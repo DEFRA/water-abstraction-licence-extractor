@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.0.1"/>
+        <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1"/>
+        <PackageReference Include="PdfPig" Version="0.1.10"/>
+        <PackageReference Include="PdfPig.Filters.Jbig2.PdfboxJbig2" Version="0.1.10.2" />
+        <PackageReference Include="PdfPig.Rendering.Skia" Version="0.1.10.2" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
+        <PackageReference Include="System.Drawing.Common" Version="9.0.1"/>
+        <PackageReference Include="Tesseract" Version="5.2.0"/>
+        <PackageReference Include="WeCantSpell.Hunspell" Version="5.2.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="en_GB.dic"/>
+        <Content Include="en_GB.dic">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="en_GB.aff"/>
+        <Content Include="en_GB.aff">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Data\first-names.csv"/>
+        <Content Include="Data\first-names.csv">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Templates\report-template.html" />
+        <Content Include="Templates\report-template.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="Templates\LOCAL_report-template.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Templates\jsonpath-0.8.0.js" />
+        <Content Include="Templates\jsonpath-0.8.0.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+</Project>

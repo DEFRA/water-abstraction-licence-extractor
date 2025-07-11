@@ -1,0 +1,375 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaterAbstractionLicenseExtractor.Cmd", "WaterAbstractionLicenseExtractor.Cmd\WaterAbstractionLicenseExtractor.Cmd.csproj", "{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}"
+	ProjectSection(SolutionItems) = preProject
+		General.txt = Documentation/General.txt
+		Documentation\index.html = Documentation\index.html
+		Documentation\ResourcesNeeded.txt = Documentation\ResourcesNeeded.txt
+		Documentation\ServicesNeeded.txt = Documentation\ServicesNeeded.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tests", "WALE.ProcessFile.Services.Tests\WALE.ProcessFile.Services.Tests.csproj", "{C755F5CE-0BAD-4162-B522-48B122B6CF3F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E7FA29C6-FC0A-4459-ACFA-C9D846A7F582}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		licence-number-filename-map.csv = licence-number-filename-map.csv
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{A438B272-8652-4721-8951-906B4142FD5B}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Images\FollowUpConfused.png = Documentation\Images\FollowUpConfused.png
+		Documentation\Images\FollowUpConfused2.png = Documentation\Images\FollowUpConfused2.png
+		Documentation\Images\FollowUpConfused3.png = Documentation\Images\FollowUpConfused3.png
+		Documentation\Images\OcrPdfAggregateFound.png = Documentation\Images\OcrPdfAggregateFound.png
+		Documentation\Images\OcrPdfAggregateReference.png = Documentation\Images\OcrPdfAggregateReference.png
+		Documentation\Images\OcrPdfLicenceHolderFound.png = Documentation\Images\OcrPdfLicenceHolderFound.png
+		Documentation\Images\OcrPdfLicenceHolderReference.png = Documentation\Images\OcrPdfLicenceHolderReference.png
+		Documentation\Images\TextFileFound.png = Documentation\Images\TextFileFound.png
+		Documentation\Images\TextFileFound2.png = Documentation\Images\TextFileFound2.png
+		Documentation\Images\TextFileFound2Reference.png = Documentation\Images\TextFileFound2Reference.png
+		Documentation\Images\TextFileFoundLicenceHolder.png = Documentation\Images\TextFileFoundLicenceHolder.png
+		Documentation\Images\TextFileFoundLicenceNumber.png = Documentation\Images\TextFileFoundLicenceNumber.png
+		Documentation\Images\TextFileFoundReference.png = Documentation\Images\TextFileFoundReference.png
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ideas", "Ideas", "{92F49DCD-9AA0-4ED5-AFC1-AD8C86628AED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Schemas", "Schemas", "{CD2DC48B-C156-4260-B9F6-A3F5690E7F19}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aggregate", "Aggregate", "{FF193B34-7830-48E8-9AC1-10A56AECCF50}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Aggregate\Schema.json = Documentation\Schemas\Aggregate\Schema.json
+		Documentation\Schemas\Aggregate\InitialAnalysis.txt = Documentation\Schemas\Aggregate\InitialAnalysis.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{5A400F43-75D1-48DB-9E92-B1797AD93EB0}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Aggregate\Examples\1_3-licence-07_02_2023.json = Documentation\Schemas\Aggregate\Examples\1_3-licence-07_02_2023.json
+		Documentation\Schemas\Aggregate\Examples\08-36-19-S-0101_5826949_2.json = Documentation\Schemas\Aggregate\Examples\08-36-19-S-0101_5826949_2.json
+		Documentation\Schemas\Aggregate\Examples\08-36-19-S-0130_5827009.json = Documentation\Schemas\Aggregate\Examples\08-36-19-S-0130_5827009.json
+		Documentation\Schemas\Aggregate\Examples\08-37-31-S-0199_5835643-Agg1.json = Documentation\Schemas\Aggregate\Examples\08-37-31-S-0199_5835643-Agg1.json
+		Documentation\Schemas\Aggregate\Examples\08-37-31-S-0199_5835643-Agg2.json = Documentation\Schemas\Aggregate\Examples\08-37-31-S-0199_5835643-Agg2.json
+		Documentation\Schemas\Aggregate\Examples\Abstraction_Licence_7310604.json = Documentation\Schemas\Aggregate\Examples\Abstraction_Licence_7310604.json
+		Documentation\Schemas\Aggregate\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113.json = Documentation\Schemas\Aggregate\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113.json
+		Documentation\Schemas\Aggregate\Examples\template.json = Documentation\Schemas\Aggregate\Examples\template.json
+		Documentation\Schemas\Aggregate\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-Agg1.json = Documentation\Schemas\Aggregate\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-Agg1.json
+		Documentation\Schemas\Aggregate\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-Agg2.json = Documentation\Schemas\Aggregate\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-Agg2.json
+		Documentation\Schemas\Aggregate\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01.json = Documentation\Schemas\Aggregate\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01.json
+		Documentation\Schemas\Aggregate\Examples\Licence-22718128R01.json = Documentation\Schemas\Aggregate\Examples\Licence-22718128R01.json
+		Documentation\Schemas\Aggregate\Examples\Application - New - Licence Issued 08122021 - NE0270009033.json = Documentation\Schemas\Aggregate\Examples\Application - New - Licence Issued 08122021 - NE0270009033.json
+		Documentation\Schemas\Aggregate\Examples\Application - New - Licence Issued - 08122021 - 22709039.json = Documentation\Schemas\Aggregate\Examples\Application - New - Licence Issued - 08122021 - 22709039.json
+		Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270013030.json = Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270013030.json
+		Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017065.json = Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017065.json
+		Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017066.json = Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017066.json
+		Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017064.json = Documentation\Schemas\Aggregate\Examples\Application – New– Licence Issued –20072022 - NE0270017064.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Licence", "Licence", "{AA696751-7BD4-4AA6-8CA4-8903141770F7}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Licence\Schema.json = Documentation\Schemas\Licence\Schema.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{A1E3CD8B-FE5F-4372-9E9A-6ED11214FBD9}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Licence\Examples\08-37-31-S-0199_5835643.json = Documentation\Schemas\Licence\Examples\08-37-31-S-0199_5835643.json
+		Documentation\Schemas\Licence\Examples\1_3-licence-07_02_2023.json = Documentation\Schemas\Licence\Examples\1_3-licence-07_02_2023.json
+		Documentation\Schemas\Licence\Examples\08-36-19-S-0101_5826949_2.json = Documentation\Schemas\Licence\Examples\08-36-19-S-0101_5826949_2.json
+		Documentation\Schemas\Licence\Examples\08-36-19-S-0130_5827009.json = Documentation\Schemas\Licence\Examples\08-36-19-S-0130_5827009.json
+		Documentation\Schemas\Licence\Examples\Abstraction_Licence_7310604.json = Documentation\Schemas\Licence\Examples\Abstraction_Licence_7310604.json
+		Documentation\Schemas\Licence\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684.json = Documentation\Schemas\Licence\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684.json
+		Documentation\Schemas\Licence\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113.json = Documentation\Schemas\Licence\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113.json
+		Documentation\Schemas\Licence\Examples\template.json = Documentation\Schemas\Licence\Examples\template.json
+		Documentation\Schemas\Licence\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01.json = Documentation\Schemas\Licence\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01.json
+		Documentation\Schemas\Licence\Examples\Licence-22718128R01.json = Documentation\Schemas\Licence\Examples\Licence-22718128R01.json
+		Documentation\Schemas\Licence\Examples\Application - New - Licence Issued - 08122021 - 22709039.json = Documentation\Schemas\Licence\Examples\Application - New - Licence Issued - 08122021 - 22709039.json
+		Documentation\Schemas\Licence\Examples\Application - New - Licence Issued 08122021 - NE0270009033.json = Documentation\Schemas\Licence\Examples\Application - New - Licence Issued 08122021 - NE0270009033.json
+		Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270013030.json = Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270013030.json
+		Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017064.json = Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017064.json
+		Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017065.json = Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017065.json
+		Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017066.json = Documentation\Schemas\Licence\Examples\Application – New– Licence Issued –20072022 - NE0270017066.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AbstractionLimit", "AbstractionLimit", "{CB70DBDF-14F2-48CA-A895-82FC10911015}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AbstractionLimit\Schema.json = Documentation\Schemas\AbstractionLimit\Schema.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{8EC71F0F-65D9-49AC-81A6-CC438567AA30}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-1.json = Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\template.json = Documentation\Schemas\AbstractionLimit\Examples\template.json
+		Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-2.json = Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-3.json = Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-4.json = Documentation\Schemas\AbstractionLimit\Examples\1_3-licence-07_02_2023-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0101_5826949_2-1.json = Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0101_5826949_2-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0101_5826949_2-2.json = Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0101_5826949_2-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0130_5827009-1.json = Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0130_5827009-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0130_5827009-2.json = Documentation\Schemas\AbstractionLimit\Examples\08-36-19-S-0130_5827009-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\08-37-31-S-0199_5835643-1.json = Documentation\Schemas\AbstractionLimit\Examples\08-37-31-S-0199_5835643-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-1.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-2.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-3.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-4.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-5.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-5.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-6.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-6.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-7.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-7.json
+		Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-8.json = Documentation\Schemas\AbstractionLimit\Examples\Abstraction_Licence_7310604-8.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Transfer-Issued_Licence_05_05_2015_8855113-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-5.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-5.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-6.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-6.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-7.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-7.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-8.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-8.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-9.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-9.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-10.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-10.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-11.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-11.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-12.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-12.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-13.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-13.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-14.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-14.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-15.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-15.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-16.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-16.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-17.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-17.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-18.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-18.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-19.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-19.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-20.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-20.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-21.json = Documentation\Schemas\AbstractionLimit\Examples\Application-Minor_Variation-Issued_Licence_27_09_2016_9502684-21.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application-transfer-issued_licence_04_10_18_10512702-22718128R01-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-1.json = Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-2.json = Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-3.json = Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-4.json = Documentation\Schemas\AbstractionLimit\Examples\Licence-22718128R01-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-3.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-4.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-2.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued - 08122021 - 22709039-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application - New - Licence Issued 08122021 - NE0270009033-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270013030-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017064-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017065-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-1.json = Documentation\Schemas\AbstractionLimit\Examples\Application – New– Licence Issued –20072022 - NE0270017066-1.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AggregateGroup", "AggregateGroup", "{31451D25-B069-4161-87C1-9BC2E74DD69A}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AggregateGroup\Schema.json = Documentation\Schemas\AggregateGroup\Schema.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{DF4264F8-A5F1-4817-ADC0-49D685E75C74}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AggregateGroup\Examples\83619S101-83619S130.json = Documentation\Schemas\AggregateGroup\Examples\83619S101-83619S130.json
+		Documentation\Schemas\AggregateGroup\Examples\83731S199.json = Documentation\Schemas\AggregateGroup\Examples\83731S199.json
+		Documentation\Schemas\AggregateGroup\Examples\22718128R01-22718129R01.json = Documentation\Schemas\AggregateGroup\Examples\22718128R01-22718129R01.json
+		Documentation\Schemas\AggregateGroup\Examples\NE0270013030-NE0270017064-NE0270017065-NE0270017066.json = Documentation\Schemas\AggregateGroup\Examples\NE0270013030-NE0270017064-NE0270017065-NE0270017066.json
+		Documentation\Schemas\AggregateGroup\Examples\22709039-NE0270009033.json = Documentation\Schemas\AggregateGroup\Examples\22709039-NE0270009033.json
+		Documentation\Schemas\AggregateGroup\Examples\1547013S020-SW0470051003.json = Documentation\Schemas\AggregateGroup\Examples\1547013S020-SW0470051003.json
+		Documentation\Schemas\AggregateGroup\Examples\83731S101-83731S199.json = Documentation\Schemas\AggregateGroup\Examples\83731S101-83731S199.json
+		Documentation\Schemas\AggregateGroup\Examples\22632328.json = Documentation\Schemas\AggregateGroup\Examples\22632328.json
+		Documentation\Schemas\AggregateGroup\Examples\43009G0011.json = Documentation\Schemas\AggregateGroup\Examples\43009G0011.json
+		Documentation\Schemas\AggregateGroup\Examples\template.json = Documentation\Schemas\AggregateGroup\Examples\template.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PDFs", "PDFs", "{3260A6E1-9AE3-46FA-A47F-11E0AF031993}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\PDFs\1.3-licence-07.02.2023_SW0470051003_Exeter.pdf = Documentation\Schemas\PDFs\1.3-licence-07.02.2023_SW0470051003_Exeter.pdf
+		Documentation\Schemas\PDFs\08-36-19-S-0101 5826949 2_83619S101_Suffolk.PDF = Documentation\Schemas\PDFs\08-36-19-S-0101 5826949 2_83619S101_Suffolk.PDF
+		Documentation\Schemas\PDFs\08-36-19-S-0130 5827009_83619S130_Suffolk.PDF = Documentation\Schemas\PDFs\08-36-19-S-0130 5827009_83619S130_Suffolk.PDF
+		Documentation\Schemas\PDFs\08-37-31-S-0199 5835643_83731S199_Essex.PDF = Documentation\Schemas\PDFs\08-37-31-S-0199 5835643_83731S199_Essex.PDF
+		Documentation\Schemas\PDFs\Abstraction Licence 7310604_22632328_Cheshire.pdf = Documentation\Schemas\PDFs\Abstraction Licence 7310604_22632328_Cheshire.pdf
+		Documentation\Schemas\PDFs\Application - Minor Variation - Issued Licence 27.09.2016 9502684_43009G0011_Lincoln.pdf = Documentation\Schemas\PDFs\Application - Minor Variation - Issued Licence 27.09.2016 9502684_43009G0011_Lincoln.pdf
+		Documentation\Schemas\PDFs\Application - transfer - issued licence 04.10.18 10512702 - 22718128R01_22718129R01_Yorkshire.pdf = Documentation\Schemas\PDFs\Application - transfer - issued licence 04.10.18 10512702 - 22718128R01_22718129R01_Yorkshire.pdf
+		Documentation\Schemas\PDFs\Application - Transfer - Issued Licence 05.05.2015 8855113_2938060109_Hertfordshire.pdf = Documentation\Schemas\PDFs\Application - Transfer - Issued Licence 05.05.2015 8855113_2938060109_Hertfordshire.pdf
+		Documentation\Schemas\PDFs\Licence - 22718128R01_22718128R01_Yorkshire.pdf = Documentation\Schemas\PDFs\Licence - 22718128R01_22718128R01_Yorkshire.pdf
+		Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017066_NE0270017066_Wakefield.pdf = Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017066_NE0270017066_Wakefield.pdf
+		Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017065_NE0270017065_Wakefield.pdf = Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017065_NE0270017065_Wakefield.pdf
+		Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017064_NE0270017064_Wakefield.pdf = Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270017064_NE0270017064_Wakefield.pdf
+		Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270013030_NE0270013030_Wakefield.pdf = Documentation\Schemas\PDFs\Application – New– Licence Issued –20072022 - NE0270013030_NE0270013030_Wakefield.pdf
+		Documentation\Schemas\PDFs\Application - New - Licence Issued 08122021 - NE0270009033_NE0270009033_Yorkshire.pdf = Documentation\Schemas\PDFs\Application - New - Licence Issued 08122021 - NE0270009033_NE0270009033_Yorkshire.pdf
+		Documentation\Schemas\PDFs\Application - New - Licence Issued - 08122021 - 22709039_22709039_Yorkshire.pdf = Documentation\Schemas\PDFs\Application - New - Licence Issued - 08122021 - 22709039_22709039_Yorkshire.pdf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LicenceGroup", "LicenceGroup", "{76B45B30-420E-4677-A11B-560C34ED17F6}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\LicenceGroup\Schema.json = Documentation\Schemas\LicenceGroup\Schema.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{64287028-283D-4DA8-A1A7-8C0F22748ECC}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\LicenceGroup\Examples\template.json = Documentation\Schemas\LicenceGroup\Examples\template.json
+		Documentation\Schemas\LicenceGroup\Examples\83619S101-83619S130.json = Documentation\Schemas\LicenceGroup\Examples\83619S101-83619S130.json
+		Documentation\Schemas\LicenceGroup\Examples\83731S101-83731S199.json = Documentation\Schemas\LicenceGroup\Examples\83731S101-83731S199.json
+		Documentation\Schemas\LicenceGroup\Examples\1547013S020-SW0470051003.json = Documentation\Schemas\LicenceGroup\Examples\1547013S020-SW0470051003.json
+		Documentation\Schemas\LicenceGroup\Examples\22709039-NE0270009033.json = Documentation\Schemas\LicenceGroup\Examples\22709039-NE0270009033.json
+		Documentation\Schemas\LicenceGroup\Examples\22718128R01-22718129R01.json = Documentation\Schemas\LicenceGroup\Examples\22718128R01-22718129R01.json
+		Documentation\Schemas\LicenceGroup\Examples\NE0270013030-NE0270017064-NE0270017065-NE0270017066.json = Documentation\Schemas\LicenceGroup\Examples\NE0270013030-NE0270017064-NE0270017065-NE0270017066.json
+		Documentation\Schemas\LicenceGroup\Examples\22632328.json = Documentation\Schemas\LicenceGroup\Examples\22632328.json
+		Documentation\Schemas\LicenceGroup\Examples\43009G0011.json = Documentation\Schemas\LicenceGroup\Examples\43009G0011.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{84A117AD-46AA-405E-A06F-D2421C79D022}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\PDFs\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - Formal Variation - Issued Licence - 15.12.2022 - 22724477R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - Formal Variation - Issued Licence - 15.12.2022 - 22724477R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008052 -  22724486R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008052 -  22724486R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008112 - NE0270028029R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008112 - NE0270028029R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - New  licence - Issue Letter- PDF copy - 15.12.2022 - NE0270028029R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - New  licence - Issue Letter- PDF copy - 15.12.2022 - NE0270028029R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - New - Licence 19.12.2014 8724971 -  22724486R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - New - Licence 19.12.2014 8724971 -  22724486R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - New - Licence 19.12.2014 8727127 - 22718158R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - New - Licence 19.12.2014 8727127 - 22718158R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application - New Licence - PDF copy - 15.12.2022 - 22709025.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application - New Licence - PDF copy - 15.12.2022 - 22709025.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR copy - 15.12.2022 - 22718146R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR copy - 15.12.2022 - 22718146R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718131R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718131R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718147R01 - 22718152R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718147R01 - 22718152R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718153R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718153R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 15.12.2022 - 22724478R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 15.12.2022 - 22724478R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 1512022 - NE0270018033.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 1512022 - NE0270018033.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 19122022 - NE0270018009.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 19122022 - NE0270018009.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 20122022 - NE0270024003R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application – Formal Variation – Issued Licence 20122022 - NE0270024003R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application – NA Formal Variation – Issued Licence 19122022 - 22724477R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application – NA Formal Variation – Issued Licence 19122022 - 22724477R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issue Letter 17.05.23 - 22718153R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issue Letter 17.05.23 - 22718153R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 -  22724486R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 -  22724486R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 - NE0270024071.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 - NE0270024071.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 19122022 - 22718158R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 15122022 19122022 - 22718158R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724479R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724479R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724480R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724480R01.pdf
+		Documentation\Schemas\PDFs\Yorkshire24\Licence document issued 19.09.2019 11029166 - 22718158R01.pdf = Documentation\Schemas\PDFs\Yorkshire24\Licence document issued 19.09.2019 11029166 - 22718158R01.pdf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{26864A20-745E-4BA0-9E44-EEAC3410112A}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Formal Variation - Issued Licence - 15.12.2022 - 22724477R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Formal Variation - Issued Licence - 15.12.2022 - 22724477R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008052 -  22724486R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008052 -  22724486R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008112 - NE0270028029R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - Minor Variation Licence issued 10_10_17 10008112 - NE0270028029R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New  licence - Issue Letter- PDF copy - 15.12.2022 - NE0270028029R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New  licence - Issue Letter- PDF copy - 15.12.2022 - NE0270028029R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New - Licence 19.12.2014 8724971 -  22724486R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New - Licence 19.12.2014 8724971 -  22724486R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New - Licence 19.12.2014 8727127 - 22718158R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New - Licence 19.12.2014 8727127 - 22718158R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New Licence - PDF copy - 15.12.2022 - 22709025.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application - New Licence - PDF copy - 15.12.2022 - 22709025.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR copy - 15.12.2022 - 22718146R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR copy - 15.12.2022 - 22718146R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718131R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718131R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718147R01 - 22718152R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718147R01 - 22718152R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718153R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application -New  licence - Issued Licence  - PDR- 15.12.2022 - 22718153R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 15.12.2022 - 22724478R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 15.12.2022 - 22724478R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 1512022 - NE0270018033.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 1512022 - NE0270018033.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 19122022 - NE0270018009.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 19122022 - NE0270018009.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 20122022 - NE0270024003R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application – Formal Variation – Issued Licence 20122022 - NE0270024003R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application – NA Formal Variation – Issued Licence 19122022 - 22724477R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application – NA Formal Variation – Issued Licence 19122022 - 22724477R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issue Letter 17.05.23 - 22718153R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issue Letter 17.05.23 - 22718153R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 -  22724486R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 -  22724486R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 - NE0270024071.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 - NE0270024071.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 19122022 - 22718158R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 15122022 19122022 - 22718158R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724479R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724479R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724480R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Application Formal Variation Issued Licence - 19122022 - 22724480R01.json
+		Documentation\Schemas\Licence\Examples\Yorkshire24\Licence document issued 19.09.2019 11029166 - 22718158R01.json = Documentation\Schemas\Licence\Examples\Yorkshire24\Licence document issued 19.09.2019 11029166 - 22718158R01.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{8A68CE42-89D7-4812-AAAC-C9412E3DE312}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\LicenceGroup\Examples\Yorkshire24\22718053-22709025-NE0270018009-NE0270018033-22718131R01-22718146R01-22718147R01-22718152R01-22718153R01-22718158R01-NE0270024003R01-NE0270024071-22724477R01-22724478R01-22724479R01-22724480R01-22724486R01-NE0270028029R01.json = Documentation\Schemas\LicenceGroup\Examples\Yorkshire24\22718053-22709025-NE0270018009-NE0270018033-22718131R01-22718146R01-22718147R01-22718152R01-22718153R01-22718158R01-NE0270024003R01-NE0270024071-22724477R01-22724478R01-22724479R01-22724480R01-22724486R01-NE0270028029R01.json
+		Documentation\Schemas\LicenceGroup\Examples\Yorkshire24\22724477R01-LV2017092920270331-22709025etc.json = Documentation\Schemas\LicenceGroup\Examples\Yorkshire24\22724477R01-LV2017092920270331-22709025etc.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{D77CC38A-DFA5-448B-9238-9692E6425137}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg3.json = Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg3.json
+		Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg2.json = Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg2.json
+		Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg1.json = Documentation\Schemas\Aggregate\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-Agg1.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{FB97D5C1-ED2A-451D-B0E5-96B838FE0EA7}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AggregateGroup\Examples\Yorkshire24\22718053.json = Documentation\Schemas\AggregateGroup\Examples\Yorkshire24\22718053.json
+		Documentation\Schemas\AggregateGroup\Examples\Yorkshire24\22718053-22709025-NE0270018009-NE0270018033-22718131R01-22718146R01-22718147R01-22718152R01-22718153R01-22718158R01-NE0270024003R01-NE0270024071-22724477R01-22724478R01-22724479R01-22724480R01-22724486R01-NE0270028029R01.json = Documentation\Schemas\AggregateGroup\Examples\Yorkshire24\22718053-22709025-NE0270018009-NE0270018033-22718131R01-22718146R01-22718147R01-22718152R01-22718153R01-22718158R01-NE0270024003R01-NE0270024071-22724477R01-22724478R01-22724479R01-22724480R01-22724486R01-NE0270028029R01.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Yorkshire24", "Yorkshire24", "{95B3410D-30A1-47CD-87E7-185559584D1D}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-1.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-1.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-2.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-2.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-3.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-3.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-4.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-4.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-5.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-5.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-6.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-6.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-7.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-7.json
+		Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-8.json = Documentation\Schemas\AbstractionLimit\Examples\Yorkshire24\Application - Formal Variation - Issued licence - 15.12.2022 - 22718053-8.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services", "WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj", "{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.BlobTrigger", "WALE.ProcessFile.AzureFunction.BlobTrigger\WALE.ProcessFile.AzureFunction.BlobTrigger.csproj", "{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.ServiceBusTrigger", "WALE.ProcessFile.AzureFunction.ServiceBusTrigger\WALE.ProcessFile.AzureFunction.ServiceBusTrigger.csproj", "{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C755F5CE-0BAD-4162-B522-48B122B6CF3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C755F5CE-0BAD-4162-B522-48B122B6CF3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C755F5CE-0BAD-4162-B522-48B122B6CF3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C755F5CE-0BAD-4162-B522-48B122B6CF3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A438B272-8652-4721-8951-906B4142FD5B} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}
+		{CD2DC48B-C156-4260-B9F6-A3F5690E7F19} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}
+		{FF193B34-7830-48E8-9AC1-10A56AECCF50} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{5A400F43-75D1-48DB-9E92-B1797AD93EB0} = {FF193B34-7830-48E8-9AC1-10A56AECCF50}
+		{AA696751-7BD4-4AA6-8CA4-8903141770F7} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{A1E3CD8B-FE5F-4372-9E9A-6ED11214FBD9} = {AA696751-7BD4-4AA6-8CA4-8903141770F7}
+		{CB70DBDF-14F2-48CA-A895-82FC10911015} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{8EC71F0F-65D9-49AC-81A6-CC438567AA30} = {CB70DBDF-14F2-48CA-A895-82FC10911015}
+		{31451D25-B069-4161-87C1-9BC2E74DD69A} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{DF4264F8-A5F1-4817-ADC0-49D685E75C74} = {31451D25-B069-4161-87C1-9BC2E74DD69A}
+		{3260A6E1-9AE3-46FA-A47F-11E0AF031993} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{76B45B30-420E-4677-A11B-560C34ED17F6} = {CD2DC48B-C156-4260-B9F6-A3F5690E7F19}
+		{64287028-283D-4DA8-A1A7-8C0F22748ECC} = {76B45B30-420E-4677-A11B-560C34ED17F6}
+		{84A117AD-46AA-405E-A06F-D2421C79D022} = {3260A6E1-9AE3-46FA-A47F-11E0AF031993}
+		{26864A20-745E-4BA0-9E44-EEAC3410112A} = {A1E3CD8B-FE5F-4372-9E9A-6ED11214FBD9}
+		{8A68CE42-89D7-4812-AAAC-C9412E3DE312} = {64287028-283D-4DA8-A1A7-8C0F22748ECC}
+		{D77CC38A-DFA5-448B-9238-9692E6425137} = {5A400F43-75D1-48DB-9E92-B1797AD93EB0}
+		{FB97D5C1-ED2A-451D-B0E5-96B838FE0EA7} = {DF4264F8-A5F1-4817-ADC0-49D685E75C74}
+		{95B3410D-30A1-47CD-87E7-185559584D1D} = {8EC71F0F-65D9-49AC-81A6-CC438567AA30}
+	EndGlobalSection
+EndGlobal

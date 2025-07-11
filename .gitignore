@@ -2,7 +2,6 @@
 *.pdb
 *.cache
 *.xml
-*.csv
 *.deps.json
 .DS_Store
 WaterAbstractionLicenseExtractor.sln.DotSettings.user

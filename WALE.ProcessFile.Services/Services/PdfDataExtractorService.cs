@@ -798,6 +798,7 @@ public partial class PdfDataExtractorService(
                         }
                         
                         if (isLicenceNumberLookup
+                            && label != null
                             && AnyIsLicenceNumber([
                                 new DocumentLine(
                                     outputText,
@@ -823,7 +824,7 @@ public partial class PdfDataExtractorService(
                             return returnList;
                         }
 
-                        if ((isSingleWord || actsLikeSingleWord) && !string.IsNullOrEmpty(t))
+                        if ((isSingleWord || actsLikeSingleWord) && label != null && !string.IsNullOrEmpty(t))
                         {
                             labelGroupResult.Text =
                             [
@@ -987,10 +988,10 @@ public partial class PdfDataExtractorService(
                                 labelGroupResult.MatchedLabel.Possibilities = [outputText];   
                             }
                             
-                            return new List<LabelGroupResult> { labelGroupResult };
+                            return [labelGroupResult];
                         }
 
-                        if (label.Text == null && !string.IsNullOrWhiteSpace(outputText))
+                        if (label?.Text == null && !string.IsNullOrWhiteSpace(outputText))
                         {
                             var lineMatch = labelGroupResult.Clone();
                             lineMatch.Text =

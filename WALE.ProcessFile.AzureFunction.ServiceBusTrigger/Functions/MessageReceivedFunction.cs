@@ -17,8 +17,8 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 namespace WALE.ProcessFile.AzureFunction.ServiceBusTrigger.Functions;
 
 public class MessageReceivedFunction(
-    IConfiguration configuration,
-    ILogger<MessageReceivedFunction> logger)
+    IConfiguration configuration/*,
+    ILogger<MessageReceivedFunction> logger*/)
 {
     private const string QueueName = "licences-to-process";
     

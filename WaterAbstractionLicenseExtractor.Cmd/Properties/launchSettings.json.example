@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "WaterAbstractionLicenseExtractor.Cmd": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "TESSDATA_PREFIX": "../../../../WALE.ProcessFile.Services/tessdata",
+        "AzureAIVisionEndpoint": "[FILLIN]",
+        "AzureAIVisionKey": "[FILLIN]",
+        "PdfFolderPath": "../../../../../WaterPdfs/",
+        "ReportTemplatePath": "../../../../WALE.ProcessFile.Services/Templates/report-template.html",
+        "FileMappingPath": "../../../../licence-number-filename-map.csv",
+        "OutputFolder": "Output/",
+        "ConcurrentCount": "10",
+        "REGENERATE_MAPPING_JSON": "true"
+      }
+    }
+  }
+}

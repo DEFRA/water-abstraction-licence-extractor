@@ -20,6 +20,12 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <None Update="local.settings.json.example">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </None>
+    </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild">
         <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib"/>

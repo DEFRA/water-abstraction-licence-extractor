@@ -1,0 +1,13 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "BlobConnection": "[FILLIN]",
+        "ServiceBusConnection": "[FILLIN]",
+        "FullyQualifiedNamespace": "[FILLIN]",
+        "QueueName": "licences-to-process",
+        "SasKeyName": "[FILLIN]",
+        "SasKeyValue": "[FILLIN]"
+    }
+}

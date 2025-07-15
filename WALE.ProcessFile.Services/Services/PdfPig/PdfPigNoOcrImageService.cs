@@ -24,7 +24,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         
         return await Task.Run(() =>
         {
-            byte[]? bytesSpanAry = default;
+            byte[]? bytesSpanAry = null;
             ReadOnlyMemory<byte> bytesMemory = default;
             
             if (!imageData.TryGetPng(out var bytes) && !imageData.TryGetBytesAsMemory(out bytesMemory))
@@ -41,7 +41,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 : bytesMemory.Length > 0
                     ? bytesMemory.ToArray()
                     : bytesSpanAry!;
-            
+
             try
             {
                 using var image = Image.Load(new DecoderOptions(), bytesAry);

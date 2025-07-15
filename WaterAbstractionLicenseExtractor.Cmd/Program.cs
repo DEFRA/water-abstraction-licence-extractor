@@ -518,7 +518,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(1).ToList();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(10).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Issued Licence - 01081966.PDF")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

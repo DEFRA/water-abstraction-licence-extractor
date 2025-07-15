@@ -9,13 +9,23 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearNextLineIsCompany;
         labelGroupResult.MatchedLabel = request.label.Clone();
         labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
 
-        var inputLines = request.previousLines.ToList();
-        inputLines.AddRange(request.nextLines);
+        var inputLines = request.previousLines!.ToList();
+        inputLines.AddRange(request.nextLines!);
         
         var modifiedLines = RemoveExcludes(request.label, inputLines, out var removedLines);
         

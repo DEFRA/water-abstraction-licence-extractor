@@ -9,18 +9,28 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearPreviousLineIsCompany;
         labelGroupResult.MatchedLabel = request.label.Clone();
         labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
         
-        var inputLines = request.previousLines.ToList();
+        var inputLines = request.previousLines!.ToList();
         inputLines.Reverse();
-        inputLines.AddRange(request.nextLines);
+        inputLines.AddRange(request.nextLines!);
         
         var modifiedLines = RemoveExcludes(request.label, inputLines, out var removedLines);
         
-        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.previousLines, out var matchedLines))
+        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
         {
             var returnList = new List<LabelGroupResult>();
                 

@@ -8,20 +8,30 @@ public static class ApplicableToAll
 {
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
         var line = request.line;
         var lineNumber = request.lineNumber;
         
         var returnListTop = new List<LabelGroupResult>();
         
-        if (!PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel))
+        if (!PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
         {
             return returnListTop;
         }
         
-        foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel)
+        foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
         {
-            var t = matchedLabel.IncludeLabelText ? request.line.Text : text;
+            var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
             var outputText = RemoveExcludes(matchedLabel, t!, out var removedLines);
@@ -37,7 +47,7 @@ public static class ApplicableToAll
                 [
                     new DocumentLine(
                         t!,
-                        request.line.LineNumber,
+                        request.line!.LineNumber,
                         request.line.PageNumber,
                         request.line.Words.ToList())
                 ];
@@ -54,11 +64,11 @@ public static class ApplicableToAll
                     || outputText.StartsWith("trading as", StringComparison.InvariantCultureIgnoreCase)))
             {
                 over2Lines = true;
-                outputText = $"{request.previousLines.FirstOrDefault()?.Text} {outputText}";
+                outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
             }
 
             if (request.isNumberLookup
-                && TryGetNumber(outputText, line.LineNumber, line.PageNumber, out var numberLine))
+                && TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLine))
             {
                 numberLine!.Words = line.Words;
                 
@@ -76,7 +86,7 @@ public static class ApplicableToAll
                     new DocumentLine(
                         outputText,
                         lineNumber,
-                        line.PageNumber,
+                        line!.PageNumber,
                         line.Words.ToList())],
                     request.label,
                     out var licenceNumberLines))
@@ -103,7 +113,7 @@ public static class ApplicableToAll
                 [
                     new DocumentLine(
                         request.isSingleWord ? t.Split(' ')[0] : t,
-                        line.LineNumber,
+                        line!.LineNumber,
                         line.PageNumber,
                         line.Words.ToList())
                 ];
@@ -116,15 +126,15 @@ public static class ApplicableToAll
                 
                 foreach (var result in results)
                 {
-                    var subResults = await request.pdfDataExtractorService.ProcessSubLabelsAsync(
+                    var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
                         request.label,
                         result.Text!,
                         request.isOcr,
                         request.serviceName,
-                        request.labelGroupName,
-                        request.licenceMapping,
-                        request.previouslyParsedPaths,
-                        request.outputFolder,
+                        request.labelGroupName!,
+                        request.licenceMapping!,
+                        request.previouslyParsedPaths!,
+                        request.outputFolder!,
                         request.useCache);
         
                     if (request.label.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)
@@ -146,7 +156,7 @@ public static class ApplicableToAll
                     new DocumentLine(
                         outputText,
                         lineNumber,
-                        line.PageNumber,
+                        line!.PageNumber,
                         line.Words.ToList()),
                     false);
                 
@@ -184,7 +194,7 @@ public static class ApplicableToAll
                     [
                         new DocumentLine(
                             possibility,
-                            line.LineNumber,
+                            line!.LineNumber,
                             line.PageNumber,
                             line.Words.ToList())
                     ];
@@ -202,14 +212,14 @@ public static class ApplicableToAll
             outputText = request.isOcr ? AutoCorrectText(new DocumentLine(
                 outputText!,
                 lineNumber,
-                line.PageNumber,
+                line!.PageNumber,
                 line.Words.ToList()), request.isCompanyType) : outputText;
 
             if (request.isCompanyType
                 && TryGetCompanyOrPersonalName(new DocumentLine(
                     outputText!,
                     lineNumber,
-                    line.PageNumber,
+                    line!.PageNumber,
                     line.Words.ToList()), out _))
             {
                 var matchType = over2Lines ?
@@ -248,7 +258,7 @@ public static class ApplicableToAll
                     new DocumentLine(
                         outputText,
                         lineNumber,
-                        line.PageNumber,
+                        line!.PageNumber,
                         line.Words.ToList())
                 ];
                 
@@ -271,7 +281,7 @@ public static class ApplicableToAll
                 [
                     new DocumentLine(
                         outputText,
-                        line.LineNumber,
+                        line!.LineNumber,
                         line.PageNumber,
                         line.Words.ToList())
                 ];

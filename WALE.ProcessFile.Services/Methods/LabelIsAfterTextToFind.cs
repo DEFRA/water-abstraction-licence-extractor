@@ -9,6 +9,16 @@ public static class LabelIsAfterTextToFind
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearPreviousLineIsCompany;
         labelGroupResult.MatchedLabel = request.label.Clone();
@@ -16,7 +26,7 @@ public static class LabelIsAfterTextToFind
         
         var modifiedPreviousLines = RemoveExcludes(request.label, request.previousLines, out var removedLines);
         
-        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.previousLines, out var matchedLines))
+        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
         {
             var returnList = new List<LabelGroupResult>();
                 

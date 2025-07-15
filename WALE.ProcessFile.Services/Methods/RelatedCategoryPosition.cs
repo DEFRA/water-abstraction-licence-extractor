@@ -7,9 +7,19 @@ public static class RelatedCategoryPosition
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
                     
-        var categoryItems = request.siblingMatches
+        var categoryItems = request.siblingMatches!
             .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)
             .OrderBy(match => match.LineNumber)
             .ToList();
@@ -29,7 +39,7 @@ public static class RelatedCategoryPosition
 
         var matches = new List<DocumentLine>();
 
-        foreach (var previousLine in request.previousLines.OrderByDescending(line => line.LineNumber))
+        foreach (var previousLine in request.previousLines!.OrderByDescending(line => line.LineNumber))
         {
             if (AnyIsNumber([previousLine], out var numberLine))
             {
@@ -37,7 +47,7 @@ public static class RelatedCategoryPosition
             }
         }
         
-        foreach (var nextLine in request.nextLines.OrderBy(line => line.LineNumber))
+        foreach (var nextLine in request.nextLines!.OrderBy(line => line.LineNumber))
         {
             if (AnyIsNumber([nextLine], out var numberLine))
             {

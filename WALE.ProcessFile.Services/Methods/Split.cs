@@ -10,13 +10,23 @@ public static class Split
     
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.labelGroupResult == null)
+        {
+            throw new ArgumentNullException(nameof(request.labelGroupResult));
+        }
+        
+        if (request.label == null)
+        {
+            throw new ArgumentNullException(nameof(request.label));
+        }
+        
         if (request.label.Text == null || request.label.Text.Count == 0)
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
 
         var lineContainsLabel = LineContainsLabel(
-            request.line,
+            request.line!,
             request.label.Text,
             LabelPosition.Split,
             UnknownLinesTotal,
@@ -24,22 +34,22 @@ public static class Split
             out _);
 
         var sub1Result = request.labelGroupResult.Clone();
-        var sub1ResultText  = request.previousLines.Reverse().ToList();
+        var sub1ResultText  = request.previousLines!.Reverse().ToList();
 
         if (!lineContainsLabel)
         {
-            sub1ResultText.Add(request.line);
+            sub1ResultText.Add(request.line!);
         }
         
         var sub2Result = request.labelGroupResult.Clone();
-        var sub2ResultText = request.nextLines.ToList();
+        var sub2ResultText = request.nextLines!.ToList();
 
         if (lineContainsLabel)
         {
             if (sub1ResultText.Count == 0 && sub2ResultText.Count == 0)
             {
                 var splitter = string.Join(' ', request.label.Text);
-                var parts = request.line.Text.Split(splitter);
+                var parts = request.line!.Text.Split(splitter);
 
                 parts[0] = parts[0].Trim();
                 parts[1] = parts[1].Trim();
@@ -59,7 +69,7 @@ public static class Split
             }
             else
             {
-                sub2ResultText.Insert(0, request.line);
+                sub2ResultText.Insert(0, request.line!);
 
                 if (sub1ResultText.Count > 0)
                 {
@@ -89,15 +99,15 @@ public static class Split
 
         foreach (var result in results)
         {
-            var subResults = await request.pdfDataExtractorService.ProcessSubLabelsAsync(
+            var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
                 request.label,
                 result.Text!,
                 request.isOcr,
                 request.serviceName,
-                request.labelGroupName,
-                request.licenceMapping,
-                request. previouslyParsedPaths,
-                request.outputFolder,
+                request.labelGroupName!,
+                request.licenceMapping!,
+                request. previouslyParsedPaths!,
+                request.outputFolder!,
                 request.useCache);
         
             if (request.label.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)

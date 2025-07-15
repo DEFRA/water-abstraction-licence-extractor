@@ -39,7 +39,7 @@ public static class LabelIsBeforeTextToFind
             labelGroupResult.MatchedLabel.Format = "CompanyName";
             RemoveRemoves(labelGroupResult, removedLines);
             
-            return Task.FromResult([labelGroupResult]);
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
         if (request.isNumberLookup && AnyIsNumber(modifiedNextLines, out var numberLine))
@@ -48,7 +48,7 @@ public static class LabelIsBeforeTextToFind
             labelGroupResult.MatchedLabel.Format = "Number";
             RemoveRemoves(labelGroupResult, removedLines);
             
-            return Task.FromResult([labelGroupResult]);
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
 
         if (request.isLicenceNumberLookup && AnyIsLicenceNumber(modifiedNextLines, request.label, out var licenceNumberLines))
@@ -82,7 +82,7 @@ public static class LabelIsBeforeTextToFind
             labelGroupResult.MatchedLabel.Format = "SingleWord";
             RemoveRemoves(labelGroupResult, removedLines);
                 
-            return Task.FromResult([labelGroupResult]);
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
         if (request.isUnitsLookup)
@@ -102,20 +102,20 @@ public static class LabelIsBeforeTextToFind
                         continue;
                     }
 
-                    labelGroupResult.Text = new[]
-                    {
+                    labelGroupResult.Text =
+                    [
                         new DocumentLine(
                             possibility,
                             nextLine.LineNumber,
                             nextLine.PageNumber,
                             nextLine.Words.ToList())
-                    };
+                    ];
                     
                     labelGroupResult.MatchedLabel.Format = "Units";
                     RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return Task.FromResult([labelGroupResult]);
+                    return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
                 }
             }
         }

@@ -41,8 +41,8 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             labelGroupResult.Text = companyNameLines;
             labelGroupResult.MatchedLabel.Format = "CompanyName";
             RemoveRemoves(labelGroupResult, removedLines);
-            
-            return Task.FromResult([labelGroupResult]);
+
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
         if (request.isNumberLookup && AnyIsNumber(modifiedLines, out var numberLine))
@@ -51,7 +51,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             labelGroupResult.MatchedLabel.Format = "Number";
             RemoveRemoves(labelGroupResult, removedLines);
             
-            return Task.FromResult([labelGroupResult]);
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
 
         if (request.isLicenceNumberLookup && AnyIsLicenceNumber(modifiedLines, request.label, out var licenceNumberLines))
@@ -85,7 +85,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             labelGroupResult.MatchedLabel.Format = "SingleWord";
             RemoveRemoves(labelGroupResult, removedLines);
                 
-            return Task.FromResult([labelGroupResult]);
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });            
         }
         
         if (request.isUnitsLookup)
@@ -118,11 +118,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                     RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return Task.FromResult([labelGroupResult]);
+                    return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
                 }
             }
         }
-        
-        return Task.FromResult([]);
+
+        return Task.FromResult(new List<LabelGroupResult>());
     }
 }

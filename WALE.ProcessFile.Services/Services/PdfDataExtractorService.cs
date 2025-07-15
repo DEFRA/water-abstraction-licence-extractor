@@ -540,38 +540,46 @@ public partial class PdfDataExtractorService(
                 continue;
             }
 
-            var lookupExpressions = GetRelevantLookupExpressions(
-                isOcr,
-                serviceName,
-                labelGroupName,
-                matchedLabel,
-                previousLines,
-                nextLines,
-                textBeforeAndAfterLabel,
-                line.LineNumber,
-                siblingMatches,
-                line,
-                licenceMapping,
-                previouslyParsedPaths,
-                outputFolder,
-                useCache);
+            var lookupExpressions = GetRelevantLookupExpressions(matchedLabel);
+            
+            var labelGroupResult = new LabelGroupResult
+            {
+                IsOcr = isOcr,
+                LineNumber = line.LineNumber,
+                PageNumber = line.PageNumber,
+                ServiceName = serviceName
+            };
             
             foreach (var expression in lookupExpressions)
             {
-                var labelGroupResult = new LabelGroupResult
+                var request = new FunctionInputModel
                 {
-                    IsOcr = isOcr,
-                    LineNumber = line.LineNumber,
-                    PageNumber = line.PageNumber,
-                    ServiceName = serviceName
+                    actsLikeSingleWord = matchedLabel.Format == "ActsLikeSingleWord",
+                    textBeforeAndAfterLabel = textBeforeAndAfterLabel,
+                    isCompanyType = matchedLabel.Format == "CompanyName",
+                    isDateOrPurposeLookup = matchedLabel.Format == "DateOrPurpose",
+                    isLicenceNumberLookup = matchedLabel.Format == "LicenceNumber",
+                    isNumberLookup = matchedLabel.Format == "Number",
+                    isOcr = isOcr,
+                    label = matchedLabel,
+                    labelGroupName = labelGroupName,
+                    labelGroupResult = labelGroupResult,
+                    licenceMapping = licenceMapping,
+                    pdfDataExtractorService = this,
+                    previouslyParsedPaths = previouslyParsedPaths,
+                    previousLines = previousLines,
+                    nextLines = nextLines,
+                    serviceName = serviceName,
+                    siblingMatches = siblingMatches,
+                    useCache = useCache,
+                    outputFolder = outputFolder,
+                    isSingleWord = matchedLabel.Format == "SingleWord",
+                    isUnitsLookup = matchedLabel.Format == "Units",
+                    line = line,
+                    lineNumber = line.LineNumber
                 };
                 
-                var results = await expression(
-                    matchedLabel,
-                    labelGroupResult,
-                    previousLines,
-                    nextLines,
-                    siblingMatches);
+                var results = await expression(request);
 
                 if (results.Count == 0)
                 {
@@ -624,38 +632,8 @@ public partial class PdfDataExtractorService(
         return returnList;
     }
     
-    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>> GetRelevantLookupExpressions(
-        bool isOcr,
-        string? serviceName,
-        string labelGroupName,
-        LabelToMatch label,
-        IReadOnlyList<DocumentLine> previousLines,
-        IReadOnlyList<DocumentLine> nextLines,
-        List<(string? Text, LabelToMatch Label)> textBeforeAndAfterLabel,
-        int lineNumber, // IN THEORY CAN GET RID OF THIS AS ITS REDUNDANT
-        IReadOnlyList<LabelGroupResult> siblingMatches,
-        DocumentLine line,
-        Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        string outputFolder,
-        bool useCache)
+    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>> GetRelevantLookupExpressions(LabelToMatch label)
     {
-        var isCompanyType = label.Format == "CompanyName";
-        var isNumberLookup = label.Format == "Number";
-        var isUnitsLookup = label.Format == "Units";
-        var isSingleWord = label.Format == "SingleWord";
-        var actsLikeSingleWord = label.Format == "ActsLikeSingleWord";
-        var isLicenceNumberLookup = label.Format == "LicenceNumber";
-        var isDateOrPurposeLookup = label.Format == "DateOrPurpose";
-        
-        var labelGroupResult = new LabelGroupResult
-        {
-            IsOcr = isOcr,
-            LineNumber = lineNumber,
-            PageNumber = line.PageNumber,
-            ServiceName = serviceName
-        };
-        
         var expressions = new List<(
             LabelPosition Position,
             Func<

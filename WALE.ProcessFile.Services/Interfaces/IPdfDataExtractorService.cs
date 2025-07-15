@@ -13,7 +13,7 @@ public interface IPdfDataExtractorService
         List<string> previouslyParsedPaths,
         string outputFolder,
         bool useCache);
-    
+
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> text,
@@ -23,5 +23,5 @@ public interface IPdfDataExtractorService
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
-        bool useCache)    
+        bool useCache);
 }

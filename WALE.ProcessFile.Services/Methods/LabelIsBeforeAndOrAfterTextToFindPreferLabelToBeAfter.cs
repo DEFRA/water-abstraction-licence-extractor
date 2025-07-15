@@ -45,16 +45,16 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
             
             labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
             
-            return [labelGroupResult];
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
 
         if (request.isNumberLookup && AnyIsNumber(modifiedLines, out var numberLine))
         {
-            labelGroupResult.Text = new[] { numberLine! };
+            labelGroupResult.Text = [numberLine!];
             labelGroupResult.MatchedLabel.Format = "Number";
             RemoveRemoves(labelGroupResult, removedLines);                        
             
-            return [labelGroupResult];
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
         if (request.isLicenceNumberLookup && AnyIsLicenceNumber(modifiedLines, request.label, out var licenceNumberLines))
@@ -91,20 +91,23 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                         continue;
                     }
 
-                    labelGroupResult.Text = new[] { new DocumentLine(
+                    labelGroupResult.Text =
+                    [
+                        new DocumentLine(
                         possibility,
                         previousLine.LineNumber,
                         previousLine.PageNumber,
-                        previousLine.Words.ToList()) };
+                        previousLine.Words.ToList())
+                    ];
                     labelGroupResult.MatchedLabel.Format = "Units";
                     RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return [labelGroupResult];
+                    return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
                 }
             }
         }
         
-        return [];
+        return Task.FromResult(new List<LabelGroupResult>());
     }
 }

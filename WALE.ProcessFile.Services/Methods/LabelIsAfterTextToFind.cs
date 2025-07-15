@@ -1,5 +1,7 @@
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
+using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -9,12 +11,12 @@ public static class LabelIsAfterTextToFind
     {
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearPreviousLineIsCompany;
-        labelGroupResult.MatchedLabel = label.Clone();
+        labelGroupResult.MatchedLabel = request.label.Clone();
         labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
         
-        var modifiedPreviousLines = RemoveExcludes(label, previousLines, out var removedLines);
+        var modifiedPreviousLines = RemoveExcludes(request.label, request.previousLines, out var removedLines);
         
-        if (isDateOrPurposeLookup && AnyIsDateOrPurpose(previousLines, out var matchedLines))
+        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.previousLines, out var matchedLines))
         {
             var returnList = new List<LabelGroupResult>();
                 
@@ -28,28 +30,28 @@ public static class LabelIsAfterTextToFind
                 returnList.Add(labelGroupResult);
             }
 
-            return returnList;
+            return Task.FromResult(returnList);
         }
         
-        if (isCompanyType && AnyIsCompanyOrPersonalName(modifiedPreviousLines, true, isOcr, out var companyNameLine))
+        if (request.isCompanyType && AnyIsCompanyOrPersonalName(modifiedPreviousLines, true, request.isOcr, out var companyNameLine))
         {
             labelGroupResult.Text = companyNameLine;
             labelGroupResult.MatchedLabel.Format = "CompanyName";
             RemoveRemoves(labelGroupResult, removedLines);
             
-            return [labelGroupResult];
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
 
-        if (isNumberLookup && AnyIsNumber(modifiedPreviousLines, out var numberLine))
+        if (request.isNumberLookup && AnyIsNumber(modifiedPreviousLines, out var numberLine))
         {
-            labelGroupResult.Text = new[] { numberLine! };
+            labelGroupResult.Text = [numberLine!];
             labelGroupResult.MatchedLabel.Format = "Number";
             RemoveRemoves(labelGroupResult, removedLines);                        
             
-            return [labelGroupResult];
+            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
-        if (isLicenceNumberLookup && AnyIsLicenceNumber(modifiedPreviousLines, label, out var licenceNumberLines))
+        if (request.isLicenceNumberLookup && AnyIsLicenceNumber(modifiedPreviousLines, request.label, out var licenceNumberLines))
         {
             var returnList = new List<LabelGroupResult>();
                 
@@ -63,10 +65,10 @@ public static class LabelIsAfterTextToFind
                 returnList.Add(labelGroupResult);
             }
 
-            return returnList;
+            return Task.FromResult(returnList);
         }
         
-        if (isUnitsLookup)
+        if (request.isUnitsLookup)
         {
             foreach (var previousLine in modifiedPreviousLines)
             {
@@ -83,20 +85,23 @@ public static class LabelIsAfterTextToFind
                         continue;
                     }
 
-                    labelGroupResult.Text = new[] { new DocumentLine(
+                    labelGroupResult.Text =
+                    [
+                        new DocumentLine(
                         possibility,
                         previousLine.LineNumber,
                         previousLine.PageNumber,
-                        previousLine.Words.ToList()) };
+                        previousLine.Words.ToList())
+                    ];
                     labelGroupResult.MatchedLabel.Format = "Units";
                     RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return [labelGroupResult];
+                    return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
                 }
             }
         }
         
-        return [];
+        return  Task.FromResult(new List<LabelGroupResult>());
     }
 }

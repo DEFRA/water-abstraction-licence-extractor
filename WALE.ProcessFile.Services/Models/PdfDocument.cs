@@ -62,7 +62,11 @@ public class PdfDocument
             throw new Exception("Cannot get image from cache");
         }
         
-        return PdfPigDocument!.GetPageAsPng(pageNumber, background: background);
+        return PdfPigDocument!.GetPageAsPng(
+            pageNumber,
+            background: background,
+            scale: 3,
+            quality: 100);
     }
     
     public void Dispose()

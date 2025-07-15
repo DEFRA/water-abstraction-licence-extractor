@@ -417,7 +417,7 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "7.",
+                    "7. ",
                     "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED",
                     "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER", //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
                     "MEANS OF MEASUREMENT OF WATER ABSTRACTED",

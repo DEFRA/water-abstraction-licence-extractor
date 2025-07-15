@@ -24,26 +24,30 @@
     <ItemGroup>
         <None Remove="en_GB.dic"/>
         <Content Include="en_GB.dic">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Remove="en_GB.aff"/>
         <Content Include="en_GB.aff">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Remove="Data\first-names.csv"/>
         <Content Include="Data\first-names.csv">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Remove="Templates\report-template.html" />
         <Content Include="Templates\report-template.html">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Update="Templates\LOCAL_report-template.html">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Remove="Templates\jsonpath-0.8.0.js" />
         <Content Include="Templates\jsonpath-0.8.0.js">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Templates\settings.js" />
+        <Content Include="Templates\settings.js">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
 </Project>

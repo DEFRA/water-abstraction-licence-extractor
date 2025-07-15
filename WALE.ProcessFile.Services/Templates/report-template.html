@@ -97,6 +97,7 @@
     </style>
 
     <script src="data.jsonp"></script>
+    <script src="../../Templates/settings.js"></script>
     <script src="../../Templates/jsonpath-0.8.0.js"></script>
     <script src="../licence-number-filename-map.jsonp"></script>
 </head>
@@ -162,7 +163,7 @@
         const HEADER_SIZE = 200;
         const PAGE_HEIGHT_PX = 1060;
 
-        let pdfPath = "../../../../../Pdfs/" + data.filename;
+        let pdfPath = jssettings.pdfFolder + data.filename;
         document.getElementById("iframe").src = pdfPath;
         
         let filenameEle = document.getElementById("filename");

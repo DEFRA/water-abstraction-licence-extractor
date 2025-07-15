@@ -474,14 +474,17 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(12, abstractionLimitsSection.Text?.Count);
+        
+        Assert.Single(abstractionLimitsSection.SubResults!);
+        Assert.Equal(12, abstractionLimitsSection.SubResults![0].Text!.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
     
     [Fact]

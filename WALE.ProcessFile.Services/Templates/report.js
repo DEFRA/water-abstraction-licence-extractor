@@ -1,9 +1,8 @@
-window.onload = function () {
-    const HEADER_SIZE = 200;
-    const PAGE_HEIGHT_PX = 1060;
+const HEADER_SIZE = 200;
+const PAGE_HEIGHT_PX = 1060;
 
+window.onload = function () {
     let pdfPath = jssettings.pdfFolder + data.filename;
-    document.getElementById("iframe").src = pdfPath;
 
     let filenameEle = document.getElementById("filename");
     filenameEle.innerHTML = data.filename;
@@ -12,7 +11,7 @@ window.onload = function () {
     var pdfImagesSb = [];
 
     for (var i = 1; i <= data.numberOfPages; i++) {
-        pdfImagesSb.push("<img src='PdfPig/Images/page-" + i + ".png'  alt='PDF image (text not available)' /><br />")
+        pdfImagesSb.push("<img id='page" + i + "' src='PdfPig/Images/page-" + i + ".png'  alt='PDF image (text not available)' /><br />")
     }
 
     document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');
@@ -325,17 +324,15 @@ function addJsonPathElement(dataToUse, path, eleId, text, groupEleId, extraHtml)
 }
 
 function jumpToPage(ele) {
-    let pageNumber = parseInt(ele.getAttribute('data-page')) - 1;
+    let pageNumber = parseInt(ele.getAttribute('data-page'));// - 1;
     jumpToPageNumber(pageNumber);
 }
 
 function jumpToPageNumber(pageNumber) {
-    scrollIframe((pageNumber > 0 ? HEADER_SIZE : 0) + (pageNumber * PAGE_HEIGHT_PX));
-}
+    var imgEle = document.getElementById("page" + pageNumber);
 
-function scrollIframe(yScrollTo) {
     document.getElementById("iframeParent").scrollTo({
-        top: yScrollTo,
+        top: imgEle.offsetTop + 350,
         left: 0,
         behavior: 'smooth'
     });
@@ -350,20 +347,15 @@ function evaluateJsonPath() {
 
 function showTab(tabName) {
     if (tabName === "pdf-images") {
-        document.getElementById("pdf-images").style.visibility = "visible";
-        document.getElementById("iframeParent").style.visibility = "hidden";
-        document.getElementById("jsonPath").style.visibility = "hidden";
-
-    } else if (tabName === "actual-pdf") {
-        document.getElementById("pdf-images").style.visibility = "hidden";
         document.getElementById("iframeParent").style.visibility = "visible";
         document.getElementById("jsonPath").style.visibility = "hidden";
-    } else {
-        document.getElementById("pdf-images").style.visibility = "hidden";
-        document.getElementById("jsonPath").style.visibility = "visible";
-        document.getElementById("iframeParent").style.visibility = "hidden";
+        
+        return false;
     }
-
+    
+    document.getElementById("iframeParent").style.visibility = "hidden";
+    document.getElementById("jsonPath").style.visibility = "visible";
+    
     return false;
 }
 
@@ -376,20 +368,22 @@ function showView(index) {
         document.getElementById("propertiesNew").style.display = "block";
 
         jumpToPageNumber(2);
-    } else {
-        document.getElementById("view1").className = "viewSelected";
-        document.getElementById("view2").className = "";
-
-        document.getElementById("properties").style.display = "block";
-        document.getElementById("propertiesNew").style.display = "none";
-
-        jumpToPageNumber(0);
+        return;
     }
+    
+    document.getElementById("view1").className = "viewSelected";
+    document.getElementById("view2").className = "";
+
+    document.getElementById("properties").style.display = "block";
+    document.getElementById("propertiesNew").style.display = "none";
+
+    jumpToPageNumber(0);
 }
 
 function continuePressed() {
     document.getElementById('licenceNumberTxtDiv').style.visibility = 'hidden';
     document.getElementById('licenceHolderTxtDiv').style.visibility = 'visible';
+    
     document.getElementById('backButton').style.display = 'inline-block';
 
     return false;

@@ -17,7 +17,8 @@ window.onload = function () {
     document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');
     document.title = data.filename + " validation report";
 
-    document.getElementById("dataOutput").innerHTML = JSON.stringify(data, null, '   ');
+//  document.getElementById("dataOutput").innerHTML = JSON.stringify(data, null, '   ');
+    evaluateJsonPath();
 
     addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]', "licenceNumber", "<strong>Licence number</strong>", "licenceNumberGroup");
     document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
@@ -65,7 +66,10 @@ window.onload = function () {
                         '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'PerSecondUnitsMeans\')]');
 
                     if (!!secondValue) {
-                        sb.push('<dt>Means of abstraction</dt><dd><dl>'
+                        let meansText = meansOfAbstractionMatches[0].text;
+                        let xy1 = meansText.length > 0 ? meansText[0].text : "--";
+                        
+                        sb.push('<dt>Means of abstraction ("' + xy1 + '")</dt><dd><dl>'
                             + '<dt><strong>Per second</strong></dt><dd>' + parseFloat(secondValue).toLocaleString()
                             + ' ' + secondUnits + '</dd></dl></dd>');
                     }
@@ -339,19 +343,32 @@ function jumpToPageNumber(pageNumber) {
 }
 
 function evaluateJsonPath() {
-    let path = document.getElementById("txtJsonPath").value;
-    let result  = jsonPath(data, path);
+    //let path = document.getElementById("txtJsonPath").value;
+    //let result  = jsonPath(data, path);
 
-    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
+    // create json tree object
+    const tree = jsonview.create(data);
+
+    // render tree into dom element
+    jsonview.render(tree, document.querySelector('#dataOutput'));
+    jsonview.toggleNode(tree);
+    
+//    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
 }
 
 function showTab(tabName) {
     if (tabName === "pdf-images") {
+        document.getElementById("pdfTabLink").className = "selectedTab";
+        document.getElementById("jsonTabLink").className = "";  
+        
         document.getElementById("iframeParent").style.visibility = "visible";
         document.getElementById("jsonPath").style.visibility = "hidden";
         
         return false;
     }
+
+    document.getElementById("pdfTabLink").className = "";
+    document.getElementById("jsonTabLink").className = "selectedTab";    
     
     document.getElementById("iframeParent").style.visibility = "hidden";
     document.getElementById("jsonPath").style.visibility = "visible";

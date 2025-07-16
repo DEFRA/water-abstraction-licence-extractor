@@ -57,5 +57,9 @@
         <Content Include="Templates\report.js">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <None Remove="Templates\jsonview.js" />
+        <Content Include="Templates\jsonview.js">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 </Project>

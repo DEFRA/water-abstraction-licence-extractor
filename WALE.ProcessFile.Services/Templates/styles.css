@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 14pt;
+}
+
+table {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+table tr {
+  height: 100%;
+}
+
+table tr td {
+  width: 50%;
+  height: 100%;
+  vertical-align: top
+}
+
+#iframeParent {
+  position: absolute;
+  top: 75px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: scroll;
+}
+
+#iframe, #jsonPath, #pdf-images {
+  width: 100%;
+  height: 10000px;
+  border-top: 1px solid #000;
+  overflow: scroll;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 -1px 20px;
+}
+
+ul li {
+  position: relative;
+  display: inline-block;
+  margin: 0 10px 0 0;
+  padding: 5px 10px;
+  border: 1px solid #000;
+  border-bottom: 0;
+  background-color: #FFF;
+  z-index: 10;
+}
+
+#rightPdf ul li a {
+  text-decoration: none;
+}
+
+dl {
+  margin: 0;
+}
+
+dl a {
+  text-decoration: none;
+}
+
+.viewSelected {
+  background-color: slategrey;
+  text-decoration: none;
+  color: #FFF;
+  cursor: none;
+}
+
+#leftDetails::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+#leftDetails::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.selectedTab {
+  font-weight: bold;
+}

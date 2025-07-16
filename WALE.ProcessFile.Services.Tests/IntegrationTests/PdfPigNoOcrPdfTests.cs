@@ -37,13 +37,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -138,13 +138,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation -Application New Licence Issued 24_12_2019 00_00_00 11164372.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -259,13 +259,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application – Transfer – Issued Licence – 07.07.2022.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -446,13 +446,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application new Issued licence 04052017 AN0300012011 9781525.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -603,13 +603,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - NA Formal Variation - Issued Licence [26_3_21] 11759321.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1055,13 +1055,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application – Renewal – Licence Issued – 24062022.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1460,13 +1460,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Renewal Issued Licence- 25.01.2024.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1646,13 +1646,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation  Issued licence -007-13122023.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1696,13 +1696,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1772,13 +1772,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -1901,13 +1901,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Vesting Licence Issued November 2017 011 10045454.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);        
@@ -1971,13 +1971,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application NA New Issued Licence 11765926.pdf";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -2042,13 +2042,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - New - Issued Licence 31.01.2017 9655530.pdf";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);        
@@ -2112,13 +2112,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Issued New Licence 2 23.2.2024.pdf";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);        
@@ -2192,13 +2192,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application New Licence July 2017 9867755.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);        
@@ -2263,13 +2263,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application NA Formal Variation Licence 08122021.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -2330,13 +2330,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - formal variation - issue licence 9227047.pdf";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -2436,13 +2436,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "06_transfer_application_new_licence_issued_2112018_10555534.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);

@@ -756,6 +756,22 @@ public static partial class DataHelpers
         return word.Length == 2 && word.All(char.IsUpper);
     }
 
+    public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
+    {
+        foreach (var match in matches)
+        {
+            if (match.MatchedLabel != null)
+            {
+                match.MatchedLabel.SubLabels = null;
+            }
+
+            if (match.SubResults != null)
+            {
+                NullOutSubLabels(match.SubResults);
+            }
+        }
+    }
+    
     private static IEnumerable<string> PreferredSuggestions =>
     [
         "Mid",

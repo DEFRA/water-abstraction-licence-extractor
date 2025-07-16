@@ -6,7 +6,7 @@ public interface IPdfDataExtractorService
 {
     public bool InUse { get; set; }
     
-    public Task<IReadOnlyList<LabelGroupResult>> GetMatchesAsync(
+    public Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         Dictionary<string, string> licenceMapping,

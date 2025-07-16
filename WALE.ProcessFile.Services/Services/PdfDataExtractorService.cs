@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
@@ -20,7 +19,7 @@ public partial class PdfDataExtractorService(
     private const int UNKNOWN_LINES_TOTAL = -1;
     private const int POSITION_NOT_FOUND = -1;
     
-    public async Task<IReadOnlyList<LabelGroupResult>> GetMatchesAsync(
+    public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         Dictionary<string, string> licenceMapping,
@@ -28,10 +27,13 @@ public partial class PdfDataExtractorService(
         string outputFolder,
         bool useCache)
     {
+        var returnResult = new MatchesResult();
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
             GetFileOutputFolder(outputFolder, pdfFilePath),
             useCache);
+
+        returnResult.NumberOfPages = pdfDocument.Pages.Count;
         
         // Save screenshots
         if (!pdfDocument.FromCache)
@@ -78,7 +80,8 @@ public partial class PdfDataExtractorService(
 
         if (unmatchedLabelLookups.Count == 0)
         {
-            return labelGroupMatches;
+            returnResult.Matches = labelGroupMatches;
+            return returnResult;
         }
         
         documentLines = [];
@@ -256,7 +259,9 @@ public partial class PdfDataExtractorService(
         }
 
         noOcrDataExtractorService.Release(pdfDocument);
-        return labelGroupMatches;
+
+        returnResult.Matches = labelGroupMatches;
+        return returnResult;      
     }
 
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
@@ -416,7 +421,7 @@ public partial class PdfDataExtractorService(
                         var labelResult = new LabelGroupResult
                         {
                             MatchedLabel = label,
-                            SubResults = relatedFileMatches,
+                            SubResults = relatedFileMatches.Matches,
                             PageNumber = line.PageNumber
                         };
                         

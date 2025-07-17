@@ -120,6 +120,102 @@ public static partial class DataHelpers
             .Reverse()
             .ToList();
     }
+    
+    public static List<DocumentLine> RemoveExcludes(
+        LabelToMatch label,
+        IReadOnlyList<DocumentLine>? betweenText,
+        out IReadOnlyList<string>? removesUsed)
+    {
+        removesUsed = null;
+        var returnList = betweenText != null ? [..betweenText] : new List<DocumentLine>();
+        
+        if (label.Remove?.Any() != true || betweenText == null)
+        {
+            return RemoveMultipleBlankLines(returnList);
+        }
+
+        var removesUsedList = new List<string>();
+        
+        for (var idx = 0; idx < returnList.Count; idx++)
+        {
+            returnList[idx] = new DocumentLine(
+                RemoveExcludes(label, betweenText[idx].Text, out var removesUsedLoop),
+                returnList[idx].LineNumber,
+                returnList[idx].PageNumber,
+                returnList[idx].Words.ToList());
+
+            if (removesUsedLoop != null)
+            {
+                removesUsedList.AddRange(removesUsedLoop);
+            }
+        }
+
+        removesUsed = removesUsedList;
+        return RemoveMultipleBlankLines(returnList);
+    }
+    
+    public static string RemoveExcludes(
+        LabelToMatch label,
+        string betweenText,
+        out IReadOnlyList<string>? removesUsed)
+    {
+        removesUsed = null;
+        
+        if (label.Remove?.Any() != true || string.IsNullOrEmpty(betweenText))
+        {
+            return betweenText;
+        }
+
+        var returnStr = betweenText;
+        var removesUsedList = new List<string>();
+        
+        foreach (var textToMatch in label.Remove)
+        {
+            if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
+            {
+                var pattern = textToMatch.Text.Substring(1, textToMatch.Text!.Length - 2);
+
+                if (Regex.IsMatch(returnStr, pattern))
+                {
+                    returnStr = Regex.Replace(
+                        returnStr,
+                        pattern,
+                        string.Empty);
+                    
+                    removesUsedList.Add(textToMatch.Text);
+                }
+                
+                continue;
+            }
+
+            if (!returnStr.Contains(textToMatch.Text))
+            {
+                continue;
+            }
+
+            if (textToMatch.LineMustStartWith && !returnStr.StartsWith(textToMatch.Text))
+            {
+                continue;
+            }
+
+            if (textToMatch.RemoveWholeLine)
+            {
+                removesUsedList.Add(returnStr);
+                returnStr = string.Empty;
+                
+                continue;
+            }
+            returnStr = returnStr.Replace(
+                textToMatch.Text,
+                string.Empty,
+                StringComparison.InvariantCultureIgnoreCase);
+
+            removesUsedList.Add(textToMatch.Text);
+        }
+
+        removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
+        return TrimFormatting(returnStr)!;
+    }
 
     public static string? TrimFormatting(string? text)
     {
@@ -660,6 +756,22 @@ public static partial class DataHelpers
         return word.Length == 2 && word.All(char.IsUpper);
     }
 
+    public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
+    {
+        foreach (var match in matches)
+        {
+            if (match.MatchedLabel != null)
+            {
+                match.MatchedLabel.SubLabels = null;
+            }
+
+            if (match.SubResults != null)
+            {
+                NullOutSubLabels(match.SubResults);
+            }
+        }
+    }
+    
     private static IEnumerable<string> PreferredSuggestions =>
     [
         "Mid",
@@ -892,5 +1004,210 @@ public static partial class DataHelpers
 
         delimiter = delimiterLoop;
         return found;
+    }
+    
+    public static void RemoveRemoves(
+        LabelGroupResult labelGroupResult,
+        IReadOnlyList<string>? removedLines)
+    {
+        if (labelGroupResult.MatchedLabel?.Remove == null)
+        {
+            return;
+        }
+        
+        labelGroupResult.MatchedLabel.Remove =
+            labelGroupResult.MatchedLabel.Remove!.Where(removeLine => removedLines?.Contains(removeLine.Text) == true).ToList();
+
+        if (labelGroupResult.MatchedLabel.Remove.Count == 0)
+        {
+            labelGroupResult.MatchedLabel.Remove = null;
+        }
+    }
+    
+    public static bool PotentialMatchOnLabelLine(
+        IEnumerable<(string? Text, LabelToMatch Label)> textBeforeAndAfterLabel)
+    {
+        foreach (var (text, _) in textBeforeAndAfterLabel)
+        {
+            if (!IsNullOrEmptyWhitespaceOrPunctuation(text)
+                && text!.Trim() != "-"
+                && text.Trim() != "—")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public static bool AnyIsDateOrPurpose(
+        IEnumerable<DocumentLine?> lines,
+        out List<DocumentLine> matchedLines)
+    {
+        var returnValue = false;
+        var outList = new List<DocumentLine>();
+        
+        foreach (var line in lines)
+        {
+            if (IsDateOrPurpose(line!.Text))
+            {
+                outList.Add(line);
+                returnValue = true;
+            }
+        }
+
+        matchedLines = outList;
+        return returnValue;
+    }
+    
+    public static bool LineContainsLabel(
+        DocumentLine line,
+        IReadOnlyList<string>? labelText,
+        LabelPosition position,
+        int lineCount,
+        int howManyLinesTotal,
+        out string? matchedText)
+    {
+        if (labelText == null)
+        {
+            matchedText = null;
+            return true;
+        }
+        
+        foreach (var textItem in labelText)
+        {
+            if (lineCount == 0
+                && textItem.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase))
+            {
+                matchedText = textItem;
+                return true;
+            }
+
+            if (line.Text.Contains("PERIOD OF ABSTRACTION"))
+            {
+                
+            }
+            
+            if (line.Text.StartsWith(textItem, StringComparison.InvariantCultureIgnoreCase)
+                || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
+            {
+                matchedText = textItem;
+                return true;
+            }
+
+            if (position == LabelPosition.Split && lineCount == howManyLinesTotal - 1)
+            {
+                matchedText = null;
+                return true;
+            }
+        }
+
+        matchedText = null;
+        return false;
+    }
+    
+    public static bool IsDateOrPurpose(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        if (text.Contains("aggregate"))
+        {
+            return true;
+        }
+
+        return YearRegex().IsMatch(text);
+    }
+    
+    [GeneratedRegex(@"19\d\d|20\d\d")]
+    private static partial Regex YearRegex();
+    
+    public static List<DocumentLine>? GetTextBetween(
+        IReadOnlyList<string> textEnd,
+        IReadOnlyList<string>? containsText,
+        string? firstLineTextAfterLabel,
+        IReadOnlyList<DocumentLine> nextLines,
+        int startLineNumber,
+        DocumentLine lineInput,
+        out (string matchedEndText, string matchedContainsText)? matchData)
+    {
+        matchData = null;
+        var foundEndTag = false;
+        
+        var lineCount = 0;
+        var returnList = new List<DocumentLine>();
+        
+        if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
+        {
+            returnList.Add(new DocumentLine(
+                TrimFormatting(firstLineTextAfterLabel)!,
+                startLineNumber,
+                lineInput.PageNumber,
+                lineInput.Words));
+        }
+
+        var totalLines = nextLines.Count;
+        
+        foreach (var line in nextLines)
+        {
+            var label = new LabelToMatch
+            {
+                Text = textEnd
+            };
+            
+            if (LineContainsLabel(line, label.Text, label.Position, lineCount++, totalLines, out var matchedEndTextTemp))
+            {
+                matchData = (matchedEndTextTemp!, "[WILL_BE_REPLACED_LATER]");
+                foundEndTag = true;
+
+                break;
+            }
+            
+            var text = TrimFormatting(line.Text)!;
+            returnList.Add(new DocumentLine(
+                text,
+                line.LineNumber,
+                line.PageNumber,
+                line.Words.ToList()));
+        }
+
+        if (!foundEndTag && textEnd.Contains("[END_OF_BLOCK]"))
+        {
+            matchData = ("[END_OF_BLOCK]", "[WILL_BE_REPLACED_LATER]");            
+            foundEndTag = true;
+        }
+
+        if (containsText == null)
+        {
+            return returnList;
+        }
+
+        string? matchedContains = null;
+        
+        var result = foundEndTag && containsText.Any(containsInstance =>
+        {
+            var matchResult = string.IsNullOrEmpty(containsInstance) || returnList.Any(line =>
+                line.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase));
+
+            if (!matchResult)
+            {
+                return false;
+            }
+            
+            matchedContains = containsInstance;
+            return true;
+
+        }) ? returnList : null;
+
+        if (matchedContains != null)
+        {
+            matchData = (matchData!.Value.matchedEndText, matchedContains!);
+            return result;
+        }
+
+        matchData = null;
+        return result;
     }
 }

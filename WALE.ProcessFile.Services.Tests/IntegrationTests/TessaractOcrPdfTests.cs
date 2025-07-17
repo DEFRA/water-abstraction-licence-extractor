@@ -28,13 +28,13 @@ public class TessaractOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -103,13 +103,13 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -142,13 +142,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count); // Only 2 as the serial number cannot be read correctly
@@ -177,13 +177,13 @@ public class TessaractOcrPdfTests
         const string filename = "34_236CA_LICENCE 8463615 (2007).pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -216,13 +216,13 @@ public class TessaractOcrPdfTests
         const string filename = "original licence (12.03.1975).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(2, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
@@ -253,13 +253,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5796052.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -292,13 +292,13 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0507 5609942.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -331,13 +331,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6081901.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -370,13 +370,13 @@ public class TessaractOcrPdfTests
         const string filename = "Original Licence 5646512.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -409,13 +409,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -448,13 +448,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document Licence document 28112002.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -487,13 +487,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083958.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(2, resultList.Count); // The document is printed out of alignment and has ghosting
@@ -514,13 +514,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document [Licence] (25112008).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -553,13 +553,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(2, resultList.Count); // File is scanned titled and font is very bold and hard to read
@@ -583,13 +583,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5809134.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count);
@@ -611,13 +611,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -651,13 +651,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5652046.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
@@ -681,13 +681,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count);
@@ -717,13 +717,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(2, resultList.Count); // Crossed out company name
@@ -749,13 +749,13 @@ public class TessaractOcrPdfTests
         const string filename = "Application New Licence Issued - 22-07-1966 - 22-07-1966.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Single(resultList); // Very old printing, hard to OCR
@@ -777,13 +777,13 @@ public class TessaractOcrPdfTests
         const string filename = "permit_01_01_1998.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count);
@@ -817,13 +817,13 @@ public class TessaractOcrPdfTests
         const string filename = "2938010008 5641759.pdf";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count); // Abstraction limitscrossed out
@@ -853,13 +853,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -893,13 +893,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.05.2001).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -933,13 +933,13 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -965,13 +965,13 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count); // Very faint text
@@ -993,13 +993,13 @@ public class TessaractOcrPdfTests
         const string filename = "08-36-19-S-0130 5827009.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);

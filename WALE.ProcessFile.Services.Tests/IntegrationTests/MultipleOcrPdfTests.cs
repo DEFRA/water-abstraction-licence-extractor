@@ -31,13 +31,13 @@ public class MultipleOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -100,13 +100,13 @@ public class MultipleOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -165,13 +165,13 @@ public class MultipleOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);

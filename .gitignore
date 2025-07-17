@@ -17,3 +17,4 @@ local.settings.json
 /WALE.ProcessFile.Services.Tests/obj
 /WaterAbstractionLicenseExtractor.Cmd/bin
 /WaterAbstractionLicenseExtractor.Cmd/obj
+licence-number-filename-map.csv

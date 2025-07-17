@@ -4,12 +4,13 @@ using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
+
+const bool useCachedResponse = true;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -101,7 +102,6 @@ foreach (var line in fileMappingContents)
 try
 {
     var processingTasks = new List<Task>();
-    const bool useCachedResponse = false;
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
@@ -117,6 +117,11 @@ try
     if (processingTasks.Count > 0)
     {
         await Task.WhenAll(processingTasks);
+    }
+
+    foreach (var pdfDataExtractor in pdfDataExtractors)
+    {
+        pdfDataExtractor.Dispose();
     }
 }
 catch (Exception e)
@@ -347,13 +352,15 @@ async Task HandleFileAsync(
             pdfFilePath
         };
         
-        var matches = await pdfDataExtractor.GetMatchesAsync(
+        var matches1 = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             LabelConfiguration.GetLabels(),
             licenceMapping,
             previouslyParsedPaths,
             outputFolder,
             useCache);
+
+        var matches = matches1.Matches!;
         
         var purposeMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var purposeText = purposeMatch?.Text?.FirstOrDefault()?.Text ?? "--";
@@ -423,15 +430,9 @@ async Task HandleFileAsync(
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
 
+        var json = SharedHelper.GetJson(matches1, pdfFilePath);
+        
         var filenameOnlyNoExtension = DataHelpers.GetFilenameWithoutExtensions(pdfFilePath);
-        NullOutSubLabels(matches);
-
-        var json = JsonSerializer.Serialize(new ParseResult
-        {
-            Filename = pdfFilePath.Split('/').Last(),
-            Matches = matches
-        }, jsonOptions);
-
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
         
         File.WriteAllText(
@@ -469,22 +470,6 @@ async Task HandleFileAsync(
     }
 }
 
-static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
-{
-    foreach (var match in matches)
-    {
-        if (match.MatchedLabel != null)
-        {
-            match.MatchedLabel.SubLabels = null;
-        }
-
-        if (match.SubResults != null)
-        {
-            NullOutSubLabels(match.SubResults);
-        }
-    }
-}
-
 static string ToPercent(double? value, string? ocr)
 {
     if (ocr != "OCR")
@@ -505,6 +490,8 @@ IEnumerable<string> GetPdfPaths()
     var pdfFilePaths = Directory
         .GetFiles(pdfFolderPath)
         .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
+
+    var rnd = new Random();
     
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence - Old 6078869.PDF")).ToArray();
@@ -518,8 +505,8 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(1).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Issued Licence - 01081966.PDF")).ToArray();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(2).Take(1).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("14460030852 licence effective 24.07.2005.PDF")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
     return pdfFilePaths;

@@ -31,15 +31,17 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metaDataFileText)!;
 
-            var numberOfPages = ((JsonElement)metadata["pages"]).GetInt32();
+            var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
             var pagesList = new List<PdfPage>();
             
-            for (var pageNumber = 1; pageNumber <= numberOfPages; pageNumber++)
+            for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
             {
+                var pageElement = pageArray[pageNumber - 1];
+                
                 pagesList.Add(new PdfPage
                 {
                     Number = pageNumber,
-                    NumberOfImages = -1 // TODO 2025-07-17
+                    NumberOfImages = pageElement.GetProperty("NumberOfImages").GetInt32()
                 });
             }
 
@@ -83,8 +85,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         {
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metaDataFileText);
-            var pagesElement = (JsonElement)metadata!["pages"];
-            var pageCount = pagesElement.GetInt32();
+            var pageCount = ((JsonElement)metadata!["pages"]).GetArrayLength();
             
             for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
             {
@@ -124,14 +125,19 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             //dtStart = DateTime.Now;
             //Console.WriteLine($"Read PdfPig text pages in {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfFilePath}");
             
-            var pages = pdfDocument.Pages;
-            var pageNumber = 1;
+            var pagesMetadata = new List<Dictionary<string, object>>();
             
             foreach (var page in pdfDocument.Pages)
             {
                 var txtOutputFilename = $"{txtFolder}/page-{page.Number}.json";
                 List<TextBlock> pageLines = [];
 
+                pagesMetadata.Add(new Dictionary<string, object>
+                {
+                    { "Number", page.Number },
+                    { "NumberOfImages", page.NumberOfImages },
+                });                
+                
                 if (pdfDocument.FromCache && File.Exists(txtOutputFilename))
                 {
                     dtStart = DateTime.Now;
@@ -150,11 +156,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     var pageLinesTransformed = FormatPageLines(
                         pageLines,
                         page.Number,
-                        pageNumber > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
+                        page.Number > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
                     
                     documentLines.AddRange(pageLinesTransformed);
-                    pageNumber += 1;
-                    
                     continue;
                 }
                 
@@ -176,13 +180,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 var pageLinesTransformedX = FormatPageLines(
                     pageLines,
                     page.Number,
-                    pageNumber > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
+                    page.Number > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
 
                 documentLines.AddRange(pageLinesTransformedX);
-                pageNumber += 1;
             }
-
-            var data = new Dictionary<string, object> {{"pages", pages.Count}};
+            
+            var data = new Dictionary<string, object>
+            {
+                { "pages", pagesMetadata }
+            };
+            
             await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data));
         }
 

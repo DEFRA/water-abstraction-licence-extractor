@@ -38,7 +38,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             {
                 pagesList.Add(new PdfPage
                 {
-                    Number = pageNumber
+                    Number = pageNumber,
+                    NumberOfImages = -1 // TODO 2025-07-17
                 });
             }
 

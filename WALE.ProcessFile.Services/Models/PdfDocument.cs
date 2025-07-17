@@ -57,7 +57,8 @@ public class PdfDocument
                 .Select(page => new PdfPage
                 {
                     PdfPigPage = page,
-                    Number = page.Number
+                    Number = page.Number,
+                    NumberOfImages = page.NumberOfImages
                 })
                 .ToList();
             return _pages!;

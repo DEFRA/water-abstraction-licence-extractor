@@ -789,16 +789,6 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
-    public void Dispose()
-    {
-        foreach (var ocrDataExtractorService in ocrDataExtractorServices)
-        {
-            ocrDataExtractorService.Dispose();
-        }
-        
-        GC.SuppressFinalize(this);
-    }
-
     private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAndAfterText(
         DocumentLine line,
         LabelToMatch label)
@@ -963,5 +953,15 @@ public class PdfDataExtractorService(
         return label.Text!.Any(text =>
             Standardise(string.Join(',', lines.Select(line => line.Text))).Contains(text,
                 StringComparison.InvariantCultureIgnoreCase));
+    }
+    
+    public void Dispose()
+    {
+        foreach (var ocrDataExtractorService in ocrDataExtractorServices)
+        {
+            ocrDataExtractorService.Dispose();
+        }
+        
+        GC.SuppressFinalize(this);
     }
 }

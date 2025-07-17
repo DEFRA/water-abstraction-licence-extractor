@@ -9,7 +9,7 @@ using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public partial class PdfDataExtractorService(
+public class PdfDataExtractorService(
     INoOcrDataExtractorService noOcrDataExtractorService,
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
     string pdfFolderPath)
@@ -40,39 +40,9 @@ public partial class PdfDataExtractorService(
         if (!pdfDocument.FromCache)
         {
             var saveTasks = pdfDocument.Pages
-                .Select(async page =>
-                {
-                    var imageFilePath = await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
-                    returnResult.Pages.Add(new PdfPage
-                    {
-                        PageNumber = page.Number,
-                        ImageFilepath = imageFilePath
-                    });
-                    
-                    return imageFilePath;
-                });
+                .Select(page => noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number));
 
             await Task.WhenAll(saveTasks);
-        }
-        else
-        {
-            foreach (var pdfPage in pdfDocument.Pages)
-            {
-                returnResult.Pages.Add(new PdfPage
-                {
-                    PageNumber = pdfPage.Number,
-                    ImageFilepath = $"/{noOcrDataExtractorService.Name}/Images/page-{pdfPage.Number}.png"
-                });
-            }
-        }
-        
-        foreach (var pdfPage in pdfDocument.Pages)
-        {
-            returnResult.Pages.Add(new PdfPage
-            {
-                PageNumber = pdfPage.Number,
-                ImageFilepath = $"PdfPig/Images/page-{pdfPage.Number}.png"
-            });
         }
         
         var documentLines =

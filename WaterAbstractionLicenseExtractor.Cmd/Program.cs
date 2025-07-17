@@ -4,12 +4,12 @@ using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
+const bool useCachedResponse = true;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -101,7 +101,6 @@ foreach (var line in fileMappingContents)
 try
 {
     var processingTasks = new List<Task>();
-    const bool useCachedResponse = false;
     
     foreach (var pdfFilePath in GetPdfPaths())
     {

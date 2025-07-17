@@ -1,4 +1,5 @@
 using System.Text.Json;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
@@ -16,9 +17,6 @@ public partial class PdfDataExtractorService(
 {
     public bool InUse { get; set; } = false;
     
-    private const int UNKNOWN_LINES_TOTAL = -1;
-    private const int POSITION_NOT_FOUND = -1;
-    
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
@@ -27,21 +25,54 @@ public partial class PdfDataExtractorService(
         string outputFolder,
         bool useCache)
     {
-        var returnResult = new MatchesResult();
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
             GetFileOutputFolder(outputFolder, pdfFilePath),
             useCache);
 
-        returnResult.NumberOfPages = pdfDocument.Pages.Count;
+        var returnResult = new MatchesResult
+        {
+            Filename = pdfFilePath,
+            NumberOfPages = pdfDocument.Pages.Count,
+        };
         
         // Save screenshots
         if (!pdfDocument.FromCache)
         {
             var saveTasks = pdfDocument.Pages
-                .Select(page => noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number));
+                .Select(async page =>
+                {
+                    var imageFilePath = await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
+                    returnResult.Pages.Add(new PdfPage
+                    {
+                        PageNumber = page.Number,
+                        ImageFilepath = imageFilePath
+                    });
+                    
+                    return imageFilePath;
+                });
 
             await Task.WhenAll(saveTasks);
+        }
+        else
+        {
+            foreach (var pdfPage in pdfDocument.Pages)
+            {
+                returnResult.Pages.Add(new PdfPage
+                {
+                    PageNumber = pdfPage.Number,
+                    ImageFilepath = $"/{noOcrDataExtractorService.Name}/Images/page-{pdfPage.Number}.png"
+                });
+            }
+        }
+        
+        foreach (var pdfPage in pdfDocument.Pages)
+        {
+            returnResult.Pages.Add(new PdfPage
+            {
+                PageNumber = pdfPage.Number,
+                ImageFilepath = $"PdfPig/Images/page-{pdfPage.Number}.png"
+            });
         }
         
         var documentLines =
@@ -83,7 +114,8 @@ public partial class PdfDataExtractorService(
             returnResult.Matches = labelGroupMatches;
             return returnResult;
         }
-        
+
+        returnResult.ScannedFile = true;
         documentLines = [];
 
         var metadataFolder = $"{pdfDocument.OutputFolder}/{noOcrDataExtractorService.Name}/Images";
@@ -104,11 +136,14 @@ public partial class PdfDataExtractorService(
 
                 foreach (var loopImageNumber in page.ImageNumbers)
                 {
-                    var thisImageNumber = imageNumber++;
-
                     foreach (var ocrService in ocrDataExtractorServices
                         .OrderBy(service => service.HasDirectCost))
                     {
+                        if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                        {
+                            returnResult.ServicesUsed.Add(ocrService.Name);
+                        }
+
                         var imageLines =
                             await ocrService.GetTextLinesFromImageAsync(
                                 [], // TODO - diff overload without this?
@@ -188,6 +223,11 @@ public partial class PdfDataExtractorService(
                     foreach (var ocrService in ocrDataExtractorServices
                         .OrderBy(service => service.HasDirectCost))
                     {
+                        if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                        {
+                            returnResult.ServicesUsed.Add(ocrService.Name);
+                        }
+                        
                         var imageBytes = await image.GetImageBytesAsync(
                             thisImageNumber,
                             page.Number,
@@ -480,7 +520,7 @@ public partial class PdfDataExtractorService(
                     
                     foreach (var labelText in label.Text!)
                     {
-                        if (LineContainsLabel(line, [labelText], label.Position, lineCount, UNKNOWN_LINES_TOTAL, out _))
+                        if (LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
                         {
                             continue;
                         }
@@ -489,7 +529,7 @@ public partial class PdfDataExtractorService(
                         
                         foreach (var previousLine in previousLines)
                         {
-                            if (LineContainsLabel(previousLine, [labelText], label.Position, lineCount, UNKNOWN_LINES_TOTAL, out _))
+                            if (LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
                             {
                                 continueOuterLoop = true;
                                 break;
@@ -498,7 +538,7 @@ public partial class PdfDataExtractorService(
                         
                         foreach (var nextLine in nextLines)
                         {
-                            if (LineContainsLabel(nextLine, [labelText], label.Position, lineCount, UNKNOWN_LINES_TOTAL, out _))
+                            if (LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
                             {
                                 continueOuterLoop = true;
                                 break;
@@ -787,11 +827,11 @@ public partial class PdfDataExtractorService(
         
         if (label.Text == null)
         {
-            returnItems.Add((line.Text, label)!);
+            returnItems.Add((line.Text, label));
             return returnItems;
         }
         
-        var labelTextPositionIndex = POSITION_NOT_FOUND;
+        var labelTextPositionIndex = PositionConstants.POSITION_NOT_FOUND;
         string? matchedLabelText = null;
 
         foreach (var labelText in label.Text!)
@@ -802,7 +842,7 @@ public partial class PdfDataExtractorService(
                     labelText,
                     StringComparison.InvariantCultureIgnoreCase);
 
-                if (index > POSITION_NOT_FOUND)
+                if (index > PositionConstants.POSITION_NOT_FOUND)
                 {
                     labelTextPositionIndex = index;
                     matchedLabelText = labelText;
@@ -819,7 +859,7 @@ public partial class PdfDataExtractorService(
             }
         }
 
-        if (labelTextPositionIndex == POSITION_NOT_FOUND)
+        if (labelTextPositionIndex == PositionConstants.POSITION_NOT_FOUND)
         {
             return [];
         }

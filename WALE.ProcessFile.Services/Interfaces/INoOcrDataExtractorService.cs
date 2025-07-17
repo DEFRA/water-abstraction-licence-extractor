@@ -13,7 +13,7 @@ public interface INoOcrDataExtractorService
     public Task<IReadOnlyList<INoOcrPdfPageService>>
         GetPagesThatContainImagesAsync(PdfDocument pdfDocument, string pdfFilePath);
 
-    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
+    public Task<string> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
     
     public void Release(PdfDocument pdfDocument);
     

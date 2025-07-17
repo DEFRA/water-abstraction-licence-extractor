@@ -35,17 +35,18 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return Task.FromResult(new PdfDocument(pdfFilePath, outputFolder, false));
     }
     
-    public async Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+    public async Task<string> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
     {
-        var imgFolder = $"{pdfDocument.OutputFolder.Replace("//", "/")}/{Name}/Images";
+        var imgFolder = pdfDocument.OutputFolder.Replace("//", "/");
         Directory.CreateDirectory(imgFolder); // This checks if exists, and creates the whole path too
         
-        var imgOutputFilename = $"{imgFolder}/page-{pageNumber}.png";
+        var imgOutputFilename = $"/{Name}/Images/page-{pageNumber}.png";
         
-        await using var fileStream = new FileStream(imgOutputFilename, FileMode.Create);
+        await using var fileStream = new FileStream($"{imgFolder}{imgOutputFilename}", FileMode.Create);
         using var memoryStream = pdfDocument.GetPageAsPng(pageNumber, RGBColor.White);
 
         memoryStream.WriteTo(fileStream);
+        return imgOutputFilename;
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(

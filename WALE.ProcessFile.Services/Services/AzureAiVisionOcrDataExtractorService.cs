@@ -107,4 +107,10 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     {
         return (int)Math.Round(value / roundTo) * (int)roundTo;
     }
+
+    public void Dispose()
+    {
+        // TODO
+        GC.SuppressFinalize(this);
+    }
 }

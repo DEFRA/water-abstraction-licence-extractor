@@ -10,4 +10,6 @@ public interface IOcrDataExtractorService
     public bool HasDirectCost { get; }
     
     public string Name { get; }
+
+    public void Dispose();
 }

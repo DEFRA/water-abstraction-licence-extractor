@@ -789,6 +789,16 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
+    public void Dispose()
+    {
+        foreach (var ocrDataExtractorService in ocrDataExtractorServices)
+        {
+            ocrDataExtractorService.Dispose();
+        }
+        
+        GC.SuppressFinalize(this);
+    }
+
     private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAndAfterText(
         DocumentLine line,
         LabelToMatch label)

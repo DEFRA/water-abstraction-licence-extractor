@@ -9,7 +9,8 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
-const bool useCachedResponse = true;
+
+const bool useCachedResponse = false;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -116,6 +117,11 @@ try
     if (processingTasks.Count > 0)
     {
         await Task.WhenAll(processingTasks);
+    }
+
+    foreach (var pdfDataExtractor in pdfDataExtractors)
+    {
+        pdfDataExtractor.Dispose();
     }
 }
 catch (Exception e)
@@ -499,7 +505,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(1).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(5).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("14460030852 licence effective 24.07.2005.PDF")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

@@ -24,4 +24,6 @@ public interface IPdfDataExtractorService
         List<string> previouslyParsedPaths,
         string outputFolder,
         bool useCache);
+
+    public void Dispose();
 }

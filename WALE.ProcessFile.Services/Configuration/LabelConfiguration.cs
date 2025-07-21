@@ -307,6 +307,7 @@ public static class LabelConfiguration
                     "(hereinafter referred to as \"The Licence Holder\")",
                     "(hereinafter referred to as \"The Licence Holder\" )",
                     "( hereinafter referred to as \"The Licence Holder\" )",
+                    "( hereinafter referred to as \"The Licence Holder\")",
                     "(hereinafter referred to as \" The Licence Holder \")",
                     "(hereinafter referred to as \"The Licence Holder)",
                     "is hereby licensed"

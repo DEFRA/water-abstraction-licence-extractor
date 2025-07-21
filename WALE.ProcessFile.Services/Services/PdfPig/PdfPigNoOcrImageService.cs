@@ -45,8 +45,10 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
             try
             {
-                using var image = Image.Load(new DecoderOptions(), bytesAry);
-                image.SaveAsJpeg(outputFilename, new JpegEncoder { Quality = 95 });
+                // TODO look at swapping this to BMP or TIFF or something lossless
+                
+                using var image = Image.Load(new DecoderOptions(),bytesAry);
+                image.SaveAsJpeg(outputFilename, new JpegEncoder { Interleaved = false, Quality = 100 }); // TODO does it need full quality? needs higher then 75 (95 worked okay for a bit)
             }
             catch (Exception ex)
             {

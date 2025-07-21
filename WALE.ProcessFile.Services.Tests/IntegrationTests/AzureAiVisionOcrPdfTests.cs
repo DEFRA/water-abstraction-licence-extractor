@@ -45,9 +45,9 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        // NOTE - According to companies house this is actual H.N. BUTLER FARMS LIMITED        
-        Assert.Equal("H.W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("(hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text!);
+        // NOTE - According to companies house this is actual H.N. BUTLER FARMS LTD        
+        Assert.Equal("H. W. Butter Farms", nameResult.Text?.FirstOrDefault()?.Text);
+        Assert.Contains("( hereinafter referred to as \"The Licence Holder\")", nameResult.MatchedLabel!.Text!);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -127,7 +127,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(16, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -199,7 +199,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(12, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(11, abstractionLimitsResult.Text?.Count);        
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -275,7 +275,7 @@ public class AzureAiVisionOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(13, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);

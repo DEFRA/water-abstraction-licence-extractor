@@ -429,7 +429,7 @@ async Task HandleFileAsync(
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
 
-        var json = SharedHelper.GetJson(matches1, pdfFilePath);
+        var json = SharedHelper.GetJson(matches1);
         
         var filenameOnlyNoExtension = DataHelpers.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");

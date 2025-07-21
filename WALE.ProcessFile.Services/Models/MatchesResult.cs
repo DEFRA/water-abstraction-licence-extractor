@@ -7,5 +7,5 @@ public class MatchesResult
     public int NumberOfPages { get; set; }
     public bool ScannedFile { get; set; }
     public List<string> ServicesUsed { get; set; } = [];
-    public List<PdfPage> Pages { get; set; } = [];
+    public IReadOnlyList<PdfPage> Pages { get; set; } = [];
 }

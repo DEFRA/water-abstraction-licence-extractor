@@ -6,9 +6,7 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class SharedHelper
 {
-    public static string GetJson(
-        MatchesResult matches,
-        string pdfFilePath)
+    public static string GetJson(MatchesResult matches)
     {
         var jsonOptions = new JsonSerializerOptions
         {
@@ -22,12 +20,6 @@ public static class SharedHelper
         };
         
         DataHelpers.NullOutSubLabels(matches.Matches!);
-
-        return JsonSerializer.Serialize(new ParseResult
-        {
-            Filename = pdfFilePath.Split('/').Last(),
-            Matches = matches.Matches,
-            NumberOfPages = matches.NumberOfPages,
-        }, jsonOptions);
+        return JsonSerializer.Serialize(matches, jsonOptions);
     }
 }

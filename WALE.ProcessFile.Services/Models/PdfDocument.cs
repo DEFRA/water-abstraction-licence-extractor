@@ -54,12 +54,24 @@ public class PdfDocument
             }
             
             _pages = PdfPigDocument!.GetPages()
-                .Select(page => new PdfPage
+                .Select(page =>
                 {
-                    PdfPigPage = page,
-                    Number = page.Number,
-                    NumberOfImages = page.NumberOfImages,
-                    Text = page.Text
+                    var pdfPage = new PdfPage
+                    {
+                        PdfPigPage = page,
+                        Number = page.Number,
+                        NumberOfImages = page.NumberOfImages,
+                        Text = page.Text
+                    };
+                    pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
+                    
+                    pdfPage.Providers.Add(new PdfPageProvider
+                    {
+                        Provider = "PdfPig",
+                        Text = [page.Text]
+                    });
+                    
+                    return pdfPage;
                 })
                 .ToList();
             return _pages!;

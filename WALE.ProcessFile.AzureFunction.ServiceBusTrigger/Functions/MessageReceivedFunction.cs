@@ -67,7 +67,7 @@ public class MessageReceivedFunction(
             outputFolder,
             useCache);
         
-        var json = SharedHelper.GetJson(matches, pdfFilePath);
+        var json = SharedHelper.GetJson(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
         var filenameOnlyNoExtension = DataHelpers.GetFilenameWithoutExtensions(pdfFilePath);

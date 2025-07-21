@@ -38,13 +38,21 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
             {
                 var pageElement = pageArray[pageNumber - 1];
-                
-                pagesList.Add(new PdfPage
+                var pdfPage = new PdfPage
                 {
                     Number = pageNumber,
                     NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
-                    Text = pageElement.GetProperty("text").GetString(),
+                    Text = pageElement.GetProperty("text").GetString()
+                };
+
+                pdfPage.ImageFilepath = $"{outputFolder}/{pdfPage.GetImageFilepath(Name)}";
+                pdfPage.Providers.Add(new PdfPageProvider
+                {
+                    Provider = Name,
+                    Text = [pdfPage.Text!]
                 });
+                
+                pagesList.Add(pdfPage);
             }
 
             pdfDocument.Pages = pagesList;

@@ -50,7 +50,7 @@ public class PdfDataExtractorService(
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
-                ImageFilename = $"{outputFolder}/{page.ImageFilepath(noOcrDataExtractorService.Name)}"
+                ImageFilename = $"{outputFolder}/{page.GetImageFilepath(noOcrDataExtractorService.Name)}"
             };
             
             imagesMetadata.Pages.Add(metadataPage);
@@ -86,9 +86,12 @@ public class PdfDataExtractorService(
 
         var returnResult = new MatchesResult
         {
-            Filename = pdfFilePath,
+            Filename = pdfFilePath.Split('/').Last(),
             NumberOfPages = pdfDocument.Pages.Count,
+            Pages = pdfDocument.Pages
         };
+        
+        returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
         
         var (imagesMetadata, imageMetadataChanged) = await GetImageMetadataAsync(pdfDocument, pdfDocument.OutputFolder);
         
@@ -142,6 +145,8 @@ public class PdfDataExtractorService(
         
         foreach (var page in imagesMetadata.Pages)
         {
+            var returnResultPage =
+            
             pageNumber += 1;
             var imageNumber = 1;
             var loopImageNumber = 1;
@@ -166,6 +171,18 @@ public class PdfDataExtractorService(
                     var tempLines = documentLines.ToList();
                     tempLines.AddRange(imageLines);
 
+                    var providers = returnResult.Pages
+                        .Single(p => p.Number == page.Number).Providers;
+
+                    if (providers.All(p => p.Provider != ocrService.Name))
+                    {
+                        providers.Add(new PdfPageProvider
+                        {
+                            Provider = ocrService.Name,
+                            Text = imageLines.Select(l => l.Text).ToList()
+                        });
+                    }                    
+                    
                     const bool isOcr = true;
                     
                     var ocrResult = await GetLabelGroupMatchesAsync(

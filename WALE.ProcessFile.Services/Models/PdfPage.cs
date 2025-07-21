@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WALE.ProcessFile.Services.Models;
 
 public class PdfPage
@@ -6,14 +8,18 @@ public class PdfPage
     
     public int NumberOfImages { get; set; }
 
+    [JsonIgnore]
     public string? Text { get; set; }
 
-    public string? ImageFilepath(string serviceName)
+    public string GetImageFilepath(string serviceName)
     {
         return $"{serviceName}/Images/page-{Number}.png";
     }
-
-    public IReadOnlyList<PdfPageProvider>? Providers { get; set; }
     
+    public string? ImageFilepath { get; set; }
+
+    public List<PdfPageProvider> Providers { get; set; } = [];
+    
+    [JsonIgnore]
     public UglyToad.PdfPig.Content.Page? PdfPigPage { get; set; }
 }

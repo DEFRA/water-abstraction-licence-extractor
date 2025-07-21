@@ -9,8 +9,7 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
-
-const bool useCachedResponse = true;
+const bool refreshCache = false;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -105,7 +104,7 @@ try
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
-        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping, useCachedResponse));
+        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping, !refreshCache));
 
         if (processingTasks.Count == concurrentCount)
         {

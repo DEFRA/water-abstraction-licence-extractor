@@ -12,8 +12,8 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
     {
         var outputFolderFull = $"{outputFolder}/PdfPig/Images";
         Directory.CreateDirectory(outputFolderFull);
-            
-        var outputFilename = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
+
+        var outputFilename = GetFilepath(imageNumber, pageNumber, outputFolder, true);
 
         // TODO
         /*
@@ -64,7 +64,24 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             return bytesAry;
         });
     }
-    
+
+    public Task SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
+    {
+        return GetImageBytesAsync(imageNumber, pageNumber, outputFolder);
+    }
+
+    public string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory)
+    {
+        var outputFolderFull = $"{outputFolder}/PdfPig/Images";
+        
+        if (createDirectory)
+        {
+            Directory.CreateDirectory(outputFolderFull);
+        }
+        
+        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
+    }
+
     private static byte[] Deflate(byte[] input)
     {
         var cutInput = new byte[input.Length - 2];

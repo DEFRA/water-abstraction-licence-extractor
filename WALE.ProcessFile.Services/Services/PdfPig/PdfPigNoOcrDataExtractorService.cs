@@ -3,6 +3,7 @@ using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.Graphics.Colors;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
@@ -20,7 +21,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var txtFolder = $"{outputFolder.Replace("//", "/")}/{Name}/Text";
         Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
 
-        var metadataFilename = $"{txtFolder}/metadata.json";
+        var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
         var getFromCache = useCache && File.Exists(metadataFilename);
         var pdfDocument = new PdfDocument(pdfFilePath, outputFolder, getFromCache);
         
@@ -41,7 +42,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 pagesList.Add(new PdfPage
                 {
                     Number = pageNumber,
-                    NumberOfImages = pageElement.GetProperty("NumberOfImages").GetInt32()
+                    NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
+                    Text = pageElement.GetProperty("text").GetString(),
                 });
             }
 
@@ -51,7 +53,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return pdfDocument;
     }
     
-    public async Task<string> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+    public async Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
     {
         var imgFolder = pdfDocument.OutputFolder.Replace("//", "/");
         var imgOutputPath = $"/{Name}/Images/";
@@ -64,7 +66,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         using var memoryStream = pdfDocument.GetPageAsPng(pageNumber, RGBColor.White);
 
         memoryStream.WriteTo(fileStream);
-        return imgOutputFilename;
+        return new PdfPage
+        {
+            Number = pageNumber,
+            NumberOfImages = pdfDocument.Pages[pageNumber-1].NumberOfImages
+        };
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
@@ -76,7 +82,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
         
         var documentLines = new List<DocumentLine>();
-        var metadataFilename = $"{txtFolder}/metadata.json";
+        var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
         
         const int roundToHorizontalLimited = 500;
         const int roundToHorizontalFull = 800;        
@@ -129,14 +135,18 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             foreach (var page in pdfDocument.Pages)
             {
-                var txtOutputFilename = $"{txtFolder}/page-{page.Number}.json";
-                List<TextBlock> pageLines = [];
-
+                var detailCacheFilename = $"page-{page.Number}.json";
+                var txtOutputFilename = $"{txtFolder}/{detailCacheFilename}";
+                
                 pagesMetadata.Add(new Dictionary<string, object>
                 {
-                    { "Number", page.Number },
-                    { "NumberOfImages", page.NumberOfImages },
-                });                
+                    { "number", page.Number },
+                    { "numberOfImages", page.NumberOfImages },
+                    { "text", page.Text! },
+                    { "detailFilename", txtOutputFilename },
+                });
+
+                List<TextBlock> pageLines = [];                
                 
                 if (pdfDocument.FromCache && File.Exists(txtOutputFilename))
                 {
@@ -162,7 +172,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
                 
-                if (IsPageEmpty(page.PdfPigPage!.Text))
+                if (IsPageEmpty(page.Text))
                 {
                     await File.WriteAllTextAsync(txtOutputFilename, "[]");
                     continue;
@@ -187,7 +197,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             var data = new Dictionary<string, object>
             {
-                { "pages", pagesMetadata }
+                { "pages", pagesMetadata },
+                { "allTextFilename", "pages-all.txt" }
             };
             
             await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data));
@@ -214,9 +225,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     public Task<IReadOnlyList<INoOcrPdfPageService>> GetPagesThatContainImagesAsync(PdfDocument pdfDocument, string pdfFilePath)
     {
+        if (pdfDocument.Pages.Any(p => p.PdfPigPage == null))
+        {
+            
+        }
+        
         var result = pdfDocument
             .Pages
-            .Where(page => IsPageEmpty(page.PdfPigPage!.Text) && page.NumberOfImages > 0)
+            .Where(page => IsPageEmpty(page.Text) && page.NumberOfImages > 0)
             .Select(page => new PdfPigNoOcrPageService(page.PdfPigPage!))
             .ToList();
 

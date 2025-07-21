@@ -1,3 +1,4 @@
+using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Services.Models;
 using PdfDocument = WALE.ProcessFile.Services.Models.PdfDocument;
 
@@ -13,7 +14,7 @@ public interface INoOcrDataExtractorService
     public Task<IReadOnlyList<INoOcrPdfPageService>>
         GetPagesThatContainImagesAsync(PdfDocument pdfDocument, string pdfFilePath);
 
-    public Task<string> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
+    public Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
     
     public void Release(PdfDocument pdfDocument);
     

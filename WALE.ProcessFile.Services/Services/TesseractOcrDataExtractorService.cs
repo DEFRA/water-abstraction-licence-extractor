@@ -14,7 +14,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     public string Name => "TesseractOcr";
     
     public Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(byte[] imageData, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {
@@ -32,7 +32,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             else
             {
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                using var ocrImage = Pix.LoadFromMemory(imageData);
+                using var ocrImage = Pix.LoadFromFile(imageFilename);
                 using var page = _tesseractEngine.Process(ocrImage);
                 
                 using var iterator = page.GetIterator();

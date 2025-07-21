@@ -6,7 +6,12 @@ public class PdfPage
     
     public int NumberOfImages { get; set; }
 
-    public string? ImageFilepath => $"/PdfPig/Images/page-{Number}.png";
+    public string? Text { get; set; }
+
+    public string? ImageFilepath(string serviceName)
+    {
+        return $"{serviceName}/Images/page-{Number}.png";
+    }
 
     public IReadOnlyList<PdfPageProvider>? Providers { get; set; }
     

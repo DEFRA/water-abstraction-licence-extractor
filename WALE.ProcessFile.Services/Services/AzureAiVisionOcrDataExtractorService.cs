@@ -15,7 +15,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(byte[] imageData, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         var lines = new List<(string Text, IList<Word> Words)>();
 
@@ -34,7 +34,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         }
         else
         {
-            using var stream = new MemoryStream(imageData);
+            await using var stream = new FileStream(imageFilepath, FileMode.Open);
             var textHeaders = await _client.ReadInStreamAsync(stream);
 
             const int waitBeforeCheck = 2000;

@@ -305,6 +305,7 @@ public static class LabelConfiguration
                 Text =
                 [
                     "(hereinafter referred to as \"The Licence Holder\")",
+                    "(hereinafter referred to as \"The Licence Holder\" )",
                     "( hereinafter referred to as \"The Licence Holder\" )",
                     "(hereinafter referred to as \" The Licence Holder \")",
                     "(hereinafter referred to as \"The Licence Holder)",

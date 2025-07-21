@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Services.Interfaces;
 
@@ -45,7 +46,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             try
             {
                 using var image = Image.Load(new DecoderOptions(), bytesAry);
-                image.SaveAsJpeg(outputFilename);
+                image.SaveAsJpeg(outputFilename, new JpegEncoder { Quality = 95 });
             }
             catch (Exception ex)
             {

@@ -503,7 +503,7 @@ public static partial class DataHelpers
 
         if (returnLines.Count > 0)
         {
-            var tempLine = returnLines.First(); // TODO something maybe relies on the following -  .MaxBy(text => text);
+            var tempLine = returnLines.MaxBy(text => text);
             
             numberLine = new DocumentLine(
                 tempLine.ToString(CultureInfo.InvariantCulture),

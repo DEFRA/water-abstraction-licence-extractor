@@ -145,8 +145,6 @@ public class PdfDataExtractorService(
         
         foreach (var page in imagesMetadata.Pages)
         {
-            var returnResultPage =
-            
             pageNumber += 1;
             var imageNumber = 1;
             var loopImageNumber = 1;
@@ -161,8 +159,18 @@ public class PdfDataExtractorService(
                         returnResult.ServicesUsed.Add(ocrService.Name);
                     }
 
+                    // TODO following just here till can work out why OCR isnt working as well with saved files
+                    /*var image1 = pdfDocument.Pages[0].PdfPigPage!.GetImages().First();
+                    var image = new PdfPigNoOcrImageService(image1);
+                    
+                    var imageBytes = await image.GetImageBytesAsync(
+                        0,
+                        page.Number,
+                        pdfDocument.OutputFolder);*/
+                    
                     var imageLines =
                         await ocrService.GetTextLinesFromImageAsync(
+                            /*imageBytes,*/
                             imageFilename,
                             pageNumber,
                             loopImageNumber++,

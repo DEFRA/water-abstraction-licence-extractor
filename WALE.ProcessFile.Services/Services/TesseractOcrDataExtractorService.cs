@@ -14,7 +14,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     public string Name => "TesseractOcr";
     
     public Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(/*byte[] imageAry,*/ string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {

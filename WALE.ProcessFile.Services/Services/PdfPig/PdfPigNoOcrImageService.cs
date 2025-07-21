@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Bmp;
 using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Services.Interfaces;
 
@@ -23,7 +23,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             return null;
         }*/
         
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             byte[]? bytesSpanAry = null;
             ReadOnlyMemory<byte> bytesMemory = default;
@@ -43,12 +43,16 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                     ? bytesMemory.ToArray()
                     : bytesSpanAry!;
 
+            const double A4WidthToHeightRatio = 1.414;
+            const int TargetWidth = 1920;
+            var TargetHeight = 4000;
+            
             try
             {
                 // TODO look at swapping this to BMP or TIFF or something lossless
                 
-                using var image = Image.Load(new DecoderOptions(),bytesAry);
-                image.SaveAsJpeg(outputFilename, new JpegEncoder { Interleaved = false, Quality = 100 }); // TODO does it need full quality? needs higher then 75 (95 worked okay for a bit)
+                using var image = Image.Load(new DecoderOptions { TargetSize = new Size(TargetWidth, TargetHeight) },bytesAry);
+                await image.SaveAsBmpAsync(outputFilename, new BmpEncoder { BitsPerPixel = BmpBitsPerPixel.Pixel32  });
             }
             catch (Exception ex)
             {
@@ -60,8 +64,8 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 // TODO should check what exception it is before trying this
                 bytesAry = Deflate(bytesAry);
 
-                using var image = Image.Load(new DecoderOptions(), bytesAry);
-                image.SaveAsJpeg(outputFilename);                
+                using var image = Image.Load(new DecoderOptions { TargetSize = new Size(TargetWidth, TargetHeight) },bytesAry);
+                await image.SaveAsBmpAsync(outputFilename, new BmpEncoder { BitsPerPixel = BmpBitsPerPixel.Pixel32  });   
             }
 
             return bytesAry;
@@ -82,7 +86,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             Directory.CreateDirectory(outputFolderFull);
         }
         
-        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
+        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.bmp";
     }
 
     private static byte[] Deflate(byte[] input)

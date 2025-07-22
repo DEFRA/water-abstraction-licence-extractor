@@ -52,9 +52,9 @@ public static class LabelIsBeforeTextToFind
             return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
-        if (request.isNumberLookup && AnyIsNumber(modifiedNextLines, out var numberLine))
+        if (request.isNumberLookup && AnyIsNumber(modifiedNextLines, out var numberLines))
         {
-            labelGroupResult.Text = [numberLine!];
+            labelGroupResult.Text = [numberLines.First()];
             labelGroupResult.MatchedLabel.Format = "Number";
             RemoveRemoves(labelGroupResult, removedLines);
             

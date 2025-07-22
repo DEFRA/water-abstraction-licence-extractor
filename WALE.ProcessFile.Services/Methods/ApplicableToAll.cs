@@ -17,6 +17,11 @@ public static class ApplicableToAll
         {
             throw new ArgumentNullException(nameof(request.label));
         }
+
+        if (request.label.Name == "PointPointNumber")
+        {
+            
+        }
         
         var labelGroupResult = request.labelGroupResult.Clone();
         var line = request.line;
@@ -68,15 +73,30 @@ public static class ApplicableToAll
             }
 
             if (request.isNumberLookup
-                && TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLine))
+                && TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLines))
             {
-                numberLine!.Words = line.Words;
+                if (matchedLabel.Possibilities?.Any() == true)
+                {
+                    var newNumberLines = numberLines
+                        .Where(numberLineLoop => matchedLabel.Possibilities.Any(p => p == numberLineLoop.Text))
+                        .ToList();
+
+                    numberLines = newNumberLines;
+                }
                 
+                var numberLine = numberLines.FirstOrDefault();
+
+                if (numberLine == null)
+                {
+                    return [];
+                }
+
+                numberLine.Words = line.Words;
                 labelGroupResult.Text = [numberLine];
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                 labelGroupResult.MatchedLabel = matchedLabel;
-                RemoveRemoves(labelGroupResult, removedLines);
 
+                RemoveRemoves(labelGroupResult, removedLines);
                 return [labelGroupResult];
             }
             

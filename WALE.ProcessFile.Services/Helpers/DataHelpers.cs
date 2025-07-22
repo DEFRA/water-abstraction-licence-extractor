@@ -448,9 +448,9 @@ public static partial class DataHelpers
 
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
-        out DocumentLine? numberLine)
+        out List<DocumentLine> numberLines)
     {
-        numberLine = null;
+        numberLines = [];
 
         var matched = false;
         var returnLines = new List<double>();
@@ -503,13 +503,14 @@ public static partial class DataHelpers
 
         if (returnLines.Count > 0)
         {
-            var tempLine = returnLines.MaxBy(text => text);
-            
-            numberLine = new DocumentLine(
-                tempLine.ToString(CultureInfo.InvariantCulture),
-                lineNumber,
-                pageNumber,
-                lineWords);
+            foreach (var tempLine in returnLines.OrderByDescending(text => text))
+            {
+                numberLines.Add(new DocumentLine(
+                    tempLine.ToString(CultureInfo.InvariantCulture),
+                    lineNumber,
+                    pageNumber,
+                    lineWords));
+            }
         }
         
         return matched;
@@ -791,16 +792,16 @@ public static partial class DataHelpers
         string? text,
         int lineNumber,
         int pageNumber,
-        out DocumentLine? number)
+        out List<DocumentLine> numbers)
     {
-        number = null;
+        numbers = [];
         
         if (text == null)
         {
             return false;
         }
         
-        var IRRELEVANT_WORDS = new List<DocumentLineWord>();
+        var irrelevantWords = new List<DocumentLineWord>();
 
         var list = text
             .Split(' ')
@@ -808,11 +809,11 @@ public static partial class DataHelpers
                 result,
                 lineNumber,
                 pageNumber,
-            IRRELEVANT_WORDS));
+            irrelevantWords));
         
-        if (AnyIsNumber(list, out var numberLine))
+        if (AnyIsNumber(list, out var numberLines))
         {
-            number = numberLine;
+            numbers.AddRange(numberLines);
             return true;
         }
 

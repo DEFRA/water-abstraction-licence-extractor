@@ -124,13 +124,20 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
         
         Assert.Single(purposeResult.SubResults!);
-        var firstPurposePointGroup = purposeResult.SubResults!.First();
-        Assert.Equal("4.1 Private Water Supply", firstPurposePointGroup.Text!.First().Text);
-
-        //TODO fix the below
         
-        var secondPurpose = purposeResult.SubResults!.Last();
-        Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurpose.Text!.First().Text);        
+        var firstPurposePointGroup = purposeResult.SubResults!.First();
+        var firstPurpose = firstPurposePointGroup.SubResults![0];
+        
+        Assert.Equal("4.1 Private Water Supply", firstPurpose.Text!.First().Text);
+
+        var firstPurposeWithoutPrepoint = firstPurpose.SubResults![1];
+        Assert.Equal("Private Water Supply", firstPurposeWithoutPrepoint.Text!.First().Text);
+        
+        var secondPurpose = firstPurposePointGroup.SubResults[1];
+        Assert.Equal("4.2 Agriculture (other than Spray Irrigation)", secondPurpose.Text!.First().Text);        
+        
+        var secondPurposeWithoutPrepoint = secondPurpose.SubResults![1];
+        Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);        
     }
 
     [Fact]

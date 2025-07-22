@@ -41,17 +41,17 @@ public static class RelatedCategoryPosition
 
         foreach (var previousLine in request.previousLines!.OrderByDescending(line => line.LineNumber))
         {
-            if (AnyIsNumber([previousLine], out var numberLine))
+            if (AnyIsNumber([previousLine], out var numberLines))
             {
-                matches.Add(numberLine!);
+                matches.Add(numberLines.First());
             }
         }
         
         foreach (var nextLine in request.nextLines!.OrderBy(line => line.LineNumber))
         {
-            if (AnyIsNumber([nextLine], out var numberLine))
+            if (AnyIsNumber([nextLine], out var numberLines))
             {
-                matches.Add(numberLine!);
+                matches.Add(numberLines.First());
             }
         }
 

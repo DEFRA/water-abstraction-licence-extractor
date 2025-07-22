@@ -28,7 +28,9 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             if (pdfDocument.FromCache && File.Exists(outputFilename))
             {
                 var fileText = await File.ReadAllTextAsync(outputFilename);
-                lines = JsonSerializer.Deserialize<List<LineAndWords>>(fileText);
+                lines = JsonSerializer.Deserialize<List<LineAndWords>>(
+                    fileText,
+                    SharedHelper.GetSerializer());
             }
             else
             {

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
@@ -24,17 +25,18 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         
-        if (/*false &&*/ pdfDocument.FromCache && File.Exists(outputFilename))
+        if (pdfDocument.FromCache && File.Exists(outputFilename))
         {
             var txt = await File.ReadAllTextAsync(outputFilename);
-            var page = JsonSerializer.Deserialize<ReadResult>(txt);
+            var page = JsonSerializer.Deserialize<ReadResult>(
+                txt,
+                SharedHelper.GetSerializer());
 
             var pageLines = ToPageLines(page!);
             lines.AddRange(pageLines);
         }
         else
         {
-//            using var stream = new MemoryStream(imageAry);
             await using var stream = new FileStream(imageFilepath, FileMode.Open);
             var textHeaders = await _client.ReadInStreamAsync(stream);
 

@@ -22,7 +22,9 @@ public class PdfDataExtractorService(
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
     {
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
-        var metadata = JsonSerializer.Deserialize<ImageMetadata>(metaDataFileText);
+        var metadata = JsonSerializer.Deserialize<ImageMetadata>(
+            metaDataFileText,
+            SharedHelper.GetSerializer());
 
         return metadata!;
     }

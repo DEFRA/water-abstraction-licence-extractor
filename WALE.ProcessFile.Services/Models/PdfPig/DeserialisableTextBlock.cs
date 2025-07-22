@@ -14,6 +14,11 @@ public class DeserialisableTextBlock
     
     public TextBlock ToPdfPigTextBlock()
     {
+        if (TextLines == null || TextLines.Count == 0)
+        {
+            
+        }
+        
         return new TextBlock(
             TextLines?.Select(textLine => textLine.ToPdfPigTextLine()).ToList());
     }    

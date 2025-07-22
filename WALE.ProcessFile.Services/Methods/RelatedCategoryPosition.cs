@@ -16,6 +16,11 @@ public static class RelatedCategoryPosition
         {
             throw new ArgumentNullException(nameof(request.label));
         }
+
+        if (request.label.Name == "PerYearValue")
+        {
+            
+        }
         
         var labelGroupResult = request.labelGroupResult.Clone();
                     

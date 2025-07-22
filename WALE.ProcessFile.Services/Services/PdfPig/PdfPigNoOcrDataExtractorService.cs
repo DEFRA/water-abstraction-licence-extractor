@@ -16,6 +16,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
+    private const int RoundToVertical = 5;
     
     public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder, bool useCache)
     {
@@ -31,7 +32,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             // TODO load from cache
             
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
-            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metaDataFileText)!;
+            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                metaDataFileText,
+                SharedHelper.GetSerializer())!;
 
             var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
             var pagesList = new List<PdfPage>();
@@ -94,12 +97,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
         
         const int roundToHorizontalLimited = 500;
-        const int roundToHorizontalFull = 800;        
+        const int roundToHorizontalFull = 900;        
         
         if (pdfDocument.FromCache && File.Exists(metadataFilename))
         {
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
-            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metaDataFileText);
+            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                metaDataFileText,
+                SharedHelper.GetSerializer());
+            
             var pageCount = ((JsonElement)metadata!["pages"]).GetArrayLength();
             
             for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
@@ -119,7 +125,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 Console.WriteLine($"Read {Name} text file page {pageNumber} in {(DateTime.Now - dtStart).TotalSeconds}" +
                     $" seconds - {pdfDocument.PdfFilePath}");
                 
-                var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(fileText)!;
+                var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
+                    fileText,
+                    SharedHelper.GetSerializer())!;
                 
                 pageLines.AddRange(cachedTextBlocks.Select(
                     cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -167,7 +175,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         $"- {pdfDocument.OutputFolder}");
 
                     var cachedTextBlocks =
-                        JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(fileText)!;
+                        JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
+                            fileText,
+                            SharedHelper.GetSerializer())!;
 
                     pageLines.AddRange(cachedTextBlocks.Select(
                         cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -253,12 +263,17 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return (int)Math.Round(value / roundTo) * (int)roundTo;
     }
 
+    private static double MidHorizontalPoint(double left, double right)
+    {
+        var width = right - left;
+        return left + width / 2;
+    }
+    
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IEnumerable<TextBlock> pageLines,
         int pageNumber,
         int roundToHorizontal)
     {
-        const int roundToVertical = 5;
         const int blankLineGap = 25;
         
         var lineNumber = 0;
@@ -266,19 +281,24 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         return pageLines
             .SelectMany(textBlock => textBlock.TextLines)
-            .OrderByDescending(line => RoundToNearestN(line.BoundingBox.Top, roundToVertical))
-            .ThenBy(line => line.BoundingBox.Left)            
+            .OrderByDescending(line => RoundToNearestN(line.BoundingBox.Top, RoundToVertical))
+            .ThenBy(line => MidHorizontalPoint(line.BoundingBox.Left, line.BoundingBox.Right))
             .GroupBy(line => (
-                RoundToNearestN(line.BoundingBox.Top, roundToVertical),
-                RoundToNearestN(line.BoundingBox.Left, roundToHorizontal)))
+                RoundToNearestN(
+                    line.BoundingBox.Top,
+                    RoundToVertical),
+                RoundToNearestN(
+                    MidHorizontalPoint(line.BoundingBox.Left, line.BoundingBox.Right),
+                    roundToHorizontal)))
             .SelectMany(lines =>
             {
                 var resultList = new List<DocumentLine>();
                 var verticalDistanceFromPreviousLine = previousLine?.BoundingBox.Top
                     - lines.First().BoundingBox.Top;
 
-                var horizontalDistanceFromPreviousLine = previousLine?.BoundingBox.Left
-                    - lines.First().BoundingBox.Left;                
+                /*var horizontalDistanceFromPreviousLine = 
+                    previousLine?.BoundingBox.Left
+                    - lines.First().BoundingBox.Left; */               
 
                 var containsText = false;
 
@@ -333,15 +353,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     private static async Task<IReadOnlyList<TextBlock>> GetPageLinesAsync(Page page)
     {
-        const int roundTo = 5;
-        
         return await Task.Run(() =>
         {
             return RecursiveXYCut
                 .Instance
                 .GetBlocks(page.GetWords())
-                .OrderByDescending(block => RoundToNearestN(block.BoundingBox.Top, roundTo))
-                .ThenBy(block => block.BoundingBox.Left)
+                .OrderByDescending(block => RoundToNearestN(block.BoundingBox.Top, RoundToVertical))
+                .ThenBy(block => MidHorizontalPoint(block.BoundingBox.Left, block.BoundingBox.Right))
                 .ToList();
         });
     }

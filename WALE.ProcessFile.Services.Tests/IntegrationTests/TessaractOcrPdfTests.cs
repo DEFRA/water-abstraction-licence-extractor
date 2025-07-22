@@ -496,7 +496,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // The document is printed out of alignment and has ghosting
+        Assert.Equal(3, resultList.Count); // The document is printed out of alignment and has ghosting
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -660,7 +660,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(4, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         

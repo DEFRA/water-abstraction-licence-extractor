@@ -4,6 +4,7 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
@@ -193,7 +194,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
 
-                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines));
+                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines, SharedHelper.GetSerializer()));
                 
                 var pageLinesTransformedX = FormatPageLines(
                     pageLines,
@@ -209,7 +210,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 { "allTextFilename", "pages-all.txt" }
             };
             
-            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data));
+            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data, SharedHelper.GetSerializer()));
         }
 
         // Update line numbers, now in one big list

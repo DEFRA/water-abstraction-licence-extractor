@@ -8,7 +8,13 @@ public static class SharedHelper
 {
     public static string GetJson(MatchesResult matches)
     {
-        var jsonOptions = new JsonSerializerOptions
+        DataHelpers.NullOutSubLabels(matches.Matches!);
+        return JsonSerializer.Serialize(matches, GetSerializer());
+    }
+
+    public static JsonSerializerOptions GetSerializer()
+    {
+        return new JsonSerializerOptions
         {
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -18,8 +24,5 @@ public static class SharedHelper
                 new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
             }
         };
-        
-        DataHelpers.NullOutSubLabels(matches.Matches!);
-        return JsonSerializer.Serialize(matches, jsonOptions);
     }
 }

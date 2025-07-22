@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
@@ -63,7 +64,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     lines.Add(new LineAndWords { Text = line, Words = words });
                 } while (iterator.Next(PageIteratorLevel.TextLine));
                 
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(lines));
+                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(lines, SharedHelper.GetSerializer()));
             }
             
             var lineNumber = 0;

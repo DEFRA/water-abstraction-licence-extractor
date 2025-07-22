@@ -1,6 +1,7 @@
 using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
@@ -258,7 +259,7 @@ public class PdfDataExtractorService(
         
         await File.WriteAllTextAsync(
             GetImageMetadataFilename(pdfDocument),
-            JsonSerializer.Serialize(imagesMetadata));
+            JsonSerializer.Serialize(imagesMetadata, SharedHelper.GetSerializer()));
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(

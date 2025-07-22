@@ -220,7 +220,7 @@ public static partial class DataHelpers
     public static string? TrimFormatting(string? text)
     {
         var trimmed = text?.Trim();
-
+        
         while (trimmed?.Length >= 1
             && (char.IsPunctuation(trimmed[0])
                 || char.IsSymbol(trimmed[0])
@@ -701,7 +701,9 @@ public static partial class DataHelpers
                 if (
                     (word.Length == 1 || !Dictionary.Check(word))
                     && !string.IsNullOrWhiteSpace(nextWord)
-                    && (word.Length > 1 || nextWord.Length > 1))
+                    && (word.Length > 1 || nextWord.Length > 1)
+                    && word.All(char.IsLetterOrDigit)
+                    && nextWord.All(char.IsLetterOrDigit))
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
 
@@ -714,7 +716,9 @@ public static partial class DataHelpers
                     }
                 }
 
-                if (word.Length <= 1 || word.Split(".").Length >= 3)
+                var containsSymbol = !word.All(char.IsLetterOrDigit);
+                
+                if (word.Length <= 1 || containsSymbol || word.Split(".").Length >= 3)
                 {
                     newWords.Add(word);                       
                     continue;
@@ -853,7 +857,7 @@ public static partial class DataHelpers
             && parts.Last().All(char.IsLetter)
             && !parts.All(word => Dictionary.Check(word) && word.Length > 1);
 
-        if (looksLikeNameWithInitials)
+        if (looksLikeNameWithInitials && !text.Text.Contains('"'))
         {
             companyOrPersonalName = text.Text;            
             return true;

@@ -398,7 +398,7 @@ public class AzureAiVisionOcrPdfTests
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
         // Is crossed out but Azure AI can read it
-        Assert.Equal("WARRINGTON RUNCORN AND DISTRICT WATER BOARD", nameResult.Text?.First().Text);
+        Assert.Equal("WARRINGTON, RUNCORN AND DISTRICT WATER BOARD", nameResult.Text?.First().Text);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it

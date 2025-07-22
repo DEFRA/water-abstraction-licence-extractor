@@ -16,7 +16,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int RoundToVertical = 5;
+    private const int RoundToVertical = 10;
     
     public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder, bool useCache)
     {
@@ -263,10 +263,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return (int)Math.Round(value / roundTo) * (int)roundTo;
     }
 
-    private static double MidHorizontalPoint(double left, double right)
+    private static double MidPoint(double? pos1, double? pos2)
     {
-        var width = right - left;
-        return left + width / 2;
+        if (pos1 == null || pos2 == null)
+        {
+            return 0;
+        }
+        
+        var distance = pos2.Value - pos1.Value;
+        return pos1.Value + (distance / 2);
     }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
@@ -281,20 +286,25 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         return pageLines
             .SelectMany(textBlock => textBlock.TextLines)
-            .OrderByDescending(line => RoundToNearestN(line.BoundingBox.Top, RoundToVertical))
-            .ThenBy(line => MidHorizontalPoint(line.BoundingBox.Left, line.BoundingBox.Right))
+            .OrderByDescending(line => RoundToNearestN(
+                MidPoint(line.BoundingBox.Top, line.BoundingBox.Bottom),
+                RoundToVertical))
+            .ThenBy(line => MidPoint(line.BoundingBox.Left, line.BoundingBox.Right))
             .GroupBy(line => (
                 RoundToNearestN(
-                    line.BoundingBox.Top,
+                    MidPoint(line.BoundingBox.Top, line.BoundingBox.Bottom),
                     RoundToVertical),
                 RoundToNearestN(
-                    MidHorizontalPoint(line.BoundingBox.Left, line.BoundingBox.Right),
+                    MidPoint(line.BoundingBox.Left, line.BoundingBox.Right),
                     roundToHorizontal)))
             .SelectMany(lines =>
             {
                 var resultList = new List<DocumentLine>();
-                var verticalDistanceFromPreviousLine = previousLine?.BoundingBox.Top
-                    - lines.First().BoundingBox.Top;
+                var firstLine = lines.First();
+                
+                var verticalDistanceFromPreviousLine=
+                    MidPoint(previousLine?.BoundingBox.Top, previousLine?.BoundingBox.Bottom)
+                    - MidPoint(firstLine.BoundingBox.Top, firstLine.BoundingBox.Bottom);
 
                 /*var horizontalDistanceFromPreviousLine = 
                     previousLine?.BoundingBox.Left
@@ -358,8 +368,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             return RecursiveXYCut
                 .Instance
                 .GetBlocks(page.GetWords())
-                .OrderByDescending(block => RoundToNearestN(block.BoundingBox.Top, RoundToVertical))
-                .ThenBy(block => MidHorizontalPoint(block.BoundingBox.Left, block.BoundingBox.Right))
+                .OrderByDescending(block => RoundToNearestN(
+                    MidPoint(block.BoundingBox.Top, block.BoundingBox.Bottom),
+                    RoundToVertical))
+                .ThenBy(block => MidPoint(block.BoundingBox.Left, block.BoundingBox.Right))
                 .ToList();
         });
     }

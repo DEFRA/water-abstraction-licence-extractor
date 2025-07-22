@@ -58,12 +58,12 @@ public class PdfDataExtractorService(
             
             foreach (var image in await pageImageService.GetImagesAsync())
             {
-                await image.SaveImageBytesAsync(
+                var extension = await image.SaveImageBytesAsync(
                     imageNumber,
                     page.Number,
                     pdfDocument.OutputFolder);
                 
-                var filepath = image.GetFilepath(imageNumber++, page.Number, outputFolder, false);
+                var filepath = image.GetFilepath(imageNumber++, page.Number, outputFolder, false, extension);
                 metadataPage.ImageFiles.Add(filepath);
             }
         }

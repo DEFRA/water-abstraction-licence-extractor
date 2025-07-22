@@ -2,9 +2,7 @@ namespace WALE.ProcessFile.Services.Interfaces;
 
 public interface INoOcrPdfImageService
 {
-    public Task<byte[]> GetImageBytesAsync(int imageNumber, int pageNumber, string outputFolder);
-
-    string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory);
+    string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory, string extension);
     
-    public Task SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder);
+    public Task<string> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder);
 }

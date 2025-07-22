@@ -1,7 +1,4 @@
 using System.IO.Compression;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
 using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Services.Interfaces;
 
@@ -9,75 +6,55 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<byte[]> GetImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
+    public async Task<string> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
     {
-        var outputFolderFull = $"{outputFolder}/PdfPig/Images";
-        Directory.CreateDirectory(outputFolderFull);
-
-        var outputFilename = GetFilepath(imageNumber, pageNumber, outputFolder, true);
-
-        // TODO
-        /*
-        if (File.Exists(outputFilename))
+        try
         {
-            return null;
-        }*/
-        
-        return await Task.Run(async () =>
+            if (imageData.TryGetPng(out var bytes))
+            {
+                await File.WriteAllBytesAsync(
+                    GetFilepath(imageNumber, pageNumber, outputFolder, true, "png"),
+                    bytes);
+                
+                return "png";
+            }
+
+            if (imageData.TryGetBytesAsMemory(out var bytesMemory))
+            {
+                await File.WriteAllBytesAsync(
+                    GetFilepath(imageNumber, pageNumber, outputFolder, true, "bmp"),
+                    bytesMemory.ToArray());
+                
+                return "bmp";
+            }
+
+            var bytesSpanAry = imageData.RawBytes.ToArray();
+            if (bytesSpanAry.Length == 0)
+            {
+                throw new Exception("Cannot get bytes via either method");
+            }
+
+            await File.WriteAllBytesAsync(
+                GetFilepath(imageNumber, pageNumber, outputFolder, true, "jpg"),
+                bytesSpanAry);
+            
+            return "jpg";
+        }
+        catch (Exception ex)
         {
-            byte[]? bytesSpanAry = null;
-            ReadOnlyMemory<byte> bytesMemory = default;
-            
-            if (!imageData.TryGetPng(out var bytes) && !imageData.TryGetBytesAsMemory(out bytesMemory))
+            if (ex is IOException)
             {
-                bytesSpanAry = imageData.RawBytes.ToArray();
-                if (bytesSpanAry.Length == 0)
-                {
-                    throw new Exception("Cannot get bytes via either method");
-                }
-            }
-            
-            var bytesAry = bytes?.Length > 0
-                ? bytes
-                : bytesMemory.Length > 0
-                    ? bytesMemory.ToArray()
-                    : bytesSpanAry!;
-
-            const double A4WidthToHeightRatio = 1.414;
-            const int TargetWidth = 1920;
-            var TargetHeight = 4000;
-            
-            try
-            {
-                // TODO look at swapping this to BMP or TIFF or something lossless
-                
-                using var image = Image.Load(new DecoderOptions { TargetSize = new Size(TargetWidth, TargetHeight) },bytesAry);
-                await image.SaveAsBmpAsync(outputFilename, new BmpEncoder { BitsPerPixel = BmpBitsPerPixel.Pixel32  });
-            }
-            catch (Exception ex)
-            {
-                if (ex is IOException)
-                {
-                    return bytesAry;
-                }
-                
-                // TODO should check what exception it is before trying this
-                bytesAry = Deflate(bytesAry);
-
-                using var image = Image.Load(new DecoderOptions { TargetSize = new Size(TargetWidth, TargetHeight) },bytesAry);
-                await image.SaveAsBmpAsync(outputFilename, new BmpEncoder { BitsPerPixel = BmpBitsPerPixel.Pixel32  });   
+                return string.Empty;
             }
 
-            return bytesAry;
-        });
+            // TODO should work out when need to deflate
+            //bytesAry = Deflate(bytesAry);
+
+            return string.Empty;
+        }
     }
 
-    public Task SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
-    {
-        return GetImageBytesAsync(imageNumber, pageNumber, outputFolder);
-    }
-
-    public string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory)
+    public string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory, string extension)
     {
         var outputFolderFull = $"{outputFolder}/PdfPig/Images";
         
@@ -86,7 +63,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             Directory.CreateDirectory(outputFolderFull);
         }
         
-        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.bmp";
+        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
     }
 
     private static byte[] Deflate(byte[] input)

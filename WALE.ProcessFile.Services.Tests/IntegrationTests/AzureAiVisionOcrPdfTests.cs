@@ -527,4 +527,45 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
     }
+    
+    [Fact]
+
+    public async Task ScannedFileUploaded_ThenFindHuncorn_DebuggingTest()
+    {
+        // Arrange
+        const string filename = "Licence - Old 6082700.PDF";
+
+        if (File.Exists("Licence - Old 6082700/PdfPig/Text/cache-metadata.json"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Text/cache-metadata.json");
+        }        
+        
+        if (File.Exists("Licence - Old 6082700/PdfPig/Images/cache-metadata.json"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Images/cache-metadata.json");
+        }
+
+        if (File.Exists("Licence - Old 6082700/PdfPig/Images/page-1-image-1.bmp"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Images/page-1-image-1.bmp");
+        }
+
+        if (File.Exists("Licence - Old 6082700/AzureAiVisionOcr/Text/ocr-page-1-image-1.json"))
+        {
+            File.Delete("Licence - Old 6082700/AzureAiVisionOcr/Text/ocr-page-1-image-1.json");
+        }
+
+        // Act
+        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + filename,
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            [PdfFolder + filename],
+            string.Empty,
+            UseCache);
+
+        // Assert
+        var allText = string.Join(' ', resultList.Pages[0].Providers[1].Text!);
+        Assert.Contains("HUNCORN", allText);
+    }
 }

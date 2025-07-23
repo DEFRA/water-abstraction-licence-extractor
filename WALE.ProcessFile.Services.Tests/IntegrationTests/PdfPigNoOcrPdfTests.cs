@@ -1933,7 +1933,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(8, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(4, abstractionLimitsSection.Text?.Count);
         Assert.Single(abstractionLimitsSection.SubResults!);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults![0];

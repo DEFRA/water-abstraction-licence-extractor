@@ -16,7 +16,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int RoundToVertical = 10;
+    private const int RoundToVertical = 11;
     
     public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder, bool useCache)
     {
@@ -299,6 +299,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     roundToHorizontal)))
             .SelectMany(lines =>
             {
+                if (lines.Any(x => x.Text.Contains("From 01 April")))
+                {
+                    
+                }
+                
                 var resultList = new List<DocumentLine>();
                 var firstLine = lines.First();
                 

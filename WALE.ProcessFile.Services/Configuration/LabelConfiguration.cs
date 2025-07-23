@@ -415,7 +415,7 @@ public static class LabelConfiguration
                     "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
                     "MAXIMUM QUANTITIES",
                     "Quantity(ies) of water authorised to be abstracted during a period",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED"
+                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]"
                 ],
                 TextEnd =
                 [

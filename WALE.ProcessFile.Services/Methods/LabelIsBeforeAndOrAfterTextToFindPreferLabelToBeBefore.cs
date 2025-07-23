@@ -18,6 +18,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         {
             throw new ArgumentNullException(nameof(request.label));
         }
+
+        if (request.label.Name == "PointPurpose")
+        {
+            
+        }
         
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearNextLineIsCompany;

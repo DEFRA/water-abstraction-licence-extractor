@@ -1087,17 +1087,27 @@ public static partial class DataHelpers
                 matchedText = textItem;
                 return true;
             }
+         
+            var mustEndLine = textItem.Contains("[END_OF_LINE]");
 
-            if (line.Text.Contains("PERIOD OF ABSTRACTION"))
+            if (mustEndLine)
             {
-                
+                var tItem = textItem.Replace("[END_OF_LINE]", string.Empty);
+
+                if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    matchedText = tItem;
+                    return true;                    
+                }
             }
-            
-            if (line.Text.StartsWith(textItem, StringComparison.InvariantCultureIgnoreCase)
-                || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
+            else
             {
-                matchedText = textItem;
-                return true;
+                if (line.Text.StartsWith(textItem, StringComparison.InvariantCultureIgnoreCase)
+                    || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    matchedText = textItem;
+                    return true;
+                }
             }
 
             if (position == LabelPosition.Split && lineCount == howManyLinesTotal - 1)

@@ -367,6 +367,11 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
+                if (lineCount > 204)
+                {
+                    
+                }
+                
                 if (label.Format == "LinkedLicence")
                 {
                     var licenceNumbers = siblingMatches
@@ -452,6 +457,11 @@ public class PdfDataExtractorService(
                 if (!LineContainsLabel(line, label.Text, label.Position, lineCount, totalLineCount, out var matchedText))
                 {
                     continue;
+                }
+
+                if (label.Name == "PointPurpose")
+                {
+                    
                 }
                 
                 if (label.Name == "TextWithoutPoints")
@@ -925,12 +935,16 @@ public class PdfDataExtractorService(
     
     private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
     {
-        if (label.Text!.Any(text => text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)))
+        var labelText = label.Text!
+            .Select(text => text.Replace("[END_OF_LINE]", string.Empty))
+            .ToList();
+        
+        if (labelText.Any(text => text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
         
-        return label.Text!.Any(text =>
+        return labelText.Any(text =>
             Standardise(string.Join(',', lines.Select(line => line.Text))).Contains(text,
                 StringComparison.InvariantCultureIgnoreCase));
     }

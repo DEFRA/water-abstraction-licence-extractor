@@ -18,6 +18,11 @@ public static class TextToFindIsBetweenLabels
         {
             throw new ArgumentNullException(nameof(request.label));
         }
+
+        if (request.label.Name == "AbstractionLimitPoint")
+        {
+            
+        }
         
         var label = request.label;
         var labelGroupResult = request.labelGroupResult.Clone();

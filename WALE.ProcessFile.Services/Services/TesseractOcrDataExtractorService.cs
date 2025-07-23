@@ -78,7 +78,11 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     line.Item1,
                     lineNumber++,
                     pageNumber,
-                    line.Words!))
+                    line.Words!,
+                    -1,
+                    -1,
+                    -1,
+                    -1))
                 .ToList();
 
             return (IReadOnlyList<DocumentLine>)results;

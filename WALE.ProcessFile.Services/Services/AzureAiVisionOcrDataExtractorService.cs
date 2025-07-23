@@ -82,7 +82,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                         word.Text,
                         word.Confidence * 100,
                         word.BoundingBox.ToList()))
-                    .ToList()))            
+                    .ToList(),
+                -1,
+                -1,
+                -1,
+                -1))            
             .ToList();
     }
 

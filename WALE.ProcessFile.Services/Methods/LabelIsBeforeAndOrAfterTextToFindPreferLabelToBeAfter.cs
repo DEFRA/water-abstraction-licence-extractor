@@ -107,7 +107,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                         possibility,
                         previousLine.LineNumber,
                         previousLine.PageNumber,
-                        previousLine.Words.ToList())
+                        previousLine.Words.ToList(),
+                        previousLine.Top,
+                        previousLine.TopRounded,
+                        previousLine.Left,
+                        previousLine.LeftRounded)
                     ];
                     labelGroupResult.MatchedLabel.Format = "Units";
                     RemoveRemoves(labelGroupResult, removedLines);

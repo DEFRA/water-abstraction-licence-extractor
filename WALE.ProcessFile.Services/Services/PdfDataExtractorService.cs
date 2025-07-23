@@ -884,7 +884,11 @@ public class PdfDataExtractorService(
                     Standardise(line.Text),
                     line.LineNumber,
                     line.PageNumber,
-                    line.Words.ToList()),
+                    line.Words.ToList(),
+                    line.Top,
+                    line.TopRounded,
+                    line.Left,
+                    line.LeftRounded),
                 GetPreviousLines(lines, index, label.PreviousLinesToFetch),
                 GetNextLines(lines, index, label.NextLinesToFetch)
             ))
@@ -899,12 +903,18 @@ public class PdfDataExtractorService(
 
         while (newIndex >= 0 && count++ < n)
         {
+            var line = lines[newIndex];
+            
             returnList.Add(
                 new DocumentLine(
-                    Standardise(lines[newIndex].Text),
-                    lines[newIndex].LineNumber,
-                    lines[newIndex].PageNumber,
-                    lines[newIndex].Words.ToList()));
+                    Standardise(line.Text),
+                    line.LineNumber,
+                    line.PageNumber,
+                    line.Words.ToList(),
+                    line.Top,
+                    line.TopRounded,
+                    line.Left,
+                    line.LeftRounded));
 
             newIndex -= 1;
         }
@@ -920,12 +930,18 @@ public class PdfDataExtractorService(
         
         while (newIndex < lines.Count && count++ < n)
         {
+            var line = lines[newIndex];
+            
             returnList.Add(
                 new DocumentLine(
-                    Standardise(lines[newIndex].Text),
-                    lines[newIndex].LineNumber,
-                    lines[newIndex].PageNumber,
-                    lines[newIndex].Words.ToList()));
+                    Standardise(line.Text),
+                    line.LineNumber,
+                    line.PageNumber,
+                    line.Words.ToList(),
+                    line.Top,
+                    line.TopRounded,
+                    line.Left,
+                    line.LeftRounded));
 
             newIndex += 1;
         }

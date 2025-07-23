@@ -262,17 +262,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     {
         return (int)Math.Round(value / roundTo) * (int)roundTo;
     }
-
-    private static double MidPoint(double? pos1, double? pos2)
-    {
-        if (pos1 == null || pos2 == null)
-        {
-            return 0;
-        }
-        
-        var distance = pos2.Value - pos1.Value;
-        return pos1.Value + (distance / 2);
-    }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IEnumerable<TextBlock> pageLines,
@@ -287,29 +276,29 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return pageLines
             .SelectMany(textBlock => textBlock.TextLines)
             .OrderByDescending(line => RoundToNearestN(
-                MidPoint(line.BoundingBox.Top, line.BoundingBox.Bottom),
+                line.BoundingBox.Centroid.Y,
                 RoundToVertical))
-            .ThenBy(line => MidPoint(line.BoundingBox.Left, line.BoundingBox.Right))
+            .ThenBy(line => line.BoundingBox.Centroid.X)
             .GroupBy(line => (
                 RoundToNearestN(
-                    MidPoint(line.BoundingBox.Top, line.BoundingBox.Bottom),
+                    line.BoundingBox.Centroid.Y,
                     RoundToVertical),
                 RoundToNearestN(
-                    MidPoint(line.BoundingBox.Left, line.BoundingBox.Right),
+                    line.BoundingBox.Centroid.X,
                     roundToHorizontal)))
             .SelectMany(lines =>
             {
-                if (lines.Any(x => x.Text.Contains("From 01 April")))
+                if (lines.Any(x => x.Text.StartsWith("4.1")))
                 {
                     
                 }
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = lines.First();
-                
-                var verticalDistanceFromPreviousLine=
-                    MidPoint(previousLine?.BoundingBox.Top, previousLine?.BoundingBox.Bottom)
-                    - MidPoint(firstLine.BoundingBox.Top, firstLine.BoundingBox.Bottom);
+
+                var verticalDistanceFromPreviousLine =
+                    previousLine?.BoundingBox.Centroid.Y
+                    - firstLine.BoundingBox.Centroid.Y;
 
                 /*var horizontalDistanceFromPreviousLine = 
                     previousLine?.BoundingBox.Left
@@ -333,7 +322,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 if (verticalDistanceFromPreviousLine >= blankLineGap)
                 {
-                    resultList.Add(new DocumentLine(string.Empty, lineNumber++, pageNumber, []));
+                    resultList.Add(
+                        new DocumentLine(
+                            string.Empty,
+                            lineNumber++,
+                            pageNumber,
+                            [],
+                            -1,
+                            -1,
+                            -1,
+                            -1));
                 }
                 
                 previousLine = lines.First();
@@ -359,7 +357,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                                 word.BoundingBox.Bottom,
                                 word.BoundingBox.Right
                             ]))
-                        .ToList()));
+                        .ToList(),
+                    firstLine.BoundingBox.Top,
+                    lines.Key.Item1,
+                    firstLine.BoundingBox.Left,
+                    lines.Key.Item2));
                 
                 return resultList;
             })
@@ -374,9 +376,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .Instance
                 .GetBlocks(page.GetWords())
                 .OrderByDescending(block => RoundToNearestN(
-                    MidPoint(block.BoundingBox.Top, block.BoundingBox.Bottom),
+                    block.BoundingBox.Top,//MidPoint(block.BoundingBox.Top, block.BoundingBox.Bottom),
                     RoundToVertical))
-                .ThenBy(block => MidPoint(block.BoundingBox.Left, block.BoundingBox.Right))
+                .ThenBy(block => block.BoundingBox.Centroid.X)
                 .ToList();
         });
     }

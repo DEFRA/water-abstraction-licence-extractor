@@ -80,13 +80,19 @@ public static class LabelIsBeforeTextToFind
         
         if (request.isSingleWord && modifiedNextLines.FirstOrDefault() != null)
         {
+            var modifiedLine = modifiedNextLines.First();
+            
             labelGroupResult.Text =
             [
                 new DocumentLine(
-                modifiedNextLines.First().Text.Split(' ')[0],
-                modifiedNextLines.First().LineNumber,
-                modifiedNextLines.First().PageNumber,
-                modifiedNextLines.First().Words.ToList())
+                    modifiedLine.Text.Split(' ')[0],
+                    modifiedLine.LineNumber,
+                    modifiedLine.PageNumber,
+                    modifiedLine.Words.ToList(),
+                    modifiedLine.Top,
+                    modifiedLine.TopRounded,
+                    modifiedLine.Left,
+                    modifiedLine.LeftRounded)
             ];
             
             labelGroupResult.MatchedLabel.Format = "SingleWord";
@@ -118,7 +124,11 @@ public static class LabelIsBeforeTextToFind
                             possibility,
                             nextLine.LineNumber,
                             nextLine.PageNumber,
-                            nextLine.Words.ToList())
+                            nextLine.Words.ToList(),
+                            nextLine.Top,
+                            nextLine.TopRounded,
+                            nextLine.Left,
+                            nextLine.LeftRounded)
                     ];
                     
                     labelGroupResult.MatchedLabel.Format = "Units";

@@ -64,8 +64,26 @@ public static class Split
                     .Select(t => new DocumentLineWord(t, null, []))
                     .ToList();                                
                 
-                sub1ResultText = [new DocumentLine(parts[0], request.lineNumber, request.line.PageNumber, lineWords1)];
-                sub2ResultText = [new DocumentLine(parts[1], request.lineNumber, request.line.PageNumber, lineWords2)];
+                sub1ResultText = [
+                    new DocumentLine(parts[0],
+                        request.lineNumber,
+                        request.line.PageNumber,
+                        lineWords1,
+                        request.line.Top,
+                        request.line.TopRounded,
+                        request.line.Left,
+                        request.line.LeftRounded)
+                ];
+                sub2ResultText = [
+                    new DocumentLine(parts[1],
+                        request.lineNumber,
+                        request.line.PageNumber,
+                        lineWords2,
+                        request.line.Top,
+                        request.line.TopRounded,
+                        request.line.Left,
+                        request.line.LeftRounded)
+                ];
             }
             else
             {

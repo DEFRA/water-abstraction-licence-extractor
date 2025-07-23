@@ -75,7 +75,11 @@ public static class RelatedCategoryPosition
                 absoluteMatches.FirstOrDefault()?.Text!,
                 -1,
                 -1,
-                [])
+                [],
+                0,
+                0,
+                0,
+                0)
         ];
             
         labelGroupResult.MatchedLabel = request.label;

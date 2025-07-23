@@ -4,7 +4,11 @@ public class DocumentLine(
     string text,
     int lineNumber,
     int pageNumber,
-    List<DocumentLineWord> words)
+    List<DocumentLineWord> words,
+    double top,
+    double topRounded,
+    double left,
+    double leftRounded)
 {
     public string Text { get; set; } = text;
 
@@ -31,4 +35,12 @@ public class DocumentLine(
             return total / wordsWithConfidence.Count;
         }
     }
+
+    public double Top { get; set; } = top;
+    
+    public double TopRounded { get; set; } = topRounded;
+
+    public double Left { get; set; } = left;
+
+    public double LeftRounded { get; set; } = leftRounded;
 }

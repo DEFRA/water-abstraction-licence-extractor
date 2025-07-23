@@ -88,13 +88,20 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         
         if (request.isSingleWord && modifiedLines.FirstOrDefault() != null)
         {
+            var modifiedLine = modifiedLines.First();
+            
             labelGroupResult.Text =
             [
                 new DocumentLine(
-                modifiedLines.First().Text.Split(' ')[0],
-                modifiedLines.First().LineNumber,
-                modifiedLines.First().PageNumber,
-                modifiedLines.First().Words.ToList())
+                    modifiedLine.Text.Split(' ')[0],
+                    modifiedLine.LineNumber,
+                    modifiedLine.PageNumber,
+                    modifiedLine.Words.ToList(),
+                    modifiedLine.Top,
+                    modifiedLine.TopRounded,
+                    modifiedLine.Left,
+                    modifiedLine.LeftRounded
+                )
             ];
             
             labelGroupResult.MatchedLabel.Format = "SingleWord";
@@ -126,7 +133,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                             possibility,
                             nextLine.LineNumber,
                             nextLine.PageNumber,
-                            nextLine.Words.ToList())
+                            nextLine.Words.ToList(),
+                            nextLine.Top,
+                            nextLine.TopRounded,
+                            nextLine.Left,
+                            nextLine.LeftRounded)
                     ];
                     
                     labelGroupResult.MatchedLabel.Format = "Units";

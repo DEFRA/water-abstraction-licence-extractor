@@ -54,7 +54,11 @@ public static class ApplicableToAll
                         t!,
                         request.line!.LineNumber,
                         request.line.PageNumber,
-                        request.line.Words.ToList())
+                        request.line.Words.ToList(),
+                        request.line.Top,
+                        request.line.TopRounded,
+                        request.line.Left,
+                        request.line.LeftRounded)
                 ];
                 
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
@@ -107,7 +111,11 @@ public static class ApplicableToAll
                         outputText,
                         lineNumber,
                         line!.PageNumber,
-                        line.Words.ToList())],
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded)],
                     request.label,
                     out var licenceNumberLines))
             {
@@ -135,7 +143,11 @@ public static class ApplicableToAll
                         request.isSingleWord ? t.Split(' ')[0] : t,
                         line!.LineNumber,
                         line.PageNumber,
-                        line.Words.ToList())
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded)
                 ];
                 
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
@@ -177,7 +189,11 @@ public static class ApplicableToAll
                         outputText,
                         lineNumber,
                         line!.PageNumber,
-                        line.Words.ToList()),
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded),
                     false);
                 
                 foreach (var possibility in matchedLabel.Possibilities)
@@ -216,7 +232,11 @@ public static class ApplicableToAll
                             possibility,
                             line!.LineNumber,
                             line.PageNumber,
-                            line.Words.ToList())
+                            line.Words.ToList(),
+                            line.Top,
+                            line.TopRounded,
+                            line.Left,
+                            line.LeftRounded)
                     ];
                     
                     labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
@@ -224,7 +244,7 @@ public static class ApplicableToAll
                     RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return new List<LabelGroupResult> { labelGroupResult };
+                    return [labelGroupResult];
                 }
             }
 
@@ -233,14 +253,22 @@ public static class ApplicableToAll
                 outputText!,
                 lineNumber,
                 line!.PageNumber,
-                line.Words.ToList()), request.isCompanyType) : outputText;
+                line.Words.ToList(),
+                line.Top,
+                line.TopRounded,
+                line.Left,
+                line.LeftRounded), request.isCompanyType) : outputText;
 
             if (request.isCompanyType
                 && TryGetCompanyOrPersonalName(new DocumentLine(
                     outputText!,
                     lineNumber,
                     line!.PageNumber,
-                    line.Words.ToList()), out _))
+                    line.Words.ToList(),
+                    line.Top,
+                    line.TopRounded,
+                    line.Left,
+                    line.LeftRounded), out _))
             {
                 var matchType = over2Lines ?
                     MatchType.SameLineIsCompany2Lines
@@ -252,7 +280,11 @@ public static class ApplicableToAll
                         outputText!,
                         line.LineNumber,
                         line.PageNumber,
-                        line.Words.ToList())
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded)
                 ];
                 
                 labelGroupResult.MatchType = matchType;
@@ -279,7 +311,11 @@ public static class ApplicableToAll
                         outputText,
                         lineNumber,
                         line!.PageNumber,
-                        line.Words.ToList())
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded)
                 ];
                 
                 labelGroupResult.MatchType = MatchType.SameLineSingleWord;
@@ -303,7 +339,11 @@ public static class ApplicableToAll
                         outputText,
                         line!.LineNumber,
                         line.PageNumber,
-                        line.Words.ToList())
+                        line.Words.ToList(),
+                        line.Top,
+                        line.TopRounded,
+                        line.Left,
+                        line.LeftRounded)
                 ];
                 
                 lineMatch.MatchType = MatchType.Between;

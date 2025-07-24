@@ -16,7 +16,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int RoundToVertical = 11;
+    private const int LineHeight = 11;
     
     public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder, bool useCache)
     {
@@ -257,38 +257,101 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         return Task.FromResult((IReadOnlyList<INoOcrPdfPageService>)result);
     }
+
+    private static int SnapToPageRow(
+        double textPosition,
+        double lineHeight,
+        double firstTextPosition)
+    {
+        var currentRowPosition = firstTextPosition; // e.g. 231.4
+        var halfLineHeight = lineHeight / 2.0; // e.g. 5.5
+
+        do
+        {
+            var rowTop = currentRowPosition + halfLineHeight; // e.g. 236.4
+            var rowBottom = currentRowPosition - halfLineHeight; // e.g. 225.4
+
+            // A lower top value is further down the page
+            if (textPosition <= rowTop && textPosition >= rowBottom)
+            {
+                return (int)currentRowPosition;
+            }
+
+            currentRowPosition -= lineHeight;
+        } while (currentRowPosition - lineHeight >= -lineHeight);
+
+        var recursionTop = 1000.0;
+
+        if (Math.Abs(firstTextPosition - recursionTop) < 0.001)
+        {
+            throw new ArgumentOutOfRangeException(nameof(firstTextPosition));
+        }
+        
+        return SnapToPageRow(textPosition, lineHeight, recursionTop);
+    }
     
     private static int RoundToNearestN(double value, double roundTo)
     {
-        return (int)Math.Round(value / roundTo) * (int)roundTo;
+        if (value >= 403.48 && value <= 403.49)
+        {
+            
+        }
+        
+        var remainder = value % roundTo;
+        value += (remainder <= roundTo / 2) ? -remainder : (roundTo - remainder);
+        
+        return (int)value;
     }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
-        IEnumerable<TextBlock> pageLines,
+        IReadOnlyList<TextBlock> pageLines,
         int pageNumber,
         int roundToHorizontal)
     {
+        if (pageLines.Count == 0)
+        {
+            return [];
+        }
+        
         const int blankLineGap = 25;
         
         var lineNumber = 0;
         var previousLine = (TextLine?)null;
-        
-        return pageLines
+
+        var orderedPageLines = pageLines
             .SelectMany(textBlock => textBlock.TextLines)
             .OrderByDescending(line => RoundToNearestN(
                 line.BoundingBox.Centroid.Y,
-                RoundToVertical))
+                LineHeight))
             .ThenBy(line => line.BoundingBox.Centroid.X)
+            .ToList();
+
+        var marginTop = orderedPageLines[0].BoundingBox.Top;
+        var normalFontSizeMax = 8.5;
+        
+        foreach (var pageLine in orderedPageLines)
+        {
+            if (!(pageLine.BoundingBox.Height <= normalFontSizeMax))
+            {
+                continue;
+            }
+            
+            marginTop = pageLine.BoundingBox.Top;
+            break;
+        }
+        
+        return orderedPageLines
             .GroupBy(line => (
-                RoundToNearestN(
+                SnapToPageRow(
                     line.BoundingBox.Centroid.Y,
-                    RoundToVertical),
+                    LineHeight,
+                    marginTop),
                 RoundToNearestN(
                     line.BoundingBox.Centroid.X,
                     roundToHorizontal)))
             .SelectMany(lines =>
             {
-                if (lines.Any(x => x.Text.StartsWith("4.1")))
+                if (lines.Any(x => x.Text.StartsWith("6.1")))
                 {
                     
                 }
@@ -358,9 +421,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                                 word.BoundingBox.Right
                             ]))
                         .ToList(),
-                    firstLine.BoundingBox.Top,
+                    firstLine.BoundingBox.Centroid.Y,
                     lines.Key.Item1,
-                    firstLine.BoundingBox.Left,
+                    firstLine.BoundingBox.Centroid.X,
                     lines.Key.Item2));
                 
                 return resultList;
@@ -376,8 +439,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .Instance
                 .GetBlocks(page.GetWords())
                 .OrderByDescending(block => RoundToNearestN(
-                    block.BoundingBox.Top,//MidPoint(block.BoundingBox.Top, block.BoundingBox.Bottom),
-                    RoundToVertical))
+                    block.BoundingBox.Centroid.Y,
+                    LineHeight))
                 .ThenBy(block => block.BoundingBox.Centroid.X)
                 .ToList();
         });

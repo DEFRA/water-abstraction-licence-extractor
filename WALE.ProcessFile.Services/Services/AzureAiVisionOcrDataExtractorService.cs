@@ -61,7 +61,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             
             foreach (var page in results.AnalyzeResult.ReadResults)
             {
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page));
+                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page, SharedHelper.GetSerializer()));
 
                 var pageLines = ToPageLines(page!);
                 lines.AddRange(pageLines);

@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -260,7 +261,7 @@ public static class ApplicableToAll
                 line.LeftRounded), request.isCompanyType) : outputText;
 
             if (request.isCompanyType
-                && TryGetCompanyOrPersonalName(new DocumentLine(
+                && CompanyName.TryGetCompanyOrPersonalName(new DocumentLine(
                     outputText!,
                     lineNumber,
                     line!.PageNumber,
@@ -268,7 +269,7 @@ public static class ApplicableToAll
                     line.Top,
                     line.TopRounded,
                     line.Left,
-                    line.LeftRounded), out _))
+                    line.LeftRounded), matchedLabel, out _))
             {
                 var matchType = over2Lines ?
                     MatchType.SameLineIsCompany2Lines

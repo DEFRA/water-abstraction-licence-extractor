@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -51,7 +52,8 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             return Task.FromResult(returnList);
         }
         
-        if (request.isCompanyType && AnyIsCompanyOrPersonalName(modifiedLines, false, request.isOcr, out var companyNameLines))
+        if (request.isCompanyType
+            && CompanyName.AnyIsCompanyOrPersonalName(modifiedLines, request.label, false, request.isOcr, out var companyNameLines))
         {
             labelGroupResult.Text = companyNameLines;
             labelGroupResult.MatchedLabel.Format = "CompanyName";

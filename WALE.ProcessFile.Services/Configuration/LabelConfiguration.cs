@@ -296,10 +296,15 @@ public static class LabelConfiguration
                     "authority hereby licence",
                     "authority hereby license",
                     "authority hereby licenge",
-                    "hereby grant a licence to"
+                    "hereby grant a licence to",
+                    "(hereinafter referred to as \"the Authority\")",
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                Format = "CompanyName"
+                Format = "CompanyName",
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {
@@ -314,7 +319,11 @@ public static class LabelConfiguration
                     "is hereby licensed"
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
-                Format = "CompanyName"
+                Format = "CompanyName",
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {
@@ -327,7 +336,11 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                 Format = "CompanyName",
                 PreviousLinesToFetch = 3,
-                NextLinesToFetch = 10
+                NextLinesToFetch = 10,
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {

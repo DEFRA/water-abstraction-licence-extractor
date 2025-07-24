@@ -1054,4 +1054,32 @@ public class TessaractOcrPdfTests
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("13/43/37/110", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
+    
+    [Fact]
+    public async Task A3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "Non-Application Licence Document (14.09.1992).PDF";
+
+        // Act
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + filename,
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            [PdfFolder + filename],
+            string.Empty,
+            UseCache)).Matches!;
+        
+        // Assert
+        Assert.Equal(4, resultList.Count);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("28/39/22/427", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        // Name cannot be found as its stricken through (should be 'Barry Ball')
+    }
 }

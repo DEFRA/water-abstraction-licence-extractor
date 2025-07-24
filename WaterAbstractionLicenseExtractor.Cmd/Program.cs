@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -505,7 +506,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Non-Application Licence Document (14.09.1992).PDF")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
     return pdfFilePaths;
@@ -515,27 +516,4 @@ void Log(string message, StringBuilder outputStringBuilder)
 {
 //    Console.WriteLine(message);
     outputStringBuilder.Append(message);
-}
-
-class OutputLine
-{
-    public int LineNumber;
-    public int StartNumber;
-    public string? Filename;
-    public string? LicenceHolder;
-    public double? LicenceHolderOcrConfidence;
-    public string? Ocr;
-    public string? Purposes;
-    public string? ServiceName;
-    public int Certainty;
-    public string? MatchType;
-    public int Duration;
-    public string? MatchedLabelText;
-    public string? MatchedLabelPosition;
-    public string? LicenceNumber;
-    public double? LicenceNumberOcrConfidence;
-    public bool LimitsFound;
-    public bool MeansFound;
-    public string? LinkedLicenceNumbers;
-    public int NodeId;
 }

@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -43,7 +44,8 @@ public static class LabelIsAfterTextToFind
             return Task.FromResult(returnList);
         }
         
-        if (request.isCompanyType && AnyIsCompanyOrPersonalName(modifiedPreviousLines, true, request.isOcr, out var companyNameLine))
+        if (request.isCompanyType
+            && CompanyName.AnyIsCompanyOrPersonalName(modifiedPreviousLines, request.label,true, request.isOcr, out var companyNameLine))
         {
             labelGroupResult.Text = companyNameLine;
             labelGroupResult.MatchedLabel.Format = "CompanyName";

@@ -18,24 +18,11 @@ public static class TextToFindIsBetweenLabels
         {
             throw new ArgumentNullException(nameof(request.label));
         }
-
-        if (request.label.Name == "AbstractionLimitPoint")
-        {
-            
-        }
         
         var label = request.label;
         var labelGroupResult = request.labelGroupResult.Clone();
         
-        var linesToUse = new List<DocumentLine>();/*
-        {
-            line
-        };*/
-
-        if (label.Name == "Purpose")
-        {
-            
-        }
+        var linesToUse = new List<DocumentLine>();
 
         if (label.LeewayBefore >= 1 && request.previousLines!.Count >= label.LeewayBefore) // TODO never currently set
         {
@@ -96,9 +83,11 @@ public static class TextToFindIsBetweenLabels
         labelGroupResult.MatchType = MatchType.Between;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.TextEnd =
-            [
-                labelGroupResult.MatchedLabel.TextEnd!.Single(x => matchedEndText != null && x == matchedEndText.Value.matchedEndText)
-            ];
+        [
+            labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
+                matchedEndText != null
+                && x == matchedEndText.Value.matchedEndText)
+        ];
 
         if (labelGroupResult.MatchedLabel.MustContain != null)
         {

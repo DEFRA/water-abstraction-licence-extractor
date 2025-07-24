@@ -342,6 +342,128 @@ public class PdfDataExtractorService(
     {
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
     }
+
+    private async Task<IReadOnlyList<LabelGroupResult>> ProcessLinkedLicenceAsync(
+        DocumentLine line,
+        IReadOnlyList<LabelGroupResult> siblingMatches,
+        LabelToMatch label,
+        Dictionary<string, string> licenceMapping,
+        List<string> previouslyParsedPaths,
+        string outputFolder,
+        bool useCache)
+    {
+        var returnList = new List<LabelGroupResult>();
+        
+        var licenceNumbers = siblingMatches
+            .Where(siblingMatch => siblingMatch.MatchedLabel?.Name == label.RelatedName)
+            .Select(result => result.Text?.FirstOrDefault())
+            .ToList();
+        
+        var pathsToFetch = new List<string>();
+        
+        foreach (var licenceNumber in licenceNumbers)
+        {
+            if (!string.IsNullOrEmpty(licenceNumber?.Text))
+            {
+                if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
+                {
+                    continue;
+                    // TODO ultimately this should throw an error, but silently skip while developing
+                }
+                
+                relatedFileName = $"{pdfFolderPath}{relatedFileName}";
+                
+                if (previouslyParsedPaths.Contains(relatedFileName))
+                {
+                    continue;
+                }
+
+                previouslyParsedPaths.Add(relatedFileName);
+                pathsToFetch.Add(relatedFileName);
+            }
+        }
+
+        foreach (var relatedFileName in pathsToFetch)
+        {
+            var relatedFileMatches = await GetMatchesAsync(
+                relatedFileName,
+                Configuration.LabelConfiguration.GetLabels(),
+                licenceMapping,
+                previouslyParsedPaths,
+                outputFolder,
+                useCache);
+
+            var labelResult = new LabelGroupResult
+            {
+                MatchedLabel = label,
+                SubResults = relatedFileMatches.Matches,
+                PageNumber = line.PageNumber
+            };
+            
+            RemoveRemoves(labelResult, []); // TODO do this properly at some point
+            returnList.Add(labelResult);
+        }
+
+        if (pathsToFetch.Count > 0)
+        {
+            label.Completed = true;
+        }
+
+        return returnList;
+    }
+
+    private bool ProcessMatchAll(
+        DocumentLine line,
+        LabelToMatch label,
+        int lineCount,
+        IReadOnlyList<DocumentLine> previousLines,
+        IReadOnlyList<DocumentLine> nextLines)
+    {
+        var matchedAll = true;
+                    
+        foreach (var labelText in label.Text!)
+        {
+            if (LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+            {
+                continue;
+            }
+
+            var continueOuterLoop = false;
+                        
+            foreach (var previousLine in previousLines)
+            {
+                if (LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                {
+                    continueOuterLoop = true;
+                    break;
+                }
+            }                        
+                        
+            foreach (var nextLine in nextLines)
+            {
+                if (LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                {
+                    continueOuterLoop = true;
+                    break;
+                }
+            }
+
+            if (continueOuterLoop)
+            {
+                continue;
+            }
+                        
+            matchedAll = false;
+            break;
+        }
+
+        if (!matchedAll)
+        {
+            return true;
+        }
+        
+        return false;
+    }
     
     private async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInLinesAsync(
         IReadOnlyList<(DocumentLine Line, IReadOnlyList<DocumentLine> PreviousNLines, IReadOnlyList<DocumentLine> NextNLines)> lines,
@@ -367,68 +489,18 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (lineCount > 204)
-                {
-                    
-                }
-                
                 if (label.Format == "LinkedLicence")
                 {
-                    var licenceNumbers = siblingMatches
-                        .Where(siblingMatch => siblingMatch.MatchedLabel?.Name == label.RelatedName)
-                        .Select(result => result.Text?.FirstOrDefault())
-                        .ToList();
+                    var linkedLicences = await ProcessLinkedLicenceAsync(
+                        line,
+                        siblingMatches,
+                        label,
+                        licenceMapping,
+                        previouslyParsedPaths,
+                        outputFolder,
+                        useCache);
                     
-                    var pathsToFetch = new List<string>();
-                    
-                    foreach (var licenceNumber in licenceNumbers)
-                    {
-                        if (!string.IsNullOrEmpty(licenceNumber?.Text))
-                        {
-                            if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
-                            {
-                                continue;
-                                // TODO ultimately this should throw an error, but silently skip while developing
-                            }
-                            
-                            relatedFileName = $"{pdfFolderPath}{relatedFileName}";
-                            
-                            if (previouslyParsedPaths.Contains(relatedFileName))
-                            {
-                                continue;
-                            }
-
-                            previouslyParsedPaths.Add(relatedFileName);
-                            pathsToFetch.Add(relatedFileName);
-                        }
-                    }
-
-                    foreach (var relatedFileName in pathsToFetch)
-                    {
-                        var relatedFileMatches = await GetMatchesAsync(
-                            relatedFileName,
-                            Configuration.LabelConfiguration.GetLabels(),
-                            licenceMapping,
-                            previouslyParsedPaths,
-                            outputFolder,
-                            useCache);
-
-                        var labelResult = new LabelGroupResult
-                        {
-                            MatchedLabel = label,
-                            SubResults = relatedFileMatches.Matches,
-                            PageNumber = line.PageNumber
-                        };
-                        
-                        RemoveRemoves(labelResult, []); // TODO do this properly at some point
-                        returnList.Add(labelResult);
-                    }
-
-                    if (pathsToFetch.Count > 0)
-                    {
-                        label.Completed = true;
-                    }
-
+                    returnList.AddRange(linkedLicences);
                     continue;
                 }
 
@@ -439,82 +511,14 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Text?.Any(x => x.ToLower().Contains("from")) == true)
-                {
-                    // TODO what was this for?
-                }
-                
-                if (line.Text.Contains("Licensee"))
-                {
-                    // TODO what was this for?                    
-                }
-
-                if (label.Name == "PurposeLink")
-                {
-                    
-                }
-                
                 if (!LineContainsLabel(line, label.Text, label.Position, lineCount, totalLineCount, out var matchedText))
                 {
                     continue;
                 }
 
-                if (label.Name == "PointPurpose")
-                {
-                    
-                }
-                
-                if (label.Name == "TextWithoutPoints")
-                {
-                    // TODO what was this for?                    
-                }
-
-                if (line.Text.Contains("2025"))
-                {
-                    // TODO what was this for?                    
-                }
-
                 if (label.MatchAllText)
                 {
-                    var matchedAll = true;
-                    
-                    foreach (var labelText in label.Text!)
-                    {
-                        if (LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
-                        {
-                            continue;
-                        }
-
-                        var continueOuterLoop = false;
-                        
-                        foreach (var previousLine in previousLines)
-                        {
-                            if (LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
-                            {
-                                continueOuterLoop = true;
-                                break;
-                            }
-                        }                        
-                        
-                        foreach (var nextLine in nextLines)
-                        {
-                            if (LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
-                            {
-                                continueOuterLoop = true;
-                                break;
-                            }
-                        }
-
-                        if (continueOuterLoop)
-                        {
-                            continue;
-                        }
-                        
-                        matchedAll = false;
-                        break;
-                    }
-
-                    if (!matchedAll)
+                    if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))
                     {
                         continue;
                     }
@@ -544,7 +548,7 @@ public class PdfDataExtractorService(
                 lineCount += 1;
                 continue;
             }
-
+            
             var lookupExpressions = GetRelevantLookupExpressions(matchedLabel);
             
             var labelGroupResult = new LabelGroupResult
@@ -637,7 +641,8 @@ public class PdfDataExtractorService(
         return returnList;
     }
     
-    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>> GetRelevantLookupExpressions(LabelToMatch label)
+    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
+        GetRelevantLookupExpressions(LabelToMatch label)
     {
         var expressions = new List<(
             LabelPosition Position,

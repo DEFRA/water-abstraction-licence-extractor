@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using CsvHelper;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
 
@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static partial class DataHelpers
 {
-    private static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
+    public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
 
     public static string GetFilenameWithoutExtensions(string pdfFilePath)
     {
@@ -17,84 +17,6 @@ public static partial class DataHelpers
         return string.Join('-', filenameParts.Take(filenameParts.Length - 1));
     }
     
-    private static HashSet<string>? _firstNamesCsv { get; set; }
-
-    private static HashSet<string> FirstNamesCsv
-    {
-        get
-        {
-            if (_firstNamesCsv != null)
-            {
-                return _firstNamesCsv;
-            }
-
-            var avoidWords = new List<string>
-            {
-                "the", // Too generic
-                "po", // PO box
-                "mersey", // Geography
-                "june", // Month
-                "charity", // Company word
-                "grant", // Legal word
-                "manor", // house name,
-                "red", // color, not common name
-                "south", // direction
-                "north", // direction
-                "west", // direction
-                "rho", // In postcodes
-                "rivers", // water
-                "see", // doing word,
-                "heh", // Is it a name?
-                "you", //  Is it a name?
-                "thames" // River
-            };
-
-            var returnList = new HashSet<string>();
-
-            using var reader = new StreamReader("Data/first-names.csv");
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            
-            var records = csv.GetRecords<FirstNamesRow>().ToList();
-                
-            foreach (var name in records.Select(record => record.FirstForename))
-            {
-                if (avoidWords.Contains(name!.ToLower())
-                    || name.Length <= 2)
-                {
-                    continue;
-                }
-                
-                returnList.Add(name);
-            }
-
-            _firstNamesCsv = returnList;
-            return _firstNamesCsv;
-        }
-    }
-    
-    private static readonly List<string> CompanySuffixes =
-    [
-        " agency",
-        " limited",
-        " charities",
-        " ltd",
-        " plc",
-        " school",
-        " corporation",
-        " university",
-        " and sons",
-        " water board",
-        " users",
-        " estate",
-        " quarry",
-        " nurseries",
-        " esq.", // Personal suffix
-        " esq",
-        " and son",
-        " and partners",
-        " farms"
-    ];
-
     public static List<DocumentLine> RemoveMultipleBlankLines(IEnumerable<DocumentLine> sourceList)
     {
         var trimmedList = TrimList(sourceList);
@@ -317,12 +239,12 @@ public static partial class DataHelpers
             return true;
         }
         
-        if (StartsWithCompanyOrPersonalPrefix(line))
+        if (CompanyName.StartsWithCompanyOrPersonalPrefix(line))
         {
             return false;
         }
 
-        if (EndsWithCompanyOrPersonalSuffix(line))
+        if (CompanyName.EndsWithCompanyOrPersonalSuffix(line))
         {
             return false;
         }
@@ -535,149 +457,9 @@ public static partial class DataHelpers
         return matched;
     }
 
-    public static bool AnyIsCompanyOrPersonalName(
-        IEnumerable<DocumentLine?> lines,
-        bool isPrevious,
-        bool isOcr,
-        out IReadOnlyList<DocumentLine>? companyOrPersonalNames)
-    {
-        companyOrPersonalNames = null;
-        var returnList = new List<DocumentLine>();
-        
-        var matched = false;
-        var returnLines = new List<string>();
-        
-        var lineNumber = -1;
-        var pageNumber = -1;
-        var lineWords = new List<DocumentLineWord>();
-        
-        foreach (var line in lines)
-        {
-            if (IsCorruptedText(line?.Text))
-            {
-                if (matched)
-                {
-                    break;
-                }
-                
-                continue;
-            }
-            
-            var correctedLine = isOcr ? new DocumentLine(
-                AutoCorrectText(line!, true)!,
-                line!.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded) : line;
-
-            correctedLine = new DocumentLine(
-                TrimFormatting(correctedLine?.Text)!,
-                correctedLine!.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
-
-            if (IsCorruptedText(line?.Text))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            if (!TryGetCompanyOrPersonalName(correctedLine, out var companyOrPersonalName))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            correctedLine = new DocumentLine(
-                companyOrPersonalName!,
-                correctedLine.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
-            
-            // It's only the company suffix with nothing else
-            if (CompanySuffixes.Any(companySuffix =>
-                companySuffix.Trim().Equals(correctedLine.Text, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            if (lineNumber == -1)
-            {
-                lineNumber = correctedLine.LineNumber;
-                pageNumber = correctedLine.PageNumber;
-                lineWords = correctedLine.Words;
-            }
-
-            returnLines.Add(correctedLine.Text);
-            matched = true;
-            
-            if (ContainsCompanyOrPersonalSuffixDelimitter(correctedLine.Text, out _))
-            {
-                break;
-            }
-        }
-
-        if (isPrevious)
-        {
-            returnLines.Reverse();
-        }
-        
-        if (returnLines.Count > 0)
-        {
-            if (returnLines.Count > 1)
-            {
-                returnLines.Remove("The Environment Agency");
-            }
-
-            var newReturnLines = new List<string>();
-
-            foreach (var returnLine in returnLines)
-            {
-                if (ContainsCompanyOrPersonalSuffixDelimitter(returnLine, out _))
-                {
-                    newReturnLines.Add(returnLine);
-                    break;
-                }
-                
-                newReturnLines.Add(returnLine);
-            }
-
-            returnLines = newReturnLines;
-            returnList.AddRange(returnLines.Select(returnLine =>
-                new DocumentLine(
-                    returnLine,
-                    lineNumber,
-                    pageNumber,
-                    lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1)));
-        }
-
-        if (returnList.Count > 0)
-        {
-            companyOrPersonalNames = returnList;
-        }
-        
-        return matched;
-    }
-    
     public static string? AutoCorrectText(DocumentLine? text, bool removeFirstWordIfLowercase)
     {
-        if (StartsWithCompanyOrPersonalPrefix(text?.Text))
+        if (CompanyName.StartsWithCompanyOrPersonalPrefix(text?.Text))
         {
             return text?.Text;
         }
@@ -857,197 +639,6 @@ public static partial class DataHelpers
         }
 
         return false;
-    }
-
-    private static bool ContainsDescriptionOfAgency(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-
-        return text.Contains("hereinafter", StringComparison.InvariantCultureIgnoreCase)
-           || text.Contains("grants this", StringComparison.InvariantCultureIgnoreCase)
-           || text.Contains("a agency", StringComparison.InvariantCultureIgnoreCase);
-    }
-    
-    public static bool TryGetCompanyOrPersonalName(
-        DocumentLine? text,
-        out string? companyOrPersonalName)
-    {
-        companyOrPersonalName = null;
-        
-        if (text == null)
-        {
-            return false;
-        }
-
-        // TODO - bit of a hack
-        if (ContainsDescriptionOfAgency(text.Text))
-        {
-            return false;
-        }
-
-        var parts = text.Text.Split(' ');
-        var looksLikeNameWithInitials = parts.Length is 2 or 3 or 4
-            && parts.First().Length is 1 or 2
-            && parts.First().All(char.IsLetter)
-            && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))
-            && parts.Last().Length >= 3
-            && parts.Last().All(char.IsLetter)
-            && !parts.All(word => Dictionary.Check(word) && word.Length > 1);
-
-        if (looksLikeNameWithInitials && !text.Text.Contains('"'))
-        {
-            companyOrPersonalName = text.Text;            
-            return true;
-        }
-        
-        var containsDelimitter = ContainsCompanyOrPersonalSuffixDelimitter(
-            text.Text,
-            out var delimiter);
-        
-        if (StartsWithCompanyOrPersonalPrefix(text.Text)
-            || ContainsCompanyOrPersonalWord(text.Text)
-            || containsDelimitter)
-        {
-            if (EndsWithNoneCommpanyOrPersonalSuffix(text.Text))
-            {
-                return false;
-            }
-            
-            if (containsDelimitter)
-            {
-                text.Text = text.Text[..(text.Text.IndexOf(delimiter!,
-                    StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
-            }
-            
-            companyOrPersonalName = text.Text;
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool EndsWithNoneCommpanyOrPersonalSuffix(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-        
-        var suffixes = new List<string>
-        {
-            " road",
-            " lane",
-            " avenue",
-            " street"            
-        };
-        
-        
-        return suffixes
-            .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase)
-                || char.IsDigit(text.Last()));
-    }
-    
-    private static bool StartsWithCompanyOrPersonalPrefix(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-    
-        var prefixes = new List<string>
-        {
-            "department ",
-            "university ",
-            "mr ",
-            "mr. ",
-            "mrs ",
-            "mrs. ",
-            "miss ",
-            "miss. ",
-            "lord ",
-            "lord. ",
-            "lady ",
-            "lady. "            
-        };
-        
-        return prefixes
-            .Any(prefix => text.StartsWith(prefix,
-                StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    private static bool EndsWithCompanyOrPersonalSuffix(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-        
-        return CompanySuffixes
-            .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase));
-    }    
-
-    private static bool ContainsCompanyOrPersonalWord(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-    
-        var companyWords = new List<string>
-        {
-            "trading as"
-        };
-
-        var textParts = text.Split(' ');
-        var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
-        
-        foreach (var name in FirstNamesCsv)
-        {
-            if (text.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase)
-                || secondWordString?.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase) == true)
-            {
-                return true;
-            }
-        }
-        
-        return companyWords
-            .Any(companyWord => text.Contains(companyWord,
-                StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    private static bool ContainsCompanyOrPersonalSuffixDelimitter(
-        string? text,
-        out string? delimiter)
-    {
-        delimiter = null;
-        
-        if (text == null)
-        {
-            return false;
-        }
-
-        string? delimiterLoop = null;
-        var found = CompanySuffixes
-            .Any(companySuffix =>
-            {
-                var contains = text.Contains(companySuffix,
-                    StringComparison.InvariantCultureIgnoreCase);
-
-                if (contains)
-                {
-                    delimiterLoop = companySuffix;
-                }
-
-                return contains;
-            });
-
-        delimiter = delimiterLoop;
-        return found;
     }
     
     public static void RemoveRemoves(

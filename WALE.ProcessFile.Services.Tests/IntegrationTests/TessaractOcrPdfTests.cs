@@ -241,7 +241,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
     }

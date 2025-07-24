@@ -457,7 +457,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
         // For some reason it won't read the licence number
         // from the box in the header its in
         
@@ -476,8 +476,11 @@ public class TessaractOcrPdfTests
         Assert.True(abstractionLimitsResult.IsOcr);
         Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
-        // For some reason it won't read the licence number
-        // from the box in the header its in
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal("13/43/021/G/018", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }    
     
     [Fact]
@@ -1024,5 +1027,31 @@ public class TessaractOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("8/36/19/S/130", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+    }
+    
+    [Fact]
+    public async Task A1_B2_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "Non-Application Licence Document (12.09.1979).pdf";
+
+        // Act
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + filename,
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            [PdfFolder + filename],
+            string.Empty,
+            UseCache)).Matches!;
+        
+        // Assert
+        Assert.Equal(3, resultList.Count);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("13/43/37/110", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
 }

@@ -369,6 +369,11 @@ public static partial class DataHelpers
             {
                 continue;
             }
+
+            if (!line.Text.Any(char.IsDigit))
+            {
+                continue;
+            }
             
             if (IsCorruptedText(line.Text))
             {
@@ -394,6 +399,17 @@ public static partial class DataHelpers
                     && character != '.'
                     && character != '*');
 
+                var words = subLine.Split(' ');
+
+                foreach (var word in words)
+                {
+                    if (word.Length >= 3 && word.All(char.IsLetter) && Dictionary.Check(word))
+                    {
+                        invalid = true;
+                        break;
+                    }
+                }                
+                
                 if (!invalid)
                 {
                     var containsSplitter = subLine.Contains(' ') || line.Text.Contains('/');
@@ -438,17 +454,6 @@ public static partial class DataHelpers
                             return anyIsMatch;                            
                         }
                     }
-                    /*else if (false && !containsSplitter && long.TryParse(line.Text, out _)) // No licence numbers we need so far without a splitter
-                    {
-                        numberLines.Add(new DocumentLine(
-                            line.Text.Trim(),
-                            line.LineNumber,
-                            line.PageNumber,
-                            line.Words.ToList()
-                        ));
-                        
-                        anyIsMatch = true;
-                    }*/
                 }
             }
         }

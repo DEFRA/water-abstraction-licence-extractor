@@ -1,6 +1,7 @@
 using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
@@ -569,7 +570,7 @@ public class PdfDataExtractorService(
                 {
                     actsLikeSingleWord = matchedLabel.Format == "ActsLikeSingleWord",
                     textBeforeAndAfterLabel = textBeforeAndAfterLabel,
-                    isCompanyType = matchedLabel.Format == "CompanyName",
+                    isCompanyType = matchedLabel.Format == CompanyName.Constant,
                     isDateOrPurposeLookup = matchedLabel.Format == "DateOrPurpose",
                     isLicenceNumberLookup = matchedLabel.Format == "LicenceNumber",
                     isNumberLookup = matchedLabel.Format == "Number",

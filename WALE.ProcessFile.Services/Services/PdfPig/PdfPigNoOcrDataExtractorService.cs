@@ -243,7 +243,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         double lineHeight,
         double firstTextPosition)
     {
-        const double DefaultTopPosition = 1000.0;
+        const double defaultTopPosition = 1000.0;
+        
         var currentRowPosition = firstTextPosition; // e.g. 231.4
         var halfLineHeight = lineHeight / 2.0; // e.g. 5.5
 
@@ -263,12 +264,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         const double negligibleTolerance = 0.00001;
         
-        if (Math.Abs(firstTextPosition - DefaultTopPosition) < negligibleTolerance)
+        if (Math.Abs(firstTextPosition - defaultTopPosition) < negligibleTolerance)
         {
             throw new ArgumentOutOfRangeException(nameof(firstTextPosition));
         }
         
-        return SnapToPageRow(textPosition, lineHeight, DefaultTopPosition);
+        return SnapToPageRow(textPosition, lineHeight, defaultTopPosition);
     }
     
     private static int RoundToNearestN(double value, double roundTo)

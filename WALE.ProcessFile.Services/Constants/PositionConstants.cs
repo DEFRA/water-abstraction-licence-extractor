@@ -11,4 +11,5 @@ public static class PositionConstants
     public const string CacheMetadataFilename = "cache-metadata.json";
     
     public const char SpaceChar = ' ';
+    public const string SpaceString = " ";    
 }

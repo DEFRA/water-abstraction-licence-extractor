@@ -1,10 +1,14 @@
 namespace WALE.ProcessFile.Services.Helpers;
 
-public class FileHelper
+public static class FileHelper
 {
     public static string GetFilenameWithoutExtensions(string pdfFilePath)
     {
-        var filenameParts = pdfFilePath.Split('/').Last().Split('.');
-        return string.Join('-', filenameParts.Take(filenameParts.Length - 1));
+        const char pathSeparator = '/';
+        const char extensionSeperator = '.';
+        const char compositeCharacter = '-';
+        
+        var filenameParts = pdfFilePath.Split(pathSeparator).Last().Split(extensionSeperator);
+        return string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
     }
 }

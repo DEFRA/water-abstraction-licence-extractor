@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Services.Formats;
 
 public static class CompanyName
 {
+    public const string Constant = "CompanyName";
+
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,

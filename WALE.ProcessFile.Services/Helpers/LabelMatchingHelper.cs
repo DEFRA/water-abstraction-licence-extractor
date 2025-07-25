@@ -3,7 +3,7 @@ using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
-public class LabelMatchingHelper
+public static class LabelMatchingHelper
 {
     public static bool ContainsForbiddenText(DocumentLine? line, LabelToMatch label)
     {
@@ -79,11 +79,13 @@ public class LabelMatchingHelper
                 }
             }
 
-            if (position == LabelPosition.Split && lineCount == howManyLinesTotal - 1)
+            if (position != LabelPosition.Split || lineCount != howManyLinesTotal - 1)
             {
-                matchedText = null;
-                return true;
+                continue;
             }
+            
+            matchedText = null;
+            return true;
         }
 
         matchedText = null;

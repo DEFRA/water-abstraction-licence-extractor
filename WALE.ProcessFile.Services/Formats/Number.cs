@@ -1,4 +1,5 @@
 using System.Globalization;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
@@ -19,27 +20,28 @@ public static class Number
             return false;
         }
         
-        var irrelevantWords = new List<DocumentLineWord>();
+        var emptyIrrelevantWords = new List<DocumentLineWord>();
 
         var list = text
-            .Split(' ')
+            .Split(PositionConstants.SpaceChar)
             .Select(result => new DocumentLine(
                 result,
                 lineNumber,
                 pageNumber,
-                irrelevantWords,
-                -1,
-                -1,
-                -1,
-                -1));
-        
-        if (AnyIsNumber(list, out var numberLines))
-        {
-            numbers.AddRange(numberLines);
-            return true;
-        }
+                emptyIrrelevantWords,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate));
 
-        return false;
+        if (!AnyIsNumber(list, out var numberLines))
+        {
+            return false;
+        }
+        
+        numbers.AddRange(numberLines);
+        return true;
+
     }
     
     public static bool AnyIsNumber(
@@ -51,13 +53,14 @@ public static class Number
         var matched = false;
         var returnLines = new List<double>();
 
-        var ls = lines.ToList();
+        var linesList = lines.ToList();
+        var firstLine = linesList.FirstOrDefault();
         
-        var lineNumber = ls.FirstOrDefault()?.LineNumber ?? -1;
-        var pageNumber = ls.FirstOrDefault()?.PageNumber ?? -1;
+        var lineNumber = firstLine?.LineNumber ?? PositionConstants.UnknownLineNumber;
+        var pageNumber = firstLine?.PageNumber ?? PositionConstants.UnknownPageNumber;
         var lineWords = new List<DocumentLineWord>();
         
-        foreach (var line in ls)
+        foreach (var line in linesList)
         {
             if (DataHelper.IsCorruptedText(line?.Text))
             {
@@ -69,7 +72,7 @@ public static class Number
                 continue;
             }
 
-            foreach (var word in line!.Text.Split(' '))
+            foreach (var word in line!.Text.Split(PositionConstants.SpaceChar))
             {
                 if (!double.TryParse(word, out var numberLineDbl))
                 {
@@ -92,22 +95,24 @@ public static class Number
             }
         }
 
-        if (returnLines.Count > 0)
+        if (returnLines.Count == 0)
         {
-            foreach (var tempLine in returnLines.OrderByDescending(text => text))
-            {
-                numberLines.Add(new DocumentLine(
-                    tempLine.ToString(CultureInfo.InvariantCulture),
-                    lineNumber,
-                    pageNumber,
-                    lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1));
-            }
+            return matched;
         }
         
+        foreach (var tempLine in returnLines.OrderByDescending(text => text))
+        {
+            numberLines.Add(new DocumentLine(
+                tempLine.ToString(CultureInfo.InvariantCulture),
+                lineNumber,
+                pageNumber,
+                lineWords,
+                 PositionConstants.UnknownCoOrdinate,
+                 PositionConstants.UnknownCoOrdinate,
+                 PositionConstants.UnknownCoOrdinate,
+                 PositionConstants.UnknownCoOrdinate));
+        }
+
         return matched;
     }
 }

@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -18,7 +19,7 @@ public static class RelatedCategoryPosition
             .OrderBy(match => match.LineNumber)
             .ToList();
 
-        var matchedLabelLineNumber = -1;
+        var matchedLabelLineNumber = PositionConstants.UnknownLineNumber;
         
         foreach (var categoryItem in categoryItems)
         {
@@ -62,13 +63,13 @@ public static class RelatedCategoryPosition
         labelGroupResult.Text = [
             new DocumentLine(
                 absoluteMatches.FirstOrDefault()?.Text!,
-                -1,
-                -1,
+                PositionConstants.UnknownLineNumber,
+                PositionConstants.UnknownPageNumber,
                 [],
-                0,
-                0,
-                0,
-                0)
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate)
         ];
             
         labelGroupResult.MatchedLabel = request.label;

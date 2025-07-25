@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -17,12 +18,16 @@ public static class TextToFindIsBetweenLabels
         
         var linesToUse = new List<DocumentLine>();
 
-        if (label.LeewayBefore >= 1 && request.previousLines!.Count >= label.LeewayBefore) // TODO never currently set
+        if (label.LeewayBefore >= 1
+            && request.previousLines!.Count >= label.LeewayBefore)
         {
             linesToUse.Add(request.previousLines[^label.LeewayBefore]);
         }
 
-        if (label.Text?.Any(t => request.line!.Text.Contains(t, StringComparison.InvariantCultureIgnoreCase)) != true)
+        var lineContainsLabel = label.Text?.Any(labelText =>
+            request.line!.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
+
+        if (lineContainsLabel != true)
         {
             linesToUse.Add(request.line!);                        
         }
@@ -136,7 +141,7 @@ public static class TextToFindIsBetweenLabels
             
             if (LabelMatchingHelper.LineContainsLabel(line, label.Text, label.Position, lineCount++, totalLines, out var matchedEndTextTemp))
             {
-                matchData = (matchedEndTextTemp!, "[WILL_BE_REPLACED_LATER]");
+                matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
                 foundEndTag = true;
 
                 break;
@@ -154,9 +159,9 @@ public static class TextToFindIsBetweenLabels
                 line.LeftRounded));
         }
 
-        if (!foundEndTag && textEnd.Contains("[END_OF_BLOCK]"))
+        if (!foundEndTag && textEnd.Contains(PositionConstants.EndOfBlockMarker))
         {
-            matchData = ("[END_OF_BLOCK]", "[WILL_BE_REPLACED_LATER]");            
+            matchData = (PositionConstants.EndOfBlockMarker, PositionConstants.ReplacementMarker);
             foundEndTag = true;
         }
 

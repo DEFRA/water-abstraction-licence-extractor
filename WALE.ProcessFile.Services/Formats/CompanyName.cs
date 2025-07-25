@@ -14,9 +14,9 @@ public static class CompanyName
         LabelToMatch label,
         bool isPrevious,
         bool isOcr,
-        out IReadOnlyList<DocumentLine>? companyOrPersonalNames)
+        out IReadOnlyList<DocumentLine>? matchedLines)
     {
-        companyOrPersonalNames = null;
+        matchedLines = null;
         var returnList = new List<DocumentLine>();
         
         var matched = false;
@@ -149,7 +149,7 @@ public static class CompanyName
 
         if (returnList.Count > 0)
         {
-            companyOrPersonalNames = returnList;
+            matchedLines = returnList;
         }
         
         return matched;
@@ -158,9 +158,9 @@ public static class CompanyName
     public static bool TryGetCompanyOrPersonalName(
         DocumentLine? line,
         LabelToMatch label,
-        out string? companyOrPersonalName)
+        out string? matchedCompanyOrPersonalName)
     {
-        companyOrPersonalName = null;
+        matchedCompanyOrPersonalName = null;
         
         if (line == null)
         {
@@ -189,7 +189,7 @@ public static class CompanyName
 
         if (looksLikeNameWithInitials && !line.Text.Contains('"'))
         {
-            companyOrPersonalName = line.Text;            
+            matchedCompanyOrPersonalName = line.Text;            
             return true;
         }
         
@@ -212,7 +212,7 @@ public static class CompanyName
                     StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
             }
             
-            companyOrPersonalName = line.Text;
+            matchedCompanyOrPersonalName = line.Text;
             return true;
         }
 

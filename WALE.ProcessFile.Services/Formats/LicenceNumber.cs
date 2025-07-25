@@ -12,9 +12,9 @@ public static partial class LicenceNumber
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        out List<DocumentLine> numberLines)
+        out List<DocumentLine> matchedLines)
     {
-        numberLines = [];
+        matchedLines = [];
         var anyIsMatch = false;
         
         foreach (var line in lines)
@@ -91,7 +91,7 @@ public static partial class LicenceNumber
                         
                         if (match)
                         {
-                            numberLines.Add(new DocumentLine(
+                            matchedLines.Add(new DocumentLine(
                                 numberLine.Trim(),
                                 line.LineNumber,
                                 line.PageNumber,

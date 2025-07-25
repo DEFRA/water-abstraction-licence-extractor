@@ -13,9 +13,9 @@ public static class Number
         string? text,
         int lineNumber,
         int pageNumber,
-        out List<DocumentLine> numbers)
+        out List<DocumentLine> matchedNumbers)
     {
-        numbers = [];
+        matchedNumbers = [];
         
         if (text == null)
         {
@@ -41,16 +41,16 @@ public static class Number
             return false;
         }
         
-        numbers.AddRange(numberLines);
+        matchedNumbers.AddRange(numberLines);
         return true;
 
     }
     
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
-        out List<DocumentLine> numberLines)
+        out List<DocumentLine> matchedLines)
     {
-        numberLines = [];
+        matchedLines = [];
 
         var matched = false;
         var returnLines = new List<double>();
@@ -104,7 +104,7 @@ public static class Number
         
         foreach (var tempLine in returnLines.OrderByDescending(text => text))
         {
-            numberLines.Add(new DocumentLine(
+            matchedLines.Add(new DocumentLine(
                 tempLine.ToString(CultureInfo.InvariantCulture),
                 lineNumber,
                 pageNumber,

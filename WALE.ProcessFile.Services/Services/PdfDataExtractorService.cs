@@ -942,10 +942,10 @@ public class PdfDataExtractorService(
     private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(text => text.Replace("[END_OF_LINE]", string.Empty))
+            .Select(text => text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
             .ToList();
         
-        if (labelText.Any(text => text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Any(text => text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }

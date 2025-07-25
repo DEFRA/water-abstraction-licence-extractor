@@ -67,8 +67,13 @@ public static class LabelIsAfterTextToFind
                 break;
             case Units.Constant:
                 returnList.AddRange( Units.GetMatchesToPossibilities(request.label, modifiedPreviousLines, labelGroupResult));
-
                 break;
+            case SingleWord.Constant:
+                returnList.AddRange(SingleWord.FindSingleWord(modifiedPreviousLines, labelGroupResult));
+                break;
+            case ActsLikeSingleWord.Constant:
+                returnList.AddRange(ActsLikeSingleWord.FindSingleWord(modifiedPreviousLines, labelGroupResult));
+                break;            
         }
 
         foreach (var item in returnList)

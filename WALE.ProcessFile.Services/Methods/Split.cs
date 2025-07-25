@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -18,94 +19,101 @@ public static class Split
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
 
+        var leftPartLines  = request.previousLines!.Reverse().ToList();
+
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
             request.label.Text,
             LabelPosition.Split,
             UnknownLinesTotal,
             int.MaxValue,
-            out _);
-
-        var sub1Result = request.labelGroupResult.Clone();
-        var sub1ResultText  = request.previousLines!.Reverse().ToList();
-
+            out _);        
+        
         if (!lineContainsLabel)
         {
-            sub1ResultText.Add(request.line!);
+            leftPartLines.Add(request.line!);
         }
         
-        var sub2Result = request.labelGroupResult.Clone();
-        var sub2ResultText = request.nextLines!.ToList();
+        var rightPartLines = request.nextLines!.ToList();
 
         if (lineContainsLabel)
         {
-            if (sub1ResultText.Count == 0 && sub2ResultText.Count == 0)
+            var noPreviousLines = leftPartLines.Count == 0;
+            var noNextLines = rightPartLines.Count == 0;
+            
+            if (noPreviousLines && noNextLines)
             {
-                var splitter = string.Join(' ', request.label.Text);
-                var parts = request.line!.Text.Split(splitter);
+                var splitPhrase = string.Join(PositionConstants.SpaceChar, request.label.Text);
+                var separateParts = request.line!.Text.Split(splitPhrase);
 
-                parts[0] = parts[0].Trim();
-                parts[1] = parts[1].Trim();
+                var leftPart = separateParts[0].Trim();
                 
-                var lineWords1 = parts[0]
-                    .Split(' ')
-                    .Select(t => new DocumentLineWord(t, null, []))
+                var leftPartWords = leftPart
+                    .Split(PositionConstants.SpaceChar)
+                    .Select(text => new DocumentLineWord(text, null, []))
                     .ToList();
 
-                var lineWords2 = parts[1]
-                    .Split(' ')
-                    .Select(t => new DocumentLineWord(t, null, []))
-                    .ToList();                                
+                leftPartLines = [
+                    new DocumentLine(leftPart,
+                        request.lineNumber,
+                        request.line.PageNumber,
+                        leftPartWords,
+                        request.line.Top,
+                        request.line.TopRounded,
+                        request.line.Left,
+                        request.line.LeftRounded)
+                ];
                 
-                sub1ResultText = [
-                    new DocumentLine(parts[0],
-                        request.lineNumber,
-                        request.line.PageNumber,
-                        lineWords1,
-                        request.line.Top,
-                        request.line.TopRounded,
-                        request.line.Left,
-                        request.line.LeftRounded)
-                ];
-                sub2ResultText = [
-                    new DocumentLine(parts[1],
-                        request.lineNumber,
-                        request.line.PageNumber,
-                        lineWords2,
-                        request.line.Top,
-                        request.line.TopRounded,
-                        request.line.Left,
-                        request.line.LeftRounded)
-                ];
+                var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
+
+                if (rightPart != null)
+                {
+                    var rightPartWords = rightPart?
+                        .Split(PositionConstants.SpaceChar)
+                        .Select(text => new DocumentLineWord(text, null, []))
+                        .ToList();
+
+                    rightPartLines =
+                    [
+                        new DocumentLine(rightPart!,
+                            request.lineNumber,
+                            request.line.PageNumber,
+                            rightPartWords!,
+                            request.line.Top,
+                            request.line.TopRounded,
+                            request.line.Left,
+                            request.line.LeftRounded)
+                    ];
+                }
             }
             else
             {
-                sub2ResultText.Insert(0, request.line!);
+                rightPartLines.Insert(0, request.line!);
 
-                if (sub1ResultText.Count > 0)
+                if (leftPartLines.Count > 0)
                 {
-                    var lastLine = sub1ResultText.Last();
-                    sub2ResultText.Insert(0, lastLine);
-
-                    sub1ResultText.Remove(lastLine);
+                    var lastLeftLine = leftPartLines.Last();
+                    
+                    rightPartLines.Insert(0, lastLeftLine);
+                    leftPartLines.Remove(lastLeftLine);
                 }
             }
         }
 
-        sub1ResultText = FormattingHelper.RemoveMultipleBlankLines(sub1ResultText);
-        sub2ResultText = FormattingHelper.RemoveMultipleBlankLines(sub2ResultText);
+        leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
+        var leftPartResult = request.labelGroupResult.Clone(leftPartLines);
         
-        sub1Result.Text = sub1ResultText;
-        sub2Result.Text = sub2ResultText;
-
         var results = new List<LabelGroupResult>
         {
-            sub1Result
+            leftPartResult
         };
 
-        if (sub2Result.Text.Count > 0)
+        rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
+        
+        if (rightPartLines.Count > 0)
         {
-            results.Add(sub2Result);
+            var rightPartResult = request.labelGroupResult.Clone(rightPartLines);
+            results.Add(rightPartResult);
         }
 
         foreach (var result in results)
@@ -117,11 +125,12 @@ public static class Split
                 request.serviceName,
                 request.labelGroupName!,
                 request.licenceMapping!,
-                request. previouslyParsedPaths!,
+                request.previouslyParsedPaths!,
                 request.outputFolder!,
                 request.useCache);
         
-            if (request.label.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)
+            if (request.label.MinimumSubMatches.HasValue
+                && request.label.MinimumSubMatches.Value > subResults.Count)
             {
                 return [];
             }

@@ -23,10 +23,10 @@ public static class LabelIsBeforeTextToFind
             request.nextLines,
             out var removedLines);
         
+        var returnList = new List<LabelGroupResult>();
+        
         if (request.isDateOrPurposeLookup && DateOrPurpose.AnyIsDateOrPurpose(request.nextLines!, out var matchedLines))
         {
-            var returnList = new List<LabelGroupResult>();
-                
             foreach (var matchedLine in matchedLines)
             {
                 labelGroupResult = labelGroupResult.Clone();
@@ -61,8 +61,6 @@ public static class LabelIsBeforeTextToFind
 
         if (request.isLicenceNumberLookup && LicenceNumber.AnyIsLicenceNumber(modifiedNextLines, request.label, out var licenceNumberLines))
         {
-            var returnList = new List<LabelGroupResult>();
-                
             foreach (var licenceNumberLine in licenceNumberLines)
             {
                 labelGroupResult = labelGroupResult.Clone();
@@ -138,6 +136,6 @@ public static class LabelIsBeforeTextToFind
             }
         }
 
-        return Task.FromResult(new List<LabelGroupResult>());
+        return Task.FromResult(returnList);
     }
 }

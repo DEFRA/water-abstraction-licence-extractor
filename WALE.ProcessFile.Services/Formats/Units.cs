@@ -8,7 +8,7 @@ public static class Units
 
     public static List<LabelGroupResult> GetMatchesToPossibilities(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> modifiedPreviousLines,
+        IReadOnlyList<DocumentLine> lines,
         LabelGroupResult labelGroupResult)
     {
         var returnList = new List<LabelGroupResult>();
@@ -18,7 +18,7 @@ public static class Units
             return returnList;
         }
 
-        foreach (var previousLine in modifiedPreviousLines)
+        foreach (var previousLine in lines)
         {
             foreach (var possibility in label.Possibilities!)
             {

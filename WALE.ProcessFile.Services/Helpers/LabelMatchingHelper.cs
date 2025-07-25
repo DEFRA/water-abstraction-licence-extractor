@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Models;
 
@@ -9,7 +10,12 @@ public static class LabelMatchingHelper
     {
         return label.MustNotContain?
             .Any(mustNotContainText =>
-                line?.Text.Contains(mustNotContainText, StringComparison.InvariantCultureIgnoreCase) == true) == true;
+                LineContainsForbiddenText(line, mustNotContainText)) == true;
+    }
+
+    private static bool LineContainsForbiddenText(DocumentLine? line, string mustNotContainText)
+    {
+        return line?.Text.Contains(mustNotContainText, StringComparison.InvariantCultureIgnoreCase) == true;
     }
     
     public static bool PotentialMatchOnLabelLine(
@@ -44,24 +50,21 @@ public static class LabelMatchingHelper
             matchedText = null;
             return true;
         }
-
-        const string startOfBlockMarker = "[START_OF_BLOCK]";
-        const string endOfLineMarker = "[END_OF_LINE]";
         
         foreach (var textItem in labelText)
         {
             if (lineCount == 0
-                && textItem.Equals(startOfBlockMarker, StringComparison.InvariantCultureIgnoreCase))
+                && textItem.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase))
             {
                 matchedText = textItem;
                 return true;
             }
          
-            var mustEndLine = textItem.Contains(endOfLineMarker);
+            var mustEndLine = textItem.Contains(PositionConstants.EndOfLineMarker);
 
             if (mustEndLine)
             {
-                var tItem = textItem.Replace(endOfLineMarker, string.Empty);
+                var tItem = textItem.Replace(PositionConstants.EndOfLineMarker, string.Empty);
 
                 if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
                 {

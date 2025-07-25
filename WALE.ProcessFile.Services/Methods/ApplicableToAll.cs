@@ -1,6 +1,6 @@
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -9,20 +9,8 @@ public static class ApplicableToAll
 {
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.labelGroupResult == null)
-        {
-            throw new ArgumentNullException(nameof(request.labelGroupResult));
-        }
-        
-        if (request.label == null)
-        {
-            throw new ArgumentNullException(nameof(request.label));
-        }
-
-        if (request.label.Name == "PointPointNumber")
-        {
-            
-        }
+        ArgumentNullException.ThrowIfNull(request.labelGroupResult);
+        ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult.Clone();
         var line = request.line;
@@ -30,7 +18,7 @@ public static class ApplicableToAll
         
         var returnListTop = new List<LabelGroupResult>();
         
-        if (!PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
+        if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
         {
             return returnListTop;
         }
@@ -40,14 +28,14 @@ public static class ApplicableToAll
             var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
-            var outputText = RemoveExcludes(matchedLabel, t!, out var removedLines);
+            var outputText = DataHelper.RemoveExcludes(matchedLabel, t!, out var removedLines);
 
-            if (IsCorruptedText(outputText))
+            if (DataHelper.IsCorruptedText(outputText))
             {
                 continue;
             }
 
-            if (request.isDateOrPurposeLookup && IsDateOrPurpose(t))
+            if (request.isDateOrPurposeLookup && DateOrPurpose.IsDateOrPurpose(t))
             {
                 labelGroupResult.Text =
                 [
@@ -64,7 +52,7 @@ public static class ApplicableToAll
                 
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                 labelGroupResult.MatchedLabel = matchedLabel;
-                RemoveRemoves(labelGroupResult, removedLines);
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
                 return [labelGroupResult];
             }
@@ -78,7 +66,7 @@ public static class ApplicableToAll
             }
 
             if (request.isNumberLookup
-                && TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLines))
+                && Number.TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLines))
             {
                 if (matchedLabel.Possibilities?.Any() == true)
                 {
@@ -101,13 +89,13 @@ public static class ApplicableToAll
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                 labelGroupResult.MatchedLabel = matchedLabel;
 
-                RemoveRemoves(labelGroupResult, removedLines);
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 return [labelGroupResult];
             }
             
             if (request.isLicenceNumberLookup
                 && request.label != null
-                && AnyIsLicenceNumber([
+                && LicenceNumber.AnyIsLicenceNumber([
                     new DocumentLine(
                         outputText,
                         lineNumber,
@@ -128,7 +116,7 @@ public static class ApplicableToAll
                     labelGroupResult.Text = [licenceNumberLine];
                     labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                     labelGroupResult.MatchedLabel = matchedLabel;
-                    RemoveRemoves(labelGroupResult, removedLines);
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     
                     returnList.Add(labelGroupResult);
                 }
@@ -153,7 +141,7 @@ public static class ApplicableToAll
                 
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                 labelGroupResult.MatchedLabel = matchedLabel;
-                RemoveRemoves(labelGroupResult, removedLines);
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
                 var results = new List<LabelGroupResult> {labelGroupResult};
                 
@@ -185,7 +173,7 @@ public static class ApplicableToAll
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
-                var autoCorrectedOutputText = AutoCorrectText(
+                var autoCorrectedOutputText = AutoCorrectHelper.AutoCorrectText(
                     new DocumentLine(
                         outputText,
                         lineNumber,
@@ -242,15 +230,15 @@ public static class ApplicableToAll
                     
                     labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                     labelGroupResult.MatchedLabel = matchedLabel;
-                    RemoveRemoves(labelGroupResult, removedLines);
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
                     return [labelGroupResult];
                 }
             }
 
-            outputText = TrimFormatting(outputText);
-            outputText = request.isOcr ? AutoCorrectText(new DocumentLine(
+            outputText = FormattingHelper.TrimFormatting(outputText);
+            outputText = request.isOcr ? AutoCorrectHelper.AutoCorrectText(new DocumentLine(
                 outputText!,
                 lineNumber,
                 line!.PageNumber,
@@ -290,7 +278,7 @@ public static class ApplicableToAll
                 
                 labelGroupResult.MatchType = matchType;
                 labelGroupResult.MatchedLabel = matchedLabel;
-                RemoveRemoves(labelGroupResult, removedLines);
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
                 {
@@ -321,7 +309,7 @@ public static class ApplicableToAll
                 
                 labelGroupResult.MatchType = MatchType.SameLineSingleWord;
                 labelGroupResult.MatchedLabel = matchedLabel;
-                RemoveRemoves(labelGroupResult, removedLines);
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
                 {
@@ -349,7 +337,7 @@ public static class ApplicableToAll
                 
                 lineMatch.MatchType = MatchType.Between;
                 lineMatch.MatchedLabel = request.label;
-                RemoveRemoves(lineMatch, removedLines);
+                FormattingHelper.RemoveRemoves(lineMatch, removedLines);
                 
                 returnListTop.Add(lineMatch);
             }

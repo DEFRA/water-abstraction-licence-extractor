@@ -194,7 +194,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 
     var color = fileCount % 2 == 0 ? "#F6F6F6" : "#FAFAFA";
     var backgroundCss = $"style='background-color: {color}'";
-    var filename = DataHelpers.GetFilenameWithoutExtensions(outputLine.Filename!);
+    var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
     var filenameForScreen = outputLine.Filename;
 
     if (filenameForScreen?.Length > 30)
@@ -430,9 +430,9 @@ async Task HandleFileAsync(
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
 
-        var json = SharedHelper.GetJson(matches1);
+        var json = JsonHelper.GetAsString(matches1);
         
-        var filenameOnlyNoExtension = DataHelpers.GetFilenameWithoutExtensions(pdfFilePath);
+        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
         
         File.WriteAllText(

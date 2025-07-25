@@ -6,14 +6,14 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
+    public async Task<string?> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
     {
         try
         {
             if (imageData.TryGetPng(out var bytes))
             {
                 await File.WriteAllBytesAsync(
-                    GetFilepath(imageNumber, pageNumber, outputFolder, true, "png"),
+                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "png"),
                     bytes);
                 
                 return "png";
@@ -22,7 +22,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
                 await File.WriteAllBytesAsync(
-                    GetFilepath(imageNumber, pageNumber, outputFolder, true, "bmp"),
+                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "bmp"),
                     bytesMemory.ToArray());
                 
                 return "bmp";
@@ -35,26 +35,26 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             }
 
             await File.WriteAllBytesAsync(
-                GetFilepath(imageNumber, pageNumber, outputFolder, true, "jpg"),
+                GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "jpg"),
                 bytesSpanAry);
             
             return "jpg";
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            if (ex is IOException)
+            if (exception is IOException)
             {
-                return string.Empty;
+                return null;
             }
 
             // TODO should work out when need to deflate
             //bytesAry = Deflate(bytesAry);
 
-            return string.Empty;
+            return null;
         }
     }
 
-    public string GetFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory, string extension)
+    public string GetImageFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory, string extension)
     {
         var outputFolderFull = $"{outputFolder}/PdfPig/Images";
         
@@ -66,17 +66,17 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
     }
 
-    private static byte[] Deflate(byte[] input)
+    private static byte[] Deflate(byte[] input) // TODO use again
     {
         var cutInput = new byte[input.Length - 2];
         Array.Copy(input, 2, cutInput, 0, cutInput.Length);
 
         var stream = new MemoryStream();
 
-        using (var compressStream = new MemoryStream(cutInput))
-        using (var decompressor = new DeflateStream(compressStream, CompressionMode.Decompress))
-            decompressor.CopyTo(stream);
-
+        using var compressStream = new MemoryStream(cutInput);
+        using var decompressor = new DeflateStream(compressStream, CompressionMode.Decompress);
+        
+        decompressor.CopyTo(stream);
         return stream.ToArray();
     }
 }

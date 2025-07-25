@@ -9,7 +9,6 @@ using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
 using PdfDocument = WALE.ProcessFile.Services.Models.PdfDocument;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 
 namespace WALE.ProcessFile.Services.Services.PdfPig;
 
@@ -34,7 +33,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText,
-                SharedHelper.GetSerializer())!;
+                JsonHelper.GetSerializer())!;
 
             var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
             var pagesList = new List<PdfPage>();
@@ -104,7 +103,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText,
-                SharedHelper.GetSerializer());
+                JsonHelper.GetSerializer());
             
             var pageCount = ((JsonElement)metadata!["pages"]).GetArrayLength();
             
@@ -127,7 +126,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
                     fileText,
-                    SharedHelper.GetSerializer())!;
+                    JsonHelper.GetSerializer())!;
                 
                 pageLines.AddRange(cachedTextBlocks.Select(
                     cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -144,9 +143,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         {
             Console.WriteLine(
                 $"Read {Name} document in {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
-            
-            //dtStart = DateTime.Now;
-            //Console.WriteLine($"Read PdfPig text pages in {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfFilePath}");
             
             var pagesMetadata = new List<Dictionary<string, object>>();
             
@@ -177,7 +173,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     var cachedTextBlocks =
                         JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
                             fileText,
-                            SharedHelper.GetSerializer())!;
+                            JsonHelper.GetSerializer())!;
 
                     pageLines.AddRange(cachedTextBlocks.Select(
                         cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -191,7 +187,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
                 
-                if (IsPageEmpty(page.Text))
+                if (FormattingHelper.IsPageEmpty(page.Text))
                 {
                     await File.WriteAllTextAsync(txtOutputFilename, "[]");
                     continue;
@@ -204,7 +200,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
 
-                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines, SharedHelper.GetSerializer()));
+                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializer()));
                 
                 var pageLinesTransformedX = FormatPageLines(
                     pageLines,
@@ -220,7 +216,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 { "allTextFilename", "pages-all.txt" }
             };
             
-            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data, SharedHelper.GetSerializer()));
+            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data, JsonHelper.GetSerializer()));
         }
 
         // Update line numbers, now in one big list
@@ -242,27 +238,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return documentLines;
     }
 
-    public Task<IReadOnlyList<INoOcrPdfPageService>> GetPagesThatContainImagesAsync(PdfDocument pdfDocument, string pdfFilePath)
-    {
-        if (pdfDocument.Pages.Any(p => p.PdfPigPage == null))
-        {
-            
-        }
-        
-        var result = pdfDocument
-            .Pages
-            .Where(page => IsPageEmpty(page.Text) && page.NumberOfImages > 0)
-            .Select(page => new PdfPigNoOcrPageService(page.PdfPigPage!))
-            .ToList();
-
-        return Task.FromResult((IReadOnlyList<INoOcrPdfPageService>)result);
-    }
-
     private static int SnapToPageRow(
         double textPosition,
         double lineHeight,
         double firstTextPosition)
     {
+        const double DefaultTopPosition = 1000.0;
         var currentRowPosition = firstTextPosition; // e.g. 231.4
         var halfLineHeight = lineHeight / 2.0; // e.g. 5.5
 
@@ -280,23 +261,18 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             currentRowPosition -= lineHeight;
         } while (currentRowPosition - lineHeight >= -lineHeight);
 
-        var recursionTop = 1000.0;
-
-        if (Math.Abs(firstTextPosition - recursionTop) < 0.001)
+        const double negligibleTolerance = 0.00001;
+        
+        if (Math.Abs(firstTextPosition - DefaultTopPosition) < negligibleTolerance)
         {
             throw new ArgumentOutOfRangeException(nameof(firstTextPosition));
         }
         
-        return SnapToPageRow(textPosition, lineHeight, recursionTop);
+        return SnapToPageRow(textPosition, lineHeight, DefaultTopPosition);
     }
     
     private static int RoundToNearestN(double value, double roundTo)
     {
-        if (value >= 403.48 && value <= 403.49)
-        {
-            
-        }
-        
         var remainder = value % roundTo;
         value += (remainder <= roundTo / 2) ? -remainder : (roundTo - remainder);
         
@@ -351,38 +327,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     roundToHorizontal)))
             .SelectMany(lines =>
             {
-                if (lines.Any(x => x.Text.StartsWith("6.1")))
-                {
-                    
-                }
-                
                 var resultList = new List<DocumentLine>();
                 var firstLine = lines.First();
 
                 var verticalDistanceFromPreviousLine =
                     previousLine?.BoundingBox.Centroid.Y
-                    - firstLine.BoundingBox.Centroid.Y;
+                    - firstLine.BoundingBox.Centroid.Y;         
 
-                /*var horizontalDistanceFromPreviousLine = 
-                    previousLine?.BoundingBox.Left
-                    - lines.First().BoundingBox.Left; */               
-
-                var containsText = false;
-
-                foreach (var line in lines)
-                {
-                    if (line.Text.Contains("TL545369"))
-                    {
-                        containsText = true;
-                        break;
-                    }
-                }
-
-                if (containsText)
-                {
-                    
-                }
-                
                 if (verticalDistanceFromPreviousLine >= blankLineGap)
                 {
                     resultList.Add(
@@ -398,11 +349,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
                 
                 previousLine = lines.First();
-
-                if (lines.Count() > 1)
-                {
-                    
-                }
                 
                 var text = string.Join(' ', lines);
                 var words = lines.SelectMany(line => line.Words);

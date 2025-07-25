@@ -1,5 +1,6 @@
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -7,20 +8,8 @@ public static class RelatedCategoryPosition
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.labelGroupResult == null)
-        {
-            throw new ArgumentNullException(nameof(request.labelGroupResult));
-        }
-        
-        if (request.label == null)
-        {
-            throw new ArgumentNullException(nameof(request.label));
-        }
-
-        if (request.label.Name == "PerYearValue")
-        {
-            
-        }
+        ArgumentNullException.ThrowIfNull(request.labelGroupResult);
+        ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult.Clone();
                     
@@ -46,7 +35,7 @@ public static class RelatedCategoryPosition
 
         foreach (var previousLine in request.previousLines!.OrderByDescending(line => line.LineNumber))
         {
-            if (AnyIsNumber([previousLine], out var numberLines))
+            if (Number.AnyIsNumber([previousLine], out var numberLines))
             {
                 matches.Add(numberLines.First());
             }
@@ -54,7 +43,7 @@ public static class RelatedCategoryPosition
         
         foreach (var nextLine in request.nextLines!.OrderBy(line => line.LineNumber))
         {
-            if (AnyIsNumber([nextLine], out var numberLines))
+            if (Number.AnyIsNumber([nextLine], out var numberLines))
             {
                 matches.Add(numberLines.First());
             }
@@ -85,7 +74,7 @@ public static class RelatedCategoryPosition
         labelGroupResult.MatchedLabel = request.label;
 
         // TODO should set match type
-        RemoveRemoves(labelGroupResult, []); // TODO probably do something else
+        FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
             
         return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
     }

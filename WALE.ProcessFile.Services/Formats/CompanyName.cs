@@ -26,12 +26,12 @@ public static class CompanyName
         
         foreach (var line in lines)
         {
-            if (GeneralChecks.ContainsForbiddenText(line, label))
+            if (LabelMatchingHelper.ContainsForbiddenText(line, label))
             {
                 continue;
             }
             
-            if (DataHelpers.IsCorruptedText(line?.Text))
+            if (DataHelper.IsCorruptedText(line?.Text))
             {
                 if (matched)
                 {
@@ -42,7 +42,7 @@ public static class CompanyName
             }
             
             var correctedLine = isOcr ? new DocumentLine(
-                DataHelpers.AutoCorrectText(line!, true)!,
+                AutoCorrectHelper.AutoCorrectText(line!, true)!,
                 line!.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
@@ -52,7 +52,7 @@ public static class CompanyName
                 line.LeftRounded) : line;
 
             correctedLine = new DocumentLine(
-                DataHelpers.TrimFormatting(correctedLine?.Text)!,
+                FormattingHelper.TrimFormatting(correctedLine?.Text)!,
                 correctedLine!.LineNumber,
                 correctedLine.PageNumber,
                 correctedLine.Words.ToList(),
@@ -61,7 +61,7 @@ public static class CompanyName
                 correctedLine.Left,
                 correctedLine.LeftRounded);
 
-            if (DataHelpers.IsCorruptedText(line?.Text))
+            if (DataHelper.IsCorruptedText(line?.Text))
             {
                 if (matched) break;
                 continue;
@@ -165,7 +165,7 @@ public static class CompanyName
             return false;
         }
         
-        if (GeneralChecks.ContainsForbiddenText(line, label))
+        if (LabelMatchingHelper.ContainsForbiddenText(line, label))
         {
             return false;
         }
@@ -183,7 +183,7 @@ public static class CompanyName
             && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))
             && parts.Last().Length >= 3
             && parts.Last().All(char.IsLetter)
-            && !parts.All(word => DataHelpers.Dictionary.Check(word) && word.Length > 1);
+            && !parts.All(word => DataHelper.Dictionary.Check(word) && word.Length > 1);
 
         if (looksLikeNameWithInitials && !line.Text.Contains('"'))
         {
@@ -257,6 +257,11 @@ public static class CompanyName
                 StringComparison.InvariantCultureIgnoreCase));
     }
     
+    public static bool MayBeInitials(string word)
+    {
+        return word.Length == 2 && word.All(char.IsUpper);
+    }
+    
     private static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
@@ -327,7 +332,7 @@ public static class CompanyName
                || text.Contains("grants this", StringComparison.InvariantCultureIgnoreCase)
                || text.Contains("a agency", StringComparison.InvariantCultureIgnoreCase);
     }
-
+    
     private static bool EndsWithNoneCompanyOrPersonalSuffix(string? text)
     {
         if (text == null)

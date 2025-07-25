@@ -1,6 +1,6 @@
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -10,22 +10,15 @@ public static class Split
     
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.labelGroupResult == null)
-        {
-            throw new ArgumentNullException(nameof(request.labelGroupResult));
-        }
-        
-        if (request.label == null)
-        {
-            throw new ArgumentNullException(nameof(request.label));
-        }
+        ArgumentNullException.ThrowIfNull(request.labelGroupResult);
+        ArgumentNullException.ThrowIfNull(request.label);
         
         if (request.label.Text == null || request.label.Text.Count == 0)
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
 
-        var lineContainsLabel = LineContainsLabel(
+        var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
             request.label.Text,
             LabelPosition.Split,
@@ -99,8 +92,8 @@ public static class Split
             }
         }
 
-        sub1ResultText = RemoveMultipleBlankLines(sub1ResultText);
-        sub2ResultText = RemoveMultipleBlankLines(sub2ResultText);
+        sub1ResultText = FormattingHelper.RemoveMultipleBlankLines(sub1ResultText);
+        sub2ResultText = FormattingHelper.RemoveMultipleBlankLines(sub2ResultText);
         
         sub1Result.Text = sub1ResultText;
         sub2Result.Text = sub2ResultText;

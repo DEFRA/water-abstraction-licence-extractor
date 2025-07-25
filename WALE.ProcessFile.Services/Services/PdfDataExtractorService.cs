@@ -6,7 +6,6 @@ using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
@@ -24,7 +23,7 @@ public class PdfDataExtractorService(
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
         var metadata = JsonSerializer.Deserialize<ImageMetadata>(
             metaDataFileText,
-            SharedHelper.GetSerializer());
+            JsonHelper.GetSerializer());
 
         return metadata!;
     }
@@ -49,7 +48,7 @@ public class PdfDataExtractorService(
         {
             await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
             
-            var pageImageService = new PdfPigNoOcrPageService(page.PdfPigPage!);
+            var pageImageService = new PdfPigNoOcrPageService(page.PdfPigPage!); // TODO should use the interface (via a factory)
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
@@ -65,8 +64,13 @@ public class PdfDataExtractorService(
                     imageNumber,
                     page.Number,
                     pdfDocument.OutputFolder);
+
+                if (extension == null)
+                {
+                    continue;
+                }
                 
-                var filepath = image.GetFilepath(imageNumber++, page.Number, outputFolder, false, extension);
+                var filepath = image.GetImageFilepath(imageNumber++, page.Number, outputFolder, false, extension);
                 metadataPage.ImageFiles.Add(filepath);
             }
         }
@@ -261,7 +265,7 @@ public class PdfDataExtractorService(
         
         await File.WriteAllTextAsync(
             GetImageMetadataFilename(pdfDocument),
-            JsonSerializer.Serialize(imagesMetadata, SharedHelper.GetSerializer()));
+            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializer()));
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
@@ -327,7 +331,7 @@ public class PdfDataExtractorService(
     
     private static string GetFileOutputFolder(string outputFolder, string pdfFilePath)
     {
-        var fileOutputFolder = Path.Combine(outputFolder, GetFilenameWithoutExtensions(pdfFilePath));
+        var fileOutputFolder = Path.Combine(outputFolder, FileHelper.GetFilenameWithoutExtensions(pdfFilePath));
         if (fileOutputFolder.StartsWith('/'))
         {
             fileOutputFolder = fileOutputFolder[1..];
@@ -400,7 +404,7 @@ public class PdfDataExtractorService(
                 PageNumber = line.PageNumber
             };
             
-            RemoveRemoves(labelResult, []); // TODO do this properly at some point
+            FormattingHelper.RemoveRemoves(labelResult, []); // TODO do this properly at some point
             returnList.Add(labelResult);
         }
 
@@ -423,7 +427,7 @@ public class PdfDataExtractorService(
                     
         foreach (var labelText in label.Text!)
         {
-            if (LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+            if (LabelMatchingHelper.LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
             {
                 continue;
             }
@@ -432,7 +436,7 @@ public class PdfDataExtractorService(
                         
             foreach (var previousLine in previousLines)
             {
-                if (LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                if (LabelMatchingHelper.LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -441,7 +445,7 @@ public class PdfDataExtractorService(
                         
             foreach (var nextLine in nextLines)
             {
-                if (LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                if (LabelMatchingHelper.LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -504,14 +508,14 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (IsLineEmpty(line)
+                if (FormattingHelper.IsLineEmpty(line)
                     && label.Text?.Any(text => text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
                     && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
                 {
                     continue;
                 }
                 
-                if (!LineContainsLabel(line, label.Text, label.Position, lineCount, totalLineCount, out var matchedText))
+                if (!LabelMatchingHelper.LineContainsLabel(line, label.Text, label.Position, lineCount, totalLineCount, out var matchedText))
                 {
                     continue;
                 }
@@ -829,8 +833,8 @@ public class PdfDataExtractorService(
             return [];
         }
 
-        var textBeforeLabel = TrimFormatting(line.Text[..labelTextPositionIndex]);
-        var textAfterLabel = TrimFormatting(line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..]);
+        var textBeforeLabel = FormattingHelper.TrimFormatting(line.Text[..labelTextPositionIndex]);
+        var textAfterLabel = FormattingHelper.TrimFormatting(line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..]);
         
         if (!string.IsNullOrEmpty(textAfterLabel)
             && label.Position is LabelPosition.LabelIsBeforeTextToFind
@@ -886,7 +890,7 @@ public class PdfDataExtractorService(
         return lines.Select((line, index) =>
             (
                 new DocumentLine(
-                    Standardise(line.Text),
+                    FormattingHelper.Standardise(line.Text),
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
@@ -912,7 +916,7 @@ public class PdfDataExtractorService(
             
             returnList.Add(
                 new DocumentLine(
-                    Standardise(line.Text),
+                    FormattingHelper.Standardise(line.Text),
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
@@ -939,7 +943,7 @@ public class PdfDataExtractorService(
             
             returnList.Add(
                 new DocumentLine(
-                    Standardise(line.Text),
+                    FormattingHelper.Standardise(line.Text),
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
@@ -966,7 +970,7 @@ public class PdfDataExtractorService(
         }
         
         return labelText.Any(text =>
-            Standardise(string.Join(',', lines.Select(line => line.Text))).Contains(text,
+            FormattingHelper.Standardise(string.Join(',', lines.Select(line => line.Text))).Contains(text,
                 StringComparison.InvariantCultureIgnoreCase));
     }
     

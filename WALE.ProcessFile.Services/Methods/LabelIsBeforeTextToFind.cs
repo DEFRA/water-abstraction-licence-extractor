@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -10,24 +10,17 @@ public static class LabelIsBeforeTextToFind
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.labelGroupResult == null)
-        {
-            throw new ArgumentNullException(nameof(request.labelGroupResult));
-        }
-        
-        if (request.label == null)
-        {
-            throw new ArgumentNullException(nameof(request.label));
-        }
+        ArgumentNullException.ThrowIfNull(request.labelGroupResult);
+        ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult.Clone();
         labelGroupResult.MatchType = MatchType.NearNextLineIsCompany;
         labelGroupResult.MatchedLabel = request.label.Clone();
         labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
 
-        var modifiedNextLines = RemoveExcludes(request.label, request.nextLines, out var removedLines);
+        var modifiedNextLines = DataHelper.RemoveExcludes(request.label, request.nextLines, out var removedLines);
         
-        if (request.isDateOrPurposeLookup && AnyIsDateOrPurpose(request.nextLines!, out var matchedLines))
+        if (request.isDateOrPurposeLookup && DateOrPurpose.AnyIsDateOrPurpose(request.nextLines!, out var matchedLines))
         {
             var returnList = new List<LabelGroupResult>();
                 
@@ -36,7 +29,7 @@ public static class LabelIsBeforeTextToFind
                 labelGroupResult = labelGroupResult.Clone();
                 labelGroupResult.Text = [matchedLine];
                 labelGroupResult.MatchedLabel!.Format = "DateOrPurpose";
-                RemoveRemoves(labelGroupResult, removedLines);                            
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);                            
                 
                 returnList.Add(labelGroupResult);
             }
@@ -49,21 +42,21 @@ public static class LabelIsBeforeTextToFind
         {
             labelGroupResult.Text = companyNameLine;
             labelGroupResult.MatchedLabel.Format = "CompanyName";
-            RemoveRemoves(labelGroupResult, removedLines);
+            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
             
             return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
         
-        if (request.isNumberLookup && AnyIsNumber(modifiedNextLines, out var numberLines))
+        if (request.isNumberLookup && Number.AnyIsNumber(modifiedNextLines, out var numberLines))
         {
             labelGroupResult.Text = [numberLines.First()];
             labelGroupResult.MatchedLabel.Format = "Number";
-            RemoveRemoves(labelGroupResult, removedLines);
+            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
             
             return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
 
-        if (request.isLicenceNumberLookup && AnyIsLicenceNumber(modifiedNextLines, request.label, out var licenceNumberLines))
+        if (request.isLicenceNumberLookup && LicenceNumber.AnyIsLicenceNumber(modifiedNextLines, request.label, out var licenceNumberLines))
         {
             var returnList = new List<LabelGroupResult>();
                 
@@ -72,7 +65,7 @@ public static class LabelIsBeforeTextToFind
                 labelGroupResult = labelGroupResult.Clone();
                 labelGroupResult.Text = [licenceNumberLine];
                 labelGroupResult.MatchedLabel!.Format = "LicenceNumber";
-                RemoveRemoves(labelGroupResult, removedLines);                            
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);                            
                 
                 returnList.Add(labelGroupResult);
             }
@@ -98,7 +91,7 @@ public static class LabelIsBeforeTextToFind
             ];
             
             labelGroupResult.MatchedLabel.Format = "SingleWord";
-            RemoveRemoves(labelGroupResult, removedLines);
+            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
             return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
         }
@@ -134,7 +127,7 @@ public static class LabelIsBeforeTextToFind
                     ];
                     
                     labelGroupResult.MatchedLabel.Format = "Units";
-                    RemoveRemoves(labelGroupResult, removedLines);
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
                     return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -81,10 +82,10 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     lineNumber++,
                     pageNumber,
                     line.Words!,
-                    -1,
-                    -1,
-                    -1,
-                    -1))
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate))
                 .ToList();
 
             // TODO add grouping and ordering

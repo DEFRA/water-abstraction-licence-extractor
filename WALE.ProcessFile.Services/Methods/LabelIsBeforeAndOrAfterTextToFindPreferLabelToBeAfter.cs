@@ -13,10 +13,10 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult.Clone();
-        labelGroupResult.MatchType = MatchType.NearPreviousLineIsCompany;
-        labelGroupResult.MatchedLabel = request.label.Clone();
-        labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
+        var labelGroupResult = request.labelGroupResult.Clone(
+            MatchType.NearPreviousLineIsCompany,
+            LabelPosition.LabelIsAfterTextToFind,
+            request.label);
         
         var inputLines = request.previousLines!.ToList();
         inputLines.Reverse();

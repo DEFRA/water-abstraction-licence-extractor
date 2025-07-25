@@ -28,8 +28,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (getFromCache)
         {
-            // TODO load from cache
-            
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText,
@@ -77,10 +75,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         using var memoryStream = pdfDocument.GetPageAsPng(pageNumber, RGBColor.White);
 
         memoryStream.WriteTo(fileStream);
+        var page = pdfDocument.Pages[pageNumber - 1];
+        
         return new PdfPage
         {
             Number = pageNumber,
-            NumberOfImages = pdfDocument.Pages[pageNumber-1].NumberOfImages
+            NumberOfImages = page.NumberOfImages
         };
     }
 
@@ -227,57 +227,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             $"Getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
             $" - {pdfDocument.PdfFilePath}");
         
-        foreach (var line in documentLines)
-        {
-            if (line.Text.Contains("TL545369"))
-            {
-                break;
-            }
-        }
-        
         return documentLines;
-    }
-
-    private static int SnapToPageRow(
-        double textPosition,
-        double lineHeight,
-        double firstTextPosition)
-    {
-        const double defaultTopPosition = 1000.0;
-        
-        var currentRowPosition = firstTextPosition; // e.g. 231.4
-        var halfLineHeight = lineHeight / 2.0; // e.g. 5.5
-
-        do
-        {
-            var rowTop = currentRowPosition + halfLineHeight; // e.g. 236.4
-            var rowBottom = currentRowPosition - halfLineHeight; // e.g. 225.4
-
-            // A lower top value is further down the page
-            if (textPosition <= rowTop && textPosition >= rowBottom)
-            {
-                return (int)currentRowPosition;
-            }
-
-            currentRowPosition -= lineHeight;
-        } while (currentRowPosition - lineHeight >= -lineHeight);
-
-        const double negligibleTolerance = 0.00001;
-        
-        if (Math.Abs(firstTextPosition - defaultTopPosition) < negligibleTolerance)
-        {
-            throw new ArgumentOutOfRangeException(nameof(firstTextPosition));
-        }
-        
-        return SnapToPageRow(textPosition, lineHeight, defaultTopPosition);
-    }
-    
-    private static int RoundToNearestN(double value, double roundTo)
-    {
-        var remainder = value % roundTo;
-        value += (remainder <= roundTo / 2) ? -remainder : (roundTo - remainder);
-        
-        return (int)value;
     }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
@@ -297,14 +247,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         var orderedPageLines = pageLines
             .SelectMany(textBlock => textBlock.TextLines)
-            .OrderByDescending(line => RoundToNearestN(
+            .OrderByDescending(line => LineSnappingHelper.RoundToNearestN(
                 line.BoundingBox.Centroid.Y,
                 LineHeight))
             .ThenBy(line => line.BoundingBox.Centroid.X)
             .ToList();
 
         var marginTop = orderedPageLines[0].BoundingBox.Top;
-        var normalFontSizeMax = 8.5;
+        const double normalFontSizeMax = 8.5;
         
         foreach (var pageLine in orderedPageLines)
         {
@@ -319,11 +269,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         return orderedPageLines
             .GroupBy(line => (
-                SnapToPageRow(
+                LineSnappingHelper.SnapToPageRow(
                     line.BoundingBox.Centroid.Y,
                     LineHeight,
                     marginTop),
-                RoundToNearestN(
+                LineSnappingHelper.RoundToNearestN(
                     line.BoundingBox.Centroid.X,
                     roundToHorizontal)))
             .SelectMany(lines =>
@@ -343,10 +293,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                             lineNumber++,
                             pageNumber,
                             [],
-                            -1,
-                            -1,
-                            -1,
-                            -1));
+                            PositionConstants.UnknownCoOrdinate,
+                            PositionConstants.UnknownCoOrdinate,
+                            PositionConstants.UnknownCoOrdinate,
+                            PositionConstants.UnknownCoOrdinate));
                 }
                 
                 previousLine = lines.First();
@@ -385,7 +335,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             return RecursiveXYCut
                 .Instance
                 .GetBlocks(page.GetWords())
-                .OrderByDescending(block => RoundToNearestN(
+                .OrderByDescending(block => LineSnappingHelper.RoundToNearestN(
                     block.BoundingBox.Centroid.Y,
                     LineHeight))
                 .ThenBy(block => block.BoundingBox.Centroid.X)

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace WALE.ProcessFile.Services.Models;
 
 public class DocumentLine(
@@ -43,4 +45,18 @@ public class DocumentLine(
     public double Left { get; set; } = left;
 
     public double LeftRounded { get; set; } = leftRounded;
+    
+    public DocumentLine Clone()
+    {
+        return JsonSerializer.Deserialize<DocumentLine>(
+            JsonSerializer.Serialize(this))!;
+    }
+    
+    public DocumentLine Clone(string text)
+    {
+        var cloned = Clone();
+        cloned.Text = text;
+        
+        return cloned;
+    }
 }

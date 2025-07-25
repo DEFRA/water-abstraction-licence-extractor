@@ -5,6 +5,8 @@ namespace WALE.ProcessFile.Services.Formats;
 
 public static partial class DateOrPurpose
 {
+    public const string Constant = "DateOrPurpose";
+    
     public static bool AnyIsDateOrPurpose(
         IEnumerable<DocumentLine?> lines,
         out List<DocumentLine> matchedLines)

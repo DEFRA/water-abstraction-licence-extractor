@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -82,10 +83,10 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                         word.Confidence * 100,
                         word.BoundingBox.ToList()))
                     .ToList(),
-                -1,
-                -1,
-                -1,
-                -1))            
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate))            
             .ToList();
     }
 
@@ -94,7 +95,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(line => RoundToNearestN(line.BoundingBox[3]!.Value, roundTo))
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo))
             .ThenBy(line => line.BoundingBox[0]!.Value);
 
         // TODO add grouping and ordering
@@ -111,10 +112,6 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             };
     }
     
-    private static int RoundToNearestN(double value, double roundTo)
-    {
-        return (int)Math.Round(value / roundTo) * (int)roundTo;
-    }
 
     public void Dispose()
     {

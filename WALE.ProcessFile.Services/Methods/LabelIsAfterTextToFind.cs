@@ -12,106 +12,70 @@ public static class LabelIsAfterTextToFind
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-        
-        var labelGroupResult = request.labelGroupResult.Clone();
-        labelGroupResult.MatchType = MatchType.NearPreviousLineIsCompany;
-        labelGroupResult.MatchedLabel = request.label.Clone();
-        labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
-        
-        var modifiedPreviousLines = DataHelper.RemoveExcludes(request.label, request.previousLines, out var removedLines);
-        
-        if (request.isDateOrPurposeLookup && DateOrPurpose.AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
-        {
-            var returnList = new List<LabelGroupResult>();
-                
-            foreach (var matchedLine in matchedLines)
-            {
-                labelGroupResult = labelGroupResult.Clone();
-                labelGroupResult.Text = [matchedLine];
-                labelGroupResult.MatchedLabel!.Format = "DateOrPurpose";
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);                            
-                
-                returnList.Add(labelGroupResult);
-            }
 
-            return Task.FromResult(returnList);
-        }
+        var labelGroupResult = request.labelGroupResult.Clone(
+            MatchType.NearPreviousLineIsCompany,
+            LabelPosition.LabelIsAfterTextToFind,
+            request.label);
         
-        if (request.isCompanyType
-            && CompanyName.AnyIsCompanyOrPersonalName(modifiedPreviousLines, request.label,true, request.isOcr, out var companyNameLine))
-        {
-            labelGroupResult.Text = companyNameLine;
-            labelGroupResult.MatchedLabel.Format = "CompanyName";
-            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-            
-            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
-        }
+        var modifiedPreviousLines = DataHelper.RemoveExcludes(
+            request.label,
+            request.previousLines,
+            out var removedLines);
 
-        if (request.isNumberLookup && Number.AnyIsNumber(modifiedPreviousLines, out var numberLines))
-        {
-            labelGroupResult.Text = [numberLines.First()];
-            labelGroupResult.MatchedLabel.Format = "Number";
-            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);                        
-            
-            return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
-        }
-        
-        if (request.isLicenceNumberLookup && LicenceNumber.AnyIsLicenceNumber(modifiedPreviousLines, request.label, out var licenceNumberLines))
-        {
-            var returnList = new List<LabelGroupResult>();
-                
-            foreach (var licenceNumberLine in licenceNumberLines)
-            {
-                labelGroupResult = labelGroupResult.Clone();
-                labelGroupResult.Text = [licenceNumberLine];
-                labelGroupResult.MatchedLabel!.Format = "LicenceNumber";
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                
-                returnList.Add(labelGroupResult);
-            }
+        var returnList = new List<LabelGroupResult>();
 
-            return Task.FromResult(returnList);
-        }
-        
-        if (request.isUnitsLookup)
+        switch (request.label.Format)
         {
-            foreach (var previousLine in modifiedPreviousLines)
-            {
-                if (labelGroupResult.MatchedLabel.Possibilities == null)
+            case DateOrPurpose.Constant:
+                if (DateOrPurpose.AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
                 {
-                    continue;
-                }
-                
-                foreach (var possibility in labelGroupResult.MatchedLabel.Possibilities!)
-                {
-                    if (!previousLine.Text.Contains(possibility,
-                            StringComparison.InvariantCultureIgnoreCase))
+                    foreach (var matchedLine in matchedLines)
                     {
-                        continue;
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        returnList.Add(labelGroupResult);
                     }
-
-                    labelGroupResult.Text =
-                    [
-                        new DocumentLine(
-                        possibility,
-                        previousLine.LineNumber,
-                        previousLine.PageNumber,
-                        previousLine.Words.ToList(),
-                        previousLine.Top,
-                        previousLine.TopRounded,
-                        previousLine.Left,
-                        previousLine.LeftRounded)
-                    ];
-                    
-                    labelGroupResult.MatchedLabel.Format = "Units";
-                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                    labelGroupResult.MatchedLabel.Possibilities = [possibility];
-                    
-                    return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
                 }
-            }
+                break;
+            case CompanyName.Constant:
+                if (CompanyName.AnyIsCompanyOrPersonalName(modifiedPreviousLines, request.label, true, request.isOcr,
+                    out var companyNameLine))
+                {
+                    labelGroupResult.Text = companyNameLine;
+                    returnList.Add(labelGroupResult);
+                }
+                
+                break;
+            case Number.Constant:
+                if (Number.AnyIsNumber(modifiedPreviousLines, out var numberLines))
+                {
+                    labelGroupResult.Text = [numberLines.First()];
+                    returnList.Add(labelGroupResult);
+                }
+                
+                break;
+            case LicenceNumber.Constant:
+                if (LicenceNumber.AnyIsLicenceNumber(modifiedPreviousLines, request.label, out var licenceNumberLines))
+                {
+                    foreach (var licenceNumberLine in licenceNumberLines)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                
+                break;
+            case Units.Constant:
+                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, modifiedPreviousLines, labelGroupResult));
+
+                break;
+        }
+
+        foreach (var item in returnList)
+        {
+            FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return  Task.FromResult(new List<LabelGroupResult>());
+        return Task.FromResult(returnList);
     }
 }

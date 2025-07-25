@@ -1,4 +1,5 @@
 using System.Text.Json;
+using WALE.ProcessFile.Services.Enums;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Models;
@@ -27,5 +28,23 @@ public class LabelGroupResult
     {
         return JsonSerializer.Deserialize<LabelGroupResult>(
             JsonSerializer.Serialize(this))!;
+    }
+
+    public LabelGroupResult Clone(MatchType matchType, LabelPosition position, LabelToMatch label)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedLabel = label.Clone();
+        labelGroupResult.MatchedLabel.Position = position;
+
+        return labelGroupResult;
+    }
+    
+    public LabelGroupResult Clone(IReadOnlyList<DocumentLine> text)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.Text = text;
+
+        return labelGroupResult;
     }
 }

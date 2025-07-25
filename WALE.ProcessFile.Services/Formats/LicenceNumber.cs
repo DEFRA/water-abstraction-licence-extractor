@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Services.Formats;
 
 public static partial class LicenceNumber
 {
+    public const string Constant = "LicenceNumber";
+    
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,

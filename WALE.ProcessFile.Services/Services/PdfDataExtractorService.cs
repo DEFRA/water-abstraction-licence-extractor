@@ -235,21 +235,6 @@ public class PdfDataExtractorService(
             }                
         }
 
-        /*
-            var imageLines =
-                await ocrService.GetTextLinesFromImageAsync(
-                    imageBytes,
-                    page.Number,
-                    thisImageNumber,
-                    pdfDocument);
-
-            Directory.CreateDirectory($"{pdfDocument.OutputFolder}/{ocrService.Name}/Text");
-                        
-                await File.WriteAllTextAsync(
-                    $"{pdfDocument.OutputFolder}/{ocrService.Name}/Text/page-{page.Number}-image-{thisImageNumber}.txt",
-                    string.Join("\r\n", imageLines.Select(x => $"{x.LineNumber} {x.Text}").ToArray()));
-        }*/
-
         await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);
         noOcrDataExtractorService.Release(pdfDocument);
 
@@ -745,11 +730,6 @@ public class PdfDataExtractorService(
                     
         if (label.SubLabels?.Count > 0)
         {
-            if (label.Name == "DocumentPurposesAll")
-            {
-                
-            }
-            
             foreach (var subLabel in label.SubLabels)
             {
                 if (subLabel.Remove == null && label.Remove != null)

@@ -8,24 +8,28 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 {
     public async Task<string?> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
     {
+        const string pngExtension = "png";
+        const string bmpExtension = "bmp";
+        const string jpgExtension = "jpg";
+        
         try
         {
             if (imageData.TryGetPng(out var bytes))
             {
                 await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "png"),
+                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, pngExtension),
                     bytes);
                 
-                return "png";
+                return pngExtension;
             }
 
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
                 await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "bmp"),
+                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, bmpExtension),
                     bytesMemory.ToArray());
                 
-                return "bmp";
+                return bmpExtension;
             }
 
             var bytesSpanAry = imageData.RawBytes.ToArray();
@@ -35,10 +39,10 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             }
 
             await File.WriteAllBytesAsync(
-                GetImageFilepath(imageNumber, pageNumber, outputFolder, true, "jpg"),
+                GetImageFilepath(imageNumber, pageNumber, outputFolder, true, jpgExtension),
                 bytesSpanAry);
             
-            return "jpg";
+            return jpgExtension;
         }
         catch (Exception exception)
         {

@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Services.Formats;
 
 public static class Number
 {
+    public const string Constant = "Number";
+    
     public static bool TryGetNumber(
         string? text,
         int lineNumber,

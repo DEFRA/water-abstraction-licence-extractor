@@ -13,12 +13,15 @@ public static class LabelIsBeforeTextToFind
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult.Clone();
-        labelGroupResult.MatchType = MatchType.NearNextLineIsCompany;
-        labelGroupResult.MatchedLabel = request.label.Clone();
-        labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+        var labelGroupResult = request.labelGroupResult.Clone(
+            MatchType.NearNextLineIsCompany,
+            LabelPosition.LabelIsBeforeTextToFind,
+            request.label);
 
-        var modifiedNextLines = DataHelper.RemoveExcludes(request.label, request.nextLines, out var removedLines);
+        var modifiedNextLines = DataHelper.RemoveExcludes(
+            request.label,
+            request.nextLines,
+            out var removedLines);
         
         if (request.isDateOrPurposeLookup && DateOrPurpose.AnyIsDateOrPurpose(request.nextLines!, out var matchedLines))
         {

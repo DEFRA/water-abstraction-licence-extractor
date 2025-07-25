@@ -9,20 +9,8 @@ public static partial class DateOrPurpose
         IEnumerable<DocumentLine?> lines,
         out List<DocumentLine> matchedLines)
     {
-        var returnValue = false;
-        var outList = new List<DocumentLine>();
-        
-        foreach (var line in lines)
-        {
-            if (IsDateOrPurpose(line!.Text))
-            {
-                outList.Add(line);
-                returnValue = true;
-            }
-        }
-
-        matchedLines = outList;
-        return returnValue;
+        matchedLines = lines.Where(line => IsDateOrPurpose(line?.Text)).ToList()!;
+        return matchedLines.Count > 0;
     }
     
     public static bool IsDateOrPurpose(string? text)
@@ -32,12 +20,8 @@ public static partial class DateOrPurpose
             return false;
         }
 
-        if (text.Contains("aggregate"))
-        {
-            return true;
-        }
-
-        return YearRegex().IsMatch(text);
+        const string purposeWord = "aggregate";
+        return text.Contains(purposeWord) || YearRegex().IsMatch(text);
     }
     
     [GeneratedRegex(@"19\d\d|20\d\d")]

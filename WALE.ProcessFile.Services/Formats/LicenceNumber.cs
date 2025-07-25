@@ -32,14 +32,16 @@ public static partial class LicenceNumber
                 continue;
             }
 
+            const string splitChar = ",";
+
             var subLines = line.Text
-                .Replace(" and", ",")
-                .Replace(" for", ",")
-                .Replace(" shall", ",")
-                .Replace(" under", ",")
-                .Replace(" from", ",")
-                .Replace(" (", ",")                
-                .Split(',');
+                .Replace(" and", splitChar)
+                .Replace(" for", splitChar)
+                .Replace(" shall", splitChar)
+                .Replace(" under", splitChar)
+                .Replace(" from", splitChar)
+                .Replace(" (", splitChar)                
+                .Split(splitChar);
 
             foreach (var subLine in subLines)
             {

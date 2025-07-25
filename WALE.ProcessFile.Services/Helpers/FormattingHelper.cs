@@ -20,16 +20,6 @@ public class FormattingHelper
         return returnList;
     }
     
-    public static IEnumerable<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
-    {
-        return sourceList
-            .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
-            .Reverse()
-            .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
-            .Reverse()
-            .ToList();
-    }
-    
     public static string? TrimFormatting(string? text)
     {
         var trimmed = text?.Trim();
@@ -118,5 +108,15 @@ public class FormattingHelper
         {
             labelGroupResult.MatchedLabel.Remove = null;
         }
+    }
+    
+    private static IEnumerable<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
+    {
+        return sourceList
+            .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
+            .Reverse()
+            .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
+            .Reverse()
+            .ToList();
     }
 }

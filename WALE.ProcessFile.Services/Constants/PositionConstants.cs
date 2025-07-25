@@ -2,7 +2,9 @@ namespace WALE.ProcessFile.Services.Constants;
 
 public static class PositionConstants
 {
-    public static int UNKNOWN_LINES_TOTAL = -1;
-    public static int POSITION_NOT_FOUND = -1;
-    public static readonly string CacheMetadataFilename = "cache-metadata.json";
+    public const int UnknownLinesTotal = -1;
+    public const int UnknownLineNumber = -1;
+    
+    public const int PositionNotFound = -1;
+    public const string CacheMetadataFilename = "cache-metadata.json";
 }

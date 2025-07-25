@@ -15,11 +15,14 @@ public class LabelMatchingHelper
     public static bool PotentialMatchOnLabelLine(
         IEnumerable<(string? Text, LabelToMatch Label)> textBeforeAndAfterLabel)
     {
+        const string shortHyphen = "-";
+        const string longHyphen = "—";
+        
         foreach (var (text, _) in textBeforeAndAfterLabel)
         {
             if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(text)
-                && text!.Trim() != "-"
-                && text.Trim() != "—")
+                && text!.Trim() != shortHyphen
+                && text.Trim() != longHyphen)
             {
                 return true;
             }
@@ -41,21 +44,24 @@ public class LabelMatchingHelper
             matchedText = null;
             return true;
         }
+
+        const string startOfBlockMarker = "[START_OF_BLOCK]";
+        const string endOfLineMarker = "[END_OF_LINE]";
         
         foreach (var textItem in labelText)
         {
             if (lineCount == 0
-                && textItem.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase))
+                && textItem.Equals(startOfBlockMarker, StringComparison.InvariantCultureIgnoreCase))
             {
                 matchedText = textItem;
                 return true;
             }
          
-            var mustEndLine = textItem.Contains("[END_OF_LINE]");
+            var mustEndLine = textItem.Contains(endOfLineMarker);
 
             if (mustEndLine)
             {
-                var tItem = textItem.Replace("[END_OF_LINE]", string.Empty);
+                var tItem = textItem.Replace(endOfLineMarker, string.Empty);
 
                 if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
                 {

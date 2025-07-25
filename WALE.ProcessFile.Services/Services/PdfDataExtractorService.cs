@@ -427,7 +427,7 @@ public class PdfDataExtractorService(
                     
         foreach (var labelText in label.Text!)
         {
-            if (LabelMatchingHelper.LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+            if (LabelMatchingHelper.LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
             {
                 continue;
             }
@@ -436,7 +436,7 @@ public class PdfDataExtractorService(
                         
             foreach (var previousLine in previousLines)
             {
-                if (LabelMatchingHelper.LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                if (LabelMatchingHelper.LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -445,7 +445,7 @@ public class PdfDataExtractorService(
                         
             foreach (var nextLine in nextLines)
             {
-                if (LabelMatchingHelper.LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UNKNOWN_LINES_TOTAL, out _))
+                if (LabelMatchingHelper.LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -800,7 +800,7 @@ public class PdfDataExtractorService(
             return returnItems;
         }
         
-        var labelTextPositionIndex = PositionConstants.POSITION_NOT_FOUND;
+        var labelTextPositionIndex = PositionConstants.PositionNotFound;
         string? matchedLabelText = null;
 
         foreach (var labelText in label.Text!)
@@ -811,7 +811,7 @@ public class PdfDataExtractorService(
                     labelText,
                     StringComparison.InvariantCultureIgnoreCase);
 
-                if (index > PositionConstants.POSITION_NOT_FOUND)
+                if (index > PositionConstants.PositionNotFound)
                 {
                     labelTextPositionIndex = index;
                     matchedLabelText = labelText;
@@ -828,7 +828,7 @@ public class PdfDataExtractorService(
             }
         }
 
-        if (labelTextPositionIndex == PositionConstants.POSITION_NOT_FOUND)
+        if (labelTextPositionIndex == PositionConstants.PositionNotFound)
         {
             return [];
         }

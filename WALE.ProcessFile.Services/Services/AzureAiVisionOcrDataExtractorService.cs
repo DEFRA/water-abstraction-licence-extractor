@@ -1,9 +1,10 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -15,26 +16,26 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(byte[] imageData, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var lines = new List<(string Text, IList<Word> Words)>();
+        var returnLines = new List<(string Text, IList<Word> Words)>();
 
         var folder = $"{pdfDocument.OutputFolder}/{Name}/Text";
-        Directory.CreateDirectory(folder);
-        
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         
         if (pdfDocument.FromCache && File.Exists(outputFilename))
         {
-            var txt = await File.ReadAllTextAsync(outputFilename);
-            var page = JsonSerializer.Deserialize<ReadResult>(txt);
+            var cachedText = await File.ReadAllTextAsync(outputFilename);
+            var cachedPage = JsonSerializer.Deserialize<ReadResult>(
+                cachedText,
+                JsonHelper.GetSerializer());
 
-            var pageLines = ToPageLines(page!);
-            lines.AddRange(pageLines);
+            var pageLines = ToPageLines(cachedPage!);
+            returnLines.AddRange(pageLines);
         }
         else
         {
-            using var stream = new MemoryStream(imageData);
+            await using var stream = new FileStream(imageFilepath, FileMode.Open);
             var textHeaders = await _client.ReadInStreamAsync(stream);
 
             const int waitBeforeCheck = 2000;
@@ -56,20 +57,22 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             }
             while (results.Status is OperationStatusCodes.Running or OperationStatusCodes.NotStarted);
             
+            Directory.CreateDirectory(folder);
+            
             foreach (var page in results.AnalyzeResult.ReadResults)
             {
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page));
+                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page, JsonHelper.GetSerializer()));
 
                 var pageLines = ToPageLines(page!);
-                lines.AddRange(pageLines);
+                returnLines.AddRange(pageLines);
             }
         }
 
         var lineNumber = 0;
         
-        return lines
-            .Where(line => !IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Select(line => (Standardise(line.Text), line.Words))
+        return returnLines
+            .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
+            .Select(line => (FormattingHelper.Standardise(line.Text), line.Words))
             .Select(line => new DocumentLine(
                 line.Item1,
                 lineNumber++,
@@ -79,7 +82,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                         word.Text,
                         word.Confidence * 100,
                         word.BoundingBox.ToList()))
-                    .ToList()))            
+                    .ToList(),
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate,
+                PositionConstants.UnknownCoOrdinate))            
             .ToList();
     }
 
@@ -88,9 +95,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(x => RoundToNearestN(x.BoundingBox[3]!.Value, roundTo))
-            .ThenBy(x => x.BoundingBox[0]!.Value);
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo))
+            .ThenBy(line => line.BoundingBox[0]!.Value);
 
+        // TODO add grouping and ordering
+        
         return pageLines.Select(line => (line.Text, line.Words));
     }
     
@@ -103,8 +112,9 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             };
     }
     
-    private static int RoundToNearestN(double value, double roundTo)
+
+    public void Dispose()
     {
-        return (int)Math.Round(value / roundTo) * (int)roundTo;
+        GC.SuppressFinalize(this);
     }
 }

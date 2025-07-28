@@ -10,6 +10,7 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
+const bool refreshCache = false;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -101,11 +102,10 @@ foreach (var line in fileMappingContents)
 try
 {
     var processingTasks = new List<Task>();
-    const bool useCachedResponse = false;
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
-        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping, useCachedResponse));
+        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping, !refreshCache));
 
         if (processingTasks.Count == concurrentCount)
         {
@@ -117,6 +117,11 @@ try
     if (processingTasks.Count > 0)
     {
         await Task.WhenAll(processingTasks);
+    }
+
+    foreach (var pdfDataExtractor in pdfDataExtractors)
+    {
+        pdfDataExtractor.Dispose();
     }
 }
 catch (Exception e)
@@ -189,7 +194,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 
     var color = fileCount % 2 == 0 ? "#F6F6F6" : "#FAFAFA";
     var backgroundCss = $"style='background-color: {color}'";
-    var filename = DataHelpers.GetFilenameWithoutExtensions(outputLine.Filename!);
+    var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
     var filenameForScreen = outputLine.Filename;
 
     if (filenameForScreen?.Length > 30)
@@ -347,13 +352,15 @@ async Task HandleFileAsync(
             pdfFilePath
         };
         
-        var matches = await pdfDataExtractor.GetMatchesAsync(
+        var matches1 = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             LabelConfiguration.GetLabels(),
             licenceMapping,
             previouslyParsedPaths,
             outputFolder,
             useCache);
+
+        var matches = matches1.Matches!;
         
         var purposeMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var purposeText = purposeMatch?.Text?.FirstOrDefault()?.Text ?? "--";
@@ -423,15 +430,9 @@ async Task HandleFileAsync(
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
 
-        var filenameOnlyNoExtension = DataHelpers.GetFilenameWithoutExtensions(pdfFilePath);
-        NullOutSubLabels(matches);
-
-        var json = JsonSerializer.Serialize(new ParseResult
-        {
-            Filename = pdfFilePath.Split('/').Last(),
-            Matches = matches
-        }, jsonOptions);
-
+        var json = JsonHelper.GetAsString(matches1);
+        
+        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
         
         File.WriteAllText(
@@ -457,7 +458,7 @@ async Task HandleFileAsync(
             LineNumber = completeNumber++,
             StartNumber = fileNumber,
             Filename = fileName,
-            LicenceHolder = $"[Error] {exception.Message}",
+            LicenceHolder = $"[Error] {exception.Message} {exception.StackTrace}",
             Ocr = "0",
             ServiceName = "NA",
             Duration = durationInSeconds
@@ -466,22 +467,6 @@ async Task HandleFileAsync(
     finally
     {
         pdfDataExtractor.InUse = false;
-    }
-}
-
-static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
-{
-    foreach (var match in matches)
-    {
-        if (match.MatchedLabel != null)
-        {
-            match.MatchedLabel.SubLabels = null;
-        }
-
-        if (match.SubResults != null)
-        {
-            NullOutSubLabels(match.SubResults);
-        }
     }
 }
 
@@ -505,6 +490,8 @@ IEnumerable<string> GetPdfPaths()
     var pdfFilePaths = Directory
         .GetFiles(pdfFolderPath)
         .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
+
+    //var rnd = new Random();
     
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence - Old 6078869.PDF")).ToArray();
@@ -518,8 +505,8 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Take(1).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Issued Licence - 01081966.PDF")).ToArray();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Non-Application Licence Document (14.09.1992).PDF")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
     return pdfFilePaths;
@@ -529,27 +516,4 @@ void Log(string message, StringBuilder outputStringBuilder)
 {
 //    Console.WriteLine(message);
     outputStringBuilder.Append(message);
-}
-
-class OutputLine
-{
-    public int LineNumber;
-    public int StartNumber;
-    public string? Filename;
-    public string? LicenceHolder;
-    public double? LicenceHolderOcrConfidence;
-    public string? Ocr;
-    public string? Purposes;
-    public string? ServiceName;
-    public int Certainty;
-    public string? MatchType;
-    public int Duration;
-    public string? MatchedLabelText;
-    public string? MatchedLabelPosition;
-    public string? LicenceNumber;
-    public double? LicenceNumberOcrConfidence;
-    public bool LimitsFound;
-    public bool MeansFound;
-    public string? LinkedLicenceNumbers;
-    public int NodeId;
 }

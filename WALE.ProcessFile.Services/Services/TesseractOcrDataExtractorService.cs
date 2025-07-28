@@ -1,8 +1,10 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using static WALE.ProcessFile.Services.Helpers.DataHelpers;
+using WALE.ProcessFile.Services.Models.TesseractOcr;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -14,7 +16,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     public string Name => "TesseractOcr";
     
     public Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(byte[] imageData, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {
@@ -22,17 +24,21 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             Directory.CreateDirectory(folder);
         
             var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
-            var lines = new List<LineAndWords>();
+            var returnLines = new List<LineAndWords>();
             
             if (pdfDocument.FromCache && File.Exists(outputFilename))
             {
                 var fileText = await File.ReadAllTextAsync(outputFilename);
-                lines = JsonSerializer.Deserialize<List<LineAndWords>>(fileText);
+                var pageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
+                    fileText,
+                    JsonHelper.GetSerializer());
+                
+                returnLines.AddRange(pageLines!);
             }
             else
             {
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                using var ocrImage = Pix.LoadFromMemory(imageData);
+                using var ocrImage = Pix.LoadFromFile(imageFilename);
                 using var page = _tesseractEngine.Process(ocrImage);
                 
                 using var iterator = page.GetIterator();
@@ -60,32 +66,32 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                             ]));
                     } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
-                    lines.Add(new LineAndWords { Text = line, Words = words });
+                    returnLines.Add(new LineAndWords { Text = line, Words = words });
                 } while (iterator.Next(PageIteratorLevel.TextLine));
                 
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(lines));
+                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializer()));
             }
             
             var lineNumber = 0;
             
-            var results = lines!
-                .Where(line => !IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-                .Select(line => (Standardise(line.Text!), line.Words))
+            var results = returnLines!
+                .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
+                .Select(line => (FormattingHelper.Standardise(line.Text!), line.Words))
                 .Select(line => new DocumentLine(
                     line.Item1,
                     lineNumber++,
                     pageNumber,
-                    line.Words!))
+                    line.Words!,
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate,
+                    PositionConstants.UnknownCoOrdinate))
                 .ToList();
 
+            // TODO add grouping and ordering
+            
             return (IReadOnlyList<DocumentLine>)results;
         });
-    }
-    
-    private class LineAndWords
-    {
-        public string? Text { get; set; }
-        public List<DocumentLineWord?>? Words { get; set; }        
     }
     
     public void Dispose()

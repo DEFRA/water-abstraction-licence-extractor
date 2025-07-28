@@ -31,13 +31,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -45,7 +45,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        // NOTE - According to companies house this is actual H.N. BUTLER FARMS LIMITED        
+        // NOTE - According to companies house this is actual H.N. BUTLER FARMS LTD        
         Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text!);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
@@ -104,13 +104,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -176,13 +176,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -199,7 +199,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(10, abstractionLimitsResult.Text?.Count);        
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -253,13 +253,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -275,7 +275,7 @@ public class AzureAiVisionOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(12, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -319,13 +319,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -384,13 +384,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -398,7 +398,7 @@ public class AzureAiVisionOcrPdfTests
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
         // Is crossed out but Azure AI can read it
-        Assert.Equal("WARRINGTON RUNCORN AND DISTRICT WATER BOARD", nameResult.Text?.First().Text);
+        Assert.Equal("WARRINGTON, RUNCORN AND DISTRICT WATER BOARD", nameResult.Text?.First().Text);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
@@ -450,13 +450,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -474,14 +474,17 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(12, abstractionLimitsSection.Text?.Count);
+        
+        Assert.Single(abstractionLimitsSection.SubResults!);
+        Assert.Equal(12, abstractionLimitsSection.SubResults![0].Text!.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
     
     [Fact]
@@ -491,13 +494,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache);
+            UseCache)).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -523,5 +526,45 @@ public class AzureAiVisionOcrPdfTests
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+    }
+    
+    [Fact(Skip = "DebuggingImageIssue")]
+    public async Task ScannedFileUploaded_ThenFindXuncorn_DebuggingTest()
+    {
+        // Arrange
+        const string filename = "Licence - Old 6082700.PDF";
+
+        if (File.Exists("Licence - Old 6082700/PdfPig/Text/cache-metadata.json"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Text/cache-metadata.json");
+        }        
+        
+        if (File.Exists("Licence - Old 6082700/PdfPig/Images/cache-metadata.json"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Images/cache-metadata.json");
+        }
+
+        if (File.Exists("Licence - Old 6082700/PdfPig/Images/page-1-image-1.bmp"))
+        {
+            File.Delete("Licence - Old 6082700/PdfPig/Images/page-1-image-1.bmp");
+        }
+
+        if (File.Exists("Licence - Old 6082700/AzureAiVisionOcr/Text/ocr-page-1-image-1.json"))
+        {
+            File.Delete("Licence - Old 6082700/AzureAiVisionOcr/Text/ocr-page-1-image-1.json");
+        }
+
+        // Act
+        var resultList = await _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + filename,
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            [PdfFolder + filename],
+            string.Empty,
+            UseCache);
+
+        // Assert
+        var allText = string.Join(' ', resultList.Pages[0].Providers[1].Text!);
+        Assert.Contains("UNCORN", allText);
     }
 }

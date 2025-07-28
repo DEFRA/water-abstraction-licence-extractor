@@ -120,11 +120,113 @@ public static partial class DataHelpers
             .Reverse()
             .ToList();
     }
+    
+    public static List<DocumentLine> RemoveExcludes(
+        LabelToMatch label,
+        IReadOnlyList<DocumentLine>? betweenText,
+        out IReadOnlyList<string>? removesUsed)
+    {
+        removesUsed = null;
+        var returnList = betweenText != null ? [..betweenText] : new List<DocumentLine>();
+        
+        if (label.Remove?.Any() != true || betweenText == null)
+        {
+            return RemoveMultipleBlankLines(returnList);
+        }
+
+        var removesUsedList = new List<string>();
+        
+        for (var idx = 0; idx < returnList.Count; idx++)
+        {
+            var line = returnList[idx];
+            
+            returnList[idx] = new DocumentLine(
+                RemoveExcludes(label, betweenText[idx].Text, out var removesUsedLoop),
+                line.LineNumber,
+                line.PageNumber,
+                line.Words.ToList(),
+                line.Top,
+                line.TopRounded,
+                line.Left,
+                line.LeftRounded);
+
+            if (removesUsedLoop != null)
+            {
+                removesUsedList.AddRange(removesUsedLoop);
+            }
+        }
+
+        removesUsed = removesUsedList;
+        return RemoveMultipleBlankLines(returnList);
+    }
+    
+    public static string RemoveExcludes(
+        LabelToMatch label,
+        string betweenText,
+        out IReadOnlyList<string>? removesUsed)
+    {
+        removesUsed = null;
+        
+        if (label.Remove?.Any() != true || string.IsNullOrEmpty(betweenText))
+        {
+            return betweenText;
+        }
+
+        var returnStr = betweenText;
+        var removesUsedList = new List<string>();
+        
+        foreach (var textToMatch in label.Remove)
+        {
+            if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
+            {
+                var pattern = textToMatch.Text.Substring(1, textToMatch.Text!.Length - 2);
+
+                if (Regex.IsMatch(returnStr, pattern))
+                {
+                    returnStr = Regex.Replace(
+                        returnStr,
+                        pattern,
+                        string.Empty);
+                    
+                    removesUsedList.Add(textToMatch.Text);
+                }
+                
+                continue;
+            }
+
+            if (!returnStr.Contains(textToMatch.Text))
+            {
+                continue;
+            }
+
+            if (textToMatch.LineMustStartWith && !returnStr.StartsWith(textToMatch.Text))
+            {
+                continue;
+            }
+
+            if (textToMatch.RemoveWholeLine)
+            {
+                removesUsedList.Add(returnStr);
+                returnStr = string.Empty;
+                
+                continue;
+            }
+            returnStr = returnStr.Replace(
+                textToMatch.Text,
+                string.Empty,
+                StringComparison.InvariantCultureIgnoreCase);
+
+            removesUsedList.Add(textToMatch.Text);
+        }
+
+        removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
+        return TrimFormatting(returnStr)!;
+    }
 
     public static string? TrimFormatting(string? text)
     {
         var trimmed = text?.Trim();
-
+        
         while (trimmed?.Length >= 1
             && (char.IsPunctuation(trimmed[0])
                 || char.IsSymbol(trimmed[0])
@@ -321,7 +423,11 @@ public static partial class DataHelpers
                                 numberLine.Trim(),
                                 line.LineNumber,
                                 line.PageNumber,
-                                line.Words.ToList()
+                                line.Words.ToList(),
+                                line.Top,
+                                line.TopRounded,
+                                line.Left,
+                                line.LeftRounded
                             ));
                                 
                             anyIsMatch = true;
@@ -352,9 +458,9 @@ public static partial class DataHelpers
 
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
-        out DocumentLine? numberLine)
+        out List<DocumentLine> numberLines)
     {
-        numberLine = null;
+        numberLines = [];
 
         var matched = false;
         var returnLines = new List<double>();
@@ -407,13 +513,18 @@ public static partial class DataHelpers
 
         if (returnLines.Count > 0)
         {
-            var tempLine = returnLines.First(); // TODO something maybe relies on the following -  .MaxBy(text => text);
-            
-            numberLine = new DocumentLine(
-                tempLine.ToString(CultureInfo.InvariantCulture),
-                lineNumber,
-                pageNumber,
-                lineWords);
+            foreach (var tempLine in returnLines.OrderByDescending(text => text))
+            {
+                numberLines.Add(new DocumentLine(
+                    tempLine.ToString(CultureInfo.InvariantCulture),
+                    lineNumber,
+                    pageNumber,
+                    lineWords,
+                    -1,
+                    -1,
+                    -1,
+                    -1));
+            }
         }
         
         return matched;
@@ -451,13 +562,21 @@ public static partial class DataHelpers
                 AutoCorrectText(line!, true)!,
                 line!.LineNumber,
                 line.PageNumber,
-                line.Words.ToList()) : line;
+                line.Words.ToList(),
+                line.Top,
+                line.TopRounded,
+                line.Left,
+                line.LeftRounded) : line;
 
             correctedLine = new DocumentLine(
                 TrimFormatting(correctedLine?.Text)!,
                 correctedLine!.LineNumber,
                 correctedLine.PageNumber,
-                correctedLine.Words.ToList());
+                correctedLine.Words.ToList(),
+                correctedLine.Top,
+                correctedLine.TopRounded,
+                correctedLine.Left,
+                correctedLine.LeftRounded);
 
             if (IsCorruptedText(line?.Text))
             {
@@ -475,7 +594,11 @@ public static partial class DataHelpers
                 companyOrPersonalName!,
                 correctedLine.LineNumber,
                 correctedLine.PageNumber,
-                correctedLine.Words.ToList());
+                correctedLine.Words.ToList(),
+                correctedLine.Top,
+                correctedLine.TopRounded,
+                correctedLine.Left,
+                correctedLine.LeftRounded);
             
             // It's only the company suffix with nothing else
             if (CompanySuffixes.Any(companySuffix =>
@@ -532,7 +655,11 @@ public static partial class DataHelpers
                     returnLine,
                     lineNumber,
                     pageNumber,
-                    lineWords)));
+                    lineWords,
+                    -1,
+                    -1,
+                    -1,
+                    -1)));
         }
 
         if (returnList.Count > 0)
@@ -605,7 +732,9 @@ public static partial class DataHelpers
                 if (
                     (word.Length == 1 || !Dictionary.Check(word))
                     && !string.IsNullOrWhiteSpace(nextWord)
-                    && (word.Length > 1 || nextWord.Length > 1))
+                    && (word.Length > 1 || nextWord.Length > 1)
+                    && word.All(char.IsLetterOrDigit)
+                    && nextWord.All(char.IsLetterOrDigit))
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
 
@@ -618,7 +747,9 @@ public static partial class DataHelpers
                     }
                 }
 
-                if (word.Length <= 1 || word.Split(".").Length >= 3)
+                var containsSymbol = !word.All(char.IsLetterOrDigit);
+                
+                if (word.Length <= 1 || containsSymbol || word.Split(".").Length >= 3)
                 {
                     newWords.Add(word);                       
                     continue;
@@ -660,6 +791,22 @@ public static partial class DataHelpers
         return word.Length == 2 && word.All(char.IsUpper);
     }
 
+    public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
+    {
+        foreach (var match in matches)
+        {
+            if (match.MatchedLabel != null)
+            {
+                match.MatchedLabel.SubLabels = null;
+            }
+
+            if (match.SubResults != null)
+            {
+                NullOutSubLabels(match.SubResults);
+            }
+        }
+    }
+    
     private static IEnumerable<string> PreferredSuggestions =>
     [
         "Mid",
@@ -675,16 +822,16 @@ public static partial class DataHelpers
         string? text,
         int lineNumber,
         int pageNumber,
-        out DocumentLine? number)
+        out List<DocumentLine> numbers)
     {
-        number = null;
+        numbers = [];
         
         if (text == null)
         {
             return false;
         }
         
-        var IRRELEVANT_WORDS = new List<DocumentLineWord>();
+        var irrelevantWords = new List<DocumentLineWord>();
 
         var list = text
             .Split(' ')
@@ -692,11 +839,15 @@ public static partial class DataHelpers
                 result,
                 lineNumber,
                 pageNumber,
-            IRRELEVANT_WORDS));
+                irrelevantWords,
+                -1,
+                -1,
+                -1,
+                -1));
         
-        if (AnyIsNumber(list, out var numberLine))
+        if (AnyIsNumber(list, out var numberLines))
         {
-            number = numberLine;
+            numbers.AddRange(numberLines);
             return true;
         }
 
@@ -741,7 +892,7 @@ public static partial class DataHelpers
             && parts.Last().All(char.IsLetter)
             && !parts.All(word => Dictionary.Check(word) && word.Length > 1);
 
-        if (looksLikeNameWithInitials)
+        if (looksLikeNameWithInitials && !text.Text.Contains('"'))
         {
             companyOrPersonalName = text.Text;            
             return true;
@@ -892,5 +1043,228 @@ public static partial class DataHelpers
 
         delimiter = delimiterLoop;
         return found;
+    }
+    
+    public static void RemoveRemoves(
+        LabelGroupResult labelGroupResult,
+        IReadOnlyList<string>? removedLines)
+    {
+        if (labelGroupResult.MatchedLabel?.Remove == null)
+        {
+            return;
+        }
+        
+        labelGroupResult.MatchedLabel.Remove =
+            labelGroupResult.MatchedLabel.Remove!.Where(removeLine => removedLines?.Contains(removeLine.Text) == true).ToList();
+
+        if (labelGroupResult.MatchedLabel.Remove.Count == 0)
+        {
+            labelGroupResult.MatchedLabel.Remove = null;
+        }
+    }
+    
+    public static bool PotentialMatchOnLabelLine(
+        IEnumerable<(string? Text, LabelToMatch Label)> textBeforeAndAfterLabel)
+    {
+        foreach (var (text, _) in textBeforeAndAfterLabel)
+        {
+            if (!IsNullOrEmptyWhitespaceOrPunctuation(text)
+                && text!.Trim() != "-"
+                && text.Trim() != "—")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public static bool AnyIsDateOrPurpose(
+        IEnumerable<DocumentLine?> lines,
+        out List<DocumentLine> matchedLines)
+    {
+        var returnValue = false;
+        var outList = new List<DocumentLine>();
+        
+        foreach (var line in lines)
+        {
+            if (IsDateOrPurpose(line!.Text))
+            {
+                outList.Add(line);
+                returnValue = true;
+            }
+        }
+
+        matchedLines = outList;
+        return returnValue;
+    }
+    
+    public static bool LineContainsLabel(
+        DocumentLine line,
+        IReadOnlyList<string>? labelText,
+        LabelPosition position,
+        int lineCount,
+        int howManyLinesTotal,
+        out string? matchedText)
+    {
+        if (labelText == null)
+        {
+            matchedText = null;
+            return true;
+        }
+        
+        foreach (var textItem in labelText)
+        {
+            if (lineCount == 0
+                && textItem.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase))
+            {
+                matchedText = textItem;
+                return true;
+            }
+         
+            var mustEndLine = textItem.Contains("[END_OF_LINE]");
+
+            if (mustEndLine)
+            {
+                var tItem = textItem.Replace("[END_OF_LINE]", string.Empty);
+
+                if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    matchedText = tItem;
+                    return true;                    
+                }
+            }
+            else
+            {
+                if (line.Text.StartsWith(textItem, StringComparison.InvariantCultureIgnoreCase)
+                    || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    matchedText = textItem;
+                    return true;
+                }
+            }
+
+            if (position == LabelPosition.Split && lineCount == howManyLinesTotal - 1)
+            {
+                matchedText = null;
+                return true;
+            }
+        }
+
+        matchedText = null;
+        return false;
+    }
+    
+    public static bool IsDateOrPurpose(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        if (text.Contains("aggregate"))
+        {
+            return true;
+        }
+
+        return YearRegex().IsMatch(text);
+    }
+    
+    [GeneratedRegex(@"19\d\d|20\d\d")]
+    private static partial Regex YearRegex();
+    
+    public static List<DocumentLine>? GetTextBetween(
+        IReadOnlyList<string> textEnd,
+        IReadOnlyList<string>? containsText,
+        string? firstLineTextAfterLabel,
+        IReadOnlyList<DocumentLine> nextLines,
+        int startLineNumber,
+        DocumentLine lineInput,
+        out (string matchedEndText, string matchedContainsText)? matchData)
+    {
+        matchData = null;
+        var foundEndTag = false;
+        
+        var lineCount = 0;
+        var returnList = new List<DocumentLine>();
+        
+        if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
+        {
+            returnList.Add(new DocumentLine(
+                TrimFormatting(firstLineTextAfterLabel)!,
+                startLineNumber,
+                lineInput.PageNumber,
+                lineInput.Words,
+                lineInput.Top,
+                lineInput.TopRounded,
+                lineInput.Left,
+                lineInput.LeftRounded));
+        }
+
+        var totalLines = nextLines.Count;
+        
+        foreach (var line in nextLines)
+        {
+            var label = new LabelToMatch
+            {
+                Text = textEnd
+            };
+            
+            if (LineContainsLabel(line, label.Text, label.Position, lineCount++, totalLines, out var matchedEndTextTemp))
+            {
+                matchData = (matchedEndTextTemp!, "[WILL_BE_REPLACED_LATER]");
+                foundEndTag = true;
+
+                break;
+            }
+            
+            var text = TrimFormatting(line.Text)!;
+            returnList.Add(new DocumentLine(
+                text,
+                line.LineNumber,
+                line.PageNumber,
+                line.Words.ToList(),
+                line.Top,
+                line.TopRounded,
+                line.Left,
+                line.LeftRounded));
+        }
+
+        if (!foundEndTag && textEnd.Contains("[END_OF_BLOCK]"))
+        {
+            matchData = ("[END_OF_BLOCK]", "[WILL_BE_REPLACED_LATER]");            
+            foundEndTag = true;
+        }
+
+        if (containsText == null)
+        {
+            return returnList;
+        }
+
+        string? matchedContains = null;
+        
+        var result = foundEndTag && containsText.Any(containsInstance =>
+        {
+            var matchResult = string.IsNullOrEmpty(containsInstance) || returnList.Any(line =>
+                line.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase));
+
+            if (!matchResult)
+            {
+                return false;
+            }
+            
+            matchedContains = containsInstance;
+            return true;
+
+        }) ? returnList : null;
+
+        if (matchedContains != null)
+        {
+            matchData = (matchData!.Value.matchedEndText, matchedContains!);
+            return result;
+        }
+
+        matchData = null;
+        return result;
     }
 }

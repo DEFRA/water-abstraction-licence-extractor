@@ -1,0 +1,3 @@
+var jssettings = {
+  "pdfFolder": "../../../../../../../WaterPdfs/"
+}

@@ -20,7 +20,10 @@ public class PdfDocument
         OutputFolder = outputFolder;
         FromCache = fromCache;
 
-        if (fromCache) return;
+        if (fromCache)
+        {
+            return;
+        }
         
         PdfPigDocument = UglyToad.PdfPig.PdfDocument.Open(
             pdfFilePath,
@@ -34,9 +37,9 @@ public class PdfDocument
         PdfPigDocument!.AddSkiaPageFactory();
     }
 
-    private IReadOnlyList<Page>? _pages;
+    private IReadOnlyList<PdfPage>? _pages;
     
-    public IReadOnlyList<Page> Pages
+    public IReadOnlyList<PdfPage> Pages
     {
         get
         {
@@ -50,9 +53,30 @@ public class PdfDocument
                 return [];
             }
             
-            _pages = PdfPigDocument!.GetPages().ToList();
+            _pages = PdfPigDocument!.GetPages()
+                .Select(page =>
+                {
+                    var pdfPage = new PdfPage
+                    {
+                        PdfPigPage = page,
+                        Number = page.Number,
+                        NumberOfImages = page.NumberOfImages,
+                        Text = page.Text
+                    };
+                    pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
+                    
+                    pdfPage.Providers.Add(new PdfPageProvider
+                    {
+                        Provider = "PdfPig",
+                        Text = [page.Text]
+                    });
+                    
+                    return pdfPage;
+                })
+                .ToList();
             return _pages!;
         }
+        set => _pages = value;
     }
 
     public MemoryStream GetPageAsPng(int pageNumber, IColor background)
@@ -62,7 +86,11 @@ public class PdfDocument
             throw new Exception("Cannot get image from cache");
         }
         
-        return PdfPigDocument!.GetPageAsPng(pageNumber, background: background);
+        return PdfPigDocument!.GetPageAsPng(
+            pageNumber,
+            background: background,
+            scale: 3,
+            quality: 100);
     }
     
     public void Dispose()

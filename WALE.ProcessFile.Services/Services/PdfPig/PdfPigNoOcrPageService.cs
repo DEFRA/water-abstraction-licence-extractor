@@ -7,6 +7,8 @@ public class PdfPigNoOcrPageService(Page page) : INoOcrPdfPageService
 {
     public async Task<IEnumerable<INoOcrPdfImageService>> GetImagesAsync()
     {
+        ArgumentNullException.ThrowIfNull(page);
+
         return await Task.Run(() =>
         {
             return page

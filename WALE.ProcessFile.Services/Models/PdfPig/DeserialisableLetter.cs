@@ -19,17 +19,17 @@ public class DeserialisableLetter
     /// For example letters with descenders, p, j, etc., will have a box extending below the <see cref="Location"/> they are placed at.
     /// The width of the glyph may also be more or less than the <see cref="Width"/> allocated for the character in the PDF content.
     /// </summary>
-    public PdfRectangle GlyphRectangle { get; set; }
+    public DeserialisablePdfRectangle? GlyphRectangle { get; set; }
     
     /// <summary>
     /// The placement position of the character in PDF space (the start point of the baseline). See <see cref="Location"/>
     /// </summary>
-    public PdfPoint StartBaseLine { get; set; }
-
+    public DeserialisablePdfPoint? StartBaseLine { get; set; }
+    
     /// <summary>
     /// The end point of the baseline.
     /// </summary>
-    public PdfPoint EndBaseLine { get; set; }
+    public DeserialisablePdfPoint? EndBaseLine { get; set; }
     
     /// <summary>
     /// The width occupied by the character within the PDF content.
@@ -79,9 +79,9 @@ public class DeserialisableLetter
     {
         return new Letter(
             Value!,
-            GlyphRectangle,
-            StartBaseLine,
-            EndBaseLine,
+            GlyphRectangle!.ToPdfRectangle(),
+            StartBaseLine!.ToPdfPoint(),
+            EndBaseLine!.ToPdfPoint(),
             Width,
             FontSize,
             Font!,

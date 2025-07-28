@@ -268,7 +268,8 @@ public static class LabelConfiguration
                     "licence serial no.",
                     "serial no.",
                     "ref. no. ",
-                    "Reference No.",                    
+                    "Reference No.",
+                    "Reference Number ",
                     "licence no: ",
                     "licence no.",
                     "Licence number: "
@@ -295,23 +296,34 @@ public static class LabelConfiguration
                     "authority hereby licence",
                     "authority hereby license",
                     "authority hereby licenge",
-                    "hereby grant a licence to"
+                    "hereby grant a licence to",
+                    "(hereinafter referred to as \"the Authority\")",
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                Format = "CompanyName"
+                Format = "CompanyName",
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {
                 Text =
                 [
                     "(hereinafter referred to as \"The Licence Holder\")",
+                    "(hereinafter referred to as \"The Licence Holder\" )",
                     "( hereinafter referred to as \"The Licence Holder\" )",
+                    "( hereinafter referred to as \"The Licence Holder\")",
                     "(hereinafter referred to as \" The Licence Holder \")",
                     "(hereinafter referred to as \"The Licence Holder)",
                     "is hereby licensed"
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
-                Format = "CompanyName"
+                Format = "CompanyName",
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {
@@ -324,7 +336,11 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                 Format = "CompanyName",
                 PreviousLinesToFetch = 3,
-                NextLinesToFetch = 10
+                NextLinesToFetch = 10,
+                MustNotContain = [
+                    "source of supply",
+                    "abstract water"
+                ]
             },
             new LabelToMatch
             {
@@ -413,11 +429,13 @@ public static class LabelConfiguration
                     "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
                     "MAXIMUM QUANTITIES",
                     "Quantity(ies) of water authorised to be abstracted during a period",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED"
+                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING",
+                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD",
+                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]"
                 ],
                 TextEnd =
                 [
-                    "7.",
+                    "7. ",
                     "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED",
                     "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER", //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
                     "MEANS OF MEASUREMENT OF WATER ABSTRACTED",
@@ -438,7 +456,7 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new("6.1"),
+                    /*new("6.1"),
                     new("6.2"),
                     new("6.3"),
                     new("6.4"),
@@ -447,7 +465,7 @@ public static class LabelConfiguration
                     new("6.7"),
                     new("6.8"),
                     new("6.9"),
-                    new("6.10"),
+                    new("6.10"),*/
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],

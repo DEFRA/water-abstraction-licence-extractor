@@ -1,0 +1,186 @@
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 14pt;
+}
+
+table {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+table tr {
+  height: 100%;
+}
+
+table tr td {
+  width: 50%;
+  height: 100%;
+  vertical-align: top
+}
+
+table tr td.left-cell {
+  position:relative;
+  border-right: 1px solid #DDD;
+}
+
+table tr td.right-cell {
+  position: relative;
+}
+
+#iframeParent {
+  position: absolute;
+  top: 75px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: scroll;
+}
+
+#jsonPath {
+  visibility: hidden;
+}
+
+#dataOutput {
+  height: 1000px;
+  width: 50vw;
+  overflow: scroll;
+}
+
+#jsonPath, #pdf-images {
+  width: 100%;
+  border-top: 1px solid #000;
+}
+
+#pdf-images img {
+  width: 100%;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 -1px 20px;
+}
+
+ul li {
+  position: relative;
+  display: inline-block;
+  margin: 0 10px 0 0;
+  padding: 5px 10px;
+  border: 1px solid #000;
+  border-bottom: 0;
+  background-color: #FFF;
+  z-index: 10;
+}
+
+#rightPdf {
+  position:relative;
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
+}
+
+#rightPdf ul li a {
+  text-decoration: none;
+}
+
+dl {
+  margin: 0;
+}
+
+dl a {
+  text-decoration: none;
+}
+
+.viewSelected {
+  background-color: slategrey;
+  text-decoration: none;
+  color: #FFF;
+  cursor: none;
+}
+
+#leftDetails {
+  width: 100%;
+  height: 100vh;
+  overflow: auto
+}
+
+#licenceNumberTxtDiv {
+  position: absolute;
+  top: 30%;
+  margin-top: -20px;
+  left: 50%;
+  margin-left: -275px;
+  width: 500px;
+  font-size: 30px;
+}
+
+#licenceNumberTxt {
+  font-size: 30px;
+  width: 100%;
+}
+
+#licenceHolderTxt {
+  font-size: 30px;
+  width: 100%;
+}
+
+#backButton {
+  font-size: 20pt;
+  display: none;
+}
+
+#continueButton {
+  font-size: 20pt;
+}
+
+#back-continue-area {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+}
+
+#licenceHolderTxtDiv {
+  position: absolute;
+  top: 30%;
+  margin-top: -20px;
+  left: 50%;
+  margin-left: -275px;
+  width: 500px;
+  font-size: 30px;
+  visibility: hidden
+}
+
+#view-edit {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1
+}
+
+#propertiesNew {
+  display: none;
+  height: 95vh;
+  position: relative;
+}
+
+#leftDetails::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+#leftDetails::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.selectedTab {
+  font-weight: bold;
+}

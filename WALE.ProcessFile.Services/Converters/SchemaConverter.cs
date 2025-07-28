@@ -14,7 +14,7 @@ public static class SchemaConverter
             throw new Exception("No match object exists to convert");
         }
         
-        var licenceNumber = matches!
+        var licenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
             .Text?
             .FirstOrDefault()?
@@ -38,9 +38,44 @@ public static class SchemaConverter
             .SelectMany(x => x.SubResults!)
             .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
             .ToList();
+
+        var aggregates = isSinglePoint ? new List<Aggregate>() : [];
+        var individual = isSinglePoint ? new List<AbstractionLimit>() : [];        
         
-        var aggregates = new List<Aggregate>();
-        var individual = new List<AbstractionLimit>();
+        if (abstractionLimitPointSubs != null)
+        {
+            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+            {
+                var siblings = abstractionLimitPointSub.SubResults;
+                
+                var valueResults = siblings?
+                    .Where(y => !string.IsNullOrEmpty(y.MatchedLabel?.RelatedName))
+                    .ToList();
+
+                if (valueResults != null)
+                {
+                    foreach (var valueResult in valueResults)
+                    {
+                        var number = double.Parse(valueResult.Text!.FirstOrDefault()?.Text!);
+                        var units = siblings?
+                            .FirstOrDefault(sibling =>
+                                sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)?
+                            .Text?
+                            .FirstOrDefault()?
+                            .Text;
+                        
+                        var abstractionLimit = new AbstractionLimit
+                        {
+                            Name = valueResult.MatchedLabel?.Text?.FirstOrDefault(),
+                            Value = number,
+                            Units = units
+                        };
+                
+                        individual.Add(abstractionLimit);
+                    }
+                }
+            }
+        }
         
         return new Licence
         {

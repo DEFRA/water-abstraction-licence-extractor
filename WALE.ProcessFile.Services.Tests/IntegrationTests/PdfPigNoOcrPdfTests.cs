@@ -148,6 +148,15 @@ public class PdfPigNoOcrPdfTests
         var agreedSchema = SchemaConverter.ToLicence(resultFull);
         Assert.Equal(filename, agreedSchema.Filename);
         Assert.Equal("1/25/04/059", agreedSchema.LicenceNumber);
+        
+        Assert.Equal(2, agreedSchema.AbstractionLimits!.Individual!.Length);
+        Assert.Equal("per day", agreedSchema.AbstractionLimits!.Individual.First().Name);
+        Assert.Equal("cubic metres", agreedSchema.AbstractionLimits!.Individual.First().Units);
+        Assert.Equal(90.909999999999997, agreedSchema.AbstractionLimits!.Individual.First().Value);
+        
+        Assert.Equal("per year", agreedSchema.AbstractionLimits!.Individual.Last().Name);
+        Assert.Equal("cubic metres", agreedSchema.AbstractionLimits!.Individual.Last().Units);
+        Assert.Equal(33182, agreedSchema.AbstractionLimits!.Individual.Last().Value);
     }
 
     [Fact]

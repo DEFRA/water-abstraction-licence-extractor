@@ -1,0 +1,27 @@
+namespace WALE.ProcessFile.Services.Models.OutputSchema;
+
+public class LicenceVersion
+{
+    public string? LicenceVersionId
+    {
+        get
+        {
+            if (EffectiveDate == null && ExpiryDate == null)
+            {
+                return null;
+            }
+
+            return $"LV{EffectiveDate:yyyyMMdd}{ExpiryDate:yyyyMMdd}";
+        }
+    }
+    
+    public DateTime? EffectiveDate { get; set; }
+    
+    public DateTime? ExpiryDate { get; set; }
+    
+    public DateTime? NaldStartDate { get; set; }
+    
+    public DateTime? NaldEndDate { get; set; }
+    
+    public string? NaldVersionNumber { get; set; }    
+}

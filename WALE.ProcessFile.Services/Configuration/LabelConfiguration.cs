@@ -456,16 +456,6 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    /*new("6.1"),
-                    new("6.2"),
-                    new("6.3"),
-                    new("6.4"),
-                    new("6.5"),
-                    new("6.6"),
-                    new("6.7"),
-                    new("6.8"),
-                    new("6.9"),
-                    new("6.10"),*/
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],

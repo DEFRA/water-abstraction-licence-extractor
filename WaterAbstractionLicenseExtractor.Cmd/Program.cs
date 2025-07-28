@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -446,6 +447,13 @@ async Task HandleFileAsync(
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/report.html",
             reportTemplateContents.Replace("{Filename}", filenameOnlyNoExtension));
+
+        var agreedSchema = SchemaConverter.ToLicence(matches1);
+        var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
+        
+        File.WriteAllText(
+            $"{outputFolder}/{filenameOnlyNoExtension}/agreed-data.json",
+            agreedSchemaJson);
         
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
     }

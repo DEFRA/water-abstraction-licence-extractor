@@ -30,12 +30,30 @@ public class LabelGroupResult
             JsonSerializer.Serialize(this))!;
     }
 
-    public LabelGroupResult Clone(MatchType matchType, LabelPosition position, LabelToMatch label)
+    public LabelGroupResult Clone(
+        MatchType matchType,
+        LabelPosition position,
+        LabelToMatch label)
     {
         var labelGroupResult = Clone();
         labelGroupResult.MatchType = matchType;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
+
+        return labelGroupResult;
+    }
+    
+    public LabelGroupResult Clone(
+        MatchType matchType,
+        LabelPosition position,
+        LabelToMatch label,
+        IReadOnlyList<DocumentLine> text)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedLabel = label.Clone();
+        labelGroupResult.MatchedLabel.Position = position;
+        labelGroupResult.Text = text;
 
         return labelGroupResult;
     }

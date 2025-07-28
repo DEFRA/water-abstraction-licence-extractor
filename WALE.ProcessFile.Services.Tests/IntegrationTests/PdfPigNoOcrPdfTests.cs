@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
@@ -37,13 +38,15 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache)).Matches!;
+            UseCache);
+        
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -55,24 +58,27 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
-//        Assert.Equal(136, nameResult.LineNumber);
+//      Assert.Equal(136, nameResult.LineNumber);
         
         // Note no other licence mentioned
-        var abstractionLimitsSecrtion = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
-        Assert.NotNull(abstractionLimitsSecrtion);
-        Assert.False(abstractionLimitsSecrtion.IsOcr);
-        Assert.Equal(5, abstractionLimitsSecrtion.Text?.Count);
-        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSecrtion.Text![3].Text);
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.False(abstractionLimitsSection.IsOcr);
+        Assert.Equal(5, abstractionLimitsSection.Text?.Count);
+        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![3].Text);
         //Assert.Equal(208, abstractionLimitsSecrtion.LineNumber);
         
-        Assert.NotNull(abstractionLimitsSecrtion.SubResults);
-        Assert.Single(abstractionLimitsSecrtion.SubResults!);
+        Assert.NotNull(abstractionLimitsSection.SubResults);
+        Assert.Single(abstractionLimitsSection.SubResults!);
         //Assert.Equal(208, abstractionLimitsSecrtion.LineNumber);
         
-        var abstractionLimitsPoint1 = abstractionLimitsSecrtion.SubResults[0];
+        var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(abstractionLimitsPoint1.SubResults!);
+
         var point1Sub1 = abstractionLimitsPoint1.SubResults![0];
+        Assert.NotNull(point1Sub1);
+        Assert.Equal("AbstractionLimitPointSub", point1Sub1.MatchedLabel?.Name);
         
         Assert.Equal(5, point1Sub1.Text!.Count);
 
@@ -137,7 +143,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("4.2 Agriculture (other than Spray Irrigation)", secondPurpose.Text!.First().Text);        
         
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults![1];
-        Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);        
+        Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
+
+        var agreedSchema = SchemaConverter.ToLicence(resultFull);
+        Assert.Equal(filename, agreedSchema.Filename);
+        Assert.Equal("1/25/04/059", agreedSchema.LicenceNumber);
     }
 
     [Fact]

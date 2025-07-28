@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
@@ -10,6 +11,11 @@ public static class JsonHelper
     {
         FormattingHelper.NullOutSubLabels(matches.Matches!);
         return JsonSerializer.Serialize(matches, GetSerializer());
+    }
+    
+    public static string GetAsString(Licence licence)
+    {
+        return JsonSerializer.Serialize(licence, GetSerializer());
     }
     
     public static JsonSerializerOptions GetSerializer()

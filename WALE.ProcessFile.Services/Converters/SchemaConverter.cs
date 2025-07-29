@@ -48,11 +48,30 @@ public static class SchemaConverter
             }
         }
         
-        return new LicenceGroup
+        var licenceGroup = new LicenceGroup
         {
             Licences = licences.ToArray(),
             AggregateSets = null
         };
+
+        foreach (var licence in licences)
+        {
+            var aggregates = licence
+                .AbstractionLimits?
+                .Aggregates;
+
+            if (aggregates == null)
+            {
+                continue;
+            }
+
+            _ = aggregates
+                .Where(aggregate => aggregate.GroupId == PositionConstants.ReplacementMarker)
+                .Select(aggregate => aggregate.GroupId = licenceGroup.Id)
+                .ToList();
+        }
+        
+        return licenceGroup;
     }
 
     private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)

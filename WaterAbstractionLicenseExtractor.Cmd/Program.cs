@@ -448,7 +448,9 @@ async Task HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/report.html",
             reportTemplateContents.Replace("{Filename}", filenameOnlyNoExtension));
 
-        var agreedSchema = SchemaConverter.ToLicence(matches1);
+        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matches1);
+        var agreedSchema = agreedSchemaGroup.Licences!.First();
+        
         var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
         
         File.WriteAllText(

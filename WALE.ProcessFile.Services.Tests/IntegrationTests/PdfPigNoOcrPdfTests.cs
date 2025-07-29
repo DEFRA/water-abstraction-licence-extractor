@@ -145,26 +145,33 @@ public class PdfPigNoOcrPdfTests
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults![1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchema = SchemaConverter.ToLicence(resultFull);
-        Assert.Equal(filename, agreedSchema.Filename);
-        Assert.Equal("1/25/04/059", agreedSchema.LicenceNumber);
-        
-        Assert.Equal(2, agreedSchema.AbstractionLimits!.Individual!.Length);
-        Assert.Equal("per day", agreedSchema.AbstractionLimits!.Individual.First().Name);
-        Assert.Equal("cubic metres", agreedSchema.AbstractionLimits!.Individual.First().Units);
-        Assert.Equal(90.909999999999997, agreedSchema.AbstractionLimits!.Individual.First().Value);
-        
-        Assert.Equal("per year", agreedSchema.AbstractionLimits!.Individual.Last().Name);
-        Assert.Equal("cubic metres", agreedSchema.AbstractionLimits!.Individual.Last().Units);
-        Assert.Equal(33182, agreedSchema.AbstractionLimits!.Individual.Last().Value);
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences!.First();
 
-        Assert.NotNull(agreedSchema.LicenceVersion);
-        Assert.Equal("LV20220705", agreedSchema.LicenceVersion.LicenceVersionId);
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Null(agreedSchema.LicenceVersion.ExpiryDate);
-        Assert.Equal(new DateTime(2022, 07, 05), agreedSchema.LicenceVersion.EffectiveDate);
-        Assert.Equal(new DateTime(1968, 05, 15), agreedSchema.LicenceVersion.OriginalIssueDate);
-        Assert.Equal(new DateTime(2022, 07, 05), agreedSchema.LicenceVersion.IssueDate);        
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal("per day", agreedSchemaLicence.AbstractionLimits!.Individual.First().Name);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual.First().Units);
+        Assert.Equal(90.909999999999997, agreedSchemaLicence.AbstractionLimits!.Individual.First().Value);
+        
+        Assert.Equal("per year", agreedSchemaLicence.AbstractionLimits!.Individual.Last().Name);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual.Last().Units);
+        Assert.Equal(33182, agreedSchemaLicence.AbstractionLimits!.Individual.Last().Value);
+
+        Assert.NotNull(agreedSchemaLicence.LicenceVersion);
+        Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        
+        Assert.Null(agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2022, 07, 05), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(new DateTime(1968, 05, 15), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2022, 07, 05), agreedSchemaLicence.LicenceVersion.IssueDate);
+
+        Assert.Equal("12504059-LV20220705", agreedSchemaLicenceGroup.Id);
+        
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
     }
 
     [Fact]
@@ -174,13 +181,15 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation -Application New Licence Issued 24_12_2019 00_00_00 11164372.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache)).Matches!;
+            UseCache);
+        
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(9, resultList.Count);
@@ -269,11 +278,6 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
-        var linkedLicenceNumber = section2Sub1.SubResults
-            .FirstOrDefault(subResult =>
-                subResult.MatchedLabel!.Name == "LinkedLicenceNumber")?.Text?.FirstOrDefault()?.Text;
-        Assert.Equal("28/39/22/0338", linkedLicenceNumber);
-
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
         Assert.NotNull(purposeResult);
@@ -286,6 +290,38 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(purposeResult.SubResults!);
         var firstPurposePointGroup = purposeResult.SubResults!.Single();
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass)", firstPurposePointGroup.Text!.Single().Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.Id);
+        
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences!.First();
+
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("28/39/22/0422", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal("per hour", agreedSchemaLicence.AbstractionLimits!.Individual[0].Name);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[0].Units);
+        Assert.Equal(41, agreedSchemaLicence.AbstractionLimits!.Individual[0].Value);
+        
+        Assert.Equal("per day", agreedSchemaLicence.AbstractionLimits!.Individual[1].Name);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[1].Units);
+        Assert.Equal(205, agreedSchemaLicence.AbstractionLimits!.Individual[1].Value);
+        
+        Assert.Equal("per year", agreedSchemaLicence.AbstractionLimits!.Individual[2].Name);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[2].Units);
+        Assert.Equal(6138, agreedSchemaLicence.AbstractionLimits!.Individual[2].Value);        
+
+        Assert.NotNull(agreedSchemaLicence.LicenceVersion);
+        Assert.Equal("LV20191111", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        
+        Assert.Null(agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2019, 11, 11), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(new DateTime(1975, 01, 22), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2019, 12, 24), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 
     [Fact]
@@ -1814,13 +1850,15 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache)).Matches!;
+            UseCache);
+        
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(9, resultList.Count);
@@ -1934,6 +1972,52 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences);
+        Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
+        
+        Assert.Equal("2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619", agreedSchemaLicenceGroup.Id);
+        var primaryLicence = agreedSchemaLicenceGroup.Licences!.First();
+
+        Assert.Equal(filename, primaryLicence.Filename);
+        Assert.Equal("25 68 001 249", primaryLicence.LicenceNumber);
+        
+        Assert.Equal(5, primaryLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal("per hour", primaryLicence.AbstractionLimits!.Individual[0].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[0].Units);
+        Assert.Equal(20, primaryLicence.AbstractionLimits!.Individual[0].Value);
+        
+        Assert.Equal("per day", primaryLicence.AbstractionLimits!.Individual[1].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[1].Units);
+        Assert.Equal(475, primaryLicence.AbstractionLimits!.Individual[1].Value);
+        
+        Assert.Equal("per year", primaryLicence.AbstractionLimits!.Individual[2].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[2].Units);
+        Assert.Equal(173453, primaryLicence.AbstractionLimits!.Individual[2].Value);
+
+        Assert.Equal("per day", primaryLicence.AbstractionLimits!.Individual[3].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[3].Units);
+        Assert.Equal(475, primaryLicence.AbstractionLimits!.Individual[3].Value);
+        
+        Assert.Equal("per year", primaryLicence.AbstractionLimits!.Individual[4].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[4].Units);
+        Assert.Equal(173453, primaryLicence.AbstractionLimits!.Individual[4].Value);        
+        
+        Assert.NotNull(primaryLicence.LicenceVersion);
+        Assert.Equal("LV20190619", primaryLicence.LicenceVersion.LicenceVersionId);
+        
+        Assert.Null(primaryLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(new DateTime(1995, 05, 09), primaryLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.IssueDate);
+        
+        var firstLinkedLicence = agreedSchemaLicenceGroup.Licences[1];
+        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        
+        var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
+        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
     }
     
     [Fact]

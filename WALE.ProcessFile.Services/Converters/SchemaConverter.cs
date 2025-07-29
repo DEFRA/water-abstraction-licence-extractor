@@ -5,7 +5,66 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static class SchemaConverter
 {
-    public static Licence ToLicence(MatchesResult matchesResult)
+    public static LicenceGroup ToLicenceGroup(MatchesResult matchesResult)
+    {
+        var licences = new List<Licence>
+        {
+            ToLicence(matchesResult)
+        };
+        
+        var abstractionLimits = matchesResult.Matches?
+            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+
+        var abstractionLimitsPoints = abstractionLimits?.SubResults;
+
+        if (abstractionLimitsPoints != null)
+        {
+            foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
+            {
+                var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
+
+                if (abstractionLimitPointSubs == null)
+                {
+                    continue;
+                }
+
+                foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+                {
+                    var linkedLicencesLoop = abstractionLimitPointSub.SubResults!
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Name == "LinkedLicence")
+                        .ToList();
+
+                    foreach (var linkedLicence in linkedLicencesLoop)
+                    {
+                        var toMatchesResult = ToMatchesResult(linkedLicence);
+                        var toLinkedLicence = ToLicence(toMatchesResult);
+                        
+                        licences.Add(toLinkedLicence);   
+                    }
+                }
+            }
+        }
+        
+        return new LicenceGroup
+        {
+            Licences = licences.ToArray(),
+            AggregateSets = null
+        };
+    }
+
+    private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
+    {
+        var results = new List<LabelGroupResult>();
+        results.AddRange(labelGroupResult.SubResults!);
+        
+        return new MatchesResult
+        {
+            Matches = results
+        };
+    }
+
+    private static Licence ToLicence(MatchesResult matchesResult)
     {
         var matches = matchesResult.Matches;
 
@@ -93,21 +152,25 @@ public static class SchemaConverter
                 {
                     foreach (var valueResult in valueResults)
                     {
-                        var number = double.Parse(valueResult.Text!.FirstOrDefault()?.Text!);
+                        if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
+                        {
+                            continue;
+                        }
+                        
                         var units = siblings?
                             .FirstOrDefault(sibling =>
                                 sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)?
                             .Text?
                             .FirstOrDefault()?
                             .Text;
-                        
+
                         var abstractionLimit = new AbstractionLimit
                         {
                             Name = valueResult.MatchedLabel?.Text?.FirstOrDefault(),
                             Value = number,
                             Units = units
                         };
-                
+
                         individual.Add(abstractionLimit);
                     }
                 }

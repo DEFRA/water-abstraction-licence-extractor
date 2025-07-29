@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -117,8 +119,16 @@ public static class SchemaConverter
         
         var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
             ? dateOfOriginalIssueOut
-            : (DateTime?)null;        
+            : (DateTime?)null;
 
+        var licenceVersion = new LicenceVersion
+        {
+            EffectiveDate = effectiveDate,
+            ExpiryDate = expiryDate,
+            IssueDate = dateOfIssue,
+            OriginalIssueDate = dateOfOriginalIssue
+        };
+        
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
@@ -127,53 +137,89 @@ public static class SchemaConverter
             .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPoint")
             .ToList();
 
-        var isSinglePoint = abstractionLimitPoints?.Count == 1;
-
         var abstractionLimitPointSubs = abstractionLimitPoints?
-            .Where(x => x.SubResults != null)
-            .SelectMany(x => x.SubResults!)
+            .Where(res => res.SubResults != null)
+            .SelectMany(res => res.SubResults!)
             .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
             .ToList();
 
-        var aggregates = isSinglePoint ? new List<Aggregate>() : [];
-        var individual = isSinglePoint ? new List<AbstractionLimit>() : [];        
+        var aggregates = new List<Aggregate>();
+        var individual = new List<AbstractionLimit>();    
         
         if (abstractionLimitPointSubs != null)
         {
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
             {
                 var siblings = abstractionLimitPointSub.SubResults;
-                
                 var valueResults = siblings?
-                    .Where(y => !string.IsNullOrEmpty(y.MatchedLabel?.RelatedName))
+                    .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                     .ToList();
 
-                if (valueResults != null)
+                if (valueResults == null)
                 {
-                    foreach (var valueResult in valueResults)
-                    {
-                        if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
-                        {
-                            continue;
-                        }
-                        
-                        var units = siblings?
-                            .FirstOrDefault(sibling =>
-                                sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)?
-                            .Text?
-                            .FirstOrDefault()?
-                            .Text;
-
-                        var abstractionLimit = new AbstractionLimit
-                        {
-                            Name = valueResult.MatchedLabel?.Text?.FirstOrDefault(),
-                            Value = number,
-                            Units = units
-                        };
-
-                        individual.Add(abstractionLimit);
-                    }
+                    continue;
                 }
+
+                var linkedLicenceNumbers = siblings?
+                    .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
+                    .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+                    .Select(linkedLicenceNumber => new LinkedLicence
+                    {
+                        LicenceNumber = linkedLicenceNumber,
+                        Condition = null
+                    })
+                    .ToList();
+
+                var hasLinkedLicenceNumber = linkedLicenceNumbers?.Count > 0;
+                var aggregateLimits = new List<AbstractionLimit>();
+                
+                foreach (var valueResult in valueResults)
+                {
+                    if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
+                    {
+                        continue;
+                    }
+                    
+                    var units = siblings?
+                        .FirstOrDefault(sibling =>
+                            sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)?
+                        .Text?
+                        .FirstOrDefault()?
+                        .Text;
+
+                    var abstractionLimit = new AbstractionLimit
+                    {
+                        Name = valueResult.MatchedLabel?.Text?.FirstOrDefault(),
+                        Value = number,
+                        Units = units
+                    };
+
+                    if (hasLinkedLicenceNumber)
+                    {
+                        aggregateLimits.Add(abstractionLimit);
+                        continue;
+                    }
+                    
+                    individual.Add(abstractionLimit);  
+                }
+
+                if (!hasLinkedLicenceNumber)
+                {
+                    continue;
+                }
+                
+                var aggregate = new Aggregate
+                {
+                    LicenceNumber = licenceNumber,
+                    LicenceVersionId = licenceVersion.LicenceVersionId,
+                    PrimaryType = PrimaryType.LicenceToLicence,
+                    SubType = SubType.PointToPoint,
+                    GroupId = PositionConstants.ReplacementMarker,
+                    LinkedLicences = linkedLicenceNumbers?.ToArray(),
+                    Limits = aggregateLimits.ToArray()
+                };
+                        
+                aggregates.Add(aggregate);
             }
         }
         
@@ -186,13 +232,7 @@ public static class SchemaConverter
             },
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
-            LicenceVersion = new LicenceVersion
-            {
-                EffectiveDate = effectiveDate,
-                ExpiryDate = expiryDate,
-                IssueDate = dateOfIssue,
-                OriginalIssueDate = dateOfOriginalIssue
-            },
+            LicenceVersion = licenceVersion
         };
     }
 }

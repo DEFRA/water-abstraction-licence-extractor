@@ -507,7 +507,7 @@ public static class LabelConfiguration
 
     private static List<LabelToMatch> GetAbstractionLimitsLabels()
     {
-        // TODO pull the purposes and can verify them against the NALD data
+        // TODO Verify the purposes against the NALD data
         
         return
         [

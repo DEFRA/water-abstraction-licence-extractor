@@ -4,7 +4,24 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class Aggregate
 {
-    public string? Id { get; set; }
+    public string? Id
+    {
+        get
+        {
+            var type = PrimaryType switch
+            {
+                Enums.OutputSchema.PrimaryType.LicenceToLicence => "L2L",
+                Enums.OutputSchema.PrimaryType.InLicence => "IL",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var licenceNumber = LicenceNumber?
+                .Replace("/", string.Empty)
+                .Replace(" ", string.Empty);
+            
+            return $"{licenceNumber}{LicenceVersionId}-{type}"; // TODO (add other linked licences etc...)
+        }
+    }
     
     public string? GroupId { get; set; }
     

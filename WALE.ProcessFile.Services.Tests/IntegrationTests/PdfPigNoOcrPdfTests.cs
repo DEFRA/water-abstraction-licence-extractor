@@ -1984,7 +1984,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(filename, primaryLicence.Filename);
         Assert.Equal("25 68 001 249", primaryLicence.LicenceNumber);
         
-        Assert.Equal(5, primaryLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal(3, primaryLicence.AbstractionLimits!.Individual!.Length);
         Assert.Equal("per hour", primaryLicence.AbstractionLimits!.Individual[0].Name);
         Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[0].Units);
         Assert.Equal(20, primaryLicence.AbstractionLimits!.Individual[0].Value);
@@ -1997,13 +1997,20 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[2].Units);
         Assert.Equal(173453, primaryLicence.AbstractionLimits!.Individual[2].Value);
 
-        Assert.Equal("per day", primaryLicence.AbstractionLimits!.Individual[3].Name);
-        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[3].Units);
-        Assert.Equal(475, primaryLicence.AbstractionLimits!.Individual[3].Value);
+        Assert.Single(primaryLicence.AbstractionLimits!.Aggregates!);
+        Assert.NotNull(primaryLicence.AbstractionLimits!.Aggregates!.Single());
         
-        Assert.Equal("per year", primaryLicence.AbstractionLimits!.Individual[4].Name);
-        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[4].Units);
-        Assert.Equal(173453, primaryLicence.AbstractionLimits!.Individual[4].Value);        
+        var aggregate = primaryLicence.AbstractionLimits!.Aggregates!.Single();
+        Assert.NotNull(aggregate.Limits);
+        Assert.Equal(2, aggregate.Limits.Length);
+        
+        Assert.Equal("per day", aggregate.Limits![0].Name);
+        Assert.Equal("cubic metres", aggregate.Limits![0].Units);
+        Assert.Equal(475, aggregate.Limits![0].Value);
+        
+        Assert.Equal("per year", aggregate.Limits![1].Name);
+        Assert.Equal("cubic metres", aggregate.Limits![1].Units);
+        Assert.Equal(173453, aggregate.Limits![1].Value);        
         
         Assert.NotNull(primaryLicence.LicenceVersion);
         Assert.Equal("LV20190619", primaryLicence.LicenceVersion.LicenceVersionId);

@@ -292,36 +292,39 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass)", firstPurposePointGroup.Text!.Single().Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
-        Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.Id);
+        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.Id);
         
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
-        Assert.Single(agreedSchemaLicenceGroup.Licences);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
         
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences!.First();
+        var primaryLicence = agreedSchemaLicenceGroup.Licences!.First();
 
-        Assert.Equal(filename, agreedSchemaLicence.Filename);
-        Assert.Equal("28/39/22/0422", agreedSchemaLicence.LicenceNumber);
-        
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits!.Individual!.Length);
-        Assert.Equal("per hour", agreedSchemaLicence.AbstractionLimits!.Individual[0].Name);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[0].Units);
-        Assert.Equal(41, agreedSchemaLicence.AbstractionLimits!.Individual[0].Value);
-        
-        Assert.Equal("per day", agreedSchemaLicence.AbstractionLimits!.Individual[1].Name);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[1].Units);
-        Assert.Equal(205, agreedSchemaLicence.AbstractionLimits!.Individual[1].Value);
-        
-        Assert.Equal("per year", agreedSchemaLicence.AbstractionLimits!.Individual[2].Name);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual[2].Units);
-        Assert.Equal(6138, agreedSchemaLicence.AbstractionLimits!.Individual[2].Value);        
+        Assert.Equal(filename, primaryLicence.Filename);
+        Assert.Equal("28/39/22/0422", primaryLicence.LicenceNumber);
 
-        Assert.NotNull(agreedSchemaLicence.LicenceVersion);
-        Assert.Equal("LV20191111", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        Assert.Equal(2, primaryLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal("per hour", primaryLicence.AbstractionLimits!.Individual[0].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[0].Units);
+        Assert.Equal(41, primaryLicence.AbstractionLimits!.Individual[0].Value);
         
-        Assert.Null(agreedSchemaLicence.LicenceVersion.ExpiryDate);
-        Assert.Equal(new DateTime(2019, 11, 11), agreedSchemaLicence.LicenceVersion.EffectiveDate);
-        Assert.Equal(new DateTime(1975, 01, 22), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
-        Assert.Equal(new DateTime(2019, 12, 24), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal("per day", primaryLicence.AbstractionLimits!.Individual[1].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[1].Units);
+        Assert.Equal(205, primaryLicence.AbstractionLimits!.Individual[1].Value);
+        
+        Assert.Single(primaryLicence.AbstractionLimits!.Aggregates!);
+        Assert.Single(primaryLicence.AbstractionLimits!.Aggregates![0].Limits!);
+        
+        Assert.Equal("per year", primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].Name);
+        Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].Units);
+        Assert.Equal(6138, primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].Value);        
+
+        Assert.NotNull(primaryLicence.LicenceVersion);
+        Assert.Equal("LV20191111", primaryLicence.LicenceVersion.LicenceVersionId);
+        
+        Assert.Null(primaryLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2019, 11, 11), primaryLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(new DateTime(1975, 01, 22), primaryLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2019, 12, 24), primaryLicence.LicenceVersion.IssueDate);
     }
 
     [Fact]
@@ -2001,6 +2004,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(primaryLicence.AbstractionLimits!.Aggregates!.Single());
         
         var aggregate = primaryLicence.AbstractionLimits!.Aggregates!.Single();
+        Assert.Equal("2568001249LV20190619-L2L--2568001247-2568001248", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Length);
         

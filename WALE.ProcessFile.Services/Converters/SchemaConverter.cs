@@ -44,6 +44,26 @@ public static class SchemaConverter
                         
                         licences.Add(toLinkedLicence);   
                     }
+                    
+                    var linkedLicencesNumbers = abstractionLimitPointSub.SubResults!
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
+                        .ToList();
+
+                    foreach (var linkedLicencesNumber in linkedLicencesNumbers)
+                    {
+                        var text = linkedLicencesNumber.Text?.FirstOrDefault()?.Text;
+
+                        if (licences.Any(x => x.LicenceNumber == text))
+                        {
+                            continue;
+                        }
+                        
+                        licences.Add(new Licence
+                        {
+                            LicenceNumber = text
+                        });
+                    }
                 }
             }
         }

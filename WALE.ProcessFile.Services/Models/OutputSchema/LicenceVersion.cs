@@ -2,13 +2,14 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class LicenceVersion
 {
-    public string? LicenceVersionId
+    public string LicenceVersionId
     {
         get
         {
             if (EffectiveDate == null && ExpiryDate == null)
             {
-                return null;
+                const string unknownVersion = "LVUNKNOWN";
+                return unknownVersion;
             }
 
             return $"LV{EffectiveDate:yyyyMMdd}{ExpiryDate:yyyyMMdd}";

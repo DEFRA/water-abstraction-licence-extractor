@@ -1,3 +1,4 @@
+using System.Text;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
@@ -18,8 +19,22 @@ public class Aggregate
             var licenceNumber = LicenceNumber?
                 .Replace("/", string.Empty)
                 .Replace(" ", string.Empty);
-            
-            return $"{licenceNumber}{LicenceVersionId}-{type}"; // TODO (add other linked licences etc...)
+
+            var outputSb = new StringBuilder();
+
+            if (LinkedLicences != null)
+            {
+                foreach (var linkedLicence in LinkedLicences)
+                {
+                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                        .Replace("/", string.Empty)
+                        .Replace(" ", string.Empty);
+                    
+                    outputSb.Append($"-{linkedLicenceNumber}");
+                }
+            }
+
+            return $"{licenceNumber}{LicenceVersionId}-{type}-{outputSb}";
         }
     }
     

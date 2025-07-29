@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -5,18 +6,23 @@ using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
-public static class ApplicableToAll
+public static class ApplicableToMost
 {
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
+        var returnListTop = new List<LabelGroupResult>();
+
+        if (request.label.Position is LabelPosition.TextToFindIsBetweenLabels or LabelPosition.Split)
+        {
+            return returnListTop;
+        }
+        
         var labelGroupResult = request.labelGroupResult.Clone();
         var line = request.line;
         var lineNumber = request.lineNumber;
-        
-        var returnListTop = new List<LabelGroupResult>();
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
         {
@@ -340,6 +346,10 @@ public static class ApplicableToAll
                 FormattingHelper.RemoveRemoves(lineMatch, removedLines);
                 
                 returnListTop.Add(lineMatch);
+            }
+            else if (!string.IsNullOrWhiteSpace(outputText) && request.label?.Format == "Text")
+            {
+                throw new Exception($"Found '{outputText}' via {nameof(ApplicableToMost)} method - expected {request.label.Position}");
             }
         }
 

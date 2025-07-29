@@ -20,8 +20,45 @@ public static class SchemaConverter
             .FirstOrDefault()?
             .Text;
 
-        var effectiveDate = (DateTime?)null;
-        var expiryDate = (DateTime?)null;
+        var effectiveDateStr = matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+        
+        var dateOfIssueStr = matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+
+        var dateOfOriginalIssueStr = matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;        
+        
+        var dateOfExpiryStr = matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+
+        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
+            ? dateOfExpiryOut
+            : (DateTime?)null;
+        
+        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
+            ? effectiveDateOut
+            : (DateTime?)null;
+        
+        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
+            ? dateOfIssueOut
+            : (DateTime?)null;
+        
+        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
+            ? dateOfOriginalIssueOut
+            : (DateTime?)null;        
 
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -89,7 +126,9 @@ public static class SchemaConverter
             LicenceVersion = new LicenceVersion
             {
                 EffectiveDate = effectiveDate,
-                ExpiryDate = expiryDate
+                ExpiryDate = expiryDate,
+                IssueDate = dateOfIssue,
+                OriginalIssueDate = dateOfOriginalIssue
             },
         };
     }

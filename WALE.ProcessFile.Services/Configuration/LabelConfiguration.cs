@@ -14,12 +14,103 @@ public static class LabelConfiguration
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("AbstractionLimits", GetAbstractionLimitsLabels()),
             ("Purpose", GetPurposeLabels()),
-            ("Points", GetPointsLabels())            
-            // TODO fetch issue date, effective date and expiry date
+            ("Points", GetPointsLabels()),
+            ("DateOfIssue", GetDateOfIssueLabels()),
+            ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
+            ("DateEffective", GetDateEffectiveLabels()),
+            ("DateOfExpiry", GetDateOfExpiryLabels())
+        ];
+    }
+
+    private static List<LabelToMatch> GetDateOfIssueLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "DateOfIssue",
+                Format = "DateOrPurpose",
+                Text =
+                [
+                    "Date of issue...",
+                    "Date of issue ..."
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                Remove = [
+                    new("...")
+                ],
+                NextLinesToFetch = 1
+            }
         ];
     }
     
-        private static List<LabelToMatch> GetPointsLabels()
+    private static List<LabelToMatch> GetDateOfOriginalIssueLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "DateOfOriginalIssue",
+                Format = "DateOrPurpose",
+                Text =
+                [
+                    "Date of original issue...",
+                    "Date of original issue ..."
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                Remove = [
+                    new("...")
+                ],
+                NextLinesToFetch = 1
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetDateEffectiveLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "DateEffective",
+                Format = "DateOrPurpose",
+                Text =
+                [
+                    "Date effective...",
+                    "Date effective ..."
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                Remove = [
+                    new("...")
+                ],
+                NextLinesToFetch = 1
+            }
+        ];
+    }    
+    
+    private static List<LabelToMatch> GetDateOfExpiryLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "DateOfExpiry",
+                Format = "DateOrPurpose",
+                Text =
+                [
+                    "Date of expiry...",
+                    "Date of expiry ..."
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                Remove = [
+                    new("...")
+                ],
+                NextLinesToFetch = 1
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetPointsLabels()
     {
         return
         [
@@ -79,7 +170,7 @@ public static class LabelConfiguration
                                     "2.2",
                                     "2.3"
                                 ],
-                                Position = LabelPosition.ApplicableToAll,
+                                Position = LabelPosition.ApplicableToMost,
                                 Format = "Number"                                
                             },
                             new()
@@ -110,7 +201,7 @@ public static class LabelConfiguration
                                     new("2.4") { LineMustStartWith = true, RemoveWholeLine = true }
                                 ],
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
-                                Position = LabelPosition.ApplicableToAll,
+                                Position = LabelPosition.ApplicableToMost,
                                 Format = "Text"
                             }                            
                         }
@@ -222,7 +313,7 @@ public static class LabelConfiguration
                                             "4.2",
                                             "4.3"
                                         ],
-                                        Position = LabelPosition.ApplicableToAll,
+                                        Position = LabelPosition.ApplicableToMost,
                                         Format = "Number"
                                     },
                                     new()
@@ -244,7 +335,7 @@ public static class LabelConfiguration
                                             new("4.4")
                                         ],
                                         Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
-                                        Position = LabelPosition.ApplicableToAll,
+                                        Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
                                     }                            
                                 ]

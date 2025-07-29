@@ -73,7 +73,9 @@ public static class LabelIsAfterTextToFind
                 break;
             case ActsLikeSingleWord.Constant:
                 returnList.AddRange(ActsLikeSingleWord.FindSingleWord(modifiedPreviousLines, labelGroupResult));
-                break;            
+                break;
+            case "Text":
+                throw new NotImplementedException();
         }
 
         foreach (var item in returnList)

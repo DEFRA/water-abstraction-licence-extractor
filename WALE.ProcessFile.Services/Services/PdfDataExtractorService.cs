@@ -641,7 +641,7 @@ public class PdfDataExtractorService(
                 Task<List<LabelGroupResult>>> ResultIfMatched,
             int Order)>
         {
-            (LabelPosition.ApplicableToAll, ApplicableToAll.FunctionAsync, 0),
+            (LabelPosition.ApplicableToMost, ApplicableToMost.FunctionAsync, 0),
             (LabelPosition.Split, Split.FunctionAsync, 0),
             (LabelPosition.RelatedCategoryPosition, RelatedCategoryPosition.FunctionAsync, 0),
             (LabelPosition.TextToFindIsBetweenLabels, TextToFindIsBetweenLabels.FunctionAsync, 0),
@@ -683,12 +683,14 @@ public class PdfDataExtractorService(
                             or LabelPosition.LabelIsAfterTextToFind:
                         return true;
                     default:
-                        return expression.Position == LabelPosition.ApplicableToAll;
+                        return expression.Position == LabelPosition.ApplicableToMost
+                            && label.Position != LabelPosition.Split
+                            && label.Position != LabelPosition.TextToFindIsBetweenLabels;
                 }
             })
             .OrderBy(expression =>
             {
-                if (expression.Position == LabelPosition.ApplicableToAll)
+                if (expression.Position == LabelPosition.ApplicableToMost)
                 {
                     const int minimumPositionForOrderingAscending = -1;
                     return minimumPositionForOrderingAscending;

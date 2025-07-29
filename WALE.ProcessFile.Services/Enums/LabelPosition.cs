@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Services.Enums;
 
 public enum LabelPosition
 {
-    ApplicableToAll,
+    ApplicableToMost,
     LabelIsBeforeTextToFind,
     LabelIsAfterTextToFind,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,

@@ -183,7 +183,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1691,7 +1691,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1741,7 +1741,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1823,7 +1823,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1952,7 +1952,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);        
+        Assert.Equal(9, resultList.Count);        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -2314,7 +2314,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
         Assert.NotNull(nameResult);
@@ -2381,7 +2381,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, resultList.Count);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 

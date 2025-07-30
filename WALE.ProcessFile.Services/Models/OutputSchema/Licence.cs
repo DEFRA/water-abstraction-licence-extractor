@@ -10,7 +10,9 @@ public class Licence
     
     public AbstractionLimits AbstractionLimits { get; init; } = new();
     
-    public TimePeriod? TimePeriod { get; set; }
+    public TimePeriod? PeriodOfAbstraction { get; set; }
+    
+    public TimePeriod? DefinitionOfYear { get; set; }
 
     public Purpose[] Purposes { get; set; } = [];
 

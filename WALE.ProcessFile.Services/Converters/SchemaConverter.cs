@@ -72,12 +72,7 @@ public static class SchemaConverter
 
         foreach (var licence in licences)
         {
-            if (licence.AbstractionLimits?.Aggregates == null || licence.AbstractionLimits.Aggregates.Length == 0)
-            {
-                continue;
-            }
-            
-            aggregates.AddRange(licence.AbstractionLimits.Aggregates!);
+            aggregates.AddRange(licence.AbstractionLimits.Aggregates);
         }
         
         var aggregateSets = new List<AggregateSet>();
@@ -99,13 +94,8 @@ public static class SchemaConverter
         foreach (var licence in licences)
         {
             var licenceAggregates = licence
-                .AbstractionLimits?
+                .AbstractionLimits
                 .Aggregates;
-
-            if (licenceAggregates == null)
-            {
-                continue;
-            }
 
             _ = licenceAggregates
                 .Where(aggregate => aggregate.AggregateSetId == PositionConstants.ReplacementMarker)
@@ -224,14 +214,19 @@ public static class SchemaConverter
                 var linkedLicenceNumbers = siblings?
                     .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
                     .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-                    .Select(linkedLicenceNumber => new LinkedLicence
+                    .Select(linkedLicenceNumber =>
                     {
-                        LicenceNumber = linkedLicenceNumber,
-                        Condition = null
+                        var condition = (Condition?)null; // TODO
+                        
+                        return new LinkedLicence
+                        {
+                            LicenceNumber = linkedLicenceNumber,
+                            Condition = condition
+                        };
                     })
-                    .ToList();
+                    .ToList() ?? [];
 
-                var hasLinkedLicenceNumber = linkedLicenceNumbers?.Count > 0;
+                var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
                 var aggregateLimits = new List<AbstractionLimit>();
                 
                 foreach (var valueResult in valueResults)
@@ -248,11 +243,16 @@ public static class SchemaConverter
                         .FirstOrDefault()?
                         .Text;
 
+                    var limitPoint = (Point?)null;
+                    var limitPurpose = (Purpose?)null;
+                    
                     var abstractionLimit = new AbstractionLimit
                     {
                         PeriodType = ToLimitPeriodType(valueResult.MatchedLabel?.Text?.FirstOrDefault()),
                         Value = number,
-                        Units = units
+                        Units = units,
+                        Point = limitPoint,
+                        Purpose = limitPurpose
                     };
 
                     if (hasLinkedLicenceNumber)
@@ -269,20 +269,35 @@ public static class SchemaConverter
                     continue;
                 }
                 
+                var pointsLoop = new List<Point>(); // TODO
+                var purposesLoop = new List<Purpose>(); // TODO
+                var timeCutoff = (TimeCutoff?)null; // TODO
+                var timePeriod = (TimePeriod?)null; // TODO
+                
                 var aggregate = new Aggregate
                 {
                     LicenceNumber = licenceNumber,
                     LicenceVersionId = licenceVersion.LicenceVersionId,
-                    PrimaryType = PrimaryType.LicenceToLicence,
-                    SubType = SubType.PointToPoint,
+                    PrimaryType = PrimaryType.LicenceToLicence, // TODO
+                    SubType = SubType.PointToPoint, // TODO
+                    NaldType = GetNaldType(),
                     AggregateSetId = PositionConstants.ReplacementMarker,
-                    LinkedLicences = linkedLicenceNumbers?.ToArray(),
-                    Limits = aggregateLimits.ToArray()
+                    LinkedLicences = linkedLicenceNumbers.ToArray(),
+                    Limits = aggregateLimits.ToArray(),
+                    Points = pointsLoop.ToArray(),
+                    Purposes = purposesLoop.ToArray(),
+                    TimeCutoff = timeCutoff,
+                    TimePeriod = timePeriod
                 };
                         
                 aggregates.Add(aggregate);
             }
         }
+        
+        var points = new List<Point>(); // TODO
+        var purposes = new List<Purpose>(); // TODO
+        var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
+        var periodOfAbstraction = (TimePeriod?)null;//new TimePeriod();  // TODO
         
         return new Licence
         {
@@ -293,7 +308,11 @@ public static class SchemaConverter
             },
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
-            LicenceVersion = licenceVersion
+            LicenceVersion = licenceVersion,
+            Points = points.ToArray(),
+            Purposes = purposes.ToArray(),
+            DefinitionOfYear = definitionOfYear,
+            PeriodOfAbstraction = periodOfAbstraction
         };
     }
 
@@ -310,5 +329,10 @@ public static class SchemaConverter
             "per year" => LimitPeriodType.PerYear,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
+    }
+    
+    private static string GetNaldType()
+    {
+        return string.Empty; // TODO
     }
 }

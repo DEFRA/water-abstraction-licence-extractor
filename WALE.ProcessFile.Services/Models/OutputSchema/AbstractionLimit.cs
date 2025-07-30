@@ -4,11 +4,11 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AbstractionLimit
 {
-    public LimitPeriodType PeriodType { get; set; }
+    public LimitPeriodType PeriodType { get; init; }
     
-    public double? Value { get; set; }
+    public double? Value { get; init; }
     
-    public string? Units { get; set; }
+    public string? Units { get; init; }
     
     public Point? Point { get; set; }
     

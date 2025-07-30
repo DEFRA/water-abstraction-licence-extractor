@@ -9,11 +9,18 @@ public class Aggregate
     {
         get
         {
-            var type = PrimaryType switch
+            var primaryType = PrimaryType switch
             {
-                Enums.OutputSchema.PrimaryType.LicenceToLicence => "L2L",
+                Enums.OutputSchema.PrimaryType.LicenceToLicence => "LL",
                 Enums.OutputSchema.PrimaryType.InLicence => "IL",
                 _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            var subType = SubType switch
+            {
+                Enums.OutputSchema.SubType.PointToPoint => "PO",
+                Enums.OutputSchema.SubType.PurposeToPurpose => "PU",
+                _ => string.Empty
             };
 
             var licenceNumber = LicenceNumber?
@@ -31,7 +38,7 @@ public class Aggregate
                 outputSb.Append($"-{linkedLicenceNumber}");
             }
 
-            return $"{licenceNumber}{LicenceVersionId}-{type}{outputSb}";
+            return $"{licenceNumber}{LicenceVersionId}-{primaryType}{subType}{outputSb}";
         }
     }
     
@@ -43,11 +50,17 @@ public class Aggregate
     
     public PrimaryType? PrimaryType { get; init; }
     
-    public SubType? SubType { get; set; }
+    public SubType? SubType { get; init; }
     
     public string? NaldType { get; set; }
 
     public TimeCutoff? TimeCutoff { get; set; }
+    
+    public Purpose[] Purposes { get; set; } = [];
+
+    public Point[] Points { get; set; } = [];
+    
+    public TimePeriod? TimePeriod { get; set; }
     
     public LinkedLicence[] LinkedLicences { get; init; } = [];
     

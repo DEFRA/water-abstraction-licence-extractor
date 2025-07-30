@@ -35,5 +35,5 @@ public class AggregateSet
     
     /*public string? VersionNumber { get; set; }*/
 
-    public Aggregate[] Aggregates { get; set; } = [];
+    public Aggregate[] Aggregates { get; init; } = [];
 }

@@ -33,7 +33,7 @@ public class LicenceSet
         }
     }
     
-    public AggregateSet[] AggregateSets { get; set; } = [];
+    public AggregateSet[] AggregateSets { get; init; } = [];
     
-    public Licence[] Licences { get; set; } = [];
+    public Licence[] Licences { get; init; } = [];
 }

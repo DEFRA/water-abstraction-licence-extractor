@@ -3,12 +3,14 @@
   "aggregateSets" : [ {
     "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
     "aggregates" : [ {
-      "id" : "2568001249LV20190619-L2L-2568001247-2568001248",
+      "id" : "2568001249LV20190619-LLPO-2568001247-2568001248",
       "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
       "licenceNumber" : "25 68 001 249",
       "licenceVersionId" : "LV20190619",
       "primaryType" : "licenceToLicence",
       "subType" : "pointToPoint",
+      "purposes" : [ ],
+      "points" : [ ],
       "linkedLicences" : [ {
         "licenceNumber" : "25 68 001 247"
       }, {
@@ -24,12 +26,14 @@
         "units" : "cubic metres"
       } ]
     }, {
-      "id" : "2568001247LV20190619-L2L-2568001248-2568001249",
+      "id" : "2568001247LV20190619-LLPO-2568001248-2568001249",
       "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
       "licenceNumber" : "25 68 001 247",
       "licenceVersionId" : "LV20190619",
       "primaryType" : "licenceToLicence",
       "subType" : "pointToPoint",
+      "purposes" : [ ],
+      "points" : [ ],
       "linkedLicences" : [ {
         "licenceNumber" : "25 68 001 248"
       }, {
@@ -45,12 +49,14 @@
         "units" : "cubic metres"
       } ]
     }, {
-      "id" : "2568001248LV20190619-L2L-2568001247-2568001249",
+      "id" : "2568001248LV20190619-LLPO-2568001247-2568001249",
       "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
       "licenceNumber" : "25 68 001 248",
       "licenceVersionId" : "LV20190619",
       "primaryType" : "licenceToLicence",
       "subType" : "pointToPoint",
+      "purposes" : [ ],
+      "points" : [ ],
       "linkedLicences" : [ {
         "licenceNumber" : "25 68 001 247"
       }, {
@@ -91,12 +97,14 @@
         "units" : "cubic metres"
       } ],
       "aggregates" : [ {
-        "id" : "2568001249LV20190619-L2L-2568001247-2568001248",
+        "id" : "2568001249LV20190619-LLPO-2568001247-2568001248",
         "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
         "licenceNumber" : "25 68 001 249",
         "licenceVersionId" : "LV20190619",
         "primaryType" : "licenceToLicence",
         "subType" : "pointToPoint",
+        "purposes" : [ ],
+        "points" : [ ],
         "linkedLicences" : [ {
           "licenceNumber" : "25 68 001 247"
         }, {
@@ -138,12 +146,14 @@
         "units" : "cubic metres"
       } ],
       "aggregates" : [ {
-        "id" : "2568001247LV20190619-L2L-2568001248-2568001249",
+        "id" : "2568001247LV20190619-LLPO-2568001248-2568001249",
         "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
         "licenceNumber" : "25 68 001 247",
         "licenceVersionId" : "LV20190619",
         "primaryType" : "licenceToLicence",
         "subType" : "pointToPoint",
+        "purposes" : [ ],
+        "points" : [ ],
         "linkedLicences" : [ {
           "licenceNumber" : "25 68 001 248"
         }, {
@@ -185,12 +195,14 @@
         "units" : "cubic metres"
       } ],
       "aggregates" : [ {
-        "id" : "2568001248LV20190619-L2L-2568001247-2568001249",
+        "id" : "2568001248LV20190619-LLPO-2568001247-2568001249",
         "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
         "licenceNumber" : "25 68 001 248",
         "licenceVersionId" : "LV20190619",
         "primaryType" : "licenceToLicence",
         "subType" : "pointToPoint",
+        "purposes" : [ ],
+        "points" : [ ],
         "linkedLicences" : [ {
           "licenceNumber" : "25 68 001 247"
         }, {

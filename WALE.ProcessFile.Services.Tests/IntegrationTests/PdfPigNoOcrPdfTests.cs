@@ -160,6 +160,9 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits!.Individual.Last().Units);
         Assert.Equal(33182, agreedSchemaLicence.AbstractionLimits!.Individual.Last().Value);
 
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits!.Aggregates);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits!.Aggregates);        
+        
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
         Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         
@@ -172,6 +175,9 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Empty(agreedSchemaLicenceGroup.AggregateSets);
     }
 
     [Fact]

@@ -13,7 +13,7 @@ public static class SchemaConverter
         {
             ToLicence(matchesResult)
         };
-        
+
         var abstractionLimits = matchesResult.Matches?
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
@@ -54,7 +54,7 @@ public static class SchemaConverter
                     {
                         var text = linkedLicencesNumber.Text?.FirstOrDefault()?.Text;
 
-                        if (licences.Any(x => x.LicenceNumber == text))
+                        if (licences.Any(licence => licence.LicenceNumber == text))
                         {
                             continue;
                         }
@@ -68,24 +68,46 @@ public static class SchemaConverter
             }
         }
         
+        var aggregates = new List<Aggregate>();
+
+        foreach (var licence in licences)
+        {
+            if (licence.AbstractionLimits?.Aggregates == null || licence.AbstractionLimits.Aggregates.Length == 0)
+            {
+                continue;
+            }
+            
+            aggregates.AddRange(licence.AbstractionLimits.Aggregates!);
+        }
+        
+        var aggregateSets = new List<AggregateSet>();
+
+        if (aggregates.Count > 0)
+        {
+            aggregateSets.Add(new AggregateSet
+            {
+                Aggregates = aggregates.ToArray()
+            });
+        }
+        
         var licenceGroup = new LicenceGroup
         {
             Licences = licences.ToArray(),
-            AggregateSets = null
+            AggregateSets = aggregateSets.ToArray()
         };
 
         foreach (var licence in licences)
         {
-            var aggregates = licence
+            var licenceAggregates = licence
                 .AbstractionLimits?
                 .Aggregates;
 
-            if (aggregates == null)
+            if (licenceAggregates == null)
             {
                 continue;
             }
 
-            _ = aggregates
+            _ = licenceAggregates
                 .Where(aggregate => aggregate.GroupId == PositionConstants.ReplacementMarker)
                 .Select(aggregate => aggregate.GroupId = licenceGroup.Id)
                 .ToList();

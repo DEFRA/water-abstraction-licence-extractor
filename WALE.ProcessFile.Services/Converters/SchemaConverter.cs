@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static class SchemaConverter
 {
-    public static LicenceGroup ToLicenceGroup(MatchesResult matchesResult)
+    public static LicenceSet ToLicenceGroup(MatchesResult matchesResult)
     {
         var licences = new List<Licence>
         {
@@ -90,7 +90,7 @@ public static class SchemaConverter
             });
         }
         
-        var licenceGroup = new LicenceGroup
+        var licenceGroup = new LicenceSet
         {
             Licences = licences.ToArray(),
             AggregateSets = aggregateSets.ToArray()
@@ -108,8 +108,8 @@ public static class SchemaConverter
             }
 
             _ = licenceAggregates
-                .Where(aggregate => aggregate.GroupId == PositionConstants.ReplacementMarker)
-                .Select(aggregate => aggregate.GroupId = licenceGroup.Id)
+                .Where(aggregate => aggregate.AggregateSetId == PositionConstants.ReplacementMarker)
+                .Select(aggregate => aggregate.AggregateSetId = licenceGroup.LicenceSetId)
                 .ToList();
         }
         
@@ -250,7 +250,7 @@ public static class SchemaConverter
 
                     var abstractionLimit = new AbstractionLimit
                     {
-                        Name = valueResult.MatchedLabel?.Text?.FirstOrDefault(),
+                        PeriodType = ToLimitPeriodType(valueResult.MatchedLabel?.Text?.FirstOrDefault()),
                         Value = number,
                         Units = units
                     };
@@ -275,7 +275,7 @@ public static class SchemaConverter
                     LicenceVersionId = licenceVersion.LicenceVersionId,
                     PrimaryType = PrimaryType.LicenceToLicence,
                     SubType = SubType.PointToPoint,
-                    GroupId = PositionConstants.ReplacementMarker,
+                    AggregateSetId = PositionConstants.ReplacementMarker,
                     LinkedLicences = linkedLicenceNumbers?.ToArray(),
                     Limits = aggregateLimits.ToArray()
                 };
@@ -294,6 +294,21 @@ public static class SchemaConverter
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
             LicenceVersion = licenceVersion
+        };
+    }
+
+    private static LimitPeriodType ToLimitPeriodType(string? text)
+    {
+        return text?.ToLower() switch
+        {
+            "per second" => LimitPeriodType.PerSecond,
+            "per minute" => LimitPeriodType.PerMinute,
+            "per hour" => LimitPeriodType.PerHour,
+            "per day" => LimitPeriodType.PerDay,
+            "per week" => LimitPeriodType.PerWeek,
+            "per month" => LimitPeriodType.PerMonth,
+            "per year" => LimitPeriodType.PerYear,
+            _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }
 }

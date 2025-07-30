@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class TimePeriod
 {
-    public PeriodType? PeriodType { get; set; }
+    public AbstractionPeriodType? PeriodType { get; set; }
     
     public string? StartDate { get; set; }
     

@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AggregateSet
 {
-    public string Id
+    public string AggregateSetId
     {
         get
         {

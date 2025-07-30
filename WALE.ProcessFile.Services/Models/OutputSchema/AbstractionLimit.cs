@@ -1,8 +1,10 @@
+using WALE.ProcessFile.Services.Enums.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AbstractionLimit
 {
-    public string? Name { get; set; }
+    public LimitPeriodType PeriodType { get; set; }
     
     public double? Value { get; set; }
     

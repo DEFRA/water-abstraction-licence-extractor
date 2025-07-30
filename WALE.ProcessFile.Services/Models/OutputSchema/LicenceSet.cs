@@ -2,9 +2,9 @@ using System.Text;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
-public class LicenceGroup
+public class LicenceSet
 {
-    public string Id
+    public string LicenceSetId
     {
         get
         {

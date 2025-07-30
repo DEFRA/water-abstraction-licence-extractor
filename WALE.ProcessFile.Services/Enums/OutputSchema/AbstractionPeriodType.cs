@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Services.Enums.OutputSchema;
 
-public enum PeriodType
+public enum AbstractionPeriodType
 {
     SetPeriod,
     PerYear

@@ -45,7 +45,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
             && CompanyName.AnyIsCompanyOrPersonalName(modifiedLines,  request.label, false, request.isOcr, out var companyNameLines))
         {
             labelGroupResult.Text = companyNameLines;
-            labelGroupResult.MatchedLabel.Format = "CompanyName";
+            labelGroupResult.MatchedLabel!.Format = "CompanyName";
             FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
             
             labelGroupResult.MatchedLabel.Position = LabelPosition.LabelIsAfterTextToFind;
@@ -56,7 +56,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         if (request.isNumberLookup && Number.AnyIsNumber(modifiedLines, out var numberLines))
         {
             labelGroupResult.Text = [numberLines.First()];
-            labelGroupResult.MatchedLabel.Format = "Number";
+            labelGroupResult.MatchedLabel!.Format = "Number";
             FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);                        
             
             return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
@@ -83,7 +83,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         {
             foreach (var previousLine in modifiedLines)
             {
-                if (labelGroupResult.MatchedLabel.Possibilities == null)
+                if (labelGroupResult.MatchedLabel!.Possibilities == null)
                 {
                     continue;
                 }

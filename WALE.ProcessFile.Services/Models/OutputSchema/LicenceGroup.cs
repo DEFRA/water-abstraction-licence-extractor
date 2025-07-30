@@ -4,15 +4,10 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class LicenceGroup
 {
-    public string? Id
+    public string Id
     {
         get
         {
-            if (Licences == null)
-            {
-                return null;
-            }
-            
             var licencesAlphabetical = Licences
                 .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion?.LicenceVersionId);
 
@@ -38,7 +33,7 @@ public class LicenceGroup
         }
     }
     
-    public AggregateSet[]? AggregateSets { get; set; }
+    public AggregateSet[] AggregateSets { get; set; } = [];
     
-    public Licence[]? Licences { get; set; }
+    public Licence[] Licences { get; set; } = [];
 }

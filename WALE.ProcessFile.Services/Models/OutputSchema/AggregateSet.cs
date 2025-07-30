@@ -4,15 +4,10 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AggregateSet
 {
-    public string? Id
+    public string Id
     {
         get
         {
-            if (Aggregates == null)
-            {
-                return null;
-            }
-            
             var licencesAlphabetical = Aggregates
                 .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersionId);
 
@@ -39,6 +34,6 @@ public class AggregateSet
     }
     
     /*public string? VersionNumber { get; set; }*/
-    
-    public Aggregate[]? Aggregates { get; set; }
+
+    public Aggregate[] Aggregates { get; set; } = [];
 }

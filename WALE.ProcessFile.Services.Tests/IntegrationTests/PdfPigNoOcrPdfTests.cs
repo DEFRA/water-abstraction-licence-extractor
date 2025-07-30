@@ -1,6 +1,8 @@
+using System.Text.Json;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -308,7 +310,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(filename, primaryLicence.Filename);
         Assert.Equal("28/39/22/0422", primaryLicence.LicenceNumber);
 
-        Assert.Equal(2, primaryLicence.AbstractionLimits!.Individual!.Length);
+        Assert.Equal(2, primaryLicence.AbstractionLimits!.Individual.Length);
         Assert.Equal("per hour", primaryLicence.AbstractionLimits!.Individual[0].Name);
         Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[0].Units);
         Assert.Equal(41, primaryLicence.AbstractionLimits!.Individual[0].Value);
@@ -319,6 +321,13 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Single(primaryLicence.AbstractionLimits!.Aggregates!);
         Assert.Single(primaryLicence.AbstractionLimits!.Aggregates![0].Limits!);
+        
+        Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
+
+        Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
+        Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].Id);
         
         Assert.Equal("per year", primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].Name);
         Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].Units);
@@ -2010,7 +2019,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(primaryLicence.AbstractionLimits!.Aggregates!.Single());
         
         var aggregate = primaryLicence.AbstractionLimits!.Aggregates!.Single();
-        Assert.Equal("2568001249LV20190619-L2L--2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249LV20190619-L2L-2568001247-2568001248", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Length);
         
@@ -2032,9 +2041,228 @@ public class PdfPigNoOcrPdfTests
         
         var firstLinkedLicence = agreedSchemaLicenceGroup.Licences[1];
         Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Single(firstLinkedLicence.AbstractionLimits!.Aggregates!);
         
         var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
         Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Single(secondLinkedLicence.AbstractionLimits!.Aggregates!);
+        
+        Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
+
+        Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates!);
+        Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates!.Length);
+
+        var licenceGroupJson = JsonSerializer.Serialize(agreedSchemaLicenceGroup, JsonHelper.GetSerializer());
+        Assert.Equal(@"{
+  ""id"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+  ""aggregateSets"" : [ {
+    ""id"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+    ""aggregates"" : [ {
+      ""id"" : ""2568001249LV20190619-L2L-2568001247-2568001248"",
+      ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+      ""licenceNumber"" : ""25 68 001 249"",
+      ""licenceVersionId"" : ""LV20190619"",
+      ""primaryType"" : ""licenceToLicence"",
+      ""subType"" : ""pointToPoint"",
+      ""linkedLicences"" : [ {
+        ""licenceNumber"" : ""25 68 001 247""
+      }, {
+        ""licenceNumber"" : ""25 68 001 248""
+      } ],
+      ""limits"" : [ {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ]
+    }, {
+      ""id"" : ""2568001247LV20190619-L2L-2568001248-2568001249"",
+      ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+      ""licenceNumber"" : ""25 68 001 247"",
+      ""licenceVersionId"" : ""LV20190619"",
+      ""primaryType"" : ""licenceToLicence"",
+      ""subType"" : ""pointToPoint"",
+      ""linkedLicences"" : [ {
+        ""licenceNumber"" : ""25 68 001 248""
+      }, {
+        ""licenceNumber"" : ""25 68 001 249""
+      } ],
+      ""limits"" : [ {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ]
+    }, {
+      ""id"" : ""2568001248LV20190619-L2L-2568001247-2568001249"",
+      ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+      ""licenceNumber"" : ""25 68 001 248"",
+      ""licenceVersionId"" : ""LV20190619"",
+      ""primaryType"" : ""licenceToLicence"",
+      ""subType"" : ""pointToPoint"",
+      ""linkedLicences"" : [ {
+        ""licenceNumber"" : ""25 68 001 247""
+      }, {
+        ""licenceNumber"" : ""25 68 001 249""
+      } ],
+      ""limits"" : [ {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ]
+    } ]
+  } ],
+  ""licences"" : [ {
+    ""licenceNumber"" : ""25 68 001 249"",
+    ""filename"" : ""Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf"",
+    ""licenceVersion"" : {
+      ""licenceVersionId"" : ""LV20190619"",
+      ""effectiveDate"" : ""2019-06-19T00:00:00"",
+      ""issueDate"" : ""2019-06-19T00:00:00"",
+      ""originalIssueDate"" : ""1995-05-09T00:00:00""
+    },
+    ""abstractionLimits"" : {
+      ""individual"" : [ {
+        ""name"" : ""per hour"",
+        ""value"" : 20,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ],
+      ""aggregates"" : [ {
+        ""id"" : ""2568001249LV20190619-L2L-2568001247-2568001248"",
+        ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+        ""licenceNumber"" : ""25 68 001 249"",
+        ""licenceVersionId"" : ""LV20190619"",
+        ""primaryType"" : ""licenceToLicence"",
+        ""subType"" : ""pointToPoint"",
+        ""linkedLicences"" : [ {
+          ""licenceNumber"" : ""25 68 001 247""
+        }, {
+          ""licenceNumber"" : ""25 68 001 248""
+        } ],
+        ""limits"" : [ {
+          ""name"" : ""per day"",
+          ""value"" : 475,
+          ""units"" : ""cubic metres""
+        }, {
+          ""name"" : ""per year"",
+          ""value"" : 173453,
+          ""units"" : ""cubic metres""
+        } ]
+      } ]
+    }
+  }, {
+    ""licenceNumber"" : ""25 68 001 247"",
+    ""licenceVersion"" : {
+      ""licenceVersionId"" : ""LV20190619"",
+      ""effectiveDate"" : ""2019-06-19T00:00:00"",
+      ""issueDate"" : ""2019-06-19T00:00:00"",
+      ""originalIssueDate"" : ""1995-05-09T00:00:00""
+    },
+    ""abstractionLimits"" : {
+      ""individual"" : [ {
+        ""name"" : ""per hour"",
+        ""value"" : 20,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ],
+      ""aggregates"" : [ {
+        ""id"" : ""2568001247LV20190619-L2L-2568001248-2568001249"",
+        ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+        ""licenceNumber"" : ""25 68 001 247"",
+        ""licenceVersionId"" : ""LV20190619"",
+        ""primaryType"" : ""licenceToLicence"",
+        ""subType"" : ""pointToPoint"",
+        ""linkedLicences"" : [ {
+          ""licenceNumber"" : ""25 68 001 248""
+        }, {
+          ""licenceNumber"" : ""25 68 001 249""
+        } ],
+        ""limits"" : [ {
+          ""name"" : ""per day"",
+          ""value"" : 475,
+          ""units"" : ""cubic metres""
+        }, {
+          ""name"" : ""per year"",
+          ""value"" : 173453,
+          ""units"" : ""cubic metres""
+        } ]
+      } ]
+    }
+  }, {
+    ""licenceNumber"" : ""25 68 001 248"",
+    ""licenceVersion"" : {
+      ""licenceVersionId"" : ""LV20190619"",
+      ""effectiveDate"" : ""2019-06-19T00:00:00"",
+      ""issueDate"" : ""2019-06-19T00:00:00"",
+      ""originalIssueDate"" : ""1995-05-09T00:00:00""
+    },
+    ""abstractionLimits"" : {
+      ""individual"" : [ {
+        ""name"" : ""per hour"",
+        ""value"" : 20,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per day"",
+        ""value"" : 475,
+        ""units"" : ""cubic metres""
+      }, {
+        ""name"" : ""per year"",
+        ""value"" : 173453,
+        ""units"" : ""cubic metres""
+      } ],
+      ""aggregates"" : [ {
+        ""id"" : ""2568001248LV20190619-L2L-2568001247-2568001249"",
+        ""groupId"" : ""2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619"",
+        ""licenceNumber"" : ""25 68 001 248"",
+        ""licenceVersionId"" : ""LV20190619"",
+        ""primaryType"" : ""licenceToLicence"",
+        ""subType"" : ""pointToPoint"",
+        ""linkedLicences"" : [ {
+          ""licenceNumber"" : ""25 68 001 247""
+        }, {
+          ""licenceNumber"" : ""25 68 001 249""
+        } ],
+        ""limits"" : [ {
+          ""name"" : ""per day"",
+          ""value"" : 475,
+          ""units"" : ""cubic metres""
+        }, {
+          ""name"" : ""per year"",
+          ""value"" : 173453,
+          ""units"" : ""cubic metres""
+        } ]
+      } ]
+    }
+  } ]
+}"
+            .Replace(" ", string.Empty).Replace("\n", string.Empty),
+            licenceGroupJson.Replace(" ", string.Empty).Replace("\n", string.Empty));
     }
     
     [Fact]

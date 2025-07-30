@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class Aggregate
 {
-    public string? Id
+    public string Id
     {
         get
         {
@@ -21,20 +21,17 @@ public class Aggregate
                 .Replace(" ", string.Empty);
 
             var outputSb = new StringBuilder();
-
-            if (LinkedLicences != null)
+            
+            foreach (var linkedLicence in LinkedLicences)
             {
-                foreach (var linkedLicence in LinkedLicences)
-                {
-                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
-                        .Replace("/", string.Empty)
-                        .Replace(" ", string.Empty);
-                    
-                    outputSb.Append($"-{linkedLicenceNumber}");
-                }
+                var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                    .Replace("/", string.Empty)
+                    .Replace(" ", string.Empty);
+                
+                outputSb.Append($"-{linkedLicenceNumber}");
             }
 
-            return $"{licenceNumber}{LicenceVersionId}-{type}-{outputSb}";
+            return $"{licenceNumber}{LicenceVersionId}-{type}{outputSb}";
         }
     }
     
@@ -58,7 +55,7 @@ public class Aggregate
     
     public Point[]? Points { get; set; }
     
-    public LinkedLicence[]? LinkedLicences { get; set; }
+    public LinkedLicence[] LinkedLicences { get; set; } = [];
     
-    public AbstractionLimit[]? Limits { get; set; }
+    public AbstractionLimit[] Limits { get; set; } = [];
 }

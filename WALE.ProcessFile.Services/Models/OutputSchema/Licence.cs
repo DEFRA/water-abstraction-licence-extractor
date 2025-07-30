@@ -8,5 +8,5 @@ public class Licence
 
     public LicenceVersion LicenceVersion { get; set; } = new();
     
-    public AbstractionLimits? AbstractionLimits { get; set; }
+    public AbstractionLimits AbstractionLimits { get; set; } = new();
 }

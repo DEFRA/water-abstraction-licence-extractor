@@ -316,7 +316,7 @@ public static class SchemaConverter
         foreach (var pointResult in periodResults.SubResults)
         {
             var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodOfAbstractionPoint")?
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodOfAbstractionSubSection")?
                 .Text?
                 .FirstOrDefault()?
                 .Text;

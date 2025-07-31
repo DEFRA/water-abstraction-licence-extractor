@@ -474,7 +474,7 @@ public static class LabelConfiguration
                 SubLabels = [
                     new()
                     {
-                        Name = "PeriodOfAbstractionPoint",
+                        Name = "PeriodOfAbstractionSubSection",
                         TextStart = [
                             "5.1",
                             "5.2",
@@ -505,7 +505,28 @@ public static class LabelConfiguration
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 10,
-                        MinimumSubMatches = 0
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PurposeLink",
+                                Text = [
+                                    "For Purpose ",
+                                    "For Purposes "
+                                ],
+                                Position = LabelPosition.LabelIsBeforeTextToFind,
+                                Format = "ActsLikeSingleWord",
+                                SubLabels =
+                                [
+                                    new()
+                                    {
+                                        Name = "PurposeLinkSub",
+                                        Text = ["and "],
+                                        Position = LabelPosition.Split
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
             }

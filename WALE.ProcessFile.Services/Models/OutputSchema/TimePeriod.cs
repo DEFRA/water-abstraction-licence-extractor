@@ -8,5 +8,7 @@ public class TimePeriod
     
     public string? StartDate { get; set; }
     
-    public string? EndDate { get; set; }    
+    public string? EndDate { get; set; }
+    
+    public bool Inclusive { get; set; }
 }

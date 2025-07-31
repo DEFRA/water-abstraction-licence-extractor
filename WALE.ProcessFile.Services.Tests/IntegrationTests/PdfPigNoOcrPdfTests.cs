@@ -1167,6 +1167,14 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(periodsResult.SubResults);
         Assert.Equal(2, periodsResult.SubResults.Count);
         
+        Assert.Equal("For Purposes 4.1 and 4.2", periodsResult.SubResults[0].Text![0].Text);
+        Assert.Equal(string.Empty, periodsResult.SubResults[0].Text![1].Text);
+        Assert.Equal("From 1 November to 31 March inclusive", periodsResult.SubResults[0].Text![2].Text);
+        
+        Assert.Equal("For Purpose 4.3", periodsResult.SubResults[1].Text![0].Text);
+        Assert.Equal(string.Empty, periodsResult.SubResults[1].Text![1].Text);
+        Assert.Equal("From 1 April to 31 October inclusive", periodsResult.SubResults[1].Text![2].Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1412,7 +1420,7 @@ public class PdfPigNoOcrPdfTests
             + "  4.2 Filling a reservoir for subsequent spray irrigation"
             + "  4.3 From Point 2.2"
             + "  Spray Irrigation",
-            allPurposeText); // TODO - why doesnt this have 4.1 and 4.2 in it?
+            allPurposeText);
         
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -2070,10 +2078,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("LV20190619", primaryLicence.LicenceVersion.LicenceVersionId);
 
         Assert.Single(primaryLicence.Points);
-        Assert.Equal("At National Grid Reference SJ 5179 4988 marked \"C\" on the map", primaryLicence.Points.First().Name);
+        Assert.Equal("At National Grid Reference SJ 5179 4988 marked \"C\" on the map",
+            primaryLicence.Points.First().Description);
 
         Assert.Single(primaryLicence.Purposes);
-        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().Name);        
+        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().Description);        
         
         Assert.Null(primaryLicence.LicenceVersion.ExpiryDate);
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.EffectiveDate);

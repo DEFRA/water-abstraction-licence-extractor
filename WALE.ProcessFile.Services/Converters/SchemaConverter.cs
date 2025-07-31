@@ -25,14 +25,9 @@ public static class SchemaConverter
             {
                 var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
 
-                if (abstractionLimitPointSubs == null)
-                {
-                    continue;
-                }
-
                 foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
                 {
-                    var linkedLicencesLoop = abstractionLimitPointSub.SubResults!
+                    var linkedLicencesLoop = abstractionLimitPointSub.SubResults
                         .Where(subResult =>
                             subResult.MatchedLabel!.Name == "LinkedLicence")
                         .ToList();
@@ -45,7 +40,7 @@ public static class SchemaConverter
                         licences.Add(toLinkedLicence);   
                     }
                     
-                    var linkedLicencesNumbers = abstractionLimitPointSub.SubResults!
+                    var linkedLicencesNumbers = abstractionLimitPointSub.SubResults
                         .Where(subResult =>
                             subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
                         .ToList();
@@ -109,7 +104,7 @@ public static class SchemaConverter
     private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
     {
         var results = new List<LabelGroupResult>();
-        results.AddRange(labelGroupResult.SubResults!);
+        results.AddRange(labelGroupResult.SubResults);
         
         return new MatchesResult
         {
@@ -184,13 +179,12 @@ public static class SchemaConverter
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
         var abstractionLimitPoints = abstractionLimitsSection?
-            .SubResults?
+            .SubResults
             .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPoint")
             .ToList();
 
         var abstractionLimitPointSubs = abstractionLimitPoints?
-            .Where(res => res.SubResults != null)
-            .SelectMany(res => res.SubResults!)
+            .SelectMany(res => res.SubResults)
             .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
             .ToList();
 
@@ -202,29 +196,24 @@ public static class SchemaConverter
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
             {
                 var siblings = abstractionLimitPointSub.SubResults;
-                var valueResults = siblings?
+                var valueResults = siblings
                     .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                     .ToList();
 
-                if (valueResults == null)
-                {
-                    continue;
-                }
-
-                var linkedLicenceNumbers = siblings?
+                var linkedLicenceNumbers = siblings
                     .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
                     .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
                     .Select(linkedLicenceNumber =>
                     {
                         var condition = (Condition?)null; // TODO
-                        
+
                         return new LinkedLicence
                         {
                             LicenceNumber = linkedLicenceNumber,
                             Condition = condition
                         };
                     })
-                    .ToList() ?? [];
+                    .ToList();
 
                 var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
                 var aggregateLimits = new List<AbstractionLimit>();
@@ -295,38 +284,71 @@ public static class SchemaConverter
         }
         
         var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
-        var periodOfAbstraction = new List<TimePeriod>();//new TimePeriod();  // TODO
         
         return new Licence
         {
-            AbstractionLimits = new AbstractionLimits
-            {
-                Aggregates = aggregates.ToArray(),
-                Individual = individual.ToArray()
-            },
+
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
             LicenceVersion = licenceVersion,
             Points = GetPoints(matches),
             Purposes = GetPurposes(matches),
+            PeriodsOfAbstraction = GetPeriods(matches),
             DefinitionOfYear = definitionOfYear,
-            PeriodsOfAbstraction = periodOfAbstraction.ToArray()
+            AbstractionLimits = new AbstractionLimits
+            {
+                Aggregates = aggregates.ToArray(),
+                Individual = individual.ToArray()
+            }
         };
     }
     
-    private static Point[] GetPoints(List<LabelGroupResult> matches)
+    private static PeriodOfAbstraction[] GetPeriods(List<LabelGroupResult> matches)
+    {
+        var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
+        var returnList = new List<PeriodOfAbstraction>();
+
+        if (periodResults == null)
+        {
+            return returnList.ToArray();
+        }
+        
+        foreach (var pointResult in periodResults.SubResults)
+        {
+            var textWithoutNumber = pointResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodOfAbstractionPoint")?
+                .Text?
+                .FirstOrDefault()?
+                .Text;
+
+            if (textWithoutNumber == null)
+            {
+                continue;
+            }
+                
+            returnList.Add(new PeriodOfAbstraction
+            {
+                 PeriodType = AbstractionPeriodType.SetPeriod,
+                 //TODO
+            });
+        }
+
+        return returnList.ToArray();
+    }
+    
+    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
-        var returnList = new List<Point>();
+        var returnList = new List<PointOfAbstraction>();
 
         if (pointsResults == null)
         {
             return returnList.ToArray();
         }
         
-        foreach (var pointResult in pointsResults.SubResults!)
+        foreach (var pointResult in pointsResults.SubResults)
         {
-            var textWithoutNumber = pointResult.SubResults?
+            var textWithoutNumber = pointResult.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                 .Text?
                 .FirstOrDefault()?
@@ -337,35 +359,30 @@ public static class SchemaConverter
                 continue;
             }
                 
-            returnList.Add(new Point
+            returnList.Add(new PointOfAbstraction
             {
-                Name = textWithoutNumber
+                Description = textWithoutNumber
             });
         }
 
         return returnList.ToArray();
     }
 
-    private static Purpose[] GetPurposes(List<LabelGroupResult> matches)
+    private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches)
     {
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
-        var returnList = new List<Purpose>();
+        var returnList = new List<PurposeOfAbstraction>();
 
         if (purposeResults == null)
         {
             return returnList.ToArray();
         }
         
-        foreach (var purposeResult in purposeResults.SubResults!)
+        foreach (var purposeResult in purposeResults.SubResults)
         {
-            if (purposeResult.SubResults == null)
+            foreach (var purposePointGroup in purposeResult.SubResults)
             {
-                continue;
-            }
-                
-            foreach (var purposePointGroup in purposeResult.SubResults!)
-            {
-                var textWithoutNumber = purposePointGroup.SubResults?
+                var textWithoutNumber = purposePointGroup.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
                     .Text?
                     .FirstOrDefault()?
@@ -376,9 +393,9 @@ public static class SchemaConverter
                     continue;
                 }
                     
-                returnList.Add(new Purpose
+                returnList.Add(new PurposeOfAbstraction
                 {
-                    Name = textWithoutNumber
+                    Description = textWithoutNumber
                 });
             }
         }

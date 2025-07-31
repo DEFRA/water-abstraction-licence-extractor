@@ -8,13 +8,13 @@ public class Licence
 
     public LicenceVersion LicenceVersion { get; init; } = new();
     
-    public AbstractionLimits AbstractionLimits { get; init; } = new();
+    public PointOfAbstraction[] Points { get; init; } = [];
+    
+    public PurposeOfAbstraction[] Purposes { get; init; } = [];
 
-    public TimePeriod[] PeriodsOfAbstraction { get; set; } = [];
+    public PeriodOfAbstraction[] PeriodsOfAbstraction { get; set; } = [];
+
+    public AbstractionLimits AbstractionLimits { get; init; } = new();    
     
     public TimePeriod? DefinitionOfYear { get; set; }
-
-    public Purpose[] Purposes { get; init; } = [];
-
-    public Point[] Points { get; init; } = [];
 }

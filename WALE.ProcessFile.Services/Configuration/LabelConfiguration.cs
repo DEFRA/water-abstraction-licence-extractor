@@ -195,10 +195,10 @@ public static class LabelConfiguration
                             {
                                 Name = "TextWithoutPurposeAndPoint",
                                 Remove = [
-                                    new("2.1") { LineMustStartWith = true, RemoveWholeLine = true },
-                                    new("2.2") { LineMustStartWith = true, RemoveWholeLine = true },
-                                    new("2.3") { LineMustStartWith = true, RemoveWholeLine = true },
-                                    new("2.4") { LineMustStartWith = true, RemoveWholeLine = true }
+                                    new("2.1") { LineMustStartWith = true },
+                                    new("2.2") { LineMustStartWith = true },
+                                    new("2.3") { LineMustStartWith = true },
+                                    new("2.4") { LineMustStartWith = true }
                                 ],
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,

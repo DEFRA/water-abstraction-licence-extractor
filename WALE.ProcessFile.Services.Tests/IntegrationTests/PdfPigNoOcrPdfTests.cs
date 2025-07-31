@@ -1881,6 +1881,29 @@ public class PdfPigNoOcrPdfTests
         
         // Assert
         Assert.Equal(9, resultList.Count);
+
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+
+        Assert.NotNull(purposeResult);
+        Assert.False(purposeResult.IsOcr);
+        Assert.Equal("4.1 Fish farm and fishery", purposeResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text);
+        Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal("4.1", purposeResult.SubResults![0].SubResults![0].SubResults![0].Text!.First().Text);
+        Assert.Equal("Fish farm and fishery", purposeResult.SubResults![0].SubResults![0].SubResults![1].Text!.First().Text);
+        
+        var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
+
+        Assert.NotNull(pointsResult);
+        Assert.False(pointsResult.IsOcr);
+        Assert.Equal("DocumentPoints", pointsResult.MatchedLabel!.Name);
+        
+        Assert.Single(pointsResult.Text!);
+        Assert.Equal("2.1 At National Grid Reference SJ 5179 4988 marked \"C\" on the map", pointsResult.Text![0].Text);
+        Assert.Equal("2.1", pointsResult.SubResults![0].SubResults![0].Text!.First().Text);
+        Assert.Equal("At National Grid Reference SJ 5179 4988 marked \"C\" on the map", pointsResult.SubResults![0].SubResults![1].Text!.First().Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -2061,6 +2084,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),
             licenceGroupJson.Replace(" ", string.Empty).Replace("\n", string.Empty));
+        
+        //TODO
     }
     
     [Fact]
@@ -2518,7 +2543,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
-        
+
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
         Assert.NotNull(nameResult);

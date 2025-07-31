@@ -1,8 +1,10 @@
+using WALE.ProcessFile.Services.Enums.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class TimeCutoff
 {
-    public string? CutoffType { get; set; }
+    public CutoffType CutoffType { get; set; }
 
-    public string? Date { get; set; }
+    public DateTime? Date { get; set; }
 }

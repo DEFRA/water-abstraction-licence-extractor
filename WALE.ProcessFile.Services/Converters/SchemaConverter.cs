@@ -294,8 +294,6 @@ public static class SchemaConverter
             }
         }
         
-        var points = new List<Point>(); // TODO
-        var purposes = new List<Purpose>(); // TODO
         var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
         var periodOfAbstraction = (TimePeriod?)null;//new TimePeriod();  // TODO
         
@@ -309,11 +307,89 @@ public static class SchemaConverter
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
             LicenceVersion = licenceVersion,
-            Points = points.ToArray(),
-            Purposes = purposes.ToArray(),
+            Points = GetPoints(matches),
+            Purposes = GetPurposes(matches),
             DefinitionOfYear = definitionOfYear,
             PeriodOfAbstraction = periodOfAbstraction
         };
+    }
+    
+    private static Point[] GetPoints(List<LabelGroupResult> matches)
+    {
+        var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
+        var returnList = new List<Point>();
+
+        if (pointsResults == null)
+        {
+            return returnList.ToArray();
+        }
+        
+        foreach (var pointResult in pointsResults.SubResults!)
+        {
+            if (pointResult.SubResults == null)
+            {
+                continue;
+            }
+            
+            var textWithoutNumber = pointResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
+                .Text?.FirstOrDefault()?.Text;
+
+            if (textWithoutNumber == null)
+            {
+                continue;
+            }
+                
+            returnList.Add(new Point
+            {
+                Name = textWithoutNumber
+            });
+        }
+
+        return returnList.ToArray();
+    }
+
+    private static Purpose[] GetPurposes(List<LabelGroupResult> matches)
+    {
+        var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var returnList = new List<Purpose>();
+
+        if (purposeResults == null)
+        {
+            return returnList.ToArray();
+        }
+        
+        foreach (var purposeResult in purposeResults.SubResults!)
+        {
+            if (purposeResult.SubResults == null)
+            {
+                continue;
+            }
+                
+            foreach (var purposePointGroup in purposeResult.SubResults!)
+            {
+                if (purposePointGroup.SubResults == null)
+                {
+                    continue;
+                }
+                    
+                var textWithoutNumber = purposePointGroup.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
+                    .Text?.FirstOrDefault()?.Text;
+
+                if (textWithoutNumber == null)
+                {
+                    continue;
+                }
+                    
+                returnList.Add(new Purpose
+                {
+                    Name = textWithoutNumber
+                });
+            }
+        }
+
+        return returnList.ToArray();
     }
 
     private static LimitPeriodType ToLimitPeriodType(string? text)

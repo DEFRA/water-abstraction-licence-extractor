@@ -1166,27 +1166,31 @@ public class PdfPigNoOcrPdfTests
 
         Assert.NotNull(periodsResult.SubResults);
         Assert.Equal(2, periodsResult.SubResults.Count);
-        
-        Assert.Equal("For Purposes 4.1 and 4.2", periodsResult.SubResults[0].Text![0].Text);
-        Assert.Equal(string.Empty, periodsResult.SubResults[0].Text![1].Text);
-        Assert.Equal("From 1 November to 31 March inclusive", periodsResult.SubResults[0].Text![2].Text);
-        
-        Assert.Equal("For Purpose 4.3", periodsResult.SubResults[1].Text![0].Text);
-        Assert.Equal(string.Empty, periodsResult.SubResults[1].Text![1].Text);
-        Assert.Equal("From 1 April to 31 October inclusive", periodsResult.SubResults[1].Text![2].Text);
 
-        var periodSubSection1PurposesText = periodsResult.SubResults[0].SubResults[0].Text!.Single().Text;
+        var periodSubSection1 = periodsResult.SubResults[0];
+        
+        Assert.Equal("For Purposes 4.1 and 4.2", periodSubSection1.Text![0].Text);
+        Assert.Equal(string.Empty, periodSubSection1.Text![1].Text);
+        Assert.Equal("From 1 November to 31 March inclusive", periodSubSection1.Text![2].Text);
+
+        var periodSubSection1PurposesText = periodSubSection1.SubResults[0].Text!.Single().Text;
         Assert.Equal("4.1 and 4.2", periodSubSection1PurposesText);
         
-        Assert.Equal(2, periodsResult.SubResults[0].SubResults[0].SubResults.Count);
-        Assert.Equal("4.1", periodsResult.SubResults[0].SubResults[0].SubResults[0].Text!.Single().Text);
-        Assert.Equal("4.2", periodsResult.SubResults[0].SubResults[0].SubResults[1].Text!.Single().Text);
+        Assert.Equal(2, periodSubSection1.SubResults[0].SubResults.Count);
+        Assert.Equal("4.1", periodSubSection1.SubResults[0].SubResults[0].Text!.Single().Text);
+        Assert.Equal("4.2", periodSubSection1.SubResults[0].SubResults[1].Text!.Single().Text);
+
+        var periodSubSection2 = periodsResult.SubResults[1];
         
-        var periodSubSection2PurposesText = periodsResult.SubResults[1].SubResults[0].Text!.Single().Text;
+        Assert.Equal("For Purpose 4.3", periodSubSection2.Text![0].Text);
+        Assert.Equal(string.Empty, periodSubSection2.Text![1].Text);
+        Assert.Equal("From 1 April to 31 October inclusive", periodSubSection2.Text![2].Text);        
+        
+        var periodSubSection2PurposesText = periodSubSection2.SubResults[0].Text!.Single().Text;
         Assert.Equal("4.3", periodSubSection2PurposesText);
         
-        Assert.Single(periodsResult.SubResults[1].SubResults[0].SubResults);
-        Assert.Equal("4.3", periodsResult.SubResults[1].SubResults[0].SubResults[0].Text!.Single().Text);
+        Assert.Single(periodSubSection2.SubResults[0].SubResults);
+        Assert.Equal("4.3", periodSubSection2.SubResults[0].SubResults[0].Text!.Single().Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         

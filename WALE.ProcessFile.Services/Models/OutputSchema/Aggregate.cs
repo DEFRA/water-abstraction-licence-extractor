@@ -54,7 +54,7 @@ public class Aggregate
     
     public string? NaldType { get; set; }
 
-    public TimeCutoff? TimeCutoff { get; set; }
+    public TimeLimited? TimeCutoff { get; set; }
     
     public Purpose[] Purposes { get; set; } = [];
 
@@ -64,5 +64,5 @@ public class Aggregate
     
     public LinkedLicence[] LinkedLicences { get; init; } = [];
     
-    public AbstractionLimit[] Limits { get; init; } = [];
+    public AggregateAbstractionLimit[] Limits { get; init; } = [];
 }

@@ -216,7 +216,7 @@ public static class SchemaConverter
                     .ToList();
 
                 var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
-                var aggregateLimits = new List<AbstractionLimit>();
+                var aggregateLimits = new List<AggregateAbstractionLimit>();
                 
                 foreach (var valueResult in valueResults)
                 {
@@ -235,7 +235,7 @@ public static class SchemaConverter
                     var limitPoint = (Point?)null;
                     var limitPurpose = (Purpose?)null;
                     
-                    var abstractionLimit = new AbstractionLimit
+                    var abstractionLimit = new AggregateAbstractionLimit
                     {
                         PeriodType = ToLimitPeriodType(valueResult.MatchedLabel?.Text?.FirstOrDefault()),
                         Value = number,
@@ -260,7 +260,7 @@ public static class SchemaConverter
                 
                 var pointsLoop = new List<Point>(); // TODO
                 var purposesLoop = new List<Purpose>(); // TODO
-                var timeCutoff = (TimeCutoff?)null; // TODO
+                var timeCutoff = (TimeLimited?)null; // TODO
                 var timePeriod = (TimePeriod?)null; // TODO
                 
                 var aggregate = new Aggregate

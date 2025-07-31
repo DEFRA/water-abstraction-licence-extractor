@@ -208,7 +208,7 @@ public static class LabelConfiguration
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Text"
-                            }                            
+                            }
                         }
                     }
                 }
@@ -525,6 +525,21 @@ public static class LabelConfiguration
                                         Position = LabelPosition.Split
                                     }
                                 ]
+                            },
+                            new()
+                            {
+                                Name = "TextWithoutPurposeAndPoint",
+                                Remove = [
+                                    new("5.1") { LineMustStartWith = true },
+                                    new("5.2") { LineMustStartWith = true },
+                                    new("5.3") { LineMustStartWith = true },
+                                    new("5.4") { LineMustStartWith = true },
+                                    new("For Purpose ") { RemoveWholeLine = true },
+                                    new("For Purposes ") { RemoveWholeLine = true }                                   
+                                ],
+                                Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
+                                Position = LabelPosition.ApplicableToMost,
+                                Format = "Text"
                             }
                         ]
                     }

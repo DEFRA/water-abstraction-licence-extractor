@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Services.Enums.OutputSchema;
 
-public enum CutoffType
+public enum LimitationType
 {
     Upto,
     From

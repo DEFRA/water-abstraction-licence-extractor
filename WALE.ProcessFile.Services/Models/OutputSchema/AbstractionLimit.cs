@@ -12,5 +12,5 @@ public class AbstractionLimit
     
     public Point? Point { get; set; }
     
-    public Purpose? Purpose { get; set; }    
+    public Purpose? Purpose { get; set; }
 }

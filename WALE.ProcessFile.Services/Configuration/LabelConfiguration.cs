@@ -12,6 +12,7 @@ public static class LabelConfiguration
             ("Company", GetCompanyNameLabels()),
             ("LicenceNumber", GetLicenceNumberLabels()),
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
+            ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
             ("AbstractionLimits", GetAbstractionLimitsLabels()),
             ("Purpose", GetPurposeLabels()),
             ("Points", GetPointsLabels()),
@@ -198,7 +199,11 @@ public static class LabelConfiguration
                                     new("2.1") { LineMustStartWith = true },
                                     new("2.2") { LineMustStartWith = true },
                                     new("2.3") { LineMustStartWith = true },
-                                    new("2.4") { LineMustStartWith = true }
+                                    new("2.4") { LineMustStartWith = true },
+                                    new("For Purpose 4.1") { RemoveWholeLine = true },
+                                    new("For Purpose 4.2") { RemoveWholeLine = true },
+                                    new("For Purpose 4.3") { RemoveWholeLine = true },
+                                    new("For Purpose 4.4") { RemoveWholeLine = true }                                    
                                 ],
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
@@ -443,6 +448,66 @@ public static class LabelConfiguration
                 Position = LabelPosition.ContractIsSuccession,
                 Format = "CompanyName",
                 MatchAllText = true
+            }
+        ];
+    }
+
+    private static List<LabelToMatch> GetPeriodsOfAbstractionLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "DocumentPeriodsOfAbstractionSection",
+                TextStart =
+                [
+                    "PERIODS OF ABSTRACTION"
+                ],
+                TextEnd =
+                [
+                    "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
+                    "[END_OF_BLOCK]"
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 15,
+                SubLabels = [
+                    new()
+                    {
+                        Name = "PeriodOfAbstractionPoint",
+                        TextStart = [
+                            "5.1",
+                            "5.2",
+                            "5.3",
+                            "5.4",
+                            "5.5",
+                            "5.6",
+                            "5.7",
+                            "5.8",
+                            "5.9",
+                            "5.10",
+                            "[START_OF_BLOCK]"
+                        ],
+                        TextEnd = [
+                            "5.2",
+                            "5.3",
+                            "5.4",
+                            "5.5",
+                            "5.6",
+                            "5.7",
+                            "5.8",
+                            "5.9",
+                            "5.10",                            
+                            "[END_OF_BLOCK]"
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        Multiple = MultipleType.MultipleLabelsMultipleValues,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 10,
+                        MinimumSubMatches = 0
+                    }
+                ]
             }
         ];
     }

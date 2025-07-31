@@ -9,12 +9,12 @@ public class Licence
     public LicenceVersion LicenceVersion { get; init; } = new();
     
     public AbstractionLimits AbstractionLimits { get; init; } = new();
-    
-    public TimePeriod? PeriodOfAbstraction { get; set; }
+
+    public TimePeriod[] PeriodsOfAbstraction { get; set; } = [];
     
     public TimePeriod? DefinitionOfYear { get; set; }
 
-    public Purpose[] Purposes { get; set; } = [];
+    public Purpose[] Purposes { get; init; } = [];
 
-    public Point[] Points { get; set; } = [];
+    public Point[] Points { get; init; } = [];
 }

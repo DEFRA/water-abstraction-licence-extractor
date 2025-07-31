@@ -295,7 +295,7 @@ public static class SchemaConverter
         }
         
         var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
-        var periodOfAbstraction = (TimePeriod?)null;//new TimePeriod();  // TODO
+        var periodOfAbstraction = new List<TimePeriod>();//new TimePeriod();  // TODO
         
         return new Licence
         {
@@ -310,7 +310,7 @@ public static class SchemaConverter
             Points = GetPoints(matches),
             Purposes = GetPurposes(matches),
             DefinitionOfYear = definitionOfYear,
-            PeriodOfAbstraction = periodOfAbstraction
+            PeriodsOfAbstraction = periodOfAbstraction.ToArray()
         };
     }
     
@@ -326,14 +326,11 @@ public static class SchemaConverter
         
         foreach (var pointResult in pointsResults.SubResults!)
         {
-            if (pointResult.SubResults == null)
-            {
-                continue;
-            }
-            
-            var textWithoutNumber = pointResult.SubResults
+            var textWithoutNumber = pointResult.SubResults?
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
-                .Text?.FirstOrDefault()?.Text;
+                .Text?
+                .FirstOrDefault()?
+                .Text;
 
             if (textWithoutNumber == null)
             {
@@ -368,14 +365,11 @@ public static class SchemaConverter
                 
             foreach (var purposePointGroup in purposeResult.SubResults!)
             {
-                if (purposePointGroup.SubResults == null)
-                {
-                    continue;
-                }
-                    
-                var textWithoutNumber = purposePointGroup.SubResults
+                var textWithoutNumber = purposePointGroup.SubResults?
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
-                    .Text?.FirstOrDefault()?.Text;
+                    .Text?
+                    .FirstOrDefault()?
+                    .Text;
 
                 if (textWithoutNumber == null)
                 {

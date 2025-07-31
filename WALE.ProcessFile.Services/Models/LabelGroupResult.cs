@@ -22,7 +22,7 @@ public class LabelGroupResult
     
     public LabelToMatch? MatchedLabel { get; set; }
 
-    public IReadOnlyList<LabelGroupResult>? SubResults { get; set; }
+    public IReadOnlyList<LabelGroupResult> SubResults { get; set; } = new List<LabelGroupResult>();
     
     public LabelGroupResult Clone()
     {

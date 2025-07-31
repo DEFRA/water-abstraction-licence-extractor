@@ -506,6 +506,11 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
+                if (label.Name == "Dates")
+                {
+            
+                }
+                
                 if (label.MatchAllText)
                 {
                     if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))

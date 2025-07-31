@@ -539,7 +539,20 @@ public static class LabelConfiguration
                                 ],
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Text"
+                                Format = "Text",
+                                SubLabels = [
+                                    new()
+                                    {
+                                        Name = "Dates",
+                                        Text = [" to "],
+                                        Remove = [
+                                            new("From "),
+                                            new("inclusive")
+                                        ],
+                                        Position = LabelPosition.Split,
+                                        Format = "DateOrPurpose"
+                                    }
+                                ]
                             }
                         ]
                     }

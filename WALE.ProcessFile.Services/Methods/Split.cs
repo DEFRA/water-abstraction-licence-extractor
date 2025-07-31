@@ -20,6 +20,11 @@ public static class Split
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
 
+        if (request.label.Name == "Dates")
+        {
+            
+        }
+        
         var leftPartLines  = request.previousLines!.Reverse().ToList();
 
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(

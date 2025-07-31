@@ -15,7 +15,12 @@ public static class ApplicableToMost
         
         var returnListTop = new List<LabelGroupResult>();
 
-        if (request.label.Position is LabelPosition.TextToFindIsBetweenLabels or LabelPosition.Split)
+        if (request.label?.Name == "TextWithoutPurposeAndPoint")
+        {
+            
+        }
+        
+        if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels or LabelPosition.Split)
         {
             return returnListTop;
         }
@@ -149,30 +154,7 @@ public static class ApplicableToMost
                 labelGroupResult.MatchedLabel = matchedLabel;
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
-                var results = new List<LabelGroupResult> {labelGroupResult};
-                
-                foreach (var result in results)
-                {
-                    var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
-                        request.label,
-                        result.Text!,
-                        request.isOcr,
-                        request.serviceName,
-                        request.labelGroupName!,
-                        request.licenceMapping!,
-                        request.previouslyParsedPaths!,
-                        request.outputFolder!,
-                        request.useCache);
-        
-                    if (request.label.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)
-                    {
-                        return [];
-                    }
-
-                    result.SubResults = subResults;
-                }
-                
-                return results;
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
             var isPossiblity = false;
@@ -352,7 +334,41 @@ public static class ApplicableToMost
                 throw new Exception($"Found '{outputText}' via {nameof(ApplicableToMost)} method - expected {request.label.Position}");
             }
         }
-
+        
         return returnListTop;
+    }
+
+    private static async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
+        FunctionInputModel request,
+        LabelGroupResult labelGroupResult)
+    {
+        var results = new List<LabelGroupResult>
+        {
+            labelGroupResult
+        };
+                
+        foreach (var result in results)
+        {
+            // TODO should always process sub-labels independant of the parent type
+            var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
+                request.label!,
+                result.Text!,
+                request.isOcr,
+                request.serviceName,
+                request.labelGroupName!,
+                request.licenceMapping!,
+                request.previouslyParsedPaths!,
+                request.outputFolder!,
+                request.useCache);
+        
+            if (request.label!.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)
+            {
+                return [];
+            }
+
+            result.SubResults = subResults;
+        }
+
+        return results;
     }
 }

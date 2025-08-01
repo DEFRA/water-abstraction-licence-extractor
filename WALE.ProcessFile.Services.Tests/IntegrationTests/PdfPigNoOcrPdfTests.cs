@@ -1464,7 +1464,7 @@ public class PdfPigNoOcrPdfTests
         var firstPurpose = firstPurposePointGroup.SubResults![1];
         var firstPurposeAllText = string.Join(' ', firstPurpose.Text?.Select(x => x.Text).ToArray()!);
         
-        Assert.Equal("4.1  Transfer for subsequent discharge and re-abstraction for spray irrigation from"
+        Assert.Equal("4.1 From Point 2.1  Transfer for subsequent discharge and re-abstraction for spray irrigation from"
                  + " the points specified in condition 2.2 of this licence and points specified in"
                  + " condition 2.1 of licence AN/033/0047/018",
             firstPurposeAllText);
@@ -1508,7 +1508,7 @@ public class PdfPigNoOcrPdfTests
         var thirdPurpose = secondPurposePointGroup.SubResults![1];
         var thirdPurposeAllText = string.Join(' ', thirdPurpose.Text?.Select(x => x.Text).ToArray()!);
         
-        Assert.Equal("4.3  Spray Irrigation", thirdPurposeAllText);
+        Assert.Equal("4.3 From Point 2.2  Spray Irrigation", thirdPurposeAllText);
         
         var thirdPurposeSubs = thirdPurpose.SubResults;
         Assert.NotNull(thirdPurposeSubs);

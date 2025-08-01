@@ -9,23 +9,22 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class TextToFindIsBetweenLabels
 {
-    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var label = request.label;
         var labelGroupResult = request.labelGroupResult.Clone();
         
         var linesToUse = new List<DocumentLine>();
 
-        if (label.LeewayBefore >= 1
-            && request.previousLines!.Count >= label.LeewayBefore)
+        if (request.label.LeewayBefore >= 1
+            && request.previousLines!.Count >= request.label.LeewayBefore)
         {
-            linesToUse.Add(request.previousLines[^label.LeewayBefore]);
+            linesToUse.Add(request.previousLines[^request.label.LeewayBefore]);
         }
 
-        var lineContainsLabel = label.Text?.Any(labelText =>
+        var lineContainsLabel = request.label.Text?.Any(labelText =>
             request.line!.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
 
         if (lineContainsLabel != true)
@@ -36,8 +35,8 @@ public static class TextToFindIsBetweenLabels
         linesToUse.AddRange(request.nextLines!);
         
         var betweenText = GetTextBetween(
-            label.TextEnd!,
-            label.MustContain,
+            request.label.TextEnd!,
+            request.label.MustContain,
             request.textBeforeAndAfterLabel!.LastOrDefault(
                 tuple => tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
                     or LabelPosition.TextToFindIsBetweenLabels).Text,
@@ -48,10 +47,10 @@ public static class TextToFindIsBetweenLabels
         
         if (betweenText == null)
         {
-            return new List<LabelGroupResult>();
+            return Task.FromResult(new List<LabelGroupResult>());
         }
 
-        if (label.IncludeLabelText && betweenText.Count >= 1)
+        if (request.label.IncludeLabelText && betweenText.Count >= 1)
         {
             betweenText[0] = request.line!;
         }
@@ -59,28 +58,12 @@ public static class TextToFindIsBetweenLabels
         betweenText = betweenText
             .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text))
             .ToList();
-
-        var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
-            label,
-            betweenText,
-            request.isOcr,
-            request.serviceName,
-            request.labelGroupName!,
-            request.licenceMapping!,
-            request.previouslyParsedPaths!,
-            request.outputFolder!,
-            request.useCache);
-        
-        if (label.MinimumSubMatches.HasValue && label.MinimumSubMatches.Value > subResults.Count)
-        {
-            return [];
-        }
         
         betweenText = DataHelper.RemoveExcludes(request.label, betweenText, out var removedLines);
         
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchType = MatchType.Between;
-        labelGroupResult.MatchedLabel = label.Clone();
+        labelGroupResult.MatchedLabel = request.label.Clone();
         labelGroupResult.MatchedLabel.TextEnd =
         [
             labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
@@ -98,12 +81,9 @@ public static class TextToFindIsBetweenLabels
         }
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-        labelGroupResult.SubResults = subResults;
         
         var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
-        return returnList;
-        
-        //return ProcessSubLabelsAsync(request, returnList);
+        return ProcessSubLabelsAsync(request, returnList);
     }
     
     private static List<DocumentLine>? GetTextBetween(

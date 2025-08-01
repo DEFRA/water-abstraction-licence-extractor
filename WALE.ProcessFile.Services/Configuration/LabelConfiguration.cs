@@ -293,8 +293,6 @@ public static class LabelConfiguration
                                 Format = "Text",
                                 Multiple = MultipleType.MultipleLabelsMultipleValues,
                                 Remove = [
-                                    new("From Point 2.1"),
-                                    new("From Point 2.2"),
                                     new(@"/Page \d* of \d*/"),
                                     new("/Licence Serial No: [A-Z0-9/]*/")
                                     /* TODO add flag to include parent removes */

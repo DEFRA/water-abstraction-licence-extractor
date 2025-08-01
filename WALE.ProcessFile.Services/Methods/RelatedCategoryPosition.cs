@@ -2,6 +2,7 @@ using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
+using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -55,9 +56,11 @@ public static class RelatedCategoryPosition
             .ThenBy(match => match.LineNumber)
             .ToList();
 
+        var returnList = new List<LabelGroupResult>();
+        
         if (absoluteMatches.Count <= 0)
         {
-            return Task.FromResult(new List<LabelGroupResult>());
+            return Task.FromResult(returnList);
         }
         
         labelGroupResult.Text = [
@@ -76,7 +79,13 @@ public static class RelatedCategoryPosition
 
         // TODO should set match type
         FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
-            
-        return Task.FromResult(new List<LabelGroupResult> { labelGroupResult });
+
+        returnList.Add(labelGroupResult);
+
+        return Task.FromResult(FilterIntoFormat(
+            request,
+            labelGroupResult,
+            absoluteMatches.Take(1).ToList(),
+            false));
     }
 }

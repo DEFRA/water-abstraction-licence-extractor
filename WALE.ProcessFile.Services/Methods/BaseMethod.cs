@@ -68,7 +68,7 @@ public static class BaseMethod
                 returnList.AddRange(ActsLikeSingleWord.FindSingleWord(lines, labelGroupResult));
                 break;
             case "Text":
-                returnList.Add(labelGroupResult); // TODO should probaby filter in some way
+                returnList.Add(labelGroupResult); // TODO should probably filter in some way
                 break;
         }
 

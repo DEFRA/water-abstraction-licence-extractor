@@ -3,6 +3,7 @@ using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -99,7 +100,7 @@ public static class TextToFindIsBetweenLabels
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
         labelGroupResult.SubResults = subResults;
 
-        return [labelGroupResult];
+        return FilterIntoFormat(request, labelGroupResult, betweenText, false);
     }
     
     private static List<DocumentLine>? GetTextBetween(

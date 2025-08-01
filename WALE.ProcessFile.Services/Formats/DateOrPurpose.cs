@@ -15,7 +15,7 @@ public static partial class DateOrPurpose
         return matchedLines.Count > 0;
     }
     
-    public static bool IsDateOrPurpose(string? text)
+    private static bool IsDateOrPurpose(string? text)
     {
         if (string.IsNullOrEmpty(text))
         {

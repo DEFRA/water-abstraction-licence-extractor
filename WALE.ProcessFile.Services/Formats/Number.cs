@@ -9,43 +9,6 @@ public static class Number
 {
     public const string Constant = "Number";
     
-    public static bool TryGetNumber(
-        string? text,
-        int lineNumber,
-        int pageNumber,
-        out List<DocumentLine> matchedNumbers)
-    {
-        matchedNumbers = [];
-        
-        if (text == null)
-        {
-            return false;
-        }
-        
-        var emptyIrrelevantWords = new List<DocumentLineWord>();
-
-        var list = text
-            .Split(PositionConstants.SpaceChar)
-            .Select(result => new DocumentLine(
-                result,
-                lineNumber,
-                pageNumber,
-                emptyIrrelevantWords,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate));
-
-        if (!AnyIsNumber(list, out var numberLines))
-        {
-            return false;
-        }
-        
-        matchedNumbers.AddRange(numberLines);
-        return true;
-
-    }
-    
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
         out List<DocumentLine> matchedLines)
@@ -78,22 +41,19 @@ public static class Number
             {
                 if (!double.TryParse(word, out var numberLineDbl))
                 {
-                    if (matched)
-                    {
-                        lineNumber = line.LineNumber;
-                        pageNumber = line.PageNumber;
-                        lineWords = line.Words;
-                        
-                        break;
-                    }
-
                     continue;
                 }
 
                 returnLines.Add(numberLineDbl);
-                matched = true;
 
-                break;
+                if (!matched)
+                {
+                    lineNumber = line.LineNumber;
+                    pageNumber = line.PageNumber;
+                    lineWords = line.Words;
+                }
+
+                matched = true;
             }
         }
 

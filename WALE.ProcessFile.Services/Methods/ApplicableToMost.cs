@@ -47,26 +47,33 @@ public static class ApplicableToMost
                 continue;
             }
 
-            if (request.isDateOrPurposeLookup && DateOrPurpose.IsDateOrPurpose(t))
+            var docLine = new DocumentLine(
+                outputText,
+                line!.LineNumber,
+                line.PageNumber,
+                line.Words,
+                line.Top,
+                line.TopRounded,
+                line.Left,
+                line.LeftRounded);
+            
+            if (request.isDateOrPurposeLookup)
             {
-                labelGroupResult.Text =
-                [
-                    new DocumentLine(
-                        t!,
-                        request.line!.LineNumber,
-                        request.line.PageNumber,
-                        request.line.Words.ToList(),
-                        request.line.Top,
-                        request.line.TopRounded,
-                        request.line.Left,
-                        request.line.LeftRounded)
-                ];
+                // TODO can swap this out now for shared method in Base
                 
-                labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
-                labelGroupResult.MatchedLabel = matchedLabel;
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
+                if (DateOrPurpose.AnyIsDateOrPurpose([docLine], out var matchedLines))
+                {
+                    matchedLines = RestrictToPossibilities(request, matchedLines);
+                    
+                    foreach (var matchedLine in matchedLines)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+                        
+                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);                        
+                    }
+                }
             }
             
             if (request.isCompanyType
@@ -77,17 +84,9 @@ public static class ApplicableToMost
                 outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
             }
 
-            /*if (request.isNumberLookup)
+            if (request.isNumberLookup)
             {
-                var docLine = new DocumentLine(
-                    outputText,
-                    line!.LineNumber,
-                    line.PageNumber,
-                    line.Words,
-                    -1,
-                    -1,
-                    -1,
-                    -1);
+                // TODO can swap this out now for shared method in Base
                 
                 if (Number.AnyIsNumber([docLine], out var numberLines))
                 {
@@ -96,52 +95,39 @@ public static class ApplicableToMost
                     if (numberLines.Count > 0)
                     {
                         labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
-                        return [labelGroupResult];
+                        labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+
+                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);
                     }
+                }
+            }
+
+            /*if (request.isLicenceNumberLookup)
+            {
+                // TODO can swap this out now for shared method in Base
+                
+                if (LicenceNumber.AnyIsLicenceNumber([docLine], request.label!, out var licenceNumberLines))
+                {
+                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
+                    var returnList = new List<LabelGroupResult>();
+                    
+                    foreach (var licenceNumberLine in licenceNumberLines)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                        labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+
+                        var x = await ProcessSubLabelsAsync(request, labelGroupResult);
+                        returnList.AddRange(x);
+                    }
+
+                    return returnList;
                 }
             }*/
 
-            if (request.isNumberLookup
-                && Number.TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLines))
-            {
-                if (matchedLabel.Possibilities?.Any() == true)
-                {
-                    var newNumberLines = numberLines
-                        .Where(numberLineLoop => matchedLabel.Possibilities.Any(p => p == numberLineLoop.Text))
-                        .ToList();
-
-                    numberLines = newNumberLines;
-                }
-                
-                var numberLine = numberLines.FirstOrDefault();
-
-                if (numberLine == null)
-                {
-                    return [];
-                }
-
-                numberLine.Words = line.Words;
-                labelGroupResult.Text = [numberLine];
-                labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
-                labelGroupResult.MatchedLabel = matchedLabel;
-
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
-            }
-            
             if (request.isLicenceNumberLookup
-                && request.label != null
-                && LicenceNumber.AnyIsLicenceNumber([
-                    new DocumentLine(
-                        outputText,
-                        lineNumber,
-                        line!.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded)],
-                    request.label,
+                && LicenceNumber.AnyIsLicenceNumber([docLine],
+                    request.label!,
                     out var licenceNumberLines))
             {
                 var returnList = new List<LabelGroupResult>();
@@ -212,42 +198,25 @@ public static class ApplicableToMost
                     break;
                 }
             }
-            
+
             if (request.isUnitsLookup)
             {
-                if (matchedLabel.Possibilities == null)
+                // TODO can swap this out now for shared method in Base
+                
+                var r = Units.GetMatchesToPossibilities(
+                    request.label!,
+                    [docLine],
+                    labelGroupResult);
+
+                if (r.Count == 0)
                 {
                     continue;
                 }
-                
-                foreach (var possibility in matchedLabel.Possibilities!)
-                {
-                    if (!outputText.Contains(possibility,
-                        StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
 
-                    labelGroupResult.Text =
-                    [
-                        new DocumentLine(
-                            possibility,
-                            line!.LineNumber,
-                            line.PageNumber,
-                            line.Words.ToList(),
-                            line.Top,
-                            line.TopRounded,
-                            line.Left,
-                            line.LeftRounded)
-                    ];
-                    
-                    labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
-                    labelGroupResult.MatchedLabel = matchedLabel;
-                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                    labelGroupResult.MatchedLabel.Possibilities = [possibility];
-                    
-                    return await ProcessSubLabelsAsync(request, labelGroupResult);
-                }
+                labelGroupResult = labelGroupResult.Clone([docLine]);
+                labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+                
+                return r;
             }
 
             outputText = FormattingHelper.TrimFormatting(outputText);

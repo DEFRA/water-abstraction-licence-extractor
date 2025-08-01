@@ -31,6 +31,7 @@ public static class BaseMethod
                         returnList.Add(labelGroupResult);
                     }
                 }
+                
                 break;
             case CompanyName.Constant:
                 if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,

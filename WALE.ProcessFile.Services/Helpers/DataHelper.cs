@@ -67,7 +67,7 @@ public static partial class DataHelper
         {
             if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
             {
-                var pattern = textToMatch.Text.Substring(1, textToMatch.Text!.Length - 2);
+                var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
 
                 if (Regex.IsMatch(returnStr, pattern))
                 {

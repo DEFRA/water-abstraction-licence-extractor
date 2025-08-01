@@ -72,7 +72,7 @@ public class MultipleOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(4, section1Sub1.SubResults!.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
         Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);

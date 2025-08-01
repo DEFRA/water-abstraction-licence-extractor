@@ -101,7 +101,8 @@ public static class Split
                 }
             }
         }
-
+        
+        leftPartLines = DataHelper.RemoveExcludes(request.label, leftPartLines, out _);
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(
@@ -109,9 +110,10 @@ public static class Split
             LabelPosition.Split,
             request.label,
             leftPartLines);
-
+        
         var results = FilterIntoFormat(request, leftPartResult, leftPartLines);
 
+        rightPartLines = DataHelper.RemoveExcludes(request.label, rightPartLines, out _);        
         rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
         
         if (rightPartLines.Count > 0)

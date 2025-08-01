@@ -1,4 +1,3 @@
-using SixLabors.ImageSharp.ColorSpaces;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
@@ -23,7 +22,6 @@ public static class ApplicableToMost
         }
         
         var line = request.line;
-        var lineNumber = request.lineNumber;
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
         {
@@ -123,19 +121,7 @@ public static class ApplicableToMost
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
             {
-                labelGroupResult.Text =
-                [
-                    new DocumentLine(
-                        request.isSingleWord ? t.Split(' ')[0] : t,
-                        line!.LineNumber,
-                        line.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded)
-                ];
-                
+                labelGroupResult.Text = [docLine.Clone(request.isSingleWord ? t.Split(' ')[0] : t)];
                 labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
                 labelGroupResult.MatchedLabel = matchedLabel;
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
@@ -187,44 +173,18 @@ public static class ApplicableToMost
             }
 
             outputText = FormattingHelper.TrimFormatting(outputText);
-            outputText = request.isOcr ? AutoCorrectHelper.AutoCorrectText(new DocumentLine(
-                outputText!,
-                lineNumber,
-                line!.PageNumber,
-                line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded), request.isCompanyType) : outputText;
+            outputText = request.isOcr ? AutoCorrectHelper.AutoCorrectText(
+                docLine.Clone(outputText!),
+                request.isCompanyType) : outputText;
 
             if (request.isCompanyType
-                && CompanyName.TryGetCompanyOrPersonalName(new DocumentLine(
-                    outputText!,
-                    lineNumber,
-                    line!.PageNumber,
-                    line.Words.ToList(),
-                    line.Top,
-                    line.TopRounded,
-                    line.Left,
-                    line.LeftRounded), matchedLabel, out _))
+                && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(outputText!), matchedLabel, out _))
             {
                 var matchType = over2Lines ?
                     MatchType.SameLineIsCompany2Lines
                     : MatchType.SameLineIsCompany1Line;
                 
-                labelGroupResult.Text =
-                [
-                    new DocumentLine(
-                        outputText!,
-                        line.LineNumber,
-                        line.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded)
-                ];
-                
+                labelGroupResult.Text = [docLine.Clone(outputText!)];
                 labelGroupResult.MatchType = matchType;
                 labelGroupResult.MatchedLabel = matchedLabel;
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
@@ -243,18 +203,7 @@ public static class ApplicableToMost
                 && !string.IsNullOrEmpty(trimmedSplit[0])
                 && request.isCompanyType)
             {
-                labelGroupResult.Text =
-                [
-                    new DocumentLine(
-                        outputText,
-                        lineNumber,
-                        line!.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded)
-                ];
+                labelGroupResult.Text = [docLine.Clone(outputText)];
                 
                 labelGroupResult.MatchType = MatchType.SameLineSingleWord;
                 labelGroupResult.MatchedLabel = matchedLabel;
@@ -271,18 +220,7 @@ public static class ApplicableToMost
             if (request.label?.Text == null && !string.IsNullOrWhiteSpace(outputText))
             {
                 var lineMatch = labelGroupResult.Clone();
-                lineMatch.Text =
-                [
-                    new DocumentLine(
-                        outputText,
-                        line!.LineNumber,
-                        line.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded)
-                ];
+                lineMatch.Text = [docLine.Clone(outputText)];
                 
                 lineMatch.MatchType = MatchType.Between;
                 lineMatch.MatchedLabel = request.label;

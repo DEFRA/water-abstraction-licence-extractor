@@ -48,7 +48,7 @@ public static class TextToFindIsBetweenLabels
         
         if (betweenText == null)
         {
-            return [];
+            return new List<LabelGroupResult>();
         }
 
         if (label.IncludeLabelText && betweenText.Count >= 1)
@@ -100,7 +100,10 @@ public static class TextToFindIsBetweenLabels
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
         labelGroupResult.SubResults = subResults;
 
-        return FilterIntoFormat(request, labelGroupResult, betweenText, false);
+        return new List<LabelGroupResult> { labelGroupResult };
+        
+        //var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
+        //return ProcessSubLabelsAsync(request, returnList);
     }
     
     private static List<DocumentLine>? GetTextBetween(

@@ -33,6 +33,6 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
 
-        return Task.FromResult(returnList);
+        return ProcessSubLabelsAsync(request, returnList);
     }
 }

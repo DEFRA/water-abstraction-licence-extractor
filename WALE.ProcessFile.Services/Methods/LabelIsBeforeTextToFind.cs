@@ -30,6 +30,6 @@ public static class LabelIsBeforeTextToFind
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return Task.FromResult(returnList);
+        return ProcessSubLabelsAsync(request, returnList);
     }
 }

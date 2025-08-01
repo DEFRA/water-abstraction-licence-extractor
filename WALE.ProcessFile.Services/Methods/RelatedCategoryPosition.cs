@@ -81,11 +81,12 @@ public static class RelatedCategoryPosition
         FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
 
         returnList.Add(labelGroupResult);
-
-        return Task.FromResult(FilterIntoFormat(
+        returnList = FilterIntoFormat(
             request,
             labelGroupResult,
             absoluteMatches.Take(1).ToList(),
-            false));
+            false);
+
+        return ProcessSubLabelsAsync(request, returnList);
     }
 }

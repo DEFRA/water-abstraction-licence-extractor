@@ -34,6 +34,6 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return Task.FromResult(returnList);
+        return ProcessSubLabelsAsync(request, returnList);
     }
 }

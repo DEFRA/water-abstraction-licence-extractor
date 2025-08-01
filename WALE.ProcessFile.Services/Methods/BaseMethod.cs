@@ -96,7 +96,7 @@ public static class BaseMethod
         return returnList;
     }
 
-    private static LabelGroupResult? RestrictToPossibility(
+    public static LabelGroupResult? RestrictToPossibility(
         FunctionInputModel request,
         LabelGroupResult result)
     {
@@ -110,7 +110,7 @@ public static class BaseMethod
             : null;
     }
     
-    private static List<LabelGroupResult> RestrictToPossibilities(
+    public static List<LabelGroupResult> RestrictToPossibilities(
         FunctionInputModel request,
         IReadOnlyList<LabelGroupResult> results)
     {
@@ -125,7 +125,7 @@ public static class BaseMethod
             .ToList();
     }
     
-    private static List<DocumentLine> RestrictToPossibilities(
+    public static List<DocumentLine> RestrictToPossibilities(
         FunctionInputModel request,
         IReadOnlyList<DocumentLine> lines)
     {

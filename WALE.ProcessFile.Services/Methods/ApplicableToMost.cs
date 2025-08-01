@@ -22,7 +22,11 @@ public static class ApplicableToMost
             return returnListTop;
         }
         
-        var labelGroupResult = request.labelGroupResult.Clone();
+        var labelGroupResult = request.labelGroupResult.Clone(
+            MatchType.Unknown,
+            LabelPosition.Unknown,
+            request.label);
+        
         var line = request.line;
         var lineNumber = request.lineNumber;
         
@@ -72,22 +76,29 @@ public static class ApplicableToMost
                 over2Lines = true;
                 outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
             }
-            
-            /*if (request.isNumberLookup && Number.AnyIsNumber(
-                    [new DocumentLine(
-                        outputText,
-                        line!.LineNumber,
-                        line.PageNumber,
-                        line.Words,
-                        -1,
-                        -1,
-                        -1,
-                        -1)], out var numberLines))
+
+            /*if (request.isNumberLookup)
             {
-                labelGroupResult.Text = [numberLines.First()];
+                var docLine = new DocumentLine(
+                    outputText,
+                    line!.LineNumber,
+                    line.PageNumber,
+                    line.Words,
+                    -1,
+                    -1,
+                    -1,
+                    -1);
                 
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
+                if (Number.AnyIsNumber([docLine], out var numberLines))
+                {
+                    numberLines = RestrictToPossibilities(request, numberLines);
+
+                    if (numberLines.Count > 0)
+                    {
+                        labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
+                        return [labelGroupResult];
+                    }
+                }
             }*/
 
             if (request.isNumberLookup

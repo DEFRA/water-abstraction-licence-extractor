@@ -2,6 +2,7 @@ namespace WALE.ProcessFile.Services.Enums;
 
 public enum MatchType
 {
+    Unknown = -101,
     NotApplicable = -100,
     NotFound = -99,
     

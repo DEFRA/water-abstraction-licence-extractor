@@ -99,10 +99,10 @@ public static class TextToFindIsBetweenLabels
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
         labelGroupResult.SubResults = subResults;
-
-        return new List<LabelGroupResult> { labelGroupResult };
         
-        //var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
+        var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
+        return returnList;
+        
         //return ProcessSubLabelsAsync(request, returnList);
     }
     

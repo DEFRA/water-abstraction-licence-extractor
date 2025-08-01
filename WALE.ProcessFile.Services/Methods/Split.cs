@@ -109,11 +109,8 @@ public static class Split
             LabelPosition.Split,
             request.label,
             leftPartLines);
-        
-        var results = new List<LabelGroupResult>
-        {
-            leftPartResult
-        };
+
+        var results = FilterIntoFormat(request, leftPartResult, leftPartLines);
 
         rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
         
@@ -125,7 +122,7 @@ public static class Split
                 request.label,
                 rightPartLines);
             
-            results.Add(rightPartResult);
+            results.AddRange(FilterIntoFormat(request, rightPartResult, rightPartLines));
         }
         
         return await ProcessSubLabelsAsync(request, results);

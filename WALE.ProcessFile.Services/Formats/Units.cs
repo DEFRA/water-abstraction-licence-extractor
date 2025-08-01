@@ -11,29 +11,27 @@ public static class Units
         IReadOnlyList<DocumentLine> lines,
         LabelGroupResult labelGroupResult)
     {
-        var returnList = new List<LabelGroupResult>();
-
         if (label.Possibilities == null)
         {
-            return returnList;
+            return [];
         }
 
-        foreach (var previousLine in lines)
+        foreach (var line in lines)
         {
             foreach (var possibility in label.Possibilities!)
             {
-                if (!previousLine.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                if (!line.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
                 }
 
-                labelGroupResult.Text = [previousLine.Clone(possibility)];
+                labelGroupResult.Text = [line.Clone(possibility)];
                 labelGroupResult.MatchedLabel!.Possibilities = [possibility];
 
-                returnList.Add(labelGroupResult);
+                return [labelGroupResult];
             }
         }
 
-        return returnList;
+        return [];
     }
 }

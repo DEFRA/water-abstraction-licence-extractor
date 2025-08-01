@@ -22,11 +22,6 @@ public static class ApplicableToMost
             return returnListTop;
         }
         
-        var labelGroupResult = request.labelGroupResult.Clone(
-            MatchType.Unknown,
-            LabelPosition.Unknown,
-            request.label);
-        
         var line = request.line;
         var lineNumber = request.lineNumber;
         
@@ -37,6 +32,7 @@ public static class ApplicableToMost
         
         foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
         {
+            var labelGroupResult = request.labelGroupResult.Clone(matchedLabel);
             var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
@@ -103,7 +99,7 @@ public static class ApplicableToMost
                 }
             }
 
-            /*if (request.isLicenceNumberLookup)
+            if (request.isLicenceNumberLookup)
             {
                 // TODO can swap this out now for shared method in Base
                 
@@ -116,37 +112,16 @@ public static class ApplicableToMost
                     {
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+                        labelGroupResult.MatchedLabel = matchedLabel;
 
-                        var x = await ProcessSubLabelsAsync(request, labelGroupResult);
-                        returnList.AddRange(x);
+                        returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
 
                     return returnList;
                 }
-            }*/
-
-            if (request.isLicenceNumberLookup
-                && LicenceNumber.AnyIsLicenceNumber([docLine],
-                    request.label!,
-                    out var licenceNumberLines))
-            {
-                var returnList = new List<LabelGroupResult>();
-                
-                foreach (var licenceNumberLine in licenceNumberLines)
-                {
-                    labelGroupResult = labelGroupResult.Clone();
-                    labelGroupResult.Text = [licenceNumberLine];
-                    labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
-                    labelGroupResult.MatchedLabel = matchedLabel;
-                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                    
-                    returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
-                }
-
-                return returnList;
             }
 
-            if ((request.isSingleWord || request.actsLikeSingleWord) && request.label != null && !string.IsNullOrEmpty(t))
+            if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
             {
                 labelGroupResult.Text =
                 [
@@ -173,15 +148,7 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = AutoCorrectHelper.AutoCorrectText(
-                    new DocumentLine(
-                        outputText,
-                        lineNumber,
-                        line!.PageNumber,
-                        line.Words.ToList(),
-                        line.Top,
-                        line.TopRounded,
-                        line.Left,
-                        line.LeftRounded),
+                    docLine,
                     false);
                 
                 foreach (var possibility in matchedLabel.Possibilities)

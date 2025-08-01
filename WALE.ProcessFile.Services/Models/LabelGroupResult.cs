@@ -30,6 +30,14 @@ public class LabelGroupResult
             JsonSerializer.Serialize(this))!;
     }
 
+    public LabelGroupResult Clone(LabelToMatch label)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.MatchedLabel = label.Clone();
+
+        return labelGroupResult;
+    }
+    
     public LabelGroupResult Clone(
         MatchType matchType,
         LabelPosition position,

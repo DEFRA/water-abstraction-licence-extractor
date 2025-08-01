@@ -28,7 +28,7 @@ public static class LabelIsAfterTextToFind
         switch (request.label.Format)
         {
             case DateOrPurpose.Constant:
-                if (DateOrPurpose.AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
+                if (DateOrPurpose.AnyIsDateOrPurpose(modifiedPreviousLines, out var matchedLines))
                 {
                     foreach (var matchedLine in matchedLines)
                     {

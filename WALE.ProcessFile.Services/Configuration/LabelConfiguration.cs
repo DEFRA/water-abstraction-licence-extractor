@@ -544,7 +544,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "Dates",
-                                        Text = [" to "],
+                                        Text = ["to "],
                                         Remove = [
                                             new("From "),
                                             new("inclusive")

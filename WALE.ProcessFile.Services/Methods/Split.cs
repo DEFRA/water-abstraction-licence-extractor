@@ -3,6 +3,7 @@ using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -18,11 +19,6 @@ public static class Split
         if (request.label.Text == null || request.label.Text.Count == 0)
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
-        }
-
-        if (request.label.Name == "Dates")
-        {
-            
         }
         
         var leftPartLines  = request.previousLines!.Reverse().ToList();
@@ -74,17 +70,17 @@ public static class Split
 
                 if (rightPart != null)
                 {
-                    var rightPartWords = rightPart?
+                    var rightPartWords = rightPart
                         .Split(PositionConstants.SpaceChar)
                         .Select(text => new DocumentLineWord(text, null, []))
                         .ToList();
 
                     rightPartLines =
                     [
-                        new DocumentLine(rightPart!,
+                        new DocumentLine(rightPart,
                             request.lineNumber,
                             request.line.PageNumber,
-                            rightPartWords!,
+                            rightPartWords,
                             request.line.Top,
                             request.line.TopRounded,
                             request.line.Left,
@@ -131,29 +127,7 @@ public static class Split
             
             results.Add(rightPartResult);
         }
-
-        foreach (var result in results)
-        {
-            var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
-                request.label,
-                result.Text!,
-                request.isOcr,
-                request.serviceName,
-                request.labelGroupName!,
-                request.licenceMapping!,
-                request.previouslyParsedPaths!,
-                request.outputFolder!,
-                request.useCache);
         
-            if (request.label.MinimumSubMatches.HasValue
-                && request.label.MinimumSubMatches.Value > subResults.Count)
-            {
-                return [];
-            }
-
-            result.SubResults = subResults;
-        }
-        
-        return results;
+        return await ProcessSubLabelsAsync(request, results);
     }
 }

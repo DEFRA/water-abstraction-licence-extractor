@@ -3,6 +3,7 @@ using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -14,11 +15,6 @@ public static class ApplicableToMost
         ArgumentNullException.ThrowIfNull(request.label);
         
         var returnListTop = new List<LabelGroupResult>();
-
-        if (request.label?.Name == "TextWithoutPurposeAndPoint")
-        {
-            
-        }
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels or LabelPosition.Split)
         {
@@ -65,7 +61,7 @@ public static class ApplicableToMost
                 labelGroupResult.MatchedLabel = matchedLabel;
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
-                return [labelGroupResult];
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
             
             if (request.isCompanyType
@@ -101,7 +97,7 @@ public static class ApplicableToMost
                 labelGroupResult.MatchedLabel = matchedLabel;
 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                return [labelGroupResult];
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
             
             if (request.isLicenceNumberLookup
@@ -129,7 +125,7 @@ public static class ApplicableToMost
                     labelGroupResult.MatchedLabel = matchedLabel;
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     
-                    returnList.Add(labelGroupResult);
+                    returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                 }
 
                 return returnList;
@@ -221,7 +217,7 @@ public static class ApplicableToMost
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [possibility];
                     
-                    return [labelGroupResult];
+                    return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
             }
 
@@ -273,7 +269,7 @@ public static class ApplicableToMost
                     labelGroupResult.MatchedLabel.Possibilities = [outputText!];   
                 }
                 
-                return [labelGroupResult];
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
             var trimmedSplit = outputText!.Trim().Split(' ');
@@ -304,7 +300,7 @@ public static class ApplicableToMost
                     labelGroupResult.MatchedLabel.Possibilities = [outputText];   
                 }
                 
-                return [labelGroupResult];
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
             if (request.label?.Text == null && !string.IsNullOrWhiteSpace(outputText))
@@ -327,7 +323,7 @@ public static class ApplicableToMost
                 lineMatch.MatchedLabel = request.label;
                 FormattingHelper.RemoveRemoves(lineMatch, removedLines);
                 
-                returnListTop.Add(lineMatch);
+                returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
             }
             else if (!string.IsNullOrWhiteSpace(outputText) && request.label?.Format == "Text")
             {
@@ -336,39 +332,5 @@ public static class ApplicableToMost
         }
         
         return returnListTop;
-    }
-
-    private static async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
-        FunctionInputModel request,
-        LabelGroupResult labelGroupResult)
-    {
-        var results = new List<LabelGroupResult>
-        {
-            labelGroupResult
-        };
-                
-        foreach (var result in results)
-        {
-            // TODO should always process sub-labels independant of the parent type
-            var subResults = await request.pdfDataExtractorService!.ProcessSubLabelsAsync(
-                request.label!,
-                result.Text!,
-                request.isOcr,
-                request.serviceName,
-                request.labelGroupName!,
-                request.licenceMapping!,
-                request.previouslyParsedPaths!,
-                request.outputFolder!,
-                request.useCache);
-        
-            if (request.label!.MinimumSubMatches.HasValue && request.label.MinimumSubMatches.Value > subResults.Count)
-            {
-                return [];
-            }
-
-            result.SubResults = subResults;
-        }
-
-        return results;
     }
 }

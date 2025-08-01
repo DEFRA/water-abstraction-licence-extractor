@@ -554,37 +554,37 @@ public class PdfDataExtractorService(
                 ServiceName = serviceName
             };
             
+            var request = new FunctionInputModel
+            {
+                actsLikeSingleWord = matchedLabel.Format == "ActsLikeSingleWord",
+                textBeforeAndAfterLabel = textBeforeAndAfterLabel,
+                isCompanyType = matchedLabel.Format == CompanyName.Constant,
+                isDateOrPurposeLookup = matchedLabel.Format == "DateOrPurpose",
+                isLicenceNumberLookup = matchedLabel.Format == "LicenceNumber",
+                isNumberLookup = matchedLabel.Format == "Number",
+                isOcr = isOcr,
+                label = matchedLabel,
+                labelGroupName = labelGroupName,
+                labelGroupResult = labelGroupResult,
+                licenceMapping = licenceMapping,
+                pdfDataExtractorService = this,
+                previouslyParsedPaths = previouslyParsedPaths,
+                previousLines = previousLines,
+                nextLines = nextLines,
+                serviceName = serviceName,
+                siblingMatches = siblingMatches,
+                useCache = useCache,
+                outputFolder = outputFolder,
+                isSingleWord = matchedLabel.Format == "SingleWord",
+                isUnitsLookup = matchedLabel.Format == "Units",
+                line = line,
+                lineNumber = line.LineNumber
+            };
+            
             foreach (var expression in lookupExpressions)
             {
-                var request = new FunctionInputModel
-                {
-                    actsLikeSingleWord = matchedLabel.Format == "ActsLikeSingleWord",
-                    textBeforeAndAfterLabel = textBeforeAndAfterLabel,
-                    isCompanyType = matchedLabel.Format == CompanyName.Constant,
-                    isDateOrPurposeLookup = matchedLabel.Format == "DateOrPurpose",
-                    isLicenceNumberLookup = matchedLabel.Format == "LicenceNumber",
-                    isNumberLookup = matchedLabel.Format == "Number",
-                    isOcr = isOcr,
-                    label = matchedLabel,
-                    labelGroupName = labelGroupName,
-                    labelGroupResult = labelGroupResult,
-                    licenceMapping = licenceMapping,
-                    pdfDataExtractorService = this,
-                    previouslyParsedPaths = previouslyParsedPaths,
-                    previousLines = previousLines,
-                    nextLines = nextLines,
-                    serviceName = serviceName,
-                    siblingMatches = siblingMatches,
-                    useCache = useCache,
-                    outputFolder = outputFolder,
-                    isSingleWord = matchedLabel.Format == "SingleWord",
-                    isUnitsLookup = matchedLabel.Format == "Units",
-                    line = line,
-                    lineNumber = line.LineNumber
-                };
-                
                 var results = await expression(request);
-
+                
                 if (results.Count == 0)
                 {
                     continue;

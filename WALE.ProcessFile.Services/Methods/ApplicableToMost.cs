@@ -1,3 +1,4 @@
+using SixLabors.ImageSharp.ColorSpaces;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
@@ -71,6 +72,23 @@ public static class ApplicableToMost
                 over2Lines = true;
                 outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
             }
+            
+            /*if (request.isNumberLookup && Number.AnyIsNumber(
+                    [new DocumentLine(
+                        outputText,
+                        line!.LineNumber,
+                        line.PageNumber,
+                        line.Words,
+                        -1,
+                        -1,
+                        -1,
+                        -1)], out var numberLines))
+            {
+                labelGroupResult.Text = [numberLines.First()];
+                
+                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                return await ProcessSubLabelsAsync(request, labelGroupResult);
+            }*/
 
             if (request.isNumberLookup
                 && Number.TryGetNumber(outputText, line!.LineNumber, line.PageNumber, out var numberLines))

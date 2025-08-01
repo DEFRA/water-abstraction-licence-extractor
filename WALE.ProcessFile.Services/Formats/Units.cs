@@ -25,7 +25,7 @@ public static class Units
                     continue;
                 }
 
-                labelGroupResult.Text = [line.Clone(possibility)];
+                labelGroupResult = labelGroupResult.Clone([line.Clone(possibility)]);
                 labelGroupResult.MatchedLabel!.Possibilities = [possibility];
 
                 return [labelGroupResult];

@@ -47,21 +47,21 @@ public class LabelGroupResult
         MatchType matchType,
         LabelPosition position,
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> text)
+        IEnumerable<DocumentLine> text)
     {
         var labelGroupResult = Clone();
         labelGroupResult.MatchType = matchType;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
-        labelGroupResult.Text = text;
+        labelGroupResult.Text = text.ToList();
 
         return labelGroupResult;
     }
     
-    public LabelGroupResult Clone(IReadOnlyList<DocumentLine> text)
+    public LabelGroupResult Clone(IEnumerable<DocumentLine> text)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.Text = text;
+        labelGroupResult.Text = text.ToList();
 
         return labelGroupResult;
     }

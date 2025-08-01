@@ -17,8 +17,9 @@ public static class SingleWord
             return returnList;
         }
         
-        var line = lines.First();
-        labelGroupResult.Text = [line.Clone(line.Text.Split(' ')[0])];
+        var line = lines[0];
+        labelGroupResult = labelGroupResult.Clone(
+            [line.Clone(line.Text.Split(' ')[0])]);
 
         returnList.Add(labelGroupResult);
         return returnList;

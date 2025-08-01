@@ -23,6 +23,8 @@ public static class BaseMethod
             case DateOrPurpose.Constant:
                 if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines))
                 {
+                    matchedLines = RestrictToPossibilities(request, matchedLines);
+                    
                     foreach (var matchedLine in matchedLines)
                     {
                         labelGroupResult = labelGroupResult.Clone([matchedLine]);
@@ -32,24 +34,36 @@ public static class BaseMethod
                 break;
             case CompanyName.Constant:
                 if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,
-                    out var companyNameLine))
+                    out var companyNameLines))
                 {
-                    labelGroupResult.Text = companyNameLine;
-                    returnList.Add(labelGroupResult);
+                    companyNameLines = RestrictToPossibilities(request, companyNameLines!);
+
+                    if (companyNameLines.Count > 0)
+                    {
+                        labelGroupResult = labelGroupResult.Clone(companyNameLines);
+                        returnList.Add(labelGroupResult);
+                    }
                 }
                 
                 break;
             case Number.Constant:
                 if (Number.AnyIsNumber(lines, out var numberLines))
                 {
-                    labelGroupResult.Text = [numberLines.First()];
-                    returnList.Add(labelGroupResult);
+                    numberLines = RestrictToPossibilities(request, numberLines);
+
+                    if (numberLines.Count > 0)
+                    {
+                        labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
+                        returnList.Add(labelGroupResult);
+                    }
                 }
                 
                 break;
             case LicenceNumber.Constant:
                 if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines))
                 {
+                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
+                    
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
@@ -60,19 +74,70 @@ public static class BaseMethod
                 break;
             case Units.Constant:
                 returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, labelGroupResult));
+                
                 break;
             case SingleWord.Constant:
-                returnList.AddRange(SingleWord.FindSingleWord(lines, labelGroupResult));
+                var results = SingleWord.FindSingleWord(lines, labelGroupResult);
+                returnList.AddRange(RestrictToPossibilities(request, results));
+                
                 break;
             case ActsLikeSingleWord.Constant:
-                returnList.AddRange(ActsLikeSingleWord.FindSingleWord(lines, labelGroupResult));
+                var matches = ActsLikeSingleWord.FindSingleWord(lines, labelGroupResult);
+                returnList.AddRange(RestrictToPossibilities(request, matches));
+
                 break;
-            case "Text":
-                returnList.Add(labelGroupResult); // TODO should probably filter in some way
+            case Text.Constant:
+                var result = RestrictToPossibility(request, labelGroupResult);
+                if (result != null) returnList.Add(labelGroupResult); // TODO should probably filter in some way
+
                 break;
         }
 
         return returnList;
+    }
+
+    private static LabelGroupResult? RestrictToPossibility(
+        FunctionInputModel request,
+        LabelGroupResult result)
+    {
+        if (request.label!.Possibilities?.Any() != true)
+        {
+            return result;
+        }
+
+        return request.label.Possibilities.Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text)
+            ? result
+            : null;
+    }
+    
+    private static List<LabelGroupResult> RestrictToPossibilities(
+        FunctionInputModel request,
+        IReadOnlyList<LabelGroupResult> results)
+    {
+        if (request.label!.Possibilities?.Any() != true)
+        {
+            return results.ToList();
+        }
+
+        return results
+            .Where(result => request.label.Possibilities
+                .Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text))
+            .ToList();
+    }
+    
+    private static List<DocumentLine> RestrictToPossibilities(
+        FunctionInputModel request,
+        IReadOnlyList<DocumentLine> lines)
+    {
+        if (request.label!.Possibilities?.Any() != true)
+        {
+            return lines.ToList();
+        }
+
+        return lines
+            .Where(line => request.label.Possibilities
+                .Any(possibility => possibility == line.Text))
+            .ToList();
     }
     
     public static async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

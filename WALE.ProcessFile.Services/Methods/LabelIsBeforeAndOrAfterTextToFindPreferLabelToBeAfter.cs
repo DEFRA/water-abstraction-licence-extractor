@@ -22,7 +22,10 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         inputLines.Reverse();
         inputLines.AddRange(request.nextLines!);
         
-        var modifiedLines = DataHelper.RemoveExcludes(request.label, inputLines, out var removedLines);
+        var modifiedLines = DataHelper.RemoveExcludes(
+            request.label,
+            inputLines,
+            out var removedLines);
         
         if (request.isDateOrPurposeLookup && DateOrPurpose.AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
         {

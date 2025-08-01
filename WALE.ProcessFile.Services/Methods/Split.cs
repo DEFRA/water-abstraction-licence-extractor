@@ -111,7 +111,7 @@ public static class Split
             request.label,
             leftPartLines);
         
-        var results = FilterIntoFormat(request, leftPartResult, leftPartLines);
+        var results = FilterIntoFormat(request, leftPartResult, leftPartLines, false);
 
         rightPartLines = DataHelper.RemoveExcludes(request.label, rightPartLines, out _);        
         rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
@@ -124,7 +124,7 @@ public static class Split
                 request.label,
                 rightPartLines);
             
-            results.AddRange(FilterIntoFormat(request, rightPartResult, rightPartLines));
+            results.AddRange(FilterIntoFormat(request, rightPartResult, rightPartLines, false));
         }
         
         return await ProcessSubLabelsAsync(request, results);

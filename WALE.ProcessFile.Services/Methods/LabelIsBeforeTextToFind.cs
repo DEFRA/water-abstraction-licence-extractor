@@ -23,7 +23,7 @@ public static class LabelIsBeforeTextToFind
             request.nextLines,
             out var removedLines);
 
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedNextLines);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedNextLines, false);
         
         foreach (var item in returnList)
         {

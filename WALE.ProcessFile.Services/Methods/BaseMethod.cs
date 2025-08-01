@@ -8,7 +8,8 @@ public static class BaseMethod
     public static List<LabelGroupResult> FilterIntoFormat(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
-        List<DocumentLine> lines)
+        List<DocumentLine> lines,
+        bool isPrevious)
     {
         if (request.label == null)
         {
@@ -30,7 +31,7 @@ public static class BaseMethod
                 }
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, true, request.isOcr,
+                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,
                     out var companyNameLine))
                 {
                     labelGroupResult.Text = companyNameLine;

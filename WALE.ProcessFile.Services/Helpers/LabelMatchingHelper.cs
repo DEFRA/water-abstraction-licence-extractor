@@ -36,19 +36,38 @@ public static class LabelMatchingHelper
 
         return false;
     }
+
+    private static bool PossibilityIsNullOrContainsPossibility(
+        string text,
+        IReadOnlyList<string>? possibilities)
+    {
+        return true;
+        
+        if (possibilities == null || possibilities.Count == 0)
+        {
+            return true;
+        }
+        
+        var matchedPossibility = possibilities.Any(possibility =>
+            text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase));
+
+        return matchedPossibility;
+    }
     
     public static bool LineContainsLabel(
         DocumentLine line,
         IReadOnlyList<string>? labelText,
+        IReadOnlyList<string>? possibilities,
         LabelPosition position,
         int lineCount,
         int howManyLinesTotal,
         out string? matchedText)
     {
+        matchedText = null;
+        
         if (labelText == null)
         {
-            matchedText = null;
-            return true;
+            return PossibilityIsNullOrContainsPossibility(line.Text, possibilities);
         }
         
         foreach (var textItem in labelText)
@@ -57,7 +76,7 @@ public static class LabelMatchingHelper
                 && textItem.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase))
             {
                 matchedText = textItem;
-                return true;
+                return PossibilityIsNullOrContainsPossibility(textItem, possibilities);
             }
          
             var mustEndLine = textItem.Contains(PositionConstants.EndOfLineMarker);
@@ -69,7 +88,7 @@ public static class LabelMatchingHelper
                 if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
                 {
                     matchedText = tItem;
-                    return true;                    
+                    return PossibilityIsNullOrContainsPossibility(tItem, possibilities);
                 }
             }
             else
@@ -78,7 +97,7 @@ public static class LabelMatchingHelper
                     || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
                 {
                     matchedText = textItem;
-                    return true;
+                    return PossibilityIsNullOrContainsPossibility(textItem, possibilities);
                 }
             }
 
@@ -87,11 +106,9 @@ public static class LabelMatchingHelper
                 continue;
             }
             
-            matchedText = null;
             return true;
         }
 
-        matchedText = null;
         return false;
     }
 }

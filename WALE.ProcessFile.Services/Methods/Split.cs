@@ -26,6 +26,7 @@ public static class Split
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
             request.label.Text,
+            request.label.Possibilities,
             LabelPosition.Split,
             UnknownLinesTotal,
             int.MaxValue,

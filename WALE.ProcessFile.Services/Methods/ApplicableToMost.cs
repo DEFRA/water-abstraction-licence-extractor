@@ -27,6 +27,11 @@ public static class ApplicableToMost
         {
             return returnListTop;
         }
+
+        if (request.label.Name == "PeriodPeriodNumber")
+        {
+            
+        }
         
         foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
         {
@@ -68,6 +73,8 @@ public static class ApplicableToMost
                         return await ProcessSubLabelsAsync(request, labelGroupResult);                        
                     }
                 }
+                
+                continue;
             }
             
             if (request.isCompanyType
@@ -95,6 +102,8 @@ public static class ApplicableToMost
                         return await ProcessSubLabelsAsync(request, labelGroupResult);
                     }
                 }
+                
+                continue;
             }
 
             if (request.isLicenceNumberLookup)
@@ -117,6 +126,8 @@ public static class ApplicableToMost
 
                     return returnList;
                 }
+                
+                continue;
             }
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))

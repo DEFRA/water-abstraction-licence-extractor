@@ -314,12 +314,15 @@ public static class SchemaConverter
         
         foreach (var pointResult in periodResults.SubResults)
         {
+            var periodPeriodNumber = pointResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodPeriodNumber");
+            
             var textWithoutNumber = pointResult.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                 .Text?
                 .Select(t => t.Text);
-
-            if (textWithoutNumber == null)
+            
+            if (textWithoutNumber == null && periodPeriodNumber == null)
             {
                 continue;
             }
@@ -328,7 +331,7 @@ public static class SchemaConverter
                 ? string.Join('\n', textWithoutNumber)
                 : null;
 
-            var number = "";//pointPointNumber?.Text?.FirstOrDefault()?.Text;
+            var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
             var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
             
             var inclusive = text?.Contains("inclusive",
@@ -343,7 +346,7 @@ public static class SchemaConverter
                 //Text = text,
                 Inclusive = inclusive,
                 StartDate = null,
-                EndDate = number
+                EndDate = null
             });
         }
 

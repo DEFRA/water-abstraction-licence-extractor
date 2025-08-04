@@ -137,15 +137,17 @@ public class PdfPigNoOcrPdfTests
         var firstPurposePointGroup = purposeResult.SubResults!.First();
         var firstPurpose = firstPurposePointGroup.SubResults![0];
         
+        Assert.Equal("Purpose", firstPurpose.MatchedLabel!.Name);
         Assert.Equal("4.1 Private Water Supply", firstPurpose.Text!.First().Text);
-
-        var firstPurposeWithoutPrepoint = firstPurpose.SubResults![1];
+        Assert.Equal(3, firstPurpose.SubResults.Count);
+        
+        var firstPurposeWithoutPrepoint = firstPurpose.SubResults![2];
         Assert.Equal("Private Water Supply", firstPurposeWithoutPrepoint.Text!.First().Text);
         
         var secondPurpose = firstPurposePointGroup.SubResults[1];
         Assert.Equal("4.2 Agriculture (other than Spray Irrigation)", secondPurpose.Text!.First().Text);        
         
-        var secondPurposeWithoutPrepoint = secondPurpose.SubResults![1];
+        var secondPurposeWithoutPrepoint = secondPurpose.SubResults![2];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
@@ -1471,15 +1473,17 @@ public class PdfPigNoOcrPdfTests
 
         var firstPurposeSubs = firstPurpose.SubResults;
         Assert.NotNull(firstPurposeSubs);
-        Assert.Equal(3, firstPurposeSubs.Count);
+        Assert.Equal(4, firstPurposeSubs.Count);
         
-        var firstPurposePoint = firstPurposeSubs[0].Text!.Single().Text;
-        Assert.Equal("2.1", firstPurposePoint);
-        
-        var firstPurposePurposeNumber = firstPurposeSubs[1].Text!.Single().Text;
+        Assert.Equal("PurposePurposeNumber", firstPurposeSubs[0].MatchedLabel?.Name);
+        var firstPurposePurposeNumber = firstPurposeSubs[0].Text!.Single().Text;
         Assert.Equal("4.1", firstPurposePurposeNumber);
         
-        var firstPurposeTextOnly = string.Join(' ', firstPurposeSubs[2].Text?.Select(x => x.Text).ToArray()!);
+        Assert.Equal("PointLink", firstPurposeSubs[1].MatchedLabel?.Name);
+        var firstPurposePointNumber = firstPurposeSubs[1].Text!.Single().Text;
+        Assert.Equal("2.1", firstPurposePointNumber);
+        
+        var firstPurposeTextOnly = string.Join(' ', firstPurposeSubs[3].Text?.Select(x => x.Text).ToArray()!);
         Assert.Equal("Transfer for subsequent discharge and re-abstraction for spray irrigation from" 
             + " the points specified in condition 2.2 of this licence and points specified in"
             + " condition 2.1 of licence AN/033/0047/018", firstPurposeTextOnly);
@@ -1492,12 +1496,12 @@ public class PdfPigNoOcrPdfTests
 
         var secondPurposeSubs = secondPurpose.SubResults;
         Assert.NotNull(secondPurposeSubs);
-        Assert.Equal(2, secondPurposeSubs.Count);
+        Assert.Equal(3, secondPurposeSubs.Count);
         
         var secondPurposePurposeNumber = secondPurposeSubs[0].Text!.Single().Text;
         Assert.Equal("4.2", secondPurposePurposeNumber);
         
-        var secondPurposeTextOnly = string.Join(' ', secondPurposeSubs[1].Text?.Select(x => x.Text).ToArray()!);
+        var secondPurposeTextOnly = string.Join(' ', secondPurposeSubs[2].Text?.Select(x => x.Text).ToArray()!);
         Assert.Equal("Filling a reservoir for subsequent spray irrigation", secondPurposeTextOnly);
         
         var secondPurposePointGroup = purposeResult.SubResults[1];        
@@ -1512,15 +1516,15 @@ public class PdfPigNoOcrPdfTests
         
         var thirdPurposeSubs = thirdPurpose.SubResults;
         Assert.NotNull(thirdPurposeSubs);
-        Assert.Equal(3, thirdPurposeSubs.Count);
+        Assert.Equal(4, thirdPurposeSubs.Count);
         
         var thirdPurposePoint = thirdPurposeSubs[0].Text!.Single().Text;
-        Assert.Equal("2.2", thirdPurposePoint);
+        Assert.Equal("4.3", thirdPurposePoint);
         
         var thirdPurposePurposeNumber = thirdPurposeSubs[1].Text!.Single().Text;
-        Assert.Equal("4.3", thirdPurposePurposeNumber);
+        Assert.Equal("2.2", thirdPurposePurposeNumber);
         
-        var thirdPurposeTextOnly = string.Join(' ', thirdPurposeSubs[2].Text?.Select(x => x.Text).ToArray()!);
+        var thirdPurposeTextOnly = string.Join(' ', thirdPurposeSubs[3].Text?.Select(x => x.Text).ToArray()!);
         Assert.Equal("Spray Irrigation", thirdPurposeTextOnly);
         
         // TODO update config to relate purposes to points
@@ -1936,7 +1940,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
         Assert.Equal("4.1", purposeResult.SubResults![0].SubResults![0].SubResults![0].Text!.First().Text);
-        Assert.Equal("Fish farm and fishery", purposeResult.SubResults![0].SubResults![0].SubResults![1].Text!.First().Text);
+        Assert.Equal("Fish farm and fishery", purposeResult.SubResults![0].SubResults![0].SubResults![2].Text!.First().Text);
         
         var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
 

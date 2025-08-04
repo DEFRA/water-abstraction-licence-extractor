@@ -416,7 +416,14 @@ public class PdfDataExtractorService(
                     
         foreach (var labelText in label.Text!)
         {
-            if (LabelMatchingHelper.LineContainsLabel(line, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
+            if (LabelMatchingHelper.LineContainsLabel(
+                line,
+                [labelText],
+                label.Possibilities,
+                label.Position,
+                lineCount,
+                PositionConstants.UnknownLinesTotal,
+                out _))
             {
                 continue;
             }
@@ -425,7 +432,14 @@ public class PdfDataExtractorService(
                         
             foreach (var previousLine in previousLines)
             {
-                if (LabelMatchingHelper.LineContainsLabel(previousLine, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
+                if (LabelMatchingHelper.LineContainsLabel(
+                    previousLine,
+                    [labelText],
+                    label.Possibilities,
+                    label.Position,
+                    lineCount,
+                    PositionConstants.UnknownLinesTotal,
+                    out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -434,7 +448,14 @@ public class PdfDataExtractorService(
                         
             foreach (var nextLine in nextLines)
             {
-                if (LabelMatchingHelper.LineContainsLabel(nextLine, [labelText], label.Position, lineCount, PositionConstants.UnknownLinesTotal, out _))
+                if (LabelMatchingHelper.LineContainsLabel(
+                    nextLine,
+                    [labelText],
+                    label.Possibilities,
+                    label.Position,
+                    lineCount,
+                    PositionConstants.UnknownLinesTotal,
+                    out _))
                 {
                     continueOuterLoop = true;
                     break;
@@ -504,12 +525,19 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (!LabelMatchingHelper.LineContainsLabel(line, label.Text, label.Position, lineCount, totalLineCount, out var matchedText))
+                if (!LabelMatchingHelper.LineContainsLabel(
+                    line,
+                    label.Text,
+                    label.Possibilities,
+                    label.Position,
+                    lineCount,
+                    totalLineCount,
+                    out var matchedText))
                 {
                     continue;
                 }
 
-                if (label.Name == "Dates")
+                if (label.Name == "PeriodPeriodNumber")
                 {
             
                 }
@@ -742,6 +770,11 @@ public class PdfDataExtractorService(
         {
             foreach (var subLabel in label.SubLabels)
             {
+                if (subLabel.Name == "PurposePurposeNumber")
+                {
+                    
+                }
+                
                 if (subLabel.Remove == null && label.Remove != null)
                 {
                     subLabel.Remove = label.Remove;
@@ -824,6 +857,14 @@ public class PdfDataExtractorService(
             return [];
         }
 
+        /*if (labelTextPositionIndex == 0
+            && label.Text?.FirstOrDefault() == line.Text
+            && label.Position == LabelPosition.ApplicableToMost)
+        {
+            returnItems.Add((line.Text, label.Clone()));
+            return returnItems;
+        }*/
+        
         var textBeforeLabel = FormattingHelper.TrimFormatting(line.Text[..labelTextPositionIndex]);
         var textAfterLabel = FormattingHelper.TrimFormatting(line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..]);
         

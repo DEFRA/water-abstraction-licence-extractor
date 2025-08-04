@@ -123,7 +123,14 @@ public static class TextToFindIsBetweenLabels
                 Text = textEnd
             };
             
-            if (LabelMatchingHelper.LineContainsLabel(line, label.Text, label.Position, lineCount++, totalLines, out var matchedEndTextTemp))
+            if (LabelMatchingHelper.LineContainsLabel(
+                line,
+                label.Text,
+                label.Possibilities,                
+                label.Position,
+                lineCount++,
+                totalLines,
+                out var matchedEndTextTemp))
             {
                 matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
                 foundEndTag = true;

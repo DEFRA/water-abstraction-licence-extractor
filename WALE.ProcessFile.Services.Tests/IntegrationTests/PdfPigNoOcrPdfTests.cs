@@ -151,7 +151,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences!.First();
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.Single();
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber);
@@ -313,7 +313,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(filename, primaryLicence.Filename);
         Assert.Equal("28/39/22/0422", primaryLicence.LicenceNumber);
 
-        Assert.Equal(2, primaryLicence.AbstractionLimits!.Individual.Length);
+        Assert.Equal(3, primaryLicence.AbstractionLimits!.Individual.Length);
         Assert.Equal(LimitPeriodType.PerHour, primaryLicence.AbstractionLimits!.Individual[0].PeriodType);
         Assert.Equal("cubic metres", primaryLicence.AbstractionLimits!.Individual[0].Units);
         Assert.Equal(41, primaryLicence.AbstractionLimits!.Individual[0].Value);
@@ -2680,20 +2680,22 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("08/37/54/0025", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }    
     
-        [Fact]
+    [Fact]
     public async Task WhenABC_DEF_ThenY()
     {
         // Arrange
         const string filename = "06_transfer_application_new_licence_issued_2112018_10555534.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [PdfFolder + filename],
             string.Empty,
-            UseCache)).Matches!;
+            UseCache);
+        
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(9, resultList.Count);
@@ -2751,5 +2753,68 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(purposeResult.SubResults!);
         var firstPurposePointGroup = purposeResult.SubResults!.First();
         Assert.Equal("4.1 Transfer for the purpose of dewatering", firstPurposePointGroup.Text!.First().Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.Single();
+
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("TH/039/0028/051", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("Brett Aggregates Limited", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal("LV2018110220260331", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        Assert.Equal(new DateTime(2018, 11, 02), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(2026, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2018, 11, 02), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+
+        Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
+        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+        
+        Assert.Equal(86, agreedSchemaLicence.AbstractionLimits.Individual.Single().Value);
+        Assert.Equal("litres", agreedSchemaLicence.AbstractionLimits.Individual.Single().Units);
+        Assert.Equal(LimitPeriodType.PerSecond, agreedSchemaLicence.AbstractionLimits.Individual.Single().PeriodType);
+        Assert.Equal(true, agreedSchemaLicence.AbstractionLimits.Individual.Single().ImplicitLimit);        
+    }
+    
+     [Fact]
+    public async Task WhenABCD_DEF_ThenY()
+    {
+        // Arrange
+        const string filename = "1.3-licence-07.02.2023.pdf";
+
+        // Act
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + filename,
+            LabelConfiguration.GetLabels(),
+            FileLicenceMapping,
+            [PdfFolder + filename],
+            string.Empty,
+            UseCache);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("SW/047/0051/003", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("South West Water Limited", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal("LV2023020720380331", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(2038, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
+        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
+        
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(86, agreedSchemaLicence.AbstractionLimits.Individual.Single().Value);
+        Assert.Equal("litres", agreedSchemaLicence.AbstractionLimits.Individual.Single().Units);
+        Assert.Equal(LimitPeriodType.PerSecond, agreedSchemaLicence.AbstractionLimits.Individual.Single().PeriodType);
+        Assert.Equal(true, agreedSchemaLicence.AbstractionLimits.Individual.Single().ImplicitLimit);        
     }
 }

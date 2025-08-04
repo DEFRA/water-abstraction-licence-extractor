@@ -56,7 +56,7 @@ public static class LabelMatchingHelper
     
     public static bool LineContainsLabel(
         DocumentLine line,
-        IReadOnlyList<string>? labelText,
+        IReadOnlyList<string>? labelTextOptions,
         IReadOnlyList<string>? possibilities,
         LabelPosition position,
         int lineCount,
@@ -64,49 +64,62 @@ public static class LabelMatchingHelper
         out string? matchedText)
     {
         matchedText = null;
+
+        var labelHasNoTextToMatch = labelTextOptions == null;
         
-        if (labelText == null)
+        if (labelHasNoTextToMatch)
         {
             return PossibilityIsNullOrContainsPossibility(line.Text, possibilities);
         }
         
-        foreach (var textItem in labelText)
+        foreach (var labelText in labelTextOptions!)
         {
-            if (lineCount == 0
-                && textItem.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase))
+            var firstLine = lineCount == 0;
+            var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
+                StringComparison.InvariantCultureIgnoreCase);
+            
+            if (firstLine && isStartOfBlock)
             {
-                matchedText = textItem;
-                return PossibilityIsNullOrContainsPossibility(textItem, possibilities);
+                matchedText = labelText;
+                return PossibilityIsNullOrContainsPossibility(labelText, possibilities);
             }
          
-            var mustEndLine = textItem.Contains(PositionConstants.EndOfLineMarker);
+            var isEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
 
-            if (mustEndLine)
+            if (isEndOfLineMarker)
             {
-                var tItem = textItem.Replace(PositionConstants.EndOfLineMarker, string.Empty);
+                var labelTextWithoutMarker =
+                    labelText.Replace(PositionConstants.EndOfLineMarker, string.Empty);
 
-                if (line.Text.EndsWith(tItem, StringComparison.InvariantCultureIgnoreCase))
+                var lineEndsWithMarker =
+                    line.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);
+                
+                if (lineEndsWithMarker)
                 {
-                    matchedText = tItem;
-                    return PossibilityIsNullOrContainsPossibility(tItem, possibilities);
+                    matchedText = labelTextWithoutMarker;
+                    return PossibilityIsNullOrContainsPossibility(labelTextWithoutMarker, possibilities);
                 }
             }
             else
             {
-                if (line.Text.StartsWith(textItem, StringComparison.InvariantCultureIgnoreCase)
-                    || line.Text.Contains($" {textItem}", StringComparison.InvariantCultureIgnoreCase))
+                var lineStartsWithLabel =
+                    line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                var lineStartsWithLabelWithSpaceBefore =
+                    line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                
+                if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore)
                 {
-                    matchedText = textItem;
-                    return PossibilityIsNullOrContainsPossibility(textItem, possibilities);
+                    matchedText = labelText;
+                    return PossibilityIsNullOrContainsPossibility(labelText, possibilities);
                 }
             }
 
-            if (position != LabelPosition.Split || lineCount != howManyLinesTotal - 1)
-            {
-                continue;
-            }
+            var isLastLine = lineCount == howManyLinesTotal - 1;
             
-            return true;
+            if (position == LabelPosition.Split && isLastLine)
+            {
+                return true;
+            }
         }
 
         return false;

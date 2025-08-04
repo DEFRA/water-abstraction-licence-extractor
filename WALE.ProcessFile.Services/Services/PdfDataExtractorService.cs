@@ -419,7 +419,6 @@ public class PdfDataExtractorService(
             if (LabelMatchingHelper.LineContainsLabel(
                 line,
                 [labelText],
-                label.Possibilities,
                 label.Position,
                 lineCount,
                 PositionConstants.UnknownLinesTotal,
@@ -435,7 +434,6 @@ public class PdfDataExtractorService(
                 if (LabelMatchingHelper.LineContainsLabel(
                     previousLine,
                     [labelText],
-                    label.Possibilities,
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
@@ -451,7 +449,6 @@ public class PdfDataExtractorService(
                 if (LabelMatchingHelper.LineContainsLabel(
                     nextLine,
                     [labelText],
-                    label.Possibilities,
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
@@ -528,7 +525,6 @@ public class PdfDataExtractorService(
                 if (!LabelMatchingHelper.LineContainsLabel(
                     line,
                     label.Text,
-                    label.Possibilities,
                     label.Position,
                     lineCount,
                     totalLineCount,
@@ -537,7 +533,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Name == "PeriodPeriodNumber")
+                if (label.Name == "PeriodOfAbstractionSubSection")
                 {
             
                 }

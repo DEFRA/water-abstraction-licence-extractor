@@ -55,7 +55,6 @@ public static class LabelMatchingHelper
     public static bool LineContainsLabel(
         DocumentLine line,
         IReadOnlyList<string>? labelTextOptions,
-        IReadOnlyList<string>? possibilities,
         LabelPosition position,
         int lineCount,
         int howManyLinesTotal,

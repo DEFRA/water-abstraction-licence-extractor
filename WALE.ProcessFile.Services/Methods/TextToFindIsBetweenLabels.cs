@@ -126,7 +126,6 @@ public static class TextToFindIsBetweenLabels
             if (LabelMatchingHelper.LineContainsLabel(
                 line,
                 label.Text,
-                label.Possibilities,                
                 label.Position,
                 lineCount++,
                 totalLines,

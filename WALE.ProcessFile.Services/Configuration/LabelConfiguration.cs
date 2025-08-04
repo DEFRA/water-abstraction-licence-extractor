@@ -515,6 +515,7 @@ public static class LabelConfiguration
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 10,
+                        IncludeLabelText = true,
                         SubLabels =
                         [
                             new()

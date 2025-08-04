@@ -475,6 +475,7 @@ public static class LabelConfiguration
                 TextEnd =
                 [
                     "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
+                    "FURTHER CONDITIONS",
                     "[END_OF_BLOCK]"
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,

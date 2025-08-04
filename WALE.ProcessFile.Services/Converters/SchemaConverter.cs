@@ -333,14 +333,17 @@ public static class SchemaConverter
             
             var inclusive = text?.Contains("inclusive",
                 StringComparison.InvariantCultureIgnoreCase) ?? false;
+
+            var allYear = text == "All year";
             
             returnList.Add(new PeriodOfAbstraction
             {
                 Id = id,
-                PeriodType = AbstractionPeriodType.SetPeriod, // TODO
+                PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
                 //Text = text,
                 Inclusive = inclusive,
-                //TODO
+                StartDate = null,
+                EndDate = number
             });
         }
 

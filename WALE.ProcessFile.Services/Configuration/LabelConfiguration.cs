@@ -669,8 +669,22 @@ public static class LabelConfiguration
                                 [
                                     new("3.1"),
                                     new("3.2"),
-                                    new("3.3")
+                                    new("3.3"),
+                                    new("3.4")
                                 ]
+                            },
+                            new()
+                            {
+                                Name = "TextWithoutNumber",
+                                Remove = [
+                                    new("3.1") { LineMustStartWith = true },
+                                    new("3.2") { LineMustStartWith = true },
+                                    new("3.3") { LineMustStartWith = true },
+                                    new("3.4") { LineMustStartWith = true }
+                                ],
+                                Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
+                                Position = LabelPosition.ApplicableToMost,
+                                Format = "Text"
                             }
                         ]
                     }

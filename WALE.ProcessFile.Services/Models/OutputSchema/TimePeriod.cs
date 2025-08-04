@@ -10,5 +10,5 @@ public class TimePeriod
     
     public string? EndDate { get; set; }
     
-    public bool Inclusive { get; set; }
+    public bool? Inclusive { get; set; }
 }

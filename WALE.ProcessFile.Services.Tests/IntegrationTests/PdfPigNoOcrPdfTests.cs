@@ -2720,7 +2720,12 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(1, meansOfAbstraction.Text?.Count);
         
         Assert.Single(meansOfAbstraction.SubResults);
-        Assert.Equal(3, meansOfAbstraction.SubResults[0].SubResults.Count);
+        Assert.Equal(4, meansOfAbstraction.SubResults[0].SubResults.Count);
+        
+        var textStr = meansOfAbstraction.SubResults[0].SubResults
+            .FirstOrDefault(subResult =>
+                subResult.MatchedLabel!.Name == "TextWithoutNumber")?.Text?.FirstOrDefault()?.Text;
+        Assert.Equal("A pump with capacity not exceeding 86 litres per second", textStr);
         
         var perSecond = meansOfAbstraction.SubResults[0].SubResults
             .FirstOrDefault(subResult =>

@@ -16,6 +16,8 @@ public class Licence
     
     public string? LicenceNumber { get; init; }
     
+    public string? LicenceHolder { get; init; }
+    
     public string? Filename { get; init; }
 
     public LicenceVersion LicenceVersion { get; init; } = new();

@@ -109,6 +109,12 @@ public static class SchemaConverter
         {
             throw new Exception("No match object exists to convert");
         }
+
+        var licenceHolder = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Company")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;        
         
         var licenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -278,6 +284,7 @@ public static class SchemaConverter
         {
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
+            LicenceHolder = licenceHolder,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = GetMeansOfAbstraction(matches),
             Points = GetPoints(matches),
@@ -391,16 +398,26 @@ public static class SchemaConverter
             var number = meanId?.Text?.FirstOrDefault()?.Text;
             var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
+            var value1 = value?.Text?.FirstOrDefault()?.Text;
+            var value2 = double.TryParse(value1, out var valueResult) ? valueResult : (double?)null;
+
+            var periodType = LimitPeriodType.Unknown;
+
+            if (text?.Contains("second", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                periodType = LimitPeriodType.PerSecond;
+            }
+            
             returnList.Add(new MeanOfAbstraction
             {
                 Id = id,
                 Description = text,
-                Limit = new AbstractionLimit
+                Limit = value2 != null ? new AbstractionLimit
                 {
-                    PeriodType = LimitPeriodType.PerSecond,
-                    Units = "unitsx",
-                    Value = 2,
-                }
+                    PeriodType = periodType,
+                    Units = units?.Text?.FirstOrDefault()?.Text,
+                    Value = value2
+                } : null
             });
         }
 

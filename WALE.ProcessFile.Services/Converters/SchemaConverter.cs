@@ -1,3 +1,4 @@
+using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Models;
@@ -279,6 +280,22 @@ public static class SchemaConverter
         }
         
         var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
+        var means = GetMeansOfAbstraction(matches);
+
+        if (means.FirstOrDefault()?.Limit?.Value != null)
+        {
+            var meanLimit = JsonSerializer.Deserialize<AbstractionLimit>(
+                JsonSerializer.Serialize(means.First().Limit!))!;
+
+            meanLimit.ImplicitLimit = true;
+            individual.Add(meanLimit);
+        }
+        
+        var limits = new AbstractionLimits
+        {
+            Aggregates = aggregates.ToArray(),
+            Individual = individual.ToArray()
+        };
         
         return new Licence
         {
@@ -286,16 +303,12 @@ public static class SchemaConverter
             LicenceNumber = licenceNumber,
             LicenceHolder = licenceHolder,
             LicenceVersion = licenceVersion,
-            MeansOfAbstraction = GetMeansOfAbstraction(matches),
+            MeansOfAbstraction = means,
             Points = GetPoints(matches),
             Purposes = GetPurposes(matches),
             PeriodsOfAbstraction = GetPeriods(matches),
             DefinitionOfYear = definitionOfYear,
-            AbstractionLimits = new AbstractionLimits
-            {
-                Aggregates = aggregates.ToArray(),
-                Individual = individual.ToArray()
-            }
+            AbstractionLimits = limits
         };
     }
     

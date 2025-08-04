@@ -37,6 +37,8 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             }
             else
             {
+                //  TODO - check dimensions are more then X and Y or its pointless
+                
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
                 using var ocrImage = Pix.LoadFromFile(imageFilename);
                 using var page = _tesseractEngine.Process(ocrImage);
@@ -69,7 +71,10 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     returnLines.Add(new LineAndWords { Text = line, Words = words });
                 } while (iterator.Next(PageIteratorLevel.TextLine));
                 
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializer()));
+                await File.WriteAllTextAsync(
+                    outputFilename,
+                    JsonSerializer.Serialize(returnLines,
+                        JsonHelper.GetSerializer()));
             }
             
             var lineNumber = 0;

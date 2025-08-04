@@ -454,8 +454,12 @@ async Task HandleFileAsync(
         var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
         
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/agreed-data.json",
+            $"{outputFolder}/{filenameOnlyNoExtension}/data2.json",
             agreedSchemaJson);
+
+        File.WriteAllText(
+            $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
+            $"var data2 = {agreedSchemaJson}");
         
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
     }
@@ -516,7 +520,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Non-Application Licence Document (14.09.1992).PDF")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("10555534.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
     return pdfFilePaths;

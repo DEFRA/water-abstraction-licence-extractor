@@ -105,6 +105,7 @@ public class PdfDataExtractorService(
         
         var documentLines =
             await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
+            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
        
         // Save all text
         if (!pdfDocument.FromCache)
@@ -140,7 +141,9 @@ public class PdfDataExtractorService(
                     labelGroupResult.LabelGroupName != labelLookup.LabelGroupName))
             .ToList();
 
-        if (unmatchedLabelLookups.Count == 0)
+        var isTextFile = documentLines.Count >= 100;
+        
+        if (unmatchedLabelLookups.Count == 0 || isTextFile)
         {
             returnResult.Matches = labelGroupMatches;
             return returnResult;

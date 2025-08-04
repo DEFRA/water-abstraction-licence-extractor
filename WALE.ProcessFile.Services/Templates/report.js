@@ -16,8 +16,7 @@ window.onload = function () {
 
     document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');
     document.title = data.filename + " validation report";
-
-//  document.getElementById("dataOutput").innerHTML = JSON.stringify(data, null, '   ');
+    
     evaluateJsonPath();
 
     addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]', "licenceNumber", "<strong>Licence number</strong>", "licenceNumberGroup");
@@ -352,26 +351,48 @@ function evaluateJsonPath() {
     // render tree into dom element
     jsonview.render(tree, document.querySelector('#dataOutput'));
     jsonview.toggleNode(tree);
+
+    // create json tree object
+    const tree2 = jsonview.create(data2);
+
+    // render tree into dom element
+    jsonview.render(tree2, document.querySelector('#dataNewOutput'));
+    jsonview.toggleNode(tree2);    
     
 //    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
 }
 
+function disableAllTabs() {
+    document.getElementById("pdfTabLink").className = "";
+    document.getElementById("jsonNewTabLink").className = "";
+    document.getElementById("jsonTabLink").className = "";
+}
+
+function hideAllAreas() {
+    document.getElementById("iframeParent").style.display = "none";
+    document.getElementById("jsonPath").style.display = "none";
+    document.getElementById("jsonNewPath").style.display = "none";
+}
+
 function showTab(tabName) {
+    disableAllTabs();
+    hideAllAreas();   
+    
     if (tabName === "pdf-images") {
         document.getElementById("pdfTabLink").className = "selectedTab";
-        document.getElementById("jsonTabLink").className = "";  
+        document.getElementById("iframeParent").style.display = "block";
         
-        document.getElementById("iframeParent").style.visibility = "visible";
-        document.getElementById("jsonPath").style.visibility = "hidden";
+        return false;
+    }
+    else if (tabName === "json-new") {
+        document.getElementById("jsonNewTabLink").className = "selectedTab";
+        document.getElementById("jsonNewPath").style.display = "block";
         
         return false;
     }
 
-    document.getElementById("pdfTabLink").className = "";
-    document.getElementById("jsonTabLink").className = "selectedTab";    
-    
-    document.getElementById("iframeParent").style.visibility = "hidden";
-    document.getElementById("jsonPath").style.visibility = "visible";
+    document.getElementById("jsonTabLink").className = "selectedTab";
+    document.getElementById("jsonPath").style.display = "block";    
     
     return false;
 }

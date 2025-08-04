@@ -35,6 +35,8 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         }
         else
         {
+            //  TODO - check dimensions are more then X and Y or its pointless
+            
             await using var stream = new FileStream(imageFilepath, FileMode.Open);
             var textHeaders = await _client.ReadInStreamAsync(stream);
 

@@ -301,6 +301,17 @@ public static class LabelConfiguration
                                 [
                                     new()
                                     {
+                                        Name  = "PurposePurposeNumber",
+                                        Possibilities = [
+                                            "4.1",
+                                            "4.2",
+                                            "4.3"
+                                        ],
+                                        Position = LabelPosition.ApplicableToMost,
+                                        Format = "Number"                                
+                                    },                                    
+                                    new()
+                                    {
                                         Name = "PointLink",
                                         Text = [
                                             "From Point "

@@ -367,11 +367,12 @@ public static class SchemaConverter
                 : null;
             
             var number = pointPointNumber?.Text?.FirstOrDefault()?.Text;
+            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
             
             returnList.Add(new PointOfAbstraction
             {
                 Description = description,
-                Id = double.TryParse(number, out var numberResult) ? numberResult : null
+                Id = id
             });
         }
 
@@ -392,8 +393,8 @@ public static class SchemaConverter
         {
             foreach (var purposePointGroup in purposeResult.SubResults)
             {
-                //var pointPointNumber = purposePointGroup.SubResults
-                    //.FirstOrDefault(x => x.MatchedLabel?.Name == "PointNumber");
+                var purposePurposeNumber = purposePointGroup.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposePurposeNumber");
                 
                 var allTextWithoutNumber = purposePointGroup.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
@@ -401,14 +402,22 @@ public static class SchemaConverter
                     .Select(t => t.Text)
                     .ToArray();
 
-                if (allTextWithoutNumber == null)
+                if (allTextWithoutNumber == null && purposePurposeNumber == null)
                 {
                     continue;
                 }
+                
+                var description = allTextWithoutNumber != null
+                    ? string.Join('\n', allTextWithoutNumber)
+                    : null;
                     
+                var number = purposePurposeNumber?.Text?.FirstOrDefault()?.Text;                
+                var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+                
                 returnList.Add(new PurposeOfAbstraction
                 {
-                    Description = string.Join('\n', allTextWithoutNumber)
+                    Id = id,
+                    Description = description
                 });
             }
         }

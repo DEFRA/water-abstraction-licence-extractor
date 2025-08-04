@@ -348,20 +348,30 @@ public static class SchemaConverter
         
         foreach (var pointResult in pointsResults.SubResults)
         {
+            var pointPointNumber = pointResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
+            
             var allTextWithoutNumber = pointResult.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                 .Text?
                 .Select(t => t.Text)
                 .ToArray();
 
-            if (allTextWithoutNumber == null)
+            if (allTextWithoutNumber == null && pointPointNumber == null)
             {
                 continue;
             }
 
+            var description = allTextWithoutNumber != null
+                ? string.Join('\n', allTextWithoutNumber)
+                : null;
+            
+            var number = pointPointNumber?.Text?.FirstOrDefault()?.Text;
+            
             returnList.Add(new PointOfAbstraction
             {
-                Description = string.Join('\n', allTextWithoutNumber)
+                Description = description,
+                Id = double.TryParse(number, out var numberResult) ? numberResult : null
             });
         }
 
@@ -382,6 +392,9 @@ public static class SchemaConverter
         {
             foreach (var purposePointGroup in purposeResult.SubResults)
             {
+                //var pointPointNumber = purposePointGroup.SubResults
+                    //.FirstOrDefault(x => x.MatchedLabel?.Name == "PointNumber");
+                
                 var allTextWithoutNumber = purposePointGroup.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
                     .Text?

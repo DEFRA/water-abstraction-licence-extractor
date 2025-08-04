@@ -279,6 +279,7 @@ public static class SchemaConverter
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
             LicenceVersion = licenceVersion,
+            MeansOfAbstraction = GetMeansOfAbstraction(matches),
             Points = GetPoints(matches),
             Purposes = GetPurposes(matches),
             PeriodsOfAbstraction = GetPeriods(matches),
@@ -347,6 +348,59 @@ public static class SchemaConverter
                 Inclusive = inclusive,
                 StartDate = null,
                 EndDate = null
+            });
+        }
+
+        return returnList.ToArray();
+    }
+
+    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches)
+    {
+        var meansResult = matches.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction");
+        var returnList = new List<MeanOfAbstraction>();
+
+        if (meansResult == null)
+        {
+            return returnList.ToArray();
+        }
+        
+        foreach (var meanResult in meansResult.SubResults)
+        {
+            var textWithoutNumber = meanResult
+                .Text?
+                .Select(t => t.Text);
+
+            var meanId = meanResult.SubResults.FirstOrDefault(
+                x => x.MatchedLabel?.Name == "MeanId");            
+            
+            var units = meanResult.SubResults.FirstOrDefault(
+                x => x.MatchedLabel?.Name == "PerSecondUnitsMeans");
+
+            var value = meanResult.SubResults.FirstOrDefault(
+                x => x.MatchedLabel?.Name == "PerSecondValueMeans");
+            
+            if (textWithoutNumber == null && meanId == null)
+            {
+                continue;
+            }
+                
+            var text = textWithoutNumber != null
+                ? string.Join('\n', textWithoutNumber)
+                : null;
+            
+            var number = meanId?.Text?.FirstOrDefault()?.Text;
+            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+
+            returnList.Add(new MeanOfAbstraction
+            {
+                Id = id,
+                Description = text,
+                Limit = new AbstractionLimit
+                {
+                    PeriodType = LimitPeriodType.PerSecond,
+                    Units = "unitsx",
+                    Value = 2,
+                }
             });
         }
 

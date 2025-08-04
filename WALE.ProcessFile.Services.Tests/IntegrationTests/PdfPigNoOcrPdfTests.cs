@@ -2718,18 +2718,20 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(meansOfAbstraction);
         Assert.False(meansOfAbstraction.IsOcr);
         Assert.Equal(1, meansOfAbstraction.Text?.Count);
-        Assert.Equal(2, meansOfAbstraction.SubResults!.Count);
         
-        var perSecond = meansOfAbstraction.SubResults
+        Assert.Single(meansOfAbstraction.SubResults);
+        Assert.Equal(3, meansOfAbstraction.SubResults[0].SubResults.Count);
+        
+        var perSecond = meansOfAbstraction.SubResults[0].SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("86", perSecond);
         
-        var perSecondUnits = meansOfAbstraction.SubResults
+        var perSecondUnits = meansOfAbstraction.SubResults[0].SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);   
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    

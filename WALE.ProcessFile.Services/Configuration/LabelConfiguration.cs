@@ -599,44 +599,82 @@ public static class LabelConfiguration
                     "PURPOSE OF ABSTRACTION",
                     "[END_OF_BLOCK]"
                 ],
-                Remove =
-                [
-                    new("3.1")
-                ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 20,
-                SubLabels = new List<LabelToMatch>
-                {
+                SubLabels =
+                [
                     new()
                     {
-                        Name = "PerSecondUnitsMeans",                                
-                        CategoryName = "PerUnits",                                
-                        Text = ["per second"],
-                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                        Format = "Units",
-                        Possibilities = new List<string>
-                        {
-                            "megalitres",
-                            "litres",
-                            "cubic metres",
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"                                    
-                        }
-                    },
-                    new()
-                    {
-                        Name = "PerSecondValueMeans",                                
-                        CategoryName = "PerValue",
-                        Text = ["per second"],
-                        Position = LabelPosition.RelatedCategoryPosition,
-                        RelatedCategoryName = "PerUnits",
-                        RelatedName = "PerSecondUnits",                                
-                        Format = "Number"
+                        Name = "Mean",
+                        TextStart = [
+                            "3.1",
+                            "3.2",
+                            "3.3",
+                            "3.4",
+                            "[START_OF_BLOCK]"
+                        ],
+                        TextEnd = [
+                            "3.2",
+                            "3.3",
+                            "3.4",
+                            "[END_OF_BLOCK]"
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        NextLinesToFetch = 6,
+                        IncludeLabelText = true,
+                        Multiple = MultipleType.MultipleLabelsMultipleValues,
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name  = "MeanId",
+                                Possibilities = [
+                                    "3.1",
+                                    "3.2",
+                                    "3.3"
+                                ],
+                                Position = LabelPosition.ApplicableToMost,
+                                Format = "Number"                                
+                            },
+                            new()
+                            {
+                                Name = "PerSecondUnitsMeans",                                
+                                CategoryName = "PerUnits",                                
+                                Text = ["per second"],
+                                Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                                Format = "Units",
+                                Possibilities = new List<string>
+                                {
+                                    "megalitres",
+                                    "litres",
+                                    "cubic metres",
+                                    "megagallons",
+                                    "thousand gallons",
+                                    "million gallons",
+                                    "gallons"                                    
+                                }
+                            },
+                            new()
+                            {
+                                Name = "PerSecondValueMeans",                                
+                                CategoryName = "PerValue",
+                                Text = ["per second"],
+                                Position = LabelPosition.RelatedCategoryPosition,
+                                RelatedCategoryName = "PerUnits",
+                                RelatedName = "PerSecondUnits",                                
+                                Format = "Number",
+                                Remove =
+                                [
+                                    new("3.1"),
+                                    new("3.2"),
+                                    new("3.3")
+                                ]
+                            }
+                        ]
                     }
-                }
+                ]
             }
         ];
     }

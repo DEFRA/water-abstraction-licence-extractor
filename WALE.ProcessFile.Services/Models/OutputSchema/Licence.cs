@@ -25,6 +25,8 @@ public class Licence
     public PurposeOfAbstraction[] Purposes { get; init; } = [];
 
     public PeriodOfAbstraction[] PeriodsOfAbstraction { get; set; } = [];
+    
+    public MeanOfAbstraction[] MeansOfAbstraction { get; set; } = [];
 
     public AbstractionLimits AbstractionLimits { get; init; } = new();    
     

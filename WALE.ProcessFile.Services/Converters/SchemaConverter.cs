@@ -101,17 +101,6 @@ public static class SchemaConverter
         return licenceGroup;
     }
 
-    private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
-    {
-        var results = new List<LabelGroupResult>();
-        results.AddRange(labelGroupResult.SubResults);
-        
-        return new MatchesResult
-        {
-            Matches = results
-        };
-    }
-
     private static Licence ToLicence(MatchesResult matchesResult)
     {
         var matches = matchesResult.Matches;
@@ -287,7 +276,6 @@ public static class SchemaConverter
         
         return new Licence
         {
-
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
             LicenceVersion = licenceVersion,
@@ -300,6 +288,17 @@ public static class SchemaConverter
                 Aggregates = aggregates.ToArray(),
                 Individual = individual.ToArray()
             }
+        };
+    }
+    
+    private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
+    {
+        var results = new List<LabelGroupResult>();
+        results.AddRange(labelGroupResult.SubResults);
+        
+        return new MatchesResult
+        {
+            Matches = results
         };
     }
     
@@ -316,20 +315,32 @@ public static class SchemaConverter
         foreach (var pointResult in periodResults.SubResults)
         {
             var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodOfAbstractionSubSection")?
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                 .Text?
-                .FirstOrDefault()?
-                .Text;
+                .Select(t => t.Text);
 
             if (textWithoutNumber == null)
             {
                 continue;
             }
                 
+            var text = textWithoutNumber != null
+                ? string.Join('\n', textWithoutNumber)
+                : null;
+
+            var number = "";//pointPointNumber?.Text?.FirstOrDefault()?.Text;
+            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+            
+            var inclusive = text?.Contains("inclusive",
+                StringComparison.InvariantCultureIgnoreCase) ?? false;
+            
             returnList.Add(new PeriodOfAbstraction
             {
-                 PeriodType = AbstractionPeriodType.SetPeriod,
-                 //TODO
+                Id = id,
+                PeriodType = AbstractionPeriodType.SetPeriod, // TODO
+                //Text = text,
+                Inclusive = inclusive,
+                //TODO
             });
         }
 

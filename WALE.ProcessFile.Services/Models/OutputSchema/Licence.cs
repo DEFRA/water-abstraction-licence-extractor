@@ -2,6 +2,18 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class Licence
 {
+    public string Id
+    {
+        get
+        {
+            var licenceNumber = LicenceNumber?
+                .Replace(" ", string.Empty)
+                .Replace("/", string.Empty);
+            
+            return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
+        }
+    }
+    
     public string? LicenceNumber { get; init; }
     
     public string? Filename { get; init; }

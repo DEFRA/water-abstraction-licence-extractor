@@ -373,7 +373,8 @@ public static class SchemaConverter
         
         foreach (var meanResult in meansResult.SubResults)
         {
-            var textWithoutNumber = meanResult
+            var textWithoutNumber = meanResult.SubResults.FirstOrDefault(
+                    x => x.MatchedLabel?.Name == "TextWithoutNumber")?
                 .Text?
                 .Select(t => t.Text);
 

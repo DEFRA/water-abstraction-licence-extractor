@@ -41,17 +41,15 @@ public static class LabelMatchingHelper
         string text,
         IReadOnlyList<string>? possibilities)
     {
-        return true;
+        //return true;
         
         if (possibilities == null || possibilities.Count == 0)
         {
             return true;
         }
         
-        var matchedPossibility = possibilities.Any(possibility =>
+        return possibilities.Any(possibility =>
             text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase));
-
-        return matchedPossibility;
     }
     
     public static bool LineContainsLabel(
@@ -69,7 +67,7 @@ public static class LabelMatchingHelper
         
         if (labelHasNoTextToMatch)
         {
-            return PossibilityIsNullOrContainsPossibility(line.Text, possibilities);
+            return true;
         }
         
         foreach (var labelText in labelTextOptions!)
@@ -81,7 +79,7 @@ public static class LabelMatchingHelper
             if (firstLine && isStartOfBlock)
             {
                 matchedText = labelText;
-                return PossibilityIsNullOrContainsPossibility(labelText, possibilities);
+                return true;
             }
          
             var isEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
@@ -97,7 +95,7 @@ public static class LabelMatchingHelper
                 if (lineEndsWithMarker)
                 {
                     matchedText = labelTextWithoutMarker;
-                    return PossibilityIsNullOrContainsPossibility(labelTextWithoutMarker, possibilities);
+                    return true;
                 }
             }
             else
@@ -110,7 +108,7 @@ public static class LabelMatchingHelper
                 if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore)
                 {
                     matchedText = labelText;
-                    return PossibilityIsNullOrContainsPossibility(labelText, possibilities);
+                    return true;
                 }
             }
 

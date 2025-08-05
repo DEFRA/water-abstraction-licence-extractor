@@ -67,7 +67,7 @@ public class TessaractOcrPdfTests
         Assert.Single(abstractionLimitsSection1.SubResults!);
 
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
-        Assert.Equal(5, section1Sub1.SubResults!.Count);
+        Assert.Equal(6, section1Sub1.SubResults!.Count);
 
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>

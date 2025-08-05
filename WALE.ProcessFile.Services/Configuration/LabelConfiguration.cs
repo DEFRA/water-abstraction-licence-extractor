@@ -1007,6 +1007,15 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "InTotalUnits",                                
                                         Format = "Number" // TODO add date extraction
+                                    },
+                                    new()
+                                    {
+                                        Name = "AYearDefinitionLine",
+                                        Text = ["beginning on"],
+                                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 1,
+                                        Format = "Text"
                                     }
                                 }       
                             }

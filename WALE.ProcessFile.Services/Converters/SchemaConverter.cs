@@ -287,7 +287,6 @@ public static class SchemaConverter
             }
         }
         
-        var definitionOfYear = (TimePeriod?)null;//new TimePeriod();  // TODO
         var means = GetMeansOfAbstraction(matches);
 
         if (means.FirstOrDefault()?.Limit?.Value != null)
@@ -315,9 +314,35 @@ public static class SchemaConverter
             Points = GetPoints(matches),
             Purposes = GetPurposes(matches),
             PeriodsOfAbstraction = GetPeriods(matches),
-            DefinitionOfYear = definitionOfYear,
+            DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits
         };
+    }
+
+    private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
+    {
+        var abstractionLimitsSection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+
+        var abstractionLimitPoints = abstractionLimitsSection?
+            .SubResults
+            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPoint")
+            .ToList();
+
+        var abstractionLimitPointSubs = abstractionLimitPoints?
+            .SelectMany(res => res.SubResults)
+            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
+            .ToList();
+
+        if (abstractionLimitPointSubs != null)
+        {
+            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+            {
+                //...
+            }
+        }
+
+        return null;
     }
     
     private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
@@ -555,6 +580,7 @@ public static class SchemaConverter
             "per week" => LimitPeriodType.PerWeek,
             "per month" => LimitPeriodType.PerMonth,
             "per year" => LimitPeriodType.PerYear,
+            "in total" => LimitPeriodType.InTotal,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

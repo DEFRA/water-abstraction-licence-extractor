@@ -85,7 +85,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(5, point1Sub1.Text!.Count);
 
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(4, point1Sub1.SubResults!.Count);
+        Assert.Equal(5, point1Sub1.SubResults!.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -447,7 +447,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults!);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(12, section2Sub1.SubResults!.Count); // TODO failing because can't find the linked licences         
+        Assert.Equal(13, section2Sub1.SubResults!.Count); // TODO failing because can't find the linked licences         
             
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -650,7 +650,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults!);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(4, section2Sub1.SubResults!.Count);
+        Assert.Equal(5, section2Sub1.SubResults!.Count);
         
         var perYear2 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1063,7 +1063,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection10.SubResults!);
 
         var section10Sub1 = abstractionLimitsSection10.SubResults[0];
-        Assert.Equal(9, section10Sub1.SubResults!.Count);
+        Assert.Equal(10, section10Sub1.SubResults!.Count);
         
         perHour = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1386,7 +1386,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection5.SubResults!);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        Assert.Equal(10, section5Sub1.SubResults!.Count);
+        Assert.Equal(11, section5Sub1.SubResults!.Count);
 
         perYear = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -2252,7 +2252,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsPoint.SubResults!);
         
         var point1Sub1 = abstractionLimitsPoint.SubResults![0];
-        Assert.Equal(8, point1Sub1.SubResults!.Count);
+        Assert.Equal(9, point1Sub1.SubResults!.Count);
 
         Assert.Equal("2", point1Sub1.SubResults!
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
@@ -2322,7 +2322,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(sectionPoint1.SubResults!);
 
         var point1Sub1 = sectionPoint1.SubResults![0];
-        Assert.Equal(8, point1Sub1.SubResults!.Count);
+        Assert.Equal(9, point1Sub1.SubResults!.Count);
 
         Assert.Equal("43.2", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
@@ -2472,7 +2472,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsPoint1.SubResults!);
 
         var point1Sub1 = abstractionLimitsPoint1.SubResults![0];
-        Assert.Equal(8, point1Sub1.SubResults!.Count);
+        Assert.Equal(9, point1Sub1.SubResults!.Count);
         
         Assert.Equal("3.5", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"

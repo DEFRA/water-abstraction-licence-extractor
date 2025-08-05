@@ -242,19 +242,25 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
-            if (request.label?.Text == null && !string.IsNullOrWhiteSpace(outputText))
+            if (!string.IsNullOrWhiteSpace(outputText))
             {
-                var lineMatch = labelGroupResult.Clone();
-                lineMatch.Text = [docLine.Clone(outputText)];
-                
-                lineMatch.MatchType = MatchType.Between;
-                FormattingHelper.RemoveRemoves(lineMatch, removedLines);
-                
-                returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
-            }
-            else if (!string.IsNullOrWhiteSpace(outputText) && request.label?.Format == "Text")
-            {
-                throw new Exception($"Found '{outputText}' via {nameof(ApplicableToMost)} method - expected {request.label.Position}");
+                if (request.label?.Text == null)
+                {
+                    var lineMatch = labelGroupResult.Clone();
+                    lineMatch.Text = [docLine.Clone(outputText)];
+
+                    lineMatch.MatchType = MatchType.Between;
+                    FormattingHelper.RemoveRemoves(lineMatch, removedLines);
+
+                    returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
+                }
+                else if (request.label?.Format == Text.Constant)
+                {
+                    var lineMatch = labelGroupResult.Clone();
+                    lineMatch.Text = [docLine.Clone(outputText)];
+
+                    returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
+                }
             }
         }
         

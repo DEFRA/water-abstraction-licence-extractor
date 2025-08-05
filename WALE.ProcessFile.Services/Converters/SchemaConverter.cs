@@ -202,8 +202,14 @@ public static class SchemaConverter
                     .Select(linkedLicenceNumber =>
                     {
                         var condition = (Condition?)null; // TODO
-                        var filename = (string?)null;
-
+                        
+                        var filename = siblings
+                            .FirstOrDefault(sibling =>
+                                sibling.MatchedLabel?.Name == "LinkedLicenceFilename")?
+                            .Text?
+                            .FirstOrDefault()?
+                            .Text;
+                        
                         return new LinkedLicence
                         {
                             LicenceNumber = linkedLicenceNumber,

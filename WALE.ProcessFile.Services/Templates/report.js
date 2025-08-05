@@ -1,88 +1,96 @@
 const HEADER_SIZE = 200;
 const PAGE_HEIGHT_PX = 1060;
 
-window.onload = function () {
-    let pdfPath = jssettings.pdfFolder + data.filename;
-
-    let filenameEle = document.getElementById("filename");
-    filenameEle.innerHTML = data.filename;
-    filenameEle.href = pdfPath;
-
-    var pdfImagesSb = [];
-
-    for (var i = 1; i <= data.numberOfPages; i++) {
-        pdfImagesSb.push("<img id='page" + i + "' src='PdfPig/Images/page-" + i + ".png'  alt='PDF image (text not available)' /><br />")
+function loadReport(filename) {
+    // Check all data is here
+    if (window.data === undefined || window.data2 === null) {
+        console.log('All data is not yet ready');
+        return;
     }
 
-    document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');
-    document.title = data.filename + " validation report";
-    
-    evaluateJsonPath();
+    window.onload = function () {
+        let pdfPath = jssettings.pdfFolder + data.filename;
 
-    addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]', "licenceNumber", "<strong>Licence number</strong>", "licenceNumberGroup");
-    document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
+        let filenameEle = document.getElementById("filename");
+        filenameEle.innerHTML = filename;
+        filenameEle.href = pdfPath;
 
-    addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'Company\')]', "grantedTo", "<strong>Licence holder</strong>", "grantedToGroup");
-    document.getElementById("licenceHolderTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'Company\')]');
+        var pdfImagesSb = [];
 
-    var sb2 = [];
-    sb2.push("<dt><strong>Purpose</strong></dt><dd id='purposes'><dl>");
-
-    let purposeMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'Purpose\')]');
-
-    if (purposeMatches != null && purposeMatches.length > 0) {
-        for (let idx = 0, len = purposeMatches.length; idx < len; idx++) {
-            let purposeMatch = purposeMatches[idx];
-
-            if (purposeMatch == null || purposeMatch.text == null || purposeMatch.text.length === 0) {
-                continue;
-            }
-
-            sb2.push("<dt><a href='#' onclick='jumpToPage(this); return false;' data-page='" + purposeMatch.pageNumber + "'>"
-                + purposeMatch.text[0].text + "</a></dt><dd><dl>");
-
-            let abstractionLimitsMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'AbstractionLimits\')]');
-            let meansOfAbstractionMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'MeansOfAbstraction\')]');
-
-            let hasAbstractionLimits = abstractionLimitsMatches != null && abstractionLimitsMatches.length > 0;
-            let hasMeansOfAbstraction = meansOfAbstractionMatches != null && meansOfAbstractionMatches.length > 0;
-
-            if (hasAbstractionLimits || hasMeansOfAbstraction) {
-                let sb = [];
-
-                if (hasAbstractionLimits) {
-                    let abstractionLimitsSection = abstractionLimitsMatches[0];
-                    let abstractionLimitsConditionBlocks = abstractionLimitsSection.subResults;
-
-                    sb.push(...processAbstractionLimits(abstractionLimitsConditionBlocks, 0));
-                }
-
-                if (hasMeansOfAbstraction) {
-                    let secondValue = getText(meansOfAbstractionMatches[0],
-                        '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'PerSecondValueMeans\')]');
-
-                    let secondUnits = getText(meansOfAbstractionMatches[0],
-                        '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'PerSecondUnitsMeans\')]');
-
-                    if (!!secondValue) {
-                        let meansText = meansOfAbstractionMatches[0].text;
-                        let xy1 = meansText.length > 0 ? meansText[0].text : "--";
-                        
-                        sb.push('<dt>Means of abstraction ("' + xy1 + '")</dt><dd><dl>'
-                            + '<dt><strong>Per second</strong></dt><dd>' + parseFloat(secondValue).toLocaleString()
-                            + ' ' + secondUnits + '</dd></dl></dd>');
-                    }
-                }
-
-                sb2.push(sb.join(''));
-            }
-
-            sb2.push("</dl></dd>");
+        for (var i = 1; i <= data.numberOfPages; i++) {
+            pdfImagesSb.push("<img id='page" + i + "' src='" + filename + "/PdfPig/Images/page-" + i + ".png'  alt='PDF image (text not available)' /><br />")
         }
-    }
 
-    sb2.push("</dl></dd>");
-    document.getElementById('properties').innerHTML += sb2.join('');
+        document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');
+        document.title = data.filename + " validation report";
+
+        evaluateJsonPath();
+
+        addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]', "licenceNumber", "<strong>Licence number</strong>", "licenceNumberGroup");
+        document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
+
+        addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'Company\')]', "grantedTo", "<strong>Licence holder</strong>", "grantedToGroup");
+        document.getElementById("licenceHolderTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'Company\')]');
+
+        var sb2 = [];
+        sb2.push("<dt><strong>Purpose</strong></dt><dd id='purposes'><dl>");
+
+        let purposeMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'Purpose\')]');
+
+        if (purposeMatches != null && purposeMatches.length > 0) {
+            for (let idx = 0, len = purposeMatches.length; idx < len; idx++) {
+                let purposeMatch = purposeMatches[idx];
+
+                if (purposeMatch == null || purposeMatch.text == null || purposeMatch.text.length === 0) {
+                    continue;
+                }
+
+                sb2.push("<dt><a href='#' onclick='jumpToPage(this); return false;' data-page='" + purposeMatch.pageNumber + "'>"
+                    + purposeMatch.text[0].text + "</a></dt><dd><dl>");
+
+                let abstractionLimitsMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'AbstractionLimits\')]');
+                let meansOfAbstractionMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'MeansOfAbstraction\')]');
+
+                let hasAbstractionLimits = abstractionLimitsMatches != null && abstractionLimitsMatches.length > 0;
+                let hasMeansOfAbstraction = meansOfAbstractionMatches != null && meansOfAbstractionMatches.length > 0;
+
+                if (hasAbstractionLimits || hasMeansOfAbstraction) {
+                    let sb = [];
+
+                    if (hasAbstractionLimits) {
+                        let abstractionLimitsSection = abstractionLimitsMatches[0];
+                        let abstractionLimitsConditionBlocks = abstractionLimitsSection.subResults;
+
+                        sb.push(...processAbstractionLimits(abstractionLimitsConditionBlocks, 0));
+                    }
+
+                    if (hasMeansOfAbstraction) {
+                        let secondValue = getText(meansOfAbstractionMatches[0],
+                            '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'PerSecondValueMeans\')]');
+
+                        let secondUnits = getText(meansOfAbstractionMatches[0],
+                            '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'PerSecondUnitsMeans\')]');
+
+                        if (!!secondValue) {
+                            let meansText = meansOfAbstractionMatches[0].text;
+                            let xy1 = meansText.length > 0 ? meansText[0].text : "--";
+
+                            sb.push('<dt>Means of abstraction ("' + xy1 + '")</dt><dd><dl>'
+                                + '<dt><strong>Per second</strong></dt><dd>' + parseFloat(secondValue).toLocaleString()
+                                + ' ' + secondUnits + '</dd></dl></dd>');
+                        }
+                    }
+
+                    sb2.push(sb.join(''));
+                }
+
+                sb2.push("</dl></dd>");
+            }
+        }
+
+        sb2.push("</dl></dd>");
+        document.getElementById('properties').innerHTML += sb2.join('');
+    };
 }
 
 function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
@@ -198,6 +206,9 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
             let linkedLicences = getMatches(conditionBlockSub,
                 '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'LinkedLicence\')]');
 
+            let linkedLicenceFilenames = getMatches(conditionBlockSub,
+                '$.subResults[?(@.matchedLabel != null && @.matchedLabel.name==\'LinkedLicenceFilename\')]');            
+            
             for (let kdx = 0, ken = linkedLicenceNumbers.length; kdx < ken; kdx++) {
                 let linkedLicenceNumber = toText(linkedLicenceNumbers[kdx]);
 
@@ -205,15 +216,13 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
                     continue;
                 }
 
-                let mapMatch = typeof (mapData) !== 'undefined'
-                    && mapData.licenceNumberToFilename[linkedLicenceNumber];
-
-                if (!mapMatch) mapMatch = "--";
-
+                let linkedLicenceFilename = toText(linkedLicenceFilenames[kdx]);
+                if (!linkedLicenceFilename) linkedLicenceFilename = "[NOT_FOUND]";
+                
                 sb.push("<dt><strong>Linked licence</strong></dt><dd><dl>");
                 sb.push("<dt><strong>Licence number</strong></dt><dd>"
-                    + "<a href='../" + mapMatch.replace(".pdf", "").replace(".PDF", "").replaceAll(".", "-")
-                    + "/report.html'>" + linkedLicenceNumber + "</a></dd>");
+                    + "<a href='?filename=" + linkedLicenceFilename.replace(".pdf", "").replace(".PDF", "").replaceAll(".", "-")
+                    + "'>" + linkedLicenceNumber + "</a></dd>");
 
                 let linkedLicence = linkedLicences.length > kdx ? linkedLicences[kdx] : null;
 
@@ -432,4 +441,16 @@ function backPressed() {
     document.getElementById('licenceHolderTxtDiv').style.visibility = 'hidden';
 
     return false;
+}
+
+function loadScript(file, callback) {
+    const newScript = document.createElement('script');
+    newScript.setAttribute('src', file);
+    newScript.setAttribute('type', 'text/javascript');
+    newScript.setAttribute('async', 'true');
+
+    newScript.onload = () => callback();
+    newScript.onerror = () => console.error(`Error loading script: ${file}`);
+
+    document.head.appendChild(newScript);
 }

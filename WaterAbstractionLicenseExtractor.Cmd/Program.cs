@@ -80,7 +80,8 @@ var fileMappingContents = File.Exists(fileMappingPath)
         .Split('\n')
     : [];
 
-var reportTemplateContents = File.ReadAllText(reportTemplatePath);
+Copy(reportTemplatePath, "Output");
+File.Move("Output/report-template.html", "Output/report.html", true);
 
 var count = 0;
 foreach (var line in fileMappingContents)
@@ -206,7 +207,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     indexFileStringBuilder.AppendLine($"<tr {backgroundCss}>");
     indexFileStringBuilder.AppendLine($"<td style='text-align: center'><img src='{filename}/PdfPig/Images/page-1.png' style='height: 80px' alt='No image found' onerror='this.style.display=\"none\"' /></td>");
     /*indexFileStringBuilder.AppendLine($"<td>{fileCount}</td>");*/
-    indexFileStringBuilder.AppendLine($"<td><a href='{filename}/report.html'>{filenameForScreen}</a></td>");
+    indexFileStringBuilder.AppendLine($"<td><a href='report.html?filename={filename}'>{filenameForScreen}</a></td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
@@ -294,6 +295,7 @@ File.WriteAllText(resultFile, resultFileStringBuilder.ToString());
 var licenceFilenameMapFile = $"{outputFolder}licence-number-filename-map.csv";
 File.WriteAllText(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
 
+/*
 #pragma warning disable CS0162 // Unreachable code detected
 if (regenerateMappingJson)
 {
@@ -308,6 +310,7 @@ if (regenerateMappingJson)
         $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, jsonOptions)};");
 }
 #pragma warning restore CS0162 // Unreachable code detected
+*/
 
 indexFileStringBuilder.AppendLine("<ul>");
 indexFileStringBuilder.AppendLine("</body></html>");
@@ -436,26 +439,22 @@ async Task HandleFileAsync(
         var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
         
-        File.WriteAllText(
+        /*File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.json",
-            json);
+            json);*/
 
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
-        
-        File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/report.html",
-            reportTemplateContents.Replace("{Filename}", filenameOnlyNoExtension));
 
         var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matches1);
         var agreedSchema = agreedSchemaGroup.Licences!.First();
         
         var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
         
-        File.WriteAllText(
+        /*File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.json",
-            agreedSchemaJson);
+            agreedSchemaJson);*/
 
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
@@ -519,8 +518,8 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-//    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
     return pdfFilePaths;
@@ -530,4 +529,15 @@ void Log(string message, StringBuilder outputStringBuilder)
 {
 //    Console.WriteLine(message);
     outputStringBuilder.Append(message);
+}
+
+void Copy(string sourceDir, string targetDir)
+{
+    Directory.CreateDirectory(targetDir);
+
+    foreach(var file in Directory.GetFiles(sourceDir))
+        File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+
+    foreach(var directory in Directory.GetDirectories(sourceDir))
+        Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
 }

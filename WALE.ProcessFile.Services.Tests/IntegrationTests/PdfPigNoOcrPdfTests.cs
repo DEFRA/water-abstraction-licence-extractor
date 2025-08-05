@@ -2092,7 +2092,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates.Single());
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates.Single();
-        Assert.Equal("2568001249LV20190619-LLPO-2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249LV20190619-LL-2568001247-2568001248", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Length);
         

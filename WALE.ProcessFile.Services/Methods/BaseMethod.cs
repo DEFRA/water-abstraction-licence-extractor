@@ -107,7 +107,7 @@ public static class BaseMethod
                 break;
             case Text.Constant:
                 var result = RestrictToPossibility(request, labelGroupResult);
-                if (result != null) returnList.Add(labelGroupResult); // TODO should probably filter in some way
+                if (result?.Text != null) returnList.Add(labelGroupResult); // TODO should probably filter in some way
 
                 break;
         }

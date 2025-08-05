@@ -52,8 +52,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9
-            , resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -203,7 +202,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -361,7 +360,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -548,7 +547,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -705,7 +704,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1609,7 +1608,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1795,7 +1794,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1845,7 +1844,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -1929,7 +1928,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
@@ -2161,7 +2160,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);        
+        Assert.Equal(10, resultList.Count);        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -2231,7 +2230,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
         Assert.NotNull(nameResult);
@@ -2452,7 +2451,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);        
+        Assert.Equal(10, resultList.Count);        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
         Assert.NotNull(nameResult);
@@ -2590,7 +2589,7 @@ public class PdfPigNoOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
@@ -2811,10 +2810,22 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.Purposes);
         Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
         
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
-        Assert.Equal(86, agreedSchemaLicence.AbstractionLimits.Individual.Single().Value);
-        Assert.Equal("litres", agreedSchemaLicence.AbstractionLimits.Individual.Single().Units);
-        Assert.Equal(LimitPeriodType.PerSecond, agreedSchemaLicence.AbstractionLimits.Individual.Single().PeriodType);
-        Assert.Equal(true, agreedSchemaLicence.AbstractionLimits.Individual.Single().ImplicitLimit);        
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(2000, agreedSchemaLicence.AbstractionLimits.Individual[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Units);        
+        Assert.Equal(LimitPeriodType.PerHour, agreedSchemaLicence.AbstractionLimits.Individual[0].PeriodType);
+        Assert.Equal(40000, agreedSchemaLicence.AbstractionLimits.Individual[1].Value);
+        Assert.Equal(6000000, agreedSchemaLicence.AbstractionLimits.Individual[2].Value);
+        Assert.Equal(556, agreedSchemaLicence.AbstractionLimits.Individual[3].Value);        
+
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal("SW0470051003LV2023020720380331-LLPO-1547013S020",
+            agreedSchemaLicence.AbstractionLimits.Aggregates[0].Id);
+        Assert.Equal("LV2023020720380331",
+            agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits);
+        Assert.Equal(148000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);
     }
 }

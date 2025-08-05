@@ -470,6 +470,7 @@ public static class LabelConfiguration
                 Name = "DocumentPeriodsOfAbstractionSection",
                 TextStart =
                 [
+                    "PERIOD OF ABSTRACTION",
                     "PERIODS OF ABSTRACTION"
                 ],
                 TextEnd =

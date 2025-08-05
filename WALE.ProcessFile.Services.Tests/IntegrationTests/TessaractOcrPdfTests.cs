@@ -623,7 +623,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -729,7 +729,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // Crossed out company name
+        Assert.Equal(3, resultList.Count); // Crossed out company name
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult); // Crossed out
@@ -1005,7 +1005,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1045,7 +1045,7 @@ public class TessaractOcrPdfTests
             UseCache)).Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(4, resultList.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

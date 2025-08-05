@@ -271,8 +271,10 @@ public static class SchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     LicenceVersionId = licenceVersion.LicenceVersionId,
-                    PrimaryType = PrimaryType.LicenceToLicence, // TODO
-                    SubType = SubType.PointToPoint, // TODO
+                    PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                        ? PrimaryType.LicenceToLicence
+                        : PrimaryType.InLicence,
+                    SubType = pointsLoop.Count > 0 ? SubType.PointToPoint : null,
                     NaldType = GetNaldType(),
                     AggregateSetId = PositionConstants.ReplacementMarker,
                     LinkedLicences = linkedLicenceNumbers.ToArray(),
@@ -338,7 +340,26 @@ public static class SchemaConverter
         {
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
             {
-                //...
+                var definition = abstractionLimitPointSub.SubResults
+                    .SingleOrDefault(sr => sr.MatchedLabel?.Name == "AYearDefinitionLine");
+
+                if (definition == null)
+                {
+                    continue;
+                }
+                
+                var dates = definition.SubResults;
+                var text = definition.Text?.FirstOrDefault()?.Text;
+                var inclusive = text?.Contains("beginning on") == true
+                    || text?.Contains("ending on") == true; 
+
+                return new TimePeriod
+                {
+                    PeriodType = AbstractionPeriodType.SetPeriod,
+                    Inclusive = inclusive,
+                    StartDate = dates.FirstOrDefault()?.Text?.FirstOrDefault()?.Text,
+                    EndDate = dates.LastOrDefault()?.Text?.FirstOrDefault()?.Text
+                };
             }
         }
 

@@ -2,8 +2,7 @@ namespace WALE.ProcessFile.Services.Enums.OutputSchema;
 
 public enum SubType
 {
-    Unknown,
-    NotApplicable,
+    NotSet,
     PurposeToPurpose,
     PointToPoint
 }

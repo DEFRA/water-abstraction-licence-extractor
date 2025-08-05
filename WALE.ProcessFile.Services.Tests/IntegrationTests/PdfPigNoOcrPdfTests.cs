@@ -2796,6 +2796,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal("SW0470051003-LV2023020720380331", agreedSchemaLicence.Id);
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("SW/047/0051/003", agreedSchemaLicence.LicenceNumber);
         Assert.Equal("South West Water Limited", agreedSchemaLicence.LicenceHolder);
@@ -2825,7 +2826,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(556, agreedSchemaLicence.AbstractionLimits.Individual[3].Value);        
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal("SW0470051003LV2023020720380331-LLPO-1547013S020",
+        Assert.Equal("SW0470051003LV2023020720380331-LL-1547013S020",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].Id);
         Assert.Equal("LV2023020720380331",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
@@ -2833,5 +2834,9 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(148000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);
+        
+        Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Equal("1 April", agreedSchemaLicence.DefinitionOfYear.StartDate);
+        Assert.Equal("31 March", agreedSchemaLicence.DefinitionOfYear.EndDate);        
     }
 }

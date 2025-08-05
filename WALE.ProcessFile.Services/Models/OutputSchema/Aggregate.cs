@@ -48,7 +48,7 @@ public class Aggregate
     
     public string? LicenceVersionId { get; init; }
     
-    public PrimaryType? PrimaryType { get; init; }
+    public PrimaryType PrimaryType { get; init; }
     
     public SubType? SubType { get; init; }
     

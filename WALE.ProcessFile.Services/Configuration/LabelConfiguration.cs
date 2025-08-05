@@ -1015,7 +1015,17 @@ public static class LabelConfiguration
                                         Position = LabelPosition.LabelIsBeforeTextToFind,
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 1,
-                                        Format = "Text"
+                                        Format = "Text",
+                                        SubLabels = [
+                                            new()
+                                            {
+                                                Name = "AYearDates",
+                                                Position = LabelPosition.Split,
+                                                Text = ["and"],
+                                                Remove = [new("ending on")],
+                                                Format = "DateOrPurpose"
+                                            }
+                                        ]
                                     }
                                 }       
                             }

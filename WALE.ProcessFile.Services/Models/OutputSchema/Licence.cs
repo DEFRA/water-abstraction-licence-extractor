@@ -26,11 +26,11 @@ public class Licence
     
     public PurposeOfAbstraction[] Purposes { get; init; } = [];
 
-    public PeriodOfAbstraction[] PeriodsOfAbstraction { get; set; } = [];
+    public PeriodOfAbstraction[] PeriodsOfAbstraction { get; init; } = [];
     
-    public MeanOfAbstraction[] MeansOfAbstraction { get; set; } = [];
+    public MeanOfAbstraction[] MeansOfAbstraction { get; init; } = [];
 
     public AbstractionLimits AbstractionLimits { get; init; } = new();    
     
-    public TimePeriod? DefinitionOfYear { get; set; }
+    public TimePeriod? DefinitionOfYear { get; init; }
 }

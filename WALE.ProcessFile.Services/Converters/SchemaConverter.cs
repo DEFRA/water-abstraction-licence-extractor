@@ -359,15 +359,24 @@ public static class SchemaConverter
                 StringComparison.InvariantCultureIgnoreCase) ?? false;
 
             var allYear = text == "All year";
+
+            // TODO next bit should be done in config
+            var dateParts = text?
+                .Replace("From", string.Empty)
+                .Replace("inclusive", string.Empty)
+                .Split(" to ");
+
+            var startDate = dateParts?[0].Trim();
+            var endDate = dateParts?.Length >= 2 ? dateParts[1].Trim() : null;
             
             returnList.Add(new PeriodOfAbstraction
             {
                 Id = id,
                 PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
-                //Text = text,
+                Description = text,
                 Inclusive = inclusive,
-                StartDate = null,
-                EndDate = null
+                StartDate = startDate,
+                EndDate = endDate
             });
         }
 

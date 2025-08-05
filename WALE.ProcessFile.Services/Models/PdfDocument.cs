@@ -1,5 +1,5 @@
+using SkiaSharp;
 using UglyToad.PdfPig;
-using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Rendering.Skia;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -79,18 +79,17 @@ public class PdfDocument
         set => _pages = value;
     }
 
-    public MemoryStream GetPageAsPng(int pageNumber, IColor background)
+    public SKBitmap GetPageAsSkBitmap(int pageNumber, IColor background)
     {
         if (FromCache)
         {
             throw new Exception("Cannot get image from cache");
         }
         
-        return PdfPigDocument!.GetPageAsPng(
+        return PdfPigDocument!.GetPageAsSKBitmap(
             pageNumber,
             background: background,
-            scale: 3,
-            quality: 100);
+            scale: 2F);
     }
     
     public void Dispose()
@@ -100,6 +99,6 @@ public class PdfDocument
             return;
         }
         
-        PdfPigDocument!.Dispose();;
+        PdfPigDocument!.Dispose();
     }
 }

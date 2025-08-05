@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SkiaSharp;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -62,26 +63,25 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return pdfDocument;
     }
     
-    public async Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+    public Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
     {
         var imgFolder = pdfDocument.OutputFolder.Replace("//", "/");
         var imgOutputPath = $"/{Name}/Images/";
 
         Directory.CreateDirectory($"{imgFolder}{imgOutputPath}"); // This checks if exists, and creates the whole path too
         
-        var imgOutputFilename = $"/{imgOutputPath}page-{pageNumber}.png";
-        
-        await using var fileStream = new FileStream($"{imgFolder}{imgOutputFilename}", FileMode.Create);
-        using var memoryStream = pdfDocument.GetPageAsPng(pageNumber, RGBColor.White);
+        var imgOutputFilename = $"/{imgOutputPath}page-{pageNumber}.jpg";
 
-        memoryStream.WriteTo(fileStream);
+        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
+        SaveAsJpeg(memoryStream, $"{imgFolder}{imgOutputFilename}");
+        
         var page = pdfDocument.Pages[pageNumber - 1];
         
-        return new PdfPage
+        return Task.FromResult(new PdfPage
         {
             Number = pageNumber,
             NumberOfImages = page.NumberOfImages
-        };
+        });
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
@@ -341,6 +341,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .ThenBy(block => block.BoundingBox.Centroid.X)
                 .ToList();
         });
+    }
+    
+    private static void SaveAsJpeg(SKBitmap bitmap, string filePath, int quality = 60)
+    {
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+        using var stream = File.OpenWrite(filePath);
+        
+        data.SaveTo(stream);
     }
 
     public void Release(PdfDocument pdfDocument)

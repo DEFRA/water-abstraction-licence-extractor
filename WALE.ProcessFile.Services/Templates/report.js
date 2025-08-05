@@ -18,7 +18,7 @@ function loadReport(filename) {
         var pdfImagesSb = [];
 
         for (var i = 1; i <= data.numberOfPages; i++) {
-            pdfImagesSb.push("<img id='page" + i + "' src='" + filename + "/PdfPig/Images/page-" + i + ".png'  alt='PDF image (text not available)' /><br />")
+            pdfImagesSb.push("<img id='page" + i + "' src='" + filename + "/PdfPig/Images/page-" + i + ".jpg'  alt='JPEG image (text not available)' /><br />")
         }
 
         document.getElementById("pdf-images").innerHTML = pdfImagesSb.join('\n');

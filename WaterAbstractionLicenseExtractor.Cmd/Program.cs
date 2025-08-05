@@ -205,7 +205,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     }
     
     indexFileStringBuilder.AppendLine($"<tr {backgroundCss}>");
-    indexFileStringBuilder.AppendLine($"<td style='text-align: center'><img src='{filename}/PdfPig/Images/page-1.png' style='height: 80px' alt='No image found' onerror='this.style.display=\"none\"' /></td>");
+    indexFileStringBuilder.AppendLine($"<td style='text-align: center'><img src='{filename}/PdfPig/Images/page-1.jpg' style='height: 80px' alt='No image found' onerror='this.style.display=\"none\"' /></td>");
     /*indexFileStringBuilder.AppendLine($"<td>{fileCount}</td>");*/
     indexFileStringBuilder.AppendLine($"<td><a href='report.html?filename={filename}'>{filenameForScreen}</a></td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}</td>");
@@ -518,7 +518,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

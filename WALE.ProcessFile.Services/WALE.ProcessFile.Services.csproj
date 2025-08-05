@@ -14,7 +14,6 @@
         <PackageReference Include="PdfPig" Version="0.1.10"/>
         <PackageReference Include="PdfPig.Filters.Jbig2.PdfboxJbig2" Version="0.1.10.2" />
         <PackageReference Include="PdfPig.Rendering.Skia" Version="0.1.10.2" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
         <PackageReference Include="System.Drawing.Common" Version="9.0.1"/>
         <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
         <PackageReference Include="Tesseract" Version="5.2.0"/>

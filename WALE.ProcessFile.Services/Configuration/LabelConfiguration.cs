@@ -820,6 +820,22 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
+                                        Name = "LinkedLicenceFilename",
+                                        Text = [
+                                            "licence number ",
+                                            "licence serial number ",
+                                            "licence serial numbers ",
+                                            "under this licence and licence",
+                                            "and licence ",
+                                            "and under licence ",
+                                            "and under license " // spelling mistake in licence                                    
+                                        ],
+                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                                        Format = "LicenceNumberFilename",
+                                        Multiple = MultipleType.SingleLabelMultipleValues
+                                    },
+                                    new()
+                                    {
                                         Name = "LinkedLicence",
                                         RelatedName = "LinkedLicenceNumber",
                                         Format = "LinkedLicence",

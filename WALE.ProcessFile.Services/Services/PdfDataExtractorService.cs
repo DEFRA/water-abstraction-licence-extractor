@@ -533,11 +533,6 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Name == "PeriodOfAbstractionSubSection")
-                {
-            
-                }
-                
                 if (label.MatchAllText)
                 {
                     if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))
@@ -583,12 +578,12 @@ public class PdfDataExtractorService(
             
             var request = new FunctionInputModel
             {
-                actsLikeSingleWord = matchedLabel.Format == "ActsLikeSingleWord",
+                actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
                 textBeforeAndAfterLabel = textBeforeAndAfterLabel,
                 isCompanyType = matchedLabel.Format == CompanyName.Constant,
-                isDateOrPurposeLookup = matchedLabel.Format == "DateOrPurpose",
-                isLicenceNumberLookup = matchedLabel.Format == "LicenceNumber",
-                isNumberLookup = matchedLabel.Format == "Number",
+                isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
+                isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
+                isNumberLookup = matchedLabel.Format == Number.Constant,
                 isOcr = isOcr,
                 label = matchedLabel,
                 labelGroupName = labelGroupName,
@@ -602,8 +597,8 @@ public class PdfDataExtractorService(
                 siblingMatches = siblingMatches,
                 useCache = useCache,
                 outputFolder = outputFolder,
-                isSingleWord = matchedLabel.Format == "SingleWord",
-                isUnitsLookup = matchedLabel.Format == "Units",
+                isSingleWord = matchedLabel.Format == SingleWord.Constant,
+                isUnitsLookup = matchedLabel.Format == Units.Constant,
                 line = line,
                 lineNumber = line.LineNumber
             };
@@ -766,11 +761,6 @@ public class PdfDataExtractorService(
         {
             foreach (var subLabel in label.SubLabels)
             {
-                if (subLabel.Name == "PurposePurposeNumber")
-                {
-                    
-                }
-                
                 if (subLabel.Remove == null && label.Remove != null)
                 {
                     subLabel.Remove = label.Remove;

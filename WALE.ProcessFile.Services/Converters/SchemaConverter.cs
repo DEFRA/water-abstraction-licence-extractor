@@ -202,10 +202,12 @@ public static class SchemaConverter
                     .Select(linkedLicenceNumber =>
                     {
                         var condition = (Condition?)null; // TODO
+                        var filename = (string?)null;
 
                         return new LinkedLicence
                         {
                             LicenceNumber = linkedLicenceNumber,
+                            Filename = filename,
                             Condition = condition
                         };
                     })
@@ -551,8 +553,8 @@ public static class SchemaConverter
         };
     }
     
-    private static string GetNaldType()
+    private static string? GetNaldType()
     {
-        return string.Empty; // TODO
+        return null;
     }
 }

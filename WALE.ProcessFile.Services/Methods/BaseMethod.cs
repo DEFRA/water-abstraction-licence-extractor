@@ -73,6 +73,24 @@ public static class BaseMethod
                 }
                 
                 break;
+            case LicenceNumberFilename.Constant:
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines2))
+                {
+                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines2);
+                    
+                    foreach (var licenceNumberLine in licenceNumberLines)
+                    {
+                        if (request.licenceMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        {
+                            continue;
+                        }
+                        
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine.Clone(relatedFileName!)]);
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                
+                break;
             case Units.Constant:
                 returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, labelGroupResult));
                 
@@ -95,35 +113,6 @@ public static class BaseMethod
         }
 
         return returnList;
-    }
-
-    public static LabelGroupResult? RestrictToPossibility(
-        FunctionInputModel request,
-        LabelGroupResult result)
-    {
-        if (request.label!.Possibilities?.Any() != true)
-        {
-            return result;
-        }
-
-        return request.label.Possibilities.Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text)
-            ? result
-            : null;
-    }
-    
-    public static List<LabelGroupResult> RestrictToPossibilities(
-        FunctionInputModel request,
-        IReadOnlyList<LabelGroupResult> results)
-    {
-        if (request.label!.Possibilities?.Any() != true)
-        {
-            return results.ToList();
-        }
-
-        return results
-            .Where(result => request.label.Possibilities
-                .Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text))
-            .ToList();
     }
     
     public static List<DocumentLine> RestrictToPossibilities(
@@ -180,5 +169,34 @@ public static class BaseMethod
         }
 
         return results;
+    }
+    
+    private static LabelGroupResult? RestrictToPossibility(
+        FunctionInputModel request,
+        LabelGroupResult result)
+    {
+        if (request.label!.Possibilities?.Any() != true)
+        {
+            return result;
+        }
+
+        return request.label.Possibilities.Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text)
+            ? result
+            : null;
+    }
+
+    private static List<LabelGroupResult> RestrictToPossibilities(
+        FunctionInputModel request,
+        IReadOnlyList<LabelGroupResult> results)
+    {
+        if (request.label!.Possibilities?.Any() != true)
+        {
+            return results.ToList();
+        }
+
+        return results
+            .Where(result => request.label.Possibilities
+                .Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text))
+            .ToList();
     }
 }

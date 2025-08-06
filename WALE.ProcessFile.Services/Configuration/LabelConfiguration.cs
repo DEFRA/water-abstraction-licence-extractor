@@ -34,7 +34,8 @@ public static class LabelConfiguration
                 Text =
                 [
                     "Date of issue...",
-                    "Date of issue ..."
+                    "Date of issue ...",
+                    "Date of Issue"
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -56,7 +57,8 @@ public static class LabelConfiguration
                 Text =
                 [
                     "Date of original issue...",
-                    "Date of original issue ..."
+                    "Date of original issue ...",
+                    "Date of original issue"
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -78,7 +80,8 @@ public static class LabelConfiguration
                 Text =
                 [
                     "Date effective...",
-                    "Date effective ..."
+                    "Date effective ...",
+                    "Date effective"
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [

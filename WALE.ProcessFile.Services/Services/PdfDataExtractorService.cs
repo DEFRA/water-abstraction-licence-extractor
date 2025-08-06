@@ -537,6 +537,11 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
+                if (label.Name == "DateEffective")
+                {
+                    
+                }
+
                 if (label.MatchAllText)
                 {
                     if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))

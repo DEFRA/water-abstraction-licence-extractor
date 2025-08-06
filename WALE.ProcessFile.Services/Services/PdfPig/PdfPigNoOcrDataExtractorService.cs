@@ -100,9 +100,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
         
         const int roundToHorizontalLimited = 500;
-        const int roundToHorizontalFull = 900;        
+        const int roundToHorizontalFull = 900;
+
+        var fromCache = pdfDocument.FromCache && File.Exists(metadataFilename);
         
-        if (pdfDocument.FromCache && File.Exists(metadataFilename))
+        if (fromCache)
         {
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
@@ -163,9 +165,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     { "detailFilename", txtOutputFilename },
                 });
 
-                List<TextBlock> pageLines = [];                
+                List<TextBlock> pageLines = [];
+
+                fromCache = pdfDocument.FromCache && File.Exists(txtOutputFilename);
                 
-                if (pdfDocument.FromCache && File.Exists(txtOutputFilename))
+                if (fromCache)
                 {
                     dtStart = DateTime.Now;
                     var fileText = await File.ReadAllTextAsync(txtOutputFilename);
@@ -198,6 +202,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
 
                 pageLines.AddRange(await GetPageLinesAsync(page.PdfPigPage!));
+                
                 if (pageLines.Count == 0)
                 {
                     await File.WriteAllTextAsync(txtOutputFilename, "[]");
@@ -270,6 +275,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             marginTop = pageLine.BoundingBox.Top;
             break;
         }
+
+        if (orderedPageLines.Any(pl => pl.Text.Contains("Date effective")))
+        {
+            
+        }
         
         return orderedPageLines
             .GroupBy(line => (
@@ -315,12 +325,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     words.Select(word => new DocumentLineWord(
                             word.Text,
                             null,
-                            [
+                            new(
                                 word.BoundingBox.Top,
-                                word.BoundingBox.Left,
+                                word.BoundingBox.Right,
                                 word.BoundingBox.Bottom,
-                                word.BoundingBox.Right
-                            ]))
+                                word.BoundingBox.Left)
+                            ))
                         .ToList(),
                     firstLine.BoundingBox.Centroid.Y,
                     lines.Key.Item1,

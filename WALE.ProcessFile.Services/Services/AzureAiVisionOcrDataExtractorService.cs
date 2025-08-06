@@ -83,7 +83,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                     new DocumentLineWord(
                         word.Text,
                         word.Confidence * 100,
-                        word.BoundingBox.ToList()))
+                        new DocumentLineWordCoordinates(
+                            word.BoundingBox[0] ?? PositionConstants.UnknownCoOrdinate,
+                            word.BoundingBox[1] ?? PositionConstants.UnknownCoOrdinate,
+                            word.BoundingBox[2] ?? PositionConstants.UnknownCoOrdinate,
+                            word.BoundingBox[3] ?? PositionConstants.UnknownCoOrdinate)))
                     .ToList(),
                 PositionConstants.UnknownCoOrdinate,
                 PositionConstants.UnknownCoOrdinate,

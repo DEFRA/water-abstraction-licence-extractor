@@ -353,7 +353,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -2767,9 +2767,9 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("2/26/32/328", agreedSchemaLicence.LicenceNumber);
         Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
-        //Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
-        //Assert.Equal(new DateTime(2038, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
-        //Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
         Assert.Equal(filename, agreedSchemaLicence.Filename);
 
         Assert.Single(agreedSchemaLicence.Points);

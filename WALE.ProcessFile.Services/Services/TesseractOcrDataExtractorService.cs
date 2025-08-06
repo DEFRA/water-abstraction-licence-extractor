@@ -60,12 +60,12 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                         words.Add(new DocumentLineWord(
                             wordText,
                             wordConfidence,
-                            [
-                                coordinates.X1,
+                            new(
                                 coordinates.Y1,
                                 coordinates.X2,
-                                coordinates.Y2
-                            ]));
+                                coordinates.Y2,
+                                coordinates.X1
+                            )));
                     } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
                     returnLines.Add(new LineAndWords { Text = line, Words = words });

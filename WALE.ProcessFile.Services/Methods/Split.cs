@@ -42,6 +42,8 @@ public static class Split
         {
             var noPreviousLines = leftPartLines.Count == 0;
             var noNextLines = rightPartLines.Count == 0;
+
+            var coords = request.line!.Words.FirstOrDefault()!.Coordinates!;
             
             if (noPreviousLines && noNextLines)
             {
@@ -52,7 +54,7 @@ public static class Split
                 
                 var leftPartWords = leftPart
                     .Split(PositionConstants.SpaceChar)
-                    .Select(text => new DocumentLineWord(text, null, []))
+                    .Select(text => new DocumentLineWord(text, null, coords))
                     .ToList();
 
                 leftPartLines = [
@@ -72,7 +74,10 @@ public static class Split
                 {
                     var rightPartWords = rightPart
                         .Split(PositionConstants.SpaceChar)
-                        .Select(text => new DocumentLineWord(text, null, []))
+                        .Select(text => new DocumentLineWord(
+                            text,
+                            null,
+                            coords))
                         .ToList();
 
                     rightPartLines =

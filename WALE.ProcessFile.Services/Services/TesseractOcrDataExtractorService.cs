@@ -20,7 +20,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     {
         return Task.Run(async () =>
         {
-            var folder = $"{pdfDocument.OutputFolder}/TesseractOcr/Text";
+            var folder = $"{pdfDocument.CacheFolder}/TesseractOcr/Text";
             Directory.CreateDirectory(folder);
         
             var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";

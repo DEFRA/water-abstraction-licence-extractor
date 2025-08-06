@@ -18,52 +18,56 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     public string Name => "PdfPig";
     private const int LineHeight = 11;
     
-    public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder)
+    public async Task<PdfDocument> GetPdfDocumentAsync(
+        string pdfFilePath,
+        string outputFolder,
+        string cacheFolder)
     {
-        var txtFolder = $"{outputFolder.Replace("//", "/")}/{Name}/Text";
-        Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
+        var txtCacheFolder = $"{cacheFolder.Replace("//", "/")}/{Name}/Text";
+        Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
-        var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
-        var getFromCache = File.Exists(metadataFilename);
-        var pdfDocument = new PdfDocument(pdfFilePath, outputFolder, getFromCache);
-        
-        if (getFromCache)
+        var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
+        var existsInCache = File.Exists(metadataFilename);
+        var pdfDocument = new PdfDocument(pdfFilePath, outputFolder, cacheFolder, existsInCache);
+
+        if (!existsInCache)
         {
-            var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
-            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                metaDataFileText,
-                JsonHelper.GetSerializer())!;
+            return pdfDocument;
+        }
+        
+        var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
+        var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            metaDataFileText,
+            JsonHelper.GetSerializer())!;
 
-            var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
-            var pagesList = new List<PdfPage>();
+        var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
+        var pagesList = new List<PdfPage>();
             
-            for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
+        for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
+        {
+            var pageElement = pageArray[pageNumber - 1];
+            var pdfPage = new PdfPage
             {
-                var pageElement = pageArray[pageNumber - 1];
-                var pdfPage = new PdfPage
-                {
-                    Number = pageNumber,
-                    NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
-                    Text = pageElement.GetProperty("text").GetString()
-                };
+                Number = pageNumber,
+                NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
+                Text = pageElement.GetProperty("text").GetString()
+            };
 
-                pdfPage.ImageFilepath = $"{outputFolder}/{pdfPage.GetImageFilepath(Name)}";
-                pdfPage.Providers.Add(new PdfPageProvider
-                {
-                    Provider = Name,
-                    Text = [pdfPage.Text!]
-                });
+            pdfPage.ImageFilepath = $"{outputFolder}/{pdfPage.GetImageFilepath(Name)}";
+            pdfPage.Providers.Add(new PdfPageProvider
+            {
+                Provider = Name,
+                Text = [pdfPage.Text!]
+            });
                 
-                pagesList.Add(pdfPage);
-            }
-
-            pdfDocument.Pages = pagesList;
+            pagesList.Add(pdfPage);
         }
 
+        pdfDocument.Pages = pagesList;
         return pdfDocument;
     }
     
-    public Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+    public async Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
     {
         var imgFolder = pdfDocument.OutputFolder.Replace("//", "/");
         var imgOutputPath = $"/{Name}/Images/";
@@ -73,15 +77,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var imgOutputFilename = $"/{imgOutputPath}page-{pageNumber}.jpg";
 
         using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
-        SaveAsJpeg(memoryStream, $"{imgFolder}{imgOutputFilename}");
+        await SaveAsJpegAsync(memoryStream, $"{imgFolder}{imgOutputFilename}");
         
         var page = pdfDocument.Pages[pageNumber - 1];
         
-        return Task.FromResult(new PdfPage
+        return new PdfPage
         {
             Number = pageNumber,
             NumberOfImages = page.NumberOfImages
-        });
+        };
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
@@ -89,7 +93,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     {
         var dtStart = DateTime.Now;
         
-        var txtFolder = $"{pdfDocument.OutputFolder.Replace("//", "/")}/{Name}/Text";
+        var txtFolder = $"{pdfDocument.CacheFolder.Replace("//", "/")}/{Name}/Text";
         Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
         
         var documentLines = new List<DocumentLine>();
@@ -168,7 +172,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
                     Console.WriteLine(
                         $"Read {Name} text file page {page.Number} in {(DateTime.Now - dtStart).TotalSeconds} seconds" +
-                        $"- {pdfDocument.OutputFolder}");
+                        $"- {pdfDocument.CacheFolder}");
 
                     var cachedTextBlocks =
                         JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
@@ -343,13 +347,20 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         });
     }
     
-    private static void SaveAsJpeg(SKBitmap bitmap, string filePath, int quality = 60)
+    private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
-        using var stream = File.OpenWrite(filePath);
+        await using var stream = new FileStream(
+            filePath,
+            FileMode.OpenOrCreate,
+            FileAccess.Write,
+            FileShare.ReadWrite);
         
         data.SaveTo(stream);
+        
+        await stream.FlushAsync();
+        stream.Close();
     }
 
     public void Release(PdfDocument pdfDocument)

@@ -20,7 +20,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     {
         var returnLines = new List<(string Text, IList<Word> Words)>();
 
-        var folder = $"{pdfDocument.OutputFolder}/{Name}/Text";
+        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         
         if (pdfDocument.FromCache && File.Exists(outputFilename))

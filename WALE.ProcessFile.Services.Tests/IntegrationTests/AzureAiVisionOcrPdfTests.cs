@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -23,6 +24,18 @@ public class AzureAiVisionOcrPdfTests
 
     private string PdfFolder => TestConfig.PdfFolder;
     
+    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    {
+        return _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + fileName,
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                "Output/",
+                "Cache/"),
+            [PdfFolder + fileName]);
+    }
+    
     [Fact]
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
@@ -30,14 +43,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -104,14 +111,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -177,14 +178,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -255,14 +250,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -322,14 +311,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -390,14 +373,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -457,14 +434,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -502,14 +473,8 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -564,17 +529,10 @@ public class AzureAiVisionOcrPdfTests
         }
 
         // Act
-        var resultList = await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename]);
+        var resultFull = await GetMatchesAsync(filename);
 
         // Assert
-        var allText = string.Join(' ', resultList.Pages[0].Providers[1].Text!);
+        var allText = string.Join(' ', resultFull.Pages[0].Providers[1].Text!);
         Assert.Contains("UNCORN", allText);
     }
 }

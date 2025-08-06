@@ -363,17 +363,19 @@ async Task HandleFileAsync(
         {
             pdfFilePath
         };
+
+        var lookupConfig = new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            licenceMapping,
+            outputFolder,
+            cacheFolder);
         
-        var matches1 = await pdfDataExtractor.GetMatchesAsync(
+        var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                licenceMapping,
-                outputFolder,
-                cacheFolder),
+            lookupConfig,
             previouslyParsedPaths);
 
-        var matches = matches1.Matches!;
+        var matches = matchesFull.Matches!;
         
         var purposeMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var purposeText = purposeMatch?.Text?.FirstOrDefault()?.Text ?? "--";
@@ -443,7 +445,7 @@ async Task HandleFileAsync(
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
 
-        var json = JsonHelper.GetAsString(matches1);
+        var json = JsonHelper.GetAsString(matchesFull);
         
         var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
@@ -456,7 +458,7 @@ async Task HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
 
-        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matches1);
+        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
         var agreedSchema = agreedSchemaGroup.Licences!.First();
         
         var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);

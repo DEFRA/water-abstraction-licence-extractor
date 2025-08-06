@@ -28,8 +28,8 @@ public class TessaractOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
+                "Output/",
+                "Cache/"),
             [PdfFolder + fileName]);
     }
     

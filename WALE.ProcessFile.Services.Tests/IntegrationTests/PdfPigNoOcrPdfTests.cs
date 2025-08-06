@@ -41,8 +41,8 @@ public class PdfPigNoOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
               FileLicenceMapping,
-                string.Empty,
-                string.Empty),
+                "Output/",
+                "Cache/"),
             [PdfFolder + fileName]);
     }
     

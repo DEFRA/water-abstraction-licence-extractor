@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -23,6 +24,18 @@ public class MultipleOcrPdfTests
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
     private static string PdfFolder => TestConfig.PdfFolder;
     
+    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    {
+        return _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + fileName,
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                "Output/",
+                "Cache/"),
+            [PdfFolder + fileName]);
+    }
+    
     [Fact]
     public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
@@ -30,14 +43,8 @@ public class MultipleOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -100,14 +107,8 @@ public class MultipleOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -166,14 +167,8 @@ public class MultipleOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                string.Empty,
-                string.Empty),
-            [PdfFolder + filename])).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);

@@ -8,16 +8,18 @@ namespace WALE.ProcessFile.Services.Models;
 
 public class PdfDocument
 {
-    public bool FromCache { get; set; }
-    public string PdfFilePath { get; set; }
-    public string OutputFolder { get; set; }    
+    public bool FromCache { get; }
+    public string PdfFilePath { get; }
+    public string OutputFolder { get; }
+    public string CacheFolder { get; set; }    
     
-    private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
+    private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; }
     
-    public PdfDocument(string pdfFilePath, string outputFolder, bool fromCache)
+    public PdfDocument(string pdfFilePath, string outputFolder, string cacheFolder, bool fromCache)
     {
         PdfFilePath = pdfFilePath;
         OutputFolder = outputFolder;
+        CacheFolder = cacheFolder;
         FromCache = fromCache;
 
         if (fromCache)
@@ -63,6 +65,7 @@ public class PdfDocument
                         NumberOfImages = page.NumberOfImages,
                         Text = page.Text
                     };
+                    
                     pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
                     
                     pdfPage.Providers.Add(new PdfPageProvider

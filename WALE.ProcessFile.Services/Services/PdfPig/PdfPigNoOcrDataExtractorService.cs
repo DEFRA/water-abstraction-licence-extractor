@@ -93,11 +93,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     {
         var dtStart = DateTime.Now;
         
-        var txtFolder = $"{pdfDocument.CacheFolder.Replace("//", "/")}/{Name}/Text";
-        Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
+        var txtCacheFolder = $"{pdfDocument.CacheFolder.Replace("//", "/")}/{Name}/Text";
+        Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
         var documentLines = new List<DocumentLine>();
-        var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
+        var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
         
         const int roundToHorizontalLimited = 500;
         const int roundToHorizontalFull = 900;        
@@ -113,7 +113,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
             {
-                var outputFilename = $"{txtFolder}/page-{pageNumber}.json";
+                var outputFilename = $"{txtCacheFolder}/page-{pageNumber}.json";
                 List<TextBlock> pageLines = [];
 
                 if (!File.Exists(outputFilename))
@@ -153,7 +153,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             foreach (var page in pdfDocument.Pages)
             {
                 var detailCacheFilename = $"page-{page.Number}.json";
-                var txtOutputFilename = $"{txtFolder}/{detailCacheFilename}";
+                var txtOutputFilename = $"{txtCacheFolder}/{detailCacheFilename}";
                 
                 pagesMetadata.Add(new Dictionary<string, object>
                 {

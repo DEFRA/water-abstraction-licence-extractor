@@ -298,10 +298,12 @@ indexFileStringBuilder.AppendLine("</tr>");
 indexFileStringBuilder.AppendLine("</tbody>");
 indexFileStringBuilder.AppendLine("</table>");
 
-var resultFile = $"{outputFolder}{DateTime.Today:yyyyMMdd}-result.csv";
+Directory.CreateDirectory($"{outputFolder}Additional");
+
+var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
 File.WriteAllText(resultFile, resultFileStringBuilder.ToString());
 
-var licenceFilenameMapFile = $"{outputFolder}licence-number-filename-map.csv";
+var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
 File.WriteAllText(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
 
 /*
@@ -339,7 +341,7 @@ var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
     }    
 };
 
-var nodeGraphDataFile = $"{outputFolder}node-graph-data.jsonp";
+var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
 File.WriteAllText(nodeGraphDataFile,
     $"var data = {JsonSerializer.Serialize(nodeGraphData, jsonOptions)};");
 
@@ -529,7 +531,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

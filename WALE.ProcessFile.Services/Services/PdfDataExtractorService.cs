@@ -32,7 +32,7 @@ public class PdfDataExtractorService(
 
     private string GetImageMetadataFilename(PdfDocument pdfDocument)
     {
-        var imagesMetadataFolder = $"{pdfDocument.OutputFolder}/{noOcrDataExtractorService.Name}/Images";
+        var imagesMetadataFolder = $"{pdfDocument.CacheFolder}/{noOcrDataExtractorService.Name}/Images";
         Directory.CreateDirectory(imagesMetadataFolder); // This checks if exists, and creates the whole path too
         return $"{imagesMetadataFolder}/{PositionConstants.CacheMetadataFilename}";
     }

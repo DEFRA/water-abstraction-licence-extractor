@@ -1,4 +1,5 @@
 using System.Text.Json;
+using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
@@ -81,16 +82,12 @@ public class PdfDataExtractorService(
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
-        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        string outputFolder,
-        bool useCache)
+        LookupConfiguration configuration,
+        List<string> previouslyParsedPaths)
     {
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
-            GetFileOutputFolder(outputFolder, pdfFilePath),
-            useCache);
+            GetFileOutputFolder(configuration.OutputFolder, pdfFilePath));
 
         var returnResult = new MatchesResult
         {
@@ -127,15 +124,15 @@ public class PdfDataExtractorService(
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
-            labelLookups,
+            configuration.Labels,
             notOcr,
             noOcrDataExtractorService.Name,
-            licenceMapping,
+            configuration.LicenceMapping,
             previouslyParsedPaths,
-            outputFolder,
-            useCache);
+            configuration.OutputFolder,
+            configuration.CacheFolder);
 
-        var unmatchedLabelLookups = labelLookups
+        var unmatchedLabelLookups = configuration.Labels
             .Where(labelLookup =>
                 labelGroupMatches.All(labelGroupResult =>
                     labelGroupResult.LabelGroupName != labelLookup.LabelGroupName))
@@ -199,10 +196,10 @@ public class PdfDataExtractorService(
                         unmatchedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        licenceMapping,
+                        configuration.LicenceMapping,
                         previouslyParsedPaths,
-                        outputFolder,
-                        useCache);
+                        configuration.OutputFolder,
+                        configuration.CacheFolder);
                     
                     if (ocrResult.Count == 0)
                     {
@@ -265,7 +262,7 @@ public class PdfDataExtractorService(
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
-        bool useCache)
+        string cacheFolder)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -298,7 +295,7 @@ public class PdfDataExtractorService(
                     licenceMapping,
                     previouslyParsedPaths,
                     outputFolder,
-                    useCache);
+                    cacheFolder);
 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -343,7 +340,7 @@ public class PdfDataExtractorService(
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
-        bool useCache)
+        string cacheFolder)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -380,11 +377,8 @@ public class PdfDataExtractorService(
         {
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                Configuration.LabelConfiguration.GetLabels(),
-                licenceMapping,
-                previouslyParsedPaths,
-                outputFolder,
-                useCache);
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
+                previouslyParsedPaths);
 
             var labelResult = new LabelGroupResult
             {
@@ -486,7 +480,7 @@ public class PdfDataExtractorService(
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
-        bool useCache)
+        string cacheFolder)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -509,7 +503,7 @@ public class PdfDataExtractorService(
                         licenceMapping,
                         previouslyParsedPaths,
                         outputFolder,
-                        useCache);
+                        cacheFolder);
                     
                     returnList.AddRange(linkedLicences);
                     continue;
@@ -595,7 +589,6 @@ public class PdfDataExtractorService(
                 nextLines = nextLines,
                 serviceName = serviceName,
                 siblingMatches = siblingMatches,
-                useCache = useCache,
                 outputFolder = outputFolder,
                 isSingleWord = matchedLabel.Format == SingleWord.Constant,
                 isUnitsLookup = matchedLabel.Format == Units.Constant,
@@ -753,7 +746,7 @@ public class PdfDataExtractorService(
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
-        bool useCache)
+        string cacheFolder)
     {
         var subResults = new List<LabelGroupResult>();
                     
@@ -776,8 +769,8 @@ public class PdfDataExtractorService(
                     licenceMapping,
                     previouslyParsedPaths,
                     outputFolder,
-                    useCache);
-                            
+                    cacheFolder);
+
                 if (subLabelGroupMatch.Count > 0)
                 {
                     subResults.AddRange(subLabelGroupMatch);

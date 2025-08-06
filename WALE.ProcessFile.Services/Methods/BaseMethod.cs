@@ -157,8 +157,8 @@ public static class BaseMethod
                 request.licenceMapping!,
                 request.previouslyParsedPaths!,
                 request.outputFolder!,
-                request.useCache);
-        
+                request.cacheFolder!);
+
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)
             {

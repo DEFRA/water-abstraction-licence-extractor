@@ -22,7 +22,6 @@ public class MultipleOcrPdfTests
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
     private static string PdfFolder => TestConfig.PdfFolder;
-    private const bool UseCache = true;
     
     [Fact]
     public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
@@ -33,11 +32,12 @@ public class MultipleOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -102,11 +102,12 @@ public class MultipleOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -167,11 +168,12 @@ public class MultipleOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);

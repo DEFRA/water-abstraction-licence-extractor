@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string?> SaveImageBytesAsync(int imageNumber, int pageNumber, string outputFolder)
+    public async Task<string?> SaveImageBytesAsync(int imageNumber, int pageNumber, string cacheFolder)
     {
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
@@ -17,7 +17,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             if (imageData.TryGetPng(out var bytes))
             {
                 await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, pngExtension),
+                    GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, pngExtension),
                     bytes);
                 
                 return pngExtension;
@@ -26,7 +26,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
                 await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, outputFolder, true, bmpExtension),
+                    GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, bmpExtension),
                     bytesMemory.ToArray());
                 
                 return bmpExtension;
@@ -39,7 +39,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             }
 
             await File.WriteAllBytesAsync(
-                GetImageFilepath(imageNumber, pageNumber, outputFolder, true, jpgExtension),
+                GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, jpgExtension),
                 bytesSpanAry);
             
             return jpgExtension;
@@ -58,9 +58,9 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         }
     }
 
-    public string GetImageFilepath(int imageNumber, int pageNumber, string outputFolder, bool createDirectory, string extension)
+    public string GetImageFilepath(int imageNumber, int pageNumber, string cacheFolder, bool createDirectory, string extension)
     {
-        var outputFolderFull = $"{outputFolder}/PdfPig/Images";
+        var outputFolderFull = $"{cacheFolder}/PdfPig/Images";
         
         if (createDirectory)
         {

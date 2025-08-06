@@ -25,6 +25,6 @@ public class FunctionInputModel
     public Dictionary<string, string>? licenceMapping { get; set; }
     public  List<string>? previouslyParsedPaths { get; set; }
     public  string? outputFolder { get; set; }
-    public bool useCache { get; set; }
+    public  string? cacheFolder { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
 }

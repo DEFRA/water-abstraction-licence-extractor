@@ -18,13 +18,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     public string Name => "PdfPig";
     private const int LineHeight = 11;
     
-    public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder, bool useCache)
+    public async Task<PdfDocument> GetPdfDocumentAsync(string pdfFilePath, string outputFolder)
     {
         var txtFolder = $"{outputFolder.Replace("//", "/")}/{Name}/Text";
         Directory.CreateDirectory(txtFolder); // This checks if exists, and creates the whole path too
 
         var metadataFilename = $"{txtFolder}/{PositionConstants.CacheMetadataFilename}";
-        var getFromCache = useCache && File.Exists(metadataFilename);
+        var getFromCache = File.Exists(metadataFilename);
         var pdfDocument = new PdfDocument(pdfFilePath, outputFolder, getFromCache);
         
         if (getFromCache)

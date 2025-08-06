@@ -11,7 +11,6 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
-const bool refreshCache = false;
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
@@ -27,6 +26,15 @@ var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
     ?? throw new NullReferenceException("FileMappingPath");
 var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
     ?? throw new NullReferenceException("OutputFolder");
+var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
+    ?? throw new NullReferenceException("CacheFolder");
+
+const bool refreshCache = false;
+
+if (refreshCache)
+{
+    // TODO clear out the Cache directory
+}
 
 var jsonOptions = new JsonSerializerOptions
 {
@@ -40,6 +48,7 @@ var jsonOptions = new JsonSerializerOptions
 };
 
 Directory.CreateDirectory(outputFolder);
+Directory.CreateDirectory(cacheFolder);
 
 var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
@@ -80,8 +89,8 @@ var fileMappingContents = File.Exists(fileMappingPath)
         .Split('\n')
     : [];
 
-Copy(reportTemplatePath, "Output");
-File.Move("Output/report-template.html", "Output/report.html", true);
+Copy(reportTemplatePath, outputFolder);
+File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
 
 var count = 0;
 foreach (var line in fileMappingContents)
@@ -107,7 +116,7 @@ try
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
-        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping, !refreshCache));
+        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping));
 
         if (processingTasks.Count == concurrentCount)
         {
@@ -339,8 +348,7 @@ return;
 async Task HandleFileAsync(
     string pdfFilePath,
     int fileNumber,
-    Dictionary<string, string> licenceMapping,
-    bool useCache)
+    Dictionary<string, string> licenceMapping)
 {
     var dtStart = DateTime.Now;
     var fileName = pdfFilePath.Split('/').Last();
@@ -358,11 +366,12 @@ async Task HandleFileAsync(
         
         var matches1 = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
-            LabelConfiguration.GetLabels(),
-            licenceMapping,
-            previouslyParsedPaths,
-            outputFolder,
-            useCache);
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                licenceMapping,
+                outputFolder,
+                cacheFolder),
+            previouslyParsedPaths);
 
         var matches = matches1.Matches!;
         

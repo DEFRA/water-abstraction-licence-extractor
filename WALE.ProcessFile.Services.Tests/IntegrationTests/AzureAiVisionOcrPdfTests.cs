@@ -22,7 +22,6 @@ public class AzureAiVisionOcrPdfTests
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
 
     private string PdfFolder => TestConfig.PdfFolder;
-    private const bool UseCache = true;
     
     [Fact]
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
@@ -33,11 +32,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -106,11 +106,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -178,11 +179,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -255,11 +257,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -321,11 +324,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -388,11 +392,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(6, resultList.Count);
@@ -454,11 +459,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(5, resultList.Count);
@@ -498,11 +504,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = (await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename])).Matches!;
         
         // Assert
         Assert.Equal(4, resultList.Count);
@@ -559,11 +566,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultList = await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache);
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                string.Empty,
+                string.Empty),
+            [PdfFolder + filename]);
 
         // Assert
         var allText = string.Join(' ', resultList.Pages[0].Providers[1].Text!);

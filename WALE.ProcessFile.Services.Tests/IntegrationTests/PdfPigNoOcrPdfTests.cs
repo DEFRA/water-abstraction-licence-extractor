@@ -2691,7 +2691,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(true, agreedSchemaLicence.AbstractionLimits.Individual.Single().ImplicitLimit);        
     }
     
-     [Fact]
+    [Fact]
     public async Task WhenABCD_DEF_ThenY()
     {
         // Arrange
@@ -2748,4 +2748,61 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("1 April", agreedSchemaLicence.DefinitionOfYear.StartDate);
         Assert.Equal("31 March", agreedSchemaLicence.DefinitionOfYear.EndDate);        
     }
+    
+    [Fact]
+    public async Task When_AbstractionLicence7310604_ThenY()
+    {
+        // Arrange
+        const string filename = "Abstraction Licence 7310604.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal("22632328-LVUNKNOWN", agreedSchemaLicence.Id);
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/26/32/328", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        //Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
+        //Assert.Equal(new DateTime(2038, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        //Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
+        Assert.Single(agreedSchemaLicence.Purposes);
+        
+        Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
+        Assert.Equal("All Year", agreedSchemaLicence.PeriodsOfAbstraction.Single().Description);
+        //Assert.Null(agreedSchemaLicence.PeriodsOfAbstraction.Single().StartDate);
+        Assert.Null(agreedSchemaLicence.PeriodsOfAbstraction.Single().EndDate);
+        //Assert.Equal(5.1, agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
+        //Assert.Null(agreedSchemaLicence.PeriodsOfAbstraction.Single().Inclusive);
+        
+        Assert.Equal(11, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(15, agreedSchemaLicence.AbstractionLimits.Individual[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Units);        
+        Assert.Equal(LimitPeriodType.PerHour, agreedSchemaLicence.AbstractionLimits.Individual[0].PeriodType);
+        Assert.Equal(360, agreedSchemaLicence.AbstractionLimits.Individual[1].Value);
+        Assert.Equal(43180, agreedSchemaLicence.AbstractionLimits.Individual[2].Value);
+        Assert.Equal(0.42, agreedSchemaLicence.AbstractionLimits.Individual[3].Value);        
+
+        /*Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal("SW0470051003LV2023020720380331-LL-1547013S020",
+            agreedSchemaLicence.AbstractionLimits.Aggregates[0].Id);
+        Assert.Equal("LV2023020720380331",
+            agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits);
+        Assert.Equal(148000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);*/
+        
+        Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Equal("1 January", agreedSchemaLicence.DefinitionOfYear.StartDate);
+        Assert.Equal("31 December", agreedSchemaLicence.DefinitionOfYear.EndDate);        
+    }    
 }

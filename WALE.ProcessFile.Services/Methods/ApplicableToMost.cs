@@ -49,10 +49,9 @@ public static class ApplicableToMost
                 line!.LineNumber,
                 line.PageNumber,
                 line.Words,
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded);
+                line.Bottom,
+                line.BottomRounded,
+                line.Left);
             
             if (request.isDateOrPurposeLookup)
             {

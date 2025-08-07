@@ -7,10 +7,9 @@ public class DocumentLine(
     int lineNumber,
     int pageNumber,
     List<DocumentLineWord> words,
-    double top,
-    double topRounded,
-    double left,
-    double leftRounded)
+    double bottom,
+    double bottomRounded,
+    double left)
 {
     public string Text { get; set; } = text;
 
@@ -38,13 +37,11 @@ public class DocumentLine(
         }
     }
 
-    public double Top { get; set; } = top;
+    public double Bottom { get; set; } = bottom;
     
-    public double TopRounded { get; set; } = topRounded;
+    public double BottomRounded { get; set; } = bottomRounded;
 
     public double Left { get; set; } = left;
-
-    public double LeftRounded { get; set; } = leftRounded;
     
     public DocumentLine Clone()
     {

@@ -84,15 +84,14 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                         word.Text,
                         word.Confidence * 100,
                         new DocumentLineWordCoordinates(
-                            word.BoundingBox[0] ?? PositionConstants.UnknownCoOrdinate,
-                            word.BoundingBox[1] ?? PositionConstants.UnknownCoOrdinate,
-                            word.BoundingBox[2] ?? PositionConstants.UnknownCoOrdinate,
-                            word.BoundingBox[3] ?? PositionConstants.UnknownCoOrdinate)))
+                            word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate,
+                            word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
+                            word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
+                            word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate)))
                     .ToList(),
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate))            
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate))            
             .ToList();
     }
 
@@ -101,7 +100,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo))
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo, line.Text))
             .ThenBy(line => line.BoundingBox[0]!.Value);
 
         // TODO add grouping and ordering

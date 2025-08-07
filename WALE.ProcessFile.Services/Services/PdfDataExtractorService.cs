@@ -921,10 +921,9 @@ public class PdfDataExtractorService(
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
-                    line.Top,
-                    line.TopRounded,
-                    line.Left,
-                    line.LeftRounded),
+                    line.Bottom,
+                    line.BottomRounded,
+                    line.Left),
                 GetPreviousLines(lines, index, label.PreviousLinesToFetch),
                 GetNextLines(lines, index, label.NextLinesToFetch)
             ))
@@ -947,10 +946,9 @@ public class PdfDataExtractorService(
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
-                    line.Top,
-                    line.TopRounded,
-                    line.Left,
-                    line.LeftRounded));
+                    line.Bottom,
+                    line.BottomRounded,
+                    line.Left));
 
             newIndex -= 1;
         }
@@ -974,10 +972,9 @@ public class PdfDataExtractorService(
                     line.LineNumber,
                     line.PageNumber,
                     line.Words.ToList(),
-                    line.Top,
-                    line.TopRounded,
-                    line.Left,
-                    line.LeftRounded));
+                    line.Bottom,
+                    line.BottomRounded,
+                    line.Left));
 
             newIndex += 1;
         }

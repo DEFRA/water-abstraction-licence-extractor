@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
@@ -48,20 +49,18 @@ public static class CompanyName
                 line!.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded) : line;
+                line.Bottom,
+                line.BottomRounded,
+                line.Left) : line;
 
             correctedLine = new DocumentLine(
                 FormattingHelper.TrimFormatting(correctedLine?.Text)!,
                 correctedLine!.LineNumber,
                 correctedLine.PageNumber,
                 correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
+                correctedLine.Bottom,
+                correctedLine.BottomRounded,
+                correctedLine.Left);
 
             if (DataHelper.IsCorruptedText(line?.Text))
             {
@@ -80,10 +79,9 @@ public static class CompanyName
                 correctedLine.LineNumber,
                 correctedLine.PageNumber,
                 correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
+                correctedLine.Bottom,
+                correctedLine.BottomRounded,
+                correctedLine.Left);
             
             // It's only the company suffix with nothing else
             if (CompanySuffixes.Any(companySuffix =>
@@ -141,10 +139,9 @@ public static class CompanyName
                     lineNumber,
                     pageNumber,
                     lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1)));
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate)));
         }
 
         if (returnList.Count > 0)

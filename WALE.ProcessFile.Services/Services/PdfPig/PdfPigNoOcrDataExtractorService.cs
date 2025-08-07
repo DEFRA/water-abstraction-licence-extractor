@@ -240,11 +240,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
-        IReadOnlyList<TextBlock> pageLines,
+        IReadOnlyList<TextBlock> pageLineBlocks,
         int pageNumber,
         int roundToHorizontal)
     {
-        if (pageLines.Count == 0)
+        if (pageLineBlocks.Count == 0)
         {
             return [];
         }
@@ -252,52 +252,69 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         const int blankLineGap = 25;
         
         var lineNumber = 0;
-        var previousLine = (TextLine?)null;
+        var previousWordLine = (Word?)null;
 
-        var orderedPageLines = pageLines
+        if (pageNumber == 4)
+        {
+        }
+
+        var orderedPageWords = pageLineBlocks
             .SelectMany(textBlock => textBlock.TextLines)
-            .OrderByDescending(line => LineSnappingHelper.RoundToNearestN(
-                line.BoundingBox.Centroid.Y,
-                LineHeight))
+            .SelectMany(textLine => textLine.Words)
+            .OrderByDescending(word => LineSnappingHelper.RoundToNearestN(
+                word.BoundingBox.Bottom,
+                LineHeight,
+                word.Text))
             .ThenBy(line => line.BoundingBox.Centroid.X)
             .ToList();
-
-        var marginTop = orderedPageLines[0].BoundingBox.Top;
-        const double normalFontSizeMax = 8.5;
         
-        foreach (var pageLine in orderedPageLines)
+        Word? previousWord = null;
+        var lineIndex = 0;
+        
+        if (pageNumber == 4)
         {
-            if (!(pageLine.BoundingBox.Height <= normalFontSizeMax))
-            {
-                continue;
-            }
-            
-            marginTop = pageLine.BoundingBox.Top;
-            break;
-        }
-
-        if (orderedPageLines.Any(pl => pl.Text.Contains("Date effective")))
-        {
-            
+            var x = string.Join(' ', orderedPageWords.Select(x => x.Text));
         }
         
-        return orderedPageLines
-            .GroupBy(line => (
-                LineSnappingHelper.SnapToPageRow(
-                    line.BoundingBox.Centroid.Y,
-                    LineHeight,
-                    marginTop),
-                LineSnappingHelper.RoundToNearestN(
-                    line.BoundingBox.Centroid.X,
-                    roundToHorizontal)))
-            .SelectMany(lines =>
+        return orderedPageWords
+            .GroupBy(word =>
             {
+                previousWord ??= word;
+
+                var xDiff = word.BoundingBox.Left - previousWord.BoundingBox.Right;
+                
+                var yDiff =
+                    LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                        previousWord.Text,
+                        previousWord.BoundingBox.Bottom)
+                    - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                        word.Text,
+                        word.BoundingBox.Bottom);
+                
+                if (yDiff >= LineHeight || xDiff >= 100)
+                {
+                    lineIndex += 1;
+                }
+
+                previousWord = word;
+                return lineIndex;
+            })
+            .SelectMany(lineWords =>
+            {
+                var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
+                var bottomRounded = lineWords.Key;
+                
+                if (pageNumber == 4)
+                {
+                    var x = string.Join(' ', orderedWords.Select(x => x.Text));
+                }
+                
                 var resultList = new List<DocumentLine>();
-                var firstLine = lines.First();
+                var firstLine = orderedWords.First();
 
                 var verticalDistanceFromPreviousLine =
-                    previousLine?.BoundingBox.Centroid.Y
-                    - firstLine.BoundingBox.Centroid.Y;         
+                    previousWordLine?.BoundingBox.Bottom
+                    - firstLine.BoundingBox.Bottom;
 
                 if (verticalDistanceFromPreviousLine >= blankLineGap)
                 {
@@ -307,35 +324,29 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                             lineNumber++,
                             pageNumber,
                             [],
-                            PositionConstants.UnknownCoOrdinate,
-                            PositionConstants.UnknownCoOrdinate,
-                            PositionConstants.UnknownCoOrdinate,
-                            PositionConstants.UnknownCoOrdinate));
+                            firstLine.BoundingBox.Bottom + blankLineGap,
+                            bottomRounded + blankLineGap,
+                            PositionConstants.UnknownCoordinate));
                 }
-                
-                previousLine = lines.First();
-                
-                var text = string.Join(' ', lines);
-                var words = lines.SelectMany(line => line.Words);
 
+                previousWordLine = firstLine;
+                var text = string.Join(' ', orderedWords);
+
+                // TODO something to split over 2 lines if there is a gap in between words (horizontal/Y)
+                
                 resultList.Add(new DocumentLine(
                     text,
                     lineNumber++,
                     pageNumber,
-                    words.Select(word => new DocumentLineWord(
-                            word.Text,
-                            null,
-                            new(
-                                word.BoundingBox.Top,
-                                word.BoundingBox.Right,
-                                word.BoundingBox.Bottom,
-                                word.BoundingBox.Left)
-                            ))
-                        .ToList(),
-                    firstLine.BoundingBox.Centroid.Y,
-                    lines.Key.Item1,
-                    firstLine.BoundingBox.Centroid.X,
-                    lines.Key.Item2));
+                    orderedWords.Select(word => new DocumentLineWord(
+                        word.Text,
+                        null,
+                        DocumentLineWordCoordinates.Convert(word.BoundingBox)
+                        ))
+                    .ToList(),
+                firstLine.BoundingBox.Bottom, 
+                bottomRounded,
+                    firstLine.BoundingBox.Left));
                 
                 return resultList;
             })
@@ -344,17 +355,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     private static async Task<IReadOnlyList<TextBlock>> GetPageLinesAsync(Page page)
     {
-        return await Task.Run(() =>
-        {
-            return RecursiveXYCut
-                .Instance
-                .GetBlocks(page.GetWords())
-                .OrderByDescending(block => LineSnappingHelper.RoundToNearestN(
-                    block.BoundingBox.Centroid.Y,
-                    LineHeight))
-                .ThenBy(block => block.BoundingBox.Centroid.X)
-                .ToList();
-        });
+        return await Task.Run(() => RecursiveXYCut
+            .Instance
+            .GetBlocks(page.GetWords())
+            .ToList());
     }
     
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)

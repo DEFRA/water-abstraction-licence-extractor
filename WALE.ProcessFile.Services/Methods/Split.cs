@@ -62,10 +62,9 @@ public static class Split
                         request.lineNumber,
                         request.line.PageNumber,
                         leftPartWords,
-                        request.line.Top,
-                        request.line.TopRounded,
-                        request.line.Left,
-                        request.line.LeftRounded)
+                        request.line.Bottom,
+                        request.line.BottomRounded,
+                        request.line.Left)
                 ];
                 
                 var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
@@ -86,10 +85,9 @@ public static class Split
                             request.lineNumber,
                             request.line.PageNumber,
                             rightPartWords,
-                            request.line.Top,
-                            request.line.TopRounded,
-                            request.line.Left,
-                            request.line.LeftRounded)
+                            request.line.Bottom,
+                            request.line.BottomRounded,
+                            request.line.Left)
                     ];
                 }
             }

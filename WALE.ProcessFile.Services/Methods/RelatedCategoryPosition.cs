@@ -69,10 +69,9 @@ public static class RelatedCategoryPosition
                 PositionConstants.UnknownLineNumber,
                 PositionConstants.UnknownPageNumber,
                 [],
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate)
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate)
         ];
             
         labelGroupResult.MatchedLabel = request.label;

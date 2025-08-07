@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using CsvHelper;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
@@ -145,10 +146,9 @@ public static partial class DataHelpers
                 line.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded);
+                line.Bottom,
+                line.BottomRounded,
+                line.Left);
 
             if (removesUsedLoop != null)
             {
@@ -424,10 +424,9 @@ public static partial class DataHelpers
                                 line.LineNumber,
                                 line.PageNumber,
                                 line.Words.ToList(),
-                                line.Top,
-                                line.TopRounded,
-                                line.Left,
-                                line.LeftRounded
+                                line.Bottom,
+                                line.BottomRounded,
+                                line.Left
                             ));
                                 
                             anyIsMatch = true;
@@ -520,10 +519,9 @@ public static partial class DataHelpers
                     lineNumber,
                     pageNumber,
                     lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1));
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate));
             }
         }
         
@@ -563,20 +561,18 @@ public static partial class DataHelpers
                 line!.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded) : line;
+                line.Bottom,
+                line.BottomRounded,
+                line.Left) : line;
 
             correctedLine = new DocumentLine(
                 TrimFormatting(correctedLine?.Text)!,
                 correctedLine!.LineNumber,
                 correctedLine.PageNumber,
                 correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
+                correctedLine.Bottom,
+                correctedLine.BottomRounded,
+                correctedLine.Left);
 
             if (IsCorruptedText(line?.Text))
             {
@@ -595,10 +591,9 @@ public static partial class DataHelpers
                 correctedLine.LineNumber,
                 correctedLine.PageNumber,
                 correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
+                correctedLine.Bottom,
+                correctedLine.BottomRounded,
+                correctedLine.Left);
             
             // It's only the company suffix with nothing else
             if (CompanySuffixes.Any(companySuffix =>
@@ -656,10 +651,9 @@ public static partial class DataHelpers
                     lineNumber,
                     pageNumber,
                     lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1)));
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate)));
         }
 
         if (returnList.Count > 0)
@@ -840,10 +834,9 @@ public static partial class DataHelpers
                 lineNumber,
                 pageNumber,
                 irrelevantWords,
-                -1,
-                -1,
-                -1,
-                -1));
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate));
         
         if (AnyIsNumber(list, out var numberLines))
         {
@@ -1195,10 +1188,9 @@ public static partial class DataHelpers
                 startLineNumber,
                 lineInput.PageNumber,
                 lineInput.Words,
-                lineInput.Top,
-                lineInput.TopRounded,
-                lineInput.Left,
-                lineInput.LeftRounded));
+                lineInput.Bottom,
+                lineInput.BottomRounded,
+                lineInput.Left));
         }
 
         var totalLines = nextLines.Count;
@@ -1224,10 +1216,9 @@ public static partial class DataHelpers
                 line.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded));
+                line.Bottom,
+                line.BottomRounded,
+                line.Left));
         }
 
         if (!foundEndTag && textEnd.Contains("[END_OF_BLOCK]"))

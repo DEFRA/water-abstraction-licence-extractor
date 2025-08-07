@@ -96,10 +96,9 @@ public static partial class LicenceNumber
                                 line.LineNumber,
                                 line.PageNumber,
                                 line.Words.ToList(),
-                                line.Top,
-                                line.TopRounded,
-                                line.Left,
-                                line.LeftRounded
+                                line.Bottom,
+                                line.BottomRounded,
+                                line.Left
                             ));
                                 
                             anyIsMatch = true;

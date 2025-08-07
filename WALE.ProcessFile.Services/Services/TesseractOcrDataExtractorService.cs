@@ -87,10 +87,9 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     lineNumber++,
                     pageNumber,
                     line.Words!,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate))
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate))
                 .ToList();
 
             // TODO add grouping and ordering

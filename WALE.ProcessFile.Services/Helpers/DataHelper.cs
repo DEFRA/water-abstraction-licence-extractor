@@ -33,10 +33,9 @@ public static partial class DataHelper
                 line.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded);
+                line.Bottom,
+                line.BottomRounded,
+                line.Left);
 
             if (removesUsedLoop != null)
             {

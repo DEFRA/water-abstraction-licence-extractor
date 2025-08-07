@@ -933,7 +933,7 @@ public static class LabelConfiguration
                                             "gallons"                                    
                                         }
                                     },
-                                    new()
+                                    /*new()
                                     {
                                         Name = "InTotalUnits",                                
                                         CategoryName = "PerUnits",                                
@@ -950,7 +950,7 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         }
-                                    },
+                                    },*/ // TODO add back in soon
                                     new()
                                     {
                                         Name = "PerHourValue",                                
@@ -1001,7 +1001,7 @@ public static class LabelConfiguration
                                         RelatedName = "PerSecondUnits",                                
                                         Format = "Number"
                                     },
-                                    new()
+                                    /*new()
                                     {
                                         Name = "InTotalValue",                                
                                         CategoryName = "PerValue",
@@ -1010,7 +1010,7 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "InTotalUnits",                                
                                         Format = "Number" // TODO add date extraction
-                                    },
+                                    },*/ // TODO add back in at some point
                                     new()
                                     {
                                         Name = "AYearDefinitionLine",

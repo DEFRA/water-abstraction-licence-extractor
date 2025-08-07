@@ -108,10 +108,9 @@ public static class TextToFindIsBetweenLabels
                 startLineNumber,
                 lineInput.PageNumber,
                 lineInput.Words,
-                lineInput.Top,
-                lineInput.TopRounded,
-                lineInput.Left,
-                lineInput.LeftRounded));
+                lineInput.Bottom,
+                lineInput.BottomRounded,
+                lineInput.Left));
         }
 
         var totalLines = nextLines.Count;
@@ -143,10 +142,9 @@ public static class TextToFindIsBetweenLabels
                 line.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded));
+                line.Bottom,
+                line.BottomRounded,
+                line.Left));
         }
 
         if (!foundEndTag && textEnd.Contains(PositionConstants.EndOfBlockMarker))

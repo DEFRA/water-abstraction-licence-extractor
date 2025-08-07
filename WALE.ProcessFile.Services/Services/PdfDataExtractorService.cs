@@ -542,7 +542,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Format == "CompanyName")
+                if (label.Name == "PeriodOfAbstractionSubSection")
                 {
                     
                 }

@@ -52,7 +52,13 @@ public static class TextToFindIsBetweenLabels
 
         if (request.label.IncludeLabelText && betweenText.Count >= 1)
         {
-            betweenText[0] = request.line!;
+            var labelText = request.label.Text!.FirstOrDefault()!;
+
+            if (labelText != "[START_OF_BLOCK]")
+            {
+                betweenText[0] = betweenText[0].Clone(
+                    request.label.Text!.FirstOrDefault()! + " " + betweenText[0].Text);   
+            }
         }
         
         betweenText = betweenText

@@ -65,8 +65,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Ingleby Greenhow Water Society Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
-        Assert.Equal(79, nameResult.LineNumber);
+        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(98, nameResult.LineNumber);
         
         // Note no other licence mentioned
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -74,8 +74,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(6, abstractionLimitsSection.Text?.Count);
-        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![4].Text);
-        Assert.Equal(212, abstractionLimitsSection.LineNumber);
+        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![3].Text);
+        Assert.Equal(166, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults!);
@@ -98,7 +98,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(214, perDay.LineNumber);
+        Assert.Equal(168, perDay.LineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -124,13 +124,13 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(134, licenceNumberResult.LineNumber);
+        Assert.Equal(90, licenceNumberResult.LineNumber);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
-        Assert.Equal("4.1 Private Water Supply  4.2 Agriculture (other than Spray Irrigation)",
+        Assert.Equal("4.1 Private Water Supply 4.2 Agriculture (other than Spray Irrigation) 5", // TODO 5 shouldnt be here
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -222,11 +222,11 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(7, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(159, abstractionLimitsResult.LineNumber);
+        Assert.Equal(153, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(159, abstractionLimitsResult.LineNumber);
+        Assert.Equal(153, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -243,7 +243,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(162, perDay.LineNumber);
+        Assert.Equal(156, perDay.LineNumber);
         Assert.Equal("205", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -374,12 +374,12 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(15, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(208, abstractionLimitsResult.LineNumber);
+        Assert.Equal(193, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
         
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(178, abstractionLimitsResult.LineNumber);
+        Assert.Equal(193, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
@@ -409,7 +409,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(180, perDay.LineNumber);
+        Assert.Equal(195, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -424,7 +424,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per year")));
 
         Assert.NotNull(perYear);
-        Assert.Equal(181, perYear.LineNumber);
+        Assert.Equal(196, perYear.LineNumber);
         Assert.Equal("40000", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -460,7 +460,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(188, perDay.LineNumber);
+        Assert.Equal(203, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -556,7 +556,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(11, abstractionLimitsSection.Text?.Count);
-        Assert.Equal(172, abstractionLimitsSection.LineNumber);
+        Assert.Equal(161, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -566,7 +566,7 @@ public class PdfPigNoOcrPdfTests
         
         var section1Sub1 = sectionPoint1.SubResults![0];
         Assert.Equal(8, section1Sub1.SubResults!.Count);
-        Assert.Equal(176, section1Sub1.LineNumber);
+        Assert.Equal(165, section1Sub1.LineNumber);
         
         var abstractionLimitsSection1 = section1Sub1.SubResults[0];
         Assert.Equal(4, section1Sub1.Text!.Count);
@@ -592,7 +592,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(174, perDay.LineNumber);
+        Assert.Equal(163, perDay.LineNumber);
         Assert.Equal("409.5", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -607,7 +607,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per year")));
 
         Assert.NotNull(perYear);
-        Assert.Equal(175, perYear.LineNumber);
+        Assert.Equal(164, perYear.LineNumber);
         Assert.Equal("20457", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -622,7 +622,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per second")));
 
         Assert.NotNull(perSecond);
-        Assert.Equal(176, perSecond.LineNumber);
+        Assert.Equal(165, perSecond.LineNumber);
         Assert.Equal("15.2", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = section1Sub1.SubResults
@@ -702,11 +702,11 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(56, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(49, abstractionLimitsSection.Text?.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(189, abstractionLimitsSection.LineNumber);
+        Assert.Equal(173, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults!);
@@ -907,7 +907,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("litres", perSecondUnits);
 
         var abstractionLimitsSection7 = abstractionLimitsSection.SubResults[6];
-        Assert.Equal(6, abstractionLimitsSection7.Text!.Count);
+        Assert.Equal(5, abstractionLimitsSection7.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection7.SubResults);
         Assert.Single(abstractionLimitsSection7.SubResults!);
@@ -940,7 +940,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("cubic metres", perYearUnits);                                
         
         var abstractionLimitsSection8 = abstractionLimitsSection.SubResults[7];
-        Assert.Equal(6, abstractionLimitsSection8.Text!.Count);
+        Assert.Equal(5, abstractionLimitsSection8.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection8.SubResults);
         Assert.Single(abstractionLimitsSection8.SubResults!);
@@ -1040,7 +1040,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("6/33/56/*G/0274/R02", linkedLicenceNumber);
         
         var abstractionLimitsSection10 = abstractionLimitsSection.SubResults[9];
-        Assert.Equal(12, abstractionLimitsSection10.Text!.Count);
+        Assert.Equal(10, abstractionLimitsSection10.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection10.SubResults);
         Assert.Single(abstractionLimitsSection10.SubResults!);
@@ -1140,20 +1140,17 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(periodsResult);
         var allPeriodsText = string.Join(' ', periodsResult.Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("5.1 For Purposes 4.1 and 4.2  From 1 November to 31 March inclusive  " +
-            "5.2 For Purpose 4.3  From 1 April to 31 October inclusive  6", allPeriodsText); // TODO shouldnt have this 6 at the end
+        Assert.Equal("5.1 For Purposes 4.1 and 4.2 From 1 November to 31 March inclusive " +
+            "5.2 For Purpose 4.3 From 1 April to 31 October inclusive  6", allPeriodsText); // TODO shouldnt have this 6 at the end
 
         Assert.NotNull(periodsResult.SubResults);
         Assert.Equal(2, periodsResult.SubResults.Count);
 
         var periodSubSection1 = periodsResult.SubResults[0];
-        Assert.Equal(2, periodSubSection1.SubResults.Count);
+        Assert.Equal(3, periodSubSection1.SubResults.Count);
         
-        Assert.Equal("5.1", periodSubSection1.Text![0].Text);
-        Assert.Equal(string.Empty, periodSubSection1.Text![1].Text);
-        Assert.Equal("For Purposes 4.1 and 4.2", periodSubSection1.Text![2].Text);
-        Assert.Equal(string.Empty, periodSubSection1.Text![3].Text);
-        Assert.Equal("From 1 November to 31 March inclusive", periodSubSection1.Text![4].Text);
+        Assert.Equal("5.1 For Purposes 4.1 and 4.2" , periodSubSection1.Text![0].Text);
+        Assert.Equal("From 1 November to 31 March inclusive", periodSubSection1.Text![1].Text);
 
         var periodSubSection1PurposesText = periodSubSection1.SubResults[1].Text!.Single().Text;
         Assert.Equal("4.1 and 4.2", periodSubSection1PurposesText);
@@ -1171,8 +1168,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, periodSubSection2.SubResults.Count);
         
         Assert.Equal("5.2 For Purpose 4.3", periodSubSection2.Text![0].Text);
-        Assert.Equal(string.Empty, periodSubSection2.Text![1].Text);
-        Assert.Equal("From 1 April to 31 October inclusive", periodSubSection2.Text![2].Text);        
+        Assert.Equal("From 1 April to 31 October inclusive", periodSubSection2.Text![1].Text);        
         
         var periodSubSection2PurposesText = periodSubSection2.SubResults[1].Text!.Single().Text;
         Assert.Equal("4.3", periodSubSection2PurposesText);
@@ -1608,7 +1604,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(100, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(77, abstractionLimitsSection.Text?.Count);
         Assert.Equal(8, abstractionLimitsSection.SubResults!.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults[0].Text!.Count);        
         
@@ -1626,7 +1622,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(265, perDay.LineNumber);
+        Assert.Equal(227, perDay.LineNumber);
         Assert.Equal("2500", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -1662,7 +1658,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(269, perDay.LineNumber);
+        Assert.Equal(231, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -1698,7 +1694,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(273, perDay.LineNumber);
+        Assert.Equal(235, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section3Sub1.SubResults
@@ -1734,7 +1730,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(269, perDay.LineNumber);
+        Assert.Equal(231, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text); // TODO there are 2 5000s and 1 5300
         
         perDayUnits = section4Sub1.SubResults
@@ -1789,7 +1785,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(37, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(34, abstractionLimitsSection.Text?.Count);
         
         Assert.Equal(4, abstractionLimitsSection.SubResults!.Count);
         var sectionPoint1 = abstractionLimitsSection.SubResults![0];
@@ -1929,7 +1925,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimits);
         Assert.False(abstractionLimits.IsOcr);
         Assert.Equal(11, abstractionLimits.Text?.Count);
-        Assert.Equal("The aggregate quality of water authorised to be abstracted under this licence", abstractionLimits.Text![3].Text);
+        Assert.Equal("The aggregate quality of water authorised to be abstracted under this licence", abstractionLimits.Text![4].Text);
         Assert.Single(abstractionLimits.SubResults!);
 
         var abstractionLimitsPoint = abstractionLimits.SubResults![0];
@@ -2197,7 +2193,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(9, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(7, abstractionLimitsSection.Text?.Count);
 
         Assert.Single(abstractionLimitsSection.SubResults!);
 
@@ -2469,7 +2465,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(37, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(39, abstractionLimitsSection.Text?.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults!.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults![0];
@@ -2523,7 +2519,8 @@ public class PdfPigNoOcrPdfTests
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
-        Assert.Equal("4.1 Public water supply", purposeResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("4.1", purposeResult.Text?[0].Text);
+        Assert.Equal("Public water supply", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
@@ -2541,7 +2538,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(18, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(25, abstractionLimitsSection.Text?.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults!.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults![0];
@@ -2769,29 +2766,29 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(29, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(144, abstractionLimitsResult.LineNumber);
+        Assert.Equal(22, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(168, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(3, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(144, abstractionLimitsResult.LineNumber);
+        Assert.Equal(168, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
-        Assert.Equal(5, abstractionLimitsSection1.Text!.Count);
+        Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
         Assert.NotNull(abstractionLimitsSection1.SubResults);
         Assert.Single(abstractionLimitsSection1.SubResults);
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
         Assert.Equal(8, section1Sub1.SubResults!.Count);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
-        Assert.Equal(5, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(4, abstractionLimitsSection2.Text!.Count);
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
         var section2Sub1 = abstractionLimitsSection2.SubResults![0];
         Assert.Equal(8, section2Sub1.SubResults!.Count);
         
         var abstractionLimitsSection3 = abstractionLimitsResult.SubResults[2];
-        Assert.Equal(7, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
+        Assert.Equal(9, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults![0];

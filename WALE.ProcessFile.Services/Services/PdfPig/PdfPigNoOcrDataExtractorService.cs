@@ -249,7 +249,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             return [];
         }
         
-        const int blankLineGap = 25;
+        const int blankLineGap = 37;
         
         var lineNumber = 0;
         var previousWordLine = (Word?)null;

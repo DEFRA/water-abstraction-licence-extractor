@@ -409,7 +409,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
-                MustNotContain = [
+                ResultMustNotContain = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -428,7 +428,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
-                MustNotContain = [
+                ResultMustNotContain = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -445,7 +445,7 @@ public static class LabelConfiguration
                 Format = "CompanyName",
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 10,
-                MustNotContain = [
+                ResultMustNotContain = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -933,7 +933,7 @@ public static class LabelConfiguration
                                             "gallons"                                    
                                         }
                                     },
-                                    /*new()
+                                    new()
                                     {
                                         Name = "InTotalUnits",                                
                                         CategoryName = "PerUnits",                                
@@ -949,8 +949,11 @@ public static class LabelConfiguration
                                             "thousand gallons",
                                             "million gallons",
                                             "gallons"                                    
-                                        }
-                                    },*/ // TODO add back in soon
+                                        },
+                                        LabelLineMustNotContain = [
+                                            "abstracted in total"
+                                        ]
+                                    },
                                     new()
                                     {
                                         Name = "PerHourValue",                                
@@ -959,7 +962,12 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerHourUnits",                                
-                                        Format = "Number"
+                                        Format = "Number",
+                                        Remove = [
+                                            new("6.1"),
+                                            new("6.2"),
+                                            new("6.3")
+                                        ]
                                     },
                                     new()
                                     {
@@ -969,7 +977,12 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerDayUnits",
-                                        Format = "Number"
+                                        Format = "Number",
+                                        Remove = [
+                                            new("6.1"),
+                                            new("6.2"),
+                                            new("6.3")
+                                        ]
                                     },
                                     new()
                                     {
@@ -979,7 +992,12 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerMonthUnits",                                
-                                        Format = "Number"
+                                        Format = "Number",
+                                        Remove = [
+                                            new("6.1"),
+                                            new("6.2"),
+                                            new("6.3")
+                                        ]
                                     },
                                     new()
                                     {
@@ -989,7 +1007,12 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerYearUnits",                                
-                                        Format = "Number"
+                                        Format = "Number",
+                                        Remove = [
+                                            new("6.1"),
+                                            new("6.2"),
+                                            new("6.3")
+                                        ]
                                     },
                                     new()
                                     {
@@ -999,9 +1022,14 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerSecondUnits",                                
-                                        Format = "Number"
+                                        Format = "Number",
+                                        Remove = [
+                                            new("6.1"),
+                                            new("6.2"),
+                                            new("6.3")
+                                        ]
                                     },
-                                    /*new()
+                                    new()
                                     {
                                         Name = "InTotalValue",                                
                                         CategoryName = "PerValue",
@@ -1009,8 +1037,11 @@ public static class LabelConfiguration
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "InTotalUnits",                                
-                                        Format = "Number" // TODO add date extraction
-                                    },*/ // TODO add back in at some point
+                                        Format = "Number", // TODO add date extraction,
+                                        LabelLineMustNotContain = [
+                                            "abstracted in total"
+                                        ]
+                                    },
                                     new()
                                     {
                                         Name = "AYearDefinitionLine",

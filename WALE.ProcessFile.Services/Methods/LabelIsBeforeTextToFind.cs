@@ -18,7 +18,7 @@ public static class LabelIsBeforeTextToFind
             LabelPosition.LabelIsBeforeTextToFind,
             request.label);
 
-        var modifiedNextLines = DataHelper.RemoveExcludes(
+        var modifiedNextLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.nextLines,
             out var removedLines);

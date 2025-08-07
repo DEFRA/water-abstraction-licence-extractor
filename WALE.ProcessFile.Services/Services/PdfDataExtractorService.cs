@@ -537,7 +537,12 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Name == "DateEffective")
+                if (LabelMatchingHelper.TextContainsForbiddenLine(line, label))
+                {
+                    continue;
+                }
+                
+                if (label.Name == "InTotalUnits")
                 {
                     
                 }

@@ -29,7 +29,7 @@ public static class CompanyName
         
         foreach (var line in lines)
         {
-            if (LabelMatchingHelper.ContainsForbiddenText(line, label))
+            if (LabelMatchingHelper.TextContainsForbiddenResult(line, label))
             {
                 continue;
             }
@@ -164,7 +164,7 @@ public static class CompanyName
             return false;
         }
         
-        if (LabelMatchingHelper.ContainsForbiddenText(line, label))
+        if (LabelMatchingHelper.TextContainsForbiddenResult(line, label))
         {
             return false;
         }

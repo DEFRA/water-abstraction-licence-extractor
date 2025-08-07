@@ -21,7 +21,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         var inputLines = request.previousLines!.ToList();
         inputLines.AddRange(request.nextLines!);
         
-        var modifiedLines = DataHelper.RemoveExcludes(
+        var modifiedLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             inputLines,
             out var removedLines);

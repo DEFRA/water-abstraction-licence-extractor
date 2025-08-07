@@ -1,4 +1,5 @@
 using System.Text.Json;
+using WALE.ProcessFile.Services.Constants;
 
 namespace WALE.ProcessFile.Services.Models;
 
@@ -11,6 +12,24 @@ public class DocumentLine(
     double bottomRounded,
     double left)
 {
+    public DocumentLine() : this(
+        string.Empty,
+        PositionConstants.UnknownLineNumber,
+        PositionConstants.UnknownPageNumber,
+        [],
+        PositionConstants.UnknownCoordinate,
+        PositionConstants.UnknownCoordinate,
+        PositionConstants.UnknownCoordinate) { }
+    
+    public DocumentLine(string text) : this(
+        text,
+        PositionConstants.UnknownLineNumber,
+        PositionConstants.UnknownPageNumber,
+        [],
+        PositionConstants.UnknownCoordinate,
+        PositionConstants.UnknownCoordinate,
+        PositionConstants.UnknownCoordinate) { }
+
     public string Text { get; set; } = text;
 
     public int LineNumber { get; set; } = lineNumber;

@@ -20,7 +20,18 @@ public static class RelatedCategoryPosition
             .OrderBy(match => match.LineNumber)
             .ToList();
 
+        var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            request.previousLines,
+            out _);
+        
+        var modifiedNextLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            request.nextLines,
+            out _);        
+        
         var matchedLabelLineNumber = PositionConstants.UnknownLineNumber;
+        var lineStartsWithLabel = false;
         
         foreach (var categoryItem in categoryItems)
         {
@@ -28,24 +39,50 @@ public static class RelatedCategoryPosition
             {
                 continue;
             }
-            
+
+            if (categoryItem.MatchedLabel?.Text != null)
+            {
+                foreach (var t in categoryItem.MatchedLabel.Text!)
+                {
+                    lineStartsWithLabel = request.line!.Text.StartsWith(t, StringComparison.OrdinalIgnoreCase);
+
+                    if (lineStartsWithLabel)
+                    {
+                        break;
+                    }
+                }
+            }
+
             matchedLabelLineNumber = categoryItem.LineNumber;
+
             break;
         }
 
-        var matches = new List<DocumentLine>();
-
-        foreach (var previousLine in request.previousLines!.OrderByDescending(line => line.LineNumber))
+        // If matching line starts with the label, prefer the line before
+        if (request.line!.LineNumber == matchedLabelLineNumber && lineStartsWithLabel)
         {
-            if (Number.AnyIsNumber([previousLine], out var numberLines))
+            matchedLabelLineNumber -= 1;
+        }
+        
+        var matches = new List<DocumentLine>();
+        List<DocumentLine> numberLines;
+        
+        foreach (var previousLine in modifiedPreviousLines.OrderByDescending(line => line.LineNumber))
+        {
+            if (Number.AnyIsNumber([previousLine], out numberLines))
             {
                 matches.Add(numberLines.First());
             }
         }
         
-        foreach (var nextLine in request.nextLines!.OrderBy(line => line.LineNumber))
+        if (Number.AnyIsNumber([request.line], out numberLines))
         {
-            if (Number.AnyIsNumber([nextLine], out var numberLines))
+            matches.Add(numberLines.First());
+        }
+        
+        foreach (var nextLine in modifiedNextLines.OrderBy(line => line.LineNumber))
+        {
+            if (Number.AnyIsNumber([nextLine], out numberLines))
             {
                 matches.Add(numberLines.First());
             }

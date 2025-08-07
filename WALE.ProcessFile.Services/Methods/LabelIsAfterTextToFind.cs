@@ -13,12 +13,17 @@ public static class LabelIsAfterTextToFind
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
+        /*if (LabelMatchingHelper.ContainsForbiddenText(request.line, request.label))
+        {
+            return ProcessSubLabelsAsync(request, []);
+        }*/
+        
         var labelGroupResult = request.labelGroupResult.Clone(
             MatchType.NearPreviousLineIsCompany,
             LabelPosition.LabelIsAfterTextToFind,
             request.label);
         
-        var modifiedPreviousLines = DataHelper.RemoveExcludes(
+        var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
             out var removedLines);

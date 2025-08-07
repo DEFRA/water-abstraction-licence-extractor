@@ -16,7 +16,8 @@ public class LabelToMatch
     }
     
     public bool MatchAllText { get; init; }
-    public IReadOnlyList<string>? MustNotContain { get; set; }
+    public IReadOnlyList<string>? ResultMustNotContain { get; init; }
+    public IReadOnlyList<string>? LabelLineMustNotContain { get; init; }    
     public IReadOnlyList<TextToMatch>? Remove { get; set; }
     public IReadOnlyList<string>? TextEnd { get; set; }
     public IReadOnlyList<string>? MustContain { get; set; }

@@ -59,7 +59,7 @@ public static class TextToFindIsBetweenLabels
             .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text))
             .ToList();
         
-        betweenText = DataHelper.RemoveExcludes(request.label, betweenText, out var removedLines);
+        betweenText = DataHelper.RemoveExcludesAndNotContains(request.label, betweenText, out var removedLines);
         
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchType = MatchType.Between;

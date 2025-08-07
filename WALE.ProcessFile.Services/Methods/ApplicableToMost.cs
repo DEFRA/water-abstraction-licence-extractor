@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
@@ -16,7 +17,9 @@ public static class ApplicableToMost
         
         var returnListTop = new List<LabelGroupResult>();
         
-        if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels or LabelPosition.Split)
+        if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
+            or LabelPosition.Split
+            or LabelPosition.RelatedCategoryPosition)
         {
             return returnListTop;
         }
@@ -30,6 +33,13 @@ public static class ApplicableToMost
         
         foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
         {
+            /*if (LabelMatchingHelper.TextContainsForbiddenResult(
+                new DocumentLine(request.line!.Text),
+                request.label!))
+            {
+                continue;
+            }*/
+            
             var labelGroupResult = request.labelGroupResult.Clone(matchedLabel);
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;

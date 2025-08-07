@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
@@ -9,33 +10,40 @@ public static partial class DataHelper
 {
     public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
 
-    public static List<DocumentLine> RemoveExcludes(
+    public static List<DocumentLine> RemoveExcludesAndNotContains(
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
-        var returnList = betweenText != null ? [..betweenText] : new List<DocumentLine>();
+        var inputList = betweenText != null ? [..betweenText] : new List<DocumentLine>();
         
-        if (label.Remove?.Any() != true || betweenText == null)
+        if ((label.Remove?.Any() != true && label.ResultMustNotContain?.Any() != true) || betweenText == null)
         {
-            return FormattingHelper.RemoveMultipleBlankLines(returnList);
+            return FormattingHelper.RemoveMultipleBlankLines(inputList);
         }
 
+        var returnList = new List<DocumentLine>();
         var removesUsedList = new List<string>();
         
-        for (var idx = 0; idx < returnList.Count; idx++)
+        for (var idx = 0; idx < inputList.Count; idx++)
         {
-            var line = returnList[idx];
+            var line = inputList[idx];
+            var bt = betweenText[idx].Text;
             
-            returnList[idx] = new DocumentLine(
-                RemoveExcludes(label, betweenText[idx].Text, out var removesUsedLoop),
+            if (LabelMatchingHelper.TextContainsForbiddenResult(line, label))
+            {
+                continue;
+            }
+            
+            returnList.Add(new DocumentLine(
+                RemoveExcludes(label, bt, out var removesUsedLoop),
                 line.LineNumber,
                 line.PageNumber,
                 line.Words.ToList(),
                 line.Bottom,
                 line.BottomRounded,
-                line.Left);
+                line.Left));
 
             if (removesUsedLoop != null)
             {
@@ -54,56 +62,60 @@ public static partial class DataHelper
     {
         removesUsed = null;
         
-        if (label.Remove?.Any() != true || string.IsNullOrEmpty(betweenText))
+        if ((label.Remove?.Any() != true && label.ResultMustNotContain?.Any() != true) || string.IsNullOrEmpty(betweenText))
         {
             return betweenText;
         }
-
+        
         var returnStr = betweenText;
         var removesUsedList = new List<string>();
-        
-        foreach (var textToMatch in label.Remove)
+
+        if (label.Remove != null)
         {
-            if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
+            foreach (var textToMatch in label.Remove)
             {
-                var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
-
-                if (Regex.IsMatch(returnStr, pattern))
+                if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
                 {
-                    returnStr = Regex.Replace(
-                        returnStr,
-                        pattern,
-                        string.Empty);
-                    
-                    removesUsedList.Add(textToMatch.Text);
+                    var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
+
+                    if (Regex.IsMatch(returnStr, pattern))
+                    {
+                        returnStr = Regex.Replace(
+                            returnStr,
+                            pattern,
+                            string.Empty);
+
+                        removesUsedList.Add(textToMatch.Text);
+                    }
+
+                    continue;
                 }
-                
-                continue;
-            }
 
-            if (!returnStr.Contains(textToMatch.Text))
-            {
-                continue;
-            }
+                if (!returnStr.Contains(textToMatch.Text))
+                {
+                    continue;
+                }
 
-            if (textToMatch.LineMustStartWith && !returnStr.StartsWith(textToMatch.Text))
-            {
-                continue;
-            }
+                if (textToMatch.LineMustStartWith && !returnStr.StartsWith(textToMatch.Text))
+                {
+                    continue;
+                }
 
-            if (textToMatch.RemoveWholeLine)
-            {
-                removesUsedList.Add(returnStr);
-                returnStr = string.Empty;
-                
-                continue;
-            }
-            returnStr = returnStr.Replace(
-                textToMatch.Text,
-                string.Empty,
-                StringComparison.InvariantCultureIgnoreCase);
+                if (textToMatch.RemoveWholeLine)
+                {
+                    removesUsedList.Add(returnStr);
+                    returnStr = string.Empty;
 
-            removesUsedList.Add(textToMatch.Text);
+                    continue;
+                }
+
+                returnStr = returnStr.Replace(
+                    textToMatch.Text,
+                    string.Empty,
+                    StringComparison.InvariantCultureIgnoreCase);
+
+                removesUsedList.Add(textToMatch.Text);
+            }
         }
 
         removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;

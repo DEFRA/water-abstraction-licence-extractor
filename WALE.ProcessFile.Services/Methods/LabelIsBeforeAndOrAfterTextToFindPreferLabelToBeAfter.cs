@@ -13,6 +13,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
+        /*if (LabelMatchingHelper.ContainsForbiddenText(request.line, request.label))
+        {
+            return ProcessSubLabelsAsync(request, []);
+        }*/
+        
         var labelGroupResult = request.labelGroupResult.Clone(
             MatchType.NearPreviousLineIsCompany,
             LabelPosition.LabelIsAfterTextToFind,
@@ -22,7 +27,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         inputLines.Reverse();
         inputLines.AddRange(request.nextLines!);
         
-        var modifiedLines = DataHelper.RemoveExcludes(
+        var modifiedLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             inputLines,
             out var removedLines);

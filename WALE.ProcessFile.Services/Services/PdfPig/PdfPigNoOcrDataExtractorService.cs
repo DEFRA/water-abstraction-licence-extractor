@@ -290,8 +290,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
                         word.Text,
                         word.BoundingBox.Bottom);
+
+                if (word.Text.Contains("Errol"))
+                {
+                    
+                }
                 
-                if (yDiff >= LineHeight || xDiff >= 100)
+                if (yDiff >= LineHeight || xDiff >= 25)
                 {
                     lineIndex += 1;
                 }

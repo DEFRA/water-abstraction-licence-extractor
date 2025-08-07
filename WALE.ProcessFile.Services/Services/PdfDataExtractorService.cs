@@ -542,7 +542,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Name == "InTotalUnits")
+                if (label.Format == "CompanyName")
                 {
                     
                 }

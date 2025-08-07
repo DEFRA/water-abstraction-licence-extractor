@@ -16,7 +16,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int LineHeight = 11;
+    private const int LineHeight = 9;
     
     public async Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFilePath,

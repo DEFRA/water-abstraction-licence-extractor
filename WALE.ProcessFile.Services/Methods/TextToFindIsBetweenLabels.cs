@@ -14,7 +14,7 @@ public static class TextToFindIsBetweenLabels
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult.Clone();
+        var labelGroupResult = request.labelGroupResult;//.Clone();
         
         var linesToUse = new List<DocumentLine>();
 

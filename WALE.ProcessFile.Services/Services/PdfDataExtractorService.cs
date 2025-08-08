@@ -855,14 +855,6 @@ public class PdfDataExtractorService(
         {
             return [];
         }
-
-        /*if (labelTextPositionIndex == 0
-            && label.Text?.FirstOrDefault() == line.Text
-            && label.Position == LabelPosition.ApplicableToMost)
-        {
-            returnItems.Add((line.Text, label.Clone()));
-            return returnItems;
-        }*/
         
         var textBeforeLabel = FormattingHelper.TrimFormatting(line.Text[..labelTextPositionIndex]);
         var textAfterLabel = FormattingHelper.TrimFormatting(line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..]);
@@ -877,6 +869,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
+            
             returnLabel.Position = label.Position is
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
@@ -897,6 +890,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
+            
             returnLabel.Position = label.Position is
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter

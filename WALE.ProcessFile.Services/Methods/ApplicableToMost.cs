@@ -39,8 +39,8 @@ public static class ApplicableToMost
             {
                 continue;
             }*/
-            
-            var labelGroupResult = request.labelGroupResult.Clone(matchedLabel);
+
+            var labelGroupResult = request.labelGroupResult;//Clone(matchedLabel);
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;
             

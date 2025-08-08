@@ -13,7 +13,7 @@ public static class RelatedCategoryPosition
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult.Clone();
+        var labelGroupResult = request.labelGroupResult;//.Clone();
                     
         var categoryItems = request.siblingMatches!
             .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)

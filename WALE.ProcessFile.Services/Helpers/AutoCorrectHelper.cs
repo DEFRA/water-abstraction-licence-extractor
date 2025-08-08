@@ -7,7 +7,8 @@ public static class AutoCorrectHelper
 {
     public static string? AutoCorrectText(DocumentLine? text, bool removeFirstWordIfLowercase)
     {
-        if (CompanyName.StartsWithCompanyOrPersonalPrefix(text?.Text))
+        if (CompanyName.StartsWithCompanyOrPersonalPrefix(text?.Text)
+            || CompanyName.CompanyWords.Any(companyWord => text?.Text.StartsWith(companyWord) ?? false))
         {
             return text?.Text;
         }

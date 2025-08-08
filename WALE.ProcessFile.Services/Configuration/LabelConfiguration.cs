@@ -441,10 +441,10 @@ public static class LabelConfiguration
                     "(the Licence Holder\")",
                     "\"the Licence Holder\""
                 ],
-                Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",
-                PreviousLinesToFetch = 3,
-                NextLinesToFetch = 10,
+                PreviousLinesToFetch = 2,
+                NextLinesToFetch = 4,
                 ResultMustNotContain = [
                     "source of supply",
                     "abstract water"

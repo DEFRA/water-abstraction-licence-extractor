@@ -8,6 +8,7 @@ public enum LabelPosition
     LabelIsAfterTextToFind,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+    LabelIsInMiddleOfTextToFind,
     ContractIsSuccession,
     TextToFindIsBetweenLabels,
     RelatedCategoryPosition,

@@ -10,6 +10,8 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
+    public static List<string> CompanyWords => ["trading as"];
+
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
@@ -45,7 +47,7 @@ public static class CompanyName
             }
             
             var correctedLine = isOcr
-                ? line!.Clone(AutoCorrectHelper.AutoCorrectText(line!, true)!)
+                ? line!.Clone(AutoCorrectHelper.AutoCorrectText(line, true)!)
                 : line;
 
             correctedLine = correctedLine!.Clone(FormattingHelper.TrimFormatting(correctedLine.Text)!);
@@ -241,17 +243,12 @@ public static class CompanyName
         return word.Length == 2 && word.All(char.IsUpper);
     }
     
-    private static bool ContainsCompanyOrPersonalWord(string? text)
+    public static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
         {
             return false;
         }
-    
-        var companyWords = new List<string>
-        {
-            "trading as"
-        };
 
         var textParts = text.Split(' ');
         var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
@@ -265,12 +262,12 @@ public static class CompanyName
             }
         }
         
-        return companyWords
+        return CompanyWords
             .Any(companyWord => text.Contains(companyWord,
                 StringComparison.InvariantCultureIgnoreCase));
     }
     
-    private static bool ContainsCompanyOrPersonalSuffixDelimitter(
+    public static bool ContainsCompanyOrPersonalSuffixDelimitter(
         string? text,
         out string? delimiter)
     {

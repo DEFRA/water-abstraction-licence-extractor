@@ -687,6 +687,7 @@ public class PdfDataExtractorService(
             (LabelPosition.TextToFindIsBetweenLabels, TextToFindIsBetweenLabels.FunctionAsync, 0),
             (LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore, LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore.FunctionAsync, -1),
             (LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter, LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter.FunctionAsync, -1),
+            (LabelPosition.LabelIsInMiddleOfTextToFind, LabelIsInMiddleOfTextToFind.FunctionAsync, -1),
             (LabelPosition.LabelIsBeforeTextToFind, LabelIsBeforeTextToFind.FunctionAsync, 0),
             (LabelPosition.LabelIsAfterTextToFind, LabelIsAfterTextToFind.FunctionAsync, 1)
         };
@@ -721,6 +722,8 @@ public class PdfDataExtractorService(
                         when expression.Position is LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                             or LabelPosition.LabelIsBeforeTextToFind
                             or LabelPosition.LabelIsAfterTextToFind:
+                    case LabelPosition.LabelIsInMiddleOfTextToFind
+                        when expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind:
                         return true;
                     default:
                         return expression.Position == LabelPosition.ApplicableToMost
@@ -747,6 +750,8 @@ public class PdfDataExtractorService(
                         expression.Position is LabelPosition.LabelIsAfterTextToFind
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore ? -0.25 : 1,
+                    LabelPosition.LabelIsInMiddleOfTextToFind =>
+                        expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind ? -0.25 : 1,
                     LabelPosition.LabelIsBeforeTextToFind or LabelPosition.ContractIsSuccession
                         => expression.Position is LabelPosition.LabelIsBeforeTextToFind ? 0 : 1,
                     _ => expression.Position == LabelPosition.LabelIsAfterTextToFind ? 0 : 1
@@ -863,6 +868,7 @@ public class PdfDataExtractorService(
             && label.Position is LabelPosition.LabelIsBeforeTextToFind
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                or LabelPosition.LabelIsInMiddleOfTextToFind
                 or LabelPosition.TextToFindIsBetweenLabels
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
@@ -884,7 +890,8 @@ public class PdfDataExtractorService(
             && label.Position is LabelPosition.LabelIsAfterTextToFind
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.TextToFindIsBetweenLabels                
+                or LabelPosition.LabelIsInMiddleOfTextToFind
+                or LabelPosition.TextToFindIsBetweenLabels
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
                 or LabelPosition.Split)

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using CsvHelper;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
 
@@ -571,7 +572,7 @@ public static partial class DataHelpers
             returnLines.Add(correctedLine.Text);
             matched = true;
             
-            if (ContainsCompanyOrPersonalSuffixDelimitter(correctedLine.Text, out _))
+            if (CompanyName.ContainsCompanyOrPersonalSuffixDelimitter(correctedLine.Text, out _))
             {
                 break;
             }
@@ -593,7 +594,7 @@ public static partial class DataHelpers
 
             foreach (var returnLine in returnLines)
             {
-                if (ContainsCompanyOrPersonalSuffixDelimitter(returnLine, out _))
+                if (CompanyName.ContainsCompanyOrPersonalSuffixDelimitter(returnLine, out _))
                 {
                     newReturnLines.Add(returnLine);
                     break;
@@ -849,12 +850,12 @@ public static partial class DataHelpers
             return true;
         }
         
-        var containsDelimitter = ContainsCompanyOrPersonalSuffixDelimitter(
+        var containsDelimitter = CompanyName.ContainsCompanyOrPersonalSuffixDelimitter(
             text.Text,
             out var delimiter);
         
         if (StartsWithCompanyOrPersonalPrefix(text.Text)
-            || ContainsCompanyOrPersonalWord(text.Text)
+            || CompanyName.ContainsCompanyOrPersonalWord(text.Text)
             || containsDelimitter)
         {
             if (EndsWithNoneCommpanyOrPersonalSuffix(text.Text))
@@ -937,65 +938,6 @@ public static partial class DataHelpers
                 StringComparison.InvariantCultureIgnoreCase));
     }    
 
-    private static bool ContainsCompanyOrPersonalWord(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-    
-        var companyWords = new List<string>
-        {
-            "trading as"
-        };
-
-        var textParts = text.Split(' ');
-        var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
-        
-        foreach (var name in FirstNamesCsv)
-        {
-            if (text.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase)
-                || secondWordString?.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase) == true)
-            {
-                return true;
-            }
-        }
-        
-        return companyWords
-            .Any(companyWord => text.Contains(companyWord,
-                StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    private static bool ContainsCompanyOrPersonalSuffixDelimitter(
-        string? text,
-        out string? delimiter)
-    {
-        delimiter = null;
-        
-        if (text == null)
-        {
-            return false;
-        }
-
-        string? delimiterLoop = null;
-        var found = CompanySuffixes
-            .Any(companySuffix =>
-            {
-                var contains = text.Contains(companySuffix,
-                    StringComparison.InvariantCultureIgnoreCase);
-
-                if (contains)
-                {
-                    delimiterLoop = companySuffix;
-                }
-
-                return contains;
-            });
-
-        delimiter = delimiterLoop;
-        return found;
-    }
-    
     public static void RemoveRemoves(
         LabelGroupResult labelGroupResult,
         IReadOnlyList<string>? removedLines)

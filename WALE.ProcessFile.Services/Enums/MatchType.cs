@@ -11,7 +11,8 @@ public enum MatchType
     SameLineSingleWord = 9903,
     
     NearPreviousLineIsCompany = 8005,
-    NearNextLineIsCompany = 9901,
+    NearNextLineIsMatch = 9901,
+    MatchIsEitherSideOfLabel = 9901,
     
     Between = 9503
 }

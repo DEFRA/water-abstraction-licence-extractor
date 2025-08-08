@@ -14,7 +14,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult.Clone(
-            MatchType.NearNextLineIsCompany,
+            MatchType.NearNextLineIsMatch,
             LabelPosition.LabelIsBeforeTextToFind,
             request.label);
         

@@ -123,7 +123,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -190,7 +190,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("SHERBORNE SCHOOL", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -322,8 +322,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -446,8 +446,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr T M C Davey", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -486,7 +486,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("A A C McArthur", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["Licensee"], nameResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         /*var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         

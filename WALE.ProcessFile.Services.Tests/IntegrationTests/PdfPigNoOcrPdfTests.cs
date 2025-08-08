@@ -64,8 +64,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Ingleby Greenhow Water Society Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         Assert.Equal(59, nameResult.LineNumber);
         
         // Note no other licence mentioned
@@ -208,8 +208,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Lady Isabelle Jacqueline Laline Hay, Countess of Erroll, Sir Thomas Minshull Stockdale, 2nd Baronet Stockdale, Robert Elkington",
             string.Join(", ", nameResult.Text!.Select(x => x.Text)));
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position); // TODO should eventually be LabelIsInMiddleOfTextToFind
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position); // TODO should eventually be LabelIsInMiddleOfTextToFind
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -221,12 +221,12 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(153, abstractionLimitsResult.LineNumber);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(110, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(153, abstractionLimitsResult.LineNumber);
+        Assert.Equal(110, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -243,7 +243,7 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel.Text!.Any(text => text.Contains("per day")));
 
         Assert.NotNull(perDay);
-        Assert.Equal(156, perDay.LineNumber);
+        Assert.Equal(112, perDay.LineNumber);
         Assert.Equal("205", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -360,8 +360,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("T Wilson & Sons (Farmers)", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -542,8 +542,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("The Bourne United Charities", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -694,8 +694,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("E.W.Porter and Son", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 
         var abstractionLimitsSection = resultList.FirstOrDefault(result =>
             result.LabelGroupName == "AbstractionLimits");
@@ -1185,8 +1185,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Waldersey Farms Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -1591,8 +1591,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Environment Agency", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -1772,8 +1772,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Armstrongs Aggregates Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -1817,8 +1817,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Rolawn Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -1917,8 +1917,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimits = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -1983,8 +1983,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = linkedLicence1!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -2000,8 +2000,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         licenceNumberResult = linkedLicence2!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -2121,8 +2121,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Philip John Hobbs", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2186,8 +2186,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Chillingham Water Users", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2252,8 +2252,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Christopher Marler", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2315,17 +2315,17 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.False(nameResult.IsOcr);
-        Assert.Equal("Clemency Ives, Stephanie Williams, Octavia Williams",
+        Assert.Equal("Clemency Ives, Stephanie Williams, Octavia Williams, trading as Brickworth Park Farms",
             string.Join(", ", nameResult.Text!.Select(x => x.Text)));
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel!.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(31, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(24, abstractionLimitsSection.Text?.Count);
 
         Assert.Equal(3, abstractionLimitsSection.SubResults!.Count);
 
@@ -2392,8 +2392,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Canterbury Golf Club Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2458,8 +2458,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("D.& M.Gedney Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2530,8 +2530,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Thames Water Utilities Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2621,8 +2621,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Brett Aggregates Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         

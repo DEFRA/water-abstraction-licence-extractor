@@ -6,30 +6,33 @@ using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
-public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+public static class LabelIsInMiddleOfTextToFind
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
-        if (request.label.Format == "CompanyName")
-        {
-            
-        }
-        
-        /*if (LabelMatchingHelper.ContainsForbiddenText(request.line, request.label))
-        {
-            return ProcessSubLabelsAsync(request, []);
-        }*/
         
         var labelGroupResult = request.labelGroupResult.Clone(
-            MatchType.NearPreviousLineIsCompany,
-            LabelPosition.LabelIsAfterTextToFind,
+            MatchType.MatchIsEitherSideOfLabel,
+            LabelPosition.LabelIsInMiddleOfTextToFind,
             request.label);
         
         var inputLines = request.previousLines!.ToList();
         inputLines.Reverse();
+        
+        if (request.textBeforeAndAfterLabel!.Count >= 1)
+        {
+            var beforeOnSameLine = request.textBeforeAndAfterLabel![0];
+            inputLines.Add(request.line!.Clone(beforeOnSameLine.Text!));
+
+            if (request.textBeforeAndAfterLabel.Count >= 2)
+            {
+                var afterOnSameLine = request.textBeforeAndAfterLabel![1];
+                inputLines.Add(request.line!.Clone(afterOnSameLine.Text!));
+            }
+        }
+
         inputLines.AddRange(request.nextLines!);
         
         var modifiedLines = DataHelper.RemoveExcludesAndNotContains(

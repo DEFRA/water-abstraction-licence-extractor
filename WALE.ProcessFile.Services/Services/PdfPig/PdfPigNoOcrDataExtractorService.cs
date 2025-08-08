@@ -294,15 +294,18 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
                 if (verticalDistanceFromPreviousLine >= blankLineGap)
                 {
-                    resultList.Add(
-                        new DocumentLine(
-                            string.Empty,
-                            lineNumber++,
-                            pageNumber,
-                            [],
-                            firstLine.BoundingBox.Bottom + blankLineGap,
-                            bottomRounded + blankLineGap,
-                            PositionConstants.UnknownCoordinate));
+                    var documentLineToAdd = new DocumentLine(
+                        lineNumber++,
+                        pageNumber,
+                        [],
+                        firstLine.BoundingBox.Bottom + blankLineGap,
+                        bottomRounded + blankLineGap,
+                        PositionConstants.UnknownCoordinate)
+                    {
+                        Text = string.Empty
+                    };
+
+                    resultList.Add(documentLineToAdd);
                 }
 
                 previousWordLine = firstLine;
@@ -334,16 +337,19 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         DocumentLineWordCoordinates.Convert(word.BoundingBox)
                     ));
                 }
-                
-                resultList.Add(new DocumentLine(
-                    text,
+
+                var documentLine = new DocumentLine(
                     lineNumber++,
                     pageNumber,
                     columns,
-                    firstLine.BoundingBox.Bottom, 
+                    firstLine.BoundingBox.Bottom,
                     bottomRounded,
-                    firstLine.BoundingBox.Left));
-                
+                    firstLine.BoundingBox.Left)
+                {
+                    Text = text
+                };
+
+                resultList.Add(documentLine);
                 return resultList;
             })
         .ToList();

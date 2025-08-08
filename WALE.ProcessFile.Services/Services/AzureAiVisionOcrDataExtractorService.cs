@@ -75,23 +75,29 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Select(line => (FormattingHelper.Standardise(line.Text), line.Words))
-            .Select(line => new DocumentLine(
-                line.Item1,
-                lineNumber++,
-                pageNumber,
-                [new(line.Words.Select(word =>
-                    new DocumentLineWord(
-                        word.Text,
-                        word.Confidence * 100,
-                        new DocumentLineWordCoordinates(
-                            word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate,
-                            word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
-                            word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
-                            word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate)))
-                    .ToList())],
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate))
+            .Select(line =>
+            {
+                var documentLine = new DocumentLine(
+                    lineNumber++,
+                    pageNumber,
+                    [
+                        new(line.Item1, line.Words.Select(word =>
+                                new DocumentLineWord(
+                                    word.Text,
+                                    word.Confidence * 100,
+                                    new DocumentLineWordCoordinates(
+                                        word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate,
+                                        word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
+                                        word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
+                                        word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate)))
+                            .ToList())
+                    ],
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate);
+
+                return documentLine;
+            })
             .ToList();
     }
 

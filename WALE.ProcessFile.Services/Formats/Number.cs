@@ -23,8 +23,6 @@ public static class Number
         
         var lineNumber = firstLine?.LineNumber ?? PositionConstants.UnknownLineNumber;
         var pageNumber = firstLine?.PageNumber ?? PositionConstants.UnknownPageNumber;
-
-        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in linesList)
         {
@@ -51,7 +49,6 @@ public static class Number
                 {
                     lineNumber = line.LineNumber;
                     pageNumber = line.PageNumber;
-                    lineColumns = line.Columns;
                 }
 
                 matched = true;
@@ -65,14 +62,23 @@ public static class Number
         
         foreach (var tempLine in returnLines.OrderByDescending(text => text))
         {
-            matchedLines.Add(new DocumentLine(
-                tempLine.ToString(CultureInfo.InvariantCulture),
+            var columns = new List<DocumentLineColumn>
+            {
+                new(tempLine.ToString(CultureInfo.InvariantCulture),[])
+            };
+            
+            var documentLine = new DocumentLine(
                 lineNumber,
                 pageNumber,
-                lineColumns,
-                 PositionConstants.UnknownCoordinate,
-                 PositionConstants.UnknownCoordinate,
-                 PositionConstants.UnknownCoordinate));
+                columns,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate)
+            {
+                Text = tempLine.ToString(CultureInfo.InvariantCulture)
+            };
+
+            matchedLines.Add(documentLine);
         }
 
         return matched;

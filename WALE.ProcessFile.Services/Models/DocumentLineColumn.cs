@@ -1,13 +1,17 @@
 namespace WALE.ProcessFile.Services.Models;
 
-public class DocumentLineColumn(List<DocumentLineWord> words)
+public class DocumentLineColumn(string text, List<DocumentLineWord> words)
 {
-    public DocumentLineColumn() : this([]) { }
+    public DocumentLineColumn(string text) : this(text, []) { }
+    
+    public DocumentLineColumn() : this(string.Empty, []) { }
 
+    public string Text { get; set; } = text;    
+    
     public List<DocumentLineWord> Words { get; set; } = words;
 
     public DocumentLineColumn Clone()
     {
-        return new DocumentLineColumn(Words.ToList());
+        return new DocumentLineColumn(Text, Words.ToList());
     }
 }

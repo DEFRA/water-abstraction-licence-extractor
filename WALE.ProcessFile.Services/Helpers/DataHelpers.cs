@@ -454,7 +454,6 @@ public static partial class DataHelpers
         
         var lineNumber = ls.FirstOrDefault()?.LineNumber ?? -1;
         var pageNumber = ls.FirstOrDefault()?.PageNumber ?? -1;
-        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in ls)
         {
@@ -476,7 +475,6 @@ public static partial class DataHelpers
                     {
                         lineNumber = line.LineNumber;
                         pageNumber = line.PageNumber;
-                        lineColumns = line.Columns;
                         
                         break;
                     }
@@ -489,25 +487,29 @@ public static partial class DataHelpers
 
                 break;
             }
-            
-            /*if (matched) -- 2025/02/03 This only made a difference to 1 unit test and having it was negative to that test
-            {
-                break;
-            }*/
         }
 
         if (returnLines.Count > 0)
         {
             foreach (var tempLine in returnLines.OrderByDescending(text => text))
             {
-                numberLines.Add(new DocumentLine(
-                    tempLine.ToString(CultureInfo.InvariantCulture),
+                var columns = new List<DocumentLineColumn>
+                {
+                    new(tempLine.ToString(CultureInfo.InvariantCulture),[])
+                };
+                
+                var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
-                    lineColumns,
+                    columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate));
+                    PositionConstants.UnknownCoordinate)
+                {
+                    Text = tempLine.ToString(CultureInfo.InvariantCulture)
+                };
+
+                numberLines.Add(documentLine);
             }
         }
         
@@ -528,7 +530,6 @@ public static partial class DataHelpers
         
         var lineNumber = -1;
         var pageNumber = -1;
-        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in lines)
         {
@@ -566,7 +567,6 @@ public static partial class DataHelpers
             {
                 lineNumber = correctedLine.LineNumber;
                 pageNumber = correctedLine.PageNumber;
-                lineColumns = correctedLine.Columns;
             }
 
             returnLines.Add(correctedLine.Text);
@@ -605,14 +605,36 @@ public static partial class DataHelpers
 
             returnLines = newReturnLines;
             returnList.AddRange(returnLines.Select(returnLine =>
-                new DocumentLine(
-                    returnLine,
+            {
+                var coords = new DocumentLineWordCoordinates(
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate
+                );
+                
+                var columns = new List<DocumentLineColumn>
+                {
+                    new(returnLine,
+                        returnLine
+                            .Split(' ')
+                            .Select(word => new DocumentLineWord(word, null, coords))
+                            .ToList())
+                };
+                
+                var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
-                    lineColumns,
+                    columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)));
+                    PositionConstants.UnknownCoordinate)
+                {
+                    Text = returnLine
+                };
+
+                return documentLine;
+            }));
         }
 
         if (returnList.Count > 0)
@@ -788,14 +810,21 @@ public static partial class DataHelpers
 
         var list = text
             .Split(' ')
-            .Select(result => new DocumentLine(
-                result,
-                lineNumber,
-                pageNumber,
-                irrelevantWords,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate));
+            .Select(result =>
+            {
+                var documentLine = new DocumentLine(
+                    lineNumber,
+                    pageNumber,
+                    irrelevantWords,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate)
+                {
+                    Text = result
+                };
+
+                return documentLine;
+            });
         
         if (AnyIsNumber(list, out var numberLines))
         {

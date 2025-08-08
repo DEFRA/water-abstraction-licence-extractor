@@ -2,26 +2,25 @@ using WALE.ProcessFile.Services.Constants;
 
 namespace WALE.ProcessFile.Services.Models;
 
-public class DocumentLine(
-    string text,
-    int lineNumber,
-    int pageNumber,
-    List<DocumentLineColumn> columns,
-    double bottom,
-    double bottomRounded,
-    double left)
+public class DocumentLine
 {
-    public DocumentLine() : this(
-        string.Empty,
-        PositionConstants.UnknownLineNumber,
-        PositionConstants.UnknownPageNumber,
-        [],
-        PositionConstants.UnknownCoordinate,
-        PositionConstants.UnknownCoordinate,
-        PositionConstants.UnknownCoordinate) { }
+    public DocumentLine(
+        int lineNumber,
+        int pageNumber,
+        List<DocumentLineColumn> columns,
+        double bottom,
+        double bottomRounded,
+        double left)
+    {
+        LineNumber = lineNumber;
+        PageNumber = pageNumber;
+        Columns = columns;
+        Bottom = bottom;
+        BottomRounded = bottomRounded;
+        Left = left;
+    }
     
-    public DocumentLine(string text) : this(
-        text,
+    public DocumentLine() : this(
         PositionConstants.UnknownLineNumber,
         PositionConstants.UnknownPageNumber,
         [],
@@ -29,13 +28,33 @@ public class DocumentLine(
         PositionConstants.UnknownCoordinate,
         PositionConstants.UnknownCoordinate) { }
 
-    public string Text { get; set; } = text;
+    public string Text
+    {
+        get
+        {
+            if (Columns.Count == 0)
+            {
+                return string.Empty;
+            }
+            
+            return Columns[0].Text;
+        }
+        set
+        {
+            if (Columns.Count == 0)
+            {
+                Columns.Add(new DocumentLineColumn());
+            }
+            
+            Columns[0].Text = value;
+        }
+    }
 
-    public int LineNumber { get; set; } = lineNumber;
+    public int LineNumber { get; set; }
 
-    public int PageNumber { get; set; } = pageNumber;
+    public int PageNumber { get; set; }
 
-    public List<DocumentLineColumn> Columns { get; set; } = columns;
+    public List<DocumentLineColumn> Columns { get; set; } = [];
 
     public double? OcrConfidence
     {
@@ -56,11 +75,11 @@ public class DocumentLine(
         }
     }
 
-    public double Bottom { get; set; } = bottom;
+    public double Bottom { get; set; }
     
-    public double BottomRounded { get; set; } = bottomRounded;
+    public double BottomRounded { get; set; }
 
-    public double Left { get; set; } = left;
+    public double Left { get; set; }
     
     public DocumentLine Clone()
     {
@@ -68,7 +87,6 @@ public class DocumentLine(
         
         return new DocumentLine
         {
-            Text = Text,
             PageNumber = PageNumber,
             LineNumber = LineNumber,
             Columns = Columns.Select(c => c.Clone()).ToList(),
@@ -81,7 +99,7 @@ public class DocumentLine(
     public DocumentLine Clone(string text)
     {
         var cloned = Clone();
-        cloned.Text = text;
+        cloned.Columns[0].Text = text;
         
         return cloned;
     }

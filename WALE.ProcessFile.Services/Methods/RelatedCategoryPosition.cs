@@ -99,18 +99,19 @@ public static class RelatedCategoryPosition
         {
             return Task.FromResult(returnList);
         }
-        
-        labelGroupResult.Text = [
-            new DocumentLine(
-                absoluteMatches.FirstOrDefault()?.Text!,
-                PositionConstants.UnknownLineNumber,
-                PositionConstants.UnknownPageNumber,
-                [],
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate)
-        ];
-            
+
+        var documentLine = new DocumentLine(
+            PositionConstants.UnknownLineNumber,
+            PositionConstants.UnknownPageNumber,
+            [],
+            PositionConstants.UnknownCoordinate,
+            PositionConstants.UnknownCoordinate,
+            PositionConstants.UnknownCoordinate)
+        {
+            Text = absoluteMatches.FirstOrDefault()?.Text!
+        };
+
+        labelGroupResult.Text = [documentLine];
         labelGroupResult.MatchedLabel = request.label;
 
         // TODO should set match type

@@ -82,14 +82,18 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             var results = returnLines!
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
                 .Select(line => (FormattingHelper.Standardise(line.Text!), line.Words))
-                .Select(line => new DocumentLine(
-                    line.Item1,
-                    lineNumber++,
-                    pageNumber,
-                    [new(line.Words!)],
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate))
+                .Select(line =>
+                {
+                    var documentLine = new DocumentLine(
+                        lineNumber++,
+                        pageNumber,
+                        [new(line.Item1, line.Words!)],
+                        PositionConstants.UnknownCoordinate,
+                        PositionConstants.UnknownCoordinate,
+                        PositionConstants.UnknownCoordinate);
+                    
+                    return documentLine;
+                })
                 .ToList();
 
             // TODO add grouping and ordering

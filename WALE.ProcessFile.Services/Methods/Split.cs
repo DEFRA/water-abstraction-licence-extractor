@@ -48,7 +48,7 @@ public static class Split
                 .FirstOrDefault()!
                 .Words
                 .FirstOrDefault()!
-                .Coordinates!;
+                .Coordinates;
             
             if (noPreviousLines && noNextLines)
             {
@@ -64,7 +64,7 @@ public static class Split
 
                 var leftColumns = new List<DocumentLineColumn>
                 {
-                    new(leftPartWords)
+                    new(leftPart, leftPartWords)
                 };
 
                 var leftLine = request.line.Clone(leftPart);
@@ -85,7 +85,7 @@ public static class Split
 
                     var rightColumns = new List<DocumentLineColumn>
                     {
-                        new(rightPartWords)
+                        new(rightPart, rightPartWords)
                     };
                     
                     var rightLine = request.line.Clone(rightPart);

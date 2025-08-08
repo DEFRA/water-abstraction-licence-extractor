@@ -27,7 +27,6 @@ public static class CompanyName
         
         var lineNumber = -1;
         var pageNumber = -1;
-        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in lines)
         {
@@ -77,7 +76,6 @@ public static class CompanyName
             {
                 lineNumber = correctedLine.LineNumber;
                 pageNumber = correctedLine.PageNumber;
-                lineColumns = correctedLine.Columns;
             }
 
             returnLines.Add(correctedLine.Text);
@@ -116,14 +114,36 @@ public static class CompanyName
 
             returnLines = newReturnLines;
             returnList.AddRange(returnLines.Select(returnLine =>
-                new DocumentLine(
-                    returnLine,
+            {
+                var coords = new DocumentLineWordCoordinates(
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate
+                );
+                
+                var columns = new List<DocumentLineColumn>
+                {
+                    new(returnLine,
+                        returnLine
+                            .Split(' ')
+                            .Select(word => new DocumentLineWord(word, null, coords))
+                            .ToList())
+                };
+                
+                var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
-                    lineColumns,
+                    columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)));
+                    PositionConstants.UnknownCoordinate)
+                {
+                    Text = returnLine
+                };
+
+                return documentLine;
+            }));
         }
 
         if (returnList.Count > 0)

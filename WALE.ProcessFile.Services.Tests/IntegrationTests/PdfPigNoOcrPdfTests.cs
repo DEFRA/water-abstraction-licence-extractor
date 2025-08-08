@@ -695,18 +695,18 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("E.W.Porter and Son", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
 
         var abstractionLimitsSection = resultList.FirstOrDefault(result =>
             result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(49, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(48, abstractionLimitsSection.Text?.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(173, abstractionLimitsSection.LineNumber);
+        Assert.Equal(140, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults!);
@@ -1040,7 +1040,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("6/33/56/*G/0274/R02", linkedLicenceNumber);
         
         var abstractionLimitsSection10 = abstractionLimitsSection.SubResults[9];
-        Assert.Equal(10, abstractionLimitsSection10.Text!.Count);
+        Assert.Equal(9, abstractionLimitsSection10.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection10.SubResults);
         Assert.Single(abstractionLimitsSection10.SubResults!);

@@ -104,7 +104,6 @@ public class PdfDataExtractorService(
         
         var documentLines =
             await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
-            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
        
         // Save all text
         if (!pdfDocument.FromCache)
@@ -920,18 +919,15 @@ public class PdfDataExtractorService(
             LabelToMatch label)
     {
         return lines.Select((line, index) =>
-            (
-                new DocumentLine(
-                    FormattingHelper.Standardise(line.Text),
-                    line.LineNumber,
-                    line.PageNumber,
-                    line.Words.ToList(),
-                    line.Bottom,
-                    line.BottomRounded,
-                    line.Left),
-                GetPreviousLines(lines, index, label.PreviousLinesToFetch),
-                GetNextLines(lines, index, label.NextLinesToFetch)
-            ))
+            {
+                line.Text = FormattingHelper.Standardise(line.Text);
+                
+                return (
+                    line,
+                    GetPreviousLines(lines, index, label.PreviousLinesToFetch),
+                    GetNextLines(lines, index, label.NextLinesToFetch)
+                );
+            })
             .ToList();
     }
     
@@ -944,16 +940,7 @@ public class PdfDataExtractorService(
         while (newIndex >= 0 && count++ < n)
         {
             var line = lines[newIndex];
-            
-            returnList.Add(
-                new DocumentLine(
-                    FormattingHelper.Standardise(line.Text),
-                    line.LineNumber,
-                    line.PageNumber,
-                    line.Words.ToList(),
-                    line.Bottom,
-                    line.BottomRounded,
-                    line.Left));
+            returnList.Add(line.Clone(FormattingHelper.Standardise(line.Text)));
 
             newIndex -= 1;
         }
@@ -970,16 +957,7 @@ public class PdfDataExtractorService(
         while (newIndex < lines.Count && count++ < n)
         {
             var line = lines[newIndex];
-            
-            returnList.Add(
-                new DocumentLine(
-                    FormattingHelper.Standardise(line.Text),
-                    line.LineNumber,
-                    line.PageNumber,
-                    line.Words.ToList(),
-                    line.Bottom,
-                    line.BottomRounded,
-                    line.Left));
+            returnList.Add(line.Clone(FormattingHelper.Standardise(line.Text)));
 
             newIndex += 1;
         }

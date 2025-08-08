@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Enums;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
@@ -26,8 +25,20 @@ public class LabelGroupResult
     
     public LabelGroupResult Clone()
     {
-        return JsonSerializer.Deserialize<LabelGroupResult>(
-            JsonSerializer.Serialize(this))!;
+        // TODO swap to source generator
+
+        return new LabelGroupResult
+        {
+            Text = Text?.ToList(),
+            MatchType = MatchType,
+            IsOcr = IsOcr,
+            LineNumber = LineNumber,
+            PageNumber = PageNumber,
+            ServiceName = ServiceName,
+            LabelGroupName = LabelGroupName,
+            MatchedLabel = MatchedLabel?.Clone(),
+            SubResults = SubResults.Select(x => x.Clone()).ToList()
+        };
     }
 
     public LabelGroupResult Clone(LabelToMatch label)

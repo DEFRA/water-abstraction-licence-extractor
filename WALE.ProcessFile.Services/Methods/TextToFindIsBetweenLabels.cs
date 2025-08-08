@@ -109,14 +109,10 @@ public static class TextToFindIsBetweenLabels
         
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
         {
-            returnList.Add(new DocumentLine(
-                FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!,
-                startLineNumber,
-                lineInput.PageNumber,
-                lineInput.Words,
-                lineInput.Bottom,
-                lineInput.BottomRounded,
-                lineInput.Left));
+            var clonedLine = lineInput.Clone(FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!);
+            clonedLine.LineNumber = startLineNumber;
+            
+            returnList.Add(clonedLine);
         }
 
         var totalLines = nextLines.Count;
@@ -143,14 +139,7 @@ public static class TextToFindIsBetweenLabels
             }
             
             var text = FormattingHelper.TrimFormatting(line.Text)!;
-            returnList.Add(new DocumentLine(
-                text,
-                line.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left));
+            returnList.Add(line.Clone(text));
         }
 
         if (!foundEndTag && textEnd.Contains(PositionConstants.EndOfBlockMarker))

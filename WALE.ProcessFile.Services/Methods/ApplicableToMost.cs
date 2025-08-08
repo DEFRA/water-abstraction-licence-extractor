@@ -54,14 +54,7 @@ public static class ApplicableToMost
                 continue;
             }
 
-            var docLine = new DocumentLine(
-                outputText,
-                line!.LineNumber,
-                line.PageNumber,
-                line.Words,
-                line.Bottom,
-                line.BottomRounded,
-                line.Left);
+            var docLine = line!.Clone(outputText);
             
             if (request.isDateOrPurposeLookup)
             {

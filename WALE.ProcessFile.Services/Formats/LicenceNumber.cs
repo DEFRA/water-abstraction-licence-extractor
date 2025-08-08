@@ -91,16 +91,7 @@ public static partial class LicenceNumber
                         
                         if (match)
                         {
-                            matchedLines.Add(new DocumentLine(
-                                numberLine.Trim(),
-                                line.LineNumber,
-                                line.PageNumber,
-                                line.Words.ToList(),
-                                line.Bottom,
-                                line.BottomRounded,
-                                line.Left
-                            ));
-                                
+                            matchedLines.Add(line.Clone(numberLine.Trim()));
                             anyIsMatch = true;
                         }
 

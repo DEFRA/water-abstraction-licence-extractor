@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Enums;
 
@@ -41,7 +40,32 @@ public class LabelToMatch
     
     public LabelToMatch Clone()
     {
-        return JsonSerializer.Deserialize<LabelToMatch>(
-            JsonSerializer.Serialize(this))!;
+        // TODO swap to a source generator
+
+        return new LabelToMatch
+        {
+            TextStart = TextStart,
+            MatchAllText = MatchAllText,
+            ResultMustNotContain = ResultMustNotContain?.ToList(),
+            LabelLineMustNotContain = LabelLineMustNotContain?.ToList(),
+            Remove = Remove?.ToList(),
+            TextEnd = TextEnd?.ToList(),
+            MustContain = MustContain?.ToList(),
+            MinimumSubMatches = MinimumSubMatches,
+            Position = Position,
+            RelatedCategoryName = RelatedCategoryName,
+            RelatedName = RelatedName,
+            LeewayBefore = LeewayBefore,
+            SubLabels = SubLabels?.Select(s => s.Clone()).ToList(),
+            Format = Format,
+            IncludeLabelText = IncludeLabelText,
+            Name = Name,
+            CategoryName = CategoryName,
+            Possibilities = Possibilities?.ToList(),
+            PreviousLinesToFetch = PreviousLinesToFetch,
+            NextLinesToFetch = NextLinesToFetch,
+            Multiple = Multiple,
+            Completed = false,
+        };
     }    
 }

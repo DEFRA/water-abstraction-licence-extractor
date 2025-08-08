@@ -18,6 +18,7 @@ public static class SingleWord
         }
         
         var line = lines[0];
+        
         labelGroupResult = labelGroupResult.Clone(
             [line.Clone(line.Text.Split(' ')[0])]);
 

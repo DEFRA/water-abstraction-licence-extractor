@@ -86,7 +86,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     line.Item1,
                     lineNumber++,
                     pageNumber,
-                    line.Words!,
+                    [new(line.Words!)],
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate))

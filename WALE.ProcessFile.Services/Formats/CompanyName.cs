@@ -25,7 +25,7 @@ public static class CompanyName
         
         var lineNumber = -1;
         var pageNumber = -1;
-        var lineWords = new List<DocumentLineWord>();
+        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in lines)
         {
@@ -44,44 +44,24 @@ public static class CompanyName
                 continue;
             }
             
-            var correctedLine = isOcr ? new DocumentLine(
-                AutoCorrectHelper.AutoCorrectText(line!, true)!,
-                line!.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left) : line;
+            var correctedLine = isOcr
+                ? line!.Clone(AutoCorrectHelper.AutoCorrectText(line!, true)!)
+                : line;
 
-            correctedLine = new DocumentLine(
-                FormattingHelper.TrimFormatting(correctedLine?.Text)!,
-                correctedLine!.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Bottom,
-                correctedLine.BottomRounded,
-                correctedLine.Left);
+            correctedLine = correctedLine!.Clone(FormattingHelper.TrimFormatting(correctedLine.Text)!);
 
-            if (DataHelper.IsCorruptedText(line?.Text))
+            if (DataHelper.IsCorruptedText(line?.Text)
+                || !TryGetCompanyOrPersonalName(correctedLine, label, out var companyOrPersonalName))
             {
-                if (matched) break;
+                if (matched)
+                {
+                    break;
+                }
+
                 continue;
             }
 
-            if (!TryGetCompanyOrPersonalName(correctedLine, label, out var companyOrPersonalName))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            correctedLine = new DocumentLine(
-                companyOrPersonalName!,
-                correctedLine.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Bottom,
-                correctedLine.BottomRounded,
-                correctedLine.Left);
+            correctedLine = correctedLine.Clone(companyOrPersonalName!);
             
             // It's only the company suffix with nothing else
             if (CompanySuffixes.Any(companySuffix =>
@@ -95,7 +75,7 @@ public static class CompanyName
             {
                 lineNumber = correctedLine.LineNumber;
                 pageNumber = correctedLine.PageNumber;
-                lineWords = correctedLine.Words;
+                lineColumns = correctedLine.Columns;
             }
 
             returnLines.Add(correctedLine.Text);
@@ -138,7 +118,7 @@ public static class CompanyName
                     returnLine,
                     lineNumber,
                     pageNumber,
-                    lineWords,
+                    lineColumns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate)));

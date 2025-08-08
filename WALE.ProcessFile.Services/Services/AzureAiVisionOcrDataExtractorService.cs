@@ -79,7 +79,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                 line.Item1,
                 lineNumber++,
                 pageNumber,
-                line.Words.Select(word =>
+                [new(line.Words.Select(word =>
                     new DocumentLineWord(
                         word.Text,
                         word.Confidence * 100,
@@ -88,10 +88,10 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                             word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
                             word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
                             word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate)))
-                    .ToList(),
+                    .ToList())],
                 PositionConstants.UnknownCoordinate,
                 PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate))            
+                PositionConstants.UnknownCoordinate))
             .ToList();
     }
 

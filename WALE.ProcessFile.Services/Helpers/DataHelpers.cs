@@ -111,8 +111,8 @@ public static partial class DataHelpers
 
         return returnList;
     }
-    
-    public static IEnumerable<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
+
+    private static IEnumerable<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
     {
         return sourceList
             .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
@@ -141,14 +141,8 @@ public static partial class DataHelpers
         {
             var line = returnList[idx];
             
-            returnList[idx] = new DocumentLine(
-                RemoveExcludes(label, betweenText[idx].Text, out var removesUsedLoop),
-                line.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left);
+            returnList[idx] = line.Clone(
+                RemoveExcludes(label, betweenText[idx].Text, out var removesUsedLoop));
 
             if (removesUsedLoop != null)
             {
@@ -419,16 +413,7 @@ public static partial class DataHelpers
                         
                         if (match)
                         {
-                            numberLines.Add(new DocumentLine(
-                                numberLine.Trim(),
-                                line.LineNumber,
-                                line.PageNumber,
-                                line.Words.ToList(),
-                                line.Bottom,
-                                line.BottomRounded,
-                                line.Left
-                            ));
-                                
+                            numberLines.Add(line.Clone(numberLine.Trim()));
                             anyIsMatch = true;
                         }
 
@@ -468,7 +453,7 @@ public static partial class DataHelpers
         
         var lineNumber = ls.FirstOrDefault()?.LineNumber ?? -1;
         var pageNumber = ls.FirstOrDefault()?.PageNumber ?? -1;
-        var lineWords = new List<DocumentLineWord>();
+        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in ls)
         {
@@ -490,7 +475,7 @@ public static partial class DataHelpers
                     {
                         lineNumber = line.LineNumber;
                         pageNumber = line.PageNumber;
-                        lineWords = line.Words;
+                        lineColumns = line.Columns;
                         
                         break;
                     }
@@ -518,7 +503,7 @@ public static partial class DataHelpers
                     tempLine.ToString(CultureInfo.InvariantCulture),
                     lineNumber,
                     pageNumber,
-                    lineWords,
+                    lineColumns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate));
@@ -542,7 +527,7 @@ public static partial class DataHelpers
         
         var lineNumber = -1;
         var pageNumber = -1;
-        var lineWords = new List<DocumentLineWord>();
+        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in lines)
         {
@@ -556,44 +541,17 @@ public static partial class DataHelpers
                 continue;
             }
             
-            var correctedLine = isOcr ? new DocumentLine(
-                AutoCorrectText(line!, true)!,
-                line!.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left) : line;
+            var correctedLine = isOcr ? line!.Clone(AutoCorrectText(line!, true)!) : line;
+            correctedLine = correctedLine!.Clone(TrimFormatting(correctedLine?.Text)!);
 
-            correctedLine = new DocumentLine(
-                TrimFormatting(correctedLine?.Text)!,
-                correctedLine!.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Bottom,
-                correctedLine.BottomRounded,
-                correctedLine.Left);
-
-            if (IsCorruptedText(line?.Text))
+            if (IsCorruptedText(line?.Text)
+                || !TryGetCompanyOrPersonalName(correctedLine, out var companyOrPersonalName))
             {
                 if (matched) break;
                 continue;
             }
 
-            if (!TryGetCompanyOrPersonalName(correctedLine, out var companyOrPersonalName))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            correctedLine = new DocumentLine(
-                companyOrPersonalName!,
-                correctedLine.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Bottom,
-                correctedLine.BottomRounded,
-                correctedLine.Left);
+            correctedLine = correctedLine.Clone(companyOrPersonalName!);
             
             // It's only the company suffix with nothing else
             if (CompanySuffixes.Any(companySuffix =>
@@ -607,7 +565,7 @@ public static partial class DataHelpers
             {
                 lineNumber = correctedLine.LineNumber;
                 pageNumber = correctedLine.PageNumber;
-                lineWords = correctedLine.Words;
+                lineColumns = correctedLine.Columns;
             }
 
             returnLines.Add(correctedLine.Text);
@@ -650,7 +608,7 @@ public static partial class DataHelpers
                     returnLine,
                     lineNumber,
                     pageNumber,
-                    lineWords,
+                    lineColumns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate)));
@@ -825,7 +783,7 @@ public static partial class DataHelpers
             return false;
         }
         
-        var irrelevantWords = new List<DocumentLineWord>();
+        var irrelevantWords = new List<DocumentLineColumn>();
 
         var list = text
             .Split(' ')
@@ -1183,14 +1141,10 @@ public static partial class DataHelpers
         
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
         {
-            returnList.Add(new DocumentLine(
-                TrimFormatting(firstLineTextAfterLabel)!,
-                startLineNumber,
-                lineInput.PageNumber,
-                lineInput.Words,
-                lineInput.Bottom,
-                lineInput.BottomRounded,
-                lineInput.Left));
+            var clonedLine = lineInput.Clone(TrimFormatting(firstLineTextAfterLabel)!);
+            clonedLine.LineNumber = startLineNumber;
+            
+            returnList.Add(clonedLine);
         }
 
         var totalLines = nextLines.Count;
@@ -1211,14 +1165,7 @@ public static partial class DataHelpers
             }
             
             var text = TrimFormatting(line.Text)!;
-            returnList.Add(new DocumentLine(
-                text,
-                line.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left));
+            returnList.Add(line.Clone(text));
         }
 
         if (!foundEndTag && textEnd.Contains("[END_OF_BLOCK]"))

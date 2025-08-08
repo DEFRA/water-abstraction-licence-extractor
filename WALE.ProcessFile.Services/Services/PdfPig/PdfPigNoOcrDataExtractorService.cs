@@ -1,7 +1,6 @@
 using System.Text.Json;
 using SkiaSharp;
 using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Services.Constants;
@@ -99,9 +98,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var documentLines = new List<DocumentLine>();
         var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
         
-        const int roundToHorizontalLimited = 500;
-        const int roundToHorizontalFull = 900;
-
         var fromCache = pdfDocument.FromCache && File.Exists(metadataFilename);
         
         if (fromCache)
@@ -139,8 +135,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 var pageLinesTransformed = FormatPageLines(
                     pageLines,
-                    pageNumber,
-                    pageNumber > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
+                    pageNumber);
 
                 documentLines.AddRange(pageLinesTransformed);
             }
@@ -188,8 +183,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
                     var pageLinesTransformed = FormatPageLines(
                         pageLines,
-                        page.Number,
-                        page.Number > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
+                        page.Number);
                     
                     documentLines.AddRange(pageLinesTransformed);
                     continue;
@@ -213,8 +207,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 var pageLinesTransformedX = FormatPageLines(
                     pageLines,
-                    page.Number,
-                    page.Number > 3 ? roundToHorizontalFull : roundToHorizontalLimited);
+                    page.Number);
 
                 documentLines.AddRange(pageLinesTransformedX);
             }
@@ -241,8 +234,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IReadOnlyList<TextBlock> pageLineBlocks,
-        int pageNumber,
-        int roundToHorizontal)
+        int pageNumber)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -253,11 +245,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         var lineNumber = 0;
         var previousWordLine = (Word?)null;
-
-        if (pageNumber == 4)
-        {
-        }
-
+        
         var orderedPageWords = pageLineBlocks
             .SelectMany(textBlock => textBlock.TextLines)
             .SelectMany(textLine => textLine.Words)
@@ -271,17 +259,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         Word? previousWord = null;
         var lineIndex = 0;
         
-        if (pageNumber == 4)
-        {
-            var x = string.Join(' ', orderedPageWords.Select(x => x.Text));
-        }
-        
         return orderedPageWords
             .GroupBy(word =>
             {
                 previousWord ??= word;
-
-                var xDiff = word.BoundingBox.Left - previousWord.BoundingBox.Right;
                 
                 var yDiff =
                     LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
@@ -290,13 +271,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
                         word.Text,
                         word.BoundingBox.Bottom);
-
-                if (word.Text.Contains("Errol"))
-                {
-                    
-                }
                 
-                if (yDiff >= LineHeight || xDiff >= 25)
+                if (yDiff >= LineHeight)
                 {
                     lineIndex += 1;
                 }
@@ -308,11 +284,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             {
                 var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
                 var bottomRounded = lineWords.Key;
-                
-                if (pageNumber == 4)
-                {
-                    var x = string.Join(' ', orderedWords.Select(x => x.Text));
-                }
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -335,22 +306,42 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
 
                 previousWordLine = firstLine;
+                
                 var text = string.Join(' ', orderedWords);
 
-                // TODO something to split over 2 lines if there is a gap in between words (horizontal/Y)
+                var columns = new List<DocumentLineColumn>
+                {
+                    new()
+                };
+
+                Word? previousWord2 = null;
+                
+                foreach (var word in orderedPageWords)
+                {
+                    previousWord2 ??= word;
+                    
+                    var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
+
+                    if (xDiff >= 25)
+                    {
+                        columns.Add(new DocumentLineColumn());
+                    }
+
+                    var columnToAddTo = columns.Last();
+                    columnToAddTo.Words.Add(new DocumentLineWord(
+                        word.Text,
+                        null,
+                        DocumentLineWordCoordinates.Convert(word.BoundingBox)
+                    ));
+                }
                 
                 resultList.Add(new DocumentLine(
                     text,
                     lineNumber++,
                     pageNumber,
-                    orderedWords.Select(word => new DocumentLineWord(
-                        word.Text,
-                        null,
-                        DocumentLineWordCoordinates.Convert(word.BoundingBox)
-                        ))
-                    .ToList(),
-                firstLine.BoundingBox.Bottom, 
-                bottomRounded,
+                    columns,
+                    firstLine.BoundingBox.Bottom, 
+                    bottomRounded,
                     firstLine.BoundingBox.Left));
                 
                 return resultList;

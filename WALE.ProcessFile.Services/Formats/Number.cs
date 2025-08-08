@@ -23,7 +23,8 @@ public static class Number
         
         var lineNumber = firstLine?.LineNumber ?? PositionConstants.UnknownLineNumber;
         var pageNumber = firstLine?.PageNumber ?? PositionConstants.UnknownPageNumber;
-        var lineWords = new List<DocumentLineWord>();
+
+        var lineColumns = new List<DocumentLineColumn>();
         
         foreach (var line in linesList)
         {
@@ -50,7 +51,7 @@ public static class Number
                 {
                     lineNumber = line.LineNumber;
                     pageNumber = line.PageNumber;
-                    lineWords = line.Words;
+                    lineColumns = line.Columns;
                 }
 
                 matched = true;
@@ -68,7 +69,7 @@ public static class Number
                 tempLine.ToString(CultureInfo.InvariantCulture),
                 lineNumber,
                 pageNumber,
-                lineWords,
+                lineColumns,
                  PositionConstants.UnknownCoordinate,
                  PositionConstants.UnknownCoordinate,
                  PositionConstants.UnknownCoordinate));

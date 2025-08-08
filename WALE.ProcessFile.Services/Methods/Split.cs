@@ -43,7 +43,12 @@ public static class Split
             var noPreviousLines = leftPartLines.Count == 0;
             var noNextLines = rightPartLines.Count == 0;
 
-            var coords = request.line!.Words.FirstOrDefault()!.Coordinates!;
+            var coords = request.line!
+                .Columns
+                .FirstOrDefault()!
+                .Words
+                .FirstOrDefault()!
+                .Coordinates!;
             
             if (noPreviousLines && noNextLines)
             {
@@ -57,15 +62,14 @@ public static class Split
                     .Select(text => new DocumentLineWord(text, null, coords))
                     .ToList();
 
-                leftPartLines = [
-                    new DocumentLine(leftPart,
-                        request.lineNumber,
-                        request.line.PageNumber,
-                        leftPartWords,
-                        request.line.Bottom,
-                        request.line.BottomRounded,
-                        request.line.Left)
-                ];
+                var leftColumns = new List<DocumentLineColumn>
+                {
+                    new(leftPartWords)
+                };
+
+                var leftLine = request.line.Clone(leftPart);
+                leftLine.Columns = leftColumns;
+                leftPartLines = [leftLine];
                 
                 var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
 
@@ -79,16 +83,14 @@ public static class Split
                             coords))
                         .ToList();
 
-                    rightPartLines =
-                    [
-                        new DocumentLine(rightPart,
-                            request.lineNumber,
-                            request.line.PageNumber,
-                            rightPartWords,
-                            request.line.Bottom,
-                            request.line.BottomRounded,
-                            request.line.Left)
-                    ];
+                    var rightColumns = new List<DocumentLineColumn>
+                    {
+                        new(rightPartWords)
+                    };
+                    
+                    var rightLine = request.line.Clone(rightPart);
+                    rightLine.Columns = rightColumns;
+                    rightPartLines = [rightLine];
                 }
             }
             else

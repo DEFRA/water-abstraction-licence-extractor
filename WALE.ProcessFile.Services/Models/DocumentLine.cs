@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 
 namespace WALE.ProcessFile.Services.Models;
@@ -7,7 +6,7 @@ public class DocumentLine(
     string text,
     int lineNumber,
     int pageNumber,
-    List<DocumentLineWord> words,
+    List<DocumentLineColumn> columns,
     double bottom,
     double bottomRounded,
     double left)
@@ -36,13 +35,14 @@ public class DocumentLine(
 
     public int PageNumber { get; set; } = pageNumber;
 
-    public List<DocumentLineWord> Words { get; set; } = words;
+    public List<DocumentLineColumn> Columns { get; set; } = columns;
 
     public double? OcrConfidence
     {
         get
         {
-            var wordsWithConfidence = Words
+            var wordsWithConfidence = Columns
+                .SelectMany(column => column.Words)
                 .Where(word => word.OcrConfidence != null)
                 .ToList();
 
@@ -64,8 +64,18 @@ public class DocumentLine(
     
     public DocumentLine Clone()
     {
-        return JsonSerializer.Deserialize<DocumentLine>(
-            JsonSerializer.Serialize(this))!;
+        // TODO replace with a source generator        
+        
+        return new DocumentLine
+        {
+            Text = Text,
+            PageNumber = PageNumber,
+            LineNumber = LineNumber,
+            Columns = Columns.Select(c => c.Clone()).ToList(),
+            Bottom = Bottom,
+            BottomRounded = BottomRounded,
+            Left = Left
+        };
     }
     
     public DocumentLine Clone(string text)

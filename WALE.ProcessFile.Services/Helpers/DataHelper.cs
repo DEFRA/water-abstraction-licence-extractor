@@ -36,14 +36,7 @@ public static partial class DataHelper
                 continue;
             }
             
-            returnList.Add(new DocumentLine(
-                RemoveExcludes(label, bt, out var removesUsedLoop),
-                line.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Bottom,
-                line.BottomRounded,
-                line.Left));
+            returnList.Add(line.Clone(RemoveExcludes(label, bt, out var removesUsedLoop)));
 
             if (removesUsedLoop != null)
             {

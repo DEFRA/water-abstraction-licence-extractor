@@ -940,8 +940,9 @@ public class PdfDataExtractorService(
         while (newIndex >= 0 && count++ < n)
         {
             var line = lines[newIndex];
-            returnList.Add(line.Clone(FormattingHelper.Standardise(line.Text)));
+            line.Text = FormattingHelper.Standardise(line.Text);
 
+            returnList.Add(line);
             newIndex -= 1;
         }
 
@@ -957,8 +958,9 @@ public class PdfDataExtractorService(
         while (newIndex < lines.Count && count++ < n)
         {
             var line = lines[newIndex];
-            returnList.Add(line.Clone(FormattingHelper.Standardise(line.Text)));
-
+            line.Text = FormattingHelper.Standardise(line.Text);
+            
+            returnList.Add(line);
             newIndex += 1;
         }
 

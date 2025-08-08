@@ -197,7 +197,6 @@ public static class ApplicableToMost
                 }
 
                 labelGroupResult = labelGroupResult.Clone([docLine]);
-                
                 return r;
             }
 
@@ -209,6 +208,14 @@ public static class ApplicableToMost
             if (request.isCompanyType
                 && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(outputText!), matchedLabel, out _))
             {
+                // Need to look at the next lines also
+                if (request.label?.Position != LabelPosition.ApplicableToMost
+                    && request.nextLines?.Count > 0
+                    && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(request.nextLines[0].Text), matchedLabel, out _))
+                {
+                    continue;
+                }
+                
                 var matchType = over2Lines ?
                     MatchType.SameLineIsCompany2Lines
                     : MatchType.SameLineIsCompany1Line;

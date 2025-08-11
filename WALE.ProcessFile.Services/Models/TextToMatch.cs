@@ -7,6 +7,6 @@ public class TextToMatch(string text)
     public bool LineMustStartWith { get; set; }
     
     public bool RemoveWholeLine { get; set; }
-    
-    public int InstanceNumber { get; set; }
+
+    public int InstanceNumber { get; set; } = 1;
 }

@@ -257,7 +257,7 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"                           
                         ],
                         TextEnd = [
-                            new("From Point "),
+                            new("From Point ") { InstanceNumber = 2 },
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,

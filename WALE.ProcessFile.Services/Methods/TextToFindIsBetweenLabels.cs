@@ -27,8 +27,11 @@ public static class TextToFindIsBetweenLabels
         var lineContainsLabel = request.label.Text?.Any(labelText =>
             request.line!.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
 
+        var labelLineAlreadyIncluded = false;
+        
         if (lineContainsLabel != true || request.label.IncludeWholeLine)
         {
+            labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);
         }
 
@@ -43,6 +46,7 @@ public static class TextToFindIsBetweenLabels
             linesToUse,
             request.lineNumber,
             request.line!,
+            labelLineAlreadyIncluded,
             out var matchedEndText);
 
         if (request.label.Name == "PurposePointGroup")
@@ -104,6 +108,7 @@ public static class TextToFindIsBetweenLabels
         IReadOnlyList<DocumentLine> lines,
         int startLineNumber,
         DocumentLine lineInput,
+        bool labelLineAlreadyIncluded,
         out (string matchedEndText, string matchedContainsText)? matchData)
     {
         matchData = null;
@@ -112,7 +117,7 @@ public static class TextToFindIsBetweenLabels
         var lineCount = 0;
         var returnList = new List<DocumentLine>();
         
-        if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
+        if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!;
             
@@ -123,6 +128,8 @@ public static class TextToFindIsBetweenLabels
         }
 
         var textEndList = textEnd.Select(x => x.Text).ToList();
+        var labelMatchCount = new Dictionary<string, int>();
+        
         var totalLines = lines.Count;
         
         foreach (var line in lines)
@@ -131,19 +138,31 @@ public static class TextToFindIsBetweenLabels
             {
                 Text = textEndList
             };
-            
-            if (LabelMatchingHelper.LineContainsLabel(
+
+            var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                 line,
                 label.Text,
                 label.Position,
                 lineCount++,
                 totalLines,
-                out var matchedEndTextTemp))
-            {
-                matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
-                foundEndTag = true;
+                out var matchedEndTextTemp);
 
-                break;
+            if (lineContainsLabel)
+            {
+                labelMatchCount.TryAdd(matchedEndTextTemp!, 0);
+                labelMatchCount[matchedEndTextTemp!] += 1;
+
+                var requiredCount = textEnd
+                    .Single(textEndLine => textEndLine.Text == matchedEndTextTemp!)
+                    .InstanceNumber;
+                
+                if (labelMatchCount[matchedEndTextTemp!] >= requiredCount)
+                {
+                    matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
+                    foundEndTag = true;
+
+                    break;
+                }
             }
             
             var text = FormattingHelper.TrimFormatting(line.Text)!;

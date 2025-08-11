@@ -833,26 +833,16 @@ public class PdfDataExtractorService(
 
         foreach (var labelText in label.Text!)
         {
-            try
-            {
-                var index = line.Text.IndexOf(
-                    labelText,
-                    StringComparison.InvariantCultureIgnoreCase);
+            var index = line.Text.IndexOf(
+                labelText,
+                StringComparison.InvariantCultureIgnoreCase);
 
-                if (index > PositionConstants.PositionNotFound)
-                {
-                    labelTextPositionIndex = index;
-                    matchedLabelText = labelText;
-                    
-                    break;
-                }
-            
-
-            }
-            catch (Exception e)
+            if (index > PositionConstants.PositionNotFound)
             {
-                Console.WriteLine(e);
-                throw;
+                labelTextPositionIndex = index;
+                matchedLabelText = labelText;
+                
+                break;
             }
         }
 

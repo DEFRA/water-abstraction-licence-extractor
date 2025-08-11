@@ -274,7 +274,15 @@ public static class LabelConfiguration
                                     "From Point "
                                 ],
                                 Format = "Number",
-                                Position = LabelPosition.LabelIsBeforeTextToFind
+                                Position = LabelPosition.LabelIsBeforeTextToFind,
+                                Possibilities = [
+                                    "2.1",
+                                    "2.2",
+                                    "2.3",
+                                    "2.4",
+                                    "2.5",
+                                    "2.6"
+                                ]
                             },
                             new()
                             {

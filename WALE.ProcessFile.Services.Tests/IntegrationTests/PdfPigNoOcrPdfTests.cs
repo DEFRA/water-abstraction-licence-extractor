@@ -1432,75 +1432,82 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal(2, purposeResult.SubResults!.Count);
         
-        var firstPurposePointGroup = purposeResult.SubResults[0];
-        Assert.Equal(2, firstPurposePointGroup.SubResults!.Count); // 1 point number, 2 lots of text
-        
-        var purposeGroupName = firstPurposePointGroup.SubResults![0];
-        Assert.Equal("2.1", purposeGroupName.Text![0].Text);
+        var purposePointGroup1 = purposeResult.SubResults[0];
+        Assert.Equal(3, purposePointGroup1.SubResults!.Count);
 
-        var firstPurpose = firstPurposePointGroup.SubResults![1];
-        var firstPurposeAllText = string.Join(' ', firstPurpose.Text?.Select(x => x.Text).ToArray()!);
+        var pointGroupName = purposePointGroup1.SubResults[0];
+        Assert.Equal("PointGroupName", pointGroupName.MatchedLabel!.Name);
+        Assert.Equal("2.1", pointGroupName.Text?.FirstOrDefault()?.Text);
+        
+        var purpose1 = purposePointGroup1.SubResults[1];
+        Assert.Equal(4, purpose1.Text?.Count);
+        
+        var purpose1AllText = string.Join(' ', purpose1.Text?.Select(x => x.Text).ToArray()!);
         
         Assert.Equal("4.1 From Point 2.1 Transfer for subsequent discharge and re-abstraction for spray irrigation from"
-                 + " the points specified in condition 2.2 of this licence and points specified in"
-                 + " condition 2.1 of licence AN/033/0047/018",
-            firstPurposeAllText);
+                     + " the points specified in condition 2.2 of this licence and points specified in"
+                     + " condition 2.1 of licence AN/033/0047/018",
+            purpose1AllText);
 
-        var firstPurposeSubs = firstPurpose.SubResults;
-        Assert.NotNull(firstPurposeSubs);
-        Assert.Equal(4, firstPurposeSubs.Count);
+        var purpose1Subs = purpose1.SubResults;
+        Assert.NotNull(purpose1Subs);
+        Assert.Equal(4, purpose1Subs.Count);
         
-        Assert.Equal("PurposePurposeNumber", firstPurposeSubs[0].MatchedLabel?.Name);
-        var firstPurposePurposeNumber = firstPurposeSubs[0].Text!.Single().Text;
-        Assert.Equal("4.1", firstPurposePurposeNumber);
+        Assert.Equal("PurposePurposeNumber", purpose1Subs[0].MatchedLabel?.Name);
+        var purpose1Number = purpose1Subs[0].Text!.Single().Text;
+        Assert.Equal("4.1", purpose1Number);
         
-        Assert.Equal("PointLink", firstPurposeSubs[1].MatchedLabel?.Name);
-        var firstPurposePointNumber = firstPurposeSubs[1].Text!.Single().Text;
-        Assert.Equal("2.1", firstPurposePointNumber);
+        Assert.Equal("PointLink", purpose1Subs[1].MatchedLabel?.Name);
+        var purpose1PointNumber = purpose1Subs[1].Text!.Single().Text;
+        Assert.Equal("2.1", purpose1PointNumber);
         
-        var firstPurposeTextOnly = string.Join(' ', firstPurposeSubs[3].Text?.Select(x => x.Text).ToArray()!);
+        var purpose1TextOnly = string.Join(' ', purpose1Subs[3].Text?.Select(x => x.Text).ToArray()!);
         Assert.Equal("Transfer for subsequent discharge and re-abstraction for spray irrigation from" 
             + " the points specified in condition 2.2 of this licence and points specified in"
-            + " condition 2.1 of licence AN/033/0047/018", firstPurposeTextOnly);
+            + " condition 2.1 of licence AN/033/0047/018", purpose1TextOnly);
         
-        var secondPurpose = firstPurposePointGroup.SubResults![2];
-        var secondPurposeAllTText = secondPurpose.Text?.Select(x => x.Text).ToArray()!;
+        var purpose2 = purposePointGroup1.SubResults[2];
+        Assert.Single(purpose2.Text!);
+        
+        var purpose2AllText = purpose2.Text?.Select(x => x.Text).ToArray()!;
         
         Assert.Equal("4.2 Filling a reservoir for subsequent spray irrigation",
-            string.Join(' ', secondPurposeAllTText));
+            string.Join(' ', purpose2AllText));
 
-        var secondPurposeSubs = secondPurpose.SubResults;
-        Assert.NotNull(secondPurposeSubs);
-        Assert.Equal(3, secondPurposeSubs.Count);
+        var purpose2Subs = purpose2.SubResults;
+        Assert.NotNull(purpose2Subs);
+        Assert.Equal(3, purpose2Subs.Count);
         
-        var secondPurposePurposeNumber = secondPurposeSubs[0].Text!.Single().Text;
-        Assert.Equal("4.2", secondPurposePurposeNumber);
+        Assert.Equal("PurposePurposeNumber", purpose2Subs[0].MatchedLabel?.Name);
+        var purpose2PurposeNumber = purpose2Subs[0].Text!.Single().Text;
+        Assert.Equal("4.2", purpose2PurposeNumber);
         
-        var secondPurposeTextOnly = string.Join(' ', secondPurposeSubs[2].Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("Filling a reservoir for subsequent spray irrigation", secondPurposeTextOnly);
+        var purpose2TextOnly = string.Join(' ', purpose2Subs[2].Text?.Select(x => x.Text).ToArray()!);
+        Assert.Equal("Filling a reservoir for subsequent spray irrigation", purpose2TextOnly);
         
-        var secondPurposePointGroup = purposeResult.SubResults[1];        
+        var purposePointGroup2 = purposeResult.SubResults[1];
         
-        purposeGroupName = secondPurposePointGroup.SubResults![0];
-        Assert.Equal("2.2", purposeGroupName.Text![0].Text);
+        pointGroupName = purposePointGroup2.SubResults![0];
+        Assert.Equal("2.2", pointGroupName.Text![0].Text);
         
-        var thirdPurpose = secondPurposePointGroup.SubResults![1];
-        var thirdPurposeAllText = string.Join(' ', thirdPurpose.Text?.Select(x => x.Text).ToArray()!);
+        var purpose3 = purposePointGroup2.SubResults![1];
+        var purpose3AllText = string.Join(' ', purpose3.Text?.Select(x => x.Text).ToArray()!);
         
-        Assert.Equal("4.3 From Point 2.2  Spray Irrigation", thirdPurposeAllText);
+        Assert.Equal("4.3 From Point 2.2 Spray Irrigation", purpose3AllText);
         
-        var thirdPurposeSubs = thirdPurpose.SubResults;
-        Assert.NotNull(thirdPurposeSubs);
-        Assert.Equal(4, thirdPurposeSubs.Count);
+        var purpose3Subs = purpose3.SubResults;
+        Assert.NotNull(purpose3Subs);
+        Assert.Equal(4, purpose3Subs.Count);
         
-        var thirdPurposePoint = thirdPurposeSubs[0].Text!.Single().Text;
-        Assert.Equal("4.3", thirdPurposePoint);
+        Assert.Equal("PurposePurposeNumber", purpose3Subs[0].MatchedLabel?.Name);
+        var purpose3PurposeNumber = purpose3Subs[0].Text!.Single().Text;
+        Assert.Equal("4.3", purpose3PurposeNumber);
         
-        var thirdPurposePurposeNumber = thirdPurposeSubs[1].Text!.Single().Text;
-        Assert.Equal("2.2", thirdPurposePurposeNumber);
+        var purpose3PointNumber = purpose3Subs[1].Text!.Single().Text;
+        Assert.Equal("2.2", purpose3PointNumber);
         
-        var thirdPurposeTextOnly = string.Join(' ', thirdPurposeSubs[3].Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("Spray Irrigation", thirdPurposeTextOnly);
+        var purpose3TextOnly = string.Join(' ', purpose3Subs[3].Text?.Select(x => x.Text).ToArray()!);
+        Assert.Equal("Spray Irrigation", purpose3TextOnly);
         
         // TODO update config to relate purposes to points
 
@@ -1510,65 +1517,56 @@ public class PdfPigNoOcrPdfTests
         Assert.False(pointsResult.IsOcr);
         Assert.Equal("DocumentPoints", pointsResult.MatchedLabel!.Name);
         
-        Assert.Equal(80, pointsResult.Text!.Count);
+        Assert.Equal(53, pointsResult.Text!.Count);
         Assert.Equal("2.1 For Purpose 4.1 and 4.2", pointsResult.Text![0].Text);
-        Assert.Equal("", pointsResult.Text![1].Text);
-        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![2].Text);
-        Assert.Equal("marked \"Point A\" and \"Point B\" on Map 1", pointsResult.Text![3].Text); // TODO double quotes should be single
-        Assert.Equal("", pointsResult.Text![4].Text);
-        Assert.Equal("2.2 For Purpose 4.3", pointsResult.Text![5].Text);
-        Assert.Equal("", pointsResult.Text![6].Text);
-        Assert.Equal("National Grid References", pointsResult.Text![7].Text);
-        Assert.Equal("From", pointsResult.Text![8].Text);
-        Assert.Equal("To", pointsResult.Text![9].Text);
-        Assert.Equal("TL5584494741", pointsResult.Text![10].Text);
-        Assert.Equal("TL5453692523", pointsResult.Text![11].Text);
-        Assert.Equal("TL5502493346", pointsResult.Text![12].Text);
-        Assert.Equal("TL5522093137", pointsResult.Text![13].Text);
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![1].Text);
+        Assert.Equal("marked \"Point A\" and \"Point B\" on Map 1", pointsResult.Text![2].Text); // TODO double quotes should be single
+        Assert.Equal("2.2 For Purpose 4.3", pointsResult.Text![3].Text);
+        Assert.Equal("National Grid References", pointsResult.Text![4].Text);
+        Assert.Equal("From To", pointsResult.Text![5].Text);
+        Assert.Equal("TL5584494741 TL5453692523", pointsResult.Text![6].Text);
+        Assert.Equal("TL5502493346 TL5522093137", pointsResult.Text![7].Text);
         
         Assert.Equal(2, pointsResult.SubResults!.Count);
 
-        var firstPoint = pointsResult.SubResults![0];
-        Assert.Equal("Point", firstPoint.MatchedLabel!.Name);
+        var point1 = pointsResult.SubResults![0];
+        Assert.Equal("Point", point1.MatchedLabel!.Name);
         
-        Assert.Equal("2.1 For Purpose 4.1 and 4.2  Between National Grid References TL 55782 94571 and TL 55844 94741" 
+        Assert.Equal("2.1 For Purpose 4.1 and 4.2 Between National Grid References TL 55782 94571 and TL 55844 94741" 
                 + " marked \"Point A\" and \"Point B\" on Map 1",
-            string.Join(' ', firstPoint.Text?.Select(x => x.Text).ToArray()!));
+            string.Join(' ', point1.Text?.Select(x => x.Text).ToArray()!));
         
-        var firstPointSubs = firstPoint.SubResults;
-        Assert.NotNull(firstPointSubs);
-        Assert.Equal(3, firstPointSubs.Count);
+        var point1Subs = point1.SubResults;
+        Assert.NotNull(point1Subs);
+        Assert.Equal(3, point1Subs.Count);
 
-        var firstPointPointNumber = firstPoint.SubResults![0];
-        Assert.Equal("PointPointNumber", firstPointPointNumber.MatchedLabel!.Name);        
-        Assert.Equal("2.1", firstPointPointNumber.Text![0].Text);
+        var point1PointNumber = point1.SubResults![0];
+        Assert.Equal("PointPointNumber", point1PointNumber.MatchedLabel!.Name);        
+        Assert.Equal("2.1", point1PointNumber.Text![0].Text);
         
-        var firstPointPurposeNumber = firstPoint.SubResults![1];
-        Assert.Equal("4.1 and 4.2", firstPointPurposeNumber.Text![0].Text);
+        var point1PurposeNumber = point1.SubResults![1];
+        Assert.Equal("4.1 and 4.2", point1PurposeNumber.Text![0].Text);
 
-        Assert.NotNull(firstPointPurposeNumber.SubResults);
-        Assert.Equal(2, firstPointPurposeNumber.SubResults.Count);
+        Assert.NotNull(point1PurposeNumber.SubResults);
+        Assert.Equal(2, point1PurposeNumber.SubResults.Count);
         
-        Assert.Equal("4.1", firstPointPurposeNumber.SubResults[0].Text![0].Text);
-        Assert.Equal("4.2", firstPointPurposeNumber.SubResults[1].Text![0].Text);
+        Assert.Equal("4.1", point1PurposeNumber.SubResults[0].Text![0].Text);
+        Assert.Equal("4.2", point1PurposeNumber.SubResults[1].Text![0].Text);
         
-        var firstPointTextOnly = firstPoint.SubResults![2];
-        Assert.Equal("TextWithoutPurposeAndPoint", firstPointTextOnly.MatchedLabel!.Name);
+        var point1TextOnly = point1.SubResults![2];
+        Assert.Equal("TextWithoutPurposeAndPoint", point1TextOnly.MatchedLabel!.Name);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741" 
                 + " marked \"Point A\" and \"Point B\" on Map 1",
-            string.Join(' ', firstPointTextOnly.Text?.Select(x => x.Text).ToArray()!));
+            string.Join(' ', point1TextOnly.Text?.Select(x => x.Text).ToArray()!));
         
-        var secondPoint = pointsResult.SubResults![1];
-        var secondPointText = secondPoint.Text!;
+        var point2 = pointsResult.SubResults![1];
+        var point2Text = point2.Text!;
 
-        Assert.Equal(75, secondPointText.Count);
-        Assert.Equal("2.2 For Purpose 4.3", secondPointText[0].Text);
-        Assert.Equal(string.Empty, secondPointText[1].Text);
-        Assert.Equal("National Grid References", secondPointText[2].Text);
-        Assert.Equal("From", secondPointText[3].Text);
-        Assert.Equal("To", secondPointText[4].Text);
-        Assert.Equal("TL5584494741", secondPointText[5].Text);
-        Assert.Equal("TL5453692523", secondPointText[6].Text);
+        Assert.Equal(50, point2Text.Count);
+        Assert.Equal("2.2 For Purpose 4.3", point2Text[0].Text);
+        Assert.Equal("National Grid References", point2Text[1].Text);
+        Assert.Equal("From To", point2Text[2].Text);
+        Assert.Equal("TL5584494741 TL5453692523", point2Text[3].Text);
         
         // TODO update config to relate points to purposes
     }

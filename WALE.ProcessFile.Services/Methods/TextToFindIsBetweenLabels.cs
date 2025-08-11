@@ -48,18 +48,15 @@ public static class TextToFindIsBetweenLabels
             request.line!,
             labelLineAlreadyIncluded,
             out var matchedEndText);
-
-        if (request.label.Name == "PurposePointGroup")
-        {
-            
-        }
         
         if (betweenText == null)
         {
             return Task.FromResult(new List<LabelGroupResult>());
         }
 
-        if (request.label.IncludeLabelText && betweenText.Count >= 1)
+        if (request.label.IncludeLabelText
+            && betweenText.Count >= 1
+            && !labelLineAlreadyIncluded)
         {
             var labelText = request.label.Text!.FirstOrDefault()!;
 

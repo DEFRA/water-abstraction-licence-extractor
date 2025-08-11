@@ -2,24 +2,15 @@ using WALE.ProcessFile.Services.Constants;
 
 namespace WALE.ProcessFile.Services.Models;
 
-public class DocumentLine
+public class DocumentLine(
+    int lineNumber,
+    int pageNumber,
+    List<DocumentLineColumn> columns,
+    double bottom,
+    double bottomRounded,
+    double left)
 {
-    public DocumentLine(
-        int lineNumber,
-        int pageNumber,
-        List<DocumentLineColumn> columns,
-        double bottom,
-        double bottomRounded,
-        double left)
-    {
-        LineNumber = lineNumber;
-        PageNumber = pageNumber;
-        Columns = columns;
-        Bottom = bottom;
-        BottomRounded = bottomRounded;
-        Left = left;
-    }
-    
+    // ReSharper disable once MemberCanBePrivate.Global
     public DocumentLine() : this(
         PositionConstants.UnknownLineNumber,
         PositionConstants.UnknownPageNumber,
@@ -32,29 +23,17 @@ public class DocumentLine
     {
         get
         {
-            if (Columns.Count == 0)
-            {
-                return string.Empty;
-            }
-            
-            return Columns[0].Text;
-        }
-        set
-        {
-            if (Columns.Count == 0)
-            {
-                Columns.Add(new DocumentLineColumn());
-            }
-            
-            Columns[0].Text = value;
+            return Columns.Count == 0 ?
+                string.Empty
+                : string.Join(' ', Columns.Select(column => column.Text));
         }
     }
 
-    public int LineNumber { get; set; }
+    public int LineNumber { get; set; } = lineNumber;
 
-    public int PageNumber { get; set; }
+    public int PageNumber { get; private init; } = pageNumber;
 
-    public List<DocumentLineColumn> Columns { get; set; } = [];
+    public List<DocumentLineColumn> Columns { get; set; } = columns;
 
     public double? OcrConfidence
     {
@@ -75,13 +54,24 @@ public class DocumentLine
         }
     }
 
-    public double Bottom { get; set; }
-    
-    public double BottomRounded { get; set; }
+    public double Bottom { get; init; } = bottom;
 
-    public double Left { get; set; }
+    public double BottomRounded { get; init; } = bottomRounded;
+
+    public double Left { get; init; } = left;
+
+    public DocumentLine Clone(string text)
+    {
+        var cloned = Clone();
+        var originalWords = cloned.Columns.First().Words;
+            
+        cloned.Columns.Clear();
+        cloned.Columns.Add(new DocumentLineColumn(text, originalWords));
+        
+        return cloned;
+    }
     
-    public DocumentLine Clone()
+    private DocumentLine Clone()
     {
         // TODO replace with a source generator        
         
@@ -94,13 +84,5 @@ public class DocumentLine
             BottomRounded = BottomRounded,
             Left = Left
         };
-    }
-    
-    public DocumentLine Clone(string text)
-    {
-        var cloned = Clone();
-        cloned.Columns[0].Text = text;
-        
-        return cloned;
     }
 }

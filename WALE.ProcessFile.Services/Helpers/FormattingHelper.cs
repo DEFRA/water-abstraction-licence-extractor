@@ -45,25 +45,28 @@ public static class FormattingHelper
         return trimmed;
     }
     
-    public static string Standardise(string text)
+    public static void Standardise(List<DocumentLineColumn> columns)
     {
         const string singleQuoteChar = "'";        
         const string doubleQuoteChar = "\"";
         const string asteriskString = "*";
-        
-        return text
-            .Trim()
-            .Replace("‘‘", doubleQuoteChar)
-            .Replace("’’", doubleQuoteChar)
-            .Replace("‘", singleQuoteChar)
-            .Replace("’", singleQuoteChar)
-            .Replace("“", doubleQuoteChar)
-            .Replace("”", doubleQuoteChar)
-            .Replace("'\"", doubleQuoteChar)
-            .Replace("'", doubleQuoteChar)
-            .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
-            .Replace("  ", PositionConstants.SpaceString)
-            .Replace("\"\"", doubleQuoteChar);
+
+        foreach (var column in columns)
+        {
+            column.Text = column.Text
+                .Trim()
+                .Replace("‘‘", doubleQuoteChar)
+                .Replace("’’", doubleQuoteChar)
+                .Replace("‘", singleQuoteChar)
+                .Replace("’", singleQuoteChar)
+                .Replace("“", doubleQuoteChar)
+                .Replace("”", doubleQuoteChar)
+                .Replace("'\"", doubleQuoteChar)
+                .Replace("'", doubleQuoteChar)
+                .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
+                .Replace("  ", PositionConstants.SpaceString)
+                .Replace("\"\"", doubleQuoteChar);
+        }
     }
 
     public static bool IsPageEmpty(string? input) => IsNullOrEmptyWhitespaceOrPunctuation(input);

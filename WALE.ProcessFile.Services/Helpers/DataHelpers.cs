@@ -497,17 +497,14 @@ public static partial class DataHelpers
                 {
                     new(tempLine.ToString(CultureInfo.InvariantCulture),[])
                 };
-                
+
                 var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
                     columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)
-                {
-                    Text = tempLine.ToString(CultureInfo.InvariantCulture)
-                };
+                    PositionConstants.UnknownCoordinate);
 
                 numberLines.Add(documentLine);
             }
@@ -621,17 +618,14 @@ public static partial class DataHelpers
                             .Select(word => new DocumentLineWord(word, null, coords))
                             .ToList())
                 };
-                
+
                 var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
                     columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)
-                {
-                    Text = returnLine
-                };
+                    PositionConstants.UnknownCoordinate);
 
                 return documentLine;
             }));
@@ -793,48 +787,6 @@ public static partial class DataHelpers
         "Farms"
     ];
 
-    public static bool TryGetNumber(
-        string? text,
-        int lineNumber,
-        int pageNumber,
-        out List<DocumentLine> numbers)
-    {
-        numbers = [];
-        
-        if (text == null)
-        {
-            return false;
-        }
-        
-        var irrelevantWords = new List<DocumentLineColumn>();
-
-        var list = text
-            .Split(' ')
-            .Select(result =>
-            {
-                var documentLine = new DocumentLine(
-                    lineNumber,
-                    pageNumber,
-                    irrelevantWords,
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)
-                {
-                    Text = result
-                };
-
-                return documentLine;
-            });
-        
-        if (AnyIsNumber(list, out var numberLines))
-        {
-            numbers.AddRange(numberLines);
-            return true;
-        }
-
-        return false;
-    }
-
     private static bool ContainsDescriptionOfAgency(string? text)
     {
         if (text == null)
@@ -891,14 +843,16 @@ public static partial class DataHelpers
             {
                 return false;
             }
+
+            var returnText = text.Text;
             
             if (containsDelimitter)
             {
-                text.Text = text.Text[..(text.Text.IndexOf(delimiter!,
+                returnText = returnText[..(returnText.IndexOf(delimiter!,
                     StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
             }
             
-            companyOrPersonalName = text.Text;
+            companyOrPersonalName = returnText;
             return true;
         }
 

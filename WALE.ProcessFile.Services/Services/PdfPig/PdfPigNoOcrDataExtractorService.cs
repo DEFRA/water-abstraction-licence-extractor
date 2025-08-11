@@ -297,21 +297,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     var documentLineToAdd = new DocumentLine(
                         lineNumber++,
                         pageNumber,
-                        [],
+                        [new(string.Empty, [])],
                         firstLine.BoundingBox.Bottom + blankLineGap,
                         bottomRounded + blankLineGap,
-                        PositionConstants.UnknownCoordinate)
-                    {
-                        Text = string.Empty
-                    };
+                        PositionConstants.UnknownCoordinate);
 
                     resultList.Add(documentLineToAdd);
                 }
 
                 previousWordLine = firstLine;
                 
-                var text = string.Join(' ', orderedWords);
-
                 var columns = new List<DocumentLineColumn>
                 {
                     new()
@@ -319,7 +314,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
                 Word? previousWord2 = null;
                 
-                foreach (var word in orderedPageWords)
+                foreach (var word in orderedWords)
                 {
                     previousWord2 ??= word;
                     
@@ -327,15 +322,26 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
                     if (xDiff >= 25)
                     {
+                        if (word?.Text == "From")
+                        {
+                            
+                        }
                         columns.Add(new DocumentLineColumn());
                     }
 
                     var columnToAddTo = columns.Last();
                     columnToAddTo.Words.Add(new DocumentLineWord(
-                        word.Text,
+                        word!.Text,
                         null,
                         DocumentLineWordCoordinates.Convert(word.BoundingBox)
                     ));
+
+                    previousWord2 = word;
+                }
+
+                foreach (var column in columns)
+                {
+                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
 
                 var documentLine = new DocumentLine(
@@ -344,10 +350,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     columns,
                     firstLine.BoundingBox.Bottom,
                     bottomRounded,
-                    firstLine.BoundingBox.Left)
-                {
-                    Text = text
-                };
+                    firstLine.BoundingBox.Left);
 
                 resultList.Add(documentLine);
                 return resultList;

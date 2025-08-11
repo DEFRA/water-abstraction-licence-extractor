@@ -100,16 +100,15 @@ public static class RelatedCategoryPosition
             return Task.FromResult(returnList);
         }
 
+        var line = absoluteMatches.First();
+
         var documentLine = new DocumentLine(
             PositionConstants.UnknownLineNumber,
             PositionConstants.UnknownPageNumber,
-            [],
+            line.Columns,
             PositionConstants.UnknownCoordinate,
             PositionConstants.UnknownCoordinate,
-            PositionConstants.UnknownCoordinate)
-        {
-            Text = absoluteMatches.FirstOrDefault()?.Text!
-        };
+            PositionConstants.UnknownCoordinate);
 
         labelGroupResult.Text = [documentLine];
         labelGroupResult.MatchedLabel = request.label;

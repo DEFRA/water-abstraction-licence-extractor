@@ -66,17 +66,14 @@ public static class Number
             {
                 new(tempLine.ToString(CultureInfo.InvariantCulture),[])
             };
-            
+
             var documentLine = new DocumentLine(
                 lineNumber,
                 pageNumber,
                 columns,
                 PositionConstants.UnknownCoordinate,
                 PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate)
-            {
-                Text = tempLine.ToString(CultureInfo.InvariantCulture)
-            };
+                PositionConstants.UnknownCoordinate);
 
             matchedLines.Add(documentLine);
         }

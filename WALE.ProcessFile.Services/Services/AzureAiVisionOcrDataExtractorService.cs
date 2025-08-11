@@ -72,9 +72,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
 
         var lineNumber = 0;
         
+        // TODO probably need to standardise the line
+        
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Select(line => (FormattingHelper.Standardise(line.Text), line.Words))
+            .Select(line => (line.Text, line.Words))
             .Select(line =>
             {
                 var documentLine = new DocumentLine(

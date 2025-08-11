@@ -19,11 +19,13 @@ public static class AutoCorrectHelper
         {
             return null;
         }
+
+        FormattingHelper.Standardise(text!.Columns);
         
         var words = wordsSplit
             .Select((line, index) =>
             (
-                FormattingHelper.Standardise(line),
+                line,
                 wordsSplit.Length > index + 1 ? wordsSplit[index + 1] : null
             ))
             .ToList();

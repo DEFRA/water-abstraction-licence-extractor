@@ -2,8 +2,6 @@ namespace WALE.ProcessFile.Services.Models;
 
 public class DocumentLineColumn(string text, List<DocumentLineWord> words)
 {
-    public DocumentLineColumn(string text) : this(text, []) { }
-    
     public DocumentLineColumn() : this(string.Empty, []) { }
 
     public string Text { get; set; } = text;    

@@ -130,17 +130,14 @@ public static class CompanyName
                             .Select(word => new DocumentLineWord(word, null, coords))
                             .ToList())
                 };
-                
+
                 var documentLine = new DocumentLine(
                     lineNumber,
                     pageNumber,
                     columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate)
-                {
-                    Text = returnLine
-                };
+                    PositionConstants.UnknownCoordinate);
 
                 return documentLine;
             }));
@@ -204,14 +201,16 @@ public static class CompanyName
             {
                 return false;
             }
+
+            var text = line.Text;
             
             if (containsDelimitter)
             {
-                line.Text = line.Text[..(line.Text.IndexOf(delimiter!,
+                text = text[..(text.IndexOf(delimiter!,
                     StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
             }
             
-            matchedCompanyOrPersonalName = line.Text;
+            matchedCompanyOrPersonalName = text;
             return true;
         }
 

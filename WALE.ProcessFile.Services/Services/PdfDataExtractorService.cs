@@ -392,7 +392,7 @@ public class PdfDataExtractorService(
             var labelResult = new LabelGroupResult
             {
                 MatchedLabel = label,
-                SubResults = relatedFileMatches.Matches,
+                SubResults = relatedFileMatches.Matches!,
                 PageNumber = line.PageNumber
             };
             
@@ -921,7 +921,7 @@ public class PdfDataExtractorService(
     {
         return lines.Select((line, index) =>
             {
-                line.Text = FormattingHelper.Standardise(line.Text);
+                FormattingHelper.Standardise(line.Columns);
                 
                 return (
                     line,
@@ -941,7 +941,7 @@ public class PdfDataExtractorService(
         while (newIndex >= 0 && count++ < n)
         {
             var line = lines[newIndex];
-            line.Text = FormattingHelper.Standardise(line.Text);
+            FormattingHelper.Standardise(line.Columns);
 
             returnList.Add(line);
             newIndex -= 1;
@@ -959,7 +959,7 @@ public class PdfDataExtractorService(
         while (newIndex < lines.Count && count++ < n)
         {
             var line = lines[newIndex];
-            line.Text = FormattingHelper.Standardise(line.Text);
+            FormattingHelper.Standardise(line.Columns);
             
             returnList.Add(line);
             newIndex += 1;
@@ -974,14 +974,19 @@ public class PdfDataExtractorService(
             .Select(text => text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
             .ToList();
         
-        if (labelText.Any(text => text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Any(text =>
+            text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
+
+        foreach (var line in lines)
+        {
+            FormattingHelper.Standardise(line.Columns);
+        }
         
-        return labelText.Any(text =>
-            FormattingHelper.Standardise(string.Join(',', lines.Select(line => line.Text))).Contains(text,
-                StringComparison.InvariantCultureIgnoreCase));
+        return labelText.Any(text => string.Join(',', lines.Select(line => line.Text)).Contains(text,
+            StringComparison.InvariantCultureIgnoreCase));
     }
     
     public void Dispose()

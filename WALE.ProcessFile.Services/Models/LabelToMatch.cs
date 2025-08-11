@@ -18,7 +18,7 @@ public class LabelToMatch
     public IReadOnlyList<string>? ResultMustNotContain { get; init; }
     public IReadOnlyList<string>? LabelLineMustNotContain { get; init; }    
     public IReadOnlyList<TextToMatch>? Remove { get; set; }
-    public IReadOnlyList<string>? TextEnd { get; set; }
+    public IReadOnlyList<TextToMatch>? TextEnd { get; set; }
     public IReadOnlyList<string>? MustContain { get; set; }
     public int? MinimumSubMatches { get; init; }
     public LabelPosition Position { get; set; }
@@ -28,6 +28,7 @@ public class LabelToMatch
     public IReadOnlyList<LabelToMatch>? SubLabels { get; set; }
     public string Format { get; set; } = "Text";
     public bool IncludeLabelText { get; init; }
+    public bool IncludeWholeLine { get; init; }
     public string? Name { get; init; }
     public string? CategoryName { get; init; }
     public IReadOnlyList<string>? Possibilities { get; set; }
@@ -59,6 +60,7 @@ public class LabelToMatch
             SubLabels = SubLabels?.Select(s => s.Clone()).ToList(),
             Format = Format,
             IncludeLabelText = IncludeLabelText,
+            IncludeWholeLine = IncludeWholeLine,
             Name = Name,
             CategoryName = CategoryName,
             Possibilities = Possibilities?.ToList(),

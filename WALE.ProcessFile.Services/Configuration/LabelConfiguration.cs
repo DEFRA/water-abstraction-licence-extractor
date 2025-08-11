@@ -129,9 +129,9 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "MEANS OF ABSTRACTION",
-                    "MEAN OF ABSTRACTION",
-                    "[END_OF_BLOCK]"
+                    new("MEANS OF ABSTRACTION"),
+                    new("MEAN OF ABSTRACTION"),
+                    new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
@@ -154,10 +154,10 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"
                         ],
                         TextEnd = [
-                            "2.2",
-                            "2.3",
-                            "2.4",
-                            "[END_OF_BLOCK]"
+                            new("2.2"),
+                            new("2.3"),
+                            new("2.4"),
+                            new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -235,9 +235,9 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "PERIODS OF ABSTRACTION",
-                    "PERIOD OF ABSTRACTION",
-                    "[END_OF_BLOCK]"
+                    new("PERIODS OF ABSTRACTION"),
+                    new("PERIOD OF ABSTRACTION"),
+                    new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
@@ -257,12 +257,13 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"                           
                         ],
                         TextEnd = [
-                            "From Point ",
-                            "[END_OF_BLOCK]"
+                            new("From Point "),
+                            new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
+                        IncludeWholeLine = true,
                         IncludeLabelText = true,
                         SubLabels =
                         [
@@ -286,10 +287,10 @@ public static class LabelConfiguration
                                     "[START_OF_BLOCK]"
                                 ],
                                 TextEnd = [
-                                    "4.2",
-                                    "4.3",
-                                    "4.4",
-                                    "[END_OF_BLOCK]"
+                                    new("4.2"),
+                                    new("4.3"),
+                                    new("4.4"),
+                                    new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 IncludeLabelText = true,
@@ -478,9 +479,9 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
-                    "FURTHER CONDITIONS",
-                    "[END_OF_BLOCK]"
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED"),
+                    new("FURTHER CONDITIONS"),
+                    new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 PreviousLinesToFetch = 0,
@@ -503,16 +504,16 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"
                         ],
                         TextEnd = [
-                            "5.2",
-                            "5.3",
-                            "5.4",
-                            "5.5",
-                            "5.6",
-                            "5.7",
-                            "5.8",
-                            "5.9",
-                            "5.10",                            
-                            "[END_OF_BLOCK]"
+                            new("5.2"),
+                            new("5.3"),
+                            new("5.4"),
+                            new("5.5"),
+                            new("5.6"),
+                            new("5.7"),
+                            new("5.8"),
+                            new("5.9"),
+                            new("5.10"),
+                            new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -600,8 +601,8 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "PURPOSE OF ABSTRACTION",
-                    "[END_OF_BLOCK]"
+                    new("PURPOSE OF ABSTRACTION"),
+                    new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 PreviousLinesToFetch = 3,
@@ -619,10 +620,10 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"
                         ],
                         TextEnd = [
-                            "3.2",
-                            "3.3",
-                            "3.4",
-                            "[END_OF_BLOCK]"
+                            new("3.2"),
+                            new("3.3"),
+                            new("3.4"),
+                            new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -718,15 +719,15 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
-                    "7. ",
-                    "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED",
-                    "MEANS OF MEASUREMENT OR ASSESSMENT OF WATER", //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
-                    "MEANS OF MEASUREMENT OF WATER ABSTRACTED",
-                    "MEANS OF ABSTRACTION",
-                    "Authorised means of abstraction",
-                    "MEANS TO BE USED FOR MEASURING",
-                    "PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED",
-                    "[END_OF_BLOCK]"
+                    new("7. "),
+                    new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED"),
+                    new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER"), //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
+                    new("MEANS OF MEASUREMENT OF WATER ABSTRACTED"),
+                    new("MEANS OF ABSTRACTION"),
+                    new("Authorised means of abstraction"),
+                    new("MEANS TO BE USED FOR MEASURING"),
+                    new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
+                    new("[END_OF_BLOCK]")
                 ],
                 MustContain =
                 [
@@ -765,16 +766,16 @@ public static class LabelConfiguration
                             "[START_OF_BLOCK]"
                         ],
                         TextEnd = [
-                            "6.2",
-                            "6.3",
-                            "6.4",
-                            "6.5",
-                            "6.6",
-                            "6.7",
-                            "6.8",
-                            "6.9",
-                            "6.10",                            
-                            "[END_OF_BLOCK]"
+                            new("6.2"),
+                            new("6.3"),
+                            new("6.4"),
+                            new("6.5"),
+                            new("6.6"),
+                            new("6.7"),
+                            new("6.8"),
+                            new("6.9"),
+                            new("6.10"),
+                            new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",

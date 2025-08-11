@@ -27,11 +27,11 @@ public static class TextToFindIsBetweenLabels
         var lineContainsLabel = request.label.Text?.Any(labelText =>
             request.line!.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
 
-        if (lineContainsLabel != true)
+        if (lineContainsLabel != true || request.label.IncludeWholeLine)
         {
-            linesToUse.Add(request.line!);                        
+            linesToUse.Add(request.line!);
         }
-        
+
         linesToUse.AddRange(request.nextLines!);
         
         var betweenText = GetTextBetween(
@@ -44,6 +44,11 @@ public static class TextToFindIsBetweenLabels
             request.lineNumber,
             request.line!,
             out var matchedEndText);
+
+        if (request.label.Name == "PurposePointGroup")
+        {
+            
+        }
         
         if (betweenText == null)
         {
@@ -74,7 +79,7 @@ public static class TextToFindIsBetweenLabels
         [
             labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
                 matchedEndText != null
-                && x == matchedEndText.Value.matchedEndText)
+                && x.Text == matchedEndText.Value.matchedEndText)
         ];
 
         if (labelGroupResult.MatchedLabel.MustContain != null)
@@ -93,10 +98,10 @@ public static class TextToFindIsBetweenLabels
     }
     
     private static List<DocumentLine>? GetTextBetween(
-        IReadOnlyList<string> textEnd,
+        IReadOnlyList<TextToMatch> textEnd,
         IReadOnlyList<string>? containsText,
         string? firstLineTextAfterLabel,
-        IReadOnlyList<DocumentLine> nextLines,
+        IReadOnlyList<DocumentLine> lines,
         int startLineNumber,
         DocumentLine lineInput,
         out (string matchedEndText, string matchedContainsText)? matchData)
@@ -109,19 +114,22 @@ public static class TextToFindIsBetweenLabels
         
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel))
         {
-            var clonedLine = lineInput.Clone(FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!);
+            var text = FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!;
+            
+            var clonedLine = lineInput.Clone(text);
             clonedLine.LineNumber = startLineNumber;
             
             returnList.Add(clonedLine);
         }
 
-        var totalLines = nextLines.Count;
+        var textEndList = textEnd.Select(x => x.Text).ToList();
+        var totalLines = lines.Count;
         
-        foreach (var line in nextLines)
+        foreach (var line in lines)
         {
             var label = new LabelToMatch
             {
-                Text = textEnd
+                Text = textEndList
             };
             
             if (LabelMatchingHelper.LineContainsLabel(
@@ -142,7 +150,7 @@ public static class TextToFindIsBetweenLabels
             returnList.Add(line.Clone(text));
         }
 
-        if (!foundEndTag && textEnd.Contains(PositionConstants.EndOfBlockMarker))
+        if (!foundEndTag && textEndList.Contains(PositionConstants.EndOfBlockMarker))
         {
             matchData = (PositionConstants.EndOfBlockMarker, PositionConstants.ReplacementMarker);
             foundEndTag = true;

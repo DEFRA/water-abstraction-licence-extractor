@@ -1548,7 +1548,11 @@ public class PdfPigNoOcrPdfTests
         
         var pointPurposeGroup1Name = pointPurposeGroup1.SubResults[0];
         Assert.Equal("PurposeGroupName", pointPurposeGroup1Name.MatchedLabel!.Name);
-        Assert.Equal("4.2", pointPurposeGroup1Name.Text!.First().Text); // TODO should be 4.1 and 4.2
+        Assert.Equal("4.1 and 4.2", pointPurposeGroup1Name.Text!.Single().Text);
+        
+        Assert.Equal(2, pointPurposeGroup1Name.SubResults.Count);
+        Assert.Equal("4.1", pointPurposeGroup1Name.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("4.2", pointPurposeGroup1Name.SubResults[1].Text?.FirstOrDefault()?.Text);
         
         var point1 = pointPurposeGroup1.SubResults[1];
         Assert.Equal("Point", point1.MatchedLabel!.Name);

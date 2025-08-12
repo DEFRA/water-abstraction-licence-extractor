@@ -168,15 +168,16 @@ public static class LabelConfiguration
                                 Text = [
                                     "For Purpose "
                                 ],
-                                Format = "Number",
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                                Possibilities = [
-                                    "4.1",
-                                    "4.2",
-                                    "4.3",
-                                    "4.4",
-                                    "4.5",
-                                    "4.6"
+                                Format = "Text",
+                                SubLabels =
+                                [
+                                    new()
+                                    {
+                                        Name = "PurposeGroupSub",
+                                        Text = ["and "],
+                                        Position = LabelPosition.Split
+                                    }
                                 ]
                             },
                             new()
@@ -220,7 +221,7 @@ public static class LabelConfiguration
                                             "For Purpose "
                                         ],
                                         Position = LabelPosition.LabelIsBeforeTextToFind,
-                                        Format = "ActsLikeSingleWord",
+                                        Format = "Text",
                                         SubLabels =
                                         [
                                             new LabelToMatch
@@ -576,7 +577,7 @@ public static class LabelConfiguration
                                     "For Purposes "
                                 ],
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                                Format = "ActsLikeSingleWord",
+                                Format = "Text",
                                 SubLabels =
                                 [
                                     new()

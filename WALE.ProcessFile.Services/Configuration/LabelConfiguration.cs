@@ -321,26 +321,6 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Number"                                
-                                    },                                    
-                                    new()
-                                    {
-                                        Name = "PointLink",
-                                        Text = [
-                                            "From Point "
-                                        ],
-                                        Position = LabelPosition.LabelIsBeforeTextToFind,
-                                        Format = "SingleWord"
-                                    },
-                                    new()
-                                    {
-                                        Name = "PointNumber",
-                                        Possibilities = [
-                                            "4.1",
-                                            "4.2",
-                                            "4.3"
-                                        ],
-                                        Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number"
                                     },
                                     new()
                                     {

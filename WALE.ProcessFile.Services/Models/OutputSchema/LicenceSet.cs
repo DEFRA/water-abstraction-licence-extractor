@@ -9,7 +9,7 @@ public class LicenceSet
         get
         {
             var licencesAlphabetical = Licences
-                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion?.LicenceVersionId);
+                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
 
             var outputSb = new StringBuilder();
             
@@ -24,7 +24,7 @@ public class LicenceSet
                     .Replace(" ", string.Empty)
                     .Replace("/", string.Empty);
 
-                var licenceVersionId = licence.LicenceVersion?.LicenceVersionId;
+                var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
                 
                 outputSb.Append($"{licenceNumber}-{licenceVersionId}");
             }

@@ -513,6 +513,16 @@ public static class SchemaConverter
         
         foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
+            var purposeGroupName = pointPurposeGroup.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeGroupName");
+
+            var purposeIds = purposeGroupName?.SubResults
+                .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
+                .Select(x => x.Text?.FirstOrDefault()?.Text)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => double.Parse(x!))
+                .ToArray() ?? [];
+            
             var points = pointPurposeGroup.SubResults
                 .Where(x => x.MatchedLabel?.Name == "Point");
 
@@ -539,7 +549,8 @@ public static class SchemaConverter
                 returnList.Add(new PointOfAbstraction
                 {
                     Description = description,
-                    Id = id
+                    Id = id,
+                    PurposeIds = purposeIds
                 });
             }
         }
@@ -559,8 +570,23 @@ public static class SchemaConverter
         
         foreach (var purposePointGroup in purposeResults.SubResults)
         {
-            var purposes = purposePointGroup.SubResults
+            var pointGroupName = purposePointGroup.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointGroupName");
+
+            var pointIds = pointGroupName?.SubResults
+                .Where(x => x.MatchedLabel?.Name == "PointGroupSub")
+                .Select(x => x.Text?.FirstOrDefault()?.Text)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => double.Parse(x!))
+                .ToArray() ?? [];
+            
+            var purposes = purposePointGroup?.SubResults
                 .Where(x => x.MatchedLabel!.Name == "Purpose");
+
+            if (purposes == null)
+            {
+                continue;
+            }
             
             foreach (var purpose in purposes)
             {
@@ -588,7 +614,8 @@ public static class SchemaConverter
                 returnList.Add(new PurposeOfAbstraction
                 {
                     Id = id,
-                    Description = description
+                    Description = description,
+                    PointIds = pointIds
                 });
             }
         }

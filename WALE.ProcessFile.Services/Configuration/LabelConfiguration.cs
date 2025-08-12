@@ -327,6 +327,15 @@ public static class LabelConfiguration
                                     "2.4",
                                     "2.5",
                                     "2.6"
+                                ],
+                                SubLabels =
+                                [
+                                    new()
+                                    {
+                                        Name = "PointGroupSub",
+                                        Text = ["and "],
+                                        Position = LabelPosition.Split
+                                    }
                                 ]
                             },
                             new()

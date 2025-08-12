@@ -1600,6 +1600,54 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("TL5584494741 TL5453692523", pointPurposeGroup2Text[3].Text);
         //...
         Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
+        
+        var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
+
+        Assert.Equal(filename, primaryLicence.Filename);
+        Assert.Equal("6/33/47/*S/0172/R01", primaryLicence.LicenceNumber);
+
+        var points = primaryLicence.Points;
+        Assert.Equal(2, points.Length);
+        
+        var primaryPoint1 = points[0];
+        Assert.Equal(2.1, primaryPoint1.Id);
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741\nmarked 'Point A' and 'Point B' on Map 1", primaryPoint1.Description);
+        Assert.Equal(2, primaryPoint1.PurposeIds.Length);
+        Assert.Equal(4.1, primaryPoint1.PurposeIds[0]);
+        Assert.Equal(4.2, primaryPoint1.PurposeIds[1]);
+        
+        var primaryPoint2 = points[1];
+        Assert.Equal(2.2, primaryPoint2.Id);
+        Assert.Equal(1213, primaryPoint2.Description!.Length);
+        Assert.StartsWith("National Grid References\nFrom To\nTL558449", primaryPoint2.Description);
+        Assert.Single(primaryPoint2.PurposeIds);
+        Assert.Equal(4.3, primaryPoint2.PurposeIds[0]);
+
+        var purposes = primaryLicence.Purposes;
+        Assert.Equal(3, purposes.Length);
+        
+        var primaryPurpose1 = purposes[0];
+        Assert.Equal(4.1, primaryPurpose1.Id);
+        Assert.StartsWith("Transfer for subsequent discharge and", primaryPurpose1.Description);
+        Assert.Single(primaryPurpose1.PointIds);
+        Assert.Equal(2.1, primaryPurpose1.PointIds[0]);
+        
+        var primaryPurpose2 = purposes[1];
+        Assert.Equal(4.2, primaryPurpose2.Id);
+        Assert.StartsWith("Filling a reservoir for subsequent", primaryPurpose2.Description);
+        Assert.Single(primaryPurpose2.PointIds);
+        Assert.Equal(2.1, primaryPurpose2.PointIds[0]);
+        
+        var primaryPurpose3 = purposes[2];
+        Assert.Equal(4.3, primaryPurpose3.Id);
+        Assert.Equal("Spray Irrigation", primaryPurpose3.Description);
+        Assert.Single(primaryPurpose3.PointIds);
+        Assert.Equal(2.2, primaryPurpose3.PointIds[0]);        
     }
     
     [Fact]
@@ -2110,7 +2158,7 @@ public class PdfPigNoOcrPdfTests
             primaryLicence.Points.First().Description);
 
         Assert.Single(primaryLicence.Purposes);
-        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().Description);        
+        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().Description);
         
         Assert.Null(primaryLicence.LicenceVersion.ExpiryDate);
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.EffectiveDate);

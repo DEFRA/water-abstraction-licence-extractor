@@ -62,7 +62,6 @@ public static class FormattingHelper
                 .Replace("“", doubleQuoteChar)
                 .Replace("”", doubleQuoteChar)
                 .Replace("'\"", doubleQuoteChar)
-                .Replace("'", doubleQuoteChar)
                 .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
                 .Replace("  ", PositionConstants.SpaceString)
                 .Replace("\"\"", doubleQuoteChar);

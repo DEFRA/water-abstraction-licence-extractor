@@ -208,7 +208,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Lady Isabelle Jacqueline Laline Hay, Countess of Erroll, Sir Thomas Minshull Stockdale, 2nd Baronet Stockdale, Robert Elkington",
             string.Join(", ", nameResult.Text!.Select(x => x.Text)));
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position); // TODO should eventually be LabelIsInMiddleOfTextToFind
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
@@ -1533,7 +1533,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("2. POINTS OF ABSTRACTION", pointsResult.Text![0].Text);
         Assert.Equal("2.1 For Purpose 4.1 and 4.2", pointsResult.Text![1].Text);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![2].Text);
-        Assert.Equal("marked \"Point A\" and \"Point B\" on Map 1", pointsResult.Text![3].Text); // TODO double quotes should be single
+        Assert.Equal("marked 'Point A' and 'Point B' on Map 1", pointsResult.Text![3].Text);
         Assert.Equal("2.2 For Purpose 4.3", pointsResult.Text![4].Text);
         Assert.Equal("National Grid References", pointsResult.Text![5].Text);
         Assert.Equal("From To", pointsResult.Text![6].Text);
@@ -1554,8 +1554,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Point", point1.MatchedLabel!.Name);
         
         Assert.Equal("2.1 For Purpose 4.1 and 4.2 Between National Grid References TL 55782 94571 and TL 55844 94741" 
-                + " marked \"Point A\" and \"Point B\" on Map 1",
-            string.Join(' ', point1.Text?.Select(x => x.Text).ToArray()!)); // TODO double quotes should be single
+                + " marked 'Point A' and 'Point B' on Map 1",
+            string.Join(' ', point1.Text?.Select(x => x.Text).ToArray()!));
         
         Assert.NotNull(point1.SubResults);
         Assert.Equal(3, point1.SubResults.Count);
@@ -1580,7 +1580,7 @@ public class PdfPigNoOcrPdfTests
         var point1TTextWithoutPurposeAndPoint= point1.SubResults[2];
         Assert.Equal("TextWithoutPurposeAndPoint", point1TTextWithoutPurposeAndPoint.MatchedLabel!.Name);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741" 
-                + " marked \"Point A\" and \"Point B\" on Map 1",
+                + " marked 'Point A' and 'Point B' on Map 1",
             string.Join(' ', point1TTextWithoutPurposeAndPoint.Text?.Select(x => x.Text).ToArray()!));
         
         var pointPurposeGroup2 = pointsResult.SubResults[1];
@@ -1596,8 +1596,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("TL5584494741 TL5453692523", pointPurposeGroup2Text[3].Text);
         //...
         Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
-        
-        // TODO update config to relate points to purposes
     }
     
     [Fact]

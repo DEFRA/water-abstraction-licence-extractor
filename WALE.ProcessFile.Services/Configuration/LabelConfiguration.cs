@@ -472,7 +472,9 @@ public static class LabelConfiguration
                 [
                     "(\"the Licence Holder\")",
                     "(the Licence Holder\")",
-                    "\"the Licence Holder\""
+                    "\"the Licence Holder\"",
+                    "'the Licence Holder\"",
+                    "\"the Licence Holder'"
                 ],
                 Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",

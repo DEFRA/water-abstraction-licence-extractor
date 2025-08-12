@@ -318,7 +318,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr J. E. Ward", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["\"the Licence Holder\""], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["\"the Licence Holder'"], nameResult.MatchedLabel!.Text);
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 

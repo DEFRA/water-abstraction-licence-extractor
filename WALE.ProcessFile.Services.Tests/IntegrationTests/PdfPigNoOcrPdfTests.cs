@@ -1463,7 +1463,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, purpose1.SubResults.Count);
 
         var purpose1PurposeNumber = purpose1.SubResults[0];
-        Assert.Equal("PurposePurposeNumber", purpose1PurposeNumber.MatchedLabel?.Name);
+        Assert.Equal("PurposeNumber", purpose1PurposeNumber.MatchedLabel?.Name);
         Assert.Equal("4.1", purpose1PurposeNumber.Text!.Single().Text);
 
         var purpose1TextWithoutPoints = purpose1.SubResults[1];
@@ -1487,7 +1487,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, purpose2.SubResults.Count);
         
         var purpose2PurposeNumber = purpose2.SubResults[0];
-        Assert.Equal("PurposePurposeNumber", purpose2PurposeNumber.MatchedLabel?.Name);
+        Assert.Equal("PurposeNumber", purpose2PurposeNumber.MatchedLabel?.Name);
         Assert.Equal("4.2", purpose2PurposeNumber.Text!.Single().Text);
         
         var purpose2TextWithoutPoints = purpose2.SubResults[1];
@@ -1514,7 +1514,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, purpose3.SubResults.Count);
         
         var purpose3PurposeNumber = purpose3.SubResults[0];
-        Assert.Equal("PurposePurposeNumber", purpose3PurposeNumber.MatchedLabel?.Name);
+        Assert.Equal("PurposeNumber", purpose3PurposeNumber.MatchedLabel?.Name);
         Assert.Equal("4.3", purpose3PurposeNumber.Text!.Single().Text);
         
         var purpose3TextWithoutPoints = purpose3.SubResults[1];

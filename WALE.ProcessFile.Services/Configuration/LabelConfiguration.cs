@@ -264,7 +264,6 @@ public static class LabelConfiguration
                         Format = "Text",
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
                         IncludeWholeLine = true,
-                        IncludeLabelText = true,
                         SubLabels =
                         [
                             new()
@@ -304,16 +303,16 @@ public static class LabelConfiguration
                                 IncludeLabelText = true,
                                 Format = "Text",
                                 Multiple = MultipleType.MultipleLabelsMultipleValues,
-                                Remove = [
-                                    new(@"/Page \d* of \d*/"),
-                                    new("/Licence Serial No: [A-Z0-9/]*/")
-                                    /* TODO add flag to include parent removes */
-                                ],
+                                //Remove = [
+                                //    new(@"/Page \d* of \d*/"),
+                                //    new("/Licence Serial No: [A-Z0-9/]*/")
+                                //    /* TODO add flag to include parent removes */
+                                //],
                                 SubLabels =
                                 [
                                     new()
                                     {
-                                        Name  = "PurposePurposeNumber",
+                                        Name  = "PurposeNumber",
                                         Possibilities = [
                                             "4.1",
                                             "4.2",

@@ -558,8 +558,8 @@ public static class SchemaConverter
         {
             foreach (var purposePointGroup in purposeResult.SubResults)
             {
-                var purposePurposeNumber = purposePointGroup.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposePurposeNumber");
+                var purposeNumber = purposePointGroup.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeNumber");
                 
                 var allTextWithoutNumber = purposePointGroup.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
@@ -567,7 +567,7 @@ public static class SchemaConverter
                     .Select(t => t.Text)
                     .ToArray();
 
-                if (allTextWithoutNumber == null && purposePurposeNumber == null)
+                if (allTextWithoutNumber == null && purposeNumber == null)
                 {
                     continue;
                 }
@@ -576,7 +576,7 @@ public static class SchemaConverter
                     ? string.Join('\n', allTextWithoutNumber)
                     : null;
                     
-                var number = purposePurposeNumber?.Text?.FirstOrDefault()?.Text;                
+                var number = purposeNumber?.Text?.FirstOrDefault()?.Text;                
                 var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
                 
                 returnList.Add(new PurposeOfAbstraction

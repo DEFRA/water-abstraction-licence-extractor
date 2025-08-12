@@ -120,7 +120,7 @@ public static class LabelConfiguration
         [
             new LabelToMatch
             {
-                Name = "DocumentPoints",
+                Name = "DocumentPointsAll",
                 TextStart =
                 [
                     "2. POINT OF ABSTRACTION",
@@ -140,79 +140,117 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 MinimumSubMatches = 1,
-                NextLinesToFetch = 80,
+                NextLinesToFetch = 100,
                 SubLabels = new List<LabelToMatch>
                 {
                     new()
                     {
-                        Name = "Point",
+                        Name = "PointPurposeGroup",
                         TextStart = [
-                            "2.1",
-                            "2.2",
-                            "2.3",
-                            "2.4",
-                            "[START_OF_BLOCK]"
+                            "For Purpose ",
+                            "[START_OF_BLOCK]"                           
                         ],
                         TextEnd = [
-                            new("2.2"),
-                            new("2.3"),
-                            new("2.4"),
+                            new("For Purpose ") { InstanceNumber = 2 },
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
-                        NextLinesToFetch = 100,
-                        IncludeLabelText = true,
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
-                        SubLabels = new List<LabelToMatch>
-                        {
+                        IncludeWholeLine = true,
+                        NextLinesToFetch = 100,
+                        SubLabels =
+                        [
                             new()
                             {
-                                Name  = "PointPointNumber",
-                                Possibilities = [
-                                    "2.1",
-                                    "2.2",
-                                    "2.3"
-                                ],
-                                Position = LabelPosition.ApplicableToMost,
-                                Format = "Number"                                
-                            },
-                            new()
-                            {
-                                Name = "PurposeLink",
+                                Name = "PurposeGroupName",
                                 Text = [
                                     "For Purpose "
                                 ],
+                                Format = "Number",
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                                Format = "ActsLikeSingleWord",
-                                SubLabels =
-                                [
-                                    new LabelToMatch
-                                    {
-                                        Name = "PurposeLinkSub",
-                                        Text = ["and "],
-                                        Position = LabelPosition.Split
-                                    }
+                                Possibilities = [
+                                    "4.1",
+                                    "4.2",
+                                    "4.3",
+                                    "4.4",
+                                    "4.5",
+                                    "4.6"
                                 ]
                             },
                             new()
                             {
-                                Name = "TextWithoutPurposeAndPoint",
-                                Remove = [
-                                    new("2.1") { LineMustStartWith = true },
-                                    new("2.2") { LineMustStartWith = true },
-                                    new("2.3") { LineMustStartWith = true },
-                                    new("2.4") { LineMustStartWith = true },
-                                    new("For Purpose 4.1") { RemoveWholeLine = true },
-                                    new("For Purpose 4.2") { RemoveWholeLine = true },
-                                    new("For Purpose 4.3") { RemoveWholeLine = true },
-                                    new("For Purpose 4.4") { RemoveWholeLine = true }                                    
+                                Name = "Point",
+                                TextStart = [
+                                    "2.1",
+                                    "2.2",
+                                    "2.3",
+                                    "2.4",
+                                    "[START_OF_BLOCK]"
                                 ],
-                                Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
-                                Position = LabelPosition.ApplicableToMost,
-                                Format = "Text"
+                                TextEnd = [
+                                    new("2.2"),
+                                    new("2.3"),
+                                    new("2.4"),
+                                    new("[END_OF_BLOCK]")
+                                ],
+                                Position = LabelPosition.TextToFindIsBetweenLabels,
+                                Format = "Text",
+                                NextLinesToFetch = 100,
+                                IncludeLabelText = true,
+                                Multiple = MultipleType.MultipleLabelsMultipleValues,
+                                SubLabels = new List<LabelToMatch>
+                                {
+                                    new()
+                                    {
+                                        Name  = "PointPointNumber",
+                                        Possibilities = [
+                                            "2.1",
+                                            "2.2",
+                                            "2.3"
+                                        ],
+                                        Position = LabelPosition.ApplicableToMost,
+                                        Format = "Number"                                
+                                    },
+                                    new()
+                                    {
+                                        Name = "PurposeLink",
+                                        Text = [
+                                            "For Purpose "
+                                        ],
+                                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                                        Format = "ActsLikeSingleWord",
+                                        SubLabels =
+                                        [
+                                            new LabelToMatch
+                                            {
+                                                Name = "PurposeLinkSub",
+                                                Text = ["and "],
+                                                Position = LabelPosition.Split
+                                            }
+                                        ]
+                                    },
+                                    new()
+                                    {
+                                        Name = "TextWithoutPurposeAndPoint",
+                                        Remove = [
+                                            new("2.1") { LineMustStartWith = true },
+                                            new("2.2") { LineMustStartWith = true },
+                                            new("2.3") { LineMustStartWith = true },
+                                            new("2.4") { LineMustStartWith = true },
+                                            new("For Purpose 4.1") { RemoveWholeLine = true },
+                                            new("For Purpose 4.2") { RemoveWholeLine = true },
+                                            new("For Purpose 4.3") { RemoveWholeLine = true },
+                                            new("For Purpose 4.4") { RemoveWholeLine = true }                                    
+                                        ],
+                                        Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
+                                        Position = LabelPosition.ApplicableToMost,
+                                        Format = "Text",
+                                        NextLinesToFetch = 100,
+                                    }
+                                }
                             }
-                        }
+                        ]
                     }
                 }
             }

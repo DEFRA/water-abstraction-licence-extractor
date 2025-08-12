@@ -511,34 +511,37 @@ public static class SchemaConverter
             return returnList.ToArray();
         }
         
-        foreach (var pointResult in pointsResults.SubResults)
+        foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
-            var pointPointNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
-            
-            var allTextWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
-                .Text?
-                .Select(t => t.Text)
-                .ToArray();
+            var points = pointPurposeGroup.SubResults
+                .Where(x => x.MatchedLabel?.Name == "Point");
 
-            if (allTextWithoutNumber == null && pointPointNumber == null)
+            foreach (var point in points)
             {
-                continue;
+                var pointNumber = point.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
+
+                var allTextWithoutNumber = point.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
+                    .Text?
+                    .Select(t => t.Text)
+                    .ToArray();
+
+                if (allTextWithoutNumber == null || pointNumber == null)
+                {
+                    continue;
+                }
+
+                var description = string.Join('\n', allTextWithoutNumber);
+                var number = pointNumber.Text!.First().Text;
+                var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+
+                returnList.Add(new PointOfAbstraction
+                {
+                    Description = description,
+                    Id = id
+                });
             }
-
-            var description = allTextWithoutNumber != null
-                ? string.Join('\n', allTextWithoutNumber)
-                : null;
-            
-            var number = pointPointNumber?.Text?.FirstOrDefault()?.Text;
-            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
-            
-            returnList.Add(new PointOfAbstraction
-            {
-                Description = description,
-                Id = id
-            });
         }
 
         return returnList.ToArray();
@@ -554,14 +557,17 @@ public static class SchemaConverter
             return returnList.ToArray();
         }
         
-        foreach (var purposeResult in purposeResults.SubResults)
+        foreach (var purposePointGroup in purposeResults.SubResults)
         {
-            foreach (var purposePointGroup in purposeResult.SubResults)
+            var purposes = purposePointGroup.SubResults
+                .Where(x => x.MatchedLabel!.Name == "Purpose");
+            
+            foreach (var purpose in purposes)
             {
-                var purposeNumber = purposePointGroup.SubResults
+                var purposeNumber = purpose.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeNumber");
                 
-                var allTextWithoutNumber = purposePointGroup.SubResults
+                var allTextWithoutNumber = purpose.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
                     .Text?
                     .Select(t => t.Text)

@@ -139,6 +139,7 @@ public static class LabelConfiguration
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
                 MinimumSubMatches = 1,
                 NextLinesToFetch = 100,
                 SubLabels = new List<LabelToMatch>
@@ -283,6 +284,7 @@ public static class LabelConfiguration
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
                 MinimumSubMatches = 1,
                 NextLinesToFetch = 30,
                 SubLabels = 
@@ -302,6 +304,11 @@ public static class LabelConfiguration
                         Format = "Text",
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
                         IncludeWholeLine = true,
+                        Remove = [
+                            new("4. PURPOSE OF ABSTRACTION"),
+                            new("4. PURPOSE(S) OF ABSTRACTION"),
+                            new("4. PURPOSES OF ABSTRACTION")                            
+                        ],
                         SubLabels =
                         [
                             new()

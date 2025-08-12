@@ -160,17 +160,23 @@ public static partial class DataHelper
         var wordsSplit = line.Split(' ');
         var countOfVeryShortWordsOrSymbols = wordsSplit
             .Count(word =>
-                word.Length <= 2 
-                && !word.Any(char.IsDigit) 
-                && word.ToLower() != "a"
-                && word.ToLower() != "a,"
-                && word.ToLower() != "b,"
-                && word.ToLower() != "c,"
-                && word.ToLower() != "d,"
-                && word.ToLower() != "e,"                
-                && word.ToLower() != "of"
-                && word.ToLower() != "to"
-                && word.ToLower() != "be");
+            {
+                var wordLower = word.ToLower();
+
+                return word.Length <= 2
+                       && !word.Any(char.IsDigit)
+                       && wordLower != "a"
+                       && wordLower != "a,"
+                       && wordLower != "b,"
+                       && wordLower != "c,"
+                       && wordLower != "d,"
+                       && wordLower != "e,"
+                       && wordLower != "of"
+                       && wordLower != "at"
+                       && wordLower != "on"
+                       && wordLower != "to"
+                       && wordLower != "be";
+            });
 
         var percentagePerWord = 100.0 / wordsSplit.Length;
         

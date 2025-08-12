@@ -541,7 +541,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Name == "PeriodOfAbstractionSubSection")
+                if (label.Name == "PurposePointGroup")
                 {
                     
                 }

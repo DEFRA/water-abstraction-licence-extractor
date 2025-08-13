@@ -16,7 +16,7 @@ public static partial class DataHelper
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
-        var inputList = betweenText != null ? [..betweenText] : new List<DocumentLine>();
+        var inputList = betweenText ?? new List<DocumentLine>();
         
         if ((label.Remove?.Any() != true && label.ResultMustNotContain?.Any() != true) || betweenText == null)
         {
@@ -26,17 +26,14 @@ public static partial class DataHelper
         var returnList = new List<DocumentLine>();
         var removesUsedList = new List<string>();
         
-        for (var idx = 0; idx < inputList.Count; idx++)
+        foreach (var line in inputList)
         {
-            var line = inputList[idx];
-            var bt = betweenText[idx].Text;
-            
             if (LabelMatchingHelper.TextContainsForbiddenResult(line, label))
             {
                 continue;
             }
             
-            returnList.Add(line.Clone(RemoveExcludes(label, bt, out var removesUsedLoop)));
+            returnList.Add(line.Clone(RemoveExcludes(label, line.Text, out var removesUsedLoop)));
 
             if (removesUsedLoop != null)
             {
@@ -190,5 +187,18 @@ public static partial class DataHelper
         
         return (countOfVeryShortWordsOrSymbols > 3 && percentageOfShortWords >= 20.0)
             || (wordsSplit.Length >= 2 && percentageOfSuspectedIncorrectWords > 50);
+    }
+    
+    public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)
+    {
+        foreach (var match in matches)
+        {
+            if (match.MatchedLabel != null)
+            {
+                match.MatchedLabel.SubLabels = null;
+            }
+
+            NullOutSubLabels(match.SubResults);
+        }
     }
 }

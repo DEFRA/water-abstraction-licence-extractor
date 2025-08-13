@@ -546,9 +546,9 @@ public class PdfDataExtractorService(
                     
                 }
                 
-                if (label.Format == "CompanyName")
+                if (line.Text.Contains("gallons per hour"))
                 {
-                    
+                
                 }
 
                 if (label.MatchAllText)

@@ -104,6 +104,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
 
                 foreach (var line in lines.OrderBy(l => l.Words[0].BoundingBox[0]))
                 {
+                    if (line!.Text.Contains("gallons per hour"))
+                    {
+                
+                    }
+                    
                     columns.Add(new DocumentLineColumn(line.Item1, line.Words.Select(word =>
                         new DocumentLineWord(
                             word.Text,

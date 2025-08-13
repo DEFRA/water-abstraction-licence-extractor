@@ -12,4 +12,9 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
     {
         return new DocumentLineColumn(Text, Words.ToList());
     }
+    
+    public DocumentLineColumn Clone(string text)
+    {
+        return new DocumentLineColumn(text, Words.ToList());
+    }
 }

@@ -113,6 +113,11 @@ public static class TextToFindIsBetweenLabels
         
         var lineCount = 0;
         var returnList = new List<DocumentLine>();
+
+        if (lines.FirstOrDefault()?.Text.Contains("gallons per hour") == true)
+        {
+            
+        }
         
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {

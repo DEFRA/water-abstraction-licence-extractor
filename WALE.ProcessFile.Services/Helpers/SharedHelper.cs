@@ -8,7 +8,7 @@ public static class SharedHelper
 {
     public static string GetJson(MatchesResult matches)
     {
-        DataHelpers.NullOutSubLabels(matches.Matches!);
+        DataHelper.NullOutSubLabels(matches.Matches!);
         return JsonSerializer.Serialize(matches, GetSerializer());
     }
 

@@ -15,96 +15,121 @@ public static partial class LicenceNumber
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
-        var anyIsMatch = false;
+        var anyMatchFound = false;
         
         foreach (var line in lines)
         {
-            if (string.IsNullOrEmpty(line?.Text))
-            {
-                continue;
-            }
-
-            if (!line.Text.Any(char.IsDigit))
+            if (line == null)
             {
                 continue;
             }
             
-            if (DataHelper.IsCorruptedText(line.Text))
+            var newColumns = new List<DocumentLineColumn>();
+            
+            foreach (var column in line.Columns)
+            {
+                var anyMatchFoundForColumn = false;
+                
+                if (string.IsNullOrEmpty(column.Text)
+                    || !column.Text.Any(char.IsDigit)
+                    || DataHelper.IsCorruptedText(column.Text))
+                {
+                    newColumns.Add(column);
+                    continue;
+                }
+
+                const string splitChar = ",";
+
+                var subLines = column.Text
+                    .Replace(" and", splitChar)
+                    .Replace(" for", splitChar)
+                    .Replace(" shall", splitChar)
+                    .Replace(" under", splitChar)
+                    .Replace(" from", splitChar)
+                    .Replace(" (", splitChar)                
+                    .Split(splitChar);
+
+                foreach (var subLine in subLines)
+                {
+                    var invalid = subLine.Any(character =>
+                        !char.IsLetter(character)
+                        && !char.IsNumber(character)
+                        && character != ' '
+                        && character != '/'
+                        && character != '.'
+                        && character != '*');
+
+                    var words = subLine.Split(' ');
+
+                    if (words.Any(word => word.Length >= 3
+                        && word.All(char.IsLetter)
+                        && DataHelper.Dictionary.Check(word)))
+                    {
+                        invalid = true;
+                    }
+
+                    if (invalid)
+                    {
+                        continue;
+                    }
+                    
+                    var containsSplitter = subLine.Contains(' ') || column.Text.Contains('/');
+
+                    if (!containsSplitter || subLine.Length < 4)
+                    {
+                        continue;
+                    }
+                    
+                    var numberLine = subLine;
+
+                    if (numberLine.Contains('/'))
+                    {
+                        numberLine = numberLine.Replace(" ", string.Empty);
+                    }
+
+                    var regexMatches = LicenceNumbersSlashesRegex().IsMatch(numberLine)
+                                       || LicenceNumbersSpacesRegex().IsMatch(numberLine);
+
+                    var enoughPartsWithNumbers = numberLine
+                        .Replace(" ", "/")
+                        .Split('/')
+                        .Count(p => p.Any(char.IsDigit)) >= 2;
+
+                    var match = regexMatches && enoughPartsWithNumbers;
+
+                    if (match)
+                    {
+                        var text = numberLine.Trim();
+                        var clonedColumn = column.Clone(text);
+
+                        newColumns.Add(clonedColumn);
+
+                        anyMatchFoundForColumn = true;
+                        anyMatchFound = true;
+                    }
+
+                    if (label.Multiple == MultipleType.False)
+                    {
+                        return anyMatchFound;
+                    }
+                }
+
+                if (!anyMatchFoundForColumn)
+                {
+                    newColumns.Add(column);
+                }
+            }
+
+            if (!anyMatchFound)
             {
                 continue;
             }
-
-            const string splitChar = ",";
-
-            var subLines = line.Text
-                .Replace(" and", splitChar)
-                .Replace(" for", splitChar)
-                .Replace(" shall", splitChar)
-                .Replace(" under", splitChar)
-                .Replace(" from", splitChar)
-                .Replace(" (", splitChar)                
-                .Split(splitChar);
-
-            foreach (var subLine in subLines)
-            {
-                var invalid = subLine.Any(character =>
-                    !char.IsLetter(character)
-                    && !char.IsNumber(character)
-                    && character != ' '
-                    && character != '/'
-                    && character != '.'
-                    && character != '*');
-
-                var words = subLine.Split(' ');
-
-                foreach (var word in words)
-                {
-                    if (word.Length >= 3 && word.All(char.IsLetter) && DataHelper.Dictionary.Check(word))
-                    {
-                        invalid = true;
-                        break;
-                    }
-                }                
-                
-                if (!invalid)
-                {
-                    var containsSplitter = subLine.Contains(' ') || line.Text.Contains('/');
-
-                    if (containsSplitter && subLine.Length >= 4)
-                    {
-                        var numberLine = subLine;
-
-                        if (numberLine.Contains('/'))
-                        {
-                            numberLine = numberLine.Replace(" ", string.Empty);
-                        }
-
-                        var regexMatches = LicenceNumbersSlashesRegex().IsMatch(numberLine)
-                            || LicenceNumbersSpacesRegex().IsMatch(numberLine);
-
-                        var enoughPartsWithNumbers = numberLine
-                           .Replace(" ", "/")
-                           .Split('/')
-                           .Count(p => p.Any(char.IsDigit)) >= 2;
-
-                        var match = regexMatches && enoughPartsWithNumbers;
-                        
-                        if (match)
-                        {
-                            matchedLines.Add(line.Clone(numberLine.Trim()));
-                            anyIsMatch = true;
-                        }
-
-                        if (label.Multiple == MultipleType.False)
-                        {
-                            return anyIsMatch;                            
-                        }
-                    }
-                }
-            }
+            
+            var clonedLine = line.Clone(newColumns);
+            matchedLines.Add(clonedLine);
         }
         
-        return anyIsMatch;
+        return anyMatchFound;
     }
     
     [GeneratedRegex(@"[0-9A-Z]{1,2}\/[0-9]{1,5}(\/[0-9\.A-Z\*]{1,4}\/\d{1,4})*")]

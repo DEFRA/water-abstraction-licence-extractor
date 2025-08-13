@@ -67,8 +67,7 @@ public static class Split
                     new(leftPart, leftPartWords)
                 };
 
-                var leftLine = request.line.Clone(leftPart);
-                leftLine.Columns = leftColumns;
+                var leftLine = request.line.Clone(leftColumns);
                 leftPartLines = [leftLine];
                 
                 var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
@@ -88,8 +87,7 @@ public static class Split
                         new(rightPart, rightPartWords)
                     };
                     
-                    var rightLine = request.line.Clone(rightPart);
-                    rightLine.Columns = rightColumns;
+                    var rightLine = request.line.Clone(rightColumns);
                     rightPartLines = [rightLine];
                 }
             }

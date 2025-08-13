@@ -59,19 +59,16 @@ public class DocumentLine(
     public double BottomRounded { get; init; } = bottomRounded;
 
     public double Left { get; init; } = left;
-
-    public DocumentLine Clone(string text)
+    
+    public DocumentLine Clone(List<DocumentLineColumn> columns)
     {
         var cloned = Clone();
-        var originalWords = cloned.Columns.First().Words;
-            
-        cloned.Columns.Clear();
-        cloned.Columns.Add(new DocumentLineColumn(text, originalWords));
+        cloned.Columns = columns;
         
         return cloned;
     }
     
-    private DocumentLine Clone()
+    public DocumentLine Clone()
     {
         // TODO replace with a source generator        
         

@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
@@ -28,17 +27,27 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            if (LabelMatchingHelper.TextContainsForbiddenResult(line, label))
+            var newColumns = new List<DocumentLineColumn>();
+            
+            foreach (var column in line.Columns)
             {
-                continue;
+                if (LabelMatchingHelper.TextContainsForbiddenResult(column.Text, label))
+                {
+                    continue;
+                }
+
+                var alteredText = RemoveExcludes(label, column.Text, out var removesUsedLoop);
+                var clonedColumn = column.Clone(alteredText);
+                newColumns.Add(clonedColumn);
+
+                if (removesUsedLoop != null)
+                {
+                    removesUsedList.AddRange(removesUsedLoop);
+                }
             }
             
-            returnList.Add(line.Clone(RemoveExcludes(label, line.Text, out var removesUsedLoop)));
-
-            if (removesUsedLoop != null)
-            {
-                removesUsedList.AddRange(removesUsedLoop);
-            }
+            var clonedLine = line.Clone(newColumns);
+            returnList.Add(clonedLine);
         }
 
         removesUsed = removesUsedList;

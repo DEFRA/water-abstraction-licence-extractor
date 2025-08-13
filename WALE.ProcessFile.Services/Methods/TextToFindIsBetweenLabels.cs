@@ -54,16 +54,20 @@ public static class TextToFindIsBetweenLabels
             return Task.FromResult(new List<LabelGroupResult>());
         }
 
+        // Add label text if asked for
         if (request.label.IncludeLabelText
             && betweenText.Count >= 1
             && !labelLineAlreadyIncluded)
         {
+            var firstBetweenLine = betweenText[0];
+            var firstColumn = firstBetweenLine.Columns[0];
+            
             var labelText = request.label.Text!.FirstOrDefault()!;
 
             if (labelText != "[START_OF_BLOCK]")
             {
-                betweenText[0] = betweenText[0].Clone(
-                    request.label.Text!.FirstOrDefault()! + " " + betweenText[0].Text);   
+                var text = $"{request.label.Text!.FirstOrDefault()!} {firstColumn.Text}";
+                betweenText[0].Columns[0] = firstColumn.Clone(text);   
             }
         }
         
@@ -119,12 +123,15 @@ public static class TextToFindIsBetweenLabels
             
         }
         
+        // Add the first line between
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!;
+            var clonedColumn = lineInput.Columns[0].Clone(text);
             
-            var clonedLine = lineInput.Clone(text);
+            var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
+            clonedLine.Columns[0] = clonedColumn;
             
             returnList.Add(clonedLine);
         }
@@ -168,7 +175,12 @@ public static class TextToFindIsBetweenLabels
             }
             
             var text = FormattingHelper.TrimFormatting(line.Text)!;
-            returnList.Add(line.Clone(text));
+            
+            var clonedColumn = line.Columns[0].Clone(text);
+            var clonedLine = line.Clone();
+            clonedLine.Columns[0] = clonedColumn;
+            
+            returnList.Add(clonedLine);
         }
 
         if (!foundEndTag && textEndList.Contains(PositionConstants.EndOfBlockMarker))

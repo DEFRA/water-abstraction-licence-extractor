@@ -536,7 +536,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (LabelMatchingHelper.TextContainsForbiddenLine(line, label))
+                if (LabelMatchingHelper.TextContainsForbiddenLine(line.Text, label))
                 {
                     continue;
                 }

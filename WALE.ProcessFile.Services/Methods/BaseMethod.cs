@@ -84,8 +84,10 @@ public static class BaseMethod
                         {
                             continue;
                         }
-                        
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine.Clone(relatedFileName!)]);
+
+                        licenceNumberLine.Columns[0].Text = relatedFileName!;
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+
                         returnList.Add(labelGroupResult);
                     }
                 }

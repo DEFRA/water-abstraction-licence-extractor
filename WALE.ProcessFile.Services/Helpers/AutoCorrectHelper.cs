@@ -1,26 +1,23 @@
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
 public static class AutoCorrectHelper
 {
-    public static string? AutoCorrectText(DocumentLine? text, bool removeFirstWordIfLowercase)
+    public static string? AutoCorrectText(string? lineText, bool removeFirstWordIfLowercase)
     {
-        if (CompanyName.StartsWithCompanyOrPersonalPrefix(text?.Text)
-            || CompanyName.CompanyWords.Any(companyWord => text?.Text.StartsWith(companyWord) ?? false))
+        if (CompanyName.StartsWithCompanyOrPersonalPrefix(lineText)
+            || CompanyName.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
         {
-            return text?.Text;
+            return lineText;
         }
         
-        var wordsSplit = text?.Text.Split(' ');
+        var wordsSplit = lineText?.Split(' ');
         
         if (wordsSplit == null)
         {
             return null;
         }
-
-        FormattingHelper.Standardise(text!.Columns);
         
         var words = wordsSplit
             .Select((line, index) =>

@@ -18,11 +18,20 @@ public static class SingleWord
         }
         
         var line = lines[0];
-        
-        labelGroupResult = labelGroupResult.Clone(
-            [line.Clone(line.Text.Split(' ')[0])]);
 
-        returnList.Add(labelGroupResult);
+        foreach (var column in line.Columns)
+        {
+            var text = column.Text.Split(' ')[0];
+
+            var clonedColumn = column.Clone(text);
+            var clonedLine = line.Clone([clonedColumn]);
+
+            labelGroupResult = labelGroupResult.Clone([clonedLine]);
+            returnList.Add(labelGroupResult);
+
+            break;
+        }
+
         return returnList;
     }
 }

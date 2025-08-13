@@ -24,12 +24,20 @@ public static class LabelIsInMiddleOfTextToFind
         if (request.textBeforeAndAfterLabel!.Count >= 1)
         {
             var beforeOnSameLine = request.textBeforeAndAfterLabel![0];
-            inputLines.Add(request.line!.Clone(beforeOnSameLine.Text!));
+
+            var clonedLine = request.line!.Clone();
+            clonedLine.Columns[0] = clonedLine.Columns[0].Clone(beforeOnSameLine.Text!);;
+            
+            inputLines.Add(clonedLine);
 
             if (request.textBeforeAndAfterLabel.Count >= 2)
             {
                 var afterOnSameLine = request.textBeforeAndAfterLabel![1];
-                inputLines.Add(request.line!.Clone(afterOnSameLine.Text!));
+                
+                clonedLine = request.line!.Clone();
+                clonedLine.Columns[0] = clonedLine.Columns[0].Clone(afterOnSameLine.Text!);;
+                
+                inputLines.Add(clonedLine);
             }
         }
 

@@ -33,14 +33,7 @@ public static class ApplicableToMost
         
         foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
         {
-            /*if (LabelMatchingHelper.TextContainsForbiddenResult(
-                new DocumentLine(request.line!.Text),
-                request.label!))
-            {
-                continue;
-            }*/
-
-            var labelGroupResult = request.labelGroupResult;//Clone(matchedLabel);
+            var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;
             
@@ -54,13 +47,14 @@ public static class ApplicableToMost
                 continue;
             }
 
-            var docLine = line!.Clone(outputText);
+            var documentLine = line!.Clone();
+            documentLine.Columns[0] = documentLine.Columns[0].Clone(outputText);
             
             if (request.isDateOrPurposeLookup)
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (DateOrPurpose.AnyIsDateOrPurpose([docLine], out var matchedLines))
+                if (DateOrPurpose.AnyIsDateOrPurpose([documentLine], out var matchedLines))
                 {
                     matchedLines = RestrictToPossibilities(request, matchedLines);
                     
@@ -88,7 +82,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (Number.AnyIsNumber([docLine], out var numberLines))
+                if (Number.AnyIsNumber([documentLine], out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request, numberLines);
 
@@ -108,7 +102,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([docLine], request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -129,7 +123,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([docLine], request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -140,8 +134,10 @@ public static class ApplicableToMost
                         {
                             continue;
                         }
+
+                        licenceNumberLine.Columns[0].Text = relatedFileName!;
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine.Clone(relatedFileName!)]);
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
 
@@ -153,9 +149,10 @@ public static class ApplicableToMost
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
             {
-                labelGroupResult.Text = [docLine.Clone(request.isSingleWord ? t.Split(' ')[0] : t)];
+                documentLine.Columns[0].Text = request.isSingleWord ? t.Split(' ')[0] : t;
+                labelGroupResult.Clone([documentLine]);
+                
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
@@ -164,8 +161,7 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = AutoCorrectHelper.AutoCorrectText(
-                    docLine,
-                    false);
+                    documentLine.Text,false);
                 
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
@@ -188,7 +184,7 @@ public static class ApplicableToMost
                 
                 var r = Units.GetMatchesToPossibilities(
                     request.label!,
-                    [docLine],
+                    [documentLine],
                     labelGroupResult);
 
                 if (r.Count == 0)
@@ -196,17 +192,17 @@ public static class ApplicableToMost
                     continue;
                 }
 
-                labelGroupResult = labelGroupResult.Clone([docLine]);
+                labelGroupResult = labelGroupResult.Clone([documentLine]);
                 return r;
             }
 
             outputText = FormattingHelper.TrimFormatting(outputText);
-            outputText = request.isOcr ? AutoCorrectHelper.AutoCorrectText(
-                docLine.Clone(outputText!),
-                request.isCompanyType) : outputText;
+            outputText = request.isOcr
+                ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType)
+                : outputText;
 
             if (request.isCompanyType
-                && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(outputText!), matchedLabel, out _))
+                && CompanyName.TryGetCompanyOrPersonalName(outputText, matchedLabel, out _))
             {
                 if (request.label?.Position == LabelPosition.LabelIsInMiddleOfTextToFind)
                 {
@@ -224,9 +220,12 @@ public static class ApplicableToMost
                 var matchType = over2Lines ?
                     MatchType.SameLineIsCompany2Lines
                     : MatchType.SameLineIsCompany1Line;
+
+                documentLine.Columns[0].Text = outputText!;
                 
-                labelGroupResult.Text = [docLine.Clone(outputText!)];
+                labelGroupResult.Text = [documentLine];
                 labelGroupResult.MatchType = matchType;
+                
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
@@ -243,9 +242,11 @@ public static class ApplicableToMost
                 && !string.IsNullOrEmpty(trimmedSplit[0])
                 && request.isCompanyType)
             {
-                labelGroupResult.Text = [docLine.Clone(outputText)];
+                documentLine.Columns[0].Text = outputText;
                 
+                labelGroupResult.Text = [documentLine];
                 labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
@@ -260,18 +261,18 @@ public static class ApplicableToMost
             {
                 if (request.label?.Text == null)
                 {
-                    var lineMatch = labelGroupResult.Clone();
-                    lineMatch.Text = [docLine.Clone(outputText)];
-
+                    documentLine.Columns[0].Text = outputText;
+                    var lineMatch = labelGroupResult.Clone([documentLine]);
                     lineMatch.MatchType = MatchType.Between;
+                    
                     FormattingHelper.RemoveRemoves(lineMatch, removedLines);
 
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
                 else if (request.label?.Format == Text.Constant)
                 {
-                    var lineMatch = labelGroupResult.Clone();
-                    lineMatch.Text = [docLine.Clone(outputText)];
+                    documentLine.Columns[0].Text = outputText;
+                    var lineMatch = labelGroupResult.Clone([documentLine]);
 
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }

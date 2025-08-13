@@ -109,11 +109,6 @@ public static partial class LicenceNumber
                         anyMatchFoundForLine = true;
                         anyMatchFound = true;
                     }
-
-                    if (label.Multiple == MultipleType.False)
-                    {
-                        return anyMatchFound;
-                    }
                 }
 
                 if (!anyMatchFoundForColumn)
@@ -129,6 +124,11 @@ public static partial class LicenceNumber
             
             var clonedLine = line.Clone(newColumns);
             matchedLines.Add(clonedLine);
+
+            if (label.Multiple == MultipleType.False)
+            {
+                return anyMatchFound;
+            }
         }
         
         return anyMatchFound;

@@ -18,40 +18,46 @@ public static class Units
 
         foreach (var line in lines)
         {
-            var matchedPossibility = (string?)null;
+            var matchedPossibilityForLine = (string?)null;
             var newColumns = new List<DocumentLineColumn>();
             
             foreach (var column in line.Columns)
             {
+                var matchedPossibilityForColumn = (string?)null;
+                
                 foreach (var possibility in label.Possibilities!)
                 {
                     if (!column.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        newColumns.Add(column);
                         continue;
                     }
 
                     var clonedColumn = column.Clone(possibility);
                     newColumns.Add(clonedColumn);
 
-                    matchedPossibility = possibility;
+                    matchedPossibilityForLine = possibility;
+                    matchedPossibilityForColumn = possibility;
+
                     break;
                 }
 
-                if (!string.IsNullOrWhiteSpace(matchedPossibility))
+                if (!string.IsNullOrWhiteSpace(matchedPossibilityForColumn))
                 {
-                    break;
+                    continue;
                 }
+                
+                newColumns.Add(column);
+                break;
             }
 
-            if (string.IsNullOrEmpty(matchedPossibility))
+            if (string.IsNullOrEmpty(matchedPossibilityForLine))
             {
                 continue;
             }
             
             var clonedLine = line.Clone(newColumns);
             labelGroupResult = labelGroupResult.Clone([clonedLine]);
-            labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibility];
+            labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine];
 
             return [labelGroupResult];
         }

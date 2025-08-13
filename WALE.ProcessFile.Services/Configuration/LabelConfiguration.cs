@@ -276,7 +276,11 @@ public static class LabelConfiguration
                 TextEnd =
                 [
                     new("PERIODS OF ABSTRACTION"),
+                    new("PERIOD(S) OF ABSTRACTION"),
                     new("PERIOD OF ABSTRACTION"),
+                    new("LAND ON WHICH LICENCE AUTHORISES USE OF WATER"),
+                    new("Quantities of water authorised to be abstracted"),
+                    new("QUANTITY(IES) OF WATER AUTHORISED"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
@@ -308,7 +312,12 @@ public static class LabelConfiguration
                         Remove = [
                             new("4. PURPOSE OF ABSTRACTION"),
                             new("4. PURPOSE(S) OF ABSTRACTION"),
-                            new("4. PURPOSES OF ABSTRACTION")                            
+                            new("4. PURPOSES OF ABSTRACTION"),
+                            new("PURPOSE OF ABSTRACTION"),
+                            new("PURPOSES OF ABSTRACTION"),
+                            new("PURPOSE(S) OF ABSTRACTION"),
+                            new("Purpose(s) for which water is authorised to be used"),
+                            new("PURPOSE(S) FOR WHICH WATER IS AUTHORISED TO BE USED") // TODO why does the capitalisation matter here?
                         ],
                         SubLabels =
                         [

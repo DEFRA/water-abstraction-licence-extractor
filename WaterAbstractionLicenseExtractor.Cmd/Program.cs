@@ -406,6 +406,32 @@ async Task HandleFileAsync(
         }
 
         var purposesHtml = "<ul>" + purposeSb + "</ul>";
+        
+        var pointsSection = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
+        var pointPurposeGroups = pointsSection?.SubResults
+            .Where(x => x.MatchedLabel!.Name == "PointPurposeGroup");
+
+        var pointsSb = new StringBuilder();
+
+        if (pointPurposeGroups != null)
+        {
+            foreach (var pointPurposeGroup in pointPurposeGroups)
+            {
+                var points = pointPurposeGroup.SubResults
+                    .Where(x => x.MatchedLabel!.Name == "Point");
+
+                foreach (var point in points!)
+                {
+                    var t1 = point.SubResults
+                        .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPurposeAndPoint");
+
+                    var t = string.Join(' ', t1?.Text?.Select(y => y.Text).ToArray()!);
+                    pointsSb.AppendLine("<li>" + t + "</li>");
+                }
+            }
+        }
+
+        var pointsHtml = "<ul>" + pointsSb + "</ul>";
 
         var companyNameMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Company");
         var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text ?? "--";
@@ -459,7 +485,7 @@ async Task HandleFileAsync(
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
             Purposes = purposesHtml,
-            Points = "TODO",
+            Points = pointsHtml,
             ServiceName = serviceName,
             Certainty = certainty,
             MatchType = companyNameMatch?.MatchType.ToString() ?? "N/A",

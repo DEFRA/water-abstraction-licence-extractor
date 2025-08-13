@@ -524,6 +524,11 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
+
+                if (line.Text.Contains("POINT OF ABSTRACTION"))
+                {
+                    
+                }
                 
                 if (!LabelMatchingHelper.LineContainsLabel(
                     line,

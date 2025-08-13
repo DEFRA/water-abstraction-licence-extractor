@@ -502,6 +502,25 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
     }
     
+    [Fact]
+    public async Task Z3_X3_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "08-36-19-S-0101 5826949.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(9, resultList.Count);
+        
+        var pointResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Point");
+        
+        Assert.NotNull(pointResult);
+        Assert.True(pointResult.IsOcr);
+    }
+    
     [Fact(Skip = "DebuggingImageIssue")]
     public async Task ScannedFileUploaded_ThenFindXuncorn_DebuggingTest()
     {

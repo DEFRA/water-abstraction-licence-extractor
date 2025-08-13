@@ -160,15 +160,15 @@ indexFileStringBuilder.AppendLine("<table>");
 indexFileStringBuilder.AppendLine("<thead>");
 indexFileStringBuilder.AppendLine("<tr>");
 indexFileStringBuilder.AppendLine("<td style='width: 5%'>Preview</td>");
-/*indexFileStringBuilder.AppendLine("<td style='width: 5%'>Index</td>");*/
 indexFileStringBuilder.AppendLine("<td style='width: 15%'>Filename</td>");
 indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence number</td>");
 indexFileStringBuilder.AppendLine("<td style='width: 15%'>Licence holder</td>");
 indexFileStringBuilder.AppendLine("<td style='width: 10%'>Scanned file</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Purposes</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Abstraction limits</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Means of abstraction</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Linked&nbsp;licences</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 9%'>Purposes</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 9%'>Points</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 9%'>Abstraction limits</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 9%'>Means of abstraction</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 9%'>Linked&nbsp;licences</td>");
 indexFileStringBuilder.AppendLine("</tr>");
 indexFileStringBuilder.AppendLine("</thead>");
 indexFileStringBuilder.AppendLine("<tbody>");
@@ -181,6 +181,7 @@ var licenceNumberFoundCount = 0;
 var licenceHolderFoundCount = 0;
 var scannedCount = 0;
 var purposesFoundCount = 0;
+var pointsFoundCount = 0;
 var limitsFoundCount = 0;
 var linkedLicenceNumbersFoundCount = 0;
 var meansFoundCount = 0;
@@ -221,6 +222,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Purposes}</td>");
+    indexFileStringBuilder.AppendLine($"<td>{outputLine.Points}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LimitsFound}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.MeansFound}</td>");
     indexFileStringBuilder.AppendLine($"<td>{!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--"}</td>");
@@ -233,6 +235,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     if (outputLine.Ocr == "OCR") scannedCount++;
     if (!string.IsNullOrEmpty(outputLine.Purposes)
         && outputLine.Purposes != "--") purposesFoundCount++;
+    if (!string.IsNullOrEmpty(outputLine.Points)
+        && outputLine.Points != "--") pointsFoundCount++;
     if (outputLine.LimitsFound) limitsFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers)
@@ -290,6 +294,7 @@ indexFileStringBuilder.AppendLine($"<td>{licenceNumberFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{licenceHolderFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{scannedCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{purposesFoundCount}</td>");
+indexFileStringBuilder.AppendLine($"<td>{pointsFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{limitsFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{meansFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{linkedLicenceNumbersFoundCount}</td>");
@@ -379,9 +384,29 @@ async Task HandleFileAsync(
 
         var matches = matchesFull.Matches!;
         
-        var purposeMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
-        var purposeText = purposeMatch?.Text?.FirstOrDefault()?.Text ?? "--";
+        var purposesSection = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposePointGroups = purposesSection?.SubResults
+            .Where(x => x.MatchedLabel!.Name == "PurposePointGroup");
+
+        var purposeSb = new StringBuilder();
         
+        foreach (var purposePointGroup in purposePointGroups!)
+        {
+            var purposes = purposePointGroup.SubResults
+                .Where(x => x.MatchedLabel!.Name == "Purpose");
+
+            foreach (var purpose in purposes!)
+            {
+                var t1 = purpose.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPoints");
+                    
+                var t = string.Join(' ', t1?.Text?.Select(y => y.Text).ToArray()!);
+                purposeSb.AppendLine("<li>" + t + "</li>");
+            }
+        }
+
+        var purposesHtml = "<ul>" + purposeSb + "</ul>";
+
         var companyNameMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Company");
         var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text ?? "--";
         var licenceHolderOcrConfidence = companyNameMatch?.Text?.FirstOrDefault()?.OcrConfidence;
@@ -433,7 +458,8 @@ async Task HandleFileAsync(
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
-            Purposes = purposeText,
+            Purposes = purposesHtml,
+            Points = "TODO",
             ServiceName = serviceName,
             Certainty = certainty,
             MatchType = companyNameMatch?.MatchType.ToString() ?? "N/A",

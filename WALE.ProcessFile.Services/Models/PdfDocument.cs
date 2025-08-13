@@ -33,7 +33,7 @@ public class PdfDocument
             {
                 UseLenientParsing = true,
                 SkipMissingFonts = true,
-                FilterProvider = ExpandedPdfPigFilterProvider.Instance
+                FilterProvider = ExpandedPdfPigFilterProvider.Instance,
             });
 
         PdfPigDocument!.AddSkiaPageFactory();

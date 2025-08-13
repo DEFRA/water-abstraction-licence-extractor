@@ -541,7 +541,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Name == "PurposePointGroup")
+                if (label.Format == "CompanyName")
                 {
                     
                 }

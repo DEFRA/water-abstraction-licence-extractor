@@ -524,11 +524,6 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
-
-                if (line.Text.Contains("POINT OF ABSTRACTION"))
-                {
-                    
-                }
                 
                 if (!LabelMatchingHelper.LineContainsLabel(
                     line,
@@ -544,6 +539,11 @@ public class PdfDataExtractorService(
                 if (LabelMatchingHelper.TextContainsForbiddenLine(line, label))
                 {
                     continue;
+                }
+                
+                if (label.Name == "DocumentAbstractionLimitsSection")
+                {
+                    
                 }
                 
                 if (label.Format == "CompanyName")

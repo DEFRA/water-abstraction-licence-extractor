@@ -69,31 +69,58 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                 returnLines.AddRange(pageLines);
             }
         }
-
+        
         var lineNumber = 0;
         
-        // TODO probably need to standardise the line
+        (string Text, IList<Word> Words)? previousLine = null;
+        var lineIndex = 0;
+        
+        // BoundingBox is { X top left, Y top left , X top right , Y top right,
+        // X bottom right , Y bottom right , X bottom left , Y bottom left }
         
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Select(line => (line.Text, line.Words))
-            .Select(line =>
+            .GroupBy(line =>
             {
+                previousLine ??= line;
+
+                var yDiff =
+                    line.Words[0].BoundingBox[1]
+                    - previousLine.Value.Words[0].BoundingBox[1];
+                
+                const int lineHeight = 15;
+                
+                if (yDiff >= lineHeight)
+                {
+                    lineIndex += 1;
+                }
+
+                previousLine = line;
+                return lineIndex;
+            })
+            .Select(lines =>
+            {
+                var columns = new List<DocumentLineColumn>();
+
+                foreach (var line in lines.OrderBy(l => l.Words[0].BoundingBox[0]))
+                {
+                    columns.Add(new DocumentLineColumn(line.Item1, line.Words.Select(word =>
+                        new DocumentLineWord(
+                            word.Text,
+                            word.Confidence * 100,
+                            new DocumentLineWordCoordinates(
+                                word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate)))
+                    .ToList())
+                    );
+                }
+                
                 var documentLine = new DocumentLine(
                     lineNumber++,
                     pageNumber,
-                    [
-                        new(line.Item1, line.Words.Select(word =>
-                                new DocumentLineWord(
-                                    word.Text,
-                                    word.Confidence * 100,
-                                    new DocumentLineWordCoordinates(
-                                        word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate,
-                                        word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
-                                        word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
-                                        word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate)))
-                            .ToList())
-                    ],
+                    columns,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate,
                     PositionConstants.UnknownCoordinate);

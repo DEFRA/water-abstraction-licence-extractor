@@ -160,6 +160,11 @@ public static class LabelConfiguration
                         Multiple = MultipleType.MultipleLabelsMultipleValues,
                         IncludeWholeLine = true,
                         NextLinesToFetch = 100,
+                        Remove = [
+                            new("2. POINT OF ABSTRACTION"),
+                            new("2. POINT(S) OF ABSTRACTION"),
+                            new("2. POINTS OF ABSTRACTION")
+                        ],
                         SubLabels =
                         [
                             new()

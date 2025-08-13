@@ -23,7 +23,8 @@ public static partial class LicenceNumber
             {
                 continue;
             }
-            
+
+            var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
             
             foreach (var column in line.Columns)
@@ -105,6 +106,7 @@ public static partial class LicenceNumber
                         newColumns.Add(clonedColumn);
 
                         anyMatchFoundForColumn = true;
+                        anyMatchFoundForLine = true;
                         anyMatchFound = true;
                     }
 
@@ -120,7 +122,7 @@ public static partial class LicenceNumber
                 }
             }
 
-            if (!anyMatchFound)
+            if (!anyMatchFoundForLine)
             {
                 continue;
             }

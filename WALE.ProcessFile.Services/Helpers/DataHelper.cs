@@ -126,8 +126,13 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
     
-    public static bool IsCorruptedText(string? line)
+    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
     {
+        if (line?.Contains("¥") == true)
+        {
+            
+        }
+        
         if (string.IsNullOrEmpty(line))
         {
             return false;
@@ -142,7 +147,8 @@ public static partial class DataHelper
             .Replace(",", string.Empty)
             .Replace("\"", string.Empty)
             .Replace("'", string.Empty)
-            .Replace("-", string.Empty) 
+            .Replace("-", string.Empty)
+            .Replace(";", string.Empty)
             .Replace("*", string.Empty)            
             .Any(ch => !char.IsLetterOrDigit(ch));
 
@@ -151,7 +157,7 @@ public static partial class DataHelper
             return true;
         }
         
-        if (char.IsLower(line[0]) && containsSpecialChar)
+        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && containsSpecialChar)
         {
             return true;
         }
@@ -190,14 +196,37 @@ public static partial class DataHelper
         var percentagePerWord = 100.0 / wordsSplit.Length;
         
         var percentageOfShortWords = countOfVeryShortWordsOrSymbols * percentagePerWord;
-        var percentageOfSuspectedIncorrectWords = wordsSplit.Count(word => 
-                !Dictionary.Check(word)
-                && !word.Contains('/')
-                && !double.TryParse(word.Replace("TL", string.Empty).Replace(",", string.Empty), out _)
-            ) * percentagePerWord;
+        var countOfSuspectedIncorrectWords = wordsSplit.Count(word =>
+        {
+            var wordWithoutPunctuation = word
+                .Replace("\"", string.Empty)
+                .Replace("(", string.Empty)
+                .Replace(")", string.Empty)
+                .Replace(",", string.Empty)
+                .Replace(":", string.Empty);
+
+            return !Dictionary.Check(wordWithoutPunctuation)
+                   && !word.Contains('/')
+                   && !double.TryParse(word.Replace("TL", string.Empty).Replace(",", string.Empty), out _);
+        });
         
-        return (countOfVeryShortWordsOrSymbols > 3 && percentageOfShortWords >= 20.0)
-            || (wordsSplit.Length >= 2 && percentageOfSuspectedIncorrectWords > 50);
+        var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
+
+        const double unacceptableShortWordsValue = 20.0;
+        var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
+            && percentageOfShortWords >= unacceptableShortWordsValue;
+
+        var mostWordsIncorrectlySpelt = wordsSplit.Length >= 2
+            && percentageOfSuspectedIncorrectWords >= unacceptableIncorrectValue;
+        
+        var returnValue = manyAndMajorityVeryShortWords || mostWordsIncorrectlySpelt;
+
+        if (returnValue)
+        {
+            
+        }
+        
+        return returnValue;
     }
     
     public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)

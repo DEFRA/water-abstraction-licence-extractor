@@ -228,7 +228,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
     }
@@ -487,7 +487,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -777,7 +777,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

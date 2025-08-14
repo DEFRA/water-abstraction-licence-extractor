@@ -536,7 +536,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Format == "CompanyName" && line.LineNumber == 13)
+                if (label.Format == "DocumentAbstractionLimitsSection")
                 {
                     
                 }

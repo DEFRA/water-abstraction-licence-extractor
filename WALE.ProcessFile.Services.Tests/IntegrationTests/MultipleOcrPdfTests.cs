@@ -47,7 +47,7 @@ public class MultipleOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);

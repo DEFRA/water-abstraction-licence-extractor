@@ -157,11 +157,6 @@ public static partial class DataHelper
     
     public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
     {
-        if (line?.Contains("¥") == true)
-        {
-            
-        }
-        
         if (string.IsNullOrEmpty(line))
         {
             return false;
@@ -181,14 +176,19 @@ public static partial class DataHelper
             .Replace(";", string.Empty)
             .Replace("£", string.Empty)
             .Replace("*", string.Empty)            
-            .Any(ch => !char.IsLetterOrDigit(ch));
+            .Count(ch => !char.IsLetterOrDigit(ch) || !char.IsAscii(ch));
 
         if (line.Length < 8 && CharDigitCharRegex().IsMatch(line))
         {
             return true;
         }
+
+        if (containsSpecialChar >= 3)
+        {
+            return true;
+        }
         
-        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && containsSpecialChar)
+        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && containsSpecialChar >= 1)
         {
             return true;
         }
@@ -203,35 +203,13 @@ public static partial class DataHelper
             return false;
         }
         
-        var wordsSplit = line.Split(' ');
-        var countOfVeryShortWordsOrSymbols = wordsSplit
-            .Count(word =>
-            {
-                var wordLower = word.ToLower();
-
-                return word.Length <= 2
-                       && !word.Any(char.IsDigit)
-                       && wordLower != "a"
-                       && wordLower != "a,"
-                       && wordLower != "b,"
-                       && wordLower != "c,"
-                       && wordLower != "d,"
-                       && wordLower != "e,"
-                       && wordLower != "as"
-                       && wordLower != "at"
-                       && wordLower != "be"                       
-                       && wordLower != "is"                       
-                       && wordLower != "of"
-                       && wordLower != "on"
-                       && wordLower != "or"                       
-                       && wordLower != "to";
-            });
-
-        var percentagePerWord = 100.0 / wordsSplit.Length;
+        var wordsSplit = GetNoneDigitWords(line.Split(' '));
+        var percentagePerWord = 100.0 / wordsSplit.Count;
         
+        var countOfVeryShortWordsOrSymbols = wordsSplit.Count(word => word.Length <= 2);
         var percentageOfShortWords = countOfVeryShortWordsOrSymbols * percentagePerWord;
         
-        const double unacceptableShortWordsValue = 20.0;
+        const double unacceptableShortWordsValue = 25.0;
         var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
                 && percentageOfShortWords >= unacceptableShortWordsValue;
 
@@ -244,6 +222,7 @@ public static partial class DataHelper
         {
             var wordWithoutPunctuation = word
                 .Replace("\"", string.Empty)
+                .Replace("'", string.Empty)
                 .Replace("(", string.Empty)
                 .Replace(")", string.Empty)
                 .Replace(",", string.Empty)
@@ -256,15 +235,36 @@ public static partial class DataHelper
         
         var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
 
-        var mostWordsIncorrectlySpelt = wordsSplit.Length >= 2
+        var mostWordsIncorrectlySpelt = wordsSplit.Count >= 2
             && percentageOfSuspectedIncorrectWords >= unacceptableIncorrectValue;
         
-        if (mostWordsIncorrectlySpelt)
-        {
-            
-        }
-        
         return mostWordsIncorrectlySpelt;
+    }
+
+    private static List<string> GetNoneDigitWords(IEnumerable<string> words)
+    {
+        return words
+            .Where(word =>
+            {
+                var wordLower = word.ToLower();
+                
+                return !word.Any(char.IsDigit)
+                       && wordLower != "a"
+                       && wordLower != "a,"
+                       && wordLower != "b,"
+                       && wordLower != "c,"
+                       && wordLower != "d,"
+                       && wordLower != "e,"
+                       && wordLower != "as"
+                       && wordLower != "at"
+                       && wordLower != "be"
+                       && wordLower != "is"
+                       && wordLower != "of"
+                       && wordLower != "on"
+                       && wordLower != "or"
+                       && wordLower != "to";
+            })
+            .ToList();
     }
     
     public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)

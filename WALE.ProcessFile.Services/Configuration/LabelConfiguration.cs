@@ -485,6 +485,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
+                PreviousLinesToFetch = 7,
                 ResultMustNotContain = [
                     "source of supply",
                     "abstract water"

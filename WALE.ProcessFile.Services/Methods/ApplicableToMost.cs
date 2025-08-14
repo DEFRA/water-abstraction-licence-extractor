@@ -38,7 +38,7 @@ public static class ApplicableToMost
             var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
-            var outputText = DataHelper.RemoveExcludes(matchedLabel, t!, out var removedLines);
+            var outputText = DataHelper.RemoveExcludes(matchedLabel, t!, true, out var removedLines);
 
             if (DataHelper.IsCorruptedText(outputText))
             {
@@ -195,7 +195,7 @@ public static class ApplicableToMost
                 return r;
             }
 
-            outputText = FormattingHelper.TrimFormatting(outputText);
+            outputText = FormattingHelper.TrimFormatting(outputText, true);
             outputText = request.isOcr
                 ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType)
                 : outputText;

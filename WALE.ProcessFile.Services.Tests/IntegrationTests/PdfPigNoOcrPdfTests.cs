@@ -1623,7 +1623,7 @@ public class PdfPigNoOcrPdfTests
         
         var primaryPoint2 = points[1];
         Assert.Equal(2.2, primaryPoint2.Id);
-        Assert.Equal(1213, primaryPoint2.Description!.Length);
+        Assert.Equal(1241, primaryPoint2.Description!.Length);
         Assert.StartsWith("National Grid References\nFrom To\nTL558449", primaryPoint2.Description);
         Assert.Single(primaryPoint2.PurposeIds);
         Assert.Equal(4.3, primaryPoint2.PurposeIds[0]);
@@ -2625,7 +2625,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(17, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(19, abstractionLimitsSection.Text?.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults!.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults![0];

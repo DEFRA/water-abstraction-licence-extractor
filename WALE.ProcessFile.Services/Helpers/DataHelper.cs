@@ -36,7 +36,8 @@ public static partial class DataHelper
                     continue;
                 }
 
-                var alteredText = RemoveExcludes(label, column.Text, out var removesUsedLoop);
+                var isLastColumn = line.Columns.Last() == column;
+                var alteredText = RemoveExcludes(label, column.Text, isLastColumn, out var removesUsedLoop);
                 var clonedColumn = new DocumentLineColumn(alteredText);
                 newColumns.Add(clonedColumn);
 
@@ -57,6 +58,7 @@ public static partial class DataHelper
     public static string RemoveExcludes(
         LabelToMatch label,
         string betweenText,
+        bool trimPunctuation,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
@@ -118,7 +120,7 @@ public static partial class DataHelper
         }
 
         removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
-        return FormattingHelper.TrimFormatting(returnStr)!;
+        return FormattingHelper.TrimFormatting(returnStr, trimPunctuation)!;
     }
     
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]

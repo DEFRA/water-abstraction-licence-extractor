@@ -21,23 +21,24 @@ public static class FormattingHelper
         return returnList;
     }
     
-    public static string? TrimFormatting(string? text)
+    public static string? TrimFormatting(string? text, bool trimPunctuation)
     {
         var trimmed = text?.Trim();
+        if (!trimPunctuation) return trimmed;
         
         while (trimmed?.Length >= 1
-            && (char.IsPunctuation(trimmed[0])
-               || char.IsSymbol(trimmed[0])
-               || char.IsWhiteSpace(trimmed[0])))
+               && (char.IsPunctuation(trimmed[0])
+                   || char.IsSymbol(trimmed[0])
+                   || char.IsWhiteSpace(trimmed[0])))
         {
             trimmed = trimmed[1..];
         }
-        
+
         while (trimmed?.Length >= 1
-            && trimmed[^1] != ')'
-            && (char.IsPunctuation(trimmed[^1])
-               || char.IsSymbol(trimmed[^1])
-               || char.IsWhiteSpace(trimmed[^1])))
+               && trimmed[^1] != ')'
+               && (char.IsPunctuation(trimmed[^1])
+                   || char.IsSymbol(trimmed[^1])
+                   || char.IsWhiteSpace(trimmed[^1])))
         {
             trimmed = trimmed[..^1];
         }
@@ -92,10 +93,7 @@ public static class FormattingHelper
                 match.MatchedLabel.SubLabels = null;
             }
 
-            if (match.SubResults != null)
-            {
-                NullOutSubLabels(match.SubResults);
-            }
+            NullOutSubLabels(match.SubResults);
         }
     }
     

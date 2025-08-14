@@ -541,16 +541,6 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                if (label.Name == "DocumentAbstractionLimitsSection")
-                {
-                    
-                }
-                
-                if (line.Text.Contains("gallons per hour"))
-                {
-                
-                }
-
                 if (label.MatchAllText)
                 {
                     if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))
@@ -856,8 +846,11 @@ public class PdfDataExtractorService(
             return [];
         }
         
-        var textBeforeLabel = FormattingHelper.TrimFormatting(line.Text[..labelTextPositionIndex]);
-        var textAfterLabel = FormattingHelper.TrimFormatting(line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..]);
+        var textBeforeLabel = FormattingHelper.TrimFormatting(
+            line.Text[..labelTextPositionIndex], true);
+        
+        var textAfterLabel = FormattingHelper.TrimFormatting(
+            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], true);
         
         if (!string.IsNullOrEmpty(textAfterLabel)
             && label.Position is LabelPosition.LabelIsBeforeTextToFind

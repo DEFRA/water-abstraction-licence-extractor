@@ -126,12 +126,13 @@ public static class TextToFindIsBetweenLabels
         // Add the first line between
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
-            var text = FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!;
-            var clonedColumn = new DocumentLineColumn(text);
+            var text = FormattingHelper.
+                TrimFormatting(firstLineTextAfterLabel, true)!;
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
-            clonedLine.Columns[0] = clonedColumn;
+            clonedLine.Columns.Clear();
+            clonedLine.Columns.Add(new DocumentLineColumn(text));
             
             returnList.Add(clonedLine);
         }
@@ -174,11 +175,16 @@ public static class TextToFindIsBetweenLabels
                 }
             }
             
-            var text = FormattingHelper.TrimFormatting(line.Text)!;
-            
-            var clonedColumn = new DocumentLineColumn(text);
             var clonedLine = line.Clone();
-            clonedLine.Columns[0] = clonedColumn;
+            clonedLine.Columns.Clear();
+
+            foreach (var column in line.Columns)
+            {
+                var isLastColumn = line.Columns.Last() == column;
+                
+                var columnText = FormattingHelper.TrimFormatting(column.Text, isLastColumn)!;
+                clonedLine.Columns.Add(new DocumentLineColumn(columnText));
+            }
             
             returnList.Add(clonedLine);
         }

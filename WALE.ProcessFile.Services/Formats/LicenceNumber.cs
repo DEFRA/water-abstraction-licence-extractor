@@ -100,11 +100,13 @@ public static partial class LicenceNumber
 
                     if (match)
                     {
-                        var text = numberLine.Trim();
-                        var clonedColumn = new DocumentLineColumn(text);
-
+                        var clonedColumn = new DocumentLineColumn(numberLine.Trim());
                         newColumns.Add(clonedColumn);
 
+                        var clonedLine = line.Clone(newColumns);
+                        matchedLines.Add(clonedLine);
+
+                        newColumns = [];
                         anyMatchFoundForColumn = true;
                         anyMatchFoundForLine = true;
                         anyMatchFound = true;
@@ -121,9 +123,6 @@ public static partial class LicenceNumber
             {
                 continue;
             }
-            
-            var clonedLine = line.Clone(newColumns);
-            matchedLines.Add(clonedLine);
 
             if (label.Multiple == MultipleType.False)
             {

@@ -24,8 +24,6 @@ public static class ApplicableToMost
             return returnListTop;
         }
         
-        var line = request.line;
-        
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
         {
             return returnListTop;
@@ -47,8 +45,21 @@ public static class ApplicableToMost
                 continue;
             }
 
-            var documentLine = line!.Clone();
-            documentLine.Columns[0] = documentLine.Columns[0].Clone(outputText);
+            var coords = new DocumentLineWordCoordinates(
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate);
+            
+            var documentLine = request.line!.Clone();
+            documentLine.Columns.Clear();
+            documentLine.Columns.Add(
+                new DocumentLineColumn(
+                    outputText,
+                    outputText
+                        .Split(' ')
+                        .Select(word => new DocumentLineWord(word, null, coords))
+                        .ToList()));
             
             if (request.isDateOrPurposeLookup)
             {

@@ -32,7 +32,7 @@ public static class Units
                         continue;
                     }
 
-                    var clonedColumn = column.Clone(possibility);
+                    var clonedColumn = new DocumentLineColumn(possibility);
                     newColumns.Add(clonedColumn);
 
                     matchedPossibilityForLine = possibility;

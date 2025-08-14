@@ -87,7 +87,7 @@ public static class CompanyName
                     continue;
                 }
 
-                var clonedColumn = column.Clone(companyOrPersonalName!);
+                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
                 
                 newColumns.Add(clonedColumn);
 

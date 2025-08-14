@@ -23,7 +23,7 @@ public static class SingleWord
         {
             var text = column.Text.Split(' ')[0];
 
-            var clonedColumn = column.Clone(text);
+            var clonedColumn = new DocumentLineColumn(text);
             var clonedLine = line.Clone([clonedColumn]);
 
             labelGroupResult = labelGroupResult.Clone([clonedLine]);

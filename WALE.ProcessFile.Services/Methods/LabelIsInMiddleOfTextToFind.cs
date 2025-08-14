@@ -26,7 +26,8 @@ public static class LabelIsInMiddleOfTextToFind
             var beforeOnSameLine = request.textBeforeAndAfterLabel![0];
 
             var clonedLine = request.line!.Clone();
-            clonedLine.Columns[0] = clonedLine.Columns[0].Clone(beforeOnSameLine.Text!);;
+            clonedLine.Columns.Clear();
+            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLine.Text!));
             
             inputLines.Add(clonedLine);
 
@@ -35,7 +36,8 @@ public static class LabelIsInMiddleOfTextToFind
                 var afterOnSameLine = request.textBeforeAndAfterLabel![1];
                 
                 clonedLine = request.line!.Clone();
-                clonedLine.Columns[0] = clonedLine.Columns[0].Clone(afterOnSameLine.Text!);;
+                clonedLine.Columns.Clear();
+                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLine.Text!));
                 
                 inputLines.Add(clonedLine);
             }

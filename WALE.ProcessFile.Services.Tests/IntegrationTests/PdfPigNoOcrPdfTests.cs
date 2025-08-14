@@ -1681,7 +1681,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(58, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(60, abstractionLimitsSection.Text?.Count);
         Assert.Equal(8, abstractionLimitsSection.SubResults!.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults[0].Text!.Count);        
         
@@ -1862,7 +1862,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(26, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(27, abstractionLimitsSection.Text?.Count);
         
         Assert.Equal(4, abstractionLimitsSection.SubResults!.Count);
         var sectionPoint1 = abstractionLimitsSection.SubResults![0];
@@ -2854,7 +2854,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(16, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(17, abstractionLimitsResult.Text?.Count);
         Assert.Equal(109, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
@@ -2876,7 +2876,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(8, section2Sub1.SubResults!.Count);
         
         var abstractionLimitsSection3 = abstractionLimitsResult.SubResults[2];
-        Assert.Equal(6, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
+        Assert.Equal(7, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults![0];

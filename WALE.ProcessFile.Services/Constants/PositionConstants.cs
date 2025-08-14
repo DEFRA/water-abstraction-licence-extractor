@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Services.Models;
+
 namespace WALE.ProcessFile.Services.Constants;
 
 public static class PositionConstants
@@ -17,4 +19,11 @@ public static class PositionConstants
     public const string EndOfLineMarker = "[END_OF_LINE]";
     public const string EndOfBlockMarker = "[END_OF_BLOCK]";
     public const string ReplacementMarker = "[WILL_BE_REPLACED_LATER]";
+
+    public static DocumentLineWordCoordinates UnknownCoordinates =>
+        new(
+            UnknownCoordinate,
+            UnknownCoordinate,
+            UnknownCoordinate,
+            UnknownCoordinate);
 }

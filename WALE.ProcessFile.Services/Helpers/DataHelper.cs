@@ -37,7 +37,7 @@ public static partial class DataHelper
                 }
 
                 var alteredText = RemoveExcludes(label, column.Text, out var removesUsedLoop);
-                var clonedColumn = column.Clone(alteredText);
+                var clonedColumn = new DocumentLineColumn(alteredText);
                 newColumns.Add(clonedColumn);
 
                 if (removesUsedLoop != null)

@@ -67,7 +67,7 @@ public static class TextToFindIsBetweenLabels
             if (labelText != "[START_OF_BLOCK]")
             {
                 var text = $"{request.label.Text!.FirstOrDefault()!} {firstColumn.Text}";
-                betweenText[0].Columns[0] = firstColumn.Clone(text);   
+                betweenText[0].Columns[0] = new DocumentLineColumn(text);   
             }
         }
         
@@ -127,7 +127,7 @@ public static class TextToFindIsBetweenLabels
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.TrimFormatting(firstLineTextAfterLabel)!;
-            var clonedColumn = lineInput.Columns[0].Clone(text);
+            var clonedColumn = new DocumentLineColumn(text);
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
@@ -176,7 +176,7 @@ public static class TextToFindIsBetweenLabels
             
             var text = FormattingHelper.TrimFormatting(line.Text)!;
             
-            var clonedColumn = line.Columns[0].Clone(text);
+            var clonedColumn = new DocumentLineColumn(text);
             var clonedLine = line.Clone();
             clonedLine.Columns[0] = clonedColumn;
             

@@ -1,7 +1,11 @@
+using WALE.ProcessFile.Services.Constants;
+
 namespace WALE.ProcessFile.Services.Models;
 
 public class DocumentLineColumn(string text, List<DocumentLineWord> words)
 {
+    public DocumentLineColumn(string text) : this(text, TextToWords(text)) { }
+    
     public DocumentLineColumn() : this(string.Empty, []) { }
 
     public string Text { get; set; } = text;    
@@ -13,8 +17,12 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
         return new DocumentLineColumn(Text, Words.ToList());
     }
     
-    public DocumentLineColumn Clone(string text)
+    private static List<DocumentLineWord> TextToWords(string text)
     {
-        return new DocumentLineColumn(text, Words.ToList());
+        return text
+            .Split(' ')
+            .Select(word =>
+                new DocumentLineWord(word, null, PositionConstants.UnknownCoordinates))
+            .ToList();
     }
 }

@@ -44,22 +44,10 @@ public static class ApplicableToMost
             {
                 continue;
             }
-
-            var coords = new DocumentLineWordCoordinates(
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate);
             
             var documentLine = request.line!.Clone();
             documentLine.Columns.Clear();
-            documentLine.Columns.Add(
-                new DocumentLineColumn(
-                    outputText,
-                    outputText
-                        .Split(' ')
-                        .Select(word => new DocumentLineWord(word, null, coords))
-                        .ToList()));
+            documentLine.Columns.Add(new DocumentLineColumn(outputText));
             
             if (request.isDateOrPurposeLookup)
             {

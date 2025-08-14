@@ -101,7 +101,7 @@ public static partial class LicenceNumber
                     if (match)
                     {
                         var text = numberLine.Trim();
-                        var clonedColumn = column.Clone(text);
+                        var clonedColumn = new DocumentLineColumn(text);
 
                         newColumns.Add(clonedColumn);
 

@@ -1027,8 +1027,16 @@ public static class LabelConfiguration
                                             new("6.1"),
                                             new("6.2"),
                                             new("6.3"),
-                                            new("1 ") { ColumnMustStartWith  = true },
-                                            new("2 ") { ColumnMustStartWith  = true }
+                                            new("1 ")
+                                            {
+                                                ColumnMustStartWith  = true,
+                                                ColumnMustHave2SequentialNumbers = true
+                                            },
+                                            new("2 ")
+                                            {
+                                                ColumnMustStartWith  = true,
+                                                ColumnMustHave2SequentialNumbers = true
+                                            },
                                         ]
                                     },
                                     new()

@@ -97,8 +97,37 @@ public static partial class DataHelper
                     continue;
                 }
 
-                if (textToMatch.ColumnMustStartWith && !returnStr.StartsWith(textToMatch.Text))
+                if (textToMatch.ColumnMustStartWith)
                 {
+                    if (!returnStr.StartsWith(textToMatch.Text))
+                    {
+                        continue;
+                    }
+                        
+                    if (textToMatch.ColumnMustHave2SequentialNumbers)
+                    {
+                        var words = returnStr.Split(' ');
+                        var countOfNumbers = words.Count(word => int.TryParse(word, out _));
+
+                        if (countOfNumbers >= 2)
+                        {
+                            returnStr = returnStr.Replace(
+                                textToMatch.Text,
+                                string.Empty,
+                                StringComparison.InvariantCultureIgnoreCase);
+
+                            removesUsedList.Add(textToMatch.Text);
+                        }
+                        
+                        continue;
+                    }
+                    
+                    returnStr = returnStr.Replace(
+                        textToMatch.Text,
+                        string.Empty,
+                        StringComparison.InvariantCultureIgnoreCase);
+
+                    removesUsedList.Add(textToMatch.Text);
                     continue;
                 }
 

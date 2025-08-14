@@ -20,6 +20,10 @@ public static class RelatedCategoryPosition
             .OrderBy(match => match.LineNumber)
             .ToList();
 
+        var modifiedLine = DataHelper.RemoveExcludesAndNotContains(request.label,
+            [request.line!],
+            out _)[0];
+        
         var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
@@ -44,7 +48,7 @@ public static class RelatedCategoryPosition
             {
                 foreach (var t in categoryItem.MatchedLabel.Text!)
                 {
-                    lineStartsWithLabel = request.line!.Text.StartsWith(t, StringComparison.OrdinalIgnoreCase);
+                    lineStartsWithLabel = modifiedLine!.Text.StartsWith(t, StringComparison.OrdinalIgnoreCase);
 
                     if (lineStartsWithLabel)
                     {
@@ -59,7 +63,7 @@ public static class RelatedCategoryPosition
         }
 
         // If matching line starts with the label, prefer the line before
-        if (request.line!.LineNumber == matchedLabelLineNumber && lineStartsWithLabel)
+        if (modifiedLine.LineNumber == matchedLabelLineNumber && lineStartsWithLabel)
         {
             matchedLabelLineNumber -= 1;
         }
@@ -69,22 +73,31 @@ public static class RelatedCategoryPosition
         
         foreach (var previousLine in modifiedPreviousLines.OrderByDescending(line => line.LineNumber))
         {
-            if (Number.AnyIsNumber([previousLine], out numberLines))
+            foreach (var column in previousLine.Columns)
             {
-                matches.Add(numberLines.First());
+                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], out numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }                
             }
         }
         
-        if (Number.AnyIsNumber([request.line], out numberLines))
+        foreach (var column in modifiedLine.Columns)
         {
-            matches.Add(numberLines.First());
+            if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], out numberLines))
+            {
+                matches.AddRange(numberLines);
+            }
         }
         
         foreach (var nextLine in modifiedNextLines.OrderBy(line => line.LineNumber))
         {
-            if (Number.AnyIsNumber([nextLine], out numberLines))
+            foreach (var column in nextLine.Columns)
             {
-                matches.Add(numberLines.First());
+                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], out numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }
             }
         }
 

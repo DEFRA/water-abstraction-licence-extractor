@@ -179,6 +179,20 @@ public static class ApplicableToMost
 
             if (request.isUnitsLookup)
             {
+                if (isPossiblity)
+                {
+                    documentLine.Columns.Clear();
+                    documentLine.Columns.Add(new DocumentLineColumn(outputText));
+                
+                    labelGroupResult.Text = [documentLine];
+                    labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                    labelGroupResult.MatchedLabel.Possibilities = [outputText];
+                
+                    return await ProcessSubLabelsAsync(request, labelGroupResult);
+                }
+                
                 // TODO can swap this out now for shared method in Base
                 
                 var r = Units.GetMatchesToPossibilities(

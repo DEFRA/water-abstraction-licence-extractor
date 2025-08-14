@@ -16,6 +16,16 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
     {
         return new DocumentLineColumn(Text, Words.ToList());
     }
+
+    public DocumentLine AsDocumentLine(DocumentLine line)
+    {
+        return new DocumentLine
+        {
+            LineNumber = line.LineNumber,
+            PageNumber = line.PageNumber,
+            Columns = [this]
+        };
+    }
     
     private static List<DocumentLineWord> TextToWords(string text)
     {

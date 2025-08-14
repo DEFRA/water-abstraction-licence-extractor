@@ -536,7 +536,7 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Format == "DocumentAbstractionLimitsSection")
+                if (label.Name == "PerMonthUnits")
                 {
                     
                 }

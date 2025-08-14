@@ -31,7 +31,7 @@ public class DocumentLine(
 
     public int LineNumber { get; set; } = lineNumber;
 
-    public int PageNumber { get; private init; } = pageNumber;
+    public int PageNumber { get; init; } = pageNumber;
 
     public List<DocumentLineColumn> Columns { get; set; } = columns;
 

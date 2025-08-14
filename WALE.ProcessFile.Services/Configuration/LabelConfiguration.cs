@@ -241,10 +241,10 @@ public static class LabelConfiguration
                                     {
                                         Name = "TextWithoutPurposeAndPoint",
                                         Remove = [
-                                            new("2.1") { LineMustStartWith = true },
-                                            new("2.2") { LineMustStartWith = true },
-                                            new("2.3") { LineMustStartWith = true },
-                                            new("2.4") { LineMustStartWith = true },
+                                            new("2.1") { ColumnMustStartWith = true },
+                                            new("2.2") { ColumnMustStartWith = true },
+                                            new("2.3") { ColumnMustStartWith = true },
+                                            new("2.4") { ColumnMustStartWith = true },
                                             new("For Purpose 4.1") { RemoveWholeLine = true },
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
@@ -616,10 +616,10 @@ public static class LabelConfiguration
                             {
                                 Name = "TextWithoutPurposeAndPoint",
                                 Remove = [
-                                    new("5.1") { LineMustStartWith = true },
-                                    new("5.2") { LineMustStartWith = true },
-                                    new("5.3") { LineMustStartWith = true },
-                                    new("5.4") { LineMustStartWith = true },
+                                    new("5.1") { ColumnMustStartWith = true },
+                                    new("5.2") { ColumnMustStartWith = true },
+                                    new("5.3") { ColumnMustStartWith = true },
+                                    new("5.4") { ColumnMustStartWith = true },
                                     new("For Purpose ") { RemoveWholeLine = true },
                                     new("For Purposes ") { RemoveWholeLine = true }                                   
                                 ],
@@ -741,10 +741,10 @@ public static class LabelConfiguration
                             {
                                 Name = "TextWithoutNumber",
                                 Remove = [
-                                    new("3.1") { LineMustStartWith = true },
-                                    new("3.2") { LineMustStartWith = true },
-                                    new("3.3") { LineMustStartWith = true },
-                                    new("3.4") { LineMustStartWith = true }
+                                    new("3.1") { ColumnMustStartWith = true },
+                                    new("3.2") { ColumnMustStartWith = true },
+                                    new("3.3") { ColumnMustStartWith = true },
+                                    new("3.4") { ColumnMustStartWith = true }
                                 ],
                                 Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
@@ -1026,7 +1026,9 @@ public static class LabelConfiguration
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
-                                            new("6.3")
+                                            new("6.3"),
+                                            new("1 ") { ColumnMustStartWith  = true },
+                                            new("2 ") { ColumnMustStartWith  = true }
                                         ]
                                     },
                                     new()

@@ -97,7 +97,7 @@ public static partial class DataHelper
                     continue;
                 }
 
-                if (textToMatch.LineMustStartWith && !returnStr.StartsWith(textToMatch.Text))
+                if (textToMatch.ColumnMustStartWith && !returnStr.StartsWith(textToMatch.Text))
                 {
                     continue;
                 }
@@ -148,7 +148,9 @@ public static partial class DataHelper
             .Replace("\"", string.Empty)
             .Replace("'", string.Empty)
             .Replace("-", string.Empty)
+            .Replace(":", string.Empty)
             .Replace(";", string.Empty)
+            .Replace("£", string.Empty)
             .Replace("*", string.Empty)            
             .Any(ch => !char.IsLetterOrDigit(ch));
 
@@ -186,16 +188,29 @@ public static partial class DataHelper
                        && wordLower != "c,"
                        && wordLower != "d,"
                        && wordLower != "e,"
-                       && wordLower != "of"
+                       && wordLower != "as"
                        && wordLower != "at"
+                       && wordLower != "be"                       
+                       && wordLower != "is"                       
+                       && wordLower != "of"
                        && wordLower != "on"
-                       && wordLower != "to"
-                       && wordLower != "be";
+                       && wordLower != "or"                       
+                       && wordLower != "to";
             });
 
         var percentagePerWord = 100.0 / wordsSplit.Length;
         
         var percentageOfShortWords = countOfVeryShortWordsOrSymbols * percentagePerWord;
+        
+        const double unacceptableShortWordsValue = 20.0;
+        var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
+                && percentageOfShortWords >= unacceptableShortWordsValue;
+
+        if (manyAndMajorityVeryShortWords)
+        {
+            return true;
+        }
+        
         var countOfSuspectedIncorrectWords = wordsSplit.Count(word =>
         {
             var wordWithoutPunctuation = word
@@ -212,21 +227,15 @@ public static partial class DataHelper
         
         var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
 
-        const double unacceptableShortWordsValue = 20.0;
-        var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
-            && percentageOfShortWords >= unacceptableShortWordsValue;
-
         var mostWordsIncorrectlySpelt = wordsSplit.Length >= 2
             && percentageOfSuspectedIncorrectWords >= unacceptableIncorrectValue;
         
-        var returnValue = manyAndMajorityVeryShortWords || mostWordsIncorrectlySpelt;
-
-        if (returnValue)
+        if (mostWordsIncorrectlySpelt)
         {
             
         }
         
-        return returnValue;
+        return mostWordsIncorrectlySpelt;
     }
     
     public static void NullOutSubLabels(IReadOnlyList<LabelGroupResult> matches)

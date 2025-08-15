@@ -1734,7 +1734,7 @@ public class PdfPigNoOcrPdfTests
         
         var primaryPoint1 = points[0];
         Assert.Equal(2.1, primaryPoint1.Id);
-        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741\nmarked 'Point A' and 'Point B' on Map 1", primaryPoint1.Description);
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741 marked 'Point A' and 'Point B' on Map 1", primaryPoint1.Description);
         Assert.Equal(2, primaryPoint1.PurposeIds.Length);
         Assert.Equal(4.1, primaryPoint1.PurposeIds[0]);
         Assert.Equal(4.2, primaryPoint1.PurposeIds[1]);
@@ -1742,7 +1742,7 @@ public class PdfPigNoOcrPdfTests
         var primaryPoint2 = points[1];
         Assert.Equal(2.2, primaryPoint2.Id);
         Assert.Equal(1241, primaryPoint2.Description!.Length);
-        Assert.StartsWith("National Grid References\nFrom To\nTL558449", primaryPoint2.Description);
+        Assert.StartsWith("National Grid References From To TL558449", primaryPoint2.Description);
         Assert.Single(primaryPoint2.PurposeIds);
         Assert.Equal(4.3, primaryPoint2.PurposeIds[0]);
 
@@ -3091,8 +3091,61 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("22705026-LV20210930", agreedSchemaLicence.Id);
         Assert.Equal("LV20210930", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
+        Assert.NotNull(agreedSchemaLicence.Points);
         Assert.Equal(5, agreedSchemaLicence.Points.Length);
+        
+        var point = agreedSchemaLicence.Points[0];
+        Assert.Equal(2.1, point.Id);
+        Assert.EndsWith("marked \"A\" on the map", point.Description);
+        
+        point = agreedSchemaLicence.Points[1];
+        Assert.Equal(2.2, point.Id);
+        Assert.EndsWith("marked \"B\" on the map", point.Description);
+        
+        point = agreedSchemaLicence.Points[2];
+        Assert.Equal(2.3, point.Id);
+        Assert.EndsWith("marked \"C\" on the map", point.Description);
+        
+        point = agreedSchemaLicence.Points[3];
+        Assert.Equal(2.4, point.Id);
+        Assert.EndsWith("marked \"D\" on the map", point.Description);
+        
+        point = agreedSchemaLicence.Points[4];
+        Assert.Equal(2.5, point.Id);
+        Assert.EndsWith("marked \"E on the map", point.Description); // TODO should be "E" not "E
+        
+        Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var purpose = agreedSchemaLicence.Purposes[0];
+        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("Public water supply", purpose.Description);
+        
+        purpose = agreedSchemaLicence.Purposes[1];
+        Assert.Equal(4.2, purpose.Id);
+        Assert.StartsWith("Transfer from W", purpose.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        //Assert.Equal(35, agreedSchemaLicence.AbstractionLimits.Individual.Length); // Breakdown is futher down
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.Length);
+
+        var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
+        Assert.Equal("22705026LV20210930-LLPO", aggregate.Id);
+        Assert.Equal(1, aggregate.Purposes.Length);
+        Assert.Equal(10, aggregate.Limits.Length); // 5 points * 1 purpose * 2 limits
+        
+        aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[1];
+        Assert.Equal("22705026LV20210930-LLPO", aggregate.Id);
+        Assert.Equal(1, aggregate.Purposes.Length);
+        Assert.Equal(5, aggregate.Limits.Length); // 5 points * 1 purpose * 1 limit
+        
+        aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[2];
+        Assert.Equal(2, aggregate.Purposes.Length);
+        Assert.Equal(20, aggregate.Limits.Length); // 5 points * 2 purposes * 2 limits
+        Assert.Equal("22705026LV20210930-LLPO", aggregate.Id);
     }
     
     [Fact]

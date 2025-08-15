@@ -644,7 +644,7 @@ public static class SchemaConverter
                     continue;
                 }
 
-                var description = string.Join('\n', allTextWithoutNumber);
+                var description = string.Join(' ', allTextWithoutNumber);
                 var number = pointNumber.Text!.First().Text;
                 var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 

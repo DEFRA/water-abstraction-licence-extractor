@@ -70,14 +70,18 @@ public static class SchemaConverter
         {
             aggregates.AddRange(licence.AbstractionLimits.Aggregates);
         }
-        
+
+        var diffAggregates = aggregates
+            .GroupBy(x => string.Join(',', x.LinkedLicences.OrderBy(y => y.LicenceNumber)))
+            .ToList();
+                
         var aggregateSets = new List<AggregateSet>();
 
-        if (aggregates.Count > 0)
+        foreach (var diffAggregate in diffAggregates)
         {
             aggregateSets.Add(new AggregateSet
             {
-                Aggregates = aggregates.ToArray()
+                Aggregates = diffAggregate.ToArray()
             });
         }
         

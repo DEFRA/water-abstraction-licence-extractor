@@ -9,6 +9,8 @@ public class AggregateSet
         get
         {
             var licencesAlphabetical = Aggregates
+                .GroupBy(aggregate => aggregate.AggregateSetId)
+                .Select(group => group.First())
                 .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersionId);
 
             var outputSb = new StringBuilder();

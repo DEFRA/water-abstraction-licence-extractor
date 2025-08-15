@@ -3061,5 +3061,135 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal("1 January", agreedSchemaLicence.DefinitionOfYear.StartDate);
         Assert.Equal("31 December", agreedSchemaLicence.DefinitionOfYear.EndDate);        
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany3_ThenY()
+    {
+        // Arrange
+        const string filename = "Application - New - Licence Issued 30092021.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(11, points.Text!.Count);
+        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/27/05/026", agreedSchemaLicence.LicenceNumber);
+        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal(new DateTime(2021, 09, 30), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1965, 12, 07), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2021, 09, 30), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("22705026-LV20210930", agreedSchemaLicence.Id);
+        Assert.Equal("LV20210930", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+        Assert.Equal(5, agreedSchemaLicence.Points.Length);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany4_ThenY()
+    {
+        // Arrange
+        const string filename = "Application Formal Variation Issued Licence 07032023 (1).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(10, points.Text!.Count);
+        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/27/11/065", agreedSchemaLicence.LicenceNumber);
+        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("22711065-LV20230307", agreedSchemaLicence.Id);
+        Assert.Equal("LV20230307", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+        Assert.Equal(5, agreedSchemaLicence.Points.Length);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany5_ThenY()
+    {
+        // Arrange
+        const string filename = "Application Formal Variation Issued Licence 07032023.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(23, points.Text!.Count);
+        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/27/11/064", agreedSchemaLicence.LicenceNumber);
+        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("22711064-LV20230307", agreedSchemaLicence.Id);
+        Assert.Equal("LV20230307", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany6_ThenY()
+    {
+        // Arrange
+        const string filename = "Application Minor Variation Issued Licence 03.10.24.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(3, points.Text!.Count);
+        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        Assert.StartsWith("2.1 At National Grid Reference ", points.Text![1].Text);
+        Assert.StartsWith("2.2 At National Grid Reference ", points.Text![2].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/27/12/261", agreedSchemaLicence.LicenceNumber);
+        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
+        Assert.Equal(new DateTime(2024, 10, 03), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2024, 10, 03), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("22712261-LV20241003", agreedSchemaLicence.Id);
+        Assert.Equal("LV20241003", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+        Assert.Equal(2, agreedSchemaLicence.Points.Length);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
     }    
 }

@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -560,5 +561,72 @@ public class AzureAiVisionOcrPdfTests
         // Assert
         var allText = string.Join(' ', resultFull.Pages[0].Providers[1].Text!);
         Assert.Contains("UNCORN", allText);
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany1_ThenY()
+    {
+        // Arrange
+        const string filename = "2-26-32-126 6937559.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(2, points.Text!.Count);
+        Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
+        Assert.Equal("and \"F\" on the map", points.Text![1].Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+        Assert.Equal("2/26/32/126", agreedSchemaLicence.LicenceNumber);
+        Assert.StartsWith("YORKSHIRE W", agreedSchemaLicence.LicenceHolder);
+//        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
+//        Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+//        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("22632126-LVUNKNOWN", agreedSchemaLicence.Id);
+        Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+        //Assert.Single(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.Purposes);
+    }
+    
+    [Fact]
+    public async Task When_YorkshireWaterCompany2_ThenY()
+    {
+        // Arrange
+        const string filename = "2-27-29-012 7003124.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        /*var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
+        Assert.Equal(3, points!.Text!.Count);
+        Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
+        Assert.StartsWith("2.1. At National Grid Reference TA ", points.Text![1].Text);
+        Assert.Equal("map", points.Text![2].Text);*/
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(filename, agreedSchemaLicence.Filename);
+//        Assert.Equal("2/26/32/328", agreedSchemaLicence.LicenceNumber);
+ //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
+  //      Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
+     //   Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+ //       Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("-LVUNKNOWN", agreedSchemaLicence.Id);
+        Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+
+//        Assert.Single(agreedSchemaLicence.Points);
+//        Assert.Single(agreedSchemaLicence.Purposes);
     }
 }

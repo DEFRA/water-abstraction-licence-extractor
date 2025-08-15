@@ -190,9 +190,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2.1, limit.Point?.Id);                                                                                                                                                                                                                                                                                                                                                                                                                                       
         Assert.Equal(4.2, limit.Purpose?.Id);
         
-        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
         Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         
@@ -206,8 +203,11 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
-        Assert.Empty(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
     }
 
     [Fact]
@@ -421,14 +421,16 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2.4, limit.Point?.Id);
         Assert.Equal(4.1, limit.Purpose?.Id);        
         
-        Assert.Single(primaryLicence.AbstractionLimits.Aggregates);
-        Assert.Single(primaryLicence.AbstractionLimits.Aggregates[0].Limits);
+        Assert.Equal(3, primaryLicence.AbstractionLimits.Aggregates.Length);
+        Assert.Equal(8, primaryLicence.AbstractionLimits.Aggregates[0].Limits.Length);
+        Assert.Single(primaryLicence.AbstractionLimits.Aggregates[1].Limits);
+        Assert.Equal(4, primaryLicence.AbstractionLimits.Aggregates[2].Limits.Length);        
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
-        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Equal(2, agreedSchemaLicenceGroup.AggregateSets.Length);
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
+        Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
         Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Equal(LimitPeriodType.PerYear, primaryLicence.AbstractionLimits!.Aggregates![0].Limits![0].PeriodType);

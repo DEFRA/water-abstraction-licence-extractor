@@ -261,6 +261,10 @@ public static class SchemaConverter
                     .ToList();
 
                 var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
+                
+                var implicitAggregateLimits = new List<AggregateAbstractionLimit>();
+                var shouldAddImplicitAggregate = false;
+                
                 var aggregateLimits = new List<AggregateAbstractionLimit>();
                 
                 foreach (var valueResult in valueResults)
@@ -301,8 +305,6 @@ public static class SchemaConverter
                         continue;
                     }
 
-                    var limits = new List<AggregateAbstractionLimit>();
-
                     foreach (var point in points)
                     {
                         foreach (var purpose in purposes)
@@ -312,30 +314,35 @@ public static class SchemaConverter
                             clonedLimit.Purpose = purpose;
 
                             individual.Add(clonedLimit);
-                            limits.Add(AggregateAbstractionLimit.FromAbstractionLimit(clonedLimit));
+                            implicitAggregateLimits.Add(AggregateAbstractionLimit.FromAbstractionLimit(clonedLimit));
                         }
                     }
 
                     if (points.Length > 1 || purposes.Length > 1)
                     {
-                        var aggregateToAdd = new Aggregate
-                        {
-                            LicenceNumber = licenceNumber,
-                            LicenceVersionId = licenceVersionId,
-                            PrimaryType = !string.IsNullOrEmpty(licenceNumber)
-                                ? PrimaryType.LicenceToLicence
-                                : PrimaryType.InLicence,
-                            SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
-                            NaldType = GetNaldType(),
-                            AggregateSetId = PositionConstants.ReplacementMarker,
-                            LinkedLicences = linkedLicenceNumbers.ToArray(),
-                            Limits = limits.ToArray(),
-                            Points = points.Select(p => (Point)p).ToArray(),
-                            Purposes = purposes.Select(p => (Purpose)p).ToArray()
-                        };
-                        
-                        aggregates.Add(aggregateToAdd);
+                        shouldAddImplicitAggregate = true;
                     }
+                }
+
+                if (shouldAddImplicitAggregate)
+                {
+                    var aggregateToAdd = new Aggregate
+                    {
+                        LicenceNumber = licenceNumber,
+                        LicenceVersionId = licenceVersionId,
+                        PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                            ? PrimaryType.LicenceToLicence
+                            : PrimaryType.InLicence,
+                        SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
+                        NaldType = GetNaldType(),
+                        AggregateSetId = PositionConstants.ReplacementMarker,
+                        LinkedLicences = linkedLicenceNumbers.ToArray(),
+                        Limits = implicitAggregateLimits.ToArray(),
+                        Points = points.Select(p => (Point)p).ToArray(),
+                        Purposes = purposes.Select(p => (Purpose)p).ToArray()
+                    };
+                        
+                    aggregates.Add(aggregateToAdd);
                 }
 
                 if (!hasLinkedLicenceNumber)
@@ -372,6 +379,8 @@ public static class SchemaConverter
         
         if (means.FirstOrDefault()?.Limit?.Value != null)
         {
+            var meanLimits = new List<AggregateAbstractionLimit>();
+            
             foreach (var point in points)
             {
                 foreach (var purpose in purposes)
@@ -382,7 +391,28 @@ public static class SchemaConverter
                     meanLimit.Purpose = purpose;
 
                     individual.Add(meanLimit);
+                    meanLimits.Add(AggregateAbstractionLimit.FromAbstractionLimit(meanLimit));
                 }
+            }
+            
+            if (points.Length > 1 || purposes.Length > 1)
+            {
+                var aggregateToAdd = new Aggregate
+                {
+                    LicenceNumber = licenceNumber,
+                    LicenceVersionId = licenceVersionId,
+                    PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                        ? PrimaryType.LicenceToLicence
+                        : PrimaryType.InLicence,
+                    SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
+                    NaldType = GetNaldType(),
+                    AggregateSetId = PositionConstants.ReplacementMarker,
+                    Limits = meanLimits.ToArray(),
+                    Points = points.Select(p => (Point)p).ToArray(),
+                    Purposes = purposes.Select(p => (Purpose)p).ToArray()
+                };
+                        
+                aggregates.Add(aggregateToAdd);
             }
         }
 

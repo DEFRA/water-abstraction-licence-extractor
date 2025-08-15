@@ -15,4 +15,19 @@ public class AbstractionLimit
     public Purpose? Purpose { get; set; }
     
     public bool? ImplicitLimit { get; set; }
+
+    public AbstractionLimit Clone()
+    {
+        // TODO do this via source generator
+
+        return new AbstractionLimit
+        {
+            PeriodType = PeriodType,
+            Value = Value,
+            Units = Units,
+            Point = Point,
+            Purpose = Purpose,
+            ImplicitLimit = ImplicitLimit
+        };
+    }
 }

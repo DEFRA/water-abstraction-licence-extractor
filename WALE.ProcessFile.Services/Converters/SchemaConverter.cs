@@ -171,6 +171,47 @@ public static class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
+        var means = GetMeansOfAbstraction(matches);
+        var points = GetPoints(matches);
+        var purposes = GetPurposes(matches);
+        
+        var (aggregates, individual) = GetAbstractionLimits(
+            matches,
+            licenceNumber,
+            licenceVersion.LicenceVersionId,
+            means,
+            points,
+            purposes);
+        
+        var limits = new AbstractionLimits
+        {
+            Aggregates = aggregates,
+            Individual = individual
+        };
+        
+        return new Licence
+        {
+            Filename = matchesResult.Filename,
+            LicenceNumber = licenceNumber,
+            LicenceHolder = licenceHolder,
+            LicenceVersion = licenceVersion,
+            MeansOfAbstraction = means,
+            Points = points,
+            Purposes = purposes,
+            PeriodsOfAbstraction = GetPeriods(matches),
+            DefinitionOfYear = GetDefinitionOfYear(matches),
+            AbstractionLimits = limits
+        };
+    }
+
+    private static (Aggregate[] aggregates, AbstractionLimit[] indiviudal) GetAbstractionLimits(
+        List<LabelGroupResult> matches,
+        string? licenceNumber,
+        string? licenceVersionId,
+        MeanOfAbstraction[] means,
+        PointOfAbstraction[] points,
+        PurposeOfAbstraction[] purposes)
+    {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
@@ -253,8 +294,48 @@ public static class SchemaConverter
                         aggregateLimits.Add(abstractionLimit);
                         continue;
                     }
-                    
-                    individual.Add(abstractionLimit);  
+
+                    if (limitPoint != null || limitPurpose != null)
+                    {
+                        individual.Add(abstractionLimit);
+                        continue;
+                    }
+
+                    var limits = new List<AggregateAbstractionLimit>();
+
+                    foreach (var point in points)
+                    {
+                        foreach (var purpose in purposes)
+                        {
+                            var clonedLimit = abstractionLimit.Clone();
+                            clonedLimit.Point = point;
+                            clonedLimit.Purpose = purpose;
+
+                            individual.Add(clonedLimit);
+                            limits.Add(AggregateAbstractionLimit.FromAbstractionLimit(clonedLimit));
+                        }
+                    }
+
+                    if (points.Length > 1 || purposes.Length > 1)
+                    {
+                        var aggregateToAdd = new Aggregate
+                        {
+                            LicenceNumber = licenceNumber,
+                            LicenceVersionId = licenceVersionId,
+                            PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                                ? PrimaryType.LicenceToLicence
+                                : PrimaryType.InLicence,
+                            SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
+                            NaldType = GetNaldType(),
+                            AggregateSetId = PositionConstants.ReplacementMarker,
+                            LinkedLicences = linkedLicenceNumbers.ToArray(),
+                            Limits = limits.ToArray(),
+                            Points = points.Select(p => (Point)p).ToArray(),
+                            Purposes = purposes.Select(p => (Purpose)p).ToArray()
+                        };
+                        
+                        aggregates.Add(aggregateToAdd);
+                    }
                 }
 
                 if (!hasLinkedLicenceNumber)
@@ -270,7 +351,7 @@ public static class SchemaConverter
                 var aggregate = new Aggregate
                 {
                     LicenceNumber = licenceNumber,
-                    LicenceVersionId = licenceVersion.LicenceVersionId,
+                    LicenceVersionId = licenceVersionId,
                     PrimaryType = !string.IsNullOrEmpty(licenceNumber)
                         ? PrimaryType.LicenceToLicence
                         : PrimaryType.InLicence,
@@ -289,36 +370,23 @@ public static class SchemaConverter
             }
         }
         
-        var means = GetMeansOfAbstraction(matches);
-
         if (means.FirstOrDefault()?.Limit?.Value != null)
         {
-            var meanLimit = JsonSerializer.Deserialize<AbstractionLimit>(
-                JsonSerializer.Serialize(means.First().Limit!))!;
+            foreach (var point in points)
+            {
+                foreach (var purpose in purposes)
+                {
+                    var meanLimit = means.First().Limit!.Clone();
+                    meanLimit.ImplicitLimit = true;
+                    meanLimit.Point = point;
+                    meanLimit.Purpose = purpose;
 
-            meanLimit.ImplicitLimit = true;
-            individual.Add(meanLimit);
+                    individual.Add(meanLimit);
+                }
+            }
         }
-        
-        var limits = new AbstractionLimits
-        {
-            Aggregates = aggregates.ToArray(),
-            Individual = individual.ToArray()
-        };
-        
-        return new Licence
-        {
-            Filename = matchesResult.Filename,
-            LicenceNumber = licenceNumber,
-            LicenceHolder = licenceHolder,
-            LicenceVersion = licenceVersion,
-            MeansOfAbstraction = means,
-            Points = GetPoints(matches),
-            Purposes = GetPurposes(matches),
-            PeriodsOfAbstraction = GetPeriods(matches),
-            DefinitionOfYear = GetDefinitionOfYear(matches),
-            AbstractionLimits = limits
-        };
+
+        return (aggregates.ToArray(), individual.ToArray());
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)

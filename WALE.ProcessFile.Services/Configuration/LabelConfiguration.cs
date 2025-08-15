@@ -193,12 +193,25 @@ public static class LabelConfiguration
                                     "2.2",
                                     "2.3",
                                     "2.4",
+                                    "2.5",
+                                    "2.6",
+                                    "2.7",
+                                    "2.8",
+                                    "2.9",
+                                    "2.10",
                                     "[START_OF_BLOCK]"
                                 ],
                                 TextEnd = [
                                     new("2.2"),
                                     new("2.3"),
                                     new("2.4"),
+                                    new("2.5"),
+                                    new("2.6"),
+                                    new("2.7"),
+                                    new("2.8"),
+                                    new("2.9"),
+                                    new("2.10"),
+                                    new("2.11"),
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -214,7 +227,14 @@ public static class LabelConfiguration
                                         Possibilities = [
                                             "2.1",
                                             "2.2",
-                                            "2.3"
+                                            "2.3",
+                                            "2.4",
+                                            "2.5",
+                                            "2.6",
+                                            "2.7",
+                                            "2.8",
+                                            "2.9",
+                                            "2.10"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Number"                                
@@ -245,6 +265,12 @@ public static class LabelConfiguration
                                             new("2.2") { ColumnMustStartWith = true },
                                             new("2.3") { ColumnMustStartWith = true },
                                             new("2.4") { ColumnMustStartWith = true },
+                                            new("2.5") { ColumnMustStartWith = true },
+                                            new("2.6") { ColumnMustStartWith = true },
+                                            new("2.7") { ColumnMustStartWith = true },
+                                            new("2.8") { ColumnMustStartWith = true },
+                                            new("2.9") { ColumnMustStartWith = true },
+                                            new("2.10") { ColumnMustStartWith = true },                                          
                                             new("For Purpose 4.1") { RemoveWholeLine = true },
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
@@ -340,7 +366,11 @@ public static class LabelConfiguration
                                     "2.3",
                                     "2.4",
                                     "2.5",
-                                    "2.6"
+                                    "2.6",
+                                    "2.7",
+                                    "2.8",
+                                    "2.9",
+                                    "2.10"                                    
                                 ],
                                 SubLabels =
                                 [
@@ -403,6 +433,7 @@ public static class LabelConfiguration
                                             new("From Point 2.7"),
                                             new("From Point 2.8"),
                                             new("From Point 2.9"),
+                                            new("From Point 2.10"),
                                             new("4.1"),
                                             new("4.2"),
                                             new("4.3"),

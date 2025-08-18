@@ -371,6 +371,22 @@ public static class SchemaConverter
                     TimeCutoff = timeCutoff,
                     TimePeriod = timePeriod
                 };
+
+                if (purposes?.Length > 0)
+                {
+                    foreach (var aggregateLimit in aggregateLimits)
+                    {
+                        aggregateLimit.Purposes = null;
+                    }
+                }
+                
+                if (points?.Length > 0)
+                {
+                    foreach (var aggregateLimit in aggregateLimits)
+                    {
+                        aggregateLimit.Points = null;
+                    }
+                }
                         
                 aggregates.Add(aggregate);
             }

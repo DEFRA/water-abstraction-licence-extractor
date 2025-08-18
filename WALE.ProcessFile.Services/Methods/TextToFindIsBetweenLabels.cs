@@ -36,11 +36,6 @@ public static class TextToFindIsBetweenLabels
         }
 
         linesToUse.AddRange(request.nextLines!);
-
-        if (request.label.Name == "PurposeCondition")
-        {
-            
-        }
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
@@ -131,11 +126,6 @@ public static class TextToFindIsBetweenLabels
         
         var lineCount = 0;
         var returnList = new List<DocumentLine>();
-
-        if (lines.FirstOrDefault()?.Text.Contains("gallons per hour") == true)
-        {
-            
-        }
         
         var linesLoop = new List<DocumentLine>();
         

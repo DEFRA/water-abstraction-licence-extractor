@@ -43,21 +43,6 @@ public static class LabelMatchingHelper
 
         return false;
     }
-
-    private static bool PossibilityIsNullOrContainsPossibility(
-        string text,
-        IReadOnlyList<string>? possibilities)
-    {
-        //return true;
-        
-        if (possibilities == null || possibilities.Count == 0)
-        {
-            return true;
-        }
-        
-        return possibilities.Any(possibility =>
-            text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase));
-    }
     
     public static bool LineContainsLabel(
         DocumentLine line,
@@ -110,8 +95,10 @@ public static class LabelMatchingHelper
                     line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                 var lineStartsWithLabelWithSpaceBefore =
                     line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                var lineEndsWithLabel =
+                    line.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                 
-                if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore)
+                if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore || lineEndsWithLabel)
                 {
                     matchedText = labelText;
                     return true;

@@ -3044,7 +3044,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, aggregate.Purposes.Length);
         Assert.Equal(2, aggregate.Limits.Length);
         Assert.Equal(38640, aggregate.Limits[0].Value);
+        Assert.Null(aggregate.Limits[0].Purposes);
+        Assert.Null(aggregate.Limits[0].Points);
         Assert.Equal(10140000, aggregate.Limits[1].Value);
+        Assert.Null(aggregate.Limits[1].Purposes);
+        Assert.Null(aggregate.Limits[1].Points);
     }
     
     [Fact]
@@ -3077,6 +3081,48 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal(5, agreedSchemaLicence.Points.Length);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var point = agreedSchemaLicence.Points[0];
+        Assert.Equal(2.1, point.Id);
+        Assert.EndsWith("marked 'A' on map 2", point.Description);
+        
+        point = agreedSchemaLicence.Points[1];
+        Assert.Equal(2.2, point.Id);
+        Assert.EndsWith("marked 'B' on map 2", point.Description);
+        
+        point = agreedSchemaLicence.Points[2];
+        Assert.Equal(2.3, point.Id);
+        Assert.EndsWith("marked 'C' on map 2", point.Description);
+        
+        point = agreedSchemaLicence.Points[3];
+        Assert.Equal(2.4, point.Id);
+        Assert.EndsWith("marked 'D' on map 1", point.Description);
+        
+        point = agreedSchemaLicence.Points[4];
+        Assert.Equal(2.5, point.Id);
+        Assert.EndsWith("marked 'E' on map 1", point.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var purpose = agreedSchemaLicence.Purposes[0];
+        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("Public water supply", purpose.Description);
+        
+        purpose = agreedSchemaLicence.Purposes[1];
+        Assert.Equal(4.2, purpose.Id);
+        Assert.StartsWith("Transfer for the purpose ", purpose.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+
+        var limit = agreedSchemaLicence.AbstractionLimits.Individual[0];
+        Assert.Null(limit.Purposes);
+        Assert.Equal(12410000, limit.Value);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
     }
     
     [Fact]
@@ -3109,6 +3155,34 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Single(agreedSchemaLicence.Points);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var point = agreedSchemaLicence.Points[0];
+        Assert.Equal(2.1, point.Id);
+        Assert.StartsWith("At the following", point.Description);
+        Assert.Equal(473, point.Description!.Length);
+        
+        Assert.NotNull(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var purpose = agreedSchemaLicence.Purposes[0];
+        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("Public water supply", purpose.Description);
+        
+        purpose = agreedSchemaLicence.Purposes[1];
+        Assert.Equal(4.2, purpose.Id);
+        Assert.StartsWith("Transfer for the", purpose.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+
+        var limit = agreedSchemaLicence.AbstractionLimits.Individual[0];
+        Assert.Null(limit.Purposes!);
+        Assert.Null(limit.Points!);
+        Assert.Equal(5840000, limit.Value);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
     }
     
     [Fact]
@@ -3143,5 +3217,41 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal(2, agreedSchemaLicence.Points.Length);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var point = agreedSchemaLicence.Points[0];
+        Assert.Equal(2.1, point.Id);
+        Assert.EndsWith("marked 'A' on map 1", point.Description);
+        
+        point = agreedSchemaLicence.Points[1];
+        Assert.Equal(2.2, point.Id);
+        Assert.EndsWith("marked 'B' on map 1", point.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        
+        var purpose = agreedSchemaLicence.Purposes[0];
+        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("Public water supply", purpose.Description);
+        
+        purpose = agreedSchemaLicence.Purposes[1];
+        Assert.Equal(4.2, purpose.Id);
+        Assert.StartsWith("Transfer for the purpose", purpose.Description);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+
+        var limit = agreedSchemaLicence.AbstractionLimits.Individual[0];
+        Assert.Null(limit.Purposes);
+        Assert.Single(limit.Points!);
+        Assert.Equal(730000, limit.Value);
+
+        limit = agreedSchemaLicence.AbstractionLimits.Individual[1];
+        Assert.Null(limit.Purposes);
+        Assert.Single(limit.Points!);
+        Assert.Equal(2920000, limit.Value);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
     }    
 }

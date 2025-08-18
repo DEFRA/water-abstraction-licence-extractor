@@ -27,18 +27,20 @@ public static class FormattingHelper
         if (!trimPunctuation) return trimmed;
         
         while (trimmed?.Length >= 1
-               && (char.IsPunctuation(trimmed[0])
-                   || char.IsSymbol(trimmed[0])
-                   || char.IsWhiteSpace(trimmed[0])))
+           && (char.IsPunctuation(trimmed[0])
+               || char.IsSymbol(trimmed[0])
+               || char.IsWhiteSpace(trimmed[0])))
         {
             trimmed = trimmed[1..];
         }
 
         while (trimmed?.Length >= 1
-               && trimmed[^1] != ')'
-               && (char.IsPunctuation(trimmed[^1])
-                   || char.IsSymbol(trimmed[^1])
-                   || char.IsWhiteSpace(trimmed[^1])))
+           && trimmed[^1] != ')'
+           && trimmed[^1] != ':'
+           && trimmed[^1] != '/'
+           && (char.IsPunctuation(trimmed[^1])
+               || char.IsSymbol(trimmed[^1])
+               || char.IsWhiteSpace(trimmed[^1])))
         {
             trimmed = trimmed[..^1];
         }

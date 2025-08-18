@@ -904,7 +904,8 @@ public static class LabelConfiguration
                                             "conditions "
                                         ],
                                         TextEnd = [
-                                            new("shall not exceed")
+                                            new("shall not exceed"),
+                                            new(":")
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
                                         Format = "Text",
@@ -937,7 +938,8 @@ public static class LabelConfiguration
                                             "conditions "
                                         ],
                                         TextEnd = [
-                                            new("shall not exceed")
+                                            new("shall not exceed"),
+                                            new(":")
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
                                         Format = "Text",
@@ -956,7 +958,7 @@ public static class LabelConfiguration
                                         [
                                             new()
                                             {
-                                                Name = "PurposeConditionSub",
+                                                Name = "PointConditionSub",
                                                 Text = ["and "],
                                                 Position = LabelPosition.Split
                                             }

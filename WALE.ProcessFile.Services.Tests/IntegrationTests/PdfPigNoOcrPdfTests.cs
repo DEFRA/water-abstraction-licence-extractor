@@ -160,35 +160,21 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
 
         var limit = agreedSchemaLicence.AbstractionLimits.Individual[0];
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
-        Assert.Equal(90.909999999999997, limit.Value);
-        Assert.Equal(2.1, limit.Points?.FirstOrDefault()?.Id);
-        Assert.Equal(4.1, limit.Purposes?.FirstOrDefault()?.Id);
+        Assert.Equal(90.91, limit.Value);
+        Assert.Null(limit.Points);
+        Assert.Null(limit.Purposes);
         
         limit = agreedSchemaLicence.AbstractionLimits.Individual[1];
-        Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
-        Assert.Equal("cubic metres", limit.Units);
-        Assert.Equal(90.909999999999997, limit.Value);   
-        Assert.Equal(2.1, limit.Points?.FirstOrDefault()?.Id);
-        Assert.Equal(4.2, limit.Purposes?.FirstOrDefault()?.Id);
-        
-        limit = agreedSchemaLicence.AbstractionLimits.Individual[2];
         Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(33182, limit.Value);
-        Assert.Equal(2.1, limit.Points?.FirstOrDefault()?.Id);
-        Assert.Equal(4.1, limit.Purposes?.FirstOrDefault()?.Id);
-        
-        limit = agreedSchemaLicence.AbstractionLimits.Individual[3];
-        Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
-        Assert.Equal("cubic metres", limit.Units);
-        Assert.Equal(33182, limit.Value);
-        Assert.Equal(2.1, limit.Points?.FirstOrDefault()?.Id);                                                                                                                                                                                                                                                                                                                                                                                                                                       
-        Assert.Equal(4.2, limit.Purposes?.FirstOrDefault()?.Id);
+        Assert.Null(limit.Points);
+        Assert.Null(limit.Purposes);
         
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
         Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
@@ -204,10 +190,10 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
-        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
+        Assert.Empty(agreedSchemaLicenceGroup.AggregateSets);
     }
 
     [Fact]

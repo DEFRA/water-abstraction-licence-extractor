@@ -285,8 +285,14 @@ public static class SchemaConverter
                         .FirstOrDefault()?
                         .Text;
 
+                    var purposeCondition = siblings?
+                        .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
+                    
+                    var limitPurpose = purposeCondition != null ?
+                        new Purpose { Id = double.Parse(purposeCondition.Text!.First().Text) }
+                        : null;
+                    
                     var limitPoint = (Point?)null;
-                    var limitPurpose = (Purpose?)null;
                     
                     var abstractionLimit = new AggregateAbstractionLimit
                     {

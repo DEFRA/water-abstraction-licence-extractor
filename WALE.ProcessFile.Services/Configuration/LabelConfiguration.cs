@@ -886,7 +886,7 @@ public static class LabelConfiguration
                                 {
                                     new()
                                     {
-                                        Name = "PointPurpose",
+                                        Name = "DatePurpose",
                                         Text = [
                                             "Up to and including ",
                                             "From ",
@@ -895,6 +895,18 @@ public static class LabelConfiguration
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "DateOrPurpose",
                                         IncludeLabelText = true
+                                    },
+                                    new()
+                                    {
+                                        Name = "PurposeCondition",
+                                        Text = [
+                                            "condition "
+                                        ],
+                                        TextEnd = [
+                                            new("shall not exceed")
+                                        ],
+                                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                                        Format = "Text"
                                     },
                                     new()
                                     {

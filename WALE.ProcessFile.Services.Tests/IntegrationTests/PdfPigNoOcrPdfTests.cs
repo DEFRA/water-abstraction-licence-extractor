@@ -3134,7 +3134,7 @@ public class PdfPigNoOcrPdfTests
 
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
         Assert.Equal("22705026LV20210930-LLPO", aggregate.Id);
-        Assert.Equal(1, aggregate.Purposes.Length);
+        Assert.Equal(2, aggregate.Purposes.Length);
         Assert.Equal(10, aggregate.Limits.Length); // 5 points * 1 purpose * 2 limits
         
         aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[1];

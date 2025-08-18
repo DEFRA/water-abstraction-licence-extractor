@@ -36,6 +36,11 @@ public static class TextToFindIsBetweenLabels
         }
 
         linesToUse.AddRange(request.nextLines!);
+
+        if (request.label.Name == "PurposeCondition")
+        {
+            
+        }
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
@@ -80,12 +85,21 @@ public static class TextToFindIsBetweenLabels
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchType = MatchType.Between;
         labelGroupResult.MatchedLabel = request.label.Clone();
-        labelGroupResult.MatchedLabel.TextEnd =
-        [
-            labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
-                matchedEndText != null
-                && x.Text == matchedEndText.Value.matchedEndText)
-        ];
+
+        try
+        {
+            labelGroupResult.MatchedLabel.TextEnd =
+            [
+                labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
+                    matchedEndText != null
+                    && x.Text == matchedEndText.Value.matchedEndText)
+            ];
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
 
         if (labelGroupResult.MatchedLabel.MustContain != null)
         {
@@ -123,6 +137,8 @@ public static class TextToFindIsBetweenLabels
             
         }
         
+        var linesLoop = new List<DocumentLine>();
+        
         // Add the first line between
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
@@ -134,15 +150,16 @@ public static class TextToFindIsBetweenLabels
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(text));
             
-            returnList.Add(clonedLine);
+            linesLoop.Add(clonedLine);
         }
 
         var textEndList = textEnd.Select(x => x.Text).ToList();
         var labelMatchCount = new Dictionary<string, int>();
         
-        var totalLines = lines.Count;
+        linesLoop.AddRange(lines);
+        var totalLines = linesLoop.Count;
         
-        foreach (var line in lines)
+        foreach (var line in linesLoop)
         {
             var label = new LabelToMatch
             {
@@ -171,6 +188,18 @@ public static class TextToFindIsBetweenLabels
                     matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
                     foundEndTag = true;
 
+                    if (returnList.Count == 0)
+                    {
+                        var t = line.Text[..line.Text.IndexOf(matchedEndTextTemp!, StringComparison.Ordinal)];
+                        
+                        var clonedLine2 = line.Clone();
+                        clonedLine2.Columns.Clear();
+                        clonedLine2.Columns.Add(new DocumentLineColumn(
+                            FormattingHelper.TrimFormatting(t, false)!));
+                        
+                        returnList.Add(clonedLine2);
+                    }
+                    
                     break;
                 }
             }
@@ -197,7 +226,7 @@ public static class TextToFindIsBetweenLabels
 
         if (containsText == null)
         {
-            return returnList;
+            return matchData == null ? null : returnList;
         }
 
         string? matchedContains = null;

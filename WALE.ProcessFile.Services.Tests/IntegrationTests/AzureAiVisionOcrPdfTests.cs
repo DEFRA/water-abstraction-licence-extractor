@@ -586,6 +586,23 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purpose.Text![0].Text);
         Assert.Equal("Water undertaking", purpose.Text![1].Text);
         
+        var abstractionLimitsResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.True(abstractionLimitsResult.IsOcr);
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count); // TODO 5 looks way too low
+
+        var abstractionLimitsSections = abstractionLimitsResult.SubResults;
+        Assert.NotNull(abstractionLimitsSections);
+        Assert.Single(abstractionLimitsSections); // TODO should be 4
+
+        var abstractionLimitsSection = abstractionLimitsSections[0];
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.NotNull(abstractionLimitsSection.SubResults);
+
+        Assert.Single(abstractionLimitsSection.SubResults);
+        var section1Sub1 = abstractionLimitsSection.SubResults[0];
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 

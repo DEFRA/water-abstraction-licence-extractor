@@ -15,8 +15,8 @@ public class AggregateAbstractionLimit : AbstractionLimit
             PeriodType = abstractionLimit.PeriodType,
             Value = abstractionLimit.Value,
             Units = abstractionLimit.Units,
-            Point = abstractionLimit.Point,
-            Purpose = abstractionLimit.Purpose,
+            Points = abstractionLimit.Points,
+            Purposes = abstractionLimit.Purposes,
             ImplicitLimit = abstractionLimit.ImplicitLimit
         };
     }

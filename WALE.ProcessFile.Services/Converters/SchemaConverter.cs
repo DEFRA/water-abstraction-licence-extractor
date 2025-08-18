@@ -265,11 +265,33 @@ public static class SchemaConverter
                     .ToList();
 
                 var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
-                
-                var implicitAggregateLimits = new List<AggregateAbstractionLimit>();
-                var shouldAddImplicitAggregate = false;
-                
                 var aggregateLimits = new List<AggregateAbstractionLimit>();
+                
+                var purposeCondition = siblings?
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
+                    
+                var purposeConditionSub = purposeCondition?
+                    .SubResults
+                    .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
+                    .ToList();
+                    
+                var limitPurposes = purposeConditionSub?.Count > 0 ?
+                    purposeConditionSub.Select(pcs =>
+                        new Purpose { Id = double.Parse(pcs!.Text!.First().Text) }).ToList()
+                    : null;
+                    
+                var pointCondition = siblings?
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
+
+                var pointConditionSub = pointCondition?
+                    .SubResults
+                    .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
+                    .ToList();
+                    
+                var limitPoints = pointConditionSub?.Count > 0 ?
+                    pointConditionSub.Select(pcs =>
+                        new Point { Id = double.Parse(pcs!.Text!.First().Text) }).ToList()
+                    : null;
                 
                 foreach (var valueResult in valueResults)
                 {
@@ -284,23 +306,14 @@ public static class SchemaConverter
                         .Text?
                         .FirstOrDefault()?
                         .Text;
-
-                    var purposeCondition = siblings?
-                        .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
-                    
-                    var limitPurpose = purposeCondition != null ?
-                        new Purpose { Id = double.Parse(purposeCondition.Text!.First().Text) }
-                        : null;
-                    
-                    var limitPoint = (Point?)null;
                     
                     var abstractionLimit = new AggregateAbstractionLimit
                     {
                         PeriodType = ToLimitPeriodType(valueResult.MatchedLabel?.Text?.FirstOrDefault()),
                         Value = number,
                         Units = units,
-                        Point = limitPoint,
-                        Purpose = limitPurpose
+                        Points = limitPoints?.ToArray(),
+                        Purposes = limitPurposes?.ToArray()
                     };
 
                     if (hasLinkedLicenceNumber)
@@ -309,61 +322,37 @@ public static class SchemaConverter
                         continue;
                     }
 
-                    if (limitPoint != null || limitPurpose != null)
+                    if ((limitPoints == null || limitPoints.Count < 2)
+                        && (limitPurposes == null || limitPurposes.Count < 2))
                     {
                         individual.Add(abstractionLimit);
-                        continue;
                     }
-
-                    foreach (var point in points)
+                    else
                     {
-                        foreach (var purpose in purposes)
-                        {
-                            var clonedLimit = abstractionLimit.Clone();
-                            clonedLimit.Point = point;
-                            clonedLimit.Purpose = purpose;
-
-                            individual.Add(clonedLimit);
-                            implicitAggregateLimits.Add(AggregateAbstractionLimit.FromAbstractionLimit(clonedLimit));
-                        }
-                    }
-
-                    if (points.Length > 1 || purposes.Length > 1)
-                    {
-                        shouldAddImplicitAggregate = true;
+                        aggregateLimits.Add(abstractionLimit);
                     }
                 }
 
-                if (shouldAddImplicitAggregate)
-                {
-                    var aggregateToAdd = new Aggregate
-                    {
-                        LicenceNumber = licenceNumber,
-                        LicenceVersionId = licenceVersionId,
-                        PrimaryType = !string.IsNullOrEmpty(licenceNumber)
-                            ? PrimaryType.LicenceToLicence
-                            : PrimaryType.InLicence,
-                        SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
-                        NaldType = GetNaldType(),
-                        AggregateSetId = PositionConstants.ReplacementMarker,
-                        LinkedLicences = linkedLicenceNumbers.ToArray(),
-                        Limits = implicitAggregateLimits.ToArray(),
-                        Points = points.Select(p => (Point)p).ToArray(),
-                        Purposes = purposes.Select(p => (Purpose)p).ToArray()
-                    };
-                        
-                    aggregates.Add(aggregateToAdd);
-                }
-
-                if (!hasLinkedLicenceNumber)
+                if (aggregateLimits.Count == 0)
                 {
                     continue;
                 }
-                
-                var pointsLoop = new List<Point>(); // TODO
-                var purposesLoop = new List<Purpose>(); // TODO
+
+                var pointsLoop = aggregateLimits.First().Points;
+                var purposesLoop = aggregateLimits.First().Purposes;
                 var timeCutoff = (TimeLimited?)null; // TODO
                 var timePeriod = (TimePeriod?)null; // TODO
+
+                SubType? subType = null;
+
+                if (pointsLoop?.Length > 0)
+                {
+                    subType = SubType.PointToPoint;
+                }
+                else if (purposesLoop?.Length > 0)
+                {
+                    subType = SubType.PurposeToPurpose;
+                }
                 
                 var aggregate = new Aggregate
                 {
@@ -372,13 +361,13 @@ public static class SchemaConverter
                     PrimaryType = !string.IsNullOrEmpty(licenceNumber)
                         ? PrimaryType.LicenceToLicence
                         : PrimaryType.InLicence,
-                    SubType = pointsLoop.Count > 0 ? SubType.PointToPoint : null,
+                    SubType = subType,
                     NaldType = GetNaldType(),
                     AggregateSetId = PositionConstants.ReplacementMarker,
                     LinkedLicences = linkedLicenceNumbers.ToArray(),
                     Limits = aggregateLimits.ToArray(),
-                    Points = pointsLoop.ToArray(),
-                    Purposes = purposesLoop.ToArray(),
+                    Points = pointsLoop?.ToArray() ?? [],
+                    Purposes = purposesLoop?.ToArray() ?? [],
                     TimeCutoff = timeCutoff,
                     TimePeriod = timePeriod
                 };
@@ -387,45 +376,6 @@ public static class SchemaConverter
             }
         }
         
-        if (means.FirstOrDefault()?.Limit?.Value != null)
-        {
-            var meanLimits = new List<AggregateAbstractionLimit>();
-            
-            foreach (var point in points)
-            {
-                foreach (var purpose in purposes)
-                {
-                    var meanLimit = means.First().Limit!.Clone();
-                    meanLimit.ImplicitLimit = true;
-                    meanLimit.Point = point;
-                    meanLimit.Purpose = purpose;
-
-                    individual.Add(meanLimit);
-                    meanLimits.Add(AggregateAbstractionLimit.FromAbstractionLimit(meanLimit));
-                }
-            }
-            
-            if (points.Length > 1 || purposes.Length > 1)
-            {
-                var aggregateToAdd = new Aggregate
-                {
-                    LicenceNumber = licenceNumber,
-                    LicenceVersionId = licenceVersionId,
-                    PrimaryType = !string.IsNullOrEmpty(licenceNumber)
-                        ? PrimaryType.LicenceToLicence
-                        : PrimaryType.InLicence,
-                    SubType = points.Length > 1 ? SubType.PointToPoint : SubType.PurposeToPurpose,
-                    NaldType = GetNaldType(),
-                    AggregateSetId = PositionConstants.ReplacementMarker,
-                    Limits = meanLimits.ToArray(),
-                    Points = points.Select(p => (Point)p).ToArray(),
-                    Purposes = purposes.Select(p => (Purpose)p).ToArray()
-                };
-                        
-                aggregates.Add(aggregateToAdd);
-            }
-        }
-
         return (aggregates.ToArray(), individual.ToArray());
     }
 

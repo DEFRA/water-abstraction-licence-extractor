@@ -10,9 +10,9 @@ public class AbstractionLimit
     
     public string? Units { get; init; }
     
-    public Point? Point { get; set; }
+    public Point[]? Points { get; set; }
     
-    public Purpose? Purpose { get; set; }
+    public Purpose[]? Purposes { get; set; }
     
     public bool? ImplicitLimit { get; set; }
 
@@ -25,8 +25,8 @@ public class AbstractionLimit
             PeriodType = PeriodType,
             Value = Value,
             Units = Units,
-            Point = Point,
-            Purpose = Purpose,
+            Points = Points,
+            Purposes = Purposes,
             ImplicitLimit = ImplicitLimit
         };
     }

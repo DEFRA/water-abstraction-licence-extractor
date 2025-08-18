@@ -575,9 +575,16 @@ public class AzureAiVisionOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(2, points.Text!.Count);
+        Assert.Equal(4, points.Text!.Count);
         Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
-        Assert.Equal("and \"F\" on the map", points.Text![1].Text);
+        Assert.Equal("and \"F\" on the map", points.Text![3].Text);
+        
+        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        Assert.NotNull(purpose);
+        
+        Assert.Equal(2, purpose.Text!.Count);
+        Assert.Equal("4. PURPOSE OF ABSTRACTION", purpose.Text![0].Text);
+        Assert.Equal("Water undertaking", purpose.Text![1].Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);

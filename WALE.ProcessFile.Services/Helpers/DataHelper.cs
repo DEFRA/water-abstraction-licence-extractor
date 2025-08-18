@@ -262,7 +262,8 @@ public static partial class DataHelper
                        && wordLower != "of"
                        && wordLower != "on"
                        && wordLower != "or"
-                       && wordLower != "to";
+                       && wordLower != "to"
+                       && !wordLower.StartsWith("ta"); // TA is an OS reference
             })
             .ToList();
     }

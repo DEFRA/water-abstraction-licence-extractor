@@ -36,6 +36,11 @@ public static class TextToFindIsBetweenLabels
         }
 
         linesToUse.AddRange(request.nextLines!);
+
+        if (request.label.Name == "DocumentPointsAll")
+        {
+            
+        }
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,

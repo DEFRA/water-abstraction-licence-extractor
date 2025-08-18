@@ -805,7 +805,8 @@ public static class LabelConfiguration
                     "Quantity(ies) of water authorised to be abstracted during a period",
                     "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING",
                     "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]"
+                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]",
+                    "The quantity of water authorised to be abstracted shall be"
                 ],
                 TextEnd =
                 [

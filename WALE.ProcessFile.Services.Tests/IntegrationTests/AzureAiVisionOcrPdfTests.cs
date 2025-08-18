@@ -629,6 +629,12 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename);
         
+        var abstractionLimitsResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.True(abstractionLimitsResult.IsOcr);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        
         /*var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         

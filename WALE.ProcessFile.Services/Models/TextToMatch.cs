@@ -8,6 +8,8 @@ public class TextToMatch(string text)
     
     public bool IfMultiplePreferLast { get; init; }
     
+    public bool IfMultiplePreferLongest { get; init; }
+    
     public bool ColumnMustHave2SequentialNumbers { get; set; }
     
     public bool RemoveWholeLine { get; init; }
@@ -20,6 +22,7 @@ public class TextToMatch(string text)
         {
             ColumnMustStartWith = ColumnMustStartWith,
             IfMultiplePreferLast = IfMultiplePreferLast,
+            IfMultiplePreferLongest = IfMultiplePreferLongest,
             ColumnMustHave2SequentialNumbers = ColumnMustHave2SequentialNumbers,
             RemoveWholeLine = RemoveWholeLine,
             InstanceNumber = InstanceNumber

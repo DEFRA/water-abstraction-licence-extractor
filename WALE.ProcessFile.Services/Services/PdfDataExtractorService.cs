@@ -200,7 +200,7 @@ public class PdfDataExtractorService(
                     
                     const bool isOcr = true;
                     
-                    var ocrResult = await GetLabelGroupMatchesAsync(
+                    var ocrResults = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
                         unmatchedLabelLookups,
                         isOcr,
@@ -210,7 +210,7 @@ public class PdfDataExtractorService(
                         configuration.OutputFolder,
                         configuration.CacheFolder);
 
-                    var noMatchesFound = ocrResult.Count == 0;
+                    var noMatchesFound = ocrResults.Count == 0;
                     bestImageLines = imageLines.ToList();
                     
                     if (noMatchesFound)
@@ -218,25 +218,30 @@ public class PdfDataExtractorService(
                         continue;
                     }
 
-                    var multiplePreferFirstMatches = ocrResult
-                        .Where(ocr =>
-                            ocr.MatchedLabel!.Text!.First().IfMultiplePreferLast // TODO should be Single not First ideally
-                            && labelGroupMatches.Select(lgm =>
-                                lgm.LabelGroupName).Contains(ocr.LabelGroupName))
-                        .ToList();
-
-                    if (multiplePreferFirstMatches.Count > 0)
+                    labelGroupMatches.AddRange(ocrResults);
+                    
+                    foreach (var ocrResult in ocrResults)
                     {
-                        foreach (var multiplePreferFirstMatch in multiplePreferFirstMatches)
+                        var matchedLabel = ocrResult.MatchedLabel!;
+                        var ifMultiplePreferLast = matchedLabel.Text!.First().IfMultiplePreferLast;
+                        var ifMultiplePreferLongest = matchedLabel.Text!.First().IfMultiplePreferLongest;
+
+                        if (ifMultiplePreferLast || ifMultiplePreferLongest)
                         {
-                            var index = labelGroupMatches.FindIndex(lgm =>
-                                lgm.LabelGroupName == multiplePreferFirstMatch.LabelGroupName);
-                            
-                            labelGroupMatches.RemoveAt(index);
+                            var alreadyOutput = labelGroupMatches
+                                .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                                .ToList();
+
+                            if (alreadyOutput.Count >= 2)
+                            {
+                                var i = alreadyOutput
+                                    .OrderBy(x => ifMultiplePreferLast ? x.LineNumber : x.Text?.Count)
+                                    .First();
+                        
+                                labelGroupMatches.Remove(i);
+                            }
                         }
                     }
-                    
-                    labelGroupMatches.AddRange(ocrResult);
                     
                     unmatchedLabelLookups = GetUnmatchedLabels(
                         unmatchedLabelLookups,
@@ -295,15 +300,16 @@ public class PdfDataExtractorService(
                     && labelLookup.Labels.Any(l => l.Name == lgm.MatchedLabel.Name))?.MatchedLabel;
 
                 var ifMultiplePreferLast = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-
-                if (ifMultiplePreferLast)
+                var ifMultiplePreferLongest = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
+                var canGoOverPageBoundary = labelFull?.CanGoOverPageBoundary ?? false;
+                
+                if (ifMultiplePreferLast || ifMultiplePreferLongest)
                 {
                     
                 }
                 
-                var canGoOverPageBoundary = labelFull?.CanGoOverPageBoundary ?? false;
-                
-                return doesntMatchAnyFound || (!onlyNotFoundAtAll && (ifMultiplePreferLast || canGoOverPageBoundary));
+                return doesntMatchAnyFound
+                    || (!onlyNotFoundAtAll && (ifMultiplePreferLast || ifMultiplePreferLongest || canGoOverPageBoundary));
             })
             .ToList();
     }
@@ -691,9 +697,12 @@ public class PdfDataExtractorService(
                 {
                     
                 }
+
+                var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
                 
                 // TOOD there should only be one below - not 2 or more
-                if (matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast == true)
+                if (ifMultiplePreferLast || ifMultiplePreferLongest)
                 {
                     var alreadyOutput = returnList
                         .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
@@ -702,12 +711,12 @@ public class PdfDataExtractorService(
                     if (alreadyOutput.Count >= 2)
                     {
                         var i = alreadyOutput
-                            .OrderBy(x => x.Text?.Count)
+                            .OrderBy(x => ifMultiplePreferLast ? x.LineNumber : x.Text?.Count)
                             .First();
                         
                         returnList.Remove(i);
                     }
-                }                
+                }
                 
                 if (matchedLabel.Multiple is MultipleType.False)
                 {

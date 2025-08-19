@@ -235,7 +235,7 @@ public class PdfDataExtractorService(
                             if (alreadyOutput.Count >= 2)
                             {
                                 var i = alreadyOutput
-                                    .OrderBy(x => ifMultiplePreferLast ? x.LineNumber : x.Text?.Count)
+                                    .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
                                     .First();
                         
                                 labelGroupMatches.Remove(i);
@@ -574,6 +574,21 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
+                if (line.LineNumber >= 93)
+                {
+                    
+                }
+                
+                if (label.Name == "DocumentAbstractionLimitsSection")
+                {
+                    
+                }
+                
+                if (line.LineNumber >= 93 && label.Name == "DocumentAbstractionLimitsSection")
+                {
+                    
+                }
+                
                 if (label.Format == "LinkedLicence")
                 {
                     var linkedLicences = await ProcessLinkedLicenceAsync(
@@ -711,7 +726,7 @@ public class PdfDataExtractorService(
                     if (alreadyOutput.Count >= 2)
                     {
                         var i = alreadyOutput
-                            .OrderBy(x => ifMultiplePreferLast ? x.LineNumber : x.Text?.Count)
+                            .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
                             .First();
                         
                         returnList.Remove(i);

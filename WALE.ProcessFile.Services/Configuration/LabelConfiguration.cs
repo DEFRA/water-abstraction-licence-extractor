@@ -139,6 +139,7 @@ public static class LabelConfiguration
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
+                Multiple = MultipleType.SingleLabelMultipleValues,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
@@ -841,6 +842,7 @@ public static class LabelConfiguration
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                Multiple = MultipleType.SingleLabelMultipleValues,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,

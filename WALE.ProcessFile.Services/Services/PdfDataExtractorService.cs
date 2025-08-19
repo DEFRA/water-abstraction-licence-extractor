@@ -254,8 +254,11 @@ public class PdfDataExtractorService(
                         break;
                     }
                 }
-                
-                documentLines.AddRange(bestImageLines);
+
+                if (bestImageLines != null)
+                {
+                    documentLines.AddRange(bestImageLines);
+                }
             }
 
             if (breakOuter)
@@ -672,10 +675,21 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
+                if (matchedLabel.Multiple is MultipleType.IfMultiplePreferLast)
+                {
+                    var alreadyOutput = returnList
+                        .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                        .ToList();
+
+                    foreach (var item in alreadyOutput)
+                    {
+                        returnList.Remove(item);
+                    }
+                }
+                
                 returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
-                if (matchedLabel.Multiple is MultipleType.False
-                    or MultipleType.IfMultiplePreferLast) // TODO this last bit should change, as it could need to look futher on the same page
+                if (matchedLabel.Multiple is MultipleType.False)
                 {
                     return returnList;
                 }

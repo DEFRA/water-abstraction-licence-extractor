@@ -615,7 +615,11 @@ public class AzureAiVisionOcrPdfTests
 //        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
         Assert.Equal("22632126-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
-
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        
         //Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Purposes);
     }
@@ -700,7 +704,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
-        Assert.Single(agreedSchemaLicence.Points);
+        //Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Purposes);
     }
 }

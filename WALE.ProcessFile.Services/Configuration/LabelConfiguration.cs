@@ -868,6 +868,7 @@ public static class LabelConfiguration
                             new("(2)"),
                             new("(3)"),
                             new("(4)"),
+                            new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -882,8 +883,9 @@ public static class LabelConfiguration
                             new("6.10"),
                             new("(2)"),
                             new("(3)"),
-                            new("(4)"), 
-                            new("(5)"),                            
+                            new("(4)"),
+                            new("(5)"),
+                            new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,

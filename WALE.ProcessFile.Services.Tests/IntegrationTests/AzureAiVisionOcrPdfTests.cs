@@ -594,7 +594,7 @@ public class AzureAiVisionOcrPdfTests
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
-        Assert.Equal(4, abstractionLimitsSections.Count);
+        Assert.Equal(5, abstractionLimitsSections.Count);
 
         var abstractionLimitsSection = abstractionLimitsSections[0];
         Assert.NotNull(abstractionLimitsSection);
@@ -618,7 +618,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(10, agreedSchemaLicence.AbstractionLimits.Individual.Length);
         
         //Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Purposes);

@@ -645,9 +645,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(abstractionLimitsSection.SubResults);
 
         Assert.Single(abstractionLimitsSection.SubResults);
-        var section1Sub1 = abstractionLimitsSection.SubResults![0];
+        var section1Sub1 = abstractionLimitsSection.SubResults[0];
         
-        Assert.Equal(2, section1Sub1.SubResults!.Count);
+        Assert.Equal(4, section1Sub1.SubResults.Count);
         
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
@@ -657,20 +657,32 @@ public class AzureAiVisionOcrPdfTests
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
         Assert.Equal("20.45", perDayValue?.Text?.FirstOrDefault()?.Text);
         
-        /*var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
+        var perYearUnits = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perYearValue = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("7823", perYearValue?.Text?.FirstOrDefault()?.Text);        
+        
+        // TODO - Should have 2 per day entries
+        
+        var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(3, points!.Text!.Count);
-        Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
-        Assert.StartsWith("2.1. At National Grid Reference TA ", points.Text![1].Text);
-        Assert.Equal("map", points.Text![2].Text);*/
+        Assert.Equal(5, points.Text!.Count);
+        Assert.Equal("Source of supply and authorised place(s) of abstraction", points.Text![0].Text);
+        Assert.StartsWith("Delete the existing", points.Text![1].Text);
+        Assert.Equal("the following :", points.Text![2].Text);
+        Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![3].Text);
+        Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![4].Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
-//        Assert.Equal("2/26/32/328", agreedSchemaLicence.LicenceNumber);
+//        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
   //      Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
      //   Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);

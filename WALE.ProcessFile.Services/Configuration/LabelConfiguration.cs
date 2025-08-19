@@ -125,7 +125,8 @@ public static class LabelConfiguration
                 [
                     new("2. POINT OF ABSTRACTION"),
                     new("2. POINT(S) OF ABSTRACTION"),
-                    new("2. POINTS OF ABSTRACTION")
+                    new("2. POINTS OF ABSTRACTION"),
+                    new("Source of supply and authorised place(s) of abstraction")
                 ],
                 TextEnd =
                 [
@@ -139,6 +140,7 @@ public static class LabelConfiguration
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                Multiple = MultipleType.IfMultiplePreferLast,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
                 NextLinesToFetch = 100,
@@ -463,6 +465,7 @@ public static class LabelConfiguration
                     new("licence serial no:"),
                     new("licence serial no."),
                     new("serial no."),
+                    //new("Serial No"),                    
                     new("ref. no. "),
                     new("Reference No."),
                     new("Reference Number "),
@@ -840,7 +843,7 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
-                Multiple = MultipleType.IfMultiplePreferLast, // TODO get this working
+                Multiple = MultipleType.IfMultiplePreferLast,
                 SubLabels = new List<LabelToMatch>
                 {
                     new()
@@ -1064,7 +1067,10 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerYearUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = [new("per year")],
+                                        Text = [
+                                            new("per year"),
+                                            new("per annum")
+                                        ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1176,7 +1182,10 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerYearValue",                                
                                         CategoryName = "PerValue",
-                                        Text = [new("per year")],
+                                        Text = [
+                                            new("per year"),
+                                            new("per annum")                                            
+                                        ],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerYearUnits",                                

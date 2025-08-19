@@ -709,6 +709,7 @@ public static class SchemaConverter
             "per day" => LimitPeriodType.PerDay,
             "per week" => LimitPeriodType.PerWeek,
             "per month" => LimitPeriodType.PerMonth,
+            "per annum" => LimitPeriodType.PerYear,
             "per year" => LimitPeriodType.PerYear,
             "in total" => LimitPeriodType.InTotal,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")

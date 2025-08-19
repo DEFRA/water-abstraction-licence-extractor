@@ -590,7 +590,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(5, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -731,7 +731,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // Abstraction limitscrossed out
+        Assert.Equal(5, resultList.Count); // Abstraction limits crossed out
 
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         

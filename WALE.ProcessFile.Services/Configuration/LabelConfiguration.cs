@@ -467,7 +467,7 @@ public static class LabelConfiguration
                     new("licence serial no:"),
                     new("licence serial no."),
                     new("serial no."),
-                    //new("Serial No"),                    
+                    new("Serial ") { ColumnMustStartWith = true },
                     new("ref. no. "),
                     new("Reference No."),
                     new("Reference Number "),

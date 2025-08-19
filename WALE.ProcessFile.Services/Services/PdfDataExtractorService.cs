@@ -586,7 +586,9 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Name == "PerMonthUnits")
+                if (label.Name == "DocumentAbstractionLimitsSection" &&
+                    label.Text!.Any(t => t.ColumnMustStartWith
+                        && t.Text.ToUpper().Contains("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED")))
                 {
                     
                 }
@@ -674,6 +676,8 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
+                
+                returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
                 if (matchedLabel.Multiple is MultipleType.IfMultiplePreferLast)
                 {
@@ -681,14 +685,16 @@ public class PdfDataExtractorService(
                         .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
                         .ToList();
 
-                    foreach (var item in alreadyOutput)
+                    if (alreadyOutput.Count >= 2)
                     {
-                        returnList.Remove(item);
+                        var i = alreadyOutput
+                            .OrderBy(x => x.Text?.Count)
+                            .First();
+                        
+                        returnList.Remove(i);
                     }
-                }
+                }                
                 
-                returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
-
                 if (matchedLabel.Multiple is MultipleType.False)
                 {
                     return returnList;

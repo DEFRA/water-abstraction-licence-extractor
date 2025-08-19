@@ -808,7 +808,7 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
-                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]"),
+                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true},
                     new("The quantity of water authorised to be abstracted shall be")
                 ],
                 TextEnd =
@@ -822,7 +822,7 @@ public static class LabelConfiguration
                     new("MEANS TO BE USED FOR MEASURING"),
                     new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
                     new("Means of measurement or assessment"),
-                    new("Schedule of conditions") { ColumnMustStartWith = true },
+                    new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
                     new("[END_OF_BLOCK]")
                 ],

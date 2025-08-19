@@ -75,6 +75,9 @@ public static class LabelMatchingHelper
                 return true;
             }
          
+            var lineStartsWithLabel =
+                line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+
             var isEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
 
             if (isEndOfLineMarker)
@@ -87,14 +90,23 @@ public static class LabelMatchingHelper
                 
                 if (lineEndsWithMarker)
                 {
-                    matchedText = labelTextWithoutMarker;
-                    return true;
+                    if (labelTextOption.ColumnMustStartWith)
+                    {
+                        if (lineStartsWithLabel)
+                        {
+                            matchedText = labelTextWithoutMarker;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        matchedText = labelTextWithoutMarker;
+                        return true;                        
+                    }
                 }
             }
             else
             {
-                var lineStartsWithLabel =
-                    line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                 var lineStartsWithLabelWithSpaceBefore =
                     line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
                 var lineEndsWithLabel =

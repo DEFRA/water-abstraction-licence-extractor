@@ -92,7 +92,8 @@ public static class TextToFindIsBetweenLabels
             [
                 labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
                     matchedEndText != null
-                    && x.Text == matchedEndText.Value.matchedEndText)
+                    && (x.Text == matchedEndText.Value.matchedEndText
+                        || x.Text == matchedEndText.Value.matchedEndText + PositionConstants.EndOfLineMarker))
             ];
         }
         catch (Exception e)
@@ -174,9 +175,20 @@ public static class TextToFindIsBetweenLabels
                 labelMatchCount.TryAdd(matchedEndTextTemp!, 0);
                 labelMatchCount[matchedEndTextTemp!] += 1;
 
-                var requiredCount = textEnd
-                    .Single(textEndLine => textEndLine.Text == matchedEndTextTemp!)
-                    .InstanceNumber;
+                int requiredCount;
+
+                try
+                {
+                    requiredCount = textEnd
+                        .Single(textEndLine => textEndLine.Text == matchedEndTextTemp!
+                            || textEndLine.Text == matchedEndTextTemp + PositionConstants.EndOfLineMarker)
+                        .InstanceNumber;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
                 
                 if (labelMatchCount[matchedEndTextTemp!] >= requiredCount)
                 {

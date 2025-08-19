@@ -659,7 +659,7 @@ public class AzureAiVisionOcrPdfTests
         
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
 
         var perYearValue = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
@@ -677,11 +677,21 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![1].Text);
         Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![2].Text);
         
+        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        Assert.NotNull(purpose);
+        
+        Assert.Equal(2, purpose.Text!.Count);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length); // TODO should be 3
+        
 //        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
   //      Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
@@ -690,7 +700,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
-//        Assert.Single(agreedSchemaLicence.Points);
-//        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.Purposes);
     }
 }

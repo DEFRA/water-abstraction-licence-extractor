@@ -304,6 +304,7 @@ public static class LabelConfiguration
                     new("PURPOSE OF ABSTRACTION"),
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
+                    new("Purpose for which water is authorised to be used"),
                     new("Purpose(s) for which water is authorised to be used")
                 ],
                 TextEnd =
@@ -314,6 +315,7 @@ public static class LabelConfiguration
                     new("LAND ON WHICH LICENCE AUTHORISES USE OF WATER"),
                     new("Quantities of water authorised to be abstracted"),
                     new("QUANTITY(IES) OF WATER AUTHORISED"),
+                    new("The quantity of water authorised to be abstracted shall be"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =

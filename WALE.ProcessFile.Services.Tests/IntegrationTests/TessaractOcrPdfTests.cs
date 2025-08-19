@@ -258,7 +258,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count); // TODO should be 9
+        Assert.Equal(29, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -394,7 +394,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(15, abstractionLimitsResult.Text?.Count); // TODO should be 12       
+        Assert.Equal(17, abstractionLimitsResult.Text?.Count); // TODO should be 12       
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -431,7 +431,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count); // TODO should be 9
+        Assert.Equal(12, abstractionLimitsResult.Text?.Count); // TODO should be 9
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

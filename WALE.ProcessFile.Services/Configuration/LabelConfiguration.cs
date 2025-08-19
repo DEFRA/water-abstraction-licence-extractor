@@ -123,10 +123,10 @@ public static class LabelConfiguration
                 Name = "DocumentPointsAll",
                 TextStart =
                 [
-                    new("2. POINT OF ABSTRACTION"),
-                    new("2. POINT(S) OF ABSTRACTION"),
-                    new("2. POINTS OF ABSTRACTION"),
-                    new("Source of supply and authorised place(s) of abstraction")
+                    new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true},
+                    new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true},
+                    new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true},
+                    new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true},
                 ],
                 TextEnd =
                 [
@@ -140,7 +140,6 @@ public static class LabelConfiguration
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
-                Multiple = MultipleType.IfMultiplePreferLast,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
                 NextLinesToFetch = 100,
@@ -808,8 +807,8 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
-                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true},
-                    new("The quantity of water authorised to be abstracted shall be")
+                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("The quantity of water authorised to be abstracted shall be") { IfMultiplePreferLast = true }
                 ],
                 TextEnd =
                 [
@@ -845,7 +844,6 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
-                Multiple = MultipleType.IfMultiplePreferLast,
                 SubLabels = new List<LabelToMatch>
                 {
                     new()

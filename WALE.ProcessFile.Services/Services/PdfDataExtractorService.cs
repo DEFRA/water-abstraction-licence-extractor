@@ -220,7 +220,7 @@ public class PdfDataExtractorService(
 
                     var multiplePreferFirstMatches = ocrResult
                         .Where(ocr =>
-                            ocr.MatchedLabel?.Multiple == MultipleType.IfMultiplePreferLast
+                            ocr.MatchedLabel!.Text!.First().IfMultiplePreferLast // TODO should be Single not First ideally
                             && labelGroupMatches.Select(lgm =>
                                 lgm.LabelGroupName).Contains(ocr.LabelGroupName))
                         .ToList();
@@ -286,11 +286,20 @@ public class PdfDataExtractorService(
     {
         return labels
             .Where(labelLookup =>
-                labelGroupMatches.All(r => r.LabelGroupName != labelLookup.LabelGroupName)
-                || (!onlyNotFoundAtAll
-                    && labelLookup.Labels.Any(l =>
-                        l.CanGoOverPageBoundary || l.Multiple == MultipleType.IfMultiplePreferLast)))
-               .ToList();
+            {
+                var doesntMatchAnyFound = labelGroupMatches.All(r =>
+                    r.LabelGroupName != labelLookup.LabelGroupName);
+                
+                var labelFull = labelGroupMatches.FirstOrDefault(lgm =>
+                    lgm.MatchedLabel != null
+                    && labelLookup.Labels.Contains(lgm.MatchedLabel))?.MatchedLabel;
+                
+                var ifMultiplePreferLast = labelFull?.CanGoOverPageBoundary == true
+                    || labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast == true;
+                
+                return doesntMatchAnyFound || (!onlyNotFoundAtAll && ifMultiplePreferLast);
+            })
+            .ToList();
     }
     
     private async Task SaveImageMetadataAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata)
@@ -606,7 +615,7 @@ public class PdfDataExtractorService(
 
                     if (matchedText != null)
                     {
-                        clonedLabel.Text = [new(matchedText)];
+                        clonedLabel.Text = [matchedText];
                     }
 
                     matchedLabel = clonedLabel;
@@ -671,8 +680,9 @@ public class PdfDataExtractorService(
                 }
                 
                 returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
-
-                if (matchedLabel.Multiple is MultipleType.IfMultiplePreferLast)
+                
+                // TOOD there should only be one below - not 2 or more
+                if (matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast == true)
                 {
                     var alreadyOutput = returnList
                         .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)

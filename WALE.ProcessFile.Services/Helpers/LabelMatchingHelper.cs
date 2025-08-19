@@ -50,7 +50,7 @@ public static class LabelMatchingHelper
         LabelPosition position,
         int lineCount,
         int howManyLinesTotal,
-        out string? matchedText)
+        out TextToMatch? matchedText)
     {
         matchedText = null;
 
@@ -71,7 +71,7 @@ public static class LabelMatchingHelper
             
             if (firstLine && isStartOfBlock)
             {
-                matchedText = labelText;
+                matchedText = labelTextOption;
                 return true;
             }
          
@@ -94,13 +94,13 @@ public static class LabelMatchingHelper
                     {
                         if (lineStartsWithLabel)
                         {
-                            matchedText = labelTextWithoutMarker;
+                            matchedText = labelTextOption.Clone(labelTextWithoutMarker);
                             return true;
                         }
                     }
                     else
                     {
-                        matchedText = labelTextWithoutMarker;
+                        matchedText = labelTextOption.Clone(labelTextWithoutMarker);
                         return true;                        
                     }
                 }
@@ -116,13 +116,13 @@ public static class LabelMatchingHelper
                 {
                     if (lineStartsWithLabel)
                     {
-                        matchedText = labelText;
+                        matchedText = labelTextOption;
                         return true;
                     }
                 }
                 else if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore || lineEndsWithLabel)
                 {
-                    matchedText = labelText;
+                    matchedText = labelTextOption;
                     return true;
                 }
             }

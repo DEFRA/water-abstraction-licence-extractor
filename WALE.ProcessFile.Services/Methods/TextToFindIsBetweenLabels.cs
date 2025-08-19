@@ -97,8 +97,8 @@ public static class TextToFindIsBetweenLabels
             [
                 labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
                     matchedEndText != null
-                    && (x.Text == matchedEndText.Value.matchedEndText
-                        || x.Text == matchedEndText.Value.matchedEndText + PositionConstants.EndOfLineMarker))
+                    && (x.Text == matchedEndText.Value.matchedEndText.Text
+                        || x.Text == matchedEndText.Value.matchedEndText.Text + PositionConstants.EndOfLineMarker))
             ];
         }
         catch (Exception e)
@@ -130,7 +130,7 @@ public static class TextToFindIsBetweenLabels
         int startLineNumber,
         DocumentLine lineInput,
         bool labelLineAlreadyIncluded,
-        out (string matchedEndText, string matchedContainsText)? matchData)
+        out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
         matchData = null;
         var foundEndTag = false;
@@ -177,16 +177,16 @@ public static class TextToFindIsBetweenLabels
 
             if (lineContainsLabel)
             {
-                labelMatchCount.TryAdd(matchedEndTextTemp!, 0);
-                labelMatchCount[matchedEndTextTemp!] += 1;
+                labelMatchCount.TryAdd(matchedEndTextTemp!.Text, 0);
+                labelMatchCount[matchedEndTextTemp.Text] += 1;
 
                 int requiredCount;
 
                 try
                 {
                     requiredCount = textEnd
-                        .Single(textEndLine => textEndLine.Text == matchedEndTextTemp!
-                            || textEndLine.Text == matchedEndTextTemp + PositionConstants.EndOfLineMarker)
+                        .Single(textEndLine => textEndLine.Text == matchedEndTextTemp.Text
+                            || textEndLine.Text == matchedEndTextTemp.Text + PositionConstants.EndOfLineMarker)
                         .InstanceNumber;
                 }
                 catch (Exception e)
@@ -195,14 +195,14 @@ public static class TextToFindIsBetweenLabels
                     throw;
                 }
                 
-                if (labelMatchCount[matchedEndTextTemp!] >= requiredCount)
+                if (labelMatchCount[matchedEndTextTemp.Text] >= requiredCount)
                 {
-                    matchData = (matchedEndTextTemp!, PositionConstants.ReplacementMarker);
+                    matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
                     foundEndTag = true;
 
                     if (returnList.Count == 0)
                     {
-                        var t = line.Text[..line.Text.IndexOf(matchedEndTextTemp!, StringComparison.Ordinal)];
+                        var t = line.Text[..line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal)];
                         
                         var clonedLine2 = line.Clone();
                         clonedLine2.Columns.Clear();
@@ -232,7 +232,7 @@ public static class TextToFindIsBetweenLabels
 
         if (!foundEndTag && textEndList.Select(x => x.Text).Contains(PositionConstants.EndOfBlockMarker))
         {
-            matchData = (PositionConstants.EndOfBlockMarker, PositionConstants.ReplacementMarker);
+            matchData = (new TextToMatch(PositionConstants.EndOfBlockMarker), PositionConstants.ReplacementMarker);
             foundEndTag = true;
         }
 

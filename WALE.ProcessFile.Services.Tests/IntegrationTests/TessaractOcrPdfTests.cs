@@ -53,7 +53,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -79,25 +79,25 @@ public class TessaractOcrPdfTests
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("77", perDay);
 
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         var perYear = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("5116", perYear);
         
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);        
         
         // See notes RE licence
@@ -120,7 +120,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CROXLEY HALL WATERS LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -154,7 +154,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel?.Text!);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel?.Text?.Select(x => x.Text)!);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
         
@@ -184,7 +184,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr E C Webb", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -220,7 +220,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("HINTON FARM LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("authority hereby licenge", nameResult.MatchedLabel?.Text!);
+        Assert.Contains("authority hereby licenge", nameResult.MatchedLabel?.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
@@ -250,7 +250,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("J M Strong and Partners", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -284,7 +284,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CROXLEY HALL WATERS LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -318,7 +318,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr J. E. Ward", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["\"the Licence Holder'"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["\"the Licence Holder'"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 
@@ -352,7 +352,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Lingfield Park 1991 Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -386,7 +386,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("E &H Pelham Farms", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be E & H with a space
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -423,7 +423,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CN Wookey", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -479,7 +479,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("J La Robe Esq", nameResult.Text?.FirstOrDefault()?.Text); // TODO this actually should be Trobe
-        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -539,7 +539,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("N. DIBBEN, ESQ.", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
     }    
@@ -562,7 +562,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("New Barn Nurseries", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -597,7 +597,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!, StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text), StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
@@ -703,7 +703,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["hereby grant a licence to"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["hereby grant a licence to"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
@@ -738,7 +738,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!.Select(x => x.Text)!);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
@@ -769,7 +769,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Barrowmore", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.SameLineSingleWord, nameResult.MatchType);
         
@@ -804,7 +804,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("THE AVIARY ESTATE", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
@@ -891,7 +891,7 @@ public class TessaractOcrPdfTests
         
         var companyName = string.Join(' ', nameResult.Text?.Select(x => x.Text).ToArray()!);
         Assert.Equal("Mr Robert Clifford Abbott and Mrs Rebecca Jane Abbott trading as R P Abbott and Sons", companyName);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         

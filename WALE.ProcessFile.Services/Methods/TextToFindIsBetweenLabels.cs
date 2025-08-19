@@ -25,7 +25,7 @@ public static class TextToFindIsBetweenLabels
         }
 
         var lineContainsLabel = request.label.Text?.Any(labelText =>
-            request.line!.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
+            request.line!.Text.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase));
 
         var labelLineAlreadyIncluded = false;
         
@@ -69,9 +69,9 @@ public static class TextToFindIsBetweenLabels
             
             var labelText = request.label.Text!.FirstOrDefault()!;
 
-            if (labelText != "[START_OF_BLOCK]")
+            if (labelText.Text != "[START_OF_BLOCK]")
             {
-                var text = $"{request.label.Text!.FirstOrDefault()!} {firstColumn.Text}";
+                var text = $"{request.label.Text!.FirstOrDefault()?.Text!} {firstColumn.Text}";
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);   
             }
         }
@@ -148,7 +148,7 @@ public static class TextToFindIsBetweenLabels
             linesLoop.Add(clonedLine);
         }
 
-        var textEndList = textEnd.Select(x => x.Text).ToList();
+        var textEndList = textEnd.Select(x => new TextToMatch(x.Text)).ToList();
         var labelMatchCount = new Dictionary<string, int>();
         
         linesLoop.AddRange(lines);
@@ -213,7 +213,7 @@ public static class TextToFindIsBetweenLabels
             returnList.Add(clonedLine);
         }
 
-        if (!foundEndTag && textEndList.Contains(PositionConstants.EndOfBlockMarker))
+        if (!foundEndTag && textEndList.Select(x => x.Text).Contains(PositionConstants.EndOfBlockMarker))
         {
             matchData = (PositionConstants.EndOfBlockMarker, PositionConstants.ReplacementMarker);
             foundEndTag = true;

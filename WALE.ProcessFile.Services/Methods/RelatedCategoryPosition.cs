@@ -48,7 +48,7 @@ public static class RelatedCategoryPosition
             {
                 foreach (var t in categoryItem.MatchedLabel.Text!)
                 {
-                    lineStartsWithLabel = modifiedLine!.Text.StartsWith(t, StringComparison.OrdinalIgnoreCase);
+                    lineStartsWithLabel = modifiedLine.Text.StartsWith(t.Text, StringComparison.OrdinalIgnoreCase);
 
                     if (lineStartsWithLabel)
                     {

@@ -5,10 +5,10 @@ namespace WALE.ProcessFile.Services.Models;
 
 public class LabelToMatch
 {
-    public IReadOnlyList<string>? TextStart { get; set; }
+    public IReadOnlyList<TextToMatch>? TextStart { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public IReadOnlyList<string>? Text
+    public IReadOnlyList<TextToMatch>? Text
     {
         get => TextStart;
         set => TextStart = value;
@@ -21,6 +21,7 @@ public class LabelToMatch
     public IReadOnlyList<TextToMatch>? TextEnd { get; set; }
     public IReadOnlyList<string>? MustContain { get; set; }
     public int? MinimumSubMatches { get; init; }
+    public bool CanGoOverPageBoundary{ get; init; }
     public LabelPosition Position { get; set; }
     public string? RelatedCategoryName { get; init; }
     public string? RelatedName { get; init; }

@@ -456,7 +456,7 @@ async Task HandleFileAsync(
             : "--";
 
         var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
-        var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault() ?? "--";
+        var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? "--";
         var matchedLabelPosition = companyNameMatch?.MatchedLabel?.Position.ToString();
 
         var licenceNumber = matches

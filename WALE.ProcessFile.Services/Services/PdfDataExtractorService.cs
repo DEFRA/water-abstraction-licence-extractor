@@ -229,10 +229,9 @@ public class PdfDataExtractorService(
                     {
                         foreach (var multiplePreferFirstMatch in multiplePreferFirstMatches)
                         {
-                            var index = labelGroupMatches.FindIndex(x =>
-                                x.LabelGroupName == multiplePreferFirstMatch.LabelGroupName);
+                            var index = labelGroupMatches.FindIndex(lgm =>
+                                lgm.LabelGroupName == multiplePreferFirstMatch.LabelGroupName);
                             
-                            // TODO do something
                             labelGroupMatches.RemoveAt(index);
                         }
                     }
@@ -284,7 +283,8 @@ public class PdfDataExtractorService(
             .Where(labelLookup =>
                 labelGroupMatches.All(r => r.LabelGroupName != labelLookup.LabelGroupName)
                 || (!onlyNotFoundAtAll
-                    && labelLookup.Labels.Any(l => l.Multiple == MultipleType.IfMultiplePreferLast)))
+                    && labelLookup.Labels.Any(l =>
+                        l.CanGoOverPageBoundary || l.Multiple == MultipleType.IfMultiplePreferLast)))
                .ToList();
     }
     
@@ -564,7 +564,7 @@ public class PdfDataExtractorService(
                 }
 
                 if (FormattingHelper.IsLineEmpty(line)
-                    && label.Text?.Any(text => text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
+                    && label.Text?.Any(text => text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
                     && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
                 {
                     continue;
@@ -606,7 +606,7 @@ public class PdfDataExtractorService(
 
                     if (matchedText != null)
                     {
-                        clonedLabel.Text = [matchedText];
+                        clonedLabel.Text = [new(matchedText)];
                     }
 
                     matchedLabel = clonedLabel;
@@ -850,12 +850,12 @@ public class PdfDataExtractorService(
         }
         
         var anyDidntStartAtStartOfBlock = subResults.Any(subResult =>
-            subResult.MatchedLabel?.Text?.FirstOrDefault() != "[START_OF_BLOCK]");
+            subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
 
         if (anyDidntStartAtStartOfBlock)
         {
             subResults = subResults
-                .Where(subResult => subResult.MatchedLabel?.Text?.FirstOrDefault() != "[START_OF_BLOCK]")
+                .Where(subResult => subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
                 .ToList();
         }
 
@@ -880,13 +880,13 @@ public class PdfDataExtractorService(
         foreach (var labelText in label.Text!)
         {
             var index = line.Text.IndexOf(
-                labelText,
+                labelText.Text,
                 StringComparison.InvariantCultureIgnoreCase);
 
             if (index > PositionConstants.PositionNotFound)
             {
                 labelTextPositionIndex = index;
-                matchedLabelText = labelText;
+                matchedLabelText = labelText.Text;
                 
                 break;
             }
@@ -1010,7 +1010,7 @@ public class PdfDataExtractorService(
     private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(text => text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
+            .Select(text => text.Text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
             .ToList();
         
         if (labelText.Any(text =>

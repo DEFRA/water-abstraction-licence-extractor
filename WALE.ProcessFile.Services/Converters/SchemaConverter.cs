@@ -306,10 +306,12 @@ public static class SchemaConverter
                         .Text?
                         .FirstOrDefault()?
                         .Text;
+
+                    var text = valueResult.MatchedLabel?.Text?.FirstOrDefault()?.Text;
                     
                     var abstractionLimit = new AggregateAbstractionLimit
                     {
-                        PeriodType = ToLimitPeriodType(valueResult.MatchedLabel?.Text?.FirstOrDefault()),
+                        PeriodType = ToLimitPeriodType(text),
                         Value = number,
                         Units = units,
                         Points = limitPoints?.ToArray(),

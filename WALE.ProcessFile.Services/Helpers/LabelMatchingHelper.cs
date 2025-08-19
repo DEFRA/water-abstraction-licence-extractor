@@ -46,7 +46,7 @@ public static class LabelMatchingHelper
     
     public static bool LineContainsLabel(
         DocumentLine line,
-        IReadOnlyList<string>? labelTextOptions,
+        IReadOnlyList<TextToMatch>? labelTextOptions,
         LabelPosition position,
         int lineCount,
         int howManyLinesTotal,
@@ -61,8 +61,10 @@ public static class LabelMatchingHelper
             return true;
         }
         
-        foreach (var labelText in labelTextOptions!)
+        foreach (var labelText1 in labelTextOptions!)
         {
+            var labelText = labelText1.Text;
+            
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
                 StringComparison.InvariantCultureIgnoreCase);

@@ -53,7 +53,7 @@ public class MultipleOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -181,7 +181,7 @@ public class MultipleOcrPdfTests
         Assert.Equal(13, nameResult.LineNumber);
         // NOTE - According to companies house this is actual H.N. BUTLER FARMS LIMITED        
         Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text!);
+        Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         

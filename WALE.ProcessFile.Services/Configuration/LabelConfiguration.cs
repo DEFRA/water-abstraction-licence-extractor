@@ -33,9 +33,9 @@ public static class LabelConfiguration
                 Format = "DateOrPurpose",
                 Text =
                 [
-                    "Date of issue...",
-                    "Date of issue ...",
-                    "Date of Issue"
+                    new("Date of issue..."),
+                    new("Date of issue ..."),
+                    new("Date of Issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -56,9 +56,9 @@ public static class LabelConfiguration
                 Format = "DateOrPurpose",
                 Text =
                 [
-                    "Date of original issue...",
-                    "Date of original issue ...",
-                    "Date of original issue"
+                    new("Date of original issue..."),
+                    new("Date of original issue ..."),
+                    new("Date of original issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -79,9 +79,9 @@ public static class LabelConfiguration
                 Format = "DateOrPurpose",
                 Text =
                 [
-                    "Date effective...",
-                    "Date effective ...",
-                    "Date effective"
+                    new("Date effective..."),
+                    new("Date effective ..."),
+                    new("Date effective")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -102,8 +102,8 @@ public static class LabelConfiguration
                 Format = "DateOrPurpose",
                 Text =
                 [
-                    "Date of expiry...",
-                    "Date of expiry ..."
+                    new("Date of expiry..."),
+                    new("Date of expiry ...")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Remove = [
@@ -123,9 +123,9 @@ public static class LabelConfiguration
                 Name = "DocumentPointsAll",
                 TextStart =
                 [
-                    "2. POINT OF ABSTRACTION",
-                    "2. POINT(S) OF ABSTRACTION",
-                    "2. POINTS OF ABSTRACTION"
+                    new("2. POINT OF ABSTRACTION"),
+                    new("2. POINT(S) OF ABSTRACTION"),
+                    new("2. POINTS OF ABSTRACTION")
                 ],
                 TextEnd =
                 [
@@ -148,8 +148,8 @@ public static class LabelConfiguration
                     {
                         Name = "PointPurposeGroup",
                         TextStart = [
-                            "For Purpose ",
-                            "[START_OF_BLOCK]"                           
+                            new("For Purpose "),
+                            new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("For Purpose ") { InstanceNumber = 2 },
@@ -171,7 +171,7 @@ public static class LabelConfiguration
                             {
                                 Name = "PurposeGroupName",
                                 Text = [
-                                    "For Purpose "
+                                    new("For Purpose ")
                                 ],
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
                                 Format = "Text",
@@ -180,7 +180,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "PurposeGroupSub",
-                                        Text = ["and "],
+                                        Text = [new("and ")],
                                         Position = LabelPosition.Split
                                     }
                                 ]
@@ -189,17 +189,17 @@ public static class LabelConfiguration
                             {
                                 Name = "Point",
                                 TextStart = [
-                                    "2.1",
-                                    "2.2",
-                                    "2.3",
-                                    "2.4",
-                                    "2.5",
-                                    "2.6",
-                                    "2.7",
-                                    "2.8",
-                                    "2.9",
-                                    "2.10",
-                                    "[START_OF_BLOCK]"
+                                    new("2.1"),
+                                    new("2.2"),
+                                    new("2.3"),
+                                    new("2.4"),
+                                    new("2.5"),
+                                    new("2.6"),
+                                    new("2.7"),
+                                    new("2.8"),
+                                    new("2.9"),
+                                    new("2.10"),
+                                    new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
                                     new("2.2"),
@@ -243,7 +243,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeLink",
                                         Text = [
-                                            "For Purpose "
+                                            new("For Purpose ")
                                         ],
                                         Position = LabelPosition.LabelIsBeforeTextToFind,
                                         Format = "Text",
@@ -252,7 +252,7 @@ public static class LabelConfiguration
                                             new LabelToMatch
                                             {
                                                 Name = "PurposeLinkSub",
-                                                Text = ["and "],
+                                                Text = [new("and ")],
                                                 Position = LabelPosition.Split
                                             }
                                         ]
@@ -299,10 +299,10 @@ public static class LabelConfiguration
                 Name = "DocumentPurposesAll",
                 TextStart =
                 [
-                    "PURPOSE OF ABSTRACTION",
-                    "PURPOSE(S) OF ABSTRACTION",
-                    "PURPOSES OF ABSTRACTION",
-                    "Purpose(s) for which water is authorised to be used"
+                    new("PURPOSE OF ABSTRACTION"),
+                    new("PURPOSE(S) OF ABSTRACTION"),
+                    new("PURPOSES OF ABSTRACTION"),
+                    new("Purpose(s) for which water is authorised to be used")
                 ],
                 TextEnd =
                 [
@@ -329,8 +329,8 @@ public static class LabelConfiguration
                     {
                         Name = "PurposePointGroup",
                         TextStart = [
-                            "From Point ",
-                            "[START_OF_BLOCK]"                           
+                            new("From Point "),
+                            new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("From Point ") { InstanceNumber = 2 },
@@ -356,7 +356,7 @@ public static class LabelConfiguration
                             {
                                 Name = "PointGroupName",
                                 Text = [
-                                    "From Point "
+                                    new("From Point ")
                                 ],
                                 Format = "Number",
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
@@ -377,7 +377,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "PointGroupSub",
-                                        Text = ["and "],
+                                        Text = [new("and ")],
                                         Position = LabelPosition.Split
                                     }
                                 ]
@@ -386,11 +386,11 @@ public static class LabelConfiguration
                             {
                                 Name = "Purpose",
                                 TextStart = [
-                                    "4.1",
-                                    "4.2",
-                                    "4.3",
-                                    "4.4",
-                                    "[START_OF_BLOCK]"
+                                    new("4.1"),
+                                    new("4.2"),
+                                    new("4.3"),
+                                    new("4.4"),
+                                    new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
                                     new("4.2"),
@@ -460,15 +460,15 @@ public static class LabelConfiguration
             {
                 Text =
                 [
-                    "licence serial no:",
-                    "licence serial no.",
-                    "serial no.",
-                    "ref. no. ",
-                    "Reference No.",
-                    "Reference Number ",
-                    "licence no: ",
-                    "licence no.",
-                    "Licence number: "
+                    new("licence serial no:"),
+                    new("licence serial no."),
+                    new("serial no."),
+                    new("ref. no. "),
+                    new("Reference No."),
+                    new("Reference Number "),
+                    new("licence no: "),
+                    new("licence no."),
+                    new("Licence number: ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Format = "LicenceNumber"
@@ -484,16 +484,16 @@ public static class LabelConfiguration
             {
                 Text =
                 [
-                    "Licensee",
-                    "\"hereby licence\"",
-                    "\"hereby license\"",
-                    "\"hereby licenge\"",
-                    "hereby licence ...",
-                    "authority hereby licence",
-                    "authority hereby license",
-                    "authority hereby licenge",
-                    "hereby grant a licence to",
-                    "(hereinafter referred to as \"the Authority\")",
+                    new("Licensee"),
+                    new("\"hereby licence\""),
+                    new("\"hereby license\""),
+                    new("\"hereby licenge\""),
+                    new("hereby licence ..."),
+                    new("authority hereby licence"),
+                    new("authority hereby license"),
+                    new("authority hereby licenge"),
+                    new("hereby grant a licence to"),
+                    new("(hereinafter referred to as \"the Authority\")")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
@@ -506,13 +506,13 @@ public static class LabelConfiguration
             {
                 Text =
                 [
-                    "(hereinafter referred to as \"The Licence Holder\")",
-                    "(hereinafter referred to as \"The Licence Holder\" )",
-                    "( hereinafter referred to as \"The Licence Holder\" )",
-                    "( hereinafter referred to as \"The Licence Holder\")",
-                    "(hereinafter referred to as \" The Licence Holder \")",
-                    "(hereinafter referred to as \"The Licence Holder)",
-                    "is hereby licensed"
+                    new("(hereinafter referred to as \"The Licence Holder\")"),
+                    new("(hereinafter referred to as \"The Licence Holder\" )"),
+                    new("( hereinafter referred to as \"The Licence Holder\" )"),
+                    new("( hereinafter referred to as \"The Licence Holder\")"),
+                    new("(hereinafter referred to as \" The Licence Holder \")"),
+                    new("(hereinafter referred to as \"The Licence Holder)"),
+                    new("is hereby licensed")
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
@@ -526,11 +526,11 @@ public static class LabelConfiguration
             {
                 Text =
                 [
-                    "(\"the Licence Holder\")",
-                    "(the Licence Holder\")",
-                    "\"the Licence Holder\"",
-                    "'the Licence Holder\"",
-                    "\"the Licence Holder'"
+                    new("(\"the Licence Holder\")"),
+                    new("(the Licence Holder\")"),
+                    new("\"the Licence Holder\""),
+                    new("'the Licence Holder\""),
+                    new("\"the Licence Holder'")
                 ],
                 Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",
@@ -545,8 +545,8 @@ public static class LabelConfiguration
             {
                 Text =
                 [
-                    "Succession to licence",
-                    "as amended by"
+                    new("Succession to licence"),
+                    new("as amended by")
                 ],
                 Position = LabelPosition.ContractIsSuccession,
                 Format = "CompanyName",
@@ -564,8 +564,8 @@ public static class LabelConfiguration
                 Name = "DocumentPeriodsOfAbstractionSection",
                 TextStart =
                 [
-                    "PERIOD OF ABSTRACTION",
-                    "PERIODS OF ABSTRACTION"
+                    new("PERIOD OF ABSTRACTION"),
+                    new("PERIODS OF ABSTRACTION")
                 ],
                 TextEnd =
                 [
@@ -581,17 +581,17 @@ public static class LabelConfiguration
                     {
                         Name = "PeriodOfAbstractionSubSection",
                         TextStart = [
-                            "5.1",
-                            "5.2",
-                            "5.3",
-                            "5.4",
-                            "5.5",
-                            "5.6",
-                            "5.7",
-                            "5.8",
-                            "5.9",
-                            "5.10",
-                            "[START_OF_BLOCK]"
+                            new("5.1"),
+                            new("5.2"),
+                            new("5.3"),
+                            new("5.4"),
+                            new("5.5"),
+                            new("5.6"),
+                            new("5.7"),
+                            new("5.8"),
+                            new("5.9"),
+                            new("5.10"),
+                            new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("5.2"),
@@ -628,8 +628,8 @@ public static class LabelConfiguration
                             {
                                 Name = "PurposeLink",
                                 Text = [
-                                    "For Purpose ",
-                                    "For Purposes "
+                                    new("For Purpose "),
+                                    new("For Purposes ")
                                 ],
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
                                 Format = "Text",
@@ -638,7 +638,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "PurposeLinkSub",
-                                        Text = ["and "],
+                                        Text = [new("and ")],
                                         Position = LabelPosition.Split
                                     }
                                 ]
@@ -661,7 +661,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "Dates",
-                                        Text = ["to "],
+                                        Text = [new("to ")],
                                         Remove = [
                                             new("From "),
                                             new("inclusive")
@@ -687,7 +687,7 @@ public static class LabelConfiguration
                 Name = "DocumentMeansOfAbstractionSection",
                 TextStart =
                 [
-                    "MEANS OF ABSTRACTION"
+                    new("MEANS OF ABSTRACTION")
                 ],
                 TextEnd =
                 [
@@ -703,11 +703,11 @@ public static class LabelConfiguration
                     {
                         Name = "Mean",
                         TextStart = [
-                            "3.1",
-                            "3.2",
-                            "3.3",
-                            "3.4",
-                            "[START_OF_BLOCK]"
+                            new("3.1"),
+                            new("3.2"),
+                            new("3.3"),
+                            new("3.4"),
+                            new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("3.2"),
@@ -737,7 +737,7 @@ public static class LabelConfiguration
                             {
                                 Name = "PerSecondUnitsMeans",                                
                                 CategoryName = "PerUnits",                                
-                                Text = ["per second"],
+                                Text = [new("per second")],
                                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                 Format = "Units",
                                 Possibilities = new List<string>
@@ -755,7 +755,7 @@ public static class LabelConfiguration
                             {
                                 Name = "PerSecondValueMeans",                                
                                 CategoryName = "PerValue",
-                                Text = ["per second"],
+                                Text = [new("per second")],
                                 Position = LabelPosition.RelatedCategoryPosition,
                                 RelatedCategoryName = "PerUnits",
                                 RelatedName = "PerSecondUnits",                                
@@ -799,14 +799,14 @@ public static class LabelConfiguration
                 Name = "DocumentAbstractionLimitsSection",
                 TextStart =
                 [
-                    "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)",
-                    "MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED",
-                    "MAXIMUM QUANTITIES",
-                    "Quantity(ies) of water authorised to be abstracted during a period",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD",
-                    "QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]",
-                    "The quantity of water authorised to be abstracted shall be"
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED"),
+                    new("MAXIMUM QUANTITIES"),
+                    new("Quantity(ies) of water authorised to be abstracted during a period"),
+                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
+                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
+                    new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]"),
+                    new("The quantity of water authorised to be abstracted shall be")
                 ],
                 TextEnd =
                 [
@@ -834,6 +834,7 @@ public static class LabelConfiguration
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
+                CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
@@ -845,17 +846,17 @@ public static class LabelConfiguration
                     {
                         Name = "AbstractionLimitPoint",
                         TextStart = [
-                            "6.1",
-                            "6.2",
-                            "6.3",
-                            "6.4",
-                            "6.5",
-                            "6.6",
-                            "6.7",
-                            "6.8",
-                            "6.9",
-                            "6.10",
-                            "[START_OF_BLOCK]"
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("6.4"),
+                            new("6.5"),
+                            new("6.6"),
+                            new("6.7"),
+                            new("6.8"),
+                            new("6.9"),
+                            new("6.10"),
+                            new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("6.2"),
@@ -880,7 +881,7 @@ public static class LabelConfiguration
                             new()
                             {
                                 Name = "AbstractionLimitPointSub",
-                                Text = ["and licence"],
+                                Text = [new("and licence")],
                                 Position = LabelPosition.Split,
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
@@ -890,9 +891,9 @@ public static class LabelConfiguration
                                     {
                                         Name = "DatePurpose",
                                         Text = [
-                                            "Up to and including ",
-                                            "From ",
-                                            "aggregate quantity of water authorised"
+                                            new("Up to and including "),
+                                            new("From "),
+                                            new("aggregate quantity of water authorised")
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "DateOrPurpose",
@@ -902,8 +903,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeCondition",
                                         Text = [
-                                            "condition ",
-                                            "conditions "
+                                            new("condition "),
+                                            new("conditions ")
                                         ],
                                         TextEnd = [
                                             new("shall not exceed"),
@@ -927,7 +928,7 @@ public static class LabelConfiguration
                                             new()
                                             {
                                                 Name = "PurposeConditionSub",
-                                                Text = ["and "],
+                                                Text = [new("and ")],
                                                 Position = LabelPosition.Split
                                             }
                                         ]
@@ -936,8 +937,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PointCondition",
                                         Text = [
-                                            "condition ",
-                                            "conditions "
+                                            new("condition "),
+                                            new("conditions ")
                                         ],
                                         TextEnd = [
                                             new("shall not exceed"),
@@ -961,7 +962,7 @@ public static class LabelConfiguration
                                             new()
                                             {
                                                 Name = "PointConditionSub",
-                                                Text = ["and "],
+                                                Text = [new("and ")],
                                                 Position = LabelPosition.Split
                                             }
                                         ]
@@ -970,13 +971,13 @@ public static class LabelConfiguration
                                     {
                                         Name = "LinkedLicenceNumber",
                                         Text = [
-                                            "licence number ",
-                                            "licence serial number ",
-                                            "licence serial numbers ",
-                                            "under this licence and licence",
-                                            "and licence ",
-                                            "and under licence ",
-                                            "and under license " // spelling mistake in licence                                    
+                                            new("licence number "),
+                                            new("licence serial number "),
+                                            new("licence serial numbers "),
+                                            new("under this licence and licence"),
+                                            new("and licence "),
+                                            new("and under licence "),
+                                            new("and under license ") // spelling mistake in licence                                    
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "LicenceNumber",
@@ -986,13 +987,13 @@ public static class LabelConfiguration
                                     {
                                         Name = "LinkedLicenceFilename",
                                         Text = [
-                                            "licence number ",
-                                            "licence serial number ",
-                                            "licence serial numbers ",
-                                            "under this licence and licence",
-                                            "and licence ",
-                                            "and under licence ",
-                                            "and under license " // spelling mistake in licence                                    
+                                            new("licence number "),
+                                            new("licence serial number "),
+                                            new("licence serial numbers "),
+                                            new("under this licence and licence"),
+                                            new("and licence "),
+                                            new("and under licence "),
+                                            new("and under license ") // spelling mistake in licence                                    
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "LicenceNumberFilename",
@@ -1008,7 +1009,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerHourUnits",
                                         CategoryName = "PerUnits",
-                                        Text = ["per hour"],
+                                        Text = [new("per hour")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1026,7 +1027,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerDayUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = ["per day"],
+                                        Text = [new("per day")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1044,7 +1045,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerMonthUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = ["per month"],
+                                        Text = [new("per month")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1062,7 +1063,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerYearUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = ["per year"],
+                                        Text = [new("per year")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1080,7 +1081,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerSecondUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = ["per second"],
+                                        Text = [new("per second")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1098,7 +1099,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "InTotalUnits",                                
                                         CategoryName = "PerUnits",                                
-                                        Text = ["in total"],
+                                        Text = [new("in total")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
                                         Possibilities = new List<string>
@@ -1119,7 +1120,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerHourValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["per hour"],
+                                        Text = [new("per hour")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerHourUnits",                                
@@ -1144,7 +1145,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerDayValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["per day"],
+                                        Text = [new("per day")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerDayUnits",
@@ -1159,7 +1160,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerMonthValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["per month"],
+                                        Text = [new("per month")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerMonthUnits",                                
@@ -1174,7 +1175,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerYearValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["per year"],
+                                        Text = [new("per year")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerYearUnits",                                
@@ -1189,7 +1190,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "PerSecondValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["per second"],
+                                        Text = [new("per second")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerSecondUnits",                                
@@ -1204,7 +1205,7 @@ public static class LabelConfiguration
                                     {
                                         Name = "InTotalValue",                                
                                         CategoryName = "PerValue",
-                                        Text = ["in total"],
+                                        Text = [new("in total")],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "InTotalUnits",                                
@@ -1216,7 +1217,7 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "AYearDefinitionLine",
-                                        Text = ["beginning on"],
+                                        Text = [new("beginning on")],
                                         Position = LabelPosition.LabelIsBeforeTextToFind,
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 1,
@@ -1226,7 +1227,7 @@ public static class LabelConfiguration
                                             {
                                                 Name = "AYearDates",
                                                 Position = LabelPosition.Split,
-                                                Text = ["and"],
+                                                Text = [new("and")],
                                                 Remove = [new("ending on")],
                                                 Format = "DateOrPurpose"
                                             }

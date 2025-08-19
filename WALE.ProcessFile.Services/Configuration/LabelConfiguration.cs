@@ -818,6 +818,7 @@ public static class LabelConfiguration
                     new("Authorised means of abstraction"),
                     new("MEANS TO BE USED FOR MEASURING"),
                     new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
+                    new("Means of measurement or assessment"),
                     new("[END_OF_BLOCK]")
                 ],
                 MustContain =

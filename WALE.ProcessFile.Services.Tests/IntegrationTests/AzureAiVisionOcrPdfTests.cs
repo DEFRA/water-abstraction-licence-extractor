@@ -629,13 +629,33 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename);
         
-        var abstractionLimitsResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        var abstractionLimitsResult = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
         
-        // TODO work on it going to different pages
+        var abstractionLimitsSections = abstractionLimitsResult.SubResults;
+        Assert.NotNull(abstractionLimitsSections);
+        Assert.Single(abstractionLimitsSections);
+
+        var abstractionLimitsSection = abstractionLimitsSections[0];
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.NotNull(abstractionLimitsSection.SubResults);
+
+        Assert.Single(abstractionLimitsSection.SubResults);
+        var section1Sub1 = abstractionLimitsSection.SubResults![0];
+        
+        Assert.Equal(2, section1Sub1.SubResults!.Count);
+        
+        var perDayUnits = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perDayValue = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("20.45", perDayValue?.Text?.FirstOrDefault()?.Text);
         
         /*var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);

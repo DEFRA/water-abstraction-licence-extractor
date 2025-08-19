@@ -586,13 +586,6 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                if (label.Name == "DocumentAbstractionLimitsSection" &&
-                    label.Text!.Any(t => t.ColumnMustStartWith
-                        && t.Text.ToUpper().Contains("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED")))
-                {
-                    
-                }
-
                 if (LabelMatchingHelper.TextContainsForbiddenLine(line.Text, label))
                 {
                     continue;

@@ -822,7 +822,7 @@ public static class LabelConfiguration
                     new("MEANS TO BE USED FOR MEASURING"),
                     new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
                     new("Means of measurement or assessment"),
-                    new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
+                    //new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
                     new("[END_OF_BLOCK]")
                 ],

@@ -801,7 +801,7 @@ public static class LabelConfiguration
                 [
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED"),
-                    new("MAXIMUM QUANTITIES"),
+                    new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),

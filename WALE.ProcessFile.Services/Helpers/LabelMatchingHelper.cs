@@ -61,9 +61,9 @@ public static class LabelMatchingHelper
             return true;
         }
         
-        foreach (var labelText1 in labelTextOptions!)
+        foreach (var labelTextOption in labelTextOptions!)
         {
-            var labelText = labelText1.Text;
+            var labelText = labelTextOption.Text;
             
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
@@ -99,8 +99,16 @@ public static class LabelMatchingHelper
                     line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
                 var lineEndsWithLabel =
                     line.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
-                
-                if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore || lineEndsWithLabel)
+
+                if (labelTextOption.ColumnMustStartWith)
+                {
+                    if (lineStartsWithLabel)
+                    {
+                        matchedText = labelText;
+                        return true;
+                    }
+                }
+                else if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore || lineEndsWithLabel)
                 {
                     matchedText = labelText;
                     return true;

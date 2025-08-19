@@ -133,15 +133,19 @@ public class PdfDataExtractorService(
             configuration.OutputFolder,
             configuration.CacheFolder);
 
-        var unmatchedLabelLookups = configuration.Labels
-            .Where(labelLookup =>
-                labelGroupMatches.All(labelGroupResult =>
-                    labelGroupResult.LabelGroupName != labelLookup.LabelGroupName))
-            .ToList();
-
         var isTextFile = documentLines.Count >= 100;
+
+        // If it's a text file, we don't need to go off and do image lookups
+        if (isTextFile)
+        {
+            returnResult.Matches = labelGroupMatches;
+            return returnResult;            
+        }
         
-        if (unmatchedLabelLookups.Count == 0 || isTextFile)
+        var unmatchedLabelLookups =
+            GetUnmatchedLabels(configuration.Labels, labelGroupMatches, false);
+        
+        if (unmatchedLabelLookups.Count == 0)
         {
             returnResult.Matches = labelGroupMatches;
             return returnResult;
@@ -156,8 +160,10 @@ public class PdfDataExtractorService(
         {
             pageNumber += 1;
             var imageNumber = 1;
-            var loopImageNumber = 1;
+            var pageImageNumber = 1;
 
+            var breakOuter = false;
+            
             foreach (var imageFilename in page.ImageFiles)
             {
                 foreach (var ocrService in ocrDataExtractorServices
@@ -172,11 +178,11 @@ public class PdfDataExtractorService(
                         await ocrService.GetTextLinesFromImageAsync(
                             imageFilename,
                             pageNumber,
-                            loopImageNumber++,
+                            pageImageNumber++,
                             pdfDocument);
                     
-                    var tempLines = documentLines.ToList();
-                    tempLines.AddRange(imageLines);
+                    var allLinesSoFar = documentLines.ToList();
+                    allLinesSoFar.AddRange(imageLines);
 
                     var providers = returnResult.Pages
                         .Single(p => p.Number == page.Number).Providers;
@@ -193,7 +199,7 @@ public class PdfDataExtractorService(
                     const bool isOcr = true;
                     
                     var ocrResult = await GetLabelGroupMatchesAsync(
-                        tempLines,
+                        allLinesSoFar,
                         unmatchedLabelLookups,
                         isOcr,
                         ocrService.Name,
@@ -212,28 +218,54 @@ public class PdfDataExtractorService(
                         continue;
                     }
 
-                    labelGroupMatches.AddRange(ocrResult);
-                    unmatchedLabelLookups = unmatchedLabelLookups
-                        .Where(labelLookup =>
-                            labelGroupMatches.All(r => r.LabelGroupName != labelLookup.LabelGroupName))
+                    var multiplePreferFirstMatches = ocrResult
+                        .Where(ocr =>
+                            ocr.MatchedLabel?.Multiple == MultipleType.IfMultiplePreferLast
+                            && labelGroupMatches.Select(lgm =>
+                                lgm.LabelGroupName).Contains(ocr.LabelGroupName))
                         .ToList();
 
-                    if (unmatchedLabelLookups.Count == 0)
+                    if (multiplePreferFirstMatches.Count > 0)
                     {
+                        foreach (var multiplePreferFirstMatch in multiplePreferFirstMatches)
+                        {
+                            var index = labelGroupMatches.FindIndex(x =>
+                                x.LabelGroupName == multiplePreferFirstMatch.LabelGroupName);
+                            
+                            // TODO do something
+                            labelGroupMatches.RemoveAt(index);
+                        }
+                    }
+                    
+                    labelGroupMatches.AddRange(ocrResult);
+                    
+                    unmatchedLabelLookups = GetUnmatchedLabels(
+                        unmatchedLabelLookups,
+                        labelGroupMatches,
+                        false);
+                    
+                    var labelsNotMatchedAtAll = GetUnmatchedLabels(
+                        unmatchedLabelLookups,
+                        labelGroupMatches,
+                        true);
+
+                    if (labelsNotMatchedAtAll.Count == 0)
+                    {
+                        breakOuter = true;
                         break;
-                    }                        
+                    }
                 }
             }
-            
-            unmatchedLabelLookups = unmatchedLabelLookups
-                .Where(labelLookup =>
-                    labelGroupMatches.All(r => r.LabelGroupName != labelLookup.LabelGroupName))
-                .ToList();
 
-            if (unmatchedLabelLookups.Count == 0)
+            if (breakOuter)
             {
                 break;
-            }                
+            }
+            
+            unmatchedLabelLookups = GetUnmatchedLabels(
+                unmatchedLabelLookups,
+                labelGroupMatches,
+                false);
         }
 
         await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);
@@ -242,7 +274,20 @@ public class PdfDataExtractorService(
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
     }
-
+    
+    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedLabels(
+        List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
+        List<LabelGroupResult> labelGroupMatches,
+        bool onlyNotFoundAtAll)
+    {
+        return labels
+            .Where(labelLookup =>
+                labelGroupMatches.All(r => r.LabelGroupName != labelLookup.LabelGroupName)
+                || (!onlyNotFoundAtAll
+                    && labelLookup.Labels.Any(l => l.Multiple == MultipleType.IfMultiplePreferLast)))
+               .ToList();
+    }
+    
     private async Task SaveImageMetadataAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata)
     {
         if (!anyChanges)
@@ -627,7 +672,8 @@ public class PdfDataExtractorService(
 
                 returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
-                if (matchedLabel.Multiple == MultipleType.False)
+                if (matchedLabel.Multiple is MultipleType.False
+                    or MultipleType.IfMultiplePreferLast) // TODO this last bit should change
                 {
                     return returnList;
                 }

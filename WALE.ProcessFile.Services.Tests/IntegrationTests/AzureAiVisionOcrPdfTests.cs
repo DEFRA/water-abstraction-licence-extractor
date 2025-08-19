@@ -635,6 +635,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.True(abstractionLimitsResult.IsOcr);
         Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
+        // TODO work on it going to different pages
+        
         /*var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         

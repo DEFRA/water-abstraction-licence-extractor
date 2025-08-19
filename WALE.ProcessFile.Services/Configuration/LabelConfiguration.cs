@@ -838,6 +838,7 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
+                Multiple = MultipleType.IfMultiplePreferLast, // TODO get this working
                 SubLabels = new List<LabelToMatch>
                 {
                     new()

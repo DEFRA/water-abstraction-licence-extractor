@@ -5,5 +5,6 @@ public enum MultipleType
     False,
     MultipleLabelsMultipleValues,
     SingleLabelMultipleValues,
-    SingleLabelSingleValueMultipleLines
+    SingleLabelSingleValueMultipleLines,
+    IfMultiplePreferLast
 }

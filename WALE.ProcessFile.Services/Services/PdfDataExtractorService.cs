@@ -292,12 +292,18 @@ public class PdfDataExtractorService(
                 
                 var labelFull = labelGroupMatches.FirstOrDefault(lgm =>
                     lgm.MatchedLabel != null
-                    && labelLookup.Labels.Contains(lgm.MatchedLabel))?.MatchedLabel;
+                    && labelLookup.Labels.Any(l => l.Name == lgm.MatchedLabel.Name))?.MatchedLabel;
+
+                var ifMultiplePreferLast = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+
+                if (ifMultiplePreferLast)
+                {
+                    
+                }
                 
-                var ifMultiplePreferLast = labelFull?.CanGoOverPageBoundary == true
-                    || labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast == true;
+                var canGoOverPageBoundary = labelFull?.CanGoOverPageBoundary ?? false;
                 
-                return doesntMatchAnyFound || (!onlyNotFoundAtAll && ifMultiplePreferLast);
+                return doesntMatchAnyFound || (!onlyNotFoundAtAll && (ifMultiplePreferLast || canGoOverPageBoundary));
             })
             .ToList();
     }
@@ -680,6 +686,11 @@ public class PdfDataExtractorService(
                 }
                 
                 returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+
+                if (matchedLabel.Name == "DocumentAbstractionLimitsSection")
+                {
+                    
+                }
                 
                 // TOOD there should only be one below - not 2 or more
                 if (matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast == true)

@@ -802,7 +802,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
-                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED"),
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLast = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),

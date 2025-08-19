@@ -166,6 +166,8 @@ public class PdfDataExtractorService(
             
             foreach (var imageFilename in page.ImageFiles)
             {
+                List<DocumentLine>? bestImageLines = null;
+                
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
                 {
@@ -207,14 +209,12 @@ public class PdfDataExtractorService(
                         previouslyParsedPaths,
                         configuration.OutputFolder,
                         configuration.CacheFolder);
-                    
-                    if (ocrResult.Count == 0)
-                    {
-                        if (ocrDataExtractorServices.Count() == ++imageNumber)
-                        {
-                            documentLines.AddRange(imageLines);
-                        }
 
+                    var noMatchesFound = ocrResult.Count == 0;
+                    bestImageLines = imageLines.ToList();
+                    
+                    if (noMatchesFound)
+                    {
                         continue;
                     }
 
@@ -254,6 +254,8 @@ public class PdfDataExtractorService(
                         break;
                     }
                 }
+                
+                documentLines.AddRange(bestImageLines);
             }
 
             if (breakOuter)
@@ -673,7 +675,7 @@ public class PdfDataExtractorService(
                 returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
                 if (matchedLabel.Multiple is MultipleType.False
-                    or MultipleType.IfMultiplePreferLast) // TODO this last bit should change
+                    or MultipleType.IfMultiplePreferLast) // TODO this last bit should change, as it could need to look futher on the same page
                 {
                     return returnList;
                 }

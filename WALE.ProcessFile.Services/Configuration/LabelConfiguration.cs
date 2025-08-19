@@ -822,6 +822,8 @@ public static class LabelConfiguration
                     new("MEANS TO BE USED FOR MEASURING"),
                     new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
                     new("Means of measurement or assessment"),
+                    new("Schedule of conditions") { ColumnMustStartWith = true },
+                    new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
                     new("[END_OF_BLOCK]")
                 ],
                 MustContain =
@@ -860,6 +862,10 @@ public static class LabelConfiguration
                             new("6.8"),
                             new("6.9"),
                             new("6.10"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -872,6 +878,10 @@ public static class LabelConfiguration
                             new("6.8"),
                             new("6.9"),
                             new("6.10"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"), 
+                            new("(5)"),                            
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -925,7 +935,11 @@ public static class LabelConfiguration
                                             "4.6",
                                             "4.7",
                                             "4.8",
-                                            "4.9"
+                                            "4.9",
+                                            "(1)",
+                                            "(2)",
+                                            "(3)",
+                                            "(4)",
                                         ],
                                         SubLabels =
                                         [
@@ -959,7 +973,11 @@ public static class LabelConfiguration
                                             "2.6",
                                             "2.7",
                                             "2.8",
-                                            "2.9"
+                                            "2.9",
+                                            "(1)",
+                                            "(2)",
+                                            "(3)",
+                                            "(4)",
                                         ],
                                         SubLabels =
                                         [
@@ -1146,6 +1164,10 @@ public static class LabelConfiguration
                                                 ColumnMustStartWith  = true,
                                                 ColumnMustHave2SequentialNumbers = true
                                             },
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ]
                                     },
                                     new()
@@ -1160,7 +1182,11 @@ public static class LabelConfiguration
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
-                                            new("6.3")
+                                            new("6.3"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ]
                                     },
                                     new()
@@ -1175,7 +1201,11 @@ public static class LabelConfiguration
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
-                                            new("6.3")
+                                            new("6.3"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ]
                                     },
                                     new()
@@ -1193,7 +1223,11 @@ public static class LabelConfiguration
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
-                                            new("6.3")
+                                            new("6.3"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ]
                                     },
                                     new()
@@ -1208,7 +1242,11 @@ public static class LabelConfiguration
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
-                                            new("6.3")
+                                            new("6.3"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ]
                                     },
                                     new()

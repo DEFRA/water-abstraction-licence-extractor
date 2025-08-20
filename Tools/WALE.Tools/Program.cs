@@ -40,12 +40,54 @@ var file6 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
 var data = new List<CsvLine>
 {
-    new() { Filename = file1.Filename, LicenceNumber = file1.LicenceNumber, Data = JsonSerializer.Serialize(file1) },
-    new() { Filename = file2.Filename, LicenceNumber = file2.LicenceNumber, Data = JsonSerializer.Serialize(file2) },
-    new() { Filename = file3.Filename, LicenceNumber = file3.LicenceNumber, Data = JsonSerializer.Serialize(file3) },
-    new() { Filename = file4.Filename, LicenceNumber = file4.LicenceNumber, Data = JsonSerializer.Serialize(file4) },
-    new() { Filename = file5.Filename, LicenceNumber = file5.LicenceNumber, Data = JsonSerializer.Serialize(file5) },
-    new() { Filename = file6.Filename, LicenceNumber = file6.LicenceNumber, Data = JsonSerializer.Serialize(file6) }
+    new()
+    {
+        Filename = file1.Filename,
+        LicenceNumber = file1.LicenceNumber,
+        HasAggregate = file1.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file1)
+    },
+    new()
+    {
+        Filename = file2.Filename,
+        LicenceNumber = file2.LicenceNumber,
+        HasAggregate = file2.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file2)
+    },
+    new()
+    {
+        Filename = file3.Filename,
+        LicenceNumber = file3.LicenceNumber,
+        HasAggregate = file3.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file3)
+    },
+    new()
+    {
+        Filename = file4.Filename,
+        LicenceNumber = file4.LicenceNumber,
+        HasAggregate = file4.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file4)
+    },
+    new()
+    {
+        Filename = file5.Filename,
+        LicenceNumber = file5.LicenceNumber,
+        HasAggregate = file5.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file5)
+    },
+    new()
+    {
+        Filename = file6.Filename,
+        LicenceNumber = file6.LicenceNumber,
+        HasAggregate = file6.AbstractionLimits.Aggregates.Length > 0,
+        AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates),
+        Data = JsonSerializer.Serialize(file6)
+    },
 };
 
 await using var writer = new StreamWriter("Yorkshire-6-20250820.csv");
@@ -72,6 +114,8 @@ Task<MatchesResult> GetMatchesAsync(string fileName)
 internal class CsvLine
 {
     public string? Filename { get; set; }
-    public string? LicenceNumber { get; set; }    
+    public string? LicenceNumber { get; set; }
+    public bool HasAggregate { get; set; }
+    public string? AggregateData { get; set; }
     public string? Data { get; set; }
 }

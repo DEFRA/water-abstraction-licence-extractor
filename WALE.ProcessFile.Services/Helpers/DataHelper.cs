@@ -27,12 +27,15 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            var newColumns = new List<DocumentLineColumn>();
+            _ = RemoveExcludes(label, line.Text, true, out var removesUsedLoopOuter);
 
-            if (line?.Columns == null)
+            // The whole line wants removing
+            if (removesUsedLoopOuter?.Contains(line.Text) == true)
             {
-                
+                continue;
             }
+
+            var newColumns = new List<DocumentLineColumn>();
             
             foreach (var column in line.Columns)
             {

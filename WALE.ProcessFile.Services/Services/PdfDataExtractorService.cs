@@ -702,6 +702,11 @@ public class PdfDataExtractorService(
                             continue;
                         }
 
+                        if (results.Any(r => r.MatchedLabel?.Name == "PurposePointGroup")) 
+                        {
+            
+                        }
+                        
                         foreach (var result in results)
                         {
                             var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
@@ -795,11 +800,6 @@ public class PdfDataExtractorService(
         if (returnList.Count > 1 && returnList.All(match =>
             match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
         {
-            if (returnList.Any(r => r.MatchedLabel?.Name == "TextWithoutPoints" && r.Text?.Any(t => t.Text.Contains("this licence and points specified in")) == true))   
-            {
-            
-            }
-                
             var textList = new List<DocumentLine>();
 
             foreach (var returnListLoop in returnList)

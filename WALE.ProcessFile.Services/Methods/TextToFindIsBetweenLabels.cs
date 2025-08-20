@@ -37,7 +37,7 @@ public static class TextToFindIsBetweenLabels
 
         linesToUse.AddRange(request.nextLines!);
 
-        if (request.label.Name == "DocumentPointsAll")
+        if (request.label.Name == "PurposePointGroup")
         {
             
         }

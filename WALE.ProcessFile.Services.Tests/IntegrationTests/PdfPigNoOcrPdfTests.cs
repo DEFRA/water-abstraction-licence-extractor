@@ -136,7 +136,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
         
-        Assert.Single(purposeResult.SubResults!);
+        Assert.Single(purposeResult.SubResults);
         
         var firstPurposePointGroup = purposeResult.SubResults!.First();
         var firstPurpose = firstPurposePointGroup.SubResults![0];

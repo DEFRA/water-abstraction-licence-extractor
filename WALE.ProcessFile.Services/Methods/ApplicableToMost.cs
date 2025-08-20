@@ -258,10 +258,10 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
-            var trimmedSplit = outputText!.Trim().Split(' ');
+            var trimmedWords = outputText!.Trim().Split(' ');
 
-            if (trimmedSplit.Length == 1
-                && !string.IsNullOrEmpty(trimmedSplit[0])
+            if (trimmedWords.Length == 1
+                && !string.IsNullOrEmpty(trimmedWords[0])
                 && request.isCompanyType)
             {
                 documentLine.Columns[0].Text = outputText;
@@ -281,6 +281,11 @@ public static class ApplicableToMost
 
             if (!string.IsNullOrWhiteSpace(outputText))
             {
+                if (outputText == "4.1")
+                {
+                        
+                }
+                
                 if (request.label?.Text?.FirstOrDefault()?.Text == null)
                 {
                     documentLine.Columns[0].Text = outputText;

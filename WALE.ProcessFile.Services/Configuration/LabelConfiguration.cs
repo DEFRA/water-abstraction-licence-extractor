@@ -905,6 +905,7 @@ public static class LabelConfiguration
                                 Position = LabelPosition.Split,
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
+                                IncludeLabelText = true,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()

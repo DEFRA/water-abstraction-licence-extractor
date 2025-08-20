@@ -618,8 +618,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
-        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal(10, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Length);
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual.Length);
         
         //Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Purposes);

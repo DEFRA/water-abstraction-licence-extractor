@@ -236,6 +236,9 @@ public static class SchemaConverter
         {
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
             {
+                var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
+                    .Any(t => t.Text.Contains("The aggregate quantity")) == true;
+                
                 var siblings = abstractionLimitPointSub.SubResults;
                 var valueResults = siblings
                     .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
@@ -318,7 +321,7 @@ public static class SchemaConverter
                         Purposes = limitPurposes?.ToArray()
                     };
 
-                    if (hasLinkedLicenceNumber)
+                    if (hasLinkedLicenceNumber || textSuggestsIsAggregate)
                     {
                         aggregateLimits.Add(abstractionLimit);
                         continue;

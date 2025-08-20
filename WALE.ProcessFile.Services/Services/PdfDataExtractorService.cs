@@ -623,11 +623,6 @@ public class PdfDataExtractorService(
                         continue;
                     }
 
-                    if (label.Name == "Purpose")
-                    {
-                        
-                    }
-
                     if (LabelMatchingHelper.TextContainsForbiddenLine(partialLine.Text, label))
                     {
                         partialLine = null;
@@ -700,11 +695,6 @@ public class PdfDataExtractorService(
                         if (results.Count == 0)
                         {
                             continue;
-                        }
-
-                        if (results.Any(r => r.MatchedLabel?.Name == "PurposePointGroup")) 
-                        {
-            
                         }
                         
                         foreach (var result in results)

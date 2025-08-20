@@ -404,7 +404,8 @@ public static class CompanyName
                 "see", // doing word,
                 "heh", // Is it a name?
                 "you", //  Is it a name?
-                "thames" // River
+                "thames", // River
+                "fee" // A fee / price
             };
 
             var returnList = new HashSet<string>();

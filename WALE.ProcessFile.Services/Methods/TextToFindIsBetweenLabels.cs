@@ -36,16 +36,6 @@ public static class TextToFindIsBetweenLabels
         }
 
         linesToUse.AddRange(request.nextLines!);
-
-        if (request.label.Name == "PurposePointGroup")
-        {
-            
-        }
-
-        if (request.label.Name == "TextWithoutPoints")
-        {
-                    
-        }
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,

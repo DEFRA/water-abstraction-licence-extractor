@@ -13,11 +13,6 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
-        if (request.label.Name == "TextWithoutPoints")
-        {
-            
-        }
         
         var returnListTop = new List<LabelGroupResult>();
         
@@ -83,11 +78,6 @@ public static class ApplicableToMost
 
             if (request.isNumberLookup)
             {
-                if (request.label?.Name == "PointPointNumber")
-                {
-                    
-                }
-                
                 // TODO can swap this out now for shared method in Base
                 
                 if (Number.AnyIsNumber([documentLine], out var numberLines))

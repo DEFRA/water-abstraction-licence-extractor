@@ -201,6 +201,10 @@ public static class LabelConfiguration
                                     new("2.8"),
                                     new("2.9"),
                                     new("2.10"),
+                                    new("(1)"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
@@ -214,6 +218,9 @@ public static class LabelConfiguration
                                     new("2.9"),
                                     new("2.10"),
                                     new("2.11"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -236,7 +243,11 @@ public static class LabelConfiguration
                                             "2.7",
                                             "2.8",
                                             "2.9",
-                                            "2.10"
+                                            "2.10",
+                                            "(1)",
+                                            "(2)",
+                                            "(3)",
+                                            "(4)"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Number"                                
@@ -272,7 +283,11 @@ public static class LabelConfiguration
                                             new("2.7") { ColumnMustStartWith = true },
                                             new("2.8") { ColumnMustStartWith = true },
                                             new("2.9") { ColumnMustStartWith = true },
-                                            new("2.10") { ColumnMustStartWith = true },                                          
+                                            new("2.10") { ColumnMustStartWith = true },  
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(3)"),                                            
                                             new("For Purpose 4.1") { RemoveWholeLine = true },
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },

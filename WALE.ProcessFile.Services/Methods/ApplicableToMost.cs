@@ -79,6 +79,11 @@ public static class ApplicableToMost
 
             if (request.isNumberLookup)
             {
+                if (request.label?.Name == "PointPointNumber")
+                {
+                    
+                }
+                
                 // TODO can swap this out now for shared method in Base
                 
                 if (Number.AnyIsNumber([documentLine], out var numberLines))
@@ -272,7 +277,7 @@ public static class ApplicableToMost
 
             if (!string.IsNullOrWhiteSpace(outputText))
             {
-                if (request.label?.Text == null)
+                if (request.matchedStartText == null)
                 {
                     documentLine.Columns[0].Text = outputText;
                     var lineMatch = labelGroupResult.Clone([documentLine]);

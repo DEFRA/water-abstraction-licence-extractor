@@ -5,6 +5,7 @@ namespace WALE.ProcessFile.Services.Models;
 public class FunctionInputModel
 {
     public LabelToMatch? label { get; set; }
+    public TextToMatch? matchedStartText { get; set; }
     public LabelGroupResult? labelGroupResult { get; set; }
     public DocumentLine? line { get; set; }
     public IReadOnlyList<DocumentLine>? previousLines { get; set; }

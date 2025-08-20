@@ -566,29 +566,32 @@ public class PdfDataExtractorService(
 
         var lineCount = 0;
         var totalLineCount = lines.Count;
-        
+
         foreach (var (line, previousLines, nextLines) in lines)
         {
             var textBeforeAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
             var matchedLabel = (LabelToMatch?)null;
-            
+
+            TextToMatch? matchedStartText = null;
+                
+            // TODO the following is wrong, should evaulate each label for each line
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
                 if (line.LineNumber >= 93)
                 {
-                    
+
                 }
-                
+
                 if (label.Name == "DocumentAbstractionLimitsSection")
                 {
-                    
+
                 }
-                
+
                 if (line.LineNumber >= 93 && label.Name == "DocumentAbstractionLimitsSection")
                 {
-                    
+
                 }
-                
+
                 if (label.Format == "LinkedLicence")
                 {
                     var linkedLicences = await ProcessLinkedLicenceAsync(
@@ -599,25 +602,26 @@ public class PdfDataExtractorService(
                         previouslyParsedPaths,
                         outputFolder,
                         cacheFolder);
-                    
+
                     returnList.AddRange(linkedLicences);
                     continue;
                 }
 
                 if (FormattingHelper.IsLineEmpty(line)
-                    && label.Text?.Any(text => text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
+                    && label.Text?.Any(text =>
+                        text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
                     && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
                 {
                     continue;
                 }
-                
+
                 if (!LabelMatchingHelper.LineContainsLabel(
-                    line,
-                    label.Text,
-                    label.Position,
-                    lineCount,
-                    totalLineCount,
-                    out var matchedText))
+                        line,
+                        label.Text,
+                        label.Position,
+                        lineCount,
+                        totalLineCount,
+                        out matchedStartText))
                 {
                     continue;
                 }
@@ -626,31 +630,24 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
-                
+
                 if (label.MatchAllText)
                 {
                     if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))
                     {
                         continue;
                     }
-                    
+
                     matchedLabel = label;
                 }
                 else
                 {
-                    var clonedLabel = label.Clone();
-
-                    if (matchedText != null)
-                    {
-                        clonedLabel.Text = [matchedText];
-                    }
-
-                    matchedLabel = clonedLabel;
+                    matchedLabel = label.Clone();
                 }
-                
+
                 textBeforeAndAfterLabel.AddRange(
                     GetLineBeforeAndAfterText(line, matchedLabel));
-                
+
                 break;
             }
 
@@ -659,9 +656,10 @@ public class PdfDataExtractorService(
                 lineCount += 1;
                 continue;
             }
-            
-            var lookupExpressions = GetRelevantLookupExpressions(matchedLabel);
-            
+
+            var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
+                .ToList();
+
             var labelGroupResult = new LabelGroupResult
             {
                 IsOcr = isOcr,
@@ -669,7 +667,7 @@ public class PdfDataExtractorService(
                 PageNumber = line.PageNumber,
                 ServiceName = serviceName
             };
-            
+
             var request = new FunctionInputModel
             {
                 actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
@@ -680,6 +678,7 @@ public class PdfDataExtractorService(
                 isNumberLookup = matchedLabel.Format == Number.Constant,
                 isOcr = isOcr,
                 label = matchedLabel,
+                matchedStartText = matchedStartText,
                 labelGroupName = labelGroupName,
                 labelGroupResult = labelGroupResult,
                 licenceMapping = licenceMapping,
@@ -696,60 +695,106 @@ public class PdfDataExtractorService(
                 line = line,
                 lineNumber = line.LineNumber
             };
-            
-            foreach (var expression in lookupExpressions)
+
+            while (request.line?.Columns.Any(c => c.Text.Length > 0) == true)
             {
-                var results = await expression(request);
-                
-                if (results.Count == 0)
+                foreach (var expression in lookupExpressions)
                 {
-                    continue;
-                }
-                
-                returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
-
-                if (matchedLabel.Name == "DocumentAbstractionLimitsSection")
-                {
-                    
-                }
-
-                var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
-                
-                // TOOD there should only be one below - not 2 or more
-                if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                {
-                    var alreadyOutput = returnList
-                        .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
-                        .ToList();
-
-                    if (alreadyOutput.Count >= 2)
+                    if (request.line == null)
                     {
-                        var i = alreadyOutput
-                            .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
-                            .First();
                         
-                        returnList.Remove(i);
                     }
+                    
+                    var results = await expression(request);
+
+                    if (results.Count == 0)
+                    {
+                        if (expression == lookupExpressions.Last())
+                        {
+                            request.line = null;
+                        }
+                        
+                        continue;
+                    }
+
+                    returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+
+                    if (matchedLabel.Name == "Point")
+                    {
+
+                    }
+
+                    var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                    var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+
+                    // TOOD there should only be one below - not 2 or more
+                    if (ifMultiplePreferLast || ifMultiplePreferLongest)
+                    {
+                        var alreadyOutput = returnList
+                            .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                            .ToList();
+
+                        if (alreadyOutput.Count >= 2)
+                        {
+                            var i = alreadyOutput
+                                .OrderBy(x =>
+                                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                                .First();
+
+                            returnList.Remove(i);
+                        }
+                    }
+
+                    if (matchedLabel.Multiple is MultipleType.False)
+                    {
+                        return returnList;
+                    }
+
+                    if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
+                        && results.Count > 0)
+                    {
+                        var result = results[0];
+
+                        if (result.LineNumber == request.line?.LineNumber)
+                        {
+                            var rt = result.Text?.FirstOrDefault()?.Text;
+
+                            if (rt != null)
+                            {
+                                var i = request.line.Text.IndexOf(rt, StringComparison.Ordinal) + rt.Length;
+
+                                if (request.line.Text.Length > i)
+                                {
+                                    var t = request.line.Text[i..];
+
+                                    if (t != string.Empty)
+                                    {
+                                        request.line = request.line.Clone();
+                                        request.line.Columns.Clear();
+                                        request.line.Columns.Add(new DocumentLineColumn(t));
+                                        
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    request.line = null;
                 }
-                
-                if (matchedLabel.Multiple is MultipleType.False)
+
+                // Don't carry on if we've identified it was a succession document
+                if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
                 {
-                    return returnList;
+                    break;
                 }
+
+                lineCount += 1;
             }
-            
-            // Don't carry on if we've identified it was a succession document
-            if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
-            {
-                break;
-            }
-            
-            lineCount += 1;
         }
 
         if (returnList.Count > 1 && returnList.All(match =>
-            match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
+                match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
         {
             var textList = new List<DocumentLine>();
 

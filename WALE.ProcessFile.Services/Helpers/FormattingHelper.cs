@@ -27,6 +27,7 @@ public static class FormattingHelper
         if (!trimPunctuation) return trimmed;
         
         while (trimmed?.Length >= 1
+           && trimmed[0] != '('
            && (char.IsPunctuation(trimmed[0])
                || char.IsSymbol(trimmed[0])
                || char.IsWhiteSpace(trimmed[0])))

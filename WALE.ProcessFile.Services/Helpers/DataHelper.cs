@@ -28,6 +28,11 @@ public static partial class DataHelper
         foreach (var line in inputList)
         {
             var newColumns = new List<DocumentLineColumn>();
+
+            if (line?.Columns == null)
+            {
+                
+            }
             
             foreach (var column in line.Columns)
             {

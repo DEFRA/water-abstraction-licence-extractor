@@ -13,7 +13,7 @@ public static class Split
     
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.label?.Name == "AYearDates")
+        if (request.matchedStartText?.Text == "AYearDates")
         {
             
         }

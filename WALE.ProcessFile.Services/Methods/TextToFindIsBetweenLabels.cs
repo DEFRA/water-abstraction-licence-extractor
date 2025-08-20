@@ -41,6 +41,11 @@ public static class TextToFindIsBetweenLabels
         {
             
         }
+
+        if (request.label.Name == "Point")
+        {
+                    
+        }
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
@@ -53,11 +58,6 @@ public static class TextToFindIsBetweenLabels
             request.line!,
             labelLineAlreadyIncluded,
             out var matchedEndText);
-        
-        if (request.label.Name == "DocumentAbstractionLimitsSection")
-        {
-                    
-        }
         
         if (betweenText == null)
         {
@@ -72,11 +72,11 @@ public static class TextToFindIsBetweenLabels
             var firstBetweenLine = betweenText[0];
             var firstColumn = firstBetweenLine.Columns[0];
             
-            var labelText = request.label.Text!.FirstOrDefault()!;
+            var labelText = request.matchedStartText!;
 
             if (labelText.Text != "[START_OF_BLOCK]")
             {
-                var text = $"{request.label.Text!.FirstOrDefault()?.Text!} {firstColumn.Text}";
+                var text = $"{request.matchedStartText!} {firstColumn.Text}";
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);   
             }
         }

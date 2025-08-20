@@ -16,7 +16,7 @@ public static class Number
         matchedLines = [];
 
         var matched = false;
-        var returnLines = new List<double>();
+        var returnLines = new List<string>();
 
         var linesList = lines.ToList();
         var firstLine = linesList.FirstOrDefault();
@@ -38,12 +38,28 @@ public static class Number
 
             foreach (var word in line!.Text.Split(PositionConstants.SpaceChar))
             {
-                if (!double.TryParse(word, out var numberLineDbl))
+                var wordWithoutBrackers = word
+                    .Replace("(", string.Empty)
+                    .Replace(")", string.Empty);
+                
+                if (!double.TryParse(wordWithoutBrackers, out var numberLineDbl))
                 {
                     continue;
                 }
 
-                returnLines.Add(numberLineDbl);
+                if (word == $"({numberLineDbl})")
+                {
+                    returnLines.Add($"({numberLineDbl})");
+                }
+                else
+                {
+                    returnLines.Add(numberLineDbl + string.Empty);   
+                }
+
+                if (returnLines.Last().Contains(","))
+                {
+                    
+                }
 
                 if (!matched)
                 {

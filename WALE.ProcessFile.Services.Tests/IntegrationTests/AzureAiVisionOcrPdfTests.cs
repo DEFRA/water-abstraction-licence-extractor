@@ -579,6 +579,18 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(4, points.Text!.Count);
         Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
         Assert.Equal("and \"F\" on the map", points.Text![3].Text);
+
+        var pointPurposeGroup = points.SubResults
+            .Where(psr => psr.MatchedLabel?.Name == "PointPurposeGroup")
+            .ToList();
+
+        Assert.Single(pointPurposeGroup);
+        
+        var pointsSubs = pointPurposeGroup[0].SubResults
+            .Where(psr => psr.MatchedLabel?.Name == "Point")
+            .ToList();
+        
+        Assert.Equal(4, pointsSubs.Count);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -653,7 +665,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(5819000, agreedSchemaLicence.AbstractionLimits.Individual[7].Value);
         Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[7].PeriodType);
         
-        //Assert.Single(agreedSchemaLicence.Points);
+        Assert.Equal(4, agreedSchemaLicence.Points.Length);
         Assert.Single(agreedSchemaLicence.Purposes);
     }
     

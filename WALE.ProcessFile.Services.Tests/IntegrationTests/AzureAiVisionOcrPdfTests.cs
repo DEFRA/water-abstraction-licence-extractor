@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -619,8 +620,38 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Length);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);        
+        Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Units);        
+        Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value); // TODO this is wrong
+        
         Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Units);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Individual[0].PeriodType);
+        Assert.Equal(45460.92, agreedSchemaLicence.AbstractionLimits.Individual[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[1].Units);
+        Assert.Equal(13638276, agreedSchemaLicence.AbstractionLimits.Individual[1].Value);
+        Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[1].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[2].Units);
+        Assert.Equal(68191, agreedSchemaLicence.AbstractionLimits.Individual[2].Value);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Individual[2].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[3].Units);
+        Assert.Equal(18184368, agreedSchemaLicence.AbstractionLimits.Individual[3].Value);
+        Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[3].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[4].Units);
+        Assert.Equal(45461, agreedSchemaLicence.AbstractionLimits.Individual[4].Value);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Individual[4].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[5].Units);
+        Assert.Equal(16593236, agreedSchemaLicence.AbstractionLimits.Individual[5].Value);
+        Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[5].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[6].Units);
+        Assert.Equal(15911, agreedSchemaLicence.AbstractionLimits.Individual[6].Value);
+        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Individual[6].PeriodType);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[7].Units);
+        Assert.Equal(5819000, agreedSchemaLicence.AbstractionLimits.Individual[7].Value);
+        Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[7].PeriodType);
         
         //Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Purposes);

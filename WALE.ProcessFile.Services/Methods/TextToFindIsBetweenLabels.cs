@@ -72,11 +72,11 @@ public static class TextToFindIsBetweenLabels
             var firstBetweenLine = betweenText[0];
             var firstColumn = firstBetweenLine.Columns[0];
             
-            var labelText = request.matchedStartText!;
+            var labelText = request.label.Text!.FirstOrDefault()?.Text;
 
-            if (labelText.Text != "[START_OF_BLOCK]")
+            if (labelText != "[START_OF_BLOCK]")
             {
-                var text = $"{request.matchedStartText!} {firstColumn.Text}";
+                var text = $"{labelText!} {firstColumn.Text}";
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);   
             }
         }

@@ -13,11 +13,6 @@ public static class Split
     
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.matchedStartText?.Text == "AYearDates")
-        {
-            
-        }
-        
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         

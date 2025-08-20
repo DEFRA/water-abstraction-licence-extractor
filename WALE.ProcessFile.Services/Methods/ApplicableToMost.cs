@@ -277,7 +277,7 @@ public static class ApplicableToMost
 
             if (!string.IsNullOrWhiteSpace(outputText))
             {
-                if (request.matchedStartText == null)
+                if (request.label?.Text?.FirstOrDefault()?.Text == null)
                 {
                     documentLine.Columns[0].Text = outputText;
                     var lineMatch = labelGroupResult.Clone([documentLine]);

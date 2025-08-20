@@ -564,259 +564,233 @@ public class PdfDataExtractorService(
     {
         var returnList = new List<LabelGroupResult>();
 
-        var lineCount = 0;
+        var lineCount = -1;
         var totalLineCount = lines.Count;
 
-        foreach (var (line, previousLines, nextLines) in lines)
+        foreach (var (lineOuter, previousLines, nextLines) in lines)
         {
-            var textBeforeAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
-            var matchedLabel = (LabelToMatch?)null;
-
-            TextToMatch? matchedStartText = null;
-                
-            // TODO the following is wrong, should evaulate each label for each line
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (line.LineNumber >= 93)
+                var partialLine = (DocumentLine?)lineOuter;
+                lineCount += 1;
+                
+                while (partialLine?.Columns.Any(c => c.Text.Length > 0) == true)
                 {
+                    var continueOuter = false;
+                    var textBeforeAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
+                    var matchedLabel = label;
+                    
+                    if (label.Format == "LinkedLicence")
+                    {
+                        var linkedLicences = await ProcessLinkedLicenceAsync(
+                            partialLine,
+                            siblingMatches,
+                            label,
+                            licenceMapping,
+                            previouslyParsedPaths,
+                            outputFolder,
+                            cacheFolder);
 
-                }
+                        returnList.AddRange(linkedLicences);
 
-                if (label.Name == "DocumentAbstractionLimitsSection")
-                {
+                        partialLine = null;
+                        continue;
+                    }
 
-                }
+                    if (FormattingHelper.IsLineEmpty(partialLine)
+                        && label.Text?.Any(text =>
+                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
+                        && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
+                    {
+                        partialLine = null;
+                        continue;
+                    }
 
-                if (line.LineNumber >= 93 && label.Name == "DocumentAbstractionLimitsSection")
-                {
-
-                }
-
-                if (label.Format == "LinkedLicence")
-                {
-                    var linkedLicences = await ProcessLinkedLicenceAsync(
-                        line,
-                        siblingMatches,
-                        label,
-                        licenceMapping,
-                        previouslyParsedPaths,
-                        outputFolder,
-                        cacheFolder);
-
-                    returnList.AddRange(linkedLicences);
-                    continue;
-                }
-
-                if (FormattingHelper.IsLineEmpty(line)
-                    && label.Text?.Any(text =>
-                        text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
-                    && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
-                {
-                    continue;
-                }
-
-                if (!LabelMatchingHelper.LineContainsLabel(
-                        line,
+                    if (!LabelMatchingHelper.LineContainsLabel(
+                        partialLine,
                         label.Text,
                         label.Position,
                         lineCount,
                         totalLineCount,
-                        out matchedStartText))
-                {
-                    continue;
-                }
-
-                if (LabelMatchingHelper.TextContainsForbiddenLine(line.Text, label))
-                {
-                    continue;
-                }
-
-                if (label.MatchAllText)
-                {
-                    if (ProcessMatchAll(line, label, lineCount, previousLines, nextLines))
+                        out var matchedStartText))
                     {
+                        partialLine = null;
                         continue;
                     }
 
-                    matchedLabel = label;
-                }
-                else
-                {
-                    matchedLabel = label.Clone();
-                }
-
-                textBeforeAndAfterLabel.AddRange(
-                    GetLineBeforeAndAfterText(line, matchedLabel));
-
-                break;
-            }
-
-            if (matchedLabel == null)
-            {
-                lineCount += 1;
-                continue;
-            }
-
-            var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
-                .ToList();
-
-            var labelGroupResult = new LabelGroupResult
-            {
-                IsOcr = isOcr,
-                LineNumber = line.LineNumber,
-                PageNumber = line.PageNumber,
-                ServiceName = serviceName
-            };
-
-            var request = new FunctionInputModel
-            {
-                actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
-                textBeforeAndAfterLabel = textBeforeAndAfterLabel,
-                isCompanyType = matchedLabel.Format == CompanyName.Constant,
-                isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
-                isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
-                isNumberLookup = matchedLabel.Format == Number.Constant,
-                isOcr = isOcr,
-                label = matchedLabel,
-                matchedStartText = matchedStartText,
-                labelGroupName = labelGroupName,
-                labelGroupResult = labelGroupResult,
-                licenceMapping = licenceMapping,
-                pdfDataExtractorService = this,
-                previouslyParsedPaths = previouslyParsedPaths,
-                previousLines = previousLines,
-                nextLines = nextLines,
-                serviceName = serviceName,
-                siblingMatches = siblingMatches,
-                outputFolder = outputFolder,
-                cacheFolder = cacheFolder,
-                isSingleWord = matchedLabel.Format == SingleWord.Constant,
-                isUnitsLookup = matchedLabel.Format == Units.Constant,
-                line = line,
-                lineNumber = line.LineNumber
-            };
-
-            while (request.line?.Columns.Any(c => c.Text.Length > 0) == true)
-            {
-                foreach (var expression in lookupExpressions)
-                {
-                    if (request.line == null)
+                    if (LabelMatchingHelper.TextContainsForbiddenLine(partialLine.Text, label))
                     {
-                        
+                        partialLine = null;
+                        continue;
                     }
+
+                    if (label.MatchAllText)
+                    {
+                        if (ProcessMatchAll(partialLine, label, lineCount, previousLines, nextLines))
+                        {
+                            partialLine = null;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        matchedLabel = label.Clone();
+
+                        if (matchedStartText != null)
+                        {
+                            matchedLabel.Text = [matchedStartText];
+                        }
+                    }
+
+                    textBeforeAndAfterLabel.AddRange(
+                        GetLineBeforeAndAfterText(partialLine, matchedLabel));
+
+                    var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
+                        .ToList();
+
+                    var labelGroupResult = new LabelGroupResult
+                    {
+                        IsOcr = isOcr,
+                        LineNumber = partialLine.LineNumber,
+                        PageNumber = partialLine.PageNumber,
+                        ServiceName = serviceName
+                    };
+
+                    var request = new FunctionInputModel
+                    {
+                        actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
+                        textBeforeAndAfterLabel = textBeforeAndAfterLabel,
+                        isCompanyType = matchedLabel.Format == CompanyName.Constant,
+                        isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
+                        isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
+                        isNumberLookup = matchedLabel.Format == Number.Constant,
+                        isOcr = isOcr,
+                        label = matchedLabel,
+                        labelGroupName = labelGroupName,
+                        labelGroupResult = labelGroupResult,
+                        licenceMapping = licenceMapping,
+                        pdfDataExtractorService = this,
+                        previouslyParsedPaths = previouslyParsedPaths,
+                        previousLines = previousLines,
+                        nextLines = nextLines,
+                        serviceName = serviceName,
+                        siblingMatches = siblingMatches,
+                        outputFolder = outputFolder,
+                        cacheFolder = cacheFolder,
+                        isSingleWord = matchedLabel.Format == SingleWord.Constant,
+                        isUnitsLookup = matchedLabel.Format == Units.Constant,
+                        line = partialLine,
+                        lineNumber = partialLine.LineNumber
+                    };
                     
-                    var results = await expression(request);
-
-                    if (results.Count == 0)
+                    foreach (var expression in lookupExpressions)
                     {
-                        if (expression == lookupExpressions.Last())
+                        var results = await expression(request);
+
+                        if (results.Count == 0)
                         {
-                            request.line = null;
+                            continue;
                         }
-                        
-                        continue;
-                    }
 
-                    returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+                        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
-                    if (matchedLabel.Name == "Point")
-                    {
+                        var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                        var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
 
-                    }
-
-                    var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                    var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
-
-                    // TOOD there should only be one below - not 2 or more
-                    if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                    {
-                        var alreadyOutput = returnList
-                            .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
-                            .ToList();
-
-                        if (alreadyOutput.Count >= 2)
+                        // TOOD there should only be one below - not 2 or more
+                        if (ifMultiplePreferLast || ifMultiplePreferLongest)
                         {
-                            var i = alreadyOutput
-                                .OrderBy(x =>
-                                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
-                                .First();
+                            var alreadyOutput = returnList
+                                .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                                .ToList();
 
-                            returnList.Remove(i);
-                        }
-                    }
-
-                    if (matchedLabel.Multiple is MultipleType.False)
-                    {
-                        return returnList;
-                    }
-
-                    if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
-                        && results.Count > 0)
-                    {
-                        var result = results[0];
-
-                        if (result.LineNumber == request.line?.LineNumber)
-                        {
-                            var rt = result.Text?.FirstOrDefault()?.Text;
-
-                            if (rt != null)
+                            if (alreadyOutput.Count >= 2)
                             {
-                                var i = request.line.Text.IndexOf(rt, StringComparison.Ordinal) + rt.Length;
+                                var i = alreadyOutput
+                                    .OrderBy(x =>
+                                        ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                                    .First();
 
-                                if (request.line.Text.Length > i)
+                                returnList.Remove(i);
+                            }
+                        }
+
+                        if (matchedLabel.Multiple is MultipleType.False)
+                        {
+                            return returnList;
+                        }
+
+                        if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
+                            && results.Count > 0)
+                        {
+                            var result = results[0];
+
+                            if (result.LineNumber == partialLine?.LineNumber)
+                            {
+                                var rt = result.Text?.FirstOrDefault()?.Text;
+
+                                if (rt != null)
                                 {
-                                    var t = request.line.Text[i..];
+                                    var i = partialLine.Text.IndexOf(rt, StringComparison.Ordinal) + rt.Length;
 
-                                    if (t != string.Empty)
+                                    if (partialLine.Text.Length > i)
                                     {
-                                        request.line = request.line.Clone();
-                                        request.line.Columns.Clear();
-                                        request.line.Columns.Add(new DocumentLineColumn(t));
-                                        
-                                        continue;
+                                        var t = partialLine.Text[i..];
+
+                                        if (t != string.Empty)
+                                        {
+                                            partialLine = partialLine.Clone();
+                                            partialLine.Columns.Clear();
+                                            partialLine.Columns.Add(new DocumentLineColumn(t));
+                                            
+                                            continueOuter = true;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+                    if (continueOuter)
+                    {
+                        continue;
+                    }
+
+                    partialLine = null;
                     
-                    request.line = null;
+                    // Don't carry on if we've identified it was a succession document
+                    if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
+                    {
+                        break;
+                    }
                 }
-
-                // Don't carry on if we've identified it was a succession document
-                if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
-                {
-                    break;
-                }
-
-                lineCount += 1;
             }
-        }
 
-        if (returnList.Count > 1 && returnList.All(match =>
+            if (returnList.Count > 1 && returnList.All(match =>
                 match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
-        {
-            var textList = new List<DocumentLine>();
+            {
+                var textList = new List<DocumentLine>();
 
-            foreach (var returnListLoop in returnList)
-            {
-                textList.AddRange(returnListLoop.Text!);
-            }
-            
-            var returnItem = returnList.First();
-            
-            return new List<LabelGroupResult>
-            {
-                new()
+                foreach (var returnListLoop in returnList)
                 {
-                    MatchedLabel = returnItem.MatchedLabel!.Clone(),
-                    LabelGroupName = returnItem.LabelGroupName,
-                    MatchType = returnItem.MatchType,
-                    PageNumber = returnItem.PageNumber,
-                    ServiceName = returnItem.ServiceName,
-                    Text = textList
+                    textList.AddRange(returnListLoop.Text!);
                 }
-            };
+
+                var returnItem = returnList.First();
+
+                return new List<LabelGroupResult>
+                {
+                    new()
+                    {
+                        MatchedLabel = returnItem.MatchedLabel!.Clone(),
+                        LabelGroupName = returnItem.LabelGroupName,
+                        MatchType = returnItem.MatchType,
+                        PageNumber = returnItem.PageNumber,
+                        ServiceName = returnItem.ServiceName,
+                        Text = textList
+                    }
+                };
+            }
         }
         
         return returnList;

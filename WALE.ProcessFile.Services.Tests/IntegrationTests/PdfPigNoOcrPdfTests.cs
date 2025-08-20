@@ -75,7 +75,7 @@ public class PdfPigNoOcrPdfTests
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(4, abstractionLimitsSection.Text?.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(108, abstractionLimitsSection.LineNumber);
+        Assert.Equal(109, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults!);
@@ -229,11 +229,11 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(6, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(110, abstractionLimitsResult.LineNumber);
+        Assert.Equal(111, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(110, abstractionLimitsResult.LineNumber);
+        Assert.Equal(111, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -393,7 +393,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(15, abstractionLimitsResult.Text?.Count);
-        Assert.Equal(142, abstractionLimitsResult.LineNumber);
+        Assert.Equal(143, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
         
@@ -575,7 +575,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(11, abstractionLimitsSection.Text?.Count);
-        Assert.Equal(121, abstractionLimitsSection.LineNumber);
+        Assert.Equal(122, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -585,7 +585,7 @@ public class PdfPigNoOcrPdfTests
         
         var section1Sub1 = sectionPoint1.SubResults![0];
         Assert.Equal(8, section1Sub1.SubResults!.Count);
-        Assert.Equal(125, section1Sub1.LineNumber);
+        Assert.Equal(122, section1Sub1.LineNumber);
         
         var abstractionLimitsSection1 = section1Sub1.SubResults[0];
         Assert.Equal(4, section1Sub1.Text!.Count);
@@ -725,7 +725,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(140, abstractionLimitsSection.LineNumber);
+        Assert.Equal(141, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults!);
@@ -1223,7 +1223,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(5, abstractionLimitsSection.SubResults!.Count);
-        Assert.Equal(162, abstractionLimitsSection.LineNumber);
+        Assert.Equal(163, abstractionLimitsSection.LineNumber);
         
         var section1Point1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(4, section1Point1.Text!.Count);
@@ -2970,9 +2970,25 @@ public class PdfPigNoOcrPdfTests
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
+
+        var purposeGroup = points.SubResults.Single();
+        
+        var actualPoints = purposeGroup.SubResults;
+        Assert.Equal(5, actualPoints.Count);
         
         Assert.Equal(11, points.Text!.Count);
         Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        
+        var purposes = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        Assert.NotNull(purposes);
+
+        var purposesSub = purposes.SubResults;
+        Assert.Single(purposesSub);
+        
+        Assert.Equal(2, purposesSub[0].SubResults
+            .Where(sr => sr.MatchedLabel?.Name == "Purpose")
+            .ToList()
+            .Count);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);

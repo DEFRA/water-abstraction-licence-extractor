@@ -139,7 +139,7 @@ public static class LabelConfiguration
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
-                Multiple = MultipleType.SingleLabelMultipleValues,
+                Multiple = MultipleType.SingleLabelMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,

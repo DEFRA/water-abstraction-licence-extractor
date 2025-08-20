@@ -569,6 +569,11 @@ public class PdfDataExtractorService(
 
         foreach (var (lineOuter, previousLines, nextLines) in lines)
         {
+            if (lineOuter.Text == "ION")
+            {
+                
+            }
+            
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
                 var partialLine = (DocumentLine?)lineOuter;
@@ -616,6 +621,11 @@ public class PdfDataExtractorService(
                     {
                         partialLine = null;
                         continue;
+                    }
+
+                    if (label.Name == "Purpose")
+                    {
+                        
                     }
 
                     if (LabelMatchingHelper.TextContainsForbiddenLine(partialLine.Text, label))
@@ -687,9 +697,24 @@ public class PdfDataExtractorService(
                     {
                         var results = await expression(request);
 
+                        if (label.Name == "Purpose")
+                        {
+                        
+                        }
+                        
                         if (results.Count == 0)
                         {
                             continue;
+                        }
+
+                        foreach (var result in results)
+                        {
+                            var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
+
+                            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
+                            {
+                                result.LineNumber = newLineNumber.Value;
+                            }
                         }
 
                         returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
@@ -739,6 +764,11 @@ public class PdfDataExtractorService(
 
                                         if (t != string.Empty)
                                         {
+                                            if (t == "ION")
+                                            {
+                                                
+                                            }
+                                            
                                             partialLine = partialLine.Clone();
                                             partialLine.Columns.Clear();
                                             partialLine.Columns.Add(new DocumentLineColumn(t));

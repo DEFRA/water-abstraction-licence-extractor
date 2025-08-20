@@ -11,7 +11,7 @@ public class LabelGroupResult
 
     public bool IsOcr { get; init; }
 
-    public int LineNumber { get; init; }
+    public int LineNumber { get; set; }
     
     public int PageNumber { get; init; }
 

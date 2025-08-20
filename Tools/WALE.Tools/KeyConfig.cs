@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Configuration;
-using WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-namespace WALE.ProcessFile.Services.Tests;
+namespace WALE.Tools;
 
-public static class TestConfig
+public static class KeyConfig
 {
     private static IConfigurationRoot? _config;
 
@@ -17,7 +16,7 @@ public static class TestConfig
             }
             
             _config = new ConfigurationBuilder()
-                .AddUserSecrets<PdfPigNoOcrPdfTests>()
+                .AddUserSecrets<Program>()
                 .Build();
             
             return _config;
@@ -69,22 +68,6 @@ public static class TestConfig
             
             _aiVisionKey = Config["AiVisionKey"]!;
             return _aiVisionKey;
-        }
-    }
-    
-    private static string? _tesseractPath;
-
-    public static string TesseractPath
-    {
-        get
-        {
-            if (_tesseractPath != null)
-            {
-                return _tesseractPath;
-            }
-            
-            _tesseractPath = Config["TesseractPath"]!;
-            return _tesseractPath;
         }
     }
 }

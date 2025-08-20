@@ -18,3 +18,5 @@ local.settings.json
 /WaterAbstractionLicenseExtractor.Cmd/bin
 /WaterAbstractionLicenseExtractor.Cmd/obj
 licence-number-filename-map.csv
+/Tools/WALE.Tools/bin
+/Tools/WALE.Tools/obj

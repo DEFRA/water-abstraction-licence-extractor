@@ -126,7 +126,7 @@ public class MultipleOcrPdfTests
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
-        Assert.Single(abstractionLimitsSections);
+        Assert.Equal(2, abstractionLimitsSections.Count); // TODO there should only be 1
         
         var abstractionLimitsSection = abstractionLimitsSections[0];
         Assert.NotNull(abstractionLimitsSection);

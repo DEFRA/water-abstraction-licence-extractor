@@ -244,11 +244,6 @@ public class PdfDataExtractorService(
                     
                     var combinedList = labelGroupMatches.ToList();
                     
-                    unmatchedLabelLookups = GetUnmatchedLabels(
-                        unmatchedLabelLookups,
-                        combinedList,
-                        false);
-                    
                     var labelsNotMatchedAtAll = GetUnmatchedLabels(
                         unmatchedLabelLookups,
                         combinedList,

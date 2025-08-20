@@ -24,6 +24,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         var modifiedLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             inputLines,
+            true,
             out var removedLines);
         
         var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);

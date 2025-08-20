@@ -710,7 +710,7 @@ public class AzureAiVisionOcrPdfTests
 
         var perDayValue = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("20.45", perDayValue?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("4.5", perDayValue?.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
@@ -718,7 +718,7 @@ public class AzureAiVisionOcrPdfTests
 
         var perYearValue = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("7823", perYearValue?.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("7823", perYearValue?.Text?.FirstOrDefault()?.Text); // TODO mismatch of units and values here    
         
         // TODO - Should have 2 per day entries
         

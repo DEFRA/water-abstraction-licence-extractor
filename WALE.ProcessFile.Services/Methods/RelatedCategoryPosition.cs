@@ -10,6 +10,11 @@ public static class RelatedCategoryPosition
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.label?.Name == "PerDayValue")
+        {
+            
+        }
+        
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
@@ -20,18 +25,23 @@ public static class RelatedCategoryPosition
             .OrderBy(match => match.LineNumber)
             .ToList();
 
-        var modifiedLine = DataHelper.RemoveExcludesAndNotContains(request.label,
+        var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
-            out _)[0];
+            false,
+            out _);
+        
+        var modifiedLine = ary.Count > 0 ? ary[0] : null;
         
         var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
+            false,
             out _);
         
         var modifiedNextLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.nextLines,
+            false,
             out _);        
         
         var matchedLabelLineNumber = PositionConstants.UnknownLineNumber;
@@ -48,7 +58,7 @@ public static class RelatedCategoryPosition
             {
                 foreach (var t in categoryItem.MatchedLabel.Text!)
                 {
-                    lineStartsWithLabel = modifiedLine.Text.StartsWith(t.Text, StringComparison.OrdinalIgnoreCase);
+                    lineStartsWithLabel = modifiedLine?.Text?.StartsWith(t.Text, StringComparison.OrdinalIgnoreCase) == true;
 
                     if (lineStartsWithLabel)
                     {
@@ -63,7 +73,7 @@ public static class RelatedCategoryPosition
         }
 
         // If matching line starts with the label (and its lowercase), prefer the line before (e.g. 150 gallons\nper hour)
-        if (modifiedLine.LineNumber == matchedLabelLineNumber && lineStartsWithLabel && char.IsLower(modifiedLine.Text[0]))
+        if (modifiedLine?.LineNumber == matchedLabelLineNumber && lineStartsWithLabel && char.IsLower(modifiedLine.Text![0]))
         {
             matchedLabelLineNumber -= 1;
         }
@@ -75,26 +85,29 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in previousLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], out numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], request.label, out numberLines))
                 {
                     matches.AddRange(numberLines);
                 }                
             }
         }
-        
-        foreach (var column in modifiedLine.Columns)
+
+        if (modifiedLine != null)
         {
-            if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], out numberLines))
+            foreach (var column in modifiedLine.Columns)
             {
-                matches.AddRange(numberLines);
+                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], request.label, out numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }
             }
         }
-        
+
         foreach (var nextLine in modifiedNextLines.OrderBy(line => line.LineNumber))
         {
             foreach (var column in nextLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], out numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], request.label, out numberLines))
                 {
                     matches.AddRange(numberLines);
                 }

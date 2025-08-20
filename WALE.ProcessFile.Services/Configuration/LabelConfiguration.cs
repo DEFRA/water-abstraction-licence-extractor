@@ -1172,6 +1172,11 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerHourUnits",                                
                                         Format = "Number",
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
+                                        ],
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
@@ -1201,6 +1206,11 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerDayUnits",
                                         Format = "Number",
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
+                                        ],
                                         Remove = [
                                             new("6.1"),
                                             new("6.2"),
@@ -1228,6 +1238,11 @@ public static class LabelConfiguration
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)")
+                                        ],
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
                                         ]
                                     },
                                     new()
@@ -1250,6 +1265,11 @@ public static class LabelConfiguration
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)")
+                                        ],
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
                                         ]
                                     },
                                     new()
@@ -1269,6 +1289,11 @@ public static class LabelConfiguration
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)")
+                                        ],
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
                                         ]
                                     },
                                     new()
@@ -1282,6 +1307,11 @@ public static class LabelConfiguration
                                         Format = "Number", // TODO add date extraction,
                                         LabelLineMustNotContain = [
                                             "abstracted in total"
+                                        ],
+                                        ResultMustNotContain = [
+                                            "(1)",
+                                            "(11)",
+                                            "(111)"
                                         ]
                                     },
                                     new()

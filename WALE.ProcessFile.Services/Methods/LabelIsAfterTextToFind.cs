@@ -26,6 +26,7 @@ public static class LabelIsAfterTextToFind
         var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
+            true,
             out var removedLines);
 
         var returnList = FilterIntoFormat(request, labelGroupResult, modifiedPreviousLines, true);

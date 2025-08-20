@@ -48,7 +48,7 @@ public static class BaseMethod
                 
                 break;
             case Number.Constant:
-                if (Number.AnyIsNumber(lines, out var numberLines))
+                if (Number.AnyIsNumber(lines, request.label, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request, numberLines);
 
@@ -161,6 +161,11 @@ public static class BaseMethod
                 request.outputFolder!,
                 request.cacheFolder!);
 
+            if (request.label?.Name == "AbstractionLimitPointSub")
+            {
+                
+            }
+            
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)
             {

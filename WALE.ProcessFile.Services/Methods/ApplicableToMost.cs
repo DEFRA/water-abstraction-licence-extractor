@@ -80,7 +80,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (Number.AnyIsNumber([documentLine], out var numberLines))
+                if (Number.AnyIsNumber([documentLine], request.label, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request, numberLines);
 

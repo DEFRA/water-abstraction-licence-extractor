@@ -11,10 +11,16 @@ public static class Number
     
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
+        LabelToMatch? label,
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
 
+        if (lines?.FirstOrDefault()?.PageNumber == 4)
+        {
+            
+        }
+        
         var matched = false;
         var returnLines = new List<string>();
 
@@ -78,9 +84,14 @@ public static class Number
         
         foreach (var tempLine in returnLines.OrderByDescending(text => text))
         {
+            if (label != null && LabelMatchingHelper.TextContainsForbiddenResult(tempLine, label))
+            {
+                continue;
+            }
+            
             var columns = new List<DocumentLineColumn>
             {
-                new(tempLine.ToString(CultureInfo.InvariantCulture),[])
+                new(tempLine,[])
             };
 
             var documentLine = new DocumentLine(

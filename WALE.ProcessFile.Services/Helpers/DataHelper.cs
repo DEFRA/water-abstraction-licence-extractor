@@ -12,6 +12,7 @@ public static partial class DataHelper
     public static List<DocumentLine> RemoveExcludesAndNotContains(
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
+        bool removeNotContains,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
@@ -39,7 +40,7 @@ public static partial class DataHelper
             
             foreach (var column in line.Columns)
             {
-                if (LabelMatchingHelper.TextContainsForbiddenResult(column.Text, label))
+                if (removeNotContains && LabelMatchingHelper.TextContainsForbiddenResult(column.Text, label))
                 {
                     continue;
                 }

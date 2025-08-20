@@ -159,14 +159,14 @@ public class PdfDataExtractorService(
         foreach (var page in imagesMetadata.Pages)
         {
             pageNumber += 1;
-            var imageNumber = 1;
+            
             var pageImageNumber = 1;
-
-            var breakOuter = false;
+            var breakPageLoop = false;
             
             foreach (var imageFilename in page.ImageFiles)
             {
                 List<DocumentLine>? bestImageLines = null;
+                List<LabelGroupResult>? ocrResults = null;
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -200,7 +200,7 @@ public class PdfDataExtractorService(
                     
                     const bool isOcr = true;
                     
-                    var ocrResults = await GetLabelGroupMatchesAsync(
+                    ocrResults = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
                         unmatchedLabelLookups,
                         isOcr,
@@ -217,8 +217,6 @@ public class PdfDataExtractorService(
                     {
                         continue;
                     }
-
-                    labelGroupMatches.AddRange(ocrResults);
                     
                     foreach (var ocrResult in ocrResults)
                     {
@@ -232,7 +230,7 @@ public class PdfDataExtractorService(
                                 .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
                                 .ToList();
 
-                            if (alreadyOutput.Count >= 2)
+                            if (alreadyOutput.Count >= 1)
                             {
                                 var i = alreadyOutput
                                     .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
@@ -242,23 +240,33 @@ public class PdfDataExtractorService(
                             }
                         }
                     }
+
+                    labelGroupMatches.AddRange(ocrResults);
+                    
+                    var combinedList = labelGroupMatches.ToList();
+                    //combinedList.AddRange(ocrResults);
                     
                     unmatchedLabelLookups = GetUnmatchedLabels(
                         unmatchedLabelLookups,
-                        labelGroupMatches,
+                        combinedList,
                         false);
                     
                     var labelsNotMatchedAtAll = GetUnmatchedLabels(
                         unmatchedLabelLookups,
-                        labelGroupMatches,
+                        combinedList,
                         true);
 
                     if (labelsNotMatchedAtAll.Count == 0)
                     {
-                        breakOuter = true;
+                        breakPageLoop = true;
                         break;
                     }
                 }
+
+                /*if (ocrResults != null)
+                {
+                    labelGroupMatches.AddRange(ocrResults);
+                }*/
 
                 if (bestImageLines != null)
                 {
@@ -266,7 +274,7 @@ public class PdfDataExtractorService(
                 }
             }
 
-            if (breakOuter)
+            if (breakPageLoop)
             {
                 break;
             }

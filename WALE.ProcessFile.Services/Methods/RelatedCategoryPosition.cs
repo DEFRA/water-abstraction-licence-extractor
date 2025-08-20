@@ -62,8 +62,8 @@ public static class RelatedCategoryPosition
             break;
         }
 
-        // If matching line starts with the label, prefer the line before
-        if (modifiedLine.LineNumber == matchedLabelLineNumber && lineStartsWithLabel)
+        // If matching line starts with the label (and its lowercase), prefer the line before (e.g. 150 gallons\nper hour)
+        if (modifiedLine.LineNumber == matchedLabelLineNumber && lineStartsWithLabel && char.IsLower(modifiedLine.Text[0]))
         {
             matchedLabelLineNumber -= 1;
         }

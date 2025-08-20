@@ -2653,7 +2653,7 @@ public class PdfPigNoOcrPdfTests
         var point1Sub1 = abstractionLimitsPoint1.SubResults![0];
         Assert.Equal(9, point1Sub1.SubResults!.Count);
 
-        Assert.Equal("Up to and including 31 March 2025", point1Sub1.SubResults
+        Assert.Equal("6.1 Up to and including 31 March 2025", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "DateOrPurpose"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text?.Contains("Up to and including ") == true)?.Text![0].Text);
         
@@ -2688,7 +2688,7 @@ public class PdfPigNoOcrPdfTests
         var point2Sub1 = abstractionLimitsPoint2.SubResults![0];
         Assert.Equal(9, point2Sub1.SubResults!.Count);
 
-        Assert.Equal("From 01 April 2025", point2Sub1.SubResults!
+        Assert.Equal("6.2 From 01 April 2025", point2Sub1.SubResults!
             .FirstOrDefault(x => x.MatchedLabel!.Format == "DateOrPurpose"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text?.Contains("From ") == true)?.Text![0].Text);
         
@@ -2698,7 +2698,7 @@ public class PdfPigNoOcrPdfTests
         var point3Sub1 = abstractionLimitsPoint3.SubResults![0];
         Assert.Equal(8, point3Sub1.SubResults!.Count);
 
-        Assert.Equal("The aggregate quantity of water authorised to be abstracted under this licence", // TODO " and under licence serial number 08/37/54/0061/R01 shall not exceed",
+        Assert.Equal("6.3 The aggregate quantity of water authorised to be abstracted under this licence", // TODO " and under licence serial number 08/37/54/0061/R01 shall not exceed",
             point3Sub1.SubResults!
             .FirstOrDefault(x => x.MatchedLabel!.Format == "DateOrPurpose"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text?.Contains("aggregate quantity of water authorised") == true)?.Text![0].Text);                

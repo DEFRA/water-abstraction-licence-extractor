@@ -457,7 +457,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(2, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
         
         // The document is printed out of alignment and has ghosting
     }

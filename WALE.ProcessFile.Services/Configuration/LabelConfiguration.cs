@@ -848,6 +848,7 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
+                IncludeLabelText = true,
                 SubLabels = new List<LabelToMatch>
                 {
                     new()
@@ -888,6 +889,7 @@ public static class LabelConfiguration
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[END_OF_BLOCK]")
                         ],
+                        IncludeLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         Multiple = MultipleType.MultipleLabelsMultipleValues,

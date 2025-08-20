@@ -165,6 +165,8 @@ public class PdfDataExtractorService(
             
             foreach (var imageFilename in page.ImageFiles)
             {
+                var breakImageLoop = false;
+                
                 List<DocumentLine>? bestImageLines = null;
                 List<LabelGroupResult>? ocrResults = null;
                 
@@ -258,9 +260,16 @@ public class PdfDataExtractorService(
 
                     if (labelsNotMatchedAtAll.Count == 0)
                     {
+                        breakImageLoop = true;
                         breakPageLoop = true;
+
                         break;
                     }
+                }
+
+                if (breakImageLoop)
+                {
+                    break;
                 }
 
                 /*if (ocrResults != null)

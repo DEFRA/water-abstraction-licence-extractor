@@ -283,15 +283,15 @@ public class PdfDataExtractorService(
                 }
             }
 
-            if (breakPageLoop)
-            {
-                break;
-            }
-            
             unmatchedLabelLookups = GetUnmatchedLabels(
                 unmatchedLabelLookups,
                 labelGroupMatches,
                 false);
+            
+            if (breakPageLoop)
+            {
+                break;
+            }
         }
 
         await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);

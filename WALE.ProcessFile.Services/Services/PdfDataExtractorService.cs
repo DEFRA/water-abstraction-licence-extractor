@@ -696,11 +696,6 @@ public class PdfDataExtractorService(
                     foreach (var expression in lookupExpressions)
                     {
                         var results = await expression(request);
-
-                        if (label.Name == "Purpose")
-                        {
-                        
-                        }
                         
                         if (results.Count == 0)
                         {
@@ -795,32 +790,37 @@ public class PdfDataExtractorService(
                     }
                 }
             }
-
-            if (returnList.Count > 1 && returnList.All(match =>
-                match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
+        }
+        
+        if (returnList.Count > 1 && returnList.All(match =>
+            match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
+        {
+            if (returnList.Any(r => r.MatchedLabel?.Name == "TextWithoutPoints" && r.Text?.Any(t => t.Text.Contains("this licence and points specified in")) == true))   
             {
-                var textList = new List<DocumentLine>();
-
-                foreach (var returnListLoop in returnList)
-                {
-                    textList.AddRange(returnListLoop.Text!);
-                }
-
-                var returnItem = returnList.First();
-
-                return new List<LabelGroupResult>
-                {
-                    new()
-                    {
-                        MatchedLabel = returnItem.MatchedLabel!.Clone(),
-                        LabelGroupName = returnItem.LabelGroupName,
-                        MatchType = returnItem.MatchType,
-                        PageNumber = returnItem.PageNumber,
-                        ServiceName = returnItem.ServiceName,
-                        Text = textList
-                    }
-                };
+            
             }
+                
+            var textList = new List<DocumentLine>();
+
+            foreach (var returnListLoop in returnList)
+            {
+                textList.AddRange(returnListLoop.Text!);
+            }
+
+            var returnItem = returnList.First();
+
+            return
+            [
+                new()
+                {
+                    MatchedLabel = returnItem.MatchedLabel!.Clone(),
+                    LabelGroupName = returnItem.LabelGroupName,
+                    MatchType = returnItem.MatchType,
+                    PageNumber = returnItem.PageNumber,
+                    ServiceName = returnItem.ServiceName,
+                    Text = textList
+                }
+            ];
         }
         
         return returnList;

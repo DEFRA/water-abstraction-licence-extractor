@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
@@ -14,6 +13,11 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+
+        if (request.label.Name == "TextWithoutPoints")
+        {
+            
+        }
         
         var returnListTop = new List<LabelGroupResult>();
         

@@ -42,7 +42,7 @@ public static class TextToFindIsBetweenLabels
             
         }
 
-        if (request.label.Name == "Point")
+        if (request.label.Name == "TextWithoutPoints")
         {
                     
         }

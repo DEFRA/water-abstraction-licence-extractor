@@ -271,11 +271,6 @@ public static class ApplicableToMost
 
             if (!string.IsNullOrWhiteSpace(outputText))
             {
-                if (outputText == "4.1")
-                {
-                        
-                }
-                
                 if (request.label?.Text?.FirstOrDefault()?.Text == null)
                 {
                     documentLine.Columns[0].Text = outputText;

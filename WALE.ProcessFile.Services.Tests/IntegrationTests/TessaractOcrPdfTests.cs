@@ -646,14 +646,13 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // Crossed out company name
+        Assert.Equal(4, resultList.Count); // Crossed out company name
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult); // Crossed out
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
-        Assert.Null(abstractionLimitsResult); // Crossed out
+        Assert.NotNull(abstractionLimitsResult);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

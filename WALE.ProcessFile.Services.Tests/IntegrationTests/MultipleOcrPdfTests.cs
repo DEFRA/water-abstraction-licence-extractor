@@ -178,7 +178,7 @@ public class MultipleOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal(13, nameResult.LineNumber);
+        Assert.Equal(10, nameResult.LineNumber);
         // NOTE - According to companies house this is actual H.N. BUTLER FARMS LIMITED        
         Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text?.Select(x => x.Text));

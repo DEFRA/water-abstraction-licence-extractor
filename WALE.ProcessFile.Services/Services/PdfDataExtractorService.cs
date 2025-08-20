@@ -569,22 +569,19 @@ public class PdfDataExtractorService(
 
         foreach (var (lineOuter, previousLines, nextLines) in lines)
         {
-            if (lineOuter.Text == "ION")
-            {
-                
-            }
+            var breakLineLoop = false;
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
                 var partialLine = (DocumentLine?)lineOuter;
                 lineCount += 1;
-                
+
                 while (partialLine?.Columns.Any(c => c.Text.Length > 0) == true)
                 {
-                    var continueOuter = false;
                     var textBeforeAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
+                    var continuePartialLoop = false;
                     var matchedLabel = label;
-                    
+
                     if (label.Format == "LinkedLicence")
                     {
                         var linkedLicences = await ProcessLinkedLicenceAsync(
@@ -612,12 +609,12 @@ public class PdfDataExtractorService(
                     }
 
                     if (!LabelMatchingHelper.LineContainsLabel(
-                        partialLine,
-                        label.Text,
-                        label.Position,
-                        lineCount,
-                        totalLineCount,
-                        out var matchedStartText))
+                            partialLine,
+                            label.Text,
+                            label.Position,
+                            lineCount,
+                            totalLineCount,
+                            out var matchedStartText))
                     {
                         partialLine = null;
                         continue;
@@ -687,16 +684,16 @@ public class PdfDataExtractorService(
                         line = partialLine,
                         lineNumber = partialLine.LineNumber
                     };
-                    
+
                     foreach (var expression in lookupExpressions)
                     {
                         var results = await expression(request);
-                        
+
                         if (results.Count == 0)
                         {
                             continue;
                         }
-                        
+
                         foreach (var result in results)
                         {
                             var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
@@ -710,7 +707,8 @@ public class PdfDataExtractorService(
                         returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
                         var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                        var ifMultiplePreferLongest = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+                        var ifMultiplePreferLongest =
+                            matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
 
                         // TOOD there should only be one below - not 2 or more
                         if (ifMultiplePreferLast || ifMultiplePreferLongest)
@@ -756,14 +754,14 @@ public class PdfDataExtractorService(
                                         {
                                             if (t == "ION")
                                             {
-                                                
+
                                             }
-                                            
+
                                             partialLine = partialLine.Clone();
                                             partialLine.Columns.Clear();
                                             partialLine.Columns.Add(new DocumentLineColumn(t));
-                                            
-                                            continueOuter = true;
+
+                                            continuePartialLoop = true;
                                         }
                                     }
                                 }
@@ -771,19 +769,25 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (continueOuter)
+                    if (continuePartialLoop)
                     {
                         continue;
                     }
 
                     partialLine = null;
-                    
+
                     // Don't carry on if we've identified it was a succession document
                     if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
                     {
+                        breakLineLoop = true;
                         break;
                     }
                 }
+            }
+            
+            if (breakLineLoop)
+            {
+                break;
             }
         }
         

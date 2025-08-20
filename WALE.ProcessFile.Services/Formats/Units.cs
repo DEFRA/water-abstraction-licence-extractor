@@ -9,6 +9,7 @@ public static class Units
     public static List<LabelGroupResult> GetMatchesToPossibilities(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines,
+        bool isPrevious,
         LabelGroupResult labelGroupResult)
     {
         if (label.Possibilities == null)
@@ -16,7 +17,9 @@ public static class Units
             return [];
         }
 
-        foreach (var line in lines)
+        var newLines = isPrevious ? lines.Reverse().ToList() : lines.ToList();
+        
+        foreach (var line in newLines)
         {
             var matchedPossibilityForLine = (string?)null;
             var newColumns = new List<DocumentLineColumn>();

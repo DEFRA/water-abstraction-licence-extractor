@@ -1255,7 +1255,7 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.RelatedCategoryPosition,
                                         RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerYearUnits",                                
+                                        RelatedName = "PerYearUnits",
                                         Format = "Number",
                                         Remove = [
                                             new("6.1"),

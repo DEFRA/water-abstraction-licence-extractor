@@ -10,11 +10,6 @@ public static class RelatedCategoryPosition
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.label?.Name == "PerDayValue")
-        {
-            
-        }
-        
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         

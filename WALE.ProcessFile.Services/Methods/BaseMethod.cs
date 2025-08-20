@@ -94,7 +94,7 @@ public static class BaseMethod
                 
                 break;
             case Units.Constant:
-                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, labelGroupResult));
+                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, isPrevious, labelGroupResult));
                 
                 break;
             case SingleWord.Constant:

@@ -197,6 +197,7 @@ public static class ApplicableToMost
                 var r = Units.GetMatchesToPossibilities(
                     request.label!,
                     [documentLine],
+                    false,
                     labelGroupResult);
 
                 if (r.Count == 0)

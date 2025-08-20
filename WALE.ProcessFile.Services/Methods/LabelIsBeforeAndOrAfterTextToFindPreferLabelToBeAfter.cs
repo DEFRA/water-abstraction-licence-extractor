@@ -38,7 +38,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
             true,
             out var removedLines);
         
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, true);
 
         foreach (var item in returnList)
         {

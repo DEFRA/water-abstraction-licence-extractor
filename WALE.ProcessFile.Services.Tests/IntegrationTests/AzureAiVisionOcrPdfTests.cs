@@ -708,6 +708,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text); // TODO should be 2/27/29/12
         
+        var company = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.Equal("SCARBOROUGH CORPORATION", company?.Text?.Single().Text);
+        
         var abstractionLimitsResult = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         

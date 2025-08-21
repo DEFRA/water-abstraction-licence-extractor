@@ -62,8 +62,6 @@ public static class CompanyName
                 if (DataHelper.IsCorruptedText(text)
                     || !TryGetCompanyOrPersonalName(text, label, out var companyOrPersonalName))
                 {
-                    newColumns.Add(column);
-                    
                     if (matched)
                     {
                         break;

@@ -206,6 +206,7 @@ public static class LabelConfiguration
                                     new("(3)"),
                                     new("(4)"),
                                     new ("NZ ") { ColumnMustStartWith = true },
+                                    //new ("A[END_OF_LINE]") { ColumnMustStartWith = true },
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
@@ -222,7 +223,8 @@ public static class LabelConfiguration
                                     new("(2)"),
                                     new("(3)"),
                                     new("(4)"),
-                                    new ("NZ ") { ColumnMustStartWith = true },                                    
+                                    new ("NZ ") { ColumnMustStartWith = true },
+                                    //new ("B") { ColumnMustStartWith = true },
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,

@@ -1140,7 +1140,7 @@ public class PdfDataExtractorService(
     private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(text => text.Text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
+            .Select(labelTextMatch => labelTextMatch.Text.Replace(PositionConstants.EndOfLineMarker, string.Empty))
             .ToList();
         
         if (labelText.Any(text =>

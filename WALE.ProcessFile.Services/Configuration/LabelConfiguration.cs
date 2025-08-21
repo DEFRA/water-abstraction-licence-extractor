@@ -342,7 +342,7 @@ public static class LabelConfiguration
                                             new("(1)"),
                                             new("(2)"),
                                             new("(3)"),
-                                            new("(3)"),                                            
+                                            new("(4)"),                                            
                                             new("For Purpose 4.1") { RemoveWholeLine = true },
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },

@@ -486,7 +486,7 @@ public static class LabelConfiguration
                     new("licence serial no:"),
                     new("licence serial no."),
                     new("serial no."),
-                    new("Serial ") { ColumnMustStartWith = true },
+                    new("Serial ") { LineMustStartWith = true },
                     new("ref. no. "),
                     new("Reference No."),
                     new("Reference Number "),
@@ -1187,12 +1187,12 @@ public static class LabelConfiguration
                                             new("6.3"),
                                             new("1 ")
                                             {
-                                                ColumnMustStartWith  = true,
+                                                LineMustStartWith = true,
                                                 ColumnMustHave2SequentialNumbers = true
                                             },
                                             new("2 ")
                                             {
-                                                ColumnMustStartWith  = true,
+                                                LineMustStartWith = true,
                                                 ColumnMustHave2SequentialNumbers = true
                                             },
                                             new("(1)"),

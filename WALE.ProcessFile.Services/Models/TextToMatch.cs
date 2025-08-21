@@ -4,6 +4,8 @@ public class TextToMatch(string text)
 {
     public string Text { get; } = text;
 
+    public bool LineMustStartWith { get; init; }    
+    
     public bool ColumnMustStartWith { get; init; }
     
     public bool IfMultiplePreferLast { get; init; }
@@ -16,10 +18,11 @@ public class TextToMatch(string text)
 
     public int InstanceNumber { get; init; } = 1;
 
-    public TextToMatch Clone(string text2)
+    public TextToMatch Clone(string textToSet)
     {
-        return new TextToMatch(text2)
+        return new TextToMatch(textToSet)
         {
+            LineMustStartWith = LineMustStartWith,
             ColumnMustStartWith = ColumnMustStartWith,
             IfMultiplePreferLast = IfMultiplePreferLast,
             IfMultiplePreferLongest = IfMultiplePreferLongest,

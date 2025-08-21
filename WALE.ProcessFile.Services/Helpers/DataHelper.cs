@@ -106,7 +106,7 @@ public static partial class DataHelper
                     continue;
                 }
 
-                if (textToMatch.ColumnMustStartWith)
+                if (textToMatch.ColumnMustStartWith || textToMatch.LineMustStartWith)
                 {
                     if (!returnStr.StartsWith(textToMatch.Text))
                     {

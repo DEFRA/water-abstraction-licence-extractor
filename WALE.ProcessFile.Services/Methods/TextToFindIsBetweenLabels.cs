@@ -90,10 +90,10 @@ public static class TextToFindIsBetweenLabels
         {
             labelGroupResult.MatchedLabel.TextEnd =
             [
-                labelGroupResult.MatchedLabel.TextEnd!.Single(x =>
+                labelGroupResult.MatchedLabel.TextEnd!.Single(textEndLine =>
                     matchedEndText != null
-                    && (x.Text == matchedEndText.Value.matchedEndText.Text
-                        || x.Text == matchedEndText.Value.matchedEndText.Text + PositionConstants.EndOfLineMarker))
+                    && (textEndLine.Text == matchedEndText.Value.matchedEndText.Text
+                        || textEndLine.Text == matchedEndText.Value.matchedEndText.Text + PositionConstants.EndOfLineMarker))
             ];
         }
         catch (Exception e)

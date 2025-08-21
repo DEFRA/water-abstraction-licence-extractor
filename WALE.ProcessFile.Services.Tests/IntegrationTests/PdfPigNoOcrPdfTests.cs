@@ -1861,8 +1861,18 @@ public class PdfPigNoOcrPdfTests
         
         // Assert
         Assert.Equal(11, resultList.Count);
-        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "Points"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue"));       
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateEffective"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry"));
         
+        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+
         Assert.NotNull(nameResult);
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Armstrongs Aggregates Limited", nameResult.Text?.FirstOrDefault()?.Text);

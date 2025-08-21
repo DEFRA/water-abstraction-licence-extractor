@@ -74,61 +74,108 @@ public static class LabelMatchingHelper
                 matchedText = labelTextOption;
                 return true;
             }
-         
+            
             var lineStartsWithLabel =
                 line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
 
-            var isEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
-
-            if (isEndOfLineMarker)
+            if (line.Text.Contains("Serial") && labelTextOption.Text.Contains("Serial"))
             {
-                var labelTextWithoutMarker =
-                    labelText.Replace(PositionConstants.EndOfLineMarker, string.Empty);
-
-                var lineEndsWithMarker =
-                    line.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);
                 
-                if (lineEndsWithMarker)
+            }
+            
+            foreach (var column in line.Columns)
+            {
+                var columnStartsWithLabel =
+                    column.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+
+                var labelHasEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
+
+                if (labelHasEndOfLineMarker)
                 {
-                    if (labelTextOption.ColumnMustStartWith)
+                    var labelTextWithoutMarker =
+                        labelText.Replace(PositionConstants.EndOfLineMarker, string.Empty);
+
+                    var columnEndsWithMarker =
+                        column.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);
+                    
+                    var lineEndsWithMarker =
+                        line.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);                    
+                    
+                    if (columnEndsWithMarker)
                     {
-                        if (lineStartsWithLabel)
+                        if (labelTextOption.ColumnMustStartWith)
+                        {
+                            if (columnStartsWithLabel)
+                            {
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                                return true;
+                            }
+                        }
+                        else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                            return true;                        
+                        }
+                    }
+                    else if (lineEndsWithMarker)
+                    {
+                        if (labelTextOption.LineMustStartWith)
+                        {
+                            if (lineStartsWithLabel)
+                            {
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                            return true;                        
+                        }
+                    }
+                }
+                else
+                {
+                    var columnStartsWithLabelWithSpaceBefore =
+                        column.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                    var columnEndsWithLabel =
+                        column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                    var lineStartsWithLabelWithSpaceBefore =
+                        line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                    var lineEndsWithLabel =
+                        line.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+
+                    if (labelTextOption.ColumnMustStartWith)
+                    {
+                        if (columnStartsWithLabel)
+                        {
+                            matchedText = labelTextOption;
                             return true;
                         }
                     }
-                    else
+                    else if (labelTextOption.LineMustStartWith)
                     {
-                        matchedText = labelTextOption.Clone(labelTextWithoutMarker);
-                        return true;                        
+                        if (lineStartsWithLabel)
+                        {
+                            matchedText = labelTextOption;
+                            return true;
+                        }
                     }
-                }
-            }
-            else
-            {
-                var lineStartsWithLabelWithSpaceBefore =
-                    line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
-                var lineEndsWithLabel =
-                    line.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
-
-                if (labelTextOption.ColumnMustStartWith)
-                {
-                    if (lineStartsWithLabel)
+                    else if (columnStartsWithLabel
+                        || lineStartsWithLabel
+                        || columnStartsWithLabelWithSpaceBefore
+                        || lineStartsWithLabelWithSpaceBefore
+                        || columnEndsWithLabel
+                        || lineEndsWithLabel)
                     {
                         matchedText = labelTextOption;
                         return true;
                     }
                 }
-                else if (lineStartsWithLabel || lineStartsWithLabelWithSpaceBefore || lineEndsWithLabel)
-                {
-                    matchedText = labelTextOption;
-                    return true;
-                }
             }
-
-            var isLastLine = lineCount == howManyLinesTotal - 1;
             
+            var isLastLine = lineCount == howManyLinesTotal - 1;
+                
             if (position == LabelPosition.Split && isLastLine)
             {
                 return true;

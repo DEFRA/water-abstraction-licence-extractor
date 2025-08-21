@@ -64,6 +64,11 @@ public static class LabelMatchingHelper
         foreach (var labelTextOption in labelTextOptions!)
         {
             var labelText = labelTextOption.Text;
+            var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
+            
+            var labelTextWithoutMarkers = labelText
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty);
             
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
@@ -82,27 +87,21 @@ public static class LabelMatchingHelper
             {
                 var columnStartsWithLabel =
                     column.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+
+                var columnMustContainEndOfColumnMarker = labelText.Contains(PositionConstants.EndOfColumnMarker);
                 
-                var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
-
-                if (lineMustContainEndOfLineMarker)
+                if (columnMustContainEndOfColumnMarker)
                 {
-                    var labelTextWithoutMarker =
-                        labelText.Replace(PositionConstants.EndOfLineMarker, string.Empty);
-
                     var columnEndsWithMarker =
-                        column.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);
+                        column.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
                     
-                    var lineEndsWithMarker =
-                        line.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);                    
-                    
-                    if (columnEndsWithMarker || lineEndsWithMarker)
+                    if (columnEndsWithMarker)
                     {
                         if (labelTextOption.ColumnMustStartWith)
                         {
                             if (columnStartsWithLabel)
                             {
-                                matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
                                 return true;
                             }
                         }
@@ -110,13 +109,43 @@ public static class LabelMatchingHelper
                         {
                             if (lineStartsWithLabel)
                             {
-                                matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
                                 return true;
                             }
                         }
                         else
                         {
-                            matchedText = labelTextOption.Clone(labelTextWithoutMarker);
+                            matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                            return true;                        
+                        }
+                    }
+                }
+                else if (lineMustContainEndOfLineMarker)
+                {
+                    var lineEndsWithMarker =
+                        line.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);                    
+                    
+                    if (lineEndsWithMarker)
+                    {
+                        if (labelTextOption.ColumnMustStartWith)
+                        {
+                            if (columnStartsWithLabel)
+                            {
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                return true;
+                            }
+                        }
+                        else if (labelTextOption.LineMustStartWith)
+                        {
+                            if (lineStartsWithLabel)
+                            {
+                                matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
                             return true;                        
                         }
                     }

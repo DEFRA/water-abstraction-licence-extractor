@@ -93,6 +93,7 @@ public static class TextToFindIsBetweenLabels
                 labelGroupResult.MatchedLabel.TextEnd!.Single(textEndLine =>
                     matchedEndText != null
                     && (textEndLine.Text == matchedEndText.Value.matchedEndText.Text
+                        || textEndLine.Text == matchedEndText.Value.matchedEndText.Text + PositionConstants.EndOfColumnMarker
                         || textEndLine.Text == matchedEndText.Value.matchedEndText.Text + PositionConstants.EndOfLineMarker))
             ];
         }
@@ -181,6 +182,7 @@ public static class TextToFindIsBetweenLabels
                 {
                     requiredCount = textEnd
                         .Single(textEndLine => textEndLine.Text == matchedEndTextTemp.Text
+                            || textEndLine.Text == matchedEndTextTemp.Text + PositionConstants.EndOfColumnMarker
                             || textEndLine.Text == matchedEndTextTemp.Text + PositionConstants.EndOfLineMarker)
                         .InstanceNumber;
                 }

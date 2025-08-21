@@ -616,13 +616,13 @@ public static class SchemaConverter
                     .Select(t => t.Text)
                     .ToArray();
 
-                if (allTextWithoutNumber == null || pointNumber == null)
+                if (allTextWithoutNumber == null)
                 {
                     continue;
                 }
 
                 var description = string.Join(' ', allTextWithoutNumber);
-                var number = pointNumber.Text!.First().Text;
+                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
                 var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
                 returnList.Add(new PointOfAbstraction

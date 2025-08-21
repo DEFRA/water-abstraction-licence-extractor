@@ -687,7 +687,10 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerYear, agreedSchemaLicence.AbstractionLimits.Individual[7].PeriodType);
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
+        // TODO 1 for each point
+        
         Assert.Single(agreedSchemaLicence.Purposes);
+        // TODO filling in purpose
     }
     
     [Fact]
@@ -749,9 +752,16 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(3, points.Text!.Count); // TODO should be 5
         Assert.Equal("Source of supply and authorised place(s) of abstraction", points.Text![0].Text);
         //Assert.StartsWith("Delete the existing", points.Text![1].Text);
-        //Assert.Equal("the following :", points.Text![2].Text);
+        //Assert.Equal("the following :", points.Text![2].Text); // TODO work out what is hapening here
         Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![1].Text);
         Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![2].Text);
+
+        var pointPurposeGroup = points.SubResults.Single();
+        Assert.NotNull(pointPurposeGroup);
+
+        var pointsSubs = pointPurposeGroup.SubResults;
+        
+        Assert.Equal(2, pointsSubs.Count);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -762,6 +772,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal("27/29/12", agreedSchemaLicence.LicenceNumber);        
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -776,8 +787,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("272912-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
-        //Assert.Single(agreedSchemaLicence.Points);
+        Assert.Equal(2, agreedSchemaLicence.Points.Length);
         Assert.Single(agreedSchemaLicence.Purposes);
-        Assert.Equal("27/29/12", agreedSchemaLicence.LicenceNumber);
     }
 }

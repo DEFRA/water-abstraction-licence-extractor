@@ -275,6 +275,9 @@ public static class LabelConfiguration
                                     new ("Z[END_OF_COLUMN]") { ColumnMustStartWith = true },
                                     new("[END_OF_BLOCK]")
                                 ],
+                                IgnoreMatchIfContains = [
+                                 //   "At the following National Grid References as marked on the maps"
+                                ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 Format = "Text",
                                 NextLinesToFetch = 100,
@@ -569,7 +572,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
-                ResultMustNotContain = [
+                IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -589,7 +592,7 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
                 PreviousLinesToFetch = 7,
-                ResultMustNotContain = [
+                IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -608,7 +611,7 @@ public static class LabelConfiguration
                 Format = "CompanyName",
                 PreviousLinesToFetch = 2,
                 NextLinesToFetch = 4,
-                ResultMustNotContain = [
+                IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
                 ]
@@ -1211,7 +1214,7 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        LabelLineMustNotContain = [
+                                        SkipLineWhenContains = [
                                             "abstracted in total"
                                         ]
                                     },
@@ -1224,7 +1227,7 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerHourUnits",                                
                                         Format = "Number",
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"
@@ -1258,7 +1261,7 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "PerDayUnits",
                                         Format = "Number",
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"
@@ -1291,7 +1294,7 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"
@@ -1318,7 +1321,7 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"
@@ -1342,7 +1345,7 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"
@@ -1357,10 +1360,10 @@ public static class LabelConfiguration
                                         RelatedCategoryName = "PerUnits",
                                         RelatedName = "InTotalUnits",                                
                                         Format = "Number", // TODO add date extraction,
-                                        LabelLineMustNotContain = [
+                                        SkipLineWhenContains = [
                                             "abstracted in total"
                                         ],
-                                        ResultMustNotContain = [
+                                        IgnoreMatchIfContains = [
                                             "(1)",
                                             "(11)",
                                             "(111)"

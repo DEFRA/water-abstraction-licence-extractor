@@ -84,7 +84,7 @@ public static class Number
         
         foreach (var tempLine in returnLines.OrderByDescending(text => text))
         {
-            if (label != null && LabelMatchingHelper.TextContainsForbiddenResult(tempLine, label))
+            if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(tempLine, label))
             {
                 continue;
             }

@@ -23,6 +23,7 @@ public static class RelatedCategoryPosition
         var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
             false,
+            out _,
             out _);
         
         var modifiedLine = ary.Count > 0 ? ary[0] : null;
@@ -31,12 +32,14 @@ public static class RelatedCategoryPosition
             request.label,
             request.previousLines,
             false,
+            out _,
             out _);
         
         var modifiedNextLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.nextLines,
             false,
+            out _,
             out _);        
         
         var matchedLabelLineNumber = PositionConstants.UnknownLineNumber;

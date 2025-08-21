@@ -13,12 +13,15 @@ public static partial class DataHelper
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
         bool removeNotContains,
+        out bool isForbidden,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
+        isForbidden = false;
+        
         var inputList = betweenText ?? new List<DocumentLine>();
         
-        if ((label.Remove?.Any() != true && label.ResultMustNotContain?.Any() != true) || betweenText == null)
+        if ((label.Remove?.Any() != true && label.IgnoreMatchIfContains?.Any() != true) || betweenText == null)
         {
             return FormattingHelper.RemoveMultipleBlankLines(inputList);
         }
@@ -40,9 +43,10 @@ public static partial class DataHelper
             
             foreach (var column in line.Columns)
             {
-                if (removeNotContains && LabelMatchingHelper.TextContainsForbiddenResult(column.Text, label))
+                if (removeNotContains && LabelMatchingHelper.ShouldSkipResultAsForbidden(column.Text, label))
                 {
-                    continue;
+                    isForbidden = true;
+                    return [];
                 }
 
                 var isLastColumn = line.Columns.Last() == column;
@@ -54,6 +58,12 @@ public static partial class DataHelper
                 {
                     removesUsedList.AddRange(removesUsedLoop);
                 }
+            }
+            
+            if (removeNotContains && LabelMatchingHelper.ShouldSkipResultAsForbidden(line.Text, label))
+            {
+                isForbidden = true;
+                return [];
             }
             
             var clonedLine = line.Clone(newColumns);
@@ -72,7 +82,7 @@ public static partial class DataHelper
     {
         removesUsed = null;
         
-        if ((label.Remove?.Any() != true && label.ResultMustNotContain?.Any() != true) || string.IsNullOrEmpty(betweenText))
+        if ((label.Remove?.Any() != true && label.IgnoreMatchIfContains?.Any() != true) || string.IsNullOrEmpty(betweenText))
         {
             return betweenText;
         }

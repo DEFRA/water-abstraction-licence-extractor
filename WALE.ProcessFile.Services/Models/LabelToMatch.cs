@@ -15,8 +15,8 @@ public class LabelToMatch
     }
     
     public bool MatchAllText { get; init; }
-    public IReadOnlyList<string>? ResultMustNotContain { get; init; }
-    public IReadOnlyList<string>? LabelLineMustNotContain { get; init; }    
+    public IReadOnlyList<string>? IgnoreMatchIfContains { get; init; }
+    public IReadOnlyList<string>? SkipLineWhenContains { get; init; }    
     public IReadOnlyList<TextToMatch>? Remove { get; set; }
     public IReadOnlyList<TextToMatch>? TextEnd { get; set; }
     public IReadOnlyList<string>? MustContain { get; set; }
@@ -48,8 +48,8 @@ public class LabelToMatch
         {
             TextStart = TextStart,
             MatchAllText = MatchAllText,
-            ResultMustNotContain = ResultMustNotContain?.ToList(),
-            LabelLineMustNotContain = LabelLineMustNotContain?.ToList(),
+            IgnoreMatchIfContains = IgnoreMatchIfContains?.ToList(),
+            SkipLineWhenContains = SkipLineWhenContains?.ToList(),
             Remove = Remove?.ToList(),
             TextEnd = TextEnd?.ToList(),
             MustContain = MustContain?.ToList(),

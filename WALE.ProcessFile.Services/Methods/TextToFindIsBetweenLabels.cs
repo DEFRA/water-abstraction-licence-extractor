@@ -80,7 +80,18 @@ public static class TextToFindIsBetweenLabels
             .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text))
             .ToList();
         
-        betweenText = DataHelper.RemoveExcludesAndNotContains(request.label, betweenText, true, out var removedLines);
+        if (request.label.Name == "Point"
+            && betweenText.Any(x => x.Text.Contains("At the following National Grid References as marked on the maps")))
+        {
+            
+        }
+        
+        betweenText = DataHelper.RemoveExcludesAndNotContains(request.label, betweenText, true, out var isForbidden, out var removedLines);
+        
+        if (isForbidden && betweenText.Count == 0)
+        {
+            return Task.FromResult(new List<LabelGroupResult>());
+        }
         
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchType = MatchType.Between;
@@ -197,14 +208,19 @@ public static class TextToFindIsBetweenLabels
 
                     if (returnList.Count == 0)
                     {
-                        var t = line.Text[..line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal)];
-                        
-                        var clonedLine2 = line.Clone();
-                        clonedLine2.Columns.Clear();
-                        clonedLine2.Columns.Add(new DocumentLineColumn(
-                            FormattingHelper.TrimFormatting(t, false)!));
-                        
-                        returnList.Add(clonedLine2);
+                        var i = line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
+
+                        if (i > -1)
+                        {
+                            var t = line.Text[..i];
+
+                            var clonedLine2 = line.Clone();
+                            clonedLine2.Columns.Clear();
+                            clonedLine2.Columns.Add(new DocumentLineColumn(
+                                FormattingHelper.TrimFormatting(t, false)!));
+
+                            returnList.Add(clonedLine2);
+                        }
                     }
                     
                     break;

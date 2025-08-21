@@ -35,7 +35,7 @@ public static class CompanyName
             
             foreach (var column in line.Columns)
             {
-                if (LabelMatchingHelper.TextContainsForbiddenResult(column.Text, label))
+                if (LabelMatchingHelper.ShouldSkipResultAsForbidden(column.Text, label))
                 {
                     newColumns.Add(column);
                     continue;
@@ -165,7 +165,7 @@ public static class CompanyName
             return false;
         }
         
-        if (LabelMatchingHelper.TextContainsForbiddenResult(lineText, label))
+        if (LabelMatchingHelper.ShouldSkipResultAsForbidden(lineText, label))
         {
             return false;
         }

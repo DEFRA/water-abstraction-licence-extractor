@@ -6,16 +6,16 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class LabelMatchingHelper
 {
-    public static bool TextContainsForbiddenLine(string? text, LabelToMatch label)
+    public static bool ShouldSkipLineAsForbidden(string? text, LabelToMatch label)
     {
-        return label.LabelLineMustNotContain?
+        return label.SkipLineWhenContains?
             .Any(mustNotContainText =>
                 TextContainsForbiddenText(text, mustNotContainText)) == true;
     }
     
-    public static bool TextContainsForbiddenResult(string? text, LabelToMatch label)
+    public static bool ShouldSkipResultAsForbidden(string? text, LabelToMatch label)
     {
-        return label.ResultMustNotContain?
+        return label.IgnoreMatchIfContains?
             .Any(mustNotContainText =>
                 TextContainsForbiddenText(text, mustNotContainText)) == true;
     }

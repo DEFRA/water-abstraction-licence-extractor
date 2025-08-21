@@ -48,7 +48,8 @@ public static class LabelIsInMiddleOfTextToFind
         var modifiedLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             inputLines,
-            true,
+            false,
+            out _,
             out var removedLines);
         
         var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);

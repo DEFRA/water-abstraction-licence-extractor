@@ -81,12 +81,17 @@ public static class LabelMatchingHelper
             }
             
             var lineStartsWithLabel =
-                line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                line.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
             
             foreach (var column in line.Columns)
             {
+                if (labelTextOption.Text.Equals("B[END_OF_COLUMN]") && column.Text.Equals("B"))
+                {
+                
+                }
+                
                 var columnStartsWithLabel =
-                    column.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                    column.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
 
                 var columnMustContainEndOfColumnMarker = labelText.Contains(PositionConstants.EndOfColumnMarker);
                 

@@ -3190,6 +3190,11 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal(23, points.Text!.Count);
         Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+
+        var pointPurposeGroup = points.SubResults[0];
+        Assert.Equal(21, pointPurposeGroup.SubResults.Count);
+        Assert.StartsWith("A SE 06", pointPurposeGroup.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("T SE 02", pointPurposeGroup.SubResults.Last().Text?.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3204,13 +3209,12 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("22711064-LV20230307", agreedSchemaLicence.Id);
         Assert.Equal("LV20230307", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
-        Assert.Single(agreedSchemaLicence.Points);
-        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Equal(21, agreedSchemaLicence.Points.Length);
         
         var point = agreedSchemaLicence.Points[0];
         Assert.Equal(2.1, point.Id);
         Assert.StartsWith("At the following", point.Description);
-        Assert.Equal(473, point.Description!.Length);
+        Assert.Equal(112, point.Description!.Length);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);

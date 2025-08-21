@@ -133,7 +133,6 @@ public static class TextToFindIsBetweenLabels
         
         var lineCount = 0;
         var returnList = new List<DocumentLine>();
-        
         var linesLoop = new List<DocumentLine>();
         
         // Add the first line between
@@ -149,8 +148,7 @@ public static class TextToFindIsBetweenLabels
             
             linesLoop.Add(clonedLine);
         }
-
-        var textEndList = textEnd.Select(x => new TextToMatch(x.Text)).ToList();
+        
         var labelMatchCount = new Dictionary<string, int>();
         
         linesLoop.AddRange(lines);
@@ -160,7 +158,7 @@ public static class TextToFindIsBetweenLabels
         {
             var label = new LabelToMatch
             {
-                Text = textEndList
+                Text = textEnd
             };
 
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
@@ -227,7 +225,7 @@ public static class TextToFindIsBetweenLabels
             returnList.Add(clonedLine);
         }
 
-        if (!foundEndTag && textEndList.Select(x => x.Text).Contains(PositionConstants.EndOfBlockMarker))
+        if (!foundEndTag && textEnd.Select(x => x.Text).Contains(PositionConstants.EndOfBlockMarker))
         {
             matchData = (new TextToMatch(PositionConstants.EndOfBlockMarker), PositionConstants.ReplacementMarker);
             foundEndTag = true;

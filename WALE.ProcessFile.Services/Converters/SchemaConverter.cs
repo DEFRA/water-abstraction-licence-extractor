@@ -293,7 +293,7 @@ public static class SchemaConverter
                     
                 var limitPoints = pointConditionSub?.Count > 0 ?
                     pointConditionSub.Select(pcs =>
-                        new Point { Id = double.Parse(pcs!.Text!.First().Text) }).ToList()
+                        new Point { Id = pcs.Text!.First().Text }).ToList()
                     : null;
                 
                 foreach (var valueResult in valueResults)
@@ -623,12 +623,11 @@ public static class SchemaConverter
 
                 var description = string.Join(' ', allTextWithoutNumber);
                 var number = pointNumber?.Text?.FirstOrDefault()?.Text;
-                var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
                 returnList.Add(new PointOfAbstraction
                 {
                     Description = description,
-                    Id = id,
+                    Id = number,
                     PurposeIds = purposeIds
                 });
             }

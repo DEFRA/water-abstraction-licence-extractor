@@ -1633,14 +1633,14 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, points.Length);
         
         var primaryPoint1 = points[0];
-        Assert.Equal(2.1, primaryPoint1.Id);
+        Assert.Equal("2.1", primaryPoint1.Id);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741 marked 'Point A' and 'Point B' on Map 1", primaryPoint1.Description);
         Assert.Equal(2, primaryPoint1.PurposeIds.Length);
         Assert.Equal(4.1, primaryPoint1.PurposeIds[0]);
         Assert.Equal(4.2, primaryPoint1.PurposeIds[1]);
         
         var primaryPoint2 = points[1];
-        Assert.Equal(2.2, primaryPoint2.Id);
+        Assert.Equal("2.2", primaryPoint2.Id);
         Assert.Equal(1241, primaryPoint2.Description!.Length);
         Assert.StartsWith("National Grid References From To TL558449", primaryPoint2.Description);
         Assert.Single(primaryPoint2.PurposeIds);
@@ -3041,23 +3041,23 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(5, agreedSchemaLicence.Points.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal(2.1, point.Id);
+        Assert.Equal("2.1", point.Id);
         Assert.EndsWith("marked \"A\" on the map", point.Description);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal(2.2, point.Id);
+        Assert.Equal("2.2", point.Id);
         Assert.EndsWith("marked \"B\" on the map", point.Description);
         
         point = agreedSchemaLicence.Points[2];
-        Assert.Equal(2.3, point.Id);
+        Assert.Equal("2.3", point.Id);
         Assert.EndsWith("marked \"C\" on the map", point.Description);
         
         point = agreedSchemaLicence.Points[3];
-        Assert.Equal(2.4, point.Id);
+        Assert.Equal("2.4", point.Id);
         Assert.EndsWith("marked \"D\" on the map", point.Description);
         
         point = agreedSchemaLicence.Points[4];
-        Assert.Equal(2.5, point.Id);
+        Assert.Equal("2.5", point.Id);
         Assert.EndsWith("marked \"E on the map", point.Description); // TODO should be "E" not "E
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
@@ -3134,23 +3134,23 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal(2.1, point.Id);
+        Assert.Equal("2.1", point.Id);
         Assert.EndsWith("marked 'A' on map 2", point.Description);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal(2.2, point.Id);
+        Assert.Equal("2.2", point.Id);
         Assert.EndsWith("marked 'B' on map 2", point.Description);
         
         point = agreedSchemaLicence.Points[2];
-        Assert.Equal(2.3, point.Id);
+        Assert.Equal("2.3", point.Id);
         Assert.EndsWith("marked 'C' on map 2", point.Description);
         
         point = agreedSchemaLicence.Points[3];
-        Assert.Equal(2.4, point.Id);
+        Assert.Equal("2.4", point.Id);
         Assert.EndsWith("marked 'D' on map 1", point.Description);
         
         point = agreedSchemaLicence.Points[4];
-        Assert.Equal(2.5, point.Id);
+        Assert.Equal("2.5", point.Id);
         Assert.EndsWith("marked 'E' on map 1", point.Description);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
@@ -3276,11 +3276,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal(2.1, point.Id);
+        Assert.Equal("2.1", point.Id);
         Assert.EndsWith("marked 'A' on map 1", point.Description);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal(2.2, point.Id);
+        Assert.Equal("2.2", point.Id);
         Assert.EndsWith("marked 'B' on map 1", point.Description);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);

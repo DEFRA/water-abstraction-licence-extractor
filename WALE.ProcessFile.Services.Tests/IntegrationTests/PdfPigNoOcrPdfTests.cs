@@ -1886,21 +1886,45 @@ public class PdfPigNoOcrPdfTests
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NW/071/0309/007", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        var abstractionLimitsSection = resultList.Single(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
 
-        //Assert.Equal(15, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(27, abstractionLimitsSection.Text?.Count);
         
         Assert.Equal(4, abstractionLimitsSection.SubResults!.Count);
         var sectionPoint1 = abstractionLimitsSection.SubResults![0];
 
-        Assert.Single(sectionPoint1.SubResults!);
+        Assert.Single(sectionPoint1.SubResults);
 
         var sectionPoint1Sub1 = sectionPoint1.SubResults![0];
         Assert.Equal(9, sectionPoint1Sub1.SubResults!.Count);
-        Assert.Single(sectionPoint1Sub1.SubResults[0].Text!); 
+        Assert.Single(sectionPoint1Sub1.SubResults[0].Text!);
+        
+        var sectionPoint2 = abstractionLimitsSection.SubResults![1];
+
+        Assert.Single(sectionPoint2.SubResults);
+
+        var sectionPoint2Sub1 = sectionPoint2.SubResults![0];
+        Assert.Equal(8, sectionPoint2Sub1.SubResults!.Count);
+        Assert.Single(sectionPoint2Sub1.SubResults[0].Text!);
+        
+        var sectionPoint3 = abstractionLimitsSection.SubResults![2];
+
+        Assert.Single(sectionPoint3.SubResults);
+
+        var sectionPoint3Sub1 = sectionPoint3.SubResults![0];
+        Assert.Equal(8, sectionPoint3Sub1.SubResults!.Count);
+        Assert.Single(sectionPoint3Sub1.SubResults[0].Text!);
+        
+        var sectionPoint4 = abstractionLimitsSection.SubResults![3];
+
+        Assert.Single(sectionPoint4.SubResults);
+
+        var sectionPoint4Sub1 = sectionPoint4.SubResults![0];
+        Assert.Equal(8, sectionPoint4Sub1.SubResults!.Count);
+        Assert.Single(sectionPoint4Sub1.SubResults[0].Text!);
         
         // TODO expand this section + add others
     }

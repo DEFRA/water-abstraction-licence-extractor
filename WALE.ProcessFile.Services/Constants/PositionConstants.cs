@@ -17,6 +17,7 @@ public static class PositionConstants
     
     public const string StartOfBlockMarker = "[START_OF_BLOCK]";
     public const string EndOfLineMarker = "[END_OF_LINE]";
+    public const string EndOfColumnMarker = "[END_OF_COLUMN]";
     public const string EndOfBlockMarker = "[END_OF_BLOCK]";
     public const string ReplacementMarker = "[WILL_BE_REPLACED_LATER]";
 

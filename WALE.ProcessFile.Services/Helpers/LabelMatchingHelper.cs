@@ -68,7 +68,7 @@ public static class LabelMatchingHelper
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
                 StringComparison.InvariantCultureIgnoreCase);
-            
+        
             if (firstLine && isStartOfBlock)
             {
                 matchedText = labelTextOption;
@@ -77,20 +77,15 @@ public static class LabelMatchingHelper
             
             var lineStartsWithLabel =
                 line.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
-
-            if (line.Text.Contains("Serial") && labelTextOption.Text.Contains("Serial"))
-            {
-                
-            }
             
             foreach (var column in line.Columns)
             {
                 var columnStartsWithLabel =
                     column.Text.StartsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                
+                var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
 
-                var labelHasEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
-
-                if (labelHasEndOfLineMarker)
+                if (lineMustContainEndOfLineMarker)
                 {
                     var labelTextWithoutMarker =
                         labelText.Replace(PositionConstants.EndOfLineMarker, string.Empty);
@@ -101,7 +96,7 @@ public static class LabelMatchingHelper
                     var lineEndsWithMarker =
                         line.Text.EndsWith(labelTextWithoutMarker, StringComparison.InvariantCultureIgnoreCase);                    
                     
-                    if (columnEndsWithMarker)
+                    if (columnEndsWithMarker || lineEndsWithMarker)
                     {
                         if (labelTextOption.ColumnMustStartWith)
                         {
@@ -111,15 +106,7 @@ public static class LabelMatchingHelper
                                 return true;
                             }
                         }
-                        else
-                        {
-                            matchedText = labelTextOption.Clone(labelTextWithoutMarker);
-                            return true;                        
-                        }
-                    }
-                    else if (lineEndsWithMarker)
-                    {
-                        if (labelTextOption.LineMustStartWith)
+                        else if (labelTextOption.LineMustStartWith)
                         {
                             if (lineStartsWithLabel)
                             {
@@ -138,8 +125,10 @@ public static class LabelMatchingHelper
                 {
                     var columnStartsWithLabelWithSpaceBefore =
                         column.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                    
                     var columnEndsWithLabel =
                         column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                    
                     var lineStartsWithLabelWithSpaceBefore =
                         line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
                     var lineEndsWithLabel =

@@ -276,7 +276,7 @@ public static class LabelConfiguration
                                     new("[END_OF_BLOCK]")
                                 ],
                                 IgnoreMatchIfContains = [
-                                 //   "At the following National Grid References as marked on the maps"
+                                    "At the following National Grid References as marked on the maps"
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 Format = "Text",

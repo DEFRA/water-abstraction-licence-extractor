@@ -638,6 +638,17 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("13638276", value2.Text![0].Text);
         Assert.Equal("PerYearValue", value2.MatchedLabel!.Name);
         
+        abstractionLimitsSection = abstractionLimitsSections[4];
+        var section4Sub1 = abstractionLimitsSection.SubResults[0];
+        
+        var value3 = section4Sub1.SubResults[3];
+        Assert.Equal("100000", value3.Text![0].Text);
+        Assert.Equal("PerDayValue", value3.MatchedLabel!.Name);
+        
+        var value4 = section4Sub1.SubResults[4];
+        Assert.Equal("32850000", value4.Text![0].Text);
+        Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -656,7 +667,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Length);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);        
-        Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.Equal(100000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Units);        
         Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value); // TODO this is wrong
         
@@ -745,7 +756,7 @@ public class AzureAiVisionOcrPdfTests
 
         var perYearValue = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("7823", perYearValue?.Text?.FirstOrDefault()?.Text); // TODO mismatch of units and values here    
+        Assert.Equal("1721", perYearValue?.Text?.FirstOrDefault()?.Text);
         
         // TODO - Should have 2 per day entries
         

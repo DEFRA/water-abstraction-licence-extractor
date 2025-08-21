@@ -346,12 +346,12 @@ public static class LabelConfiguration
                                             new("For Purpose 4.1") { RemoveWholeLine = true },
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
-                                            new("For Purpose 4.4") { RemoveWholeLine = true }                                    
+                                            new("For Purpose 4.4") { RemoveWholeLine = true } 
                                         ],
                                         Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
-                                        NextLinesToFetch = 100,
+                                        NextLinesToFetch = 100
                                     }
                                 }
                             }

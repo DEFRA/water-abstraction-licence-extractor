@@ -112,9 +112,27 @@ public static class RelatedCategoryPosition
             }
         }
 
+        var allLines = new List<DocumentLine>();
+        allLines.AddRange(modifiedPreviousLines);
+        allLines.AddRange(modifiedNextLines);
+        if (modifiedLine != null)allLines.Add(modifiedLine);
+        
         var absoluteMatches = matches
             .OrderBy(match => Math.Abs(matchedLabelLineNumber - match.LineNumber))
             .ThenBy(match => match.LineNumber)
+            .ThenBy(match =>
+            {
+                var line = allLines.First(x => x.LineNumber == match.LineNumber);
+
+                var lineText = line.Text.Replace(",", string.Empty);
+                var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
+                
+                var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
+                var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
+
+                var diff = labelIndexStart - matchIndexEnd;
+                return Math.Abs(diff);
+            })
             .ToList();
 
         var returnList = new List<LabelGroupResult>();

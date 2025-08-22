@@ -595,7 +595,7 @@ public class AzureAiVisionOcrPdfTests
             .Where(psr => psr.MatchedLabel?.Name == "Point")
             .ToList();
         
-        Assert.Equal(5, pointsSubs.Count);
+        Assert.Equal(4, pointsSubs.Count);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -628,23 +628,23 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("(1)", pointName);
         
         Assert.Equal(4, section1Sub1.Text?.Count);
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
 
-        var units1 = section1Sub1.SubResults[0];
+        var units1 = section1Sub1.SubResults[1];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
         Assert.Equal(31, units1.LineNumber);
         
-        var units2 = section1Sub1.SubResults[1];
+        var units2 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
         Assert.Equal(32, units2.LineNumber);
         
-        var value1 = section1Sub1.SubResults[2];
+        var value1 = section1Sub1.SubResults[3];
         Assert.Equal("45460.92", value1.Text![0].Text);
         Assert.Equal("PerDayValue", value1.MatchedLabel!.Name);
         
-        var value2 = section1Sub1.SubResults[3];
+        var value2 = section1Sub1.SubResults[4];
         Assert.Equal("13638276", value2.Text![0].Text);
         Assert.Equal("PerYearValue", value2.MatchedLabel!.Name);
         

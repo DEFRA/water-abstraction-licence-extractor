@@ -11,11 +11,6 @@ public static class TextToFindIsBetweenLabels
 {
     public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
-        if (request.label?.Name == "DocumentAbstractionLimitsSection")
-        {
-            
-        }
-        
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
@@ -42,9 +37,13 @@ public static class TextToFindIsBetweenLabels
 
         linesToUse.AddRange(request.nextLines!);
         
+        if (request.label.Name == "PointCondition")
+        {
+            
+        }
+        
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
-            request.label.MustContain,
             request.textBeforeAndAfterLabel!.LastOrDefault(
                 tuple => tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
                     or LabelPosition.TextToFindIsBetweenLabels).Text,
@@ -52,6 +51,7 @@ public static class TextToFindIsBetweenLabels
             request.lineNumber,
             request.line!,
             labelLineAlreadyIncluded,
+            out var foundEndTag,
             out var matchedEndText);
         
         if (betweenText == null)
@@ -75,18 +75,54 @@ public static class TextToFindIsBetweenLabels
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);   
             }
         }
+
+        if (request.label.MustContain?.Count > 0)
+        {
+            var containsText = request.label.MustContain;
+            string? matchedContains = null;
+        
+            var result = foundEndTag && containsText.Any(containsInstance =>
+            {
+                var matchResult = string.IsNullOrEmpty(containsInstance) || betweenText.Any(line =>
+                    line.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase));
+
+                if (!matchResult)
+                {
+                    return false;
+                }
+            
+                matchedContains = containsInstance;
+                return true;
+
+            }) ? betweenText : null;
+
+            if (matchedContains != null)
+            {
+                matchedEndText = (matchedEndText!.Value.matchedEndText, matchedContains!);
+                betweenText = result;
+            }
+            else
+            {
+                matchedEndText = null;
+                betweenText = result;
+            }
+        }
+        
+        if (betweenText == null)
+        {
+            return Task.FromResult(new List<LabelGroupResult>());
+        }
         
         betweenText = betweenText
             .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text))
             .ToList();
         
-        if (request.label.Name == "Point"
-            && betweenText.Any(x => x.Text.Contains("At the following National Grid References as marked on the maps")))
-        {
-            
-        }
-        
-        betweenText = DataHelper.RemoveExcludesAndNotContains(request.label, betweenText, true, out var isForbidden, out var removedLines);
+        betweenText = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            betweenText,
+            true,
+            out var isForbidden,
+            out var removedLines);
         
         if (isForbidden && betweenText.Count == 0)
         {
@@ -131,16 +167,16 @@ public static class TextToFindIsBetweenLabels
     
     private static List<DocumentLine>? GetTextBetween(
         IReadOnlyList<TextToMatch> textEnd,
-        IReadOnlyList<string>? containsText,
         string? firstLineTextAfterLabel,
         IReadOnlyList<DocumentLine> lines,
         int startLineNumber,
         DocumentLine lineInput,
         bool labelLineAlreadyIncluded,
+        out bool foundEndTag,
         out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
         matchData = null;
-        var foundEndTag = false;
+        foundEndTag = false;
         
         var lineCount = 0;
         var returnList = new List<DocumentLine>();
@@ -247,35 +283,6 @@ public static class TextToFindIsBetweenLabels
             foundEndTag = true;
         }
 
-        if (containsText == null)
-        {
-            return matchData == null ? null : returnList;
-        }
-
-        string? matchedContains = null;
-        
-        var result = foundEndTag && containsText.Any(containsInstance =>
-        {
-            var matchResult = string.IsNullOrEmpty(containsInstance) || returnList.Any(line =>
-                line.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase));
-
-            if (!matchResult)
-            {
-                return false;
-            }
-            
-            matchedContains = containsInstance;
-            return true;
-
-        }) ? returnList : null;
-
-        if (matchedContains != null)
-        {
-            matchData = (matchData!.Value.matchedEndText, matchedContains!);
-            return result;
-        }
-
-        matchData = null;
-        return result;
+        return matchData == null ? null : returnList;
     }
 }

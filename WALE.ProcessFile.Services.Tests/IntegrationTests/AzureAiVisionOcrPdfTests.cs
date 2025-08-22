@@ -312,7 +312,26 @@ public class AzureAiVisionOcrPdfTests
         
         // TODO - other 2 things
     }
-    
+
+    [Fact]
+    public async Task WhenZ_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
+        
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        
+        var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(new DateTime(2014, 08, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
+    }
+
     [Fact]
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
@@ -499,6 +518,9 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename);
         var resultList = resultFull.Matches!;
+        
+        var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
         
         // Assert
 //        Assert.Equal(4, resultList.Count);

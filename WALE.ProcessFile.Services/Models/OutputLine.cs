@@ -19,6 +19,8 @@ public class OutputLine
     public string? LicenceNumber;
     public double? LicenceNumberOcrConfidence;
     public bool LimitsFound;
+    public bool AggregatesFound;
+    public string? IssueDate;
     public bool MeansFound;
     public string? LinkedLicenceNumbers;
     public int NodeId;

@@ -160,15 +160,17 @@ indexFileStringBuilder.AppendLine("<table>");
 indexFileStringBuilder.AppendLine("<thead>");
 indexFileStringBuilder.AppendLine("<tr>");
 indexFileStringBuilder.AppendLine("<td style='width: 5%'>Preview</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 15%'>Filename</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 10%'>Filename</td>");
 indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence number</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 15%'>Licence holder</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Scanned file</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 9%'>Purposes</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 9%'>Points</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 9%'>Abstraction limits</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 9%'>Means of abstraction</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 9%'>Linked&nbsp;licences</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence holder</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 15%'>Purposes</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 20%'>Points</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Abstraction limits</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Aggregates</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Scanned file</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issue date</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Means of abstraction</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Linked&nbsp;licences</td>");
 indexFileStringBuilder.AppendLine("</tr>");
 indexFileStringBuilder.AppendLine("</thead>");
 indexFileStringBuilder.AppendLine("<tbody>");
@@ -183,6 +185,8 @@ var scannedCount = 0;
 var purposesFoundCount = 0;
 var pointsFoundCount = 0;
 var limitsFoundCount = 0;
+var aggregatesFoundCount = 0;
+var issueDateFoundCount = 0;
 var linkedLicenceNumbersFoundCount = 0;
 var meansFoundCount = 0;
 
@@ -220,10 +224,12 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     indexFileStringBuilder.AppendLine($"<td><a href='report.html?filename={filename}'>{filenameForScreen}</a></td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Purposes}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Points}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.LimitsFound}</td>");
+    indexFileStringBuilder.AppendLine($"<td>{outputLine.AggregatesFound}</td>");
+    indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
+    indexFileStringBuilder.AppendLine($"<td>{outputLine.IssueDate ?? "--"}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.MeansFound}</td>");
     indexFileStringBuilder.AppendLine($"<td>{!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--"}</td>");
     indexFileStringBuilder.AppendLine("</tr>");
@@ -238,6 +244,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     if (!string.IsNullOrEmpty(outputLine.Points)
         && outputLine.Points != "--") pointsFoundCount++;
     if (outputLine.LimitsFound) limitsFoundCount++;
+    if (outputLine.AggregatesFound) aggregatesFoundCount++;
+    if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers)
         && outputLine.LinkedLicenceNumbers != "--") linkedLicenceNumbersFoundCount++;
@@ -292,10 +300,12 @@ indexFileStringBuilder.AppendLine("<td>Total</td>");
 indexFileStringBuilder.AppendLine($"<td>{fileCount-1}</td>");
 indexFileStringBuilder.AppendLine($"<td>{licenceNumberFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{licenceHolderFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{scannedCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{purposesFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{pointsFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{limitsFoundCount}</td>");
+indexFileStringBuilder.AppendLine($"<td>{aggregatesFoundCount}</td>");
+indexFileStringBuilder.AppendLine($"<td>{scannedCount}</td>");
+indexFileStringBuilder.AppendLine($"<td>{issueDateFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{meansFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{linkedLicenceNumbersFoundCount}</td>");
 indexFileStringBuilder.AppendLine("</tr>");
@@ -475,6 +485,12 @@ async Task HandleFileAsync(
         var meansFound = matches
             .FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction")?
             .SubResults?.Count > 0;
+
+        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
+        var agreedSchema = agreedSchemaGroup.Licences.First();
+        
+        var aggregatesFound = agreedSchema.AbstractionLimits.Aggregates.Length > 0;
+        var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         
         outputLines.Add(new OutputLine
         {
@@ -495,6 +511,8 @@ async Task HandleFileAsync(
             LicenceNumber = licenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsFound = limitsFound,
+            AggregatesFound = aggregatesFound,
+            IssueDate = issueDate,
             MeansFound = meansFound,
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
@@ -512,9 +530,6 @@ async Task HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
 
-        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
-        var agreedSchema = agreedSchemaGroup.Licences!.First();
-        
         var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
         
         /*File.WriteAllText(
@@ -583,18 +598,18 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(20).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(20).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
-    pdfFilePaths = pdfFilePaths.Where(x =>
+    /*pdfFilePaths = pdfFilePaths.Where(x =>
         x.Contains("2-26-32-126 6937559.PDF")
         || x.Contains("2-27-29-012 7003124.PDF")
         || x.Contains("Application - New - Licence Issued 30092021.pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023.pdf")
         || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
-    ).ToArray();
+    ).ToArray();*/
     
     return pdfFilePaths;
 }

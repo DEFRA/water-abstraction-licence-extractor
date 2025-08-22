@@ -133,6 +133,7 @@ public static class SchemaConverter
             .FirstOrDefault()?
             .Text
             .Replace(" ", string.Empty)
+            .Replace("August", "Aug")
             .Replace("st", string.Empty)
             .Replace("nd", string.Empty)
             .Replace("rd", string.Empty)
@@ -144,6 +145,7 @@ public static class SchemaConverter
             .FirstOrDefault()?
             .Text
             .Replace(" ", string.Empty)
+            .Replace("August", "Aug")            
             .Replace("st", string.Empty)
             .Replace("nd", string.Empty)
             .Replace("rd", string.Empty)
@@ -155,6 +157,7 @@ public static class SchemaConverter
             .FirstOrDefault()?
             .Text
             .Replace(" ", string.Empty)
+            .Replace("August", "Aug")            
             .Replace("st", string.Empty)
             .Replace("nd", string.Empty)
             .Replace("rd", string.Empty)
@@ -166,6 +169,7 @@ public static class SchemaConverter
             .FirstOrDefault()?
             .Text
             .Replace(" ", string.Empty)
+            .Replace("August", "Aug")            
             .Replace("st", string.Empty)
             .Replace("nd", string.Empty)
             .Replace("rd", string.Empty)

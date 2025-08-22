@@ -49,7 +49,13 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("22ND DAY OF SEPTEMBER 1986", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -117,8 +123,13 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("twenty-third day of .O.C", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO this isn't right
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -184,7 +195,13 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("First", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO wrong
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -415,7 +432,12 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(7, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("third day of April 19 70", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
@@ -519,8 +541,10 @@ public class AzureAiVisionOcrPdfTests
         var resultFull = await GetMatchesAsync(filename);
         var resultList = resultFull.Matches!;
         
-        var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("28 DAY OF March 1984", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         // Assert
 //        Assert.Equal(4, resultList.Count);

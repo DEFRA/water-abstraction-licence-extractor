@@ -43,6 +43,18 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ]
+            },
+            new LabelToMatch
+            {
+                Name = "DateOfIssueOldStyle",
+                Format = "Text",
+                Text =
+                [
+                    new("DATED THIS ") { LineMustStartWith = true }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ApplicableToMost
             }
         ];
     }

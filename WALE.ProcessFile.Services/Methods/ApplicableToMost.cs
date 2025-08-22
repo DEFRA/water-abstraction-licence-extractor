@@ -13,6 +13,11 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+
+        if (request.label.Name == "DateOfIssue")
+        {
+            
+        }
         
         var returnListTop = new List<LabelGroupResult>();
         

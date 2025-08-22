@@ -85,11 +85,6 @@ public static class LabelMatchingHelper
             
             foreach (var column in line.Columns)
             {
-                if (labelTextOption.Text.Equals("B[END_OF_COLUMN]") && column.Text.Equals("B"))
-                {
-                
-                }
-                
                 var columnStartsWithLabel =
                     column.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
 
@@ -159,7 +154,6 @@ public static class LabelMatchingHelper
                 {
                     var columnStartsWithLabelWithSpaceBefore =
                         column.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
-                    
                     var columnEndsWithLabel =
                         column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                     

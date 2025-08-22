@@ -670,7 +670,7 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
-
+                    
                     textBeforeAndAfterLabel.AddRange(
                         GetLineBeforeAndAfterText(partialLine, matchedLabel));
 
@@ -1041,6 +1041,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.TextToFindIsBetweenLabels
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
+                or LabelPosition.ApplicableToMost
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
@@ -1063,6 +1064,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.TextToFindIsBetweenLabels
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
+                or LabelPosition.ApplicableToMost                
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();

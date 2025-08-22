@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -212,8 +213,13 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
+        Assert.Equal(3, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
         // TODO try it with Azure AI Vision
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("First DAY OF", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -279,6 +285,12 @@ public class TessaractOcrPdfTests
         
         // Assert
         Assert.Equal(6, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("22ND DAY OF SEPTEMBER 1986", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -346,7 +358,13 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("12th DAY OF DECEMBER 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -366,7 +384,13 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(new DateTime(1997, 12, 12), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 
     [Fact]
@@ -507,8 +531,13 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // File is scanned titled and font is very bold and hard to read
+        Assert.Equal(3, resultList.Count); // File is scanned titled and font is very bold and hard to read
 
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("Fifteenth day of March, © 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
         
@@ -590,7 +619,12 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(6, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("day of 196", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO wrong
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -615,7 +649,12 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(4, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("9th day of January, 196/", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO whats the last char
         
         // Success sticker used, company name is OCR-ed
         // scrambled. Rest of document is greyed out slightly and hard to read, including
@@ -939,7 +978,12 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("14th day of January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

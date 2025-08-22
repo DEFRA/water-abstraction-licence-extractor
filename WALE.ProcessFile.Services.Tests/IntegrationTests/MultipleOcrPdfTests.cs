@@ -47,7 +47,13 @@ public class MultipleOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("9th day of January, 1967", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -113,7 +119,12 @@ public class MultipleOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(7, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("third day of April 19 70", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
@@ -178,7 +189,13 @@ public class MultipleOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("22ND DAY OF SEPTEMBER 1986", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);

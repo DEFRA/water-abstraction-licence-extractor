@@ -324,7 +324,17 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
+
+        var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        
+        var dateOfOriginalIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue");
+        Assert.NotNull(dateOfOriginalIssue);
+        
+        var dateEffective = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateEffective");
+        Assert.NotNull(dateEffective);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
@@ -578,6 +588,15 @@ public class AzureAiVisionOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename);
         
+        var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        
+        var dateOfOriginalIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue");
+        Assert.NotNull(dateOfOriginalIssue);
+        
+        var dateEffective = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateEffective");
+        Assert.NotNull(dateEffective);
+        
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
@@ -666,11 +685,12 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/26/32/126", agreedSchemaLicence.LicenceNumber);
         Assert.StartsWith("YORKSHIRE W", agreedSchemaLicence.LicenceHolder);
-//        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
-//        Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
-//        Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
-        Assert.Equal("22632126-LVUNKNOWN", agreedSchemaLicence.Id);
-        Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        Assert.Equal(new DateTime(2005, 07, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Equal(new DateTime(2005, 02, 02), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Null(agreedSchemaLicence.LicenceVersion.ExpiryDate);
+        Assert.Equal("22632126-LV20050202", agreedSchemaLicence.Id);
+        Assert.Equal("LV20050202", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);

@@ -90,7 +90,7 @@ var data = new List<CsvLine>
     },
 };
 
-await using var writer = new StreamWriter("Yorkshire-6-20250820.csv");
+await using var writer = new StreamWriter($"Yorkshire-6-{DateTime.Today.ToString("yyyyMMdd")}.csv");
 await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
 csv.WriteRecords((IEnumerable)data);

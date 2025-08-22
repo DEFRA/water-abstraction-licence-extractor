@@ -37,11 +37,12 @@ public static class LabelConfiguration
                     new("Date of issue ..."),
                     new("Date of Issue")
                 ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
+                PreviousLinesToFetch = 1,
+                NextLinesToFetch = 1,
+                Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Remove = [
                     new("...")
-                ],
-                NextLinesToFetch = 1
+                ]
             }
         ];
     }

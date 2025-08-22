@@ -131,25 +131,45 @@ public static class SchemaConverter
             .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
             .Text?
             .FirstOrDefault()?
-            .Text;
-        
+            .Text
+            .Replace(" ", string.Empty)
+            .Replace("st", string.Empty)
+            .Replace("nd", string.Empty)
+            .Replace("rd", string.Empty)
+            .Replace("th", string.Empty);
+
         var dateOfIssueStr = matches
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
             .Text?
             .FirstOrDefault()?
-            .Text;
+            .Text
+            .Replace(" ", string.Empty)
+            .Replace("st", string.Empty)
+            .Replace("nd", string.Empty)
+            .Replace("rd", string.Empty)
+            .Replace("th", string.Empty);
 
         var dateOfOriginalIssueStr = matches
             .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
             .Text?
             .FirstOrDefault()?
-            .Text;        
+            .Text
+            .Replace(" ", string.Empty)
+            .Replace("st", string.Empty)
+            .Replace("nd", string.Empty)
+            .Replace("rd", string.Empty)
+            .Replace("th", string.Empty);
         
         var dateOfExpiryStr = matches
             .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
             .Text?
             .FirstOrDefault()?
-            .Text;
+            .Text
+            .Replace(" ", string.Empty)
+            .Replace("st", string.Empty)
+            .Replace("nd", string.Empty)
+            .Replace("rd", string.Empty)
+            .Replace("th", string.Empty);
 
         var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
             ? dateOfExpiryOut

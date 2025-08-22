@@ -280,7 +280,7 @@ public static class SchemaConverter
                     
                 var limitPurposes = purposeConditionSub?.Count > 0 ?
                     purposeConditionSub.Select(pcs =>
-                        new Purpose { Id = double.Parse(pcs!.Text!.First().Text) }).ToList()
+                        new Purpose { Id = pcs!.Text!.First().Text }).ToList()
                     : null;
                     
                 var pointCondition = siblings?
@@ -686,12 +686,11 @@ public static class SchemaConverter
                     ? string.Join('\n', allTextWithoutNumber)
                     : null;
                     
-                var number = purposeNumber?.Text?.FirstOrDefault()?.Text;                
-                var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+                var number = purposeNumber?.Text?.FirstOrDefault()?.Text;
                 
                 returnList.Add(new PurposeOfAbstraction
                 {
-                    Id = id,
+                    Id = number,
                     Description = description,
                     PointIds = pointIds
                 });

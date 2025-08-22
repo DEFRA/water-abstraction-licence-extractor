@@ -1650,19 +1650,19 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, purposes.Length);
         
         var primaryPurpose1 = purposes[0];
-        Assert.Equal(4.1, primaryPurpose1.Id);
+        Assert.Equal("4.1", primaryPurpose1.Id);
         Assert.StartsWith("Transfer for subsequent discharge and", primaryPurpose1.Description);
         Assert.Single(primaryPurpose1.PointIds);
         Assert.Equal(2.1, primaryPurpose1.PointIds[0]);
         
         var primaryPurpose2 = purposes[1];
-        Assert.Equal(4.2, primaryPurpose2.Id);
+        Assert.Equal("4.2", primaryPurpose2.Id);
         Assert.StartsWith("Filling a reservoir for subsequent", primaryPurpose2.Description);
         Assert.Single(primaryPurpose2.PointIds);
         Assert.Equal(2.1, primaryPurpose2.PointIds[0]);
         
         var primaryPurpose3 = purposes[2];
-        Assert.Equal(4.3, primaryPurpose3.Id);
+        Assert.Equal("4.3", primaryPurpose3.Id);
         Assert.Equal("Spray Irrigation", primaryPurpose3.Description);
         Assert.Single(primaryPurpose3.PointIds);
         Assert.Equal(2.2, primaryPurpose3.PointIds[0]);        
@@ -3070,11 +3070,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("4.1", purpose.Id);
         Assert.Equal("Public water supply", purpose.Description);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal(4.2, purpose.Id);
+        Assert.Equal("4.2", purpose.Id);
         Assert.StartsWith("Transfer from W", purpose.Description);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -3083,14 +3083,17 @@ public class PdfPigNoOcrPdfTests
 
         var limit = agreedSchemaLicence.AbstractionLimits.Individual[0];
         Assert.Single(limit.Purposes!);
+        Assert.Equal("4.1", limit.Purposes![0].Id);
         Assert.Equal(38640, limit.Value);
 
         limit = agreedSchemaLicence.AbstractionLimits.Individual[1];
         Assert.Single(limit.Purposes!);
+        Assert.Equal("4.1", limit.Purposes![0].Id);
         Assert.Equal(10140000, limit.Value);
         
         limit = agreedSchemaLicence.AbstractionLimits.Individual[2];
         Assert.Single(limit.Purposes!);
+        Assert.Equal("4.2", limit.Purposes![0].Id);
         Assert.Equal(2482000, limit.Value);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -3163,11 +3166,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("4.1", purpose.Id);
         Assert.Equal("Public water supply", purpose.Description);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal(4.2, purpose.Id);
+        Assert.Equal("4.2", purpose.Id);
         Assert.StartsWith("Transfer for the purpose ", purpose.Description);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -3228,11 +3231,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("4.1", purpose.Id);
         Assert.Equal("Public water supply", purpose.Description);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal(4.2, purpose.Id);
+        Assert.Equal("4.2", purpose.Id);
         Assert.StartsWith("Transfer for the", purpose.Description);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -3293,11 +3296,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal(4.1, purpose.Id);
+        Assert.Equal("4.1", purpose.Id);
         Assert.Equal("Public water supply", purpose.Description);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal(4.2, purpose.Id);
+        Assert.Equal("4.2", purpose.Id);
         Assert.StartsWith("Transfer for the purpose", purpose.Description);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);

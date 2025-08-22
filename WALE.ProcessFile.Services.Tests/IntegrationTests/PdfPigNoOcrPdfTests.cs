@@ -2473,7 +2473,13 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(point1.SubResults!);
 
         var point1Sub1 = point1.SubResults![0];
-        Assert.Equal(8, point1Sub1.SubResults!.Count);
+        Assert.Equal(9, point1Sub1.SubResults!.Count);
+
+        var pointName = point1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
+        
+        Assert.Equal("2.1", pointName);
+        
         Assert.Equal("90", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text?.Contains("per hour") == true)?.Text!.First().Text);

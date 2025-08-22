@@ -135,8 +135,13 @@ public class MultipleOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(6, section1Sub1.SubResults!.Count);
+        Assert.Equal(7, section1Sub1.SubResults!.Count);
 
+        var pointName = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
+        
+        Assert.Equal("(1)", pointName);
+        
         var perYearUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
         Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
 

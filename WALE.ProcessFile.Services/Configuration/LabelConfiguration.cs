@@ -1033,14 +1033,41 @@ public static class LabelConfiguration
                                         Name = "PointCondition",
                                         Text = [
                                             new("condition "),
-                                            new("conditions ")
+                                            new("conditions "),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)")
                                         ],
                                         TextEnd = [
                                             new("shall not exceed"),
-                                            new(":")
+                                            new(":"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("[END_OF_BLOCK]")                                            
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
+                                        IncludeLabelText = true,
                                         Format = "Text",
+                                        Possibilities = [
+                                            "2.1",
+                                            "2.2",
+                                            "2.3",
+                                            "2.4",
+                                            "2.5",
+                                            "2.6",
+                                            "2.7",
+                                            "2.8",
+                                            "2.9",
+                                            "(1)",
+                                            "(2)",
+                                            "(3)",
+                                            "(4)"
+                                        ],
                                         MustContain = [
                                             "2.1",
                                             "2.2",
@@ -1054,7 +1081,10 @@ public static class LabelConfiguration
                                             "(1)",
                                             "(2)",
                                             "(3)",
-                                            "(4)",
+                                            "(4)"
+                                        ],
+                                        Remove = [
+                                            new("number ")
                                         ],
                                         SubLabels =
                                         [

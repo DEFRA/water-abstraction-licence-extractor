@@ -109,7 +109,7 @@ public static class BaseMethod
                 break;
             case Text.Constant:
                 var result = RestrictToPossibility(request, labelGroupResult);
-                if (result?.Text != null) returnList.Add(labelGroupResult); // TODO should probably filter in some way
+                if (result?.Text != null) returnList.Add(result);
 
                 break;
         }
@@ -128,7 +128,18 @@ public static class BaseMethod
 
         return lines
             .Where(line => request.label.Possibilities
-                .Any(possibility => possibility == line.Text))
+                .Any(possibility => line.Text.Contains(possibility)))
+            .Select(line =>
+            {
+                var possibility = request.label.Possibilities
+                    .First(possibility => line.Text.Contains(possibility));
+
+                var clonedLine = line.Clone();
+                clonedLine.Columns.Clear();
+                clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+
+                return clonedLine;
+            })
             .ToList();
     }
     
@@ -160,11 +171,6 @@ public static class BaseMethod
                 request.previouslyParsedPaths!,
                 request.outputFolder!,
                 request.cacheFolder!);
-
-            if (request.label?.Name == "AbstractionLimitPointSub")
-            {
-                
-            }
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)
@@ -187,9 +193,25 @@ public static class BaseMethod
             return result;
         }
 
-        return request.label.Possibilities.Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text)
-            ? result
-            : null;
+        var possiblityFound = request.label.Possibilities.Any(possibility =>
+            result.Text?.FirstOrDefault()?.Text.Contains(possibility) == true);
+
+        if (possiblityFound)
+        {
+            var possibility = request.label.Possibilities
+                .First(possibility => result.Text!.First().Text.Contains(possibility));
+
+            var clonedLine = result.Text!.First().Clone();
+            clonedLine.Columns.Clear();
+            clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+
+            var clonedResult = result.Clone();
+            clonedResult.Text = [clonedLine];
+            
+            return clonedResult;
+        }
+
+        return null;
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(
@@ -203,7 +225,24 @@ public static class BaseMethod
 
         return results
             .Where(result => request.label.Possibilities
-                .Any(possibility => possibility == result.Text?.FirstOrDefault()?.Text))
+                .Any(possibility =>
+                    result.Text?.FirstOrDefault()?.Text.Contains(possibility) == true))
+            .Select(result =>
+            {
+                var lineText = result.Text!.First().Text;
+                
+                var possibility = request.label.Possibilities
+                    .First(possibility => lineText.Contains(possibility));
+
+                var clonedLine = result.Text!.First().Clone();
+                clonedLine.Columns.Clear();
+                clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+                
+                var clonedResult = result.Clone();
+                clonedResult.Text = [clonedLine];
+
+                return clonedResult;
+            })
             .ToList();
     }
 }

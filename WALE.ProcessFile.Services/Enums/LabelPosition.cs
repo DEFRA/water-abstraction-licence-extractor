@@ -12,5 +12,6 @@ public enum LabelPosition
     ContractIsSuccession,
     TextToFindIsBetweenLabels,
     RelatedCategoryPosition,
-    Split
+    Split,
+    ActuallyLabel
 }

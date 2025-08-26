@@ -726,7 +726,12 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);

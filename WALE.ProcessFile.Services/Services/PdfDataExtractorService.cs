@@ -1094,7 +1094,6 @@ public class PdfDataExtractorService(
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
-            
             returnLabel.Position = label.Position is
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
@@ -1105,11 +1104,13 @@ public class PdfDataExtractorService(
             returnItems.Add((textAfterLabel.Trim(), returnLabel));
         }
 
-        /*if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeLabelText)
+        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeLabelText)
         {
             var returnLabel = label.Clone();
+            returnLabel.Position = LabelPosition.ActuallyLabel;
+            
             returnItems.Add((textAtLabel.Trim(), returnLabel));
-        }*/
+        }
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
@@ -1123,7 +1124,6 @@ public class PdfDataExtractorService(
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
-            
             returnLabel.Position = label.Position is
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter

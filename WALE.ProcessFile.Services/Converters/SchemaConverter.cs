@@ -167,11 +167,18 @@ public static class SchemaConverter
             ? dateOfOriginalIssueOut
             : (DateTime?)null;
 
+        var issuer = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+        
         var licenceVersion = new LicenceVersion
         {
             EffectiveDate = effectiveDate,
             ExpiryDate = expiryDate,
             IssueDate = dateOfIssue,
+            Issuer = issuer,
             OriginalIssueDate = dateOfOriginalIssue
         };
         

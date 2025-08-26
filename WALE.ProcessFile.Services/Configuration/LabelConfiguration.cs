@@ -19,7 +19,53 @@ public static class LabelConfiguration
             ("DateOfIssue", GetDateOfIssueLabels()),
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
             ("DateEffective", GetDateEffectiveLabels()),
-            ("DateOfExpiry", GetDateOfExpiryLabels())
+            ("DateOfExpiry", GetDateOfExpiryLabels()),
+            ("Issuer", GetIssuerLabels())
+        ];
+    }
+    
+    private static List<LabelToMatch> GetIssuerLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Issuer",
+                Format = "Text",
+                Text =
+                [
+                    new("The Environment Agency"),
+                    new("LEE CONSERVANCY CATCHMENT BOARD"),
+                    new("National Rivers Authority"),
+                    new("South Water Authority"),
+                    new("Northumbrian Water Authority"),
+                    new("North West Water"),
+                    new("Wessex Water Authority"),
+                    new("Thames Water Authority"),
+                    new("Mersey and Weaver River Authority"),
+                    new("Convservators of the The River Thames"),
+                    new("Yorkshire Ouse and Hull River Authority"),
+                    new("Avon and Dorset River authority")
+                ],
+                Possibilities = [
+                    "The Environment Agency",
+                    "LEE CONSERVANCY CATCHMENT BOARD",
+                    "National Rivers Authority",
+                    "South Water Authority",
+                    "Northumbrian Water Authority",
+                    "North West Water",
+                    "Wessex Water Authority",
+                    "Thames Water Authority",
+                    "Mersey and Weaver River Authority",
+                    "Convservators of the The River Thames",
+                    "Yorkshire Ouse and Hull River Authority",
+                    "Avon and Dorset River authority"
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ApplicableToMost,
+                IncludeLabelText = true
+            }
         ];
     }
 
@@ -196,7 +242,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeGroupSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split
+                                        Position = LabelPosition.Split,
+                                        Multiple = MultipleType.SingleLabelMultipleValues
                                     }
                                 ]
                             },
@@ -334,7 +381,8 @@ public static class LabelConfiguration
                                             {
                                                 Name = "PurposeLinkSub",
                                                 Text = [new("and ")],
-                                                Position = LabelPosition.Split
+                                                Position = LabelPosition.Split,
+                                                Multiple = MultipleType.SingleLabelMultipleValues
                                             }
                                         ]
                                     },
@@ -730,7 +778,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeLinkSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split
+                                        Position = LabelPosition.Split,
+                                        Multiple = MultipleType.SingleLabelMultipleValues
                                     }
                                 ]
                             },
@@ -758,7 +807,8 @@ public static class LabelConfiguration
                                             new("inclusive")
                                         ],
                                         Position = LabelPosition.Split,
-                                        Format = "DateOrPurpose"
+                                        Format = "DateOrPurpose",
+                                        Multiple = MultipleType.SingleLabelMultipleValues
                                     }
                                 ]
                             }
@@ -992,6 +1042,7 @@ public static class LabelConfiguration
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
                                 IncludeLabelText = true,
+                                Multiple = MultipleType.SingleLabelMultipleValues,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -1004,7 +1055,8 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "DateOrPurpose",
-                                        IncludeLabelText = true
+                                        IncludeLabelText = true,
+                                        Multiple = MultipleType.SingleLabelMultipleValues
                                     },
                                     new()
                                     {
@@ -1058,9 +1110,6 @@ public static class LabelConfiguration
                                         TextEnd = [
                                             new("shall not exceed"),
                                             new(":"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)"),
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)"),
@@ -1430,7 +1479,8 @@ public static class LabelConfiguration
                                                 Position = LabelPosition.Split,
                                                 Text = [new("and")],
                                                 Remove = [new("ending on")],
-                                                Format = "DateOrPurpose"
+                                                Format = "DateOrPurpose",
+                                                Multiple = MultipleType.SingleLabelMultipleValues
                                             }
                                         ]
                                     }

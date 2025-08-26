@@ -44,7 +44,7 @@ public static class TextToFindIsBetweenLabels
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
-            request.textBeforeAndAfterLabel!.LastOrDefault(
+            request.textBeforeAtAndAfterLabel!.LastOrDefault(
                 tuple => tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
                     or LabelPosition.TextToFindIsBetweenLabels).Text,
             linesToUse,

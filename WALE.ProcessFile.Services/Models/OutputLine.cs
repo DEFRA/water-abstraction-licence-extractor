@@ -21,6 +21,7 @@ public class OutputLine
     public bool LimitsFound;
     public bool AggregatesFound;
     public string? IssueDate;
+    public string? Issuer;
     public bool MeansFound;
     public string? LinkedLicenceNumbers;
     public int NodeId;

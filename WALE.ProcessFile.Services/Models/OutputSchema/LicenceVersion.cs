@@ -22,6 +22,8 @@ public class LicenceVersion
 
     public DateTime? IssueDate { get; set; }
     
+    public string? Issuer { get; set; }
+    
     public DateTime? OriginalIssueDate { get; set; }
     
     public DateTime? NaldStartDate { get; set; }

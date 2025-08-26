@@ -372,6 +372,11 @@ public class PdfDataExtractorService(
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
+            if (labelGroupName == "Points" && documentLines.Count == 68)
+            {
+                
+            }
+            
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
             {
                 continue;
@@ -408,6 +413,11 @@ public class PdfDataExtractorService(
                 
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
+            }
+            
+            if (labelGroupName == "Points" && documentLines.Count == 68)
+            {
+                
             }
         }
 
@@ -601,11 +611,20 @@ public class PdfDataExtractorService(
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
                 var partialLine = (DocumentLine?)lineOuter;
+                DocumentLine? previousPartialLine = null;
+                
                 lineCount += 1;
 
                 while (partialLine?.Columns.Any(c => c.Text.Length > 0) == true)
                 {
-                    var textBeforeAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
+                    if (previousPartialLine?.Text == partialLine.Text)
+                    {
+                        throw new Exception("Infinite loop detected - coding error");
+                    }
+
+                    previousPartialLine = partialLine;
+                    
+                    var textBeforeAtAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
@@ -635,16 +654,34 @@ public class PdfDataExtractorService(
                         continue;
                     }
 
-                    if (!LabelMatchingHelper.LineContainsLabel(
+                    TextToMatch? matchedStartText = null;
+                    
+                    if (label.Text?.Any() == true)
+                    {
+                        if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             label.Text,
                             label.Position,
                             lineCount,
                             totalLineCount,
-                            out var matchedStartText))
+                            out matchedStartText))
+                        {
+                            partialLine = null;
+                            continue;
+                        }
+                    }
+                    else if (label.Possibilities?.Any() == true && label.Format == "Text")
                     {
-                        partialLine = null;
-                        continue;
+                        var matchedPossibilities =
+                            BaseMethod.RestrictToPossibilities(label.Possibilities, [partialLine]); 
+                        
+                        if (matchedPossibilities.Count == 0)
+                        {
+                            partialLine = null;
+                            continue;
+                        }
+
+                        matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
 
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
@@ -671,8 +708,8 @@ public class PdfDataExtractorService(
                         }
                     }
                     
-                    textBeforeAndAfterLabel.AddRange(
-                        GetLineBeforeAndAfterText(partialLine, matchedLabel));
+                    textBeforeAtAndAfterLabel.AddRange(
+                        GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
 
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
@@ -688,7 +725,7 @@ public class PdfDataExtractorService(
                     var request = new FunctionInputModel
                     {
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
-                        textBeforeAndAfterLabel = textBeforeAndAfterLabel,
+                        textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
                         isCompanyType = matchedLabel.Format == CompanyName.Constant,
                         isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
                         isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
@@ -719,6 +756,11 @@ public class PdfDataExtractorService(
                         if (results.Count == 0)
                         {
                             continue;
+                        }
+
+                        if (results.Count > 1 && matchedLabel.Multiple == MultipleType.False)
+                        {
+                            results = [results.First()];
                         }
 
                         foreach (var result in results)
@@ -759,6 +801,11 @@ public class PdfDataExtractorService(
                         {
                             return returnList;
                         }
+                        
+                        if (matchedLabel.Multiple is MultipleType.SingleLabelMultipleValues)
+                        {
+                            return returnList;
+                        }
 
                         if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
                             && results.Count > 0)
@@ -767,26 +814,24 @@ public class PdfDataExtractorService(
 
                             if (result.LineNumber == partialLine?.LineNumber)
                             {
-                                var rt = result.Text?.FirstOrDefault()?.Text;
+                                var resultText = result.Text?.FirstOrDefault()?.Text;
 
-                                if (rt != null)
+                                if (resultText != null)
                                 {
-                                    var i = partialLine.Text.IndexOf(rt, StringComparison.Ordinal) + rt.Length;
+                                    var startIndexOfMatch =
+                                        partialLine.Text.IndexOf(resultText, StringComparison.InvariantCultureIgnoreCase);
+                                    
+                                    var endIndexOfMatch = startIndexOfMatch + resultText.Length;
 
-                                    if (partialLine.Text.Length > i)
+                                    if (startIndexOfMatch > -1 && partialLine.Text.Length > endIndexOfMatch)
                                     {
-                                        var t = partialLine.Text[i..];
+                                        var newPartialLineText = partialLine.Text[endIndexOfMatch..];
 
-                                        if (t != string.Empty)
+                                        if (newPartialLineText != string.Empty)
                                         {
-                                            if (t == "ION")
-                                            {
-
-                                            }
-
                                             partialLine = partialLine.Clone();
                                             partialLine.Columns.Clear();
-                                            partialLine.Columns.Add(new DocumentLineColumn(t));
+                                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
 
                                             continuePartialLoop = true;
                                         }
@@ -992,7 +1037,7 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
-    private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAndAfterText(
+    private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
@@ -1029,6 +1074,8 @@ public class PdfDataExtractorService(
         
         var textBeforeLabel = FormattingHelper.TrimFormatting(
             line.Text[..labelTextPositionIndex], true);
+
+        var textAtLabel = matchedLabelText;
         
         var textAfterLabel = FormattingHelper.TrimFormatting(
             line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], true);
@@ -1055,6 +1102,12 @@ public class PdfDataExtractorService(
             
             returnItems.Add((textAfterLabel.Trim(), returnLabel));
         }
+
+        /*if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeLabelText)
+        {
+            var returnLabel = label.Clone();
+            returnItems.Add((textAtLabel.Trim(), returnLabel));
+        }*/
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind

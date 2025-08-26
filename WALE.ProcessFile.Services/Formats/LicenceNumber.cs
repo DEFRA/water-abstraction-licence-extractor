@@ -124,7 +124,7 @@ public static partial class LicenceNumber
                 continue;
             }
 
-            if (label.Multiple == MultipleType.False)
+            if (label.Multiple is MultipleType.False)
             {
                 return anyMatchFound;
             }

@@ -14,7 +14,7 @@ public static class ApplicableToMost
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
-        if (request.label.Name == "DateOfIssue")
+        if (request.label.Name == "Issuer")
         {
             
         }
@@ -28,12 +28,12 @@ public static class ApplicableToMost
             return returnListTop;
         }
         
-        if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAndAfterLabel!))
+        if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAtAndAfterLabel!))
         {
             return returnListTop;
         }
         
-        foreach (var (text, matchedLabel) in request.textBeforeAndAfterLabel!)
+        foreach (var (text, matchedLabel) in request.textBeforeAtAndAfterLabel!)
         {
             var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
@@ -59,7 +59,7 @@ public static class ApplicableToMost
                 
                 if (DateOrPurpose.AnyIsDateOrPurpose([documentLine], out var matchedLines))
                 {
-                    matchedLines = RestrictToPossibilities(request, matchedLines);
+                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
                     
                     foreach (var matchedLine in matchedLines)
                     {
@@ -87,7 +87,7 @@ public static class ApplicableToMost
                 
                 if (Number.AnyIsNumber([documentLine], request.label, out var numberLines))
                 {
-                    numberLines = RestrictToPossibilities(request, numberLines);
+                    numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
                     if (numberLines.Count > 0)
                     {
@@ -107,7 +107,7 @@ public static class ApplicableToMost
                 
                 if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
+                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
@@ -128,7 +128,7 @@ public static class ApplicableToMost
                 
                 if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
+                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
@@ -165,11 +165,14 @@ public static class ApplicableToMost
             {
                 var autoCorrectedOutputText = AutoCorrectHelper.AutoCorrectText(
                     documentLine.Text,false);
+
+                //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;
                 
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
                     if (!outputText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        && !autoCorrectedOutputText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        && !autoCorrectedOutputText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
+                        )//&& !matchedLabelText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

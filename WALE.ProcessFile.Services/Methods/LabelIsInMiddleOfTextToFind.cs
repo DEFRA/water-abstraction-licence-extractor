@@ -21,9 +21,9 @@ public static class LabelIsInMiddleOfTextToFind
         var inputLines = request.previousLines!.ToList();
         inputLines.Reverse();
         
-        if (request.textBeforeAndAfterLabel!.Count >= 1)
+        if (request.textBeforeAtAndAfterLabel!.Count >= 1)
         {
-            var beforeOnSameLine = request.textBeforeAndAfterLabel![0];
+            var beforeOnSameLine = request.textBeforeAtAndAfterLabel![0];
 
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
@@ -31,9 +31,9 @@ public static class LabelIsInMiddleOfTextToFind
             
             inputLines.Add(clonedLine);
 
-            if (request.textBeforeAndAfterLabel.Count >= 2)
+            if (request.textBeforeAtAndAfterLabel.Count >= 2)
             {
-                var afterOnSameLine = request.textBeforeAndAfterLabel![1];
+                var afterOnSameLine = request.textBeforeAtAndAfterLabel![1];
                 
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();

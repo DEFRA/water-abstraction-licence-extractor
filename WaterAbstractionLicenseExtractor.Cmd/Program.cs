@@ -160,17 +160,18 @@ indexFileStringBuilder.AppendLine("<table>");
 indexFileStringBuilder.AppendLine("<thead>");
 indexFileStringBuilder.AppendLine("<tr>");
 indexFileStringBuilder.AppendLine("<td style='width: 5%'>Preview</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Filename</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence number</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence holder</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 15%'>Purposes</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 20%'>Points</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Abstraction limits</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Aggregates</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Scanned file</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issue date</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Means of abstraction</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Linked&nbsp;licences</td>");
+indexFileStringBuilder.AppendLine("<td style='width: 10%'>Filename</td>"); // 15
+indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence number</td>"); // 25
+indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence holder</td>"); // 35
+indexFileStringBuilder.AppendLine("<td style='width: 15%'>Purposes</td>"); // 50
+indexFileStringBuilder.AppendLine("<td style='width: 15%'>Points</td>"); // 70
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Abstraction limits</td>"); // 75
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Aggregates</td>"); // 80
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Scanned file</td>"); // 85
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issue date</td>"); // 90
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issuer</td>"); // 95
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Means of abstraction</td>"); // 100
+indexFileStringBuilder.AppendLine("<td style='width: 5%'>Linked&nbsp;licences</td>"); // 105
 indexFileStringBuilder.AppendLine("</tr>");
 indexFileStringBuilder.AppendLine("</thead>");
 indexFileStringBuilder.AppendLine("<tbody>");
@@ -187,6 +188,7 @@ var pointsFoundCount = 0;
 var limitsFoundCount = 0;
 var aggregatesFoundCount = 0;
 var issueDateFoundCount = 0;
+var issuerFoundCount = 0;
 var linkedLicenceNumbersFoundCount = 0;
 var meansFoundCount = 0;
 
@@ -230,6 +232,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     indexFileStringBuilder.AppendLine($"<td>{outputLine.AggregatesFound}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.IssueDate ?? "--"}</td>");
+    indexFileStringBuilder.AppendLine($"<td>{outputLine.Issuer ?? "--"}</td>");
     indexFileStringBuilder.AppendLine($"<td>{outputLine.MeansFound}</td>");
     indexFileStringBuilder.AppendLine($"<td>{!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--"}</td>");
     indexFileStringBuilder.AppendLine("</tr>");
@@ -246,6 +249,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     if (outputLine.LimitsFound) limitsFoundCount++;
     if (outputLine.AggregatesFound) aggregatesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
+    if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers)
         && outputLine.LinkedLicenceNumbers != "--") linkedLicenceNumbersFoundCount++;
@@ -306,6 +310,7 @@ indexFileStringBuilder.AppendLine($"<td>{limitsFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{aggregatesFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{scannedCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{issueDateFoundCount}</td>");
+indexFileStringBuilder.AppendLine($"<td>{issuerFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{meansFoundCount}</td>");
 indexFileStringBuilder.AppendLine($"<td>{linkedLicenceNumbersFoundCount}</td>");
 indexFileStringBuilder.AppendLine("</tr>");
@@ -497,6 +502,8 @@ async Task HandleFileAsync(
         
         var aggregatesFound = agreedSchema.AbstractionLimits.Aggregates.Length > 0;
         var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
+
+        var issuer = agreedSchema.LicenceVersion.Issuer;
         
         outputLines.Add(new OutputLine
         {
@@ -519,6 +526,7 @@ async Task HandleFileAsync(
             LimitsFound = limitsFound,
             AggregatesFound = aggregatesFound,
             IssueDate = issueDate,
+            Issuer = !string.IsNullOrEmpty(issuer) ? issuer : "--",
             MeansFound = meansFound,
             LinkedLicenceNumbers = linkedLicenceNumbers
         });

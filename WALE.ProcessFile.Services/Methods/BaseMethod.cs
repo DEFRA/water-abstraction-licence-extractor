@@ -23,7 +23,7 @@ public static class BaseMethod
             case DateOrPurpose.Constant:
                 if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines)) // TODO when just want one column, this function should get it
                 {
-                    matchedLines = RestrictToPossibilities(request, matchedLines);
+                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
                     
                     foreach (var matchedLine in matchedLines)
                     {
@@ -37,7 +37,7 @@ public static class BaseMethod
                 if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,
                     out var companyNameLines))
                 {
-                    companyNameLines = RestrictToPossibilities(request, companyNameLines!);
+                    companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
 
                     if (companyNameLines.Count > 0)
                     {
@@ -50,7 +50,7 @@ public static class BaseMethod
             case Number.Constant:
                 if (Number.AnyIsNumber(lines, request.label, out var numberLines))
                 {
-                    numberLines = RestrictToPossibilities(request, numberLines);
+                    numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
                     if (numberLines.Count > 0)
                     {
@@ -63,7 +63,7 @@ public static class BaseMethod
             case LicenceNumber.Constant:
                 if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines);
+                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
@@ -76,7 +76,7 @@ public static class BaseMethod
             case LicenceNumberFilename.Constant:
                 if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines2))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request, licenceNumberLines2);
+                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
@@ -118,20 +118,20 @@ public static class BaseMethod
     }
     
     public static List<DocumentLine> RestrictToPossibilities(
-        FunctionInputModel request,
+        IReadOnlyList<string>? possibilities,
         IReadOnlyList<DocumentLine> lines)
     {
-        if (request.label!.Possibilities?.Any() != true)
+        if (possibilities?.Any() != true)
         {
             return lines.ToList();
         }
 
         return lines
-            .Where(line => request.label.Possibilities
+            .Where(line => possibilities
                 .Any(possibility => line.Text.Contains(possibility)))
             .Select(line =>
             {
-                var possibility = request.label.Possibilities
+                var possibility = possibilities
                     .First(possibility => line.Text.Contains(possibility));
 
                 var clonedLine = line.Clone();

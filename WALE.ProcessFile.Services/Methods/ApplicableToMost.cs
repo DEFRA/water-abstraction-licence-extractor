@@ -16,7 +16,13 @@ public static class ApplicableToMost
 
         if (request.label.Name == "Issuer")
         {
-            
+            if (request.textBeforeAtAndAfterLabel?.Any() != true)
+            {
+                request.textBeforeAtAndAfterLabel = new List<(string Text, LabelToMatch Label)>
+                {
+                    (request.label.Text?.FirstOrDefault()?.Text, request.label)!
+                }!;
+            }
         }
         
         var returnListTop = new List<LabelGroupResult>();
@@ -105,7 +111,14 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
+                var lines = new List<DocumentLine> { documentLine };
+
+                if (request.nextLines != null)
+                {
+                    lines.AddRange(request.nextLines!);
+                }
+
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();

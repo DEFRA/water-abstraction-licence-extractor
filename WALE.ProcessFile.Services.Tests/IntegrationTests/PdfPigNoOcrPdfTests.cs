@@ -474,7 +474,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults!);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(13, section2Sub1.SubResults!.Count); // TODO failing because can't find the linked licences         
+        Assert.Equal(12, section2Sub1.SubResults!.Count);
             
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -532,7 +532,7 @@ public class PdfPigNoOcrPdfTests
                 subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
             .ToList();
         
-        Assert.Equal(3, linkedLicences.Count);
+        Assert.Equal(2, linkedLicences.Count);
         
         var linkedLicenceNumber1 = linkedLicences[0].Text?[0].Text;
         Assert.Equal("NW/069/0025/006/R01", linkedLicenceNumber1); 

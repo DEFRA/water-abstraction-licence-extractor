@@ -182,10 +182,10 @@ public static class LabelConfiguration
                 Name = "DocumentPointsAll",
                 TextStart =
                 [
-                    new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true},
-                    new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true},
-                    new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true},
-                    new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true},
+                    new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                 ],
                 TextEnd =
                 [
@@ -513,7 +513,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PointGroupSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split
+                                        Position = LabelPosition.Split,
+                                        Multiple = MultipleType.SingleLabelMultipleValues
                                     }
                                 ]
                             },
@@ -962,6 +963,7 @@ public static class LabelConfiguration
                     new("Means of measurement or assessment"),
                     //new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
+                    //new("5. ") { LineMustStartWith = true },
                     new("[END_OF_BLOCK]")
                 ],
                 MustContain =
@@ -1039,10 +1041,10 @@ public static class LabelConfiguration
                                 Name = "AbstractionLimitPointSub",
                                 Text = [new("and licence")],
                                 Position = LabelPosition.Split,
+                                Multiple = MultipleType.SingleLabelMultipleValues,
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
                                 IncludeLabelText = true,
-                                Multiple = MultipleType.SingleLabelMultipleValues,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -1092,7 +1094,8 @@ public static class LabelConfiguration
                                             {
                                                 Name = "PurposeConditionSub",
                                                 Text = [new("and ")],
-                                                Position = LabelPosition.Split
+                                                Position = LabelPosition.Split,
+                                                Multiple = MultipleType.SingleLabelMultipleValues
                                             }
                                         ]
                                     },
@@ -1157,7 +1160,8 @@ public static class LabelConfiguration
                                             {
                                                 Name = "PointConditionSub",
                                                 Text = [new("and ")],
-                                                Position = LabelPosition.Split
+                                                Position = LabelPosition.Split,
+                                                Multiple = MultipleType.SingleLabelMultipleValues
                                             }
                                         ]
                                     },
@@ -1190,8 +1194,7 @@ public static class LabelConfiguration
                                             new("and under license ") // spelling mistake in licence                                    
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = "LicenceNumberFilename",
-                                        Multiple = MultipleType.SingleLabelMultipleValues
+                                        Format = "LicenceNumberFilename"
                                     },
                                     new()
                                     {

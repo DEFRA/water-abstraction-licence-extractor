@@ -683,7 +683,7 @@ public class PdfDataExtractorService(
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
-
+                    
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {
                         partialLine = null;
@@ -802,7 +802,9 @@ public class PdfDataExtractorService(
                             return returnList;
                         }
                         
-                        if (matchedLabel.Multiple is MultipleType.SingleLabelMultipleValues)
+                        if (matchedLabel.Multiple is MultipleType.SingleLabelMultipleValues
+                            && !ifMultiplePreferLast
+                            && !ifMultiplePreferLongest)
                         {
                             return returnList;
                         }

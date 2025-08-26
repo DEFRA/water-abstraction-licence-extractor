@@ -42,7 +42,7 @@ public static class TextToFindIsBetweenLabels
                 /*(request.label.IncludeLabelText && tuple.Label.Position == LabelPosition.ActuallyLabel)
                 ||*/ tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
                     or LabelPosition.TextToFindIsBetweenLabels)
-            /*.OrderBy(x =>
+            .OrderBy(x =>
             {
                 return x.Label.Position switch
                 {
@@ -52,7 +52,7 @@ public static class TextToFindIsBetweenLabels
                     LabelPosition.LabelIsBeforeTextToFind => 1,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-            })*/
+            })
             .Select(x => x.Text)
             .ToArray();
         

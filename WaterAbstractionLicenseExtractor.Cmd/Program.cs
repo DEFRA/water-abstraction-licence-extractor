@@ -399,19 +399,22 @@ async Task HandleFileAsync(
             .Where(x => x.MatchedLabel!.Name == "PurposePointGroup");
 
         var purposeSb = new StringBuilder();
-        
-        foreach (var purposePointGroup in purposePointGroups!)
-        {
-            var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purpose");
 
-            foreach (var purpose in purposes!)
+        if (purposePointGroups != null)
+        {
+            foreach (var purposePointGroup in purposePointGroups)
             {
-                var t1 = purpose.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPoints");
-                    
-                var t = string.Join(' ', t1?.Text?.Select(y => y.Text).ToArray()!);
-                purposeSb.AppendLine("<li>" + t + "</li>");
+                var purposes = purposePointGroup.SubResults
+                    .Where(x => x.MatchedLabel!.Name == "Purpose");
+
+                foreach (var purpose in purposes!)
+                {
+                    var t1 = purpose.SubResults
+                        .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPoints");
+
+                    var t = string.Join(' ', t1?.Text?.Select(y => y.Text).ToArray()!);
+                    purposeSb.AppendLine("<li>" + t + "</li>");
+                }
             }
         }
 
@@ -435,8 +438,11 @@ async Task HandleFileAsync(
                     var t1 = point.SubResults
                         .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPurposeAndPoint");
 
-                    var t = string.Join(' ', t1?.Text?.Select(y => y.Text).ToArray()!);
-                    pointsSb.AppendLine("<li>" + t + "</li>");
+                    if (t1?.Text != null)
+                    {
+                        var t = string.Join(' ', t1.Text?.Select(y => y.Text).ToArray()!);
+                        pointsSb.AppendLine("<li>" + t + "</li>");
+                    }
                 }
             }
         }
@@ -598,7 +604,7 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(20).ToList();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains(".3-licence-07.02.2023.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

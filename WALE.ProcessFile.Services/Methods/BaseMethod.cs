@@ -21,7 +21,7 @@ public static class BaseMethod
         switch (request.label.Format)
         {
             case DateOrPurpose.Constant:
-                if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines))
+                if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines)) // TODO when just want one column, this function should get it
                 {
                     matchedLines = RestrictToPossibilities(request, matchedLines);
                     

@@ -3323,5 +3323,16 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
+    }
+    
+    [Fact]
+    public async Task When_FileThatErrored_ThenY()
+    {
+        // Arrange
+        const string filename = "Application - Minor Variation -Application New Licence Issued 28_04_2021 00_00_00 11794555.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        Assert.Equal(10, resultFull.Matches?.Count);
     }    
 }

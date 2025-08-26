@@ -558,6 +558,9 @@ public static class LabelConfiguration
                     new("licence no."),
                     new("Licence number: ")
                 ],
+                Remove = [
+                    new("Licence ")
+                ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Format = "LicenceNumber"
             }

@@ -13,17 +13,6 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
-        if (request.label.Name == "Issuer")
-        {
-            if (request.textBeforeAtAndAfterLabel?.Any() != true)
-            {
-                request.textBeforeAtAndAfterLabel = new List<(string Text, LabelToMatch Label)>
-                {
-                    (request.label.Text?.FirstOrDefault()?.Text, request.label)!
-                }!;
-            }
-        }
         
         var returnListTop = new List<LabelGroupResult>();
         
@@ -32,6 +21,15 @@ public static class ApplicableToMost
             or LabelPosition.RelatedCategoryPosition)
         {
             return returnListTop;
+        }
+        
+        if (request.textBeforeAtAndAfterLabel?.Any() != true
+            && request.line?.Text.Equals(request.label.Text?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            request.textBeforeAtAndAfterLabel = new List<(string Text, LabelToMatch Label)>
+            {
+                (request.label.Text?.FirstOrDefault()?.Text, request.label)!
+            }!;
         }
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAtAndAfterLabel!))

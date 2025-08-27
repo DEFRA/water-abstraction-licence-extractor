@@ -8,7 +8,12 @@ public static class FileHelper
         const char extensionSeperator = '.';
         const char compositeCharacter = '-';
         
-        var filenameParts = pdfFilePath.Split(pathSeparator).Last().Split(extensionSeperator);
+        var filenameParts = pdfFilePath
+            .Replace("–", "-")
+            .Split(pathSeparator)
+            .Last()
+            .Split(extensionSeperator);
+        
         return string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
     }
 }

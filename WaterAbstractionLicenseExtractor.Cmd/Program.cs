@@ -90,7 +90,9 @@ var fileMappingContents = File.Exists(fileMappingPath)
     : [];
 
 Copy(reportTemplatePath, outputFolder);
+
 File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
+File.Move($"{outputFolder}list-template.html", $"{outputFolder}index.html", true);
 
 var count = 0;
 foreach (var line in fileMappingContents)
@@ -148,34 +150,6 @@ var resultFileStringBuilder = new StringBuilder(
 var mappingFileStringBuilder = new StringBuilder(
     "Filename,LicenceNumber");
 
-var indexFileStringBuilder = new StringBuilder("<html><head>");
-indexFileStringBuilder.AppendLine("<style>table thead tr td { font-weight: bold; } table tbody tr { max-height: 40px; vertical-align: top; } table td { padding: 5px; }");
-indexFileStringBuilder.AppendLine("</style");
-indexFileStringBuilder.AppendLine("</head>");
-
-indexFileStringBuilder.AppendLine("<body>");
-indexFileStringBuilder.AppendLine("<h1>All licences</h1>");
-
-indexFileStringBuilder.AppendLine("<table>");
-indexFileStringBuilder.AppendLine("<thead>");
-indexFileStringBuilder.AppendLine("<tr>");
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Preview</td>");
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Filename</td>"); // 15
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence number</td>"); // 25
-indexFileStringBuilder.AppendLine("<td style='width: 10%'>Licence holder</td>"); // 35
-indexFileStringBuilder.AppendLine("<td style='width: 15%'>Purposes</td>"); // 50
-indexFileStringBuilder.AppendLine("<td style='width: 15%'>Points</td>"); // 70
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Abstraction limits</td>"); // 75
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Aggregates</td>"); // 80
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Scanned file</td>"); // 85
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issue date</td>"); // 90
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Issuer</td>"); // 95
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Means of abstraction</td>"); // 100
-indexFileStringBuilder.AppendLine("<td style='width: 5%'>Linked&nbsp;licences</td>"); // 105
-indexFileStringBuilder.AppendLine("</tr>");
-indexFileStringBuilder.AppendLine("</thead>");
-indexFileStringBuilder.AppendLine("<tbody>");
-
 var filenameToLicenceNumberMap = new Dictionary<string, string>();
 var licenceNumberToFilenameMap = new Dictionary<string, string>();
 var fileCount = 1;
@@ -196,6 +170,9 @@ var nodeIndex = 1;
 var nodesDictionaries = new List<Dictionary<string, object>>();
 var linksDictionaries = new List<Dictionary<string, object>>();
 
+var listJsStringBuilder = new StringBuilder("var data = [\n");
+var first = true;
+
 foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 {
     var anyLinkedLicenceNumbers = outputLine.LinkedLicenceNumbers?
@@ -209,9 +186,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsFound}," +
         $"{outputLine.LinkedLicenceNumbers},{anyLinkedLicenceNumbers}",
         resultFileStringBuilder);
-
-    var color = fileCount % 2 == 0 ? "#F6F6F6" : "#FAFAFA";
-    var backgroundCss = $"style='background-color: {color}'";
+    
     var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
     var filenameForScreen = outputLine.Filename;
 
@@ -219,24 +194,32 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     {
         filenameForScreen = filenameForScreen[..30] + "-<br>" + filenameForScreen[30..];
     }
-    
-    indexFileStringBuilder.AppendLine($"<tr {backgroundCss}>");
-    indexFileStringBuilder.AppendLine($"<td style='text-align: center'><img src='{filename}/PdfPig/Images/page-1.jpg' style='height: 80px' alt='No image found' onerror='this.style.display=\"none\"' /></td>");
-    /*indexFileStringBuilder.AppendLine($"<td>{fileCount}</td>");*/
-    indexFileStringBuilder.AppendLine($"<td><a href='report.html?filename={filename}'>{filenameForScreen}</a></td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.Purposes}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.Points}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.LimitsFound}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.AggregatesFound}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.Ocr == "OCR"}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.IssueDate ?? "--"}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.Issuer ?? "--"}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{outputLine.MeansFound}</td>");
-    indexFileStringBuilder.AppendLine($"<td>{!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--"}</td>");
-    indexFileStringBuilder.AppendLine("</tr>");
 
+    if (first)
+    {
+        first = false;
+    }
+    else
+    {
+        listJsStringBuilder.AppendLine(",");
+    }
+    
+    listJsStringBuilder.AppendLine("\t{");
+    listJsStringBuilder.AppendLine($"\t\t\"imagePath\": \"{filename}/PdfPig/Images/page-1.jpg\",");
+    listJsStringBuilder.AppendLine($"\t\t\"filename\": \"{filename}\",");
+    listJsStringBuilder.AppendLine($"\t\t\"licenceNumber\": \"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}\",");
+    listJsStringBuilder.AppendLine($"\t\t\"licenceHolder\": \"{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}\",");
+    listJsStringBuilder.AppendLine($"\t\t\"purposes\": {outputLine.Purposes},");
+    listJsStringBuilder.AppendLine($"\t\t\"points\": {outputLine.Points},");
+    listJsStringBuilder.AppendLine($"\t\t\"limitsFound\": {outputLine.LimitsFound.ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"aggregatesFound\": {outputLine.AggregatesFound.ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"ocr\": {(outputLine.Ocr == "OCR").ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"issueDate\": \"{outputLine.IssueDate}\",");
+    listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
+    listJsStringBuilder.AppendLine($"\t\t\"meansFound\": {outputLine.MeansFound.ToString().ToLower()},"); 
+    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {(!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--").ToString().ToLower()},");
+    listJsStringBuilder.Append("\t}");
+    
     if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
         && outputLine.LicenceNumber != "--") licenceNumberFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
@@ -278,6 +261,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     fileCount += 1;
 }
 
+listJsStringBuilder.Append("\n];");
+
 foreach (var outputLine in outputLines)
 {
     if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers))
@@ -297,26 +282,6 @@ foreach (var outputLine in outputLines)
         }
     }
 }
-
-indexFileStringBuilder.AppendLine("<tr style='font-weight: bold;'>");
-indexFileStringBuilder.AppendLine("<td>Total</td>");
-/*indexFileStringBuilder.AppendLine("<td></td>");*/
-indexFileStringBuilder.AppendLine($"<td>{fileCount-1}</td>");
-indexFileStringBuilder.AppendLine($"<td>{licenceNumberFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{licenceHolderFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{purposesFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{pointsFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{limitsFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{aggregatesFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{scannedCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{issueDateFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{issuerFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{meansFoundCount}</td>");
-indexFileStringBuilder.AppendLine($"<td>{linkedLicenceNumbersFoundCount}</td>");
-indexFileStringBuilder.AppendLine("</tr>");
-
-indexFileStringBuilder.AppendLine("</tbody>");
-indexFileStringBuilder.AppendLine("</table>");
 
 Directory.CreateDirectory($"{outputFolder}Additional");
 
@@ -343,11 +308,8 @@ if (regenerateMappingJson)
 #pragma warning restore CS0162 // Unreachable code detected
 */
 
-indexFileStringBuilder.AppendLine("<ul>");
-indexFileStringBuilder.AppendLine("</body></html>");
-
-var indexFilePath = $"{outputFolder}index.html";
-File.WriteAllText(indexFilePath, indexFileStringBuilder.ToString());
+var jsListFilePath = $"{outputFolder}list-data.js";
+File.WriteAllText(jsListFilePath, listJsStringBuilder.ToString());
 
 var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
 {
@@ -373,7 +335,12 @@ async Task HandleFileAsync(
     Dictionary<string, string> licenceMapping)
 {
     var dtStart = DateTime.Now;
-    var fileName = pdfFilePath.Split('/').Last();
+    var fileName = pdfFilePath.Split('/').Last().Replace("–", "-");
+
+    if (fileName.Contains("03286902901r01"))
+    {
+        
+    }
     
     Console.WriteLine($"Attempting {fileNumber} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
@@ -407,6 +374,8 @@ async Task HandleFileAsync(
 
         if (purposePointGroups != null)
         {
+            var first = true;
+            
             foreach (var purposePointGroup in purposePointGroups)
             {
                 var purposes = purposePointGroup.SubResults
@@ -421,13 +390,22 @@ async Task HandleFileAsync(
 
                     if (ary != null)
                     {
-                        purposeSb.AppendLine("<li>" + string.Join(' ', ary) + "</li>");
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            purposeSb.Append(",");
+                        }
+                        
+                        purposeSb.AppendLine("\"" + string.Join(' ', ary).Replace("\"", "\\\"") + "\"");
                     }
                 }
             }
         }
 
-        var purposesHtml = "<ul>" + purposeSb + "</ul>";
+        var purposesJs = "[" + purposeSb + "]";
         
         var pointsSection = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var pointPurposeGroups = pointsSection?.SubResults
@@ -437,6 +415,8 @@ async Task HandleFileAsync(
 
         if (pointPurposeGroups != null)
         {
+            var first = true;
+            
             foreach (var pointPurposeGroup in pointPurposeGroups)
             {
                 var points = pointPurposeGroup.SubResults
@@ -449,17 +429,26 @@ async Task HandleFileAsync(
 
                     if (t1?.Text != null)
                     {
-                        var t = string.Join(' ', t1.Text?.Select(y => y.Text).ToArray()!);
-                        pointsSb.AppendLine("<li>" + t + "</li>");
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            pointsSb.Append(",");
+                        }
+                        
+                        var t = string.Join(' ', t1.Text?.Select(y => y.Text).ToArray()!).Replace("\"", "\\\"");
+                        pointsSb.AppendLine("\"" + t + "\"");
                     }
                 }
             }
         }
 
-        var pointsHtml = "<ul>" + pointsSb + "</ul>";
+        var pointsJs = "[" + pointsSb + "]";
 
         var companyNameMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Company");
-        var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text ?? "--";
+        var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text.Replace("\"", "\\\"") ?? "--";
         var licenceHolderOcrConfidence = companyNameMatch?.Text?.FirstOrDefault()?.OcrConfidence;
         
         var certainty = (int) (companyNameMatch?.MatchType ?? MatchType.NotApplicable) / 100;
@@ -513,12 +502,12 @@ async Task HandleFileAsync(
         {
             LineNumber = completeNumber++,
             StartNumber = fileNumber,
-            Filename = fileName,
+            Filename = fileName.Replace("–", "-"),
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
-            Purposes = purposesHtml,
-            Points = pointsHtml,
+            Purposes = purposesJs,
+            Points = pointsJs,
             ServiceName = serviceName,
             Certainty = certainty,
             MatchType = companyNameMatch?.MatchType.ToString() ?? "N/A",
@@ -621,7 +610,7 @@ IEnumerable<string> GetPdfPaths()
         var filename = x.Split('/').Last();
         return YorkshireFiles().Contains(x, StringComparer.InvariantCultureIgnoreCase);
     }).OrderBy(x => x).Skip(0).Take(200).ToList();*/
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(50).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     

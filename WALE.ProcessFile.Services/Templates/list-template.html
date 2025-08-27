@@ -1,0 +1,138 @@
+<html lang="en">
+<head>
+    <style>
+        table thead tr td { font-weight: bold; }
+    
+        table tbody tr { max-height: 40px; vertical-align: top; }
+        table td { padding: 5px; }
+    </style>
+    
+    <title>Water licences list</title>
+</head>
+<body>
+    <h1>All licences</h1>
+    
+    <table>
+        <thead>
+        <tr>
+            <td></td>
+            <td></td>
+            <td>
+                <select id="licence-number-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="licence-holder-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>                    
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="purposes-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="points-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="limits-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>True</option>
+                    <option>False</option>
+                </select>
+            </td>
+            <td>
+                <select id="aggregates-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>True</option>
+                    <option>False</option>
+                </select>
+            </td>
+            <td>
+                <select id="ocr-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>True</option>
+                    <option>False</option>
+                </select>
+            </td>
+            <td>
+                <select id="issue-date-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="issuer-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>Not empty</option>
+                    <option>--</option>
+                </select>
+            </td>
+            <td>
+                <select id="means-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>True</option>
+                    <option>False</option>
+                </select>
+            </td>
+            <td>
+                <select id="linked-licences-filter" style="width: 100%">
+                    <option>All</option>
+                    <option>True</option>
+                    <option>False</option>
+                </select>
+            </td>            
+        </tr>
+        <tr>
+            <td style='width: 5%'>Preview</td>
+            <td style='width: 10%'>Filename</td>
+            <td style='width: 10%'>Licence number</td>
+            <td style='width: 10%'>Licence holder</td>
+            <td style='width: 15%'>Purposes</td>
+            <td style='width: 15%'>Points</td>
+            <td style='width: 5%'>Abstraction limits</td>
+            <td style='width: 5%'>Aggregates</td>
+            <td style='width: 5%'>Scanned file</td>
+            <td style='width: 5%'>Issue date</td>
+            <td style='width: 5%'>Issuer</td>
+            <td style='width: 5%'>Means of abstraction</td>
+            <td style='width: 5%'>Linked&nbsp;licences</td>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style='font-weight: bold;'>
+                <td>Total</td>
+                <td id="filename-total"></td>
+                <td id="licence-number-total"></td>
+                <td id="licence-holder-total"></td>
+                <td id="purposes-total"></td>
+                <td id="points-total"></td>
+                <td id="limits-total"></td>
+                <td id="aggregates-total"></td>
+                <td id="ocr-total"></td>
+                <td id="issue-date-total"></td>
+                <td id="issuer-total"></td>
+                <td id="means-total"></td>
+                <td id="linked-licences-total"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <script src="list-data.js"></script>
+    <script src="Assets/list.js"></script>
+</body>
+</html>

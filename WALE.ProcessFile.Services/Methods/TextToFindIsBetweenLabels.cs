@@ -37,29 +37,13 @@ public static class TextToFindIsBetweenLabels
 
         linesToUse.AddRange(request.nextLines!);
 
-        var beforeStuff = request.textBeforeAtAndAfterLabel!
-            .Where(tuple =>
-                /*(request.label.IncludeLabelText && tuple.Label.Position == LabelPosition.ActuallyLabel)
-                ||*/ tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
-                    or LabelPosition.TextToFindIsBetweenLabels)
-            .OrderBy(x =>
-            {
-                return x.Label.Position switch
-                {
-                    LabelPosition.LabelIsAfterTextToFind => -2,
-                    LabelPosition.ActuallyLabel => -1,
-                    LabelPosition.TextToFindIsBetweenLabels => 0,
-                    LabelPosition.LabelIsBeforeTextToFind => 1,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            })
-            .Select(x => x.Text)
-            .ToArray();
-        
-        var lineBeforeText = string.Join(' ', beforeStuff);
+        var lineBeforeText = DataHelper.GetTextBeforeAtAndAfterLabelAsSingleString(
+            request.textBeforeAtAndAfterLabel,
+            false);
         
         var beforeTextContainsLabel = request.label.Text?.Any(labelText =>
-            lineBeforeText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase));
+            ((!labelText.LineMustStartWith && !labelText.ColumnMustStartWith) && lineBeforeText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
+            || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith) && lineBeforeText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
         
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
@@ -82,15 +66,16 @@ public static class TextToFindIsBetweenLabels
             && !labelLineAlreadyIncluded
             && beforeTextContainsLabel != true)
         {
-            var firstBetweenLine = betweenText[0];
-            var firstColumn = firstBetweenLine.Columns[0];
-            
-            var labelText = request.label.Text!.FirstOrDefault()?.Text;
+            var labelText =
+                request.textBeforeAtAndAfterLabel?.FirstOrDefault(x => x.Label.Position == LabelPosition.ActuallyLabel).Text;
 
-            if (labelText != "[START_OF_BLOCK]")
+            if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {
-                var text = $"{labelText!} {firstColumn.Text}";
-                betweenText[0].Columns[0] = new DocumentLineColumn(text);   
+                var firstBetweenLine = betweenText[0];
+                var firstColumn = firstBetweenLine.Columns[0];
+
+                var text = $"{labelText} {firstColumn.Text}";
+                betweenText[0].Columns[0] = new DocumentLineColumn(text);
             }
         }
 
@@ -145,11 +130,6 @@ public static class TextToFindIsBetweenLabels
         if (isForbidden && betweenText.Count == 0)
         {
             return Task.FromResult(new List<LabelGroupResult>());
-        }
-        
-        if (request.label.Name == "Point")
-        {
-            
         }
         
         labelGroupResult.Text = betweenText.ToList();

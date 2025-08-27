@@ -710,7 +710,7 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
+                    
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
 

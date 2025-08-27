@@ -13,11 +13,6 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
-        if (request.label.Format == "CompanyName")
-        {
-            
-        }
-        
         /*if (LabelMatchingHelper.ContainsForbiddenText(request.line, request.label))
         {
             return ProcessSubLabelsAsync(request, []);

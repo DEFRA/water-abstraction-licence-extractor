@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
@@ -72,6 +73,32 @@ public static partial class DataHelper
 
         removesUsed = removesUsedList;
         return FormattingHelper.RemoveMultipleBlankLines(returnList);
+    }
+
+    public static string GetTextBeforeAtAndAfterLabelAsSingleString(
+        List<(string? Text, LabelToMatch Label)>? textBeforeAtAndAfterLabel,
+        bool includeLabelText)
+    {
+        var beforeStuff = textBeforeAtAndAfterLabel!
+            .Where(tuple =>
+                (includeLabelText && tuple.Label.Position == LabelPosition.ActuallyLabel)
+                    || tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
+                        or LabelPosition.TextToFindIsBetweenLabels)
+            .OrderBy(x =>
+            {
+                return x.Label.Position switch
+                {
+                    LabelPosition.LabelIsAfterTextToFind => -2,
+                    LabelPosition.ActuallyLabel => -1,
+                    LabelPosition.TextToFindIsBetweenLabels => 0,
+                    LabelPosition.LabelIsBeforeTextToFind => 1,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            })
+            .Select(x => x.Text)
+            .ToArray();
+        
+        return string.Join(' ', beforeStuff);
     }
     
     public static string RemoveExcludes(

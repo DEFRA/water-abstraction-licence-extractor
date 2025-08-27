@@ -178,12 +178,22 @@ public class PdfDataExtractorService(
                         returnResult.ServicesUsed.Add(ocrService.Name);
                     }
 
-                    serviceImageLines =
-                        (await ocrService.GetTextLinesFromImageAsync(
-                            imageFilename,
-                            pageNumber,
-                            pageImageNumber++,
-                            pdfDocument)).ToList();
+                    try
+                    {
+                        serviceImageLines =
+                            (await ocrService.GetTextLinesFromImageAsync(
+                                imageFilename,
+                                pageNumber,
+                                pageImageNumber++,
+                                pdfDocument)).ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        serviceImageLines = [];
+                        
+                        Console.WriteLine(ex);
+                        // TODO proper logging somewhere
+                    }
                     
                     var allLinesSoFar = documentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);

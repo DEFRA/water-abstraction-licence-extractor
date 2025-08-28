@@ -87,6 +87,14 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 if (filterValue === 'empty' && value !== '') {
                     continue;
                 }
+            } else if (filterType === 'EmptyOrNotArray') {
+                if (filterValue === 'populated' && value.length === 0) {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value.length > 0) {
+                    continue;
+                }
             } else if (value !== filterValue) {
                 continue;
             }
@@ -119,14 +127,14 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
-            "<td>" + item.licenceNumber + "</td>" +
-            "<td>" + item.licenceHolder + "</td>" +
-            "<td>" + purposesSb.join('') + "</td>" +
-            "<td>" + pointsSb.join('') + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
+            "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + "</td>" +
+            "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + "</td>" +
             "<td>" + (item.limitsFound ? "True" : "False") + "</td>" +
             "<td>" + (item.aggregatesFound ? "True" : "False") + "</td>" +
             "<td>" + (item.ocr ? "True" : "False") + "</td>" +
-            "<td>" + item.issueDate + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.issueDate) + "</td>" +
             "<td>" + item.issuer + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + "</td>" +
             "<td>" + (item.linkedLicences ? "True" : "False") + "</td>" +
@@ -136,6 +144,14 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
     }
 
     tbody1.innerHTML = htmlSb.join('');
+}
+
+function dashesIfNullOrEmpty(str) {
+    if (str == null || str === '') {
+        return "--";
+    }
+    
+    return str;
 }
 
 function addChangeEvent(select) {
@@ -187,7 +203,7 @@ function populateDropdowns() {
     let uniqueValues = [];
 
     let issuerSb = [];
-    issuerSb.push('<option>All</option>');
+    issuerSb.push('<option value="All">All</option>');
     
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
@@ -211,7 +227,7 @@ function populateDropdowns() {
     uniqueValues = [];
 
     let issueDateSb = [];
-    issueDateSb.push('<option>All</option>');
+    issueDateSb.push('<option value="All">All</option>');
 
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
@@ -232,6 +248,7 @@ function populateDropdowns() {
             issueDateSb.push('<option value="' + year + '">' + year + '</option>')
         }
     }
-    
+
+    issueDateSb.push('<option value="">--</option>');
     issueDateFilter.innerHTML = issueDateSb.join('');
 }

@@ -217,25 +217,25 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     listJsStringBuilder.AppendLine($"\t\t\"issueDate\": \"{outputLine.IssueDate}\",");
     listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
     listJsStringBuilder.AppendLine($"\t\t\"meansFound\": {outputLine.MeansFound.ToString().ToLower()},"); 
-    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {(!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != "--").ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {(!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != string.Empty).ToString().ToLower()},");
     listJsStringBuilder.Append("\t}");
     
     if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
-        && outputLine.LicenceNumber != "--") licenceNumberFoundCount++;
+        && outputLine.LicenceNumber != string.Empty) licenceNumberFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
-        && outputLine.LicenceHolder != "--") licenceHolderFoundCount++;
+        && outputLine.LicenceHolder != string.Empty) licenceHolderFoundCount++;
     if (outputLine.Ocr == "OCR") scannedCount++;
     if (!string.IsNullOrEmpty(outputLine.Purposes)
-        && outputLine.Purposes != "--") purposesFoundCount++;
+        && outputLine.Purposes != string.Empty) purposesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.Points)
-        && outputLine.Points != "--") pointsFoundCount++;
+        && outputLine.Points != string.Empty) pointsFoundCount++;
     if (outputLine.LimitsFound) limitsFoundCount++;
     if (outputLine.AggregatesFound) aggregatesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers)
-        && outputLine.LinkedLicenceNumbers != "--") linkedLicenceNumbersFoundCount++;
+        && outputLine.LinkedLicenceNumbers != string.Empty) linkedLicenceNumbersFoundCount++;
     
     if (outputLine.LicenceNumber != null)
     {
@@ -246,7 +246,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     outputLine.NodeId = nodeIndex++;
     var nodeName = outputLine.Filename!;
 
-    if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != "--")
+    if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != string.Empty)
     {
         nodeName = outputLine.LicenceNumber;
     }
@@ -448,11 +448,11 @@ async Task HandleFileAsync(
         var pointsJs = "[" + pointsSb + "]";
 
         var companyNameMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Company");
-        var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text.Replace("\"", "\\\"") ?? "--";
+        var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text.Replace("\"", "\\\"") ?? string.Empty;
         var licenceHolderOcrConfidence = companyNameMatch?.Text?.FirstOrDefault()?.OcrConfidence;
         
         var certainty = (int) (companyNameMatch?.MatchType ?? MatchType.NotApplicable) / 100;
-        var ocr = companyNameMatch?.IsOcr == true ? "OCR" : "NoOCR";
+        var ocr = matchesFull.ScannedFile ? "OCR" : "NoOCR";
 
         var serviceName = companyNameMatch?.ServiceName ?? "PdfPig";
 
@@ -467,17 +467,17 @@ async Task HandleFileAsync(
         
         var linkedLicenceNumbers = linkedLicenceNumbersList != null ?
             string.Join("|", linkedLicenceNumbersList.Select(x => x?.Text).ToArray())
-            : "--";
+            : string.Empty;
 
         var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
-        var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? "--";
+        var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
         var matchedLabelPosition = companyNameMatch?.MatchedLabel?.Position.ToString();
 
         var licenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
             .Text?
             .FirstOrDefault()?
-            .Text ?? "--";
+            .Text ?? string.Empty;
 
         var licenceNumberOcrConfidence = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -519,7 +519,7 @@ async Task HandleFileAsync(
             LimitsFound = limitsFound,
             AggregatesFound = aggregatesFound,
             IssueDate = issueDate,
-            Issuer = !string.IsNullOrEmpty(issuer) ? issuer : "--",
+            Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,
             LinkedLicenceNumbers = linkedLicenceNumbers
         });
@@ -610,7 +610,7 @@ IEnumerable<string> GetPdfPaths()
     {
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(200).ToList();
+    }).OrderBy(x => x).Skip(0).Take(100).ToList();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(50).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();

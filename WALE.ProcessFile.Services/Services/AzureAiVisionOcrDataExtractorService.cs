@@ -1,10 +1,12 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Tesseract;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -36,10 +38,46 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         else
         {
             //  TODO - check dimensions are more then X and Y or its pointless
-            
-            await using var stream = new FileStream(imageFilepath, FileMode.Open);
-            var textHeaders = await _client.ReadInStreamAsync(stream);
+            ReadInStreamHeaders? textHeaders;
 
+            try
+            {
+                await using var stream = new FileStream(imageFilepath, FileMode.Open);
+                textHeaders = await _client.ReadInStreamAsync(stream);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ComputerVisionOcrErrorException ocrEx)
+                {
+                    var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
+
+                    if (errorCode == "InvalidImageDimension")
+                    {
+                        await File.WriteAllTextAsync(
+                            outputFilename,
+                            JsonSerializer.Serialize(new ReadResult { Lines = [] },
+                            JsonHelper.GetSerializer()));
+                        
+                        return [];
+                    }
+                }
+                
+                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw;
+                }
+                
+                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
+                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
+                    StringComparison.InvariantCultureIgnoreCase);
+                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+                await using var stream = new FileStream(imageFilenameDeflated, FileMode.Open);
+                textHeaders = await _client.ReadInStreamAsync(stream);
+            }
+            
             const int waitBeforeCheck = 2000;
             await Task.Delay(waitBeforeCheck);
 

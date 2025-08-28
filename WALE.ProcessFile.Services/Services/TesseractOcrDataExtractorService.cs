@@ -5,6 +5,7 @@ using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.TesseractOcr;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -40,7 +41,30 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                 //  TODO - check dimensions are more then X and Y or its pointless
                 
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                using var ocrImage = Pix.LoadFromFile(imageFilename);
+
+                Pix? ocrImage;
+
+                try
+                {
+                    ocrImage = Pix.LoadFromFile(imageFilename);
+                }
+                catch
+                {
+                    if (!imageFilename.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw;
+                    }
+                    
+                    var bytAry = await File.ReadAllBytesAsync(imageFilename);
+                    var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+                    var imageFilenameDeflated = imageFilename.Replace(".jpg", "-deflated.jpg",
+                        StringComparison.InvariantCultureIgnoreCase);
+                    await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+                    ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
+                }
+                
                 using var page = _tesseractEngine.Process(ocrImage);
                 
                 using var iterator = page.GetIterator();

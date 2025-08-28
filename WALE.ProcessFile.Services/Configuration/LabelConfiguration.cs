@@ -49,7 +49,8 @@ public static class LabelConfiguration
                     new("Avon and Dorset River authority"),
                     new("The Somerset River Authority"),
                     new("Southern Water Authority"),
-                    new("Sussex River Authority")
+                    new("Sussex River Authority"),
+                    new("Yorkshire Water Authority")
                 ],
                 Possibilities = [
                     "Environment Agency",
@@ -67,7 +68,8 @@ public static class LabelConfiguration
                     "Avon and Dorset River authority",
                     "The Somerset River Authority",
                     "Southern Water Authority",
-                    "Sussex River Authority"
+                    "Sussex River Authority",
+                    "Yorkshire Water Authority"
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

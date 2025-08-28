@@ -70,11 +70,13 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
     }
 
-    private static byte[] Deflate(byte[] input) // TODO use again
+    public static byte[] Deflate(byte[] input) // TODO use again
     {
         var cutInput = new byte[input.Length - 2];
         Array.Copy(input, 2, cutInput, 0, cutInput.Length);
 
+        var str = System.Text.Encoding.Default.GetString(input);
+        
         var stream = new MemoryStream();
 
         using var compressStream = new MemoryStream(cutInput);

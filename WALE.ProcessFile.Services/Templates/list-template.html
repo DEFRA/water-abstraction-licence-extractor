@@ -5,6 +5,7 @@
     
         table tbody tr { max-height: 40px; vertical-align: top; }
         table td { padding: 5px; }
+        table thead tr a { text-decoration: none; color: #000; }
     </style>
     
     <title>Water licences list</title>
@@ -18,97 +19,97 @@
             <td></td>
             <td></td>
             <td>
-                <select id="licence-number-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>
-                    <option>--</option>
+                <select id="licence-number-filter" data-field="licenceNumber" data-type="EmptyOrNot" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="licence-holder-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>                    
-                    <option>--</option>
+                <select id="licence-holder-filter" data-field="licenceHolder" data-type="EmptyOrNot" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="purposes-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>
-                    <option>--</option>
+                <select id="purposes-filter" data-field="purpose" data-type="EmptyOrNot" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="points-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>
-                    <option>--</option>
+                <select id="points-filter" data-field="points" data-type="EmptyOrNot" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="limits-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>True</option>
-                    <option>False</option>
+                <select id="limits-filter" data-field="limitsFound" data-type="Bool" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
                 </select>
             </td>
             <td>
-                <select id="aggregates-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>True</option>
-                    <option>False</option>
+                <select id="aggregates-filter" data-field="aggregatesFound" data-type="Bool" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
                 </select>
             </td>
             <td>
-                <select id="ocr-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>True</option>
-                    <option>False</option>
+                <select id="ocr-filter" data-field="ocr" data-type="Bool" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
                 </select>
             </td>
             <td>
-                <select id="issue-date-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>
-                    <option>--</option>
+                <select id="issue-date-filter" data-field="issueDate" data-type="Year" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="issuer-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>Not empty</option>
-                    <option>--</option>
+                <select id="issuer-filter" data-field="issuer" data-type="Values" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="means-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>True</option>
-                    <option>False</option>
+                <select id="means-filter" data-field="meansFound" data-type="Bool" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
                 </select>
             </td>
             <td>
-                <select id="linked-licences-filter" style="width: 100%">
-                    <option>All</option>
-                    <option>True</option>
-                    <option>False</option>
+                <select id="linked-licences-filter" data-field="linkedLicences" data-type="Bool" style="width: 100%">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
                 </select>
-            </td>            
+            </td>
         </tr>
         <tr>
-            <td style='width: 5%'>Preview</td>
-            <td style='width: 10%'>Filename</td>
-            <td style='width: 10%'>Licence number</td>
-            <td style='width: 10%'>Licence holder</td>
-            <td style='width: 15%'>Purposes</td>
-            <td style='width: 15%'>Points</td>
-            <td style='width: 5%'>Abstraction limits</td>
-            <td style='width: 5%'>Aggregates</td>
-            <td style='width: 5%'>Scanned file</td>
-            <td style='width: 5%'>Issue date</td>
-            <td style='width: 5%'>Issuer</td>
-            <td style='width: 5%'>Means of abstraction</td>
-            <td style='width: 5%'>Linked&nbsp;licences</td>
+            <td style='width: 5%'>&nbsp;</td>
+            <td style='width: 10%'>Filename <a href="#">&#8693;</a> </td>
+            <td style='width: 10%'>Licence number <a href="#">&#8693;</a> </td>
+            <td style='width: 10%'>Licence holder <a href="#">&#8693;</a> </td>
+            <td style='width: 15%'>Purposes <a href="#">&#8693;</a> </td>
+            <td style='width: 15%'>Points <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Abstraction limits <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Aggregates <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Scanned file <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Issue date <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Issuer <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Means of abstraction <a href="#">&#8693;</a> </td>
+            <td style='width: 5%'>Linked&nbsp;licences <a href="#">&#8693;</a> </td>
         </tr>
         </thead>
         <tbody>

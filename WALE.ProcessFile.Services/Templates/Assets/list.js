@@ -1,21 +1,78 @@
 window.onload = function () {
+    populateTable();
+    setTotals();
+    populateDropdowns();
+    
+    let selects = document.getElementsByTagName("select");
+    
+    for (let i = 0; i < selects.length; i++) {
+        let select = selects[i];
+        addChangeEvent(select);
+    }
+};
+
+function resetFilters(except) {
+    window.resetting = true;
+    let selects = document.getElementsByTagName("select");
+
+    for (let i = 0; i < selects.length; i++) {
+        let select = selects[i];
+        if (select === except) continue;
+        
+        select.selectedIndex = 0;
+    }
+
+    window.resetting = false;
+}
+
+function populateTable(filterField, filterValue, filterType) {
     const tbody1 = document.getElementsByTagName("tbody")[0];
     let htmlSb = [];
 
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
 
+        if (filterField !== undefined && filterValue !== undefined && filterValue !== 'All') {
+            let value = item[filterField];
+            
+            if (filterType === 'Year') {
+                let valueParts = value.split('-');
+                
+                if (valueParts[0] !== filterValue) {
+                    continue;
+                }
+            } else if (filterType === 'Bool') {
+                if (filterValue === 'true' && !value) {
+                    continue;
+                }
+
+                if (filterValue === 'false' && value) {
+                    continue;
+                }
+            } else if (filterType === 'EmptyOrNot') {
+                if (filterValue === 'populated' && value === '') {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value !== '') {
+                    continue;
+                }
+            } else if (value !== filterValue) {
+                continue;
+            }
+        }
+        
         let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
         let backgroundCss = "background-color: " + color;
 
         let purposesSb = [];
         purposesSb.push('<ul>');
-        
+
         for (let j = 0; j < item.purposes.length; j++) {
             let purpose = item.purposes[j];
             purposesSb.push('<li>' + purpose + '</li>');
         }
-        
+
         purposesSb.push('</ul>');
 
         let pointsSb = [];
@@ -26,8 +83,8 @@ window.onload = function () {
             pointsSb.push('<li>' + point + '</li>');
         }
 
-        pointsSb.push('</ul>');        
-                
+        pointsSb.push('</ul>');
+
         let html =
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
@@ -47,12 +104,23 @@ window.onload = function () {
 
         htmlSb.push(html);
     }
-    
-    tbody1.innerHTML = htmlSb.join('');
 
-    setTotals();
-    populateDropdowns();
-};
+    tbody1.innerHTML = htmlSb.join('');
+}
+
+function addChangeEvent(select) {
+    let dataField = select.getAttribute("data-field");
+    let dataType = select.getAttribute("data-type");
+    
+    select.addEventListener("change", function (event) {
+        if (window.resetting) {
+            return;
+        }
+
+        resetFilters(select);
+        populateTable(dataField, event.target.value, dataType);
+    });
+}
 
 function setTotals() {
     document.getElementById('filename-total').innerHTML = getCount('filename', '');
@@ -86,10 +154,10 @@ function getCount(field, comparisonValue) {
 
 function populateDropdowns() {
     let issuersFilter = document.getElementById('issuer-filter');
-    let uniqueValues = []
+    let uniqueValues = [];
 
     let issuerSb = [];
-    issuerSb.push('<option>All</option>')
+    issuerSb.push('<option>All</option>');
     
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
@@ -97,9 +165,43 @@ function populateDropdowns() {
 
         if (uniqueValues.indexOf(value) === -1) {
             uniqueValues.push(value);
-            issuerSb.push('<option>' + value + '</option>')
         }
     }
 
+    uniqueValues.sort();
+
+    for (let i = 0; i < uniqueValues.length; i++) {
+        let value = uniqueValues[i];
+        issuerSb.push('<option value="' + value + '">' + value + '</option>')
+    }
+    
     issuersFilter.innerHTML = issuerSb.join('');
+
+    let issueDateFilter = document.getElementById('issue-date-filter');
+    uniqueValues = [];
+
+    let issueDateSb = [];
+    issueDateSb.push('<option>All</option>');
+
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        let value = item["issueDate"];
+        let year = value.split('-')[0];
+        
+        if (uniqueValues.indexOf(year) === -1 && year !== '') {
+            uniqueValues.push(year);
+        }
+    }
+    
+    uniqueValues.sort();
+
+    for (let i = 0; i < uniqueValues.length; i++) {
+        let year = uniqueValues[i];
+        
+        if (year >= 1900) {
+            issueDateSb.push('<option value="' + year + '">' + year + '</option>')
+        }
+    }
+    
+    issueDateFilter.innerHTML = issueDateSb.join('');
 }

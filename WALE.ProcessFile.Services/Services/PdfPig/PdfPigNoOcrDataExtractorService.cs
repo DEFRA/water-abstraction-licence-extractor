@@ -65,26 +65,23 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         pdfDocument.Pages = pagesList;
         return pdfDocument;
     }
-    
-    public async Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+
+    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(PdfDocument pdfDocument, int pageNumber)
     {
         var imgFolder = pdfDocument.OutputFolder.Replace("//", "/");
         var imgOutputPath = $"/{Name}/Images/";
 
         Directory.CreateDirectory($"{imgFolder}{imgOutputPath}"); // This checks if exists, and creates the whole path too
         
-        var imgOutputFilename = $"/{imgOutputPath}page-{pageNumber}.jpg";
+        return (imgFolder, $"{imgOutputPath}page-{pageNumber}.jpg");
+    }
+    
+    public async Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber)
+    {
+        var (imgFolder, imgOutputFilename) = GetPageScreenshotPath(pdfDocument, pageNumber);
 
         using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
         await SaveAsJpegAsync(memoryStream, $"{imgFolder}{imgOutputFilename}");
-        
-        var page = pdfDocument.Pages[pageNumber - 1];
-        
-        return new PdfPage
-        {
-            Number = pageNumber,
-            NumberOfImages = page.NumberOfImages
-        };
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(

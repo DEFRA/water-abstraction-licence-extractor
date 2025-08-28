@@ -37,19 +37,32 @@ public class PdfDataExtractorService(
         return $"{imagesMetadataFolder}/{PositionConstants.CacheMetadataFilename}";
     }
     
-    private async Task<(ImageMetadata, bool)> GetImageMetadataAsync(PdfDocument pdfDocument)
+    private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
+        GetImageMetadataAsync(PdfDocument pdfDocument)
     {
+        foreach (var page in pdfDocument.Pages)
+        {
+            var path =
+                noOcrDataExtractorService.GetPageScreenshotPath(pdfDocument, page.Number);
+
+            var screenshotPath = path.imgFolder + path.imgOutputFilename;
+            
+            if (!File.Exists(screenshotPath))
+            {
+                await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
+            }
+        }
+
         if (pdfDocument.FromCache)
         {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument), false); // TODO load the cached image metadata new ImageMetadata();
+            // TODO load the cached image metadata new ImageMetadata();
+            return (await LoadImageMetadataFromCacheAsync(pdfDocument), false);
         }
 
         var imagesMetadata = new ImageMetadata();
             
         foreach (var page in pdfDocument.Pages)
         {
-            await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
-            
             var pageImageService = new PdfPigNoOcrPageService(page.PdfPigPage!); // TODO should use the interface (via a factory)
             var metadataPage = new ImageMetadataPage
             {
@@ -104,12 +117,13 @@ public class PdfDataExtractorService(
         
         var documentLines =
             await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
-       
-        // Save all text
-        if (!pdfDocument.FromCache)
+
+        var outputFolderFull = $"{pdfDocument.OutputFolder}/{noOcrDataExtractorService.Name}";
+        var folder = $"{outputFolderFull}/Text";
+        var pageAllPath = $"{folder}/pages-all.txt";
+
+        if (!File.Exists(pageAllPath))
         {
-            var outputFolderFull = $"{pdfDocument.OutputFolder}/{noOcrDataExtractorService.Name}";
-            var folder = $"{outputFolderFull}/Text";
             Directory.CreateDirectory(folder);
             
             await File.WriteAllTextAsync(
@@ -117,7 +131,11 @@ public class PdfDataExtractorService(
                 string.Join("\r\n", documentLines
                     .Select(line => $"{line.LineNumber} {line.Text}")
                     .ToArray()));
-            
+        }
+        
+        // Save all text
+        if (!pdfDocument.FromCache)
+        {
             await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);            
         }
 

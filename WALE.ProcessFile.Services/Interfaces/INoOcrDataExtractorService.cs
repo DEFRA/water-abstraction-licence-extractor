@@ -10,7 +10,9 @@ public interface INoOcrDataExtractorService
     public Task<List<DocumentLine>>
         GetTextLinesFromPdfAsync(PdfDocument pdfDocument);
 
-    public Task<PdfPage> SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
+    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(PdfDocument pdfDocument, int pageNumber);
+    
+    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber);    
     
     public void Release(PdfDocument pdfDocument);
     

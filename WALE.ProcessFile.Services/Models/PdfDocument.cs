@@ -11,9 +11,9 @@ public class PdfDocument
     public bool FromCache { get; }
     public string PdfFilePath { get; }
     public string OutputFolder { get; }
-    public string CacheFolder { get; set; }    
+    public string CacheFolder { get; }
     
-    private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; }
+    private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
     
     public PdfDocument(string pdfFilePath, string outputFolder, string cacheFolder, bool fromCache)
     {
@@ -27,8 +27,18 @@ public class PdfDocument
             return;
         }
         
+        OpenPdfPigDocument();
+    }
+
+    private void OpenPdfPigDocument()
+    {
+        if (PdfPigDocument != null)
+        {
+            return;
+        }
+        
         PdfPigDocument = UglyToad.PdfPig.PdfDocument.Open(
-            pdfFilePath,
+            PdfFilePath,
             new ParsingOptions
             {
                 UseLenientParsing = true,
@@ -50,9 +60,9 @@ public class PdfDocument
                 return _pages;
             }
             
-            if (FromCache)
+            if (FromCache && PdfPigDocument == null)
             {
-                return [];
+                OpenPdfPigDocument();
             }
             
             _pages = PdfPigDocument!.GetPages()
@@ -84,9 +94,9 @@ public class PdfDocument
 
     public SKBitmap GetPageAsSkBitmap(int pageNumber, IColor background)
     {
-        if (FromCache)
+        if (FromCache && PdfPigDocument == null)
         {
-            throw new Exception("Cannot get image from cache");
+            OpenPdfPigDocument();
         }
         
         return PdfPigDocument!.GetPageAsSKBitmap(
@@ -97,7 +107,7 @@ public class PdfDocument
     
     public void Dispose()
     {
-        if (FromCache)
+        if (FromCache && PdfPigDocument == null)
         {
             return;
         }

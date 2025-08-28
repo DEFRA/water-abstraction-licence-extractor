@@ -240,6 +240,7 @@ function populateDropdowns() {
     }
     
     uniqueValues.sort();
+    uniqueValues.reverse();
 
     for (let i = 0; i < uniqueValues.length; i++) {
         let year = uniqueValues[i];

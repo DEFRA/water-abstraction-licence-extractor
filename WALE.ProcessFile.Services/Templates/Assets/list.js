@@ -2,6 +2,9 @@ window.onload = function () {
     populateTable();
     setTotals();
     populateDropdowns();
+
+    window.sortedAsc = true;
+    window.sortedBy = "filename";
     
     let selects = document.getElementsByTagName("select");
     
@@ -25,12 +28,39 @@ function resetFilters(except) {
     window.resetting = false;
 }
 
-function populateTable(filterField, filterValue, filterType) {
+function sortBy(filterField) {
+    let previousSortedAsc = window.sortedAsc;
+    
+    window.sortedAsc = (window.sortedBy !== filterField);
+    if (window.sortedAsc === previousSortedAsc) window.sortedAsc = !window.sortedAsc;
+    
+    window.sortedBy = filterField;
+    
+    populateTable(undefined, undefined, undefined, filterField, sortedAsc);
+}
+
+function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
     const tbody1 = document.getElementsByTagName("tbody")[0];
     let htmlSb = [];
 
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
+    let dataSorted = data.slice(0);
+    
+    if (!!sortByField) {
+        dataSorted.sort(function(a, b) {
+            if (a[sortByField] === b[sortByField]) {
+                return 0;
+            }
+
+            return (a[sortByField] < b[sortByField]) ? -1 : 1;
+        });
+        
+        if (!sortAsc) {
+            dataSorted.reverse();
+        }
+    }
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
 
         if (filterField !== undefined && filterValue !== undefined && filterValue !== 'All') {
             let value = item[filterField];
@@ -118,7 +148,7 @@ function addChangeEvent(select) {
         }
 
         resetFilters(select);
-        populateTable(dataField, event.target.value, dataType);
+        populateTable(dataField, event.target.value, dataType, null);
     });
 }
 

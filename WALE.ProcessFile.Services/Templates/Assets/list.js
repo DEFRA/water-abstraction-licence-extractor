@@ -1,4 +1,11 @@
 window.onload = function () {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(urlSearchParams.entries());
+    
+    if (params["showAll"] === "true") {
+        document.getElementsByTagName("body")[0].className += " show-all";
+    }
+    
     populateTable();
     setTotals();
     populateDropdowns();
@@ -128,7 +135,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
             "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + "</td>" +
-            "<td>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
+            "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + "</td>" +
             "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + "</td>" +
             "<td>" + (item.limitsFound ? "True" : "False") + "</td>" +

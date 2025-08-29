@@ -5,6 +5,9 @@
         table thead tr td { font-weight: bold; }
         table thead tr a { text-decoration: none; color: #000; cursor: pointer; }
         table tbody tr { max-height: 40px; vertical-align: top; }
+
+        .default-hidden { display: none; }
+        .show-all .default-hidden { display: table-cell; }
         
         select { width: 100%; }
     </style>
@@ -26,7 +29,7 @@
                     <option value="empty">--</option>
                 </select>
             </td>
-            <td>
+            <td class="default-hidden">
                 <select id="licence-holder-filter" data-field="licenceHolder" data-type="EmptyOrNot">
                     <option value="all">All</option>
                     <option value="populated">Not empty</option>
@@ -101,7 +104,7 @@
             <td style='width: 5%'>&nbsp;</td>
             <td style='width: 10%'>Filename <a href="javascript: sortBy('filename')">&#8693;</a></td>
             <td style='width: 10%'>Licence number <a href="javascript: sortBy('licenceNumber')">&#8693;</a></td>
-            <td style='width: 10%'>Licence holder <a href="javascript: sortBy('licenceHolder')">&#8693;</a></td>
+            <td style='width: 10%' class="default-hidden">Licence holder <a href="javascript: sortBy('licenceHolder')">&#8693;</a></td>
             <td style='width: 15%'>Purposes <a href="javascript: sortBy('purposes')">&#8693;</a></td>
             <td style='width: 13%'>Points <a href="javascript: sortBy('points')">&#8693;</a></td>
             <td style='width: 7%'>Abstraction limits <a href="javascript: sortBy('limitsFound')">&#8693;</a></td>
@@ -120,7 +123,7 @@
                 <td>Total</td>
                 <td id="filename-total"></td>
                 <td id="licence-number-total"></td>
-                <td id="licence-holder-total"></td>
+                <td id="licence-holder-total" class="default-hidden"></td>
                 <td id="purposes-total"></td>
                 <td id="points-total"></td>
                 <td id="limits-total"></td>

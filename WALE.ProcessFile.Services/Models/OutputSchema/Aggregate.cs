@@ -11,8 +11,8 @@ public class Aggregate
         {
             var primaryType = PrimaryType switch
             {
-                Enums.OutputSchema.PrimaryType.LicenceToLicence => "LL",
-                Enums.OutputSchema.PrimaryType.InLicence => "IL",
+                PrimaryType.LicenceToLicence => "LL",
+                PrimaryType.InLicence => "IL",
                 _ => throw new ArgumentOutOfRangeException()
             };
             

@@ -54,6 +54,7 @@ async Task<List<CsvLine>> GetYorkshire70DataAsync()
         {
             var filename = x.Split('/').Last();
             return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
+            
         })
         .Select(x => x.Split('/').Last())
         .OrderBy(x => x).ToList();

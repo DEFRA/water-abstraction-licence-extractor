@@ -49,11 +49,11 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(7, resultList.Count);
 
-        /*var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("x", issuerResult.Text?.FirstOrDefault()?.Text);*/
+        Assert.Equal("Southern Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -208,7 +208,7 @@ public class AzureAiVisionOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("National Rivers Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("The Somerset River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -524,7 +524,7 @@ public class AzureAiVisionOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -613,7 +613,7 @@ public class AzureAiVisionOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var pointResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         
@@ -663,6 +663,9 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename);
+        
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("YORKSHIRE W", companyName?.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
@@ -760,7 +763,6 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/26/32/126", agreedSchemaLicence.LicenceNumber);
-        Assert.StartsWith("YORKSHIRE W", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2005, 07, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2005, 02, 02), agreedSchemaLicence.LicenceVersion.EffectiveDate);

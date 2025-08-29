@@ -114,12 +114,6 @@ public static class SchemaConverter
         {
             throw new Exception("No match object exists to convert");
         }
-
-        var licenceHolder = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Company")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;        
         
         var licenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -204,7 +198,6 @@ public static class SchemaConverter
         {
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
-            LicenceHolder = licenceHolder,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,

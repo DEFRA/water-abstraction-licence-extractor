@@ -61,7 +61,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -216,7 +216,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -386,7 +386,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -573,7 +573,7 @@ public class PdfPigNoOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -730,7 +730,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1182,7 +1182,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var periodsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         
@@ -1712,7 +1712,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1898,7 +1898,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);          
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);          
         
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction"));
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction"));
@@ -1981,7 +1981,7 @@ public class PdfPigNoOcrPdfTests
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
         Assert.Equal(12, resultList.Count);
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -2064,7 +2064,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
@@ -2305,7 +2305,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -2375,7 +2375,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);          
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);          
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
@@ -2446,7 +2446,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -2516,7 +2516,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -2602,7 +2602,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
@@ -2673,7 +2673,7 @@ public class PdfPigNoOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
@@ -2740,7 +2740,7 @@ public class PdfPigNoOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
 
@@ -2846,7 +2846,7 @@ public class PdfPigNoOcrPdfTests
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -2909,7 +2909,6 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("TH/039/0028/051", agreedSchemaLicence.LicenceNumber);
-        Assert.Equal("Brett Aggregates Limited", agreedSchemaLicence.LicenceHolder);
         Assert.Equal("LV2018110220260331", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         Assert.Equal(new DateTime(2018, 11, 02), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(2026, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
@@ -2931,7 +2930,9 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename);
-        var resultList = resultFull.Matches!;
+
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("South West Water Limited", companyName?.Text?.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
@@ -2940,7 +2941,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("SW0470051003-LV2023020720380331", agreedSchemaLicence.Id);
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("SW/047/0051/003", agreedSchemaLicence.LicenceNumber);
-        Assert.Equal("South West Water Limited", agreedSchemaLicence.LicenceHolder);
         Assert.Equal("LV2023020720380331", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         Assert.Equal(new DateTime(2023, 02, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(2038, 03, 31), agreedSchemaLicence.LicenceVersion.ExpiryDate);
@@ -3034,13 +3034,15 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("2.1. At National Grid Reference TA 04990 38509 at the point marked \"A\" on the", points.Text![1].Text);
         Assert.Equal("map", points.Text![2].Text);
         
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("Lakeminster Park Limited", companyName?.Text?.FirstOrDefault()?.Text);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/26/32/328", agreedSchemaLicence.LicenceNumber);
-        Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -3116,13 +3118,15 @@ public class PdfPigNoOcrPdfTests
             .ToList()
             .Count);
         
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/27/05/026", agreedSchemaLicence.LicenceNumber);
-        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2021, 09, 30), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1965, 12, 07), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2021, 09, 30), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -3215,6 +3219,9 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal(10, points.Text!.Count);
         Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3222,7 +3229,6 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/27/11/065", agreedSchemaLicence.LicenceNumber);
-        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -3297,13 +3303,15 @@ public class PdfPigNoOcrPdfTests
         Assert.StartsWith("A SE 06", pointsAll.First().Text?.FirstOrDefault()?.Text);
         Assert.StartsWith("T SE 02", pointsAll.Last().Text?.FirstOrDefault()?.Text);
         
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/27/11/064", agreedSchemaLicence.LicenceNumber);
-        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2023, 03, 07), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -3358,13 +3366,15 @@ public class PdfPigNoOcrPdfTests
         Assert.StartsWith("2.1 At National Grid Reference ", points.Text![1].Text);
         Assert.StartsWith("2.2 At National Grid Reference ", points.Text![2].Text);
         
+        var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
+        
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("2/27/12/261", agreedSchemaLicence.LicenceNumber);
-        Assert.StartsWith("Yorkshire ", agreedSchemaLicence.LicenceHolder);
         Assert.Equal(new DateTime(2024, 10, 03), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2024, 10, 03), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -3423,6 +3433,6 @@ public class PdfPigNoOcrPdfTests
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
     }    
 }

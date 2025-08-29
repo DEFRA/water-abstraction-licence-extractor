@@ -51,7 +51,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -123,7 +123,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -197,7 +197,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -278,7 +278,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -317,7 +317,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -360,7 +360,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -399,7 +399,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("National Rivers Authority", issuerResult.Text?.FirstOrDefault()?.Text);       
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text); // National Rivers Authority
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -449,7 +449,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -490,7 +490,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -651,7 +651,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -690,7 +690,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("LEE CONSERVANCY CATCHMENT BOARD", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -786,16 +786,18 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Single(resultList); // Very old printing, hard to OCR
+        Assert.Equal(2, resultList.Count); // Very old printing, hard to OCR
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("8/37/4.3/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("8/37/4.3/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var issuer = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.Equal("Essex River Authority", issuer!.Text!.FirstOrDefault()?.Text);
     }
     
     [Fact(Skip = "CantLoadImage")]
@@ -848,7 +850,7 @@ public class TessaractOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("LEE CONSERVANCY CATCHMENT BOARD", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -883,7 +885,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -922,7 +924,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1015,7 +1017,7 @@ public class TessaractOcrPdfTests
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         

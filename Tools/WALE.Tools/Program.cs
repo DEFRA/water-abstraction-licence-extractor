@@ -1,34 +1,181 @@
-﻿using System.Collections;
+﻿using System.ClientModel;
+using System.Collections;
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Azure.AI.OpenAI;
 using CsvHelper;
+using OpenAI.Chat;
+using PDFtoImage;
+using SkiaSharp;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools;
 
-var pdfDataExtractor = new PdfDataExtractorService(
-    new PdfPigNoOcrDataExtractorService(),
-    new List<IOcrDataExtractorService>
-    {
-        new AzureAiVisionOcrDataExtractorService(
-            KeyConfig.AiVisionEndpoint,
-            KeyConfig.AiVisionKey)
-    },
-    KeyConfig.PdfFolder);
+//const string workflow = "GenerateCsvForTesting";
+const string workflow = "TestsForAiPrompts";
 
-var data = await GetYorkshire70DataAsync();
+switch (workflow)
+{
+    case "GenerateCsvForTesting":
+        await GenerateCsvForTestingAsync();
+        break;
+    case "TestsForAiPrompts":
+        await TestsForAiPromptsAsync();
+        break;
+}
 
-await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today.ToString("yyyyMMdd")}.csv");
-await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-
-csv.WriteRecords((IEnumerable)data);
 return;
 
-Task<MatchesResult> GetMatchesAsync(string fileName)
+async Task TestsForAiPromptsAsync()
+{
+    var pdfName =  "2-26-32-126 6937559.PDF";
+    var pdf = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfName);
+    
+    #pragma warning disable CA1416
+    var pageImages = Conversion.ToImages(pdf).ToList();
+    #pragma warning restore CA1416
+
+    var totalPageCount = pageImages.Count;
+
+    var maxImageCount = 25.0;
+    var maxSize = (int)Math.Ceiling(totalPageCount / maxImageCount);
+
+    var pageImageGroups = new List<List<SKBitmap>>();
+    
+    for (var i = 0; i < totalPageCount; i += maxSize)
+    {
+        var pageImageGroup = pageImages
+            .Skip(i)
+            .Take(maxSize)
+            .ToList();
+        
+        pageImageGroups.Add(pageImageGroup);
+    }
+
+    var count = 0;
+    
+    Directory.CreateDirectory("Cache/PDFtoImage/Images");
+
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            $"Extract the data from this licence. " +
+            $"If a value is not present, provide null. " +
+            /*$"Don't include the top level 'Id' property in the response. " +
+            $"Don't include the 'LicenceVersionId' property in the response. " +
+            $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
+            $"Use the following structure: {JsonSerializer.Serialize(Licence.Empty)}")
+    };
+    
+    foreach (var pageImageGroup in pageImageGroups)
+    {
+        var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{count}.jpg";
+
+        var totalHeight = pageImageGroup.Sum(image => image.Height);
+        var width = pageImageGroup.Max(image => image.Width);
+        var stitchedImage = new SKBitmap(width, totalHeight);
+        var canvas = new SKCanvas(stitchedImage);
+        var currentHeight = 0;
+        
+        foreach (var pageImage in pageImageGroup)
+        {
+            canvas.DrawBitmap(pageImage, 0, currentHeight);
+            currentHeight += pageImage.Height;
+        }
+
+        await using (var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write))
+        {
+            stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
+        }
+        
+        var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
+
+        userPrompts.Add(ChatMessageContentPart.CreateImagePart(
+            BinaryData.FromBytes(imageBytes),
+            "image/jpeg",
+            ChatImageDetailLevel.Auto));
+    }
+    
+    var azureClient = new AzureOpenAIClient(
+        new Uri(KeyConfig.OpenAiEndpoint),
+        new ApiKeyCredential(KeyConfig.OpenAiKey));
+    
+    var deploymentName = "gpt-4o";
+    var chatClient = azureClient.GetChatClient(deploymentName);
+    
+    var completionOptions = new ChatCompletionOptions
+    {
+        MaxOutputTokenCount = 16_000
+    };
+
+    var allPrompts = new List<ChatMessage>
+    {
+        new SystemChatMessage(
+            "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block."),
+        new UserChatMessage(userPrompts)
+    };
+    
+    var completionUpdates = chatClient.CompleteChatStreamingAsync(allPrompts, completionOptions);
+    var responseSb = new StringBuilder();
+
+    StreamingChatCompletionUpdate? lastUpdate = null;
+    
+    await foreach (var completionUpdate in completionUpdates)
+    {
+        if (completionUpdate.ContentUpdate.Count > 0)
+        {
+            responseSb.Append(completionUpdate.ContentUpdate[0].Text);
+            lastUpdate = completionUpdate;
+        }
+    }
+
+    var response = responseSb.ToString();
+
+    if (!response.EndsWith('}'))
+    {
+        Console.WriteLine($"ERROR - Malformed JSON returned {lastUpdate!.FinishReason}");
+        Console.Write(response);
+        
+        return;
+    }
+    
+    var schema = JsonSerializer.Deserialize<Licence>(response)!;
+    schema.Filename = pdfName;
+
+    Console.WriteLine("OK");
+    Console.Write(JsonSerializer.Serialize(schema, JsonHelper.GetSerializer()));
+}
+
+async Task GenerateCsvForTestingAsync()
+{
+    var pdfDataExtractor = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new AzureAiVisionOcrDataExtractorService(
+                KeyConfig.AiVisionEndpoint,
+                KeyConfig.AiVisionKey)
+        },
+        KeyConfig.PdfFolder);
+
+    var data = await GetYorkshire70DataAsync(pdfDataExtractor);
+    //var data = awaitGetYorkshire6DataAsync(pdfDataExtractor);
+
+    await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today.ToString("yyyyMMdd")}.csv");
+    await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+    csv.WriteRecords((IEnumerable)data);
+}
+
+Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
 {
     Dictionary<string, string> fileLicenceMapping = new() {{"", ""}};
     var pdfFolder = KeyConfig.PdfFolder;
@@ -43,7 +190,7 @@ Task<MatchesResult> GetMatchesAsync(string fileName)
         [pdfFolder + fileName]);
 }
 
-async Task<List<CsvLine>> GetYorkshire70DataAsync()
+async Task<List<CsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
 {
     var yorkshire = YorkshireFiles();
     
@@ -63,7 +210,7 @@ async Task<List<CsvLine>> GetYorkshire70DataAsync()
     
     foreach (var pdfFilePath in pdfFilePaths)
     {
-        var internalJson = await GetMatchesAsync(pdfFilePath);
+        var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
         var file = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
         
         returnList.Add(new()
@@ -79,24 +226,24 @@ async Task<List<CsvLine>> GetYorkshire70DataAsync()
     return returnList;
 }
 
-async Task<List<CsvLine>> GetYorkshire6DataAsync()
+async Task<List<CsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
 {
-    var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF");
+    var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
     var file1 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
-    internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF");
+    internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
     var file2 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
-    internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf");
+    internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
     var file3 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
-    internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf");
+    internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
     var file4 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
-    internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf");
+    internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
     var file5 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
-    internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf");
+    internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
     var file6 = SchemaConverter.ToLicenceGroup(internalJson).Licences[0];
 
     return

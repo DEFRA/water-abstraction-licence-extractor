@@ -70,4 +70,36 @@ public static class KeyConfig
             return _aiVisionKey;
         }
     }
+    
+    private static string? _openAiEndpoint;
+
+    public static string OpenAiEndpoint
+    {
+        get
+        {
+            if (_openAiEndpoint != null)
+            {
+                return _openAiEndpoint;
+            }
+            
+            _openAiEndpoint = Config["OpenAiEndpoint"]!;
+            return _openAiEndpoint;
+        }
+    }
+    
+    private static string? _openAiKey;
+
+    public static string OpenAiKey
+    {
+        get
+        {
+            if (_openAiKey != null)
+            {
+                return _openAiKey;
+            }
+            
+            _openAiKey = Config["OpenAiKey"]!;
+            return _openAiKey;
+        }
+    }
 }

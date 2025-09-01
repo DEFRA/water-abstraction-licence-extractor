@@ -8,8 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.5.25277.114" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.5.25277.114" />
+        <PackageReference Include="PDFtoImage" Version="5.1.1" />
     </ItemGroup>
 
     <ItemGroup>

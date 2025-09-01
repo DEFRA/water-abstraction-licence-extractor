@@ -1,68 +1,92 @@
-window.aiData['226321266937559'] = {
-  "id": "22632126-LV20050202",
-  "licenceNumber": "2/26/32/126",
-  "filename": "2-26-32-126 6937559.PDF",
+window.aiData['ApplicationNewLicenceIssued30092021'] = {
+  "id": "22705026-LV20210930",
+  "licenceNumber": "2/27/05/026",
+  "filename": "Application - New - Licence Issued 30092021.pdf",
   "licenceVersion": {
-    "licenceVersionId": "LV20050202",
-    "effectiveDate": "2005-02-02T00:00:00",
-    "issueDate": "2005-07-20T00:00:00",
+    "licenceVersionId": "LV20210930",
+    "effectiveDate": "2021-09-30T00:00:00",
+    "issueDate": "2021-09-30T00:00:00",
     "issuer": "Environment Agency",
-    "originalIssueDate": "1966-01-27T00:00:00"
+    "originalIssueDate": "1965-12-07T00:00:00"
   },
   "points": [
     {
-      "naldId": "TA 0417 2942",
+      "naldId": "SE15454 02535",
       "purposeIds": [
         0
       ],
-      "id": "1",
-      "description": "National Grid Reference (1)"
+      "id": "",
+      "description": "Winscar Reservoir"
     },
     {
-      "naldId": "TA 0472 3425",
+      "naldId": "SE15253 01352",
       "purposeIds": [
         0
       ],
-      "id": "2",
-      "description": "National Grid Reference (2)"
+      "id": "",
+      "description": "Upper Windleden Reservoir"
     },
     {
-      "naldId": "TA 0677 3514 \u0026 TA 0678 3508",
+      "naldId": "SE15820 01918",
       "purposeIds": [
         0
       ],
-      "id": "3",
-      "description": "National Grid Reference (3)"
+      "id": "",
+      "description": "Lower Windleden Reservoir"
     },
     {
-      "naldId": "TA 0269 3303 \u0026 TA 0268 3302",
+      "naldId": "SE15192 03582",
       "purposeIds": [
         0
       ],
-      "id": "4",
-      "description": "National Grid Reference (4)"
+      "id": "",
+      "description": "Harden Reservoir"
+    },
+    {
+      "naldId": "SE13596 03969",
+      "purposeIds": [
+        0
+      ],
+      "id": "",
+      "description": "Snailsden Reservoir"
     }
   ],
   "purposes": [
     {
+      "naldId": "",
+      "pointIds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "id": "",
+      "description": "Public water supply"
+    },
+    {
+      "naldId": "SE19743 00686",
       "pointIds": [
         0
       ],
-      "id": "1",
-      "description": "Water undertaking"
+      "id": "",
+      "description": "Transfer from Winscar Reservoir to Langsett Reservoir via Hagg Brook for the purpose of public water supply"
     }
   ],
   "periodsOfAbstraction": [
     {
-      "id": 1,
+      "id": 0,
       "description": "All year",
+      "naldId": "",
       "pointIds": [
+        "0",
         "1",
         "2",
         "3",
         "4"
       ],
       "purposeIds": [
+        "0",
         "1"
       ],
       "periodType": "unknown",
@@ -73,8 +97,8 @@ window.aiData['226321266937559'] = {
   ],
   "meansOfAbstraction": [
     {
-      "id": 1,
-      "description": "Pumping shaft not exceeding 21.7 metres in depth and 4.27 metres in diameter, with a borehole to 71.6 metres connecting to adit at 21 metres",
+      "id": 0,
+      "description": "Valves and pipelines from reservoir",
       "limit": {
         "periodType": "notApplicable",
         "value": 0,
@@ -99,26 +123,8 @@ window.aiData['226321266937559'] = {
     "individual": [
       {
         "periodType": "notApplicable",
-        "value": 45460.92,
-        "units": "cubic metres per day",
-        "points": [
-          {
-            "id": "",
-            "description": ""
-          }
-        ],
-        "purposes": [
-          {
-            "id": "",
-            "description": ""
-          }
-        ],
-        "implicitLimit": false
-      },
-      {
-        "periodType": "notApplicable",
-        "value": 13638276,
-        "units": "cubic metres per year",
+        "value": 0,
+        "units": "",
         "points": [
           {
             "id": "",
@@ -137,6 +143,7 @@ window.aiData['226321266937559'] = {
     "aggregates": [
       {
         "id": "-IL",
+        "aggregateSetId": "",
         "primaryType": "inLicence",
         "naldType": "",
         "purposes": [],

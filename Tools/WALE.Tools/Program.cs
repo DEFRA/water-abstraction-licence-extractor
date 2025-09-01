@@ -45,168 +45,189 @@ async Task TestsForAiPromptsAsync()
         KeyConfig.OutputFolder,
         KeyConfig.CacheFolder,
         true);
-    
-    var pdfName =  "2-26-32-126 6937559.PDF";
-    var pdf = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfName);
-    
-    #pragma warning disable CA1416
-    var pageImages = Conversion.ToImages(pdf).ToList();
-    #pragma warning restore CA1416
 
-    var totalPageCount = pageImages.Count;
-
-    var maxImageCount = 25.0;
-    var maxSize = (int)Math.Ceiling(totalPageCount / maxImageCount);
-
-    var pageImageGroups = new List<List<SKBitmap>>();
-    
-    for (var i = 0; i < totalPageCount; i += maxSize)
+    var pdfs = new List<string>
     {
-        var pageImageGroup = pageImages
-            .Skip(i)
-            .Take(maxSize)
-            .ToList();
-        
-        pageImageGroups.Add(pageImageGroup);
-    }
-
-    var userPrompts = new List<ChatMessageContentPart>
-    {
-        ChatMessageContentPart.CreateTextPart(
-            $"Extract the data from this licence. " +
-            $"If a value is not present, provide null. " +
-            $"For the 'issuer' field, use the agency or company name, rather then a personal name. " +
-            /*$"Don't include the top level 'Id' property in the response. " +
-            $"Don't include the 'LicenceVersionId' property in the response. " +
-            $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
-            $"Use the following structure: {JsonSerializer.Serialize(Licence.Empty)}")
+        /*"2-26-32-126 6937559.PDF",
+        "2-27-29-012 7003124.PDF",
+        "Application - New - Licence Issued 30092021.pdf",
+        "Application Formal Variation Issued Licence 07032023 (1).pdf",
+        "Application Formal Variation Issued Licence 07032023.pdf",*/
+        "Application Minor Variation Issued Licence 03.10.24.pdf"
     };
-    
-    Directory.CreateDirectory("Cache/PDFtoImage/Images");
-    var pageNumber = 0;
-    
-    foreach (var pageImageGroup in pageImageGroups)
+
+    foreach (var pdfName in pdfs)
     {
-        var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
-
-        var regenerateImage = true;
-
-        if (regenerateImage)
+        try
         {
-            var totalHeight = pageImageGroup.Sum(image => image.Height);
-            var width = pageImageGroup.Max(image => image.Width);
-            var stitchedImage = new SKBitmap(width, totalHeight);
-            var canvas = new SKCanvas(stitchedImage);
-            var currentHeight = 0;
+            var pdf = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfName);
 
-            foreach (var pageImage in pageImageGroup)
+            #pragma warning disable CA1416
+            var pageImages = Conversion.ToImages(pdf).ToList();
+            #pragma warning restore CA1416
+
+            var totalPageCount = pageImages.Count;
+
+            var maxImageCount = 25.0;
+            var maxSize = (int)Math.Ceiling(totalPageCount / maxImageCount);
+
+            var pageImageGroups = new List<List<SKBitmap>>();
+
+            for (var i = 0; i < totalPageCount; i += maxSize)
             {
-                canvas.DrawBitmap(pageImage, 0, currentHeight);
-                currentHeight += pageImage.Height;
+                var pageImageGroup = pageImages
+                    .Skip(i)
+                    .Take(maxSize)
+                    .ToList();
+
+                pageImageGroups.Add(pageImageGroup);
             }
 
-            await using var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write);
-            stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
+            var userPrompts = new List<ChatMessageContentPart>
+            {
+                ChatMessageContentPart.CreateTextPart(
+                    $"Extract the data from this licence. " +
+                    $"If a value is not present, provide null. " +
+                    $"For the 'issuer' field, use the agency or company name, rather then a personal name. " +
+                    $"Points refers to 'points of abstraction' - there may be multiple of these. " +
+                    /*$"Don't include the top level 'Id' property in the response. " +
+                    $"Don't include the 'LicenceVersionId' property in the response. " +
+                    $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
+                    $"Use the following structure: {JsonSerializer.Serialize(Licence.Empty)}")
+            };
+
+            Directory.CreateDirectory("Cache/PDFtoImage/Images");
+            var pageNumber = 0;
+
+            foreach (var pageImageGroup in pageImageGroups)
+            {
+                var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
+
+                var regenerateImage = true;
+
+                if (regenerateImage)
+                {
+                    var totalHeight = pageImageGroup.Sum(image => image.Height);
+                    var width = pageImageGroup.Max(image => image.Width);
+                    var stitchedImage = new SKBitmap(width, totalHeight);
+                    var canvas = new SKCanvas(stitchedImage);
+                    var currentHeight = 0;
+
+                    foreach (var pageImage in pageImageGroup)
+                    {
+                        canvas.DrawBitmap(pageImage, 0, currentHeight);
+                        currentHeight += pageImage.Height;
+                    }
+
+                    await using var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write);
+                    stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
+                }
+
+                var lines =
+                    (await tesseractOcr.GetTextLinesFromImageAsync(
+                        pdfImageName,
+                        pageNumber,
+                        1,
+                        mockPdfDocument)).ToList();
+
+                var averageLineLength = lines.Average(line
+                    => line.Text.Length);
+
+                // Short lines indicate it may be a map page, no point processing that
+                if (averageLineLength < 30)
+                {
+                    pageNumber += 1;
+                    continue;
+                }
+
+                var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
+
+                userPrompts.Add(ChatMessageContentPart.CreateImagePart(
+                    BinaryData.FromBytes(imageBytes),
+                    "image/jpeg",
+                    ChatImageDetailLevel.Auto));
+
+                pageNumber += 1;
+            }
+
+            var azureClient = new AzureOpenAIClient(
+                new Uri(KeyConfig.OpenAiEndpoint),
+                new ApiKeyCredential(KeyConfig.OpenAiKey));
+
+            var modelName = "gpt-4o";
+            var deploymentName = "gpt-4o";
+            var chatClient = azureClient.GetChatClient(deploymentName);
+
+            var allPrompts = new List<ChatMessage>
+            {
+                new SystemChatMessage(
+                    "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block."),
+                new UserChatMessage(userPrompts)
+            };
+
+            var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
+            var inputTokenCount = tokenizer.CountTokens(allPrompts[0].Content.ToString()!);
+
+            foreach (var userPrompt in userPrompts)
+            {
+                inputTokenCount += tokenizer.CountTokens(userPrompt.Text);
+            }
+
+            const int maxTokensAllowedForModel = 16_000;
+
+            var completionUpdates = chatClient.CompleteChatStreamingAsync(
+                allPrompts,
+                new ChatCompletionOptions
+                {
+                    MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount
+                });
+
+            var responseSb = new StringBuilder();
+
+            StreamingChatCompletionUpdate? lastUpdate = null;
+
+            await foreach (var completionUpdate in completionUpdates)
+            {
+                if (completionUpdate.ContentUpdate.Count > 0)
+                {
+                    responseSb.Append(completionUpdate.ContentUpdate[0].Text);
+                    lastUpdate = completionUpdate;
+                }
+            }
+
+            var response = responseSb.ToString();
+
+            if (!response.EndsWith('}'))
+            {
+                Console.WriteLine($"ERROR - Malformed JSON returned {lastUpdate!.FinishReason}");
+                Console.Write(response);
+
+                break;
+            }
+
+            var schema = JsonSerializer.Deserialize<Licence>(response)!;
+            schema.Filename = pdfName;
+
+            Console.WriteLine("OK");
+            var filenameNoExtension = pdfName.Split('.').First();
+            var filenameNoSpacesOrDashes = filenameNoExtension
+                .Replace("-", string.Empty)
+                .Replace(" ", string.Empty);
+
+            var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
+            var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
+
+            Console.Write(outputJs);
+            await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
         }
-
-        var lines =
-            (await tesseractOcr.GetTextLinesFromImageAsync(
-                pdfImageName,
-                pageNumber,
-                1,
-                mockPdfDocument)).ToList();
-
-        var averageLineLength = lines.Average(line
-            => line.Text.Length);
-
-        // Short lines indicate it may be a map page, no point processing that
-        if (averageLineLength < 30)
+        catch (Exception e)
         {
-            pageNumber += 1;
-            continue;
+            Console.WriteLine(e);
+            throw;
         }
-        
-        var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
-
-        userPrompts.Add(ChatMessageContentPart.CreateImagePart(
-            BinaryData.FromBytes(imageBytes),
-            "image/jpeg",
-            ChatImageDetailLevel.Auto));
-
-        pageNumber += 1;
     }
-
+    
     tesseractOcr.Dispose();
-    
-    var azureClient = new AzureOpenAIClient(
-        new Uri(KeyConfig.OpenAiEndpoint),
-        new ApiKeyCredential(KeyConfig.OpenAiKey));
-
-    var modelName = "gpt-4o";
-    var deploymentName = "gpt-4o";
-    var chatClient = azureClient.GetChatClient(deploymentName);
-    
-    var allPrompts = new List<ChatMessage>
-    {
-        new SystemChatMessage(
-            "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block."),
-        new UserChatMessage(userPrompts)
-    };
-
-    var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
-    var inputTokenCount = tokenizer.CountTokens(allPrompts[0].Content.ToString()!);
-
-    foreach (var userPrompt in userPrompts)
-    {
-        inputTokenCount += tokenizer.CountTokens(userPrompt.Text);
-    }
-
-    const int maxTokensAllowedForModel = 16_000;
-    
-    var completionUpdates = chatClient.CompleteChatStreamingAsync(
-        allPrompts,
-        new ChatCompletionOptions
-        {
-            MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount
-        });
-    
-    var responseSb = new StringBuilder();
-
-    StreamingChatCompletionUpdate? lastUpdate = null;
-    
-    await foreach (var completionUpdate in completionUpdates)
-    {
-        if (completionUpdate.ContentUpdate.Count > 0)
-        {
-            responseSb.Append(completionUpdate.ContentUpdate[0].Text);
-            lastUpdate = completionUpdate;
-        }
-    }
-
-    var response = responseSb.ToString();
-
-    if (!response.EndsWith('}'))
-    {
-        Console.WriteLine($"ERROR - Malformed JSON returned {lastUpdate!.FinishReason}");
-        Console.Write(response);
-        
-        return;
-    }
-    
-    var schema = JsonSerializer.Deserialize<Licence>(response)!;
-    schema.Filename = pdfName;
-
-    Console.WriteLine("OK");
-    var filenameNoExtension = pdfName.Split('.').First();
-    var filenameNoSpacesOrDashes = filenameNoExtension
-        .Replace("-", string.Empty)
-        .Replace(" ", string.Empty);
-    
-    var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
-    var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
-
-    Console.Write(outputJs);
-    await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
 }
 
 async Task GenerateCsvForTestingAsync()

@@ -1,11 +1,34 @@
 window.onload = function () {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
-    
+
     if (params["showAll"] === "true") {
         document.getElementsByTagName("body")[0].className += " show-all";
     }
+
+    window.aiData = {};
+    let bodyEle = document.getElementsByTagName("body")[0];
+
+    window.loadedOrErrored = 0;
     
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        loadScript(item.filename, bodyEle);
+    }
+    
+    let timeCount = 0;
+
+    let intervalId = setInterval(function () {
+        if (window.loadedOrErrored !== data.length || timeCount++ > 30) return;
+
+        setup();
+
+        clearInterval(intervalId);
+        intervalId = null;
+    }, 100);
+};
+
+function setup() {
     populateTable();
     setTotals();
     populateDropdowns();
@@ -19,7 +42,23 @@ window.onload = function () {
         let select = selects[i];
         addChangeEvent(select);
     }
-};
+}
+
+function loadScript(filename, bodyEle) {
+    let script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = '../Data/' + filename + '.js';
+
+    script.onload = function () {
+        window.loadedOrErrored += 1;
+    };
+    
+    script.onerror = function () {
+        window.loadedOrErrored += 1;
+    }
+
+    bodyEle.appendChild(script);
+}
 
 function resetFilters(except) {
     window.resetting = true;

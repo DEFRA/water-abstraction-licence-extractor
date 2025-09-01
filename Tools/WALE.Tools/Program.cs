@@ -3,9 +3,9 @@ using System.Collections;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.AI.OpenAI;
 using CsvHelper;
+using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
@@ -107,23 +107,33 @@ async Task TestsForAiPromptsAsync()
     var azureClient = new AzureOpenAIClient(
         new Uri(KeyConfig.OpenAiEndpoint),
         new ApiKeyCredential(KeyConfig.OpenAiKey));
-    
+
+    var modelName = "gpt-4o";
     var deploymentName = "gpt-4o";
     var chatClient = azureClient.GetChatClient(deploymentName);
     
-    var completionOptions = new ChatCompletionOptions
-    {
-        MaxOutputTokenCount = 16_000
-    };
-
     var allPrompts = new List<ChatMessage>
     {
         new SystemChatMessage(
             "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block."),
         new UserChatMessage(userPrompts)
     };
+
+    var y = TiktokenTokenizer.CreateForModel(modelName);
+    var inputTokenCount = y.CountTokens(allPrompts[0].Content.ToString()!);
+
+    foreach (var userPrompt in userPrompts)
+    {
+        inputTokenCount += y.CountTokens(userPrompt.Text);
+    }
     
-    var completionUpdates = chatClient.CompleteChatStreamingAsync(allPrompts, completionOptions);
+    var completionUpdates = chatClient.CompleteChatStreamingAsync(
+        allPrompts,
+        new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = 16_000 - inputTokenCount
+        });
+    
     var responseSb = new StringBuilder();
 
     StreamingChatCompletionUpdate? lastUpdate = null;

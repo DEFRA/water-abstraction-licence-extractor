@@ -1,8 +1,8 @@
 using WALE.ProcessFile.Services.Enums;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -13,74 +13,30 @@ public static class LabelIsAfterTextToFind
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
+        /*if (LabelMatchingHelper.ContainsForbiddenText(request.line, request.label))
+        {
+            return ProcessSubLabelsAsync(request, []);
+        }*/
+        
         var labelGroupResult = request.labelGroupResult.Clone(
             MatchType.NearPreviousLineIsCompany,
             LabelPosition.LabelIsAfterTextToFind,
             request.label);
         
-        var modifiedPreviousLines = DataHelper.RemoveExcludes(
+        var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
+            false,
+            out _,
             out var removedLines);
 
-        var returnList = new List<LabelGroupResult>();
-
-        switch (request.label.Format)
-        {
-            case DateOrPurpose.Constant:
-                if (DateOrPurpose.AnyIsDateOrPurpose(request.previousLines!, out var matchedLines))
-                {
-                    foreach (var matchedLine in matchedLines)
-                    {
-                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
-                        returnList.Add(labelGroupResult);
-                    }
-                }
-                break;
-            case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(modifiedPreviousLines, request.label, true, request.isOcr,
-                    out var companyNameLine))
-                {
-                    labelGroupResult.Text = companyNameLine;
-                    returnList.Add(labelGroupResult);
-                }
-                
-                break;
-            case Number.Constant:
-                if (Number.AnyIsNumber(modifiedPreviousLines, out var numberLines))
-                {
-                    labelGroupResult.Text = [numberLines.First()];
-                    returnList.Add(labelGroupResult);
-                }
-                
-                break;
-            case LicenceNumber.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(modifiedPreviousLines, request.label, out var licenceNumberLines))
-                {
-                    foreach (var licenceNumberLine in licenceNumberLines)
-                    {
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        returnList.Add(labelGroupResult);
-                    }
-                }
-                
-                break;
-            case Units.Constant:
-                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, modifiedPreviousLines, labelGroupResult));
-                break;
-            case SingleWord.Constant:
-                returnList.AddRange(SingleWord.FindSingleWord(modifiedPreviousLines, labelGroupResult));
-                break;
-            case ActsLikeSingleWord.Constant:
-                returnList.AddRange(ActsLikeSingleWord.FindSingleWord(modifiedPreviousLines, labelGroupResult));
-                break;            
-        }
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedPreviousLines, true);
 
         foreach (var item in returnList)
         {
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return Task.FromResult(returnList);
+        return ProcessSubLabelsAsync(request, returnList);
     }
 }

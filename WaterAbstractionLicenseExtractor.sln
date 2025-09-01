@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.ServiceBusTrigger", "WALE.ProcessFile.AzureFunction.ServiceBusTrigger\WALE.ProcessFile.AzureFunction.ServiceBusTrigger.csproj", "{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{083AE369-520B-4A83-A5F3-6A94E22FAAA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools", "Tools\WALE.Tools\WALE.Tools.csproj", "{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,8 +47,13 @@ Global
 		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A438B272-8652-4721-8951-906B4142FD5B} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}
 	EndGlobalSection
 EndGlobal

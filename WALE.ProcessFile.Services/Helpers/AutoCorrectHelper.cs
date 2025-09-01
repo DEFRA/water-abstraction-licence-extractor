@@ -1,18 +1,18 @@
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
 public static class AutoCorrectHelper
 {
-    public static string? AutoCorrectText(DocumentLine? text, bool removeFirstWordIfLowercase)
+    public static string? AutoCorrectText(string? lineText, bool removeFirstWordIfLowercase)
     {
-        if (CompanyName.StartsWithCompanyOrPersonalPrefix(text?.Text))
+        if (CompanyName.StartsWithCompanyOrPersonalPrefix(lineText)
+            || CompanyName.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
         {
-            return text?.Text;
+            return lineText;
         }
         
-        var wordsSplit = text?.Text.Split(' ');
+        var wordsSplit = lineText?.Split(' ');
         
         if (wordsSplit == null)
         {
@@ -22,7 +22,7 @@ public static class AutoCorrectHelper
         var words = wordsSplit
             .Select((line, index) =>
             (
-                FormattingHelper.Standardise(line),
+                line,
                 wordsSplit.Length > index + 1 ? wordsSplit[index + 1] : null
             ))
             .ToList();

@@ -9,58 +9,26 @@ public static class Number
 {
     public const string Constant = "Number";
     
-    public static bool TryGetNumber(
-        string? text,
-        int lineNumber,
-        int pageNumber,
-        out List<DocumentLine> matchedNumbers)
-    {
-        matchedNumbers = [];
-        
-        if (text == null)
-        {
-            return false;
-        }
-        
-        var emptyIrrelevantWords = new List<DocumentLineWord>();
-
-        var list = text
-            .Split(PositionConstants.SpaceChar)
-            .Select(result => new DocumentLine(
-                result,
-                lineNumber,
-                pageNumber,
-                emptyIrrelevantWords,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate));
-
-        if (!AnyIsNumber(list, out var numberLines))
-        {
-            return false;
-        }
-        
-        matchedNumbers.AddRange(numberLines);
-        return true;
-
-    }
-    
     public static bool AnyIsNumber(
         IEnumerable<DocumentLine?> lines,
+        LabelToMatch? label,
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
 
+        if (lines?.FirstOrDefault()?.PageNumber == 4)
+        {
+            
+        }
+        
         var matched = false;
-        var returnLines = new List<double>();
+        var returnLines = new List<string>();
 
         var linesList = lines.ToList();
         var firstLine = linesList.FirstOrDefault();
         
         var lineNumber = firstLine?.LineNumber ?? PositionConstants.UnknownLineNumber;
         var pageNumber = firstLine?.PageNumber ?? PositionConstants.UnknownPageNumber;
-        var lineWords = new List<DocumentLineWord>();
         
         foreach (var line in linesList)
         {
@@ -76,24 +44,36 @@ public static class Number
 
             foreach (var word in line!.Text.Split(PositionConstants.SpaceChar))
             {
-                if (!double.TryParse(word, out var numberLineDbl))
+                var wordWithoutBrackers = word
+                    .Replace("(", string.Empty)
+                    .Replace(")", string.Empty);
+                
+                if (!double.TryParse(wordWithoutBrackers, out var numberLineDbl))
                 {
-                    if (matched)
-                    {
-                        lineNumber = line.LineNumber;
-                        pageNumber = line.PageNumber;
-                        lineWords = line.Words;
-                        
-                        break;
-                    }
-
                     continue;
                 }
 
-                returnLines.Add(numberLineDbl);
-                matched = true;
+                if (word == $"({numberLineDbl})")
+                {
+                    returnLines.Add($"({numberLineDbl})");
+                }
+                else
+                {
+                    returnLines.Add(numberLineDbl + string.Empty);   
+                }
 
-                break;
+                if (returnLines.Last().Contains(","))
+                {
+                    
+                }
+
+                if (!matched)
+                {
+                    lineNumber = line.LineNumber;
+                    pageNumber = line.PageNumber;
+                }
+
+                matched = true;
             }
         }
 
@@ -104,15 +84,25 @@ public static class Number
         
         foreach (var tempLine in returnLines.OrderByDescending(text => text))
         {
-            matchedLines.Add(new DocumentLine(
-                tempLine.ToString(CultureInfo.InvariantCulture),
+            if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(tempLine, label))
+            {
+                continue;
+            }
+            
+            var columns = new List<DocumentLineColumn>
+            {
+                new(tempLine,[])
+            };
+
+            var documentLine = new DocumentLine(
                 lineNumber,
                 pageNumber,
-                lineWords,
-                 PositionConstants.UnknownCoOrdinate,
-                 PositionConstants.UnknownCoOrdinate,
-                 PositionConstants.UnknownCoOrdinate,
-                 PositionConstants.UnknownCoOrdinate));
+                columns,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate);
+
+            matchedLines.Add(documentLine);
         }
 
         return matched;

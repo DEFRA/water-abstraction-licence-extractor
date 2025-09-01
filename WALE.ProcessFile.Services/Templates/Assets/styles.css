@@ -44,7 +44,7 @@ table tr td.right-cell {
 }
 
 #jsonPath {
-  visibility: hidden;
+  display: none;
 }
 
 #dataOutput {
@@ -154,14 +154,14 @@ dl a {
   margin-left: -275px;
   width: 500px;
   font-size: 30px;
-  visibility: hidden
+  display: none;
 }
 
 #view-edit {
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 1
+  z-index: 1;
 }
 
 #propertiesNew {

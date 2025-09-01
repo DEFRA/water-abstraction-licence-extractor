@@ -14,5 +14,5 @@
     <Target Name="link_deps" AfterTargets="AfterBuild">
         <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib"/>
         <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib"/>
-    </Target>    
+    </Target>
 </Project>

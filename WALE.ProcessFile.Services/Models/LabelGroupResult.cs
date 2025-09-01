@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Enums;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
@@ -12,7 +11,7 @@ public class LabelGroupResult
 
     public bool IsOcr { get; init; }
 
-    public int LineNumber { get; init; }
+    public int LineNumber { get; set; }
     
     public int PageNumber { get; init; }
 
@@ -22,15 +21,38 @@ public class LabelGroupResult
     
     public LabelToMatch? MatchedLabel { get; set; }
 
-    public IReadOnlyList<LabelGroupResult>? SubResults { get; set; }
+    public IReadOnlyList<LabelGroupResult> SubResults { get; set; } = new List<LabelGroupResult>();
     
     public LabelGroupResult Clone()
     {
-        return JsonSerializer.Deserialize<LabelGroupResult>(
-            JsonSerializer.Serialize(this))!;
+        // TODO swap to source generator
+
+        return new LabelGroupResult
+        {
+            Text = Text?.ToList(),
+            MatchType = MatchType,
+            IsOcr = IsOcr,
+            LineNumber = LineNumber,
+            PageNumber = PageNumber,
+            ServiceName = ServiceName,
+            LabelGroupName = LabelGroupName,
+            MatchedLabel = MatchedLabel?.Clone(),
+            SubResults = SubResults.Select(x => x.Clone()).ToList()
+        };
     }
 
-    public LabelGroupResult Clone(MatchType matchType, LabelPosition position, LabelToMatch label)
+    public LabelGroupResult Clone(LabelToMatch label)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.MatchedLabel = label.Clone();
+
+        return labelGroupResult;
+    }
+    
+    public LabelGroupResult Clone(
+        MatchType matchType,
+        LabelPosition position,
+        LabelToMatch label)
     {
         var labelGroupResult = Clone();
         labelGroupResult.MatchType = matchType;
@@ -40,10 +62,25 @@ public class LabelGroupResult
         return labelGroupResult;
     }
     
-    public LabelGroupResult Clone(IReadOnlyList<DocumentLine> text)
+    public LabelGroupResult Clone(
+        MatchType matchType,
+        LabelPosition position,
+        LabelToMatch label,
+        IEnumerable<DocumentLine> text)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.Text = text;
+        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedLabel = label.Clone();
+        labelGroupResult.MatchedLabel.Position = position;
+        labelGroupResult.Text = text.ToList();
+
+        return labelGroupResult;
+    }
+    
+    public LabelGroupResult Clone(IEnumerable<DocumentLine> text)
+    {
+        var labelGroupResult = Clone();
+        labelGroupResult.Text = text.ToList();
 
         return labelGroupResult;
     }

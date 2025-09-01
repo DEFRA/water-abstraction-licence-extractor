@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
     <title>Licence validation report</title>
-    <link rel="stylesheet" href="../../Templates/styles.css" />
+    <link rel="stylesheet" href="Assets/styles.css" />
 </head>
 <body>
     <table>
@@ -31,7 +31,7 @@
                         </div>
                     </div>
     
-                    <h1><a href="../index.html">Back to all licences</a></h1>
+                    <h1><a href="index.html">Back to all licences</a></h1>
                 </div>
             </td>
             <td class="right-cell">
@@ -40,31 +40,38 @@
                     
                     <ul>
                         <li><a id="pdfTabLink" href="#" onclick="return showTab('pdf-images')" class="selectedTab">PDF</a></li>
-                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON</a></li>
+                        <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
+                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>
                         <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
                     </ul>
                     
                     <div id="iframeParent">
                         <div id="pdf-images"></div>
-                        <!--<iframe id="iframe"></iframe>-->
                     </div>
                     
-                    <div id="jsonPath">
-                        <!--JSON path tester <input type="text" id="txtJsonPath" onchange="evaluateJsonPath(); return false;" />
-    
-                        <div id="jsonPathOutput">--</div>-->
-                        <pre id="dataOutput"></pre>
+                    <div id="jsonNewPath">
+                        <pre id="dataNewOutput"></pre>
                     </div>
+
+                    <div id="jsonPath">
+                        <pre id="dataOutput"></pre>
+                    </div>                    
                 </div>
             </td>
         </tr>
     </table>
 
-    <script src="data.jsonp"></script>
-    <script src="../../Templates/settings.js"></script>
-    <script src="../../Templates/report.js"></script>
-    <script src="../../Templates/jsonpath-0.8.0.js"></script>
-    <script src="../../Templates/jsonview.js"></script>
-    <script src="../licence-number-filename-map.jsonp"></script>
+    <script src="Assets/settings.js"></script>
+    <script src="Assets/report.js"></script>
+    <script src="Assets/jsonpath-0.8.0.js"></script>
+    <script src="Assets/jsonview.js"></script>
+
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        const filename = searchParams.get('filename');
+
+        loadScript(filename + "/data.jsonp", function () { loadReport(filename); });
+        loadScript(filename + "/data2.jsonp", function () { loadReport(filename); });
+    </script>
 </body>
 </html>

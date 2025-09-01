@@ -9,31 +9,62 @@ public static class Units
     public static List<LabelGroupResult> GetMatchesToPossibilities(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines,
+        bool isPrevious,
         LabelGroupResult labelGroupResult)
     {
-        var returnList = new List<LabelGroupResult>();
-
         if (label.Possibilities == null)
         {
-            return returnList;
+            return [];
         }
 
-        foreach (var previousLine in lines)
+        var newLines = isPrevious ? lines.Reverse().ToList() : lines.ToList();
+        
+        foreach (var line in newLines)
         {
-            foreach (var possibility in label.Possibilities!)
+            var matchedPossibilityForLine = (string?)null;
+            var newColumns = new List<DocumentLineColumn>();
+            
+            foreach (var column in line.Columns)
             {
-                if (!previousLine.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                var matchedPossibilityForColumn = (string?)null;
+                
+                foreach (var possibility in label.Possibilities!)
+                {
+                    if (!column.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var clonedColumn = new DocumentLineColumn(possibility);
+                    newColumns.Add(clonedColumn);
+
+                    matchedPossibilityForLine = possibility;
+                    matchedPossibilityForColumn = possibility;
+
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(matchedPossibilityForColumn))
                 {
                     continue;
                 }
-
-                labelGroupResult.Text = [previousLine.Clone(possibility)];
-                labelGroupResult.MatchedLabel!.Possibilities = [possibility];
-
-                returnList.Add(labelGroupResult);
+                
+                newColumns.Add(column);
+                break;
             }
+
+            if (string.IsNullOrEmpty(matchedPossibilityForLine))
+            {
+                continue;
+            }
+            
+            var clonedLine = line.Clone(newColumns);
+            labelGroupResult = labelGroupResult.Clone([clonedLine]);
+            labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine];
+
+            return [labelGroupResult];
         }
 
-        return returnList;
+        return [];
     }
 }

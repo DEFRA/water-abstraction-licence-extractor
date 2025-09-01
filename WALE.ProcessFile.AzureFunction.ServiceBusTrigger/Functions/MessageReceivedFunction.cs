@@ -31,6 +31,9 @@ public class MessageReceivedFunction(
         var outputFolder = configuration["OutputFolder"];
         if (string.IsNullOrEmpty(outputFolder)) throw new Exception($"{nameof(outputFolder)} is missing");
         
+        var cacheFolder = configuration["CacheFolder"];
+        if (string.IsNullOrEmpty(cacheFolder)) throw new Exception($"{nameof(cacheFolder)} is missing");
+        
         var tesseractPath = configuration["TesseractPath"];
         if (string.IsNullOrEmpty(tesseractPath)) throw new Exception($"{nameof(pdfFolderPath)} is missing");
         
@@ -49,7 +52,6 @@ public class MessageReceivedFunction(
         };
         
         var fileLicenceMapping = new Dictionary<string, string>();
-        const bool useCache = true;
 
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
@@ -61,11 +63,12 @@ public class MessageReceivedFunction(
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
+            new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             fileLicenceMapping,
-            previouslyParsedPaths,
             outputFolder,
-            useCache);
+            cacheFolder),
+            previouslyParsedPaths);
         
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);

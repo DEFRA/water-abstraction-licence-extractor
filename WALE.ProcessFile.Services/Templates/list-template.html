@@ -1,0 +1,143 @@
+<html lang="en">
+<head>
+    <style>
+        table td { padding: 5px; }
+        table thead tr td { font-weight: bold; }
+        table thead tr a { text-decoration: none; color: #000; cursor: pointer; }
+        table tbody tr { max-height: 40px; vertical-align: top; }
+
+        .default-hidden { display: none; }
+        .show-all .default-hidden { display: table-cell; }
+        
+        select { width: 100%; }
+    </style>
+    
+    <title>Water licences list</title>
+</head>
+<body>
+    <h1>All licences</h1>
+    
+    <table>
+        <thead>
+        <tr>
+            <td></td>
+            <td></td>
+            <td>
+                <select id="licence-number-filter" data-field="licenceNumber" data-type="EmptyOrNot">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td class="default-hidden">
+                <select id="licence-holder-filter" data-field="licenceHolder" data-type="EmptyOrNot">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="purposes-filter" data-field="purposes" data-type="EmptyOrNotArray">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="points-filter" data-field="points" data-type="EmptyOrNotArray">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="limits-filter" data-field="limitsFound" data-type="Bool">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+            <td>
+                <select id="aggregates-filter" data-field="aggregatesFound" data-type="Bool">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+            <td>
+                <select id="ocr-filter" data-field="ocr" data-type="Bool">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+            <td>
+                <select id="issue-date-filter" data-field="issueDate" data-type="Year">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="issuer-filter" data-field="issuer" data-type="Values">
+                    <option value="all">All</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="means-filter" data-field="meansFound" data-type="Bool">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+            <td>
+                <select id="linked-licences-filter" data-field="linkedLicences" data-type="Bool">
+                    <option value="all">All</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td style='width: 5%'>&nbsp;</td>
+            <td style='width: 10%'>Filename <a href="javascript: sortBy('filename')">&#8693;</a></td>
+            <td style='width: 10%'>Licence number <a href="javascript: sortBy('licenceNumber')">&#8693;</a></td>
+            <td style='width: 10%' class="default-hidden">Licence holder <a href="javascript: sortBy('licenceHolder')">&#8693;</a></td>
+            <td style='width: 15%'>Purposes <a href="javascript: sortBy('purposes')">&#8693;</a></td>
+            <td style='width: 13%'>Points <a href="javascript: sortBy('points')">&#8693;</a></td>
+            <td style='width: 7%'>Abstraction limits <a href="javascript: sortBy('limitsFound')">&#8693;</a></td>
+            <td style='width: 5%'>Aggregates <a href="javascript: sortBy('aggregatesFound')">&#8693;</a></td>
+            <td style='width: 5%'>Scanned file <a href="javascript: sortBy('ocr')">&#8693;</a></td>
+            <td style='width: 5%'>Issue date <a href="javascript: sortBy('issueDate')">&#8693;</a></td>
+            <td style='width: 5%'>Issuer <a href="javascript: sortBy('issuer')">&#8693;</a></td>
+            <td style='width: 5%'>Means of abstraction <a href="javascript: sortBy('meansFound')">&#8693;</a></td>
+            <td style='width: 5%'>Linked&nbsp;licences <a href="javascript: sortBy('linkedLicences')">&#8693;</a></td>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr style='font-weight: bold;'>
+                <td>Total</td>
+                <td id="filename-total"></td>
+                <td id="licence-number-total"></td>
+                <td id="licence-holder-total" class="default-hidden"></td>
+                <td id="purposes-total"></td>
+                <td id="points-total"></td>
+                <td id="limits-total"></td>
+                <td id="aggregates-total"></td>
+                <td id="ocr-total"></td>
+                <td id="issue-date-total"></td>
+                <td id="issuer-total"></td>
+                <td id="means-total"></td>
+                <td id="linked-licences-total"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <script src="list-data.js"></script>
+    <script src="Assets/list.js"></script>
+</body>
+</html>

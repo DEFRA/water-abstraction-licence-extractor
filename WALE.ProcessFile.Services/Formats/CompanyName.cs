@@ -9,6 +9,8 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
+    public static List<string> CompanyWords => ["trading as"];
+
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
@@ -17,115 +19,118 @@ public static class CompanyName
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
         matchedLines = null;
-        var returnList = new List<DocumentLine>();
-        
         var matched = false;
-        var returnLines = new List<string>();
         
-        var lineNumber = -1;
-        var pageNumber = -1;
-        var lineWords = new List<DocumentLineWord>();
+        var initialMatchedLines = new List<DocumentLine>();
         
         foreach (var line in lines)
         {
-            if (LabelMatchingHelper.ContainsForbiddenText(line, label))
+            if (line == null)
             {
                 continue;
             }
+
+            var anyLineMatch = false;
+            var newColumns = new List<DocumentLineColumn>();
             
-            if (DataHelper.IsCorruptedText(line?.Text))
+            foreach (var column in line.Columns)
             {
-                if (matched)
+                if (LabelMatchingHelper.ShouldSkipResultAsForbidden(column.Text, label))
+                {
+                    newColumns.Add(column);
+                    continue;
+                }
+            
+                if (DataHelper.IsCorruptedText(column.Text))
+                {
+                    newColumns.Add(column);
+                    
+                    if (matched)
+                    {
+                        break;
+                    }
+                
+                    continue;
+                }
+
+                var clonedText = isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(column.Text, true)
+                    : column.Text;
+
+                var text = FormattingHelper.TrimFormatting(clonedText, true)!;
+
+                if (DataHelper.IsCorruptedText(text)
+                    || !TryGetCompanyOrPersonalName(text, label, out var companyOrPersonalName))
+                {
+                    if (matched)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+            
+                // It's only the company suffix with nothing else
+                if (CompanySuffixes.Any(companySuffix =>
+                        companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    newColumns.Add(column);
+
+                    if (matched)
+                    {
+                        break;
+                    }
+                    
+                    continue;
+                }
+
+                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
+                
+                newColumns.Add(clonedColumn);
+
+                anyLineMatch = true;
+                matched = true;
+            
+                if (ContainsCompanyOrPersonalSuffixDelimitter(clonedColumn.Text, out _))
                 {
                     break;
-                }
-                
+                }   
+            }
+
+            if (!anyLineMatch)
+            {
                 continue;
             }
             
-            var correctedLine = isOcr ? new DocumentLine(
-                AutoCorrectHelper.AutoCorrectText(line!, true)!,
-                line!.LineNumber,
-                line.PageNumber,
-                line.Words.ToList(),
-                line.Top,
-                line.TopRounded,
-                line.Left,
-                line.LeftRounded) : line;
-
-            correctedLine = new DocumentLine(
-                FormattingHelper.TrimFormatting(correctedLine?.Text)!,
-                correctedLine!.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
-
-            if (DataHelper.IsCorruptedText(line?.Text))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            if (!TryGetCompanyOrPersonalName(correctedLine, label, out var companyOrPersonalName))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            correctedLine = new DocumentLine(
-                companyOrPersonalName!,
-                correctedLine.LineNumber,
-                correctedLine.PageNumber,
-                correctedLine.Words.ToList(),
-                correctedLine.Top,
-                correctedLine.TopRounded,
-                correctedLine.Left,
-                correctedLine.LeftRounded);
-            
-            // It's only the company suffix with nothing else
-            if (CompanySuffixes.Any(companySuffix =>
-                companySuffix.Trim().Equals(correctedLine.Text, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                if (matched) break;
-                continue;
-            }
-
-            if (lineNumber == -1)
-            {
-                lineNumber = correctedLine.LineNumber;
-                pageNumber = correctedLine.PageNumber;
-                lineWords = correctedLine.Words;
-            }
-
-            returnLines.Add(correctedLine.Text);
-            matched = true;
-            
-            if (ContainsCompanyOrPersonalSuffixDelimitter(correctedLine.Text, out _))
-            {
-                break;
-            }
+            var clonedLine = line.Clone(newColumns);
+            initialMatchedLines.Add(clonedLine);
         }
 
         if (isPrevious)
         {
-            returnLines.Reverse();
+            initialMatchedLines.Reverse();
         }
         
-        if (returnLines.Count > 0)
+        var returnList = new List<DocumentLine>();
+        
+        if (initialMatchedLines.Count > 0)
         {
-            if (returnLines.Count > 1)
+            if (initialMatchedLines.Count > 1)
             {
-                returnLines.Remove("The Environment Agency");
+                var eaLinePos = initialMatchedLines
+                    .FindIndex(x => x.Text.Contains("The Environment Agency"));
+
+                if (eaLinePos > -1)
+                {
+                    initialMatchedLines.RemoveAt(eaLinePos);   
+                }
             }
 
-            var newReturnLines = new List<string>();
+            var newReturnLines = new List<DocumentLine>();
 
-            foreach (var returnLine in returnLines)
+            foreach (var returnLine in initialMatchedLines)
             {
-                if (ContainsCompanyOrPersonalSuffixDelimitter(returnLine, out _))
+                if (ContainsCompanyOrPersonalSuffixDelimitter(returnLine.Text, out _))
                 {
                     newReturnLines.Add(returnLine);
                     break;
@@ -134,17 +139,8 @@ public static class CompanyName
                 newReturnLines.Add(returnLine);
             }
 
-            returnLines = newReturnLines;
-            returnList.AddRange(returnLines.Select(returnLine =>
-                new DocumentLine(
-                    returnLine,
-                    lineNumber,
-                    pageNumber,
-                    lineWords,
-                    -1,
-                    -1,
-                    -1,
-                    -1)));
+            initialMatchedLines = newReturnLines;
+            returnList.AddRange(initialMatchedLines);
         }
 
         if (returnList.Count > 0)
@@ -156,29 +152,29 @@ public static class CompanyName
     }
     
     public static bool TryGetCompanyOrPersonalName(
-        DocumentLine? line,
+        string? lineText,
         LabelToMatch label,
         out string? matchedCompanyOrPersonalName)
     {
         matchedCompanyOrPersonalName = null;
         
-        if (line == null)
+        if (lineText == null)
         {
             return false;
         }
         
-        if (LabelMatchingHelper.ContainsForbiddenText(line, label))
+        if (LabelMatchingHelper.ShouldSkipResultAsForbidden(lineText, label))
         {
             return false;
         }
         
         // TODO - bit of a hack
-        if (ContainsDescriptionOfAgency(line.Text))
+        if (ContainsDescriptionOfAgency(lineText))
         {
             return false;
         }
 
-        var parts = line.Text.Split(' ');
+        var parts = lineText.Split(' ');
         var looksLikeNameWithInitials = parts.Length is 2 or 3 or 4
             && parts.First().Length is 1 or 2
             && parts.First().All(char.IsLetter)
@@ -187,32 +183,34 @@ public static class CompanyName
             && parts.Last().All(char.IsLetter)
             && !parts.All(word => DataHelper.Dictionary.Check(word) && word.Length > 1);
 
-        if (looksLikeNameWithInitials && !line.Text.Contains('"'))
+        if (looksLikeNameWithInitials && !lineText.Contains('"'))
         {
-            matchedCompanyOrPersonalName = line.Text;            
+            matchedCompanyOrPersonalName = lineText;            
             return true;
         }
         
         var containsDelimitter = ContainsCompanyOrPersonalSuffixDelimitter(
-            line.Text,
+            lineText,
             out var delimiter);
         
-        if (StartsWithCompanyOrPersonalPrefix(line.Text)
-            || ContainsCompanyOrPersonalWord(line.Text)
+        if (StartsWithCompanyOrPersonalPrefix(lineText)
+            || ContainsCompanyOrPersonalWord(lineText)
             || containsDelimitter)
         {
-            if (EndsWithNoneCompanyOrPersonalSuffix(line.Text))
+            if (EndsWithNoneCompanyOrPersonalSuffix(lineText))
             {
                 return false;
             }
+
+            var text = lineText;
             
             if (containsDelimitter)
             {
-                line.Text = line.Text[..(line.Text.IndexOf(delimiter!,
+                text = text[..(text.IndexOf(delimiter!,
                     StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
             }
             
-            matchedCompanyOrPersonalName = line.Text;
+            matchedCompanyOrPersonalName = text;
             return true;
         }
 
@@ -264,17 +262,12 @@ public static class CompanyName
         return word.Length == 2 && word.All(char.IsUpper);
     }
     
-    private static bool ContainsCompanyOrPersonalWord(string? text)
+    public static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
         {
             return false;
         }
-    
-        var companyWords = new List<string>
-        {
-            "trading as"
-        };
 
         var textParts = text.Split(' ');
         var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
@@ -288,12 +281,12 @@ public static class CompanyName
             }
         }
         
-        return companyWords
+        return CompanyWords
             .Any(companyWord => text.Contains(companyWord,
                 StringComparison.InvariantCultureIgnoreCase));
     }
     
-    private static bool ContainsCompanyOrPersonalSuffixDelimitter(
+    public static bool ContainsCompanyOrPersonalSuffixDelimitter(
         string? text,
         out string? delimiter)
     {
@@ -409,7 +402,8 @@ public static class CompanyName
                 "see", // doing word,
                 "heh", // Is it a name?
                 "you", //  Is it a name?
-                "thames" // River
+                "thames", // River
+                "fee" // A fee / price
             };
 
             var returnList = new HashSet<string>();

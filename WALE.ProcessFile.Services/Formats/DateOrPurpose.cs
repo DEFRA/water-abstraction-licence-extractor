@@ -23,7 +23,31 @@ public static partial class DateOrPurpose
         }
 
         const string purposeWord = "aggregate";
-        return text.Contains(purposeWord) || YearRegex().IsMatch(text);
+        
+        return text.Contains(purposeWord)
+               || YearRegex().IsMatch(text)
+               || ContainsMonth(text);
+    }
+
+    private static bool ContainsMonth(string text)
+    {
+        var months = new List<string>
+        {
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        };
+        
+        return months.Any(text.Contains);
     }
     
     [GeneratedRegex(@"19\d\d|20\d\d")]

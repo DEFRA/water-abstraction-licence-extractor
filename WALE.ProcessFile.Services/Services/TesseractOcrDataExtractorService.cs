@@ -5,6 +5,7 @@ using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.TesseractOcr;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -20,7 +21,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     {
         return Task.Run(async () =>
         {
-            var folder = $"{pdfDocument.OutputFolder}/TesseractOcr/Text";
+            var folder = $"{pdfDocument.CacheFolder}/TesseractOcr/Text";
             Directory.CreateDirectory(folder);
         
             var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
@@ -37,8 +38,33 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             }
             else
             {
+                //  TODO - check dimensions are more then X and Y or its pointless
+                
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                using var ocrImage = Pix.LoadFromFile(imageFilename);
+
+                Pix? ocrImage;
+
+                try
+                {
+                    ocrImage = Pix.LoadFromFile(imageFilename);
+                }
+                catch
+                {
+                    if (!imageFilename.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw;
+                    }
+                    
+                    var bytAry = await File.ReadAllBytesAsync(imageFilename);
+                    var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+                    var imageFilenameDeflated = imageFilename.Replace(".jpg", "-deflated.jpg",
+                        StringComparison.InvariantCultureIgnoreCase);
+                    await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+                    ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
+                }
+                
                 using var page = _tesseractEngine.Process(ocrImage);
                 
                 using var iterator = page.GetIterator();
@@ -58,34 +84,42 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                         words.Add(new DocumentLineWord(
                             wordText,
                             wordConfidence,
-                            [
-                                coordinates.X1,
+                            new(
                                 coordinates.Y1,
                                 coordinates.X2,
-                                coordinates.Y2
-                            ]));
+                                coordinates.Y2,
+                                coordinates.X1
+                            )));
                     } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
                     returnLines.Add(new LineAndWords { Text = line, Words = words });
                 } while (iterator.Next(PageIteratorLevel.TextLine));
                 
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializer()));
+                await File.WriteAllTextAsync(
+                    outputFilename,
+                    JsonSerializer.Serialize(returnLines,
+                        JsonHelper.GetSerializer()));
             }
             
             var lineNumber = 0;
             
+            // TODO probably need to standardise the line
+            
             var results = returnLines!
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-                .Select(line => (FormattingHelper.Standardise(line.Text!), line.Words))
-                .Select(line => new DocumentLine(
-                    line.Item1,
-                    lineNumber++,
-                    pageNumber,
-                    line.Words!,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate,
-                    PositionConstants.UnknownCoOrdinate))
+                .Select(line => (line.Text!, line.Words))
+                .Select(line =>
+                {
+                    var documentLine = new DocumentLine(
+                        lineNumber++,
+                        pageNumber,
+                        [new(line.Item1, line.Words!)],
+                        PositionConstants.UnknownCoordinate,
+                        PositionConstants.UnknownCoordinate,
+                        PositionConstants.UnknownCoordinate);
+                    
+                    return documentLine;
+                })
                 .ToList();
 
             // TODO add grouping and ordering

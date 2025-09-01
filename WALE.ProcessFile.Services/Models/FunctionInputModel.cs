@@ -10,7 +10,7 @@ public class FunctionInputModel
     public IReadOnlyList<DocumentLine>? previousLines { get; set; }
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }
-    public List<(string? Text, LabelToMatch Label)>? textBeforeAndAfterLabel { get; set; }
+    public List<(string? Text, LabelToMatch Label)>? textBeforeAtAndAfterLabel { get; set; }
     public bool isDateOrPurposeLookup { get; set; }
     public bool isCompanyType { get; set; }
     public bool isNumberLookup { get; set; }
@@ -25,6 +25,6 @@ public class FunctionInputModel
     public Dictionary<string, string>? licenceMapping { get; set; }
     public  List<string>? previouslyParsedPaths { get; set; }
     public  string? outputFolder { get; set; }
-    public bool useCache { get; set; }
+    public  string? cacheFolder { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
 }

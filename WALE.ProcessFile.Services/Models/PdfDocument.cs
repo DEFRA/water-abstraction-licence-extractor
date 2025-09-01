@@ -1,5 +1,5 @@
+using SkiaSharp;
 using UglyToad.PdfPig;
-using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Rendering.Skia;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -8,16 +8,18 @@ namespace WALE.ProcessFile.Services.Models;
 
 public class PdfDocument
 {
-    public bool FromCache { get; set; }
-    public string PdfFilePath { get; set; }
-    public string OutputFolder { get; set; }    
+    public bool FromCache { get; }
+    public string PdfFilePath { get; }
+    public string OutputFolder { get; }
+    public string CacheFolder { get; }
     
     private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
     
-    public PdfDocument(string pdfFilePath, string outputFolder, bool fromCache)
+    public PdfDocument(string pdfFilePath, string outputFolder, string cacheFolder, bool fromCache)
     {
         PdfFilePath = pdfFilePath;
         OutputFolder = outputFolder;
+        CacheFolder = cacheFolder;
         FromCache = fromCache;
 
         if (fromCache)
@@ -25,13 +27,23 @@ public class PdfDocument
             return;
         }
         
+        OpenPdfPigDocument();
+    }
+
+    private void OpenPdfPigDocument()
+    {
+        if (PdfPigDocument != null)
+        {
+            return;
+        }
+        
         PdfPigDocument = UglyToad.PdfPig.PdfDocument.Open(
-            pdfFilePath,
+            PdfFilePath,
             new ParsingOptions
             {
                 UseLenientParsing = true,
                 SkipMissingFonts = true,
-                FilterProvider = ExpandedPdfPigFilterProvider.Instance
+                FilterProvider = ExpandedPdfPigFilterProvider.Instance,
             });
 
         PdfPigDocument!.AddSkiaPageFactory();
@@ -48,9 +60,9 @@ public class PdfDocument
                 return _pages;
             }
             
-            if (FromCache)
+            if (FromCache && PdfPigDocument == null)
             {
-                return [];
+                OpenPdfPigDocument();
             }
             
             _pages = PdfPigDocument!.GetPages()
@@ -63,6 +75,7 @@ public class PdfDocument
                         NumberOfImages = page.NumberOfImages,
                         Text = page.Text
                     };
+                    
                     pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
                     
                     pdfPage.Providers.Add(new PdfPageProvider
@@ -79,27 +92,26 @@ public class PdfDocument
         set => _pages = value;
     }
 
-    public MemoryStream GetPageAsPng(int pageNumber, IColor background)
+    public SKBitmap GetPageAsSkBitmap(int pageNumber, IColor background)
     {
-        if (FromCache)
+        if (FromCache && PdfPigDocument == null)
         {
-            throw new Exception("Cannot get image from cache");
+            OpenPdfPigDocument();
         }
         
-        return PdfPigDocument!.GetPageAsPng(
+        return PdfPigDocument!.GetPageAsSKBitmap(
             pageNumber,
             background: background,
-            scale: 3,
-            quality: 100);
+            scale: 2F);
     }
     
     public void Dispose()
     {
-        if (FromCache)
+        if (FromCache && PdfPigDocument == null)
         {
             return;
         }
         
-        PdfPigDocument!.Dispose();;
+        PdfPigDocument!.Dispose();
     }
 }

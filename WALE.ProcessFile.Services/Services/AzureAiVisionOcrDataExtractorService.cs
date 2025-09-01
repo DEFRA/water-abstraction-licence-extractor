@@ -1,10 +1,12 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Tesseract;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -20,7 +22,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     {
         var returnLines = new List<(string Text, IList<Word> Words)>();
 
-        var folder = $"{pdfDocument.OutputFolder}/{Name}/Text";
+        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         
         if (pdfDocument.FromCache && File.Exists(outputFilename))
@@ -35,9 +37,47 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         }
         else
         {
-            await using var stream = new FileStream(imageFilepath, FileMode.Open);
-            var textHeaders = await _client.ReadInStreamAsync(stream);
+            //  TODO - check dimensions are more then X and Y or its pointless
+            ReadInStreamHeaders? textHeaders;
 
+            try
+            {
+                await using var stream = new FileStream(imageFilepath, FileMode.Open);
+                textHeaders = await _client.ReadInStreamAsync(stream);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ComputerVisionOcrErrorException ocrEx)
+                {
+                    var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
+
+                    if (errorCode == "InvalidImageDimension")
+                    {
+                        await File.WriteAllTextAsync(
+                            outputFilename,
+                            JsonSerializer.Serialize(new ReadResult { Lines = [] },
+                            JsonHelper.GetSerializer()));
+                        
+                        return [];
+                    }
+                }
+                
+                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw;
+                }
+                
+                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
+                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
+                    StringComparison.InvariantCultureIgnoreCase);
+                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+                await using var stream = new FileStream(imageFilenameDeflated, FileMode.Open);
+                textHeaders = await _client.ReadInStreamAsync(stream);
+            }
+            
             const int waitBeforeCheck = 2000;
             await Task.Delay(waitBeforeCheck);
 
@@ -67,26 +107,65 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                 returnLines.AddRange(pageLines);
             }
         }
-
+        
         var lineNumber = 0;
+        
+        (string Text, IList<Word> Words)? previousLine = null;
+        var lineIndex = 0;
+        
+        // BoundingBox is { X top left, Y top left , X top right , Y top right,
+        // X bottom right , Y bottom right , X bottom left , Y bottom left }
         
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Select(line => (FormattingHelper.Standardise(line.Text), line.Words))
-            .Select(line => new DocumentLine(
-                line.Item1,
-                lineNumber++,
-                pageNumber,
-                line.Words.Select(word =>
-                    new DocumentLineWord(
-                        word.Text,
-                        word.Confidence * 100,
-                        word.BoundingBox.ToList()))
-                    .ToList(),
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate,
-                PositionConstants.UnknownCoOrdinate))            
+            .Where(line => !DataHelper.IsCorruptedText(line.Text, 100))
+            .GroupBy(line =>
+            {
+                previousLine ??= line;
+
+                var yDiff =
+                    line.Words[0].BoundingBox[1]
+                    - previousLine.Value.Words[0].BoundingBox[1];
+                
+                const int lineHeight = 15;
+                
+                if (yDiff >= lineHeight)
+                {
+                    lineIndex += 1;
+                }
+
+                previousLine = line;
+                return lineIndex;
+            })
+            .Select(lines =>
+            {
+                var columns = new List<DocumentLineColumn>();
+
+                foreach (var line in lines.OrderBy(l => l.Words[0].BoundingBox[0]))
+                {
+                    columns.Add(new DocumentLineColumn(line.Item1, line.Words.Select(word =>
+                        new DocumentLineWord(
+                            word.Text,
+                            word.Confidence * 100,
+                            new DocumentLineWordCoordinates(
+                                word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate,
+                                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate)))
+                    .ToList())
+                    );
+                }
+                
+                var documentLine = new DocumentLine(
+                    lineNumber++,
+                    pageNumber,
+                    columns,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate,
+                    PositionConstants.UnknownCoordinate);
+
+                return documentLine;
+            })
             .ToList();
     }
 
@@ -95,7 +174,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo))
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo, line.Text))
             .ThenBy(line => line.BoundingBox[0]!.Value);
 
         // TODO add grouping and ordering

@@ -17,10 +17,21 @@ public static class SingleWord
             return returnList;
         }
         
-        var line = lines.First();
-        labelGroupResult.Text = [line.Clone(line.Text.Split(' ')[0])];
+        var line = lines[0];
 
-        returnList.Add(labelGroupResult);
+        foreach (var column in line.Columns)
+        {
+            var text = column.Text.Split(' ')[0];
+
+            var clonedColumn = new DocumentLineColumn(text);
+            var clonedLine = line.Clone([clonedColumn]);
+
+            labelGroupResult = labelGroupResult.Clone([clonedLine]);
+            returnList.Add(labelGroupResult);
+
+            break;
+        }
+
         return returnList;
     }
 }

@@ -21,21 +21,25 @@ public static class FormattingHelper
         return returnList;
     }
     
-    public static string? TrimFormatting(string? text)
+    public static string? TrimFormatting(string? text, bool trimPunctuation)
     {
         var trimmed = text?.Trim();
+        if (!trimPunctuation) return trimmed;
         
         while (trimmed?.Length >= 1
-            && (char.IsPunctuation(trimmed[0])
+           && trimmed[0] != '('
+           && (char.IsPunctuation(trimmed[0])
                || char.IsSymbol(trimmed[0])
                || char.IsWhiteSpace(trimmed[0])))
         {
             trimmed = trimmed[1..];
         }
-        
+
         while (trimmed?.Length >= 1
-            && trimmed[^1] != ')'
-            && (char.IsPunctuation(trimmed[^1])
+           && trimmed[^1] != ')'
+           && trimmed[^1] != ':'
+           && trimmed[^1] != '/'
+           && (char.IsPunctuation(trimmed[^1])
                || char.IsSymbol(trimmed[^1])
                || char.IsWhiteSpace(trimmed[^1])))
         {
@@ -45,25 +49,27 @@ public static class FormattingHelper
         return trimmed;
     }
     
-    public static string Standardise(string text)
+    public static void Standardise(List<DocumentLineColumn> columns)
     {
         const string singleQuoteChar = "'";        
         const string doubleQuoteChar = "\"";
         const string asteriskString = "*";
-        
-        return text
-            .Trim()
-            .Replace("‘‘", doubleQuoteChar)
-            .Replace("’’", doubleQuoteChar)
-            .Replace("‘", singleQuoteChar)
-            .Replace("’", singleQuoteChar)
-            .Replace("“", doubleQuoteChar)
-            .Replace("”", doubleQuoteChar)
-            .Replace("'\"", doubleQuoteChar)
-            .Replace("'", doubleQuoteChar)
-            .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
-            .Replace("  ", PositionConstants.SpaceString)
-            .Replace("\"\"", doubleQuoteChar);
+
+        foreach (var column in columns)
+        {
+            column.Text = column.Text
+                .Trim()
+                .Replace("‘‘", doubleQuoteChar)
+                .Replace("’’", doubleQuoteChar)
+                .Replace("‘", singleQuoteChar)
+                .Replace("’", singleQuoteChar)
+                .Replace("“", doubleQuoteChar)
+                .Replace("”", doubleQuoteChar)
+                .Replace("'\"", doubleQuoteChar)
+                .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
+                .Replace("  ", PositionConstants.SpaceString)
+                .Replace("\"\"", doubleQuoteChar);
+        }
     }
 
     public static bool IsPageEmpty(string? input) => IsNullOrEmptyWhitespaceOrPunctuation(input);
@@ -90,10 +96,7 @@ public static class FormattingHelper
                 match.MatchedLabel.SubLabels = null;
             }
 
-            if (match.SubResults != null)
-            {
-                NullOutSubLabels(match.SubResults);
-            }
+            NullOutSubLabels(match.SubResults);
         }
     }
     

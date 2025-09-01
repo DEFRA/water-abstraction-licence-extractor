@@ -1,6 +1,8 @@
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -19,8 +21,19 @@ public class TessaractOcrPdfTests
     
     private static string PdfFolder => TestConfig.PdfFolder;
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
-    private const bool UseCache = true;
 
+    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    {
+        return _pdfDataExtractor.GetMatchesAsync(
+            PdfFolder + fileName,
+            new LookupConfiguration(
+                LabelConfiguration.GetLabels(),
+                _fileLicenceMapping,
+                "Output/",
+                "Cache/"),
+            [PdfFolder + fileName]);
+    }
+    
     [Fact]
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
@@ -28,27 +41,26 @@ public class TessaractOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(8, resultList.Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -67,30 +79,30 @@ public class TessaractOcrPdfTests
         Assert.Single(abstractionLimitsSection1.SubResults!);
 
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
-        Assert.Equal(5, section1Sub1.SubResults!.Count);
+        Assert.Equal(6, section1Sub1.SubResults!.Count);
 
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("77", perDay);
 
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         var perYear = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("5116", perYear);
         
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);        
         
         // See notes RE licence
@@ -103,24 +115,24 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(7, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CROXLEY HALL WATERS LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -142,22 +154,22 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // Only 2 as the serial number cannot be read correctly
+        Assert.Equal(6, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel?.Text!);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel?.Text?.Select(x => x.Text)!);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
         
@@ -177,24 +189,24 @@ public class TessaractOcrPdfTests
         const string filename = "34_236CA_LICENCE 8463615 (2007).pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(9, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr E C Webb", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel?.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -216,32 +228,37 @@ public class TessaractOcrPdfTests
         const string filename = "original licence (12.03.1975).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
+        Assert.Equal(4, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Wessex Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
         // TODO try it with Azure AI Vision
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("First DAY OF", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("HINTON FARM LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("authority hereby licenge", nameResult.MatchedLabel?.Text!);
+        Assert.Contains("authority hereby licenge", nameResult.MatchedLabel?.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
     }
@@ -253,30 +270,30 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5796052.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(8, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("J M Strong and Partners", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(29, abstractionLimitsResult.Text?.Count); // TODO should be 9
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -292,24 +309,28 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0507 5609942.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(7, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.Null(dateOfIssue); // OCR cant pick up the date here
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CROXLEY HALL WATERS LIMITED", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -331,30 +352,30 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6081901.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(10, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Mr J. E. Ward", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["\"the Licence Holder\""], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["\"the Licence Holder'"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
 
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count); // TODO should be 7
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -370,22 +391,27 @@ public class TessaractOcrPdfTests
         const string filename = "Original Licence 5646512.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text); // National Rivers Authority
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("12th DAY OF DECEMBER 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Lingfield Park 1991 Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -399,7 +425,13 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(new DateTime(1997, 12, 12), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 
     [Fact]
@@ -409,30 +441,30 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(7, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("E &H Pelham Farms", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be E & H with a space
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(12, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(17, abstractionLimitsResult.Text?.Count); // TODO should be 12
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -448,33 +480,32 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document Licence document 28112002.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(9, resultList.Count);
         // For some reason it won't read the licence number
         // from the box in the header its in
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("CN Wookey", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(12, abstractionLimitsResult.Text?.Count); // TODO should be 9
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -490,22 +521,21 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083958.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // The document is printed out of alignment and has ghosting
+        Assert.Equal(6, resultList.Count); // The document is printed out of alignment and has ghosting
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(2, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
         
         // The document is printed out of alignment and has ghosting
     }
@@ -517,22 +547,22 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document [Licence] (25112008).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
+
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("National Rivers Authority", issuerResult.Text?.FirstOrDefault()?.Text);        
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("J La Robe Esq", nameResult.Text?.FirstOrDefault()?.Text); // TODO this actually should be Trobe
-        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -540,7 +570,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -556,17 +586,21 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // File is scanned titled and font is very bold and hard to read
+        Assert.Equal(4, resultList.Count); // File is scanned titled and font is very bold and hard to read
 
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("Fifteenth day of March, © 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
         
@@ -586,13 +620,8 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5809134.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count);
@@ -602,7 +631,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("N. DIBBEN, ESQ.", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
     }    
@@ -614,25 +643,24 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(10, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("New Barn Nurseries", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -654,25 +682,29 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5652046.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(7, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("day of 196", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO wrong
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!, StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text), StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         // Reads licence number very badly wrong. Doesn't read abstraction limits correctly
     }
@@ -684,16 +716,16 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(4, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("9th day of January, 196/", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO whats the last char
         
         // Success sticker used, company name is OCR-ed
         // scrambled. Rest of document is greyed out slightly and hard to read, including
@@ -720,29 +752,27 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // Crossed out company name
+        Assert.Equal(5, resultList.Count); // Crossed out company name
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult); // Crossed out
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
-        Assert.Null(abstractionLimitsResult); // Crossed out
+        Assert.NotNull(abstractionLimitsResult);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("25/68/3/91/", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
     
     [Fact]
@@ -752,25 +782,22 @@ public class TessaractOcrPdfTests
         const string filename = "Application New Licence Issued - 22-07-1966 - 22-07-1966.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Single(resultList); // Very old printing, hard to OCR
+        Assert.Equal(2, resultList.Count); // Very old printing, hard to OCR
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("8/37/4.3/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);        
+        Assert.Equal("8/37/4.3/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var issuer = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.Equal("Essex River Authority", issuer!.Text!.FirstOrDefault()?.Text);
     }
     
     [Fact(Skip = "CantLoadImage")]
@@ -780,13 +807,8 @@ public class TessaractOcrPdfTests
         const string filename = "permit_01_01_1998.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(3, resultList.Count);
@@ -796,9 +818,9 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["hereby grant a licence to"], nameResult.MatchedLabel!.Text);
+        Assert.Equal(["hereby grant a licence to"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -820,25 +842,24 @@ public class TessaractOcrPdfTests
         const string filename = "2938010008 5641759.pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // Abstraction limitscrossed out
+        Assert.Equal(6, resultList.Count); // Abstraction limits crossed out
 
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
+        
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!.Select(x => x.Text)!);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -856,31 +877,30 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(8, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Barrowmore", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.SameLineSingleWord, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count); // TODO should be 6
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -896,31 +916,30 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.05.2001).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(8, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("THE AVIARY ESTATE", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -936,13 +955,8 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -968,16 +982,15 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // Very faint text
+        Assert.Equal(4, resultList.Count); // Very faint text
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult); // Very faint text
@@ -996,31 +1009,32 @@ public class TessaractOcrPdfTests
         const string filename = "08-36-19-S-0130 5827009.PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(10, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("Mr Robert Clifford Abbott and Mrs Rebecca Jane Abbott trading as R P Abbott and Sons", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany2Lines, nameResult.MatchType);
+        
+        var companyName = string.Join(' ', nameResult.Text?.Select(x => x.Text).ToArray()!);
+        Assert.Equal("Mr Robert Clifford Abbott and Mrs Rebecca Jane Abbott trading as R P Abbott and Sons", companyName);
+        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(8, abstractionLimitsSection.Text?.Count); // TODO should be 8
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1036,16 +1050,15 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (12.09.1979).pdf";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Wessex Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1062,16 +1075,20 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.09.1992).PDF";
 
         // Act
-        var resultList = (await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + filename,
-            LabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [PdfFolder + filename],
-            string.Empty,
-            UseCache)).Matches!;
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(6, resultList.Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Thames Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("14th day of January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

@@ -86,5 +86,5 @@ public static class TestConfig
             _tesseractPath = Config["TesseractPath"]!;
             return _tesseractPath;
         }
-    }        
+    }
 }

@@ -9,6 +9,7 @@ public class OutputLine
     public double? LicenceHolderOcrConfidence;
     public string? Ocr;
     public string? Purposes;
+    public string? Points;
     public string? ServiceName;
     public int Certainty;
     public string? MatchType;
@@ -18,6 +19,9 @@ public class OutputLine
     public string? LicenceNumber;
     public double? LicenceNumberOcrConfidence;
     public bool LimitsFound;
+    public bool AggregatesFound;
+    public string? IssueDate;
+    public string? Issuer;
     public bool MeansFound;
     public string? LinkedLicenceNumbers;
     public int NodeId;

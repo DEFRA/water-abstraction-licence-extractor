@@ -2,6 +2,7 @@ namespace WALE.ProcessFile.Services.Enums;
 
 public enum MatchType
 {
+    Unknown = -101,
     NotApplicable = -100,
     NotFound = -99,
     
@@ -10,7 +11,8 @@ public enum MatchType
     SameLineSingleWord = 9903,
     
     NearPreviousLineIsCompany = 8005,
-    NearNextLineIsCompany = 9901,
+    NearNextLineIsMatch = 9901,
+    MatchIsEitherSideOfLabel = 9901,
     
     Between = 9503
 }

@@ -2,14 +2,16 @@ namespace WALE.ProcessFile.Services.Enums;
 
 public enum LabelPosition
 {
-    ApplicableToAll,
+    ApplicableToMost,
+    Unknown,
     LabelIsBeforeTextToFind,
     LabelIsAfterTextToFind,
-    LabelIsInMiddleOfTextToFind,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+    LabelIsInMiddleOfTextToFind,
     ContractIsSuccession,
     TextToFindIsBetweenLabels,
     RelatedCategoryPosition,
-    Split
+    Split,
+    ActuallyLabel
 }

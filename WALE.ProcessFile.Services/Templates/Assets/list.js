@@ -1,14 +1,13 @@
 window.onload = function () {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
-
+    let bodyEle = document.getElementsByTagName("body")[0];
+    
     if (params["showAll"] === "true") {
-        document.getElementsByTagName("body")[0].className += " show-all";
+        bodyEle.className += " show-all";
     }
 
     window.aiData = {};
-    let bodyEle = document.getElementsByTagName("body")[0];
-
     window.loadedOrErrored = 0;
     
     for (let i = 0; i < data.length; i++) {
@@ -17,15 +16,19 @@ window.onload = function () {
     }
     
     let timeCount = 0;
+    let checkInterval = 50;
+    let timeout = 3000;
+    
+    let checksBeforeTimeout = timeout / checkInterval;
 
     let intervalId = setInterval(function () {
-        if (window.loadedOrErrored !== data.length || timeCount++ > 30) return;
+        if (window.loadedOrErrored !== data.length || timeCount++ >= checksBeforeTimeout) return;
 
         setup();
 
         clearInterval(intervalId);
         intervalId = null;
-    }, 100);
+    }, checkInterval);
 };
 
 function setup() {

@@ -36,6 +36,16 @@ return;
 
 async Task TestsForAiPromptsAsync()
 {
+    var tesseractOcr = new TesseractOcrDataExtractorService(
+        KeyConfig.TesseractPrefix
+        ?? throw new NullReferenceException(KeyConfig.TesseractPrefix));
+
+    var mockPdfDocument = new PdfDocument(
+        "[NOT_USED]",
+        KeyConfig.OutputFolder,
+        KeyConfig.CacheFolder,
+        true);
+    
     var pdfName =  "2-26-32-126 6937559.PDF";
     var pdf = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfName);
     
@@ -60,7 +70,7 @@ async Task TestsForAiPromptsAsync()
         pageImageGroups.Add(pageImageGroup);
     }
 
-    var count = 0;
+    var pageNumber = 0;
     
     Directory.CreateDirectory("Cache/PDFtoImage/Images");
 
@@ -77,7 +87,7 @@ async Task TestsForAiPromptsAsync()
     
     foreach (var pageImageGroup in pageImageGroups)
     {
-        var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{count}.jpg";
+        var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
 
         var totalHeight = pageImageGroup.Sum(image => image.Height);
         var width = pageImageGroup.Max(image => image.Width);
@@ -96,13 +106,32 @@ async Task TestsForAiPromptsAsync()
             stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
         }
         
+        var text =
+            (await tesseractOcr.GetTextLinesFromImageAsync(
+                pdfImageName,
+                pageNumber,
+                1,
+                mockPdfDocument)).ToList();
+
+        var averageLineLength = text.Average(x => x.Text.Length);
+
+        if (averageLineLength < 30)
+        {
+            pageNumber += 1;
+            continue;
+        }
+        
         var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
 
         userPrompts.Add(ChatMessageContentPart.CreateImagePart(
             BinaryData.FromBytes(imageBytes),
             "image/jpeg",
             ChatImageDetailLevel.Auto));
+
+        pageNumber += 1;
     }
+
+    tesseractOcr.Dispose();
     
     var azureClient = new AzureOpenAIClient(
         new Uri(KeyConfig.OpenAiEndpoint),

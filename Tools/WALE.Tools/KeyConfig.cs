@@ -102,4 +102,52 @@ public static class KeyConfig
             return _openAiKey;
         }
     }
+    
+    private static string? _tesseractPrefix;
+
+    public static string TesseractPrefix
+    {
+        get
+        {
+            if (_tesseractPrefix != null)
+            {
+                return _tesseractPrefix;
+            }
+            
+            _tesseractPrefix = Config["TESSDATA_PREFIX"]!;
+            return _tesseractPrefix;
+        }
+    }
+    
+    private static string? _outputFolder;
+
+    public static string OutputFolder
+    {
+        get
+        {
+            if (_outputFolder != null)
+            {
+                return _outputFolder;
+            }
+            
+            _outputFolder = Config["OutputFolder"]!;
+            return _outputFolder;
+        }
+    }
+    
+    private static string? _cacheFolder;
+
+    public static string CacheFolder
+    {
+        get
+        {
+            if (_cacheFolder != null)
+            {
+                return _cacheFolder;
+            }
+            
+            _cacheFolder = Config["CacheFolder"]!;
+            return _cacheFolder;
+        }
+    }
 }

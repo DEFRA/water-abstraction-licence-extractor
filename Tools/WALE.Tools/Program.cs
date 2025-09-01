@@ -70,51 +70,56 @@ async Task TestsForAiPromptsAsync()
         pageImageGroups.Add(pageImageGroup);
     }
 
-    var pageNumber = 0;
-    
-    Directory.CreateDirectory("Cache/PDFtoImage/Images");
-
     var userPrompts = new List<ChatMessageContentPart>
     {
         ChatMessageContentPart.CreateTextPart(
             $"Extract the data from this licence. " +
             $"If a value is not present, provide null. " +
+            $"For the 'issuer' field, use the agency or company name, rather then a personal name. " +
             /*$"Don't include the top level 'Id' property in the response. " +
             $"Don't include the 'LicenceVersionId' property in the response. " +
             $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
             $"Use the following structure: {JsonSerializer.Serialize(Licence.Empty)}")
     };
     
+    Directory.CreateDirectory("Cache/PDFtoImage/Images");
+    var pageNumber = 0;
+    
     foreach (var pageImageGroup in pageImageGroups)
     {
         var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
 
-        var totalHeight = pageImageGroup.Sum(image => image.Height);
-        var width = pageImageGroup.Max(image => image.Width);
-        var stitchedImage = new SKBitmap(width, totalHeight);
-        var canvas = new SKCanvas(stitchedImage);
-        var currentHeight = 0;
-        
-        foreach (var pageImage in pageImageGroup)
-        {
-            canvas.DrawBitmap(pageImage, 0, currentHeight);
-            currentHeight += pageImage.Height;
-        }
+        var regenerateImage = true;
 
-        await using (var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write))
+        if (regenerateImage)
         {
+            var totalHeight = pageImageGroup.Sum(image => image.Height);
+            var width = pageImageGroup.Max(image => image.Width);
+            var stitchedImage = new SKBitmap(width, totalHeight);
+            var canvas = new SKCanvas(stitchedImage);
+            var currentHeight = 0;
+
+            foreach (var pageImage in pageImageGroup)
+            {
+                canvas.DrawBitmap(pageImage, 0, currentHeight);
+                currentHeight += pageImage.Height;
+            }
+
+            await using var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write);
             stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
         }
-        
-        var text =
+
+        var lines =
             (await tesseractOcr.GetTextLinesFromImageAsync(
                 pdfImageName,
                 pageNumber,
                 1,
                 mockPdfDocument)).ToList();
 
-        var averageLineLength = text.Average(x => x.Text.Length);
+        var averageLineLength = lines.Average(line
+            => line.Text.Length);
 
+        // Short lines indicate it may be a map page, no point processing that
         if (averageLineLength < 30)
         {
             pageNumber += 1;
@@ -148,19 +153,21 @@ async Task TestsForAiPromptsAsync()
         new UserChatMessage(userPrompts)
     };
 
-    var y = TiktokenTokenizer.CreateForModel(modelName);
-    var inputTokenCount = y.CountTokens(allPrompts[0].Content.ToString()!);
+    var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
+    var inputTokenCount = tokenizer.CountTokens(allPrompts[0].Content.ToString()!);
 
     foreach (var userPrompt in userPrompts)
     {
-        inputTokenCount += y.CountTokens(userPrompt.Text);
+        inputTokenCount += tokenizer.CountTokens(userPrompt.Text);
     }
+
+    const int maxTokensAllowedForModel = 16_000;
     
     var completionUpdates = chatClient.CompleteChatStreamingAsync(
         allPrompts,
         new ChatCompletionOptions
         {
-            MaxOutputTokenCount = 16_000 - inputTokenCount
+            MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount
         });
     
     var responseSb = new StringBuilder();
@@ -190,7 +197,16 @@ async Task TestsForAiPromptsAsync()
     schema.Filename = pdfName;
 
     Console.WriteLine("OK");
-    Console.Write(JsonSerializer.Serialize(schema, JsonHelper.GetSerializer()));
+    var filenameNoExtension = pdfName.Split('.').First();
+    var filenameNoSpacesOrDashes = filenameNoExtension
+        .Replace("-", string.Empty)
+        .Replace(" ", string.Empty);
+    
+    var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
+    var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
+
+    Console.Write(outputJs);
+    await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
 }
 
 async Task GenerateCsvForTestingAsync()

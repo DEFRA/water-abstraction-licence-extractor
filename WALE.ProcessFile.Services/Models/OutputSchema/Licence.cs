@@ -41,6 +41,7 @@ public class Licence
         LicenceVersion = new()
         {
             NaldStartDate = DateTime.MinValue,
+            Issuer = string.Empty,
             NaldEndDate = DateTime.MinValue,
             NaldVersionNumber = string.Empty,
             EffectiveDate = DateTime.MinValue,

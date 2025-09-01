@@ -11,6 +11,13 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Data\2-26-32-126 6937559.json" />
+      <None Include="Data\2-26-32-126 6937559.js">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <Target Name="link_deps" AfterTargets="AfterBuild">
         <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib"/>
         <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib"/>

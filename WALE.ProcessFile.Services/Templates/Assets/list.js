@@ -211,14 +211,26 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 issueDate = issueDate.split('T')[0];
             }
             
+            let aggregates = aiItem.abstractionLimits.aggregates;
+            let hasLinkedLicences = false;
+            
+            for (let j = 0; j < aggregates.length; j++) {
+                let aggregate = aggregates[j];
+                
+                if (aggregate.linkedLicences.length > 0) {
+                    hasLinkedLicences = true;
+                    break;
+                }
+            }
+            
             aiLicenceNumberLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(aiItem.licenceNumber) + "</span>";
             aiLimitsFoundLine = "<br /><span class='ai-line'>" + (aiItem.abstractionLimits.individual.length > 0
                 || aiItem.abstractionLimits.aggregates.length > 0 ? "True" : "False") + "</span>";
-            aiAggregatesFoundLine = "<br /><span class='ai-line'>" + (aiItem.abstractionLimits.aggregates.length > 0 ? "True" : "False") + "</span>";
+            aiAggregatesFoundLine = "<br /><span class='ai-line'>" + (aggregates.length > 0 ? "True" : "False") + "</span>";
             aiIssueDateLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(issueDate) + "</span>";
             aiIssuerLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(aiItem.licenceVersion.issuer) + "</span>";
             aiMeansLine = "<br /><span class='ai-line'>" + (aiItem.meansOfAbstraction.length > 0 ? "True" : "False") + "</span>";
-            aiLinkedLicencesLine = "<br /><span class='ai-line'>" + "TODO" + "</span>";
+            aiLinkedLicencesLine = "<br /><span class='ai-line'>" + (hasLinkedLicences ? "True" : "False") + "</span>";
             aiPurposesLine = "\n<span class='ai-line'>" + (aiItem.purposes.length > 0 ? aiPurposesSb.join('') : '--') + "</span>";
             aiPointsLine = "\n<span class='ai-line'>" + (aiItem.points.length > 0 ? aiPointsSb.join('') : '--') + "</span>";
         }

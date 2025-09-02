@@ -63,7 +63,7 @@ public class Licence
                 Id = string.Empty,
                 NaldId = null,
                 PurposeIds = [
-                    0.0
+                    "4.1"
                 ]
             }
         ],
@@ -74,7 +74,7 @@ public class Licence
                 NaldId = null,
                 Description = string.Empty,
                 PointIds = [
-                    0.0
+                    "2.1"
                 ]
             }
         ],
@@ -131,7 +131,22 @@ public class Licence
                 {
                     AggregateSetId = string.Empty,
                     NaldType = null,
-                    PrimaryType = PrimaryType.InLicence
+                    PrimaryType = PrimaryType.NotSet,
+                    SubType = SubType.NotSet,
+                    TimeCutoff = new TimeLimited
+                    {
+                        Date = null,
+                        LimitationType = LimitationType.Unknown
+                    },
+                    TimePeriod = new TimePeriod
+                    {
+                        StartDate = null,
+                        EndDate = null
+                    },
+                    LicenceNumber = null,
+                    LicenceVersionId = null,
+                    Limits = [],
+                    LinkedLicences = []
                 }
             ],
             Individual = [

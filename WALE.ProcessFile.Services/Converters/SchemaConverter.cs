@@ -641,7 +641,6 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => double.Parse(x!))
                 .ToArray() ?? [];
             
             var points = pointPurposeGroup.SubResults
@@ -697,7 +696,6 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PointGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => double.Parse(x!))
                 .ToArray() ?? [];
             
             var purposes = purposePointGroup?.SubResults

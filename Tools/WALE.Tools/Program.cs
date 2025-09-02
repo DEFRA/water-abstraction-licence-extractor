@@ -85,14 +85,23 @@ async Task TestsForAiPromptsAsync()
             var userPrompts = new List<ChatMessageContentPart>
             {
                 ChatMessageContentPart.CreateTextPart(
-                    $"Extract the data from this licence. " +
-                    $"If a value is not present, provide null. " +
-                    $"For the 'Issuer' field, use the agency or company name, rather then a personal name. " +
-                    $"'Points' refers to 'points of abstraction' - there may be multiple of these. " +
+                    "Extract the data from this licence. " +
+                    Environment.NewLine +
+                    "If a value is not present, provide null. " +
+                    Environment.NewLine +
+                    "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
+                    Environment.NewLine +
+                    "'points' refers to 'points of abstraction' or similar in the document - there may be multiple of these. " +
+                    Environment.NewLine +
+                    "Only populate the 'purposeIds' property under the 'points' property when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' should be an empty array. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1.' DOES NOT contain a purpose. " +
+                    Environment.NewLine +
+                    "Only populate the 'pointIds' property under the 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' should be an empty array. As an example, 'Public water supply.' DOES NOT contain a point. " +
+                    Environment.NewLine +
                     "Do not populate any date fields with minimum dates - set them as null rather then full of zeroes. " + 
                     /*$"Don't include the top level 'Id' property in the response. " +
                     $"Don't include the 'LicenceVersionId' property in the response. " +
                     $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
+                    Environment.NewLine +
                     $"Use the following structure: {Licence.GetSchemaForPrompt()}")
             };
 
@@ -207,7 +216,7 @@ async Task TestsForAiPromptsAsync()
                 break;
             }
             
-            var schema = JsonSerializer.Deserialize<Licence>(textResponse)!;
+            var schema = JsonSerializer.Deserialize<Licence>(textResponse, JsonHelper.GetSerializer())!;
             schema.Filename = pdfName;
 
             Console.WriteLine("OK");

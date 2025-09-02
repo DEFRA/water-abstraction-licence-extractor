@@ -13,6 +13,7 @@ public class Aggregate
             {
                 PrimaryType.LicenceToLicence => "LL",
                 PrimaryType.InLicence => "IL",
+                PrimaryType.NotSet => "NS",
                 _ => throw new ArgumentOutOfRangeException()
             };
             
@@ -20,6 +21,7 @@ public class Aggregate
             {
                 Enums.OutputSchema.SubType.PointToPoint => "PO",
                 Enums.OutputSchema.SubType.PurposeToPurpose => "PU",
+                Enums.OutputSchema.SubType.NotSet => "NS",
                 _ => string.Empty
             };
 

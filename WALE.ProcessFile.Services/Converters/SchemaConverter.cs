@@ -405,7 +405,7 @@ public static class SchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     LicenceVersionId = licenceVersionId,
-                    PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                    PrimaryType = linkedLicenceNumbers.Count >= 1
                         ? PrimaryType.LicenceToLicence
                         : PrimaryType.InLicence,
                     SubType = subType,

@@ -98,6 +98,8 @@ async Task TestsForAiPromptsAsync()
                     "Only populate the 'pointIds' property under the 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' should be an empty array. As an example, 'Public water supply.' DOES NOT contain a point. " +
                     Environment.NewLine +
                     "Do not populate any date fields with minimum dates - set them as null rather then full of zeroes. " + 
+                    Environment.NewLine +
+                    "The 'aggregates' property should be an empty array if the abstraction limits mentioned do not mention any aggregate ." +
                     /*$"Don't include the top level 'Id' property in the response. " +
                     $"Don't include the 'LicenceVersionId' property in the response. " +
                     $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/

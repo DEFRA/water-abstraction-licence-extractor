@@ -1,7 +1,6 @@
 ﻿using System.ClientModel;
 using System.Collections;
 using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using CsvHelper;
@@ -154,8 +153,7 @@ async Task TestsForAiPromptsAsync()
                 new Uri(KeyConfig.OpenAiEndpoint),
                 new ApiKeyCredential(KeyConfig.OpenAiKey));
 
-            var modelName = "gpt-4o";
-            var deploymentName = "gpt-4o";
+            var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
             var chatClient = azureClient.GetChatClient(deploymentName);
 
             var allPrompts = new List<ChatMessage>
@@ -165,47 +163,50 @@ async Task TestsForAiPromptsAsync()
                 new UserChatMessage(userPrompts)
             };
 
+            var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
             var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
             var inputTokenCount = tokenizer.CountTokens(allPrompts[0].Content.ToString()!);
 
             foreach (var userPrompt in userPrompts)
             {
+                if (userPrompt.Kind == ChatMessageContentPartKind.Image)
+                {
+                    inputTokenCount += 1120; // Guesstimate, but works out about okay for image I used (over by about 30)
+                    continue;
+                }
+                
                 inputTokenCount += tokenizer.CountTokens(userPrompt.Text);
             }
 
             const int maxTokensAllowedForModel = 16_000;
-
-            var completionUpdates = chatClient.CompleteChatStreamingAsync(
+            
+            var chatResponse = await chatClient.CompleteChatAsync(
                 allPrompts,
                 new ChatCompletionOptions
                 {
-                    MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount
+                    MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount,
+                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
                 });
 
-            var responseSb = new StringBuilder();
-
-            StreamingChatCompletionUpdate? lastUpdate = null;
-
-            await foreach (var completionUpdate in completionUpdates)
+            var textResponse = chatResponse.Value?.Content.FirstOrDefault()?.Text;
+            
+            if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
             {
-                if (completionUpdate.ContentUpdate.Count > 0)
-                {
-                    responseSb.Append(completionUpdate.ContentUpdate[0].Text);
-                    lastUpdate = completionUpdate;
-                }
-            }
-
-            var response = responseSb.ToString();
-
-            if (!response.EndsWith('}'))
-            {
-                Console.WriteLine($"ERROR - Malformed JSON returned {lastUpdate!.FinishReason}");
-                Console.Write(response);
+                Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
+                Console.Write(textResponse);
 
                 break;
             }
+            
+            if (!textResponse!.EndsWith('}'))
+            {
+                Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
+                Console.Write(textResponse);
 
-            var schema = JsonSerializer.Deserialize<Licence>(response)!;
+                break;
+            }
+            
+            var schema = JsonSerializer.Deserialize<Licence>(textResponse)!;
             schema.Filename = pdfName;
 
             Console.WriteLine("OK");

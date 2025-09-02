@@ -6,6 +6,9 @@
     <style>
         .default-hidden { display: none; }
         .show-all .default-hidden { display: block; }
+        #textOutput {
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -65,7 +68,11 @@
 
                     <div id="jsonPath">
                         <pre id="dataOutput"></pre>
-                    </div>                    
+                    </div>
+
+                    <div id="text">
+                        <span id="textOutput"></span>
+                    </div>
                 </div>
             </td>
         </tr>

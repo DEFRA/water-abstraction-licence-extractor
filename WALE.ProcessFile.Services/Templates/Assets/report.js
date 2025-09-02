@@ -16,7 +16,12 @@ function loadReport(filename) {
         if (params["showAll"] === "true") {
             bodyEle.className += " show-all";
         }
-
+        
+        loadScript(filename + '/PdfPig/Text/pages-all.js',
+            function() {
+                document.getElementById('textOutput').innerHTML = textData.replaceAll('\n', '<br/>\n');
+        });
+        
         window.aiData = {};
         
         let aiPath = "../Data/" + data.filename.split('.')[0] + '.js';
@@ -402,6 +407,7 @@ function disableAllTabs() {
     document.getElementById("jsonNewTabLink").className = "";
     document.getElementById("jsonAiTabLink").className = "";
     document.getElementById("jsonTabLink").className = "";
+    document.getElementById("textTabLink").className = "";
 }
 
 function hideAllAreas() {
@@ -409,6 +415,7 @@ function hideAllAreas() {
     document.getElementById("jsonPath").style.display = "none";
     document.getElementById("jsonNewPath").style.display = "none";
     document.getElementById("jsonAiPath").style.display = "none";
+    document.getElementById("text").style.display = "none";
 }
 
 function showTab(tabName) {
@@ -420,16 +427,19 @@ function showTab(tabName) {
         document.getElementById("iframeParent").style.display = "block";
         
         return false;
-    }
-    else if (tabName === "json-new") {
+    } else if (tabName === "json-new") {
         document.getElementById("jsonNewTabLink").className = "selectedTab";
         document.getElementById("jsonNewPath").style.display = "block";
         
         return false;
-    }
-    else if (tabName === "json-ai") {
+    } else if (tabName === "json-ai") {
         document.getElementById("jsonAiTabLink").className = "selectedTab";
         document.getElementById("jsonAiPath").style.display = "block";
+
+        return false;
+    } else if (tabName === "text") {
+        document.getElementById("textTabLink").className = "selectedTab";
+        document.getElementById("text").style.display = "block";
 
         return false;
     }

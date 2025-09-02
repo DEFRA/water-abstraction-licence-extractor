@@ -127,10 +127,23 @@ public class PdfDataExtractorService(
             Directory.CreateDirectory(folder);
             
             await File.WriteAllTextAsync(
-                $"{folder}/pages-all.txt",
+                pageAllPath,
                 string.Join("\r\n", documentLines
                     .Select(line => $"{line.LineNumber} {line.Text}")
                     .ToArray()));
+        }
+        
+        var pageAllJsPath = $"{folder}/pages-all.js";
+
+        if (!File.Exists(pageAllJsPath))
+        {
+            var body = string.Join("\r\n", documentLines
+                .Select(line => $"{line.LineNumber} {line.Text}")
+                .ToArray());
+            
+            await File.WriteAllTextAsync(
+                pageAllJsPath,
+                "var textData = `" + body + "`;");
         }
         
         // Save all text

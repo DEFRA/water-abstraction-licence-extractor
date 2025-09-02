@@ -91,15 +91,23 @@ async Task TestsForAiPromptsAsync()
                     Environment.NewLine +
                     "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
                     Environment.NewLine +
-                    "'points' refers to 'points of abstraction' or similar in the document - there may be multiple of these. " +
+                    "The top level 'points' property refers to 'points of abstraction' or similar mentioned in a section of the the document - there may be multiple of these. " +
                     Environment.NewLine +
-                    "Only populate the 'purposeIds' property under the 'points' property when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' should be an empty array. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1.' DOES NOT contain a purpose. " +
+                    "Only populate the 'purposeIds' property value under the top level 'points' property when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' value should be an empty array. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1' DOES NOT contain a purpose. " +
                     Environment.NewLine +
-                    "Only populate the 'pointIds' property under the 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' should be an empty array. As an example, 'Public water supply.' DOES NOT contain a point. " +
+                    "Only populate the 'pointIds' property value under the top level 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be an empty array. As an example, 'Public water supply' DOES NOT contain a point. " +
                     Environment.NewLine +
-                    "Do not populate any date fields with minimum dates - set them as null rather then full of zeroes. " + 
+                    "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
                     Environment.NewLine +
-                    "The 'aggregates' property should be an empty array if the abstraction limits mentioned do not mention any aggregate ." +
+                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
+                    Environment.NewLine +
+                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
+                    Environment.NewLine +
+                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
+                    Environment.NewLine +
+                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
+                    Environment.NewLine +
+                    "Property 'limitationType' must be either 'Upto' or 'From'. " +
                     /*$"Don't include the top level 'Id' property in the response. " +
                     $"Don't include the 'LicenceVersionId' property in the response. " +
                     $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/

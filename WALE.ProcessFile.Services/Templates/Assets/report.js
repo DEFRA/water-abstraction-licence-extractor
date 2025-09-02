@@ -64,9 +64,13 @@ function loadReport(filename) {
                 if (purposeMatch == null || purposeMatch.text == null || purposeMatch.text.length === 0) {
                     continue;
                 }
+                
+                var purposeText = purposeMatch.subResults != null
+                    && purposeMatch.subResults.length > 0
+                    ? purposeMatch.subResults[0].text[0].text : purposeMatch.text[0].text
 
                 sb2.push("<dt><a href='#' onclick='jumpToPage(this); return false;' data-page='" + purposeMatch.pageNumber + "'>"
-                    + purposeMatch.text[0].text + "</a></dt><dd><dl>");
+                    + purposeText + "</a></dt><dd><dl>");
 
                 let abstractionLimitsMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'AbstractionLimits\')]');
                 let meansOfAbstractionMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'MeansOfAbstraction\')]');

@@ -3190,7 +3190,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
 
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
-        Assert.Equal("22705026LV20210930-LLPU", aggregate.Id);
+        Assert.Equal("22705026LV20210930-ILPU", aggregate.Id);
         Assert.Equal(2, aggregate.Purposes.Length);
         Assert.Equal("4.1", aggregate.Purposes[0].Id);
         Assert.Equal("4.2", aggregate.Purposes[1].Id);

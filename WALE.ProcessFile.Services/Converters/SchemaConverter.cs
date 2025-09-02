@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Models;
@@ -184,7 +183,6 @@ public static class SchemaConverter
             matches,
             licenceNumber,
             licenceVersion.LicenceVersionId,
-            means,
             points,
             purposes);
         
@@ -254,9 +252,8 @@ public static class SchemaConverter
         List<LabelGroupResult> matches,
         string? licenceNumber,
         string? licenceVersionId,
-        MeanOfAbstraction[] means,
-        PointOfAbstraction[] points,
-        PurposeOfAbstraction[] purposes)
+        PointOfAbstraction[] allPoints,
+        PurposeOfAbstraction[] allPurposes)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -419,7 +416,17 @@ public static class SchemaConverter
                     TimePeriod = timePeriod
                 };
 
-                if (purposes?.Length > 0)
+                // If there are no points, purposes or licences specified, then it
+                // must mean its relevant to all points and purposes
+                if (aggregate.Points.Length == 0
+                    && aggregate.Purposes.Length == 0
+                    && linkedLicenceNumbers.Count == 0)
+                {
+                    aggregate.Points = allPoints.Select(Point (p) => p).ToArray();
+                    aggregate.Purposes = allPurposes.Select(Purpose (p) => p).ToArray();
+                }
+                
+                if (aggregate.Purposes.Length > 0)
                 {
                     foreach (var aggregateLimit in aggregateLimits)
                     {
@@ -427,7 +434,7 @@ public static class SchemaConverter
                     }
                 }
                 
-                if (points?.Length > 0)
+                if (aggregate.Points.Length > 0)
                 {
                     foreach (var aggregateLimit in aggregateLimits)
                     {

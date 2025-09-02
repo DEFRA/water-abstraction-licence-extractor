@@ -87,12 +87,13 @@ async Task TestsForAiPromptsAsync()
                 ChatMessageContentPart.CreateTextPart(
                     $"Extract the data from this licence. " +
                     $"If a value is not present, provide null. " +
-                    $"For the 'issuer' field, use the agency or company name, rather then a personal name. " +
-                    $"Points refers to 'points of abstraction' - there may be multiple of these. " +
+                    $"For the 'Issuer' field, use the agency or company name, rather then a personal name. " +
+                    $"'Points' refers to 'points of abstraction' - there may be multiple of these. " +
+                    "Do not populate any date fields with minimum dates - set them as null rather then full of zeroes. " + 
                     /*$"Don't include the top level 'Id' property in the response. " +
                     $"Don't include the 'LicenceVersionId' property in the response. " +
                     $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
-                    $"Use the following structure: {JsonSerializer.Serialize(Licence.Empty)}")
+                    $"Use the following structure: {Licence.GetSchemaForPrompt()}")
             };
 
             Directory.CreateDirectory("Cache/PDFtoImage/Images");

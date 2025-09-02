@@ -1,4 +1,6 @@
+using System.Text.Json;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
+using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -33,17 +35,22 @@ public class Licence
     public AbstractionLimits AbstractionLimits { get; init; } = new();    
     
     public TimePeriod? DefinitionOfYear { get; init; }
+
+    public static string GetSchemaForPrompt()
+    {
+        return JsonSerializer.Serialize(Empty, JsonHelper.GetSerializer());
+    }
     
     public static Licence Empty => new()
     {
         LicenceNumber = string.Empty,
-        Filename = string.Empty,
+        Filename = null,
         LicenceVersion = new()
         {
-            NaldStartDate = DateTime.MinValue,
+            NaldStartDate = null,
+            NaldEndDate = null,
+            NaldVersionNumber = null,
             Issuer = string.Empty,
-            NaldEndDate = DateTime.MinValue,
-            NaldVersionNumber = string.Empty,
             EffectiveDate = DateTime.MinValue,
             ExpiryDate = DateTime.MinValue,
             IssueDate = DateTime.MinValue,
@@ -54,7 +61,7 @@ public class Licence
             {
                 Description = string.Empty,
                 Id = string.Empty,
-                NaldId = string.Empty,
+                NaldId = null,
                 PurposeIds = [
                     0.0
                 ]
@@ -63,9 +70,9 @@ public class Licence
         Purposes = [
             new()
             {
-                NaldId = string.Empty,
-                Description = string.Empty,
                 Id = string.Empty,
+                NaldId = null,
+                Description = string.Empty,
                 PointIds = [
                     0.0
                 ]
@@ -78,7 +85,7 @@ public class Licence
                 EndDate = string.Empty,
                 Id = 0,
                 Inclusive = false,
-                NaldId = string.Empty,
+                NaldId = null,
                 PeriodType = AbstractionPeriodType.Unknown,
                 PointIds = [
                     string.Empty
@@ -123,7 +130,7 @@ public class Licence
                 new()
                 {
                     AggregateSetId = string.Empty,
-                    NaldType = string.Empty,
+                    NaldType = null,
                     PrimaryType = PrimaryType.InLicence
                 }
             ],

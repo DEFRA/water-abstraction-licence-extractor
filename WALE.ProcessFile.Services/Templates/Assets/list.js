@@ -195,7 +195,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             aiPurposesSb.push('<ul>');
 
             for (let j = 0; j < aiItem.purposes.length; j++) {
-                let purpose = item.purposes[j];
+                let purpose = aiItem.purposes[j].description;
                 aiPurposesSb.push('<li>' + purpose + '</li>');
             }
 
@@ -203,13 +203,13 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             aiPointsSb.push('<ul>');
 
             for (let j = 0; j < aiItem.points.length; j++) {
-                let point = item.points[j];
+                let point = aiItem.points[j].description;
                 aiPointsSb.push('<li>' + point + '</li>');
             }
 
             aiPointsSb.push('</ul>');
 
-            var issueDate = aiItem.licenceVersion.issueDate;
+            let issueDate = aiItem.licenceVersion.issueDate;
             if (!!issueDate) {
                 issueDate = issueDate.split('T')[0];
             }

@@ -47,11 +47,11 @@ async Task TestsForAiPromptsAsync()
 
     var pdfs = new List<string>
     {
-        /*"2-26-32-126 6937559.PDF",
+        "2-26-32-126 6937559.PDF",
         "2-27-29-012 7003124.PDF",
         "Application - New - Licence Issued 30092021.pdf",
         "Application Formal Variation Issued Licence 07032023 (1).pdf",
-        "Application Formal Variation Issued Licence 07032023.pdf",*/
+        "Application Formal Variation Issued Licence 07032023.pdf",
         "Application Minor Variation Issued Licence 03.10.24.pdf"
     };
 

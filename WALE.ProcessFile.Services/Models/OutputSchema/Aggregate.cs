@@ -56,7 +56,7 @@ public class Aggregate
     
     public string? NaldType { get; set; }
 
-    public TimeLimited? TimeCutoff { get; set; }
+    public TimeCutoff? TimeCutoff { get; set; }
     
     public Purpose[] Purposes { get; set; } = [];
 

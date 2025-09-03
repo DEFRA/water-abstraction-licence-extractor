@@ -45,17 +45,7 @@ public class Licence
     {
         LicenceNumber = string.Empty,
         Filename = null,
-        LicenceVersion = new()
-        {
-            NaldStartDate = null,
-            NaldEndDate = null,
-            NaldVersionNumber = null,
-            Issuer = string.Empty,
-            EffectiveDate = DateTime.MinValue,
-            ExpiryDate = DateTime.MinValue,
-            IssueDate = DateTime.MinValue,
-            OriginalIssueDate = DateTime.MinValue
-        },
+        LicenceVersion = LicenceVersion.Empty,
         Points = [
             new()
             {
@@ -133,10 +123,10 @@ public class Licence
                     NaldType = null,
                     PrimaryType = PrimaryType.NotSet,
                     SubType = SubType.NotSet,
-                    TimeCutoff = new TimeLimited
+                    TimeCutoff = new TimeCutoff
                     {
                         Date = null,
-                        LimitationType = LimitationType.Unknown
+                        CutoffType = CutoffType.Unknown
                     },
                     TimePeriod = new TimePeriod
                     {

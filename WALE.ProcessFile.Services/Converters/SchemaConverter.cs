@@ -384,7 +384,7 @@ public static class SchemaConverter
 
                 var pointsLoop = aggregateLimits.First().Points;
                 var purposesLoop = aggregateLimits.First().Purposes;
-                var timeCutoff = (TimeLimited?)null; // TODO
+                var timeCutoff = (TimeCutoff?)null; // TODO
                 var timePeriod = (TimePeriod?)null; // TODO
 
                 SubType? subType = null;

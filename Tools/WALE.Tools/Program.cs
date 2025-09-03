@@ -82,39 +82,8 @@ async Task TestsForAiPromptsAsync()
                 pageImageGroups.Add(pageImageGroup);
             }
 
-            var userPrompts = new List<ChatMessageContentPart>
-            {
-                ChatMessageContentPart.CreateTextPart(
-                    "Extract the data from this licence. " +
-                    Environment.NewLine +
-                    "If a value is not present, provide null. " +
-                    Environment.NewLine +
-                    "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
-                    Environment.NewLine +
-                    "The top level 'points' property refers to 'points of abstraction' or similar mentioned in a section of the the document - there may be multiple of these. " +
-                    Environment.NewLine +
-                    "Only populate the 'purposeIds' property value under the top level 'points' property when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' value should be an empty array. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1' DOES NOT contain a purpose. " +
-                    Environment.NewLine +
-                    "Only populate the 'pointIds' property value under the top level 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be an empty array. As an example, 'Public water supply' DOES NOT contain a point. " +
-                    Environment.NewLine +
-                    "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
-                    Environment.NewLine +
-                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
-                    Environment.NewLine +
-                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
-                    Environment.NewLine +
-                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
-                    Environment.NewLine +
-                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
-                    Environment.NewLine +
-                    "Property 'limitationType' must be either 'Upto' or 'From'. " +
-                    /*$"Don't include the top level 'Id' property in the response. " +
-                    $"Don't include the 'LicenceVersionId' property in the response. " +
-                    $"Don't include the 'Id' field under the 'Aggregates' array in the response. " +*/
-                    Environment.NewLine +
-                    $"Use the following structure: {Licence.GetSchemaForPrompt()}")
-            };
-
+            var imagePrompts = new List<ChatMessageContentPart>();
+            
             Directory.CreateDirectory("Cache/PDFtoImage/Images");
             var pageNumber = 0;
 
@@ -161,7 +130,7 @@ async Task TestsForAiPromptsAsync()
 
                 var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
 
-                userPrompts.Add(ChatMessageContentPart.CreateImagePart(
+                imagePrompts.Add(ChatMessageContentPart.CreateImagePart(
                     BinaryData.FromBytes(imageBytes),
                     "image/jpeg",
                     ChatImageDetailLevel.Auto));
@@ -172,62 +141,89 @@ async Task TestsForAiPromptsAsync()
             var azureClient = new AzureOpenAIClient(
                 new Uri(KeyConfig.OpenAiEndpoint),
                 new ApiKeyCredential(KeyConfig.OpenAiKey));
-
+            
             var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
             var chatClient = azureClient.GetChatClient(deploymentName);
-
-            var allPrompts = new List<ChatMessage>
+            
+            //se the following structure: {Licence.GetSchemaForPrompt()}
+            
+            /*var userPrompts1 = new List<ChatMessageContentPart>
             {
-                new SystemChatMessage(
-                    "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block."),
-                new UserChatMessage(userPrompts)
+                ChatMessageContentPart.CreateTextPart(
+                    "Extract the data from this licence. " +
+                    Environment.NewLine +
+                    "If a value is not present, provide null. " +
+                    Environment.NewLine +
+                    "Only populate the 'pointIds' property value under the top level 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be an empty array. As an example, 'Public water supply' DOES NOT contain a point. " +
+                    Environment.NewLine +
+                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
+                    Environment.NewLine +
+                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
+                    Environment.NewLine +
+                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
+                    Environment.NewLine +
+                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
+                    Environment.NewLine +
+                    "Property 'limitationType' must be either 'Upto' or 'From'. ")
+            };*/
+
+            var systemPrompts = new List<ChatMessageContentPart>
+            {
+                "You are an AI assistant that extracts data from documents"
+                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
             };
-
+            
+            var userPrompts = new List<ChatMessageContentPart>
+            {
+                ChatMessageContentPart.CreateTextPart(
+                    "If a value is not present, provide null. " +
+                    "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
+                    "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
+                    $"Use the following structure: {LicenceVersion.GetSchemaForPrompt()}"
+                )
+            };
+            userPrompts.AddRange(imagePrompts);
+            
             var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
-            var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
-            var inputTokenCount = tokenizer.CountTokens(allPrompts[0].Content.ToString()!);
 
-            foreach (var userPrompt in userPrompts)
-            {
-                if (userPrompt.Kind == ChatMessageContentPartKind.Image)
-                {
-                    inputTokenCount += 1120; // Guesstimate, but works out about okay for image I used (over by about 30)
-                    continue;
-                }
-                
-                inputTokenCount += tokenizer.CountTokens(userPrompt.Text);
-            }
-
-            const int maxTokensAllowedForModel = 16_000;
+            var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            if (textResponse == null) break;
             
-            var chatResponse = await chatClient.CompleteChatAsync(
-                allPrompts,
-                new ChatCompletionOptions
-                {
-                    MaxOutputTokenCount = maxTokensAllowedForModel - inputTokenCount,
-                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
-                });
+            var licenceVersion = JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
 
-            var textResponse = chatResponse.Value?.Content.FirstOrDefault()?.Text;
+            userPrompts =
+            [
+                ChatMessageContentPart.CreateTextPart(
+                    "If a value is not present, provide null. " +
+                    "This array relates to 'points of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
+                    "Only populate the 'purposeIds' property value when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' value should be '[]'. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1' DOES NOT contain a purpose. " +
+                    $"Use the following structure:\n\n[{PointOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
+                )
+            ];
+            userPrompts.AddRange(imagePrompts);
             
-            if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
-            {
-                Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
-                Console.Write(textResponse);
+            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            if (textResponse == null) break;
 
-                break;
-            }
+            var points = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
             
-            if (!textResponse!.EndsWith('}'))
-            {
-                Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
-                Console.Write(textResponse);
+            userPrompts =
+            [
+                ChatMessageContentPart.CreateTextPart(
+                    "If a value is not present, provide null. " +
+                    "This array relates to 'purposes of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
+                    "Only populate the 'pointIds' property value when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be '[]'. As an example, 'Public water supply' DOES NOT contain a point. " +
+                    $"Use the following structure:\n\n[{PurposeOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
+                )
+            ];
+            userPrompts.AddRange(imagePrompts);
+            
+            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            if (textResponse == null) break;
 
-                break;
-            }
+            var purposes = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
             
-            var schema = JsonSerializer.Deserialize<Licence>(textResponse, JsonHelper.GetSerializer())!;
-            schema.Filename = pdfName;
+            //schema.Filename = pdfName;
 
             Console.WriteLine("OK");
             var filenameNoExtension = pdfName.Split('.').First();
@@ -235,11 +231,11 @@ async Task TestsForAiPromptsAsync()
                 .Replace("-", string.Empty)
                 .Replace(" ", string.Empty);
 
-            var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
-            var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
+            //var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
+            //var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
 
-            Console.Write(outputJs);
-            await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
+            //Console.Write(outputJs);
+            //await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
         }
         catch (Exception e)
         {
@@ -249,6 +245,73 @@ async Task TestsForAiPromptsAsync()
     }
     
     tesseractOcr.Dispose();
+}
+
+async Task<string?> GetTextResponseAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> systemPrompts,
+    List<ChatMessageContentPart> userPrompts)
+{
+    var chatResponse = await chatClient.CompleteChatAsync(
+        new List<ChatMessage>
+        {
+            new SystemChatMessage(systemPrompts),
+            new UserChatMessage(userPrompts)
+        },
+        new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = GetMaxTokens(modelName, systemPrompts, userPrompts),
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
+        });
+
+    var textResponse = chatResponse.Value?.Content.FirstOrDefault()?.Text;
+            
+    if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
+    {
+        Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
+        Console.Write(textResponse);
+
+        return null;
+    }
+            
+    if (!textResponse!.EndsWith('}'))
+    {
+        Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
+        Console.Write(textResponse);
+
+        return null;
+    }
+
+    return textResponse;
+}
+
+int GetMaxTokens(
+    string modelName,
+    List<ChatMessageContentPart> systemPrompts,
+    List<ChatMessageContentPart> userPrompts)
+{
+    var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
+    var inputTokenCount = 0;
+    
+    foreach (var systemPrompt in systemPrompts)
+    {
+        inputTokenCount += tokenizer.CountTokens(systemPrompt.Text);
+    }
+    
+    foreach (var prompt in userPrompts)
+    {
+        if (prompt.Kind == ChatMessageContentPartKind.Image)
+        {
+            inputTokenCount += 1120; // Guesstimate, but works out about okay for image I used (over by about 30)
+            continue;
+        }
+                
+        inputTokenCount += tokenizer.CountTokens(prompt.Text);
+    }
+
+    const int maxTokensAllowedForModel = 16_000;
+    return maxTokensAllowedForModel - inputTokenCount;
 }
 
 async Task GenerateCsvForTestingAsync()
@@ -483,4 +546,26 @@ internal class CsvLine
     public bool HasAggregate { get; set; }
     public string? AggregateData { get; set; }
     public string? Data { get; set; }
+}
+
+internal class PointOfAbstractionArrayWrapped()
+{
+    public PointOfAbstraction[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new PointOfAbstractionArrayWrapped { Data = [PointOfAbstraction.Empty] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
+}
+
+internal class PurposeOfAbstractionArrayWrapped()
+{
+    public PurposeOfAbstraction[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new PurposeOfAbstractionArrayWrapped { Data = [PurposeOfAbstraction.Empty] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
 }

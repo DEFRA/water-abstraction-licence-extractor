@@ -1,3 +1,6 @@
+using System.Text.Json;
+using WALE.ProcessFile.Services.Helpers;
+
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class LicenceVersion
@@ -31,4 +34,21 @@ public class LicenceVersion
     public DateTime? NaldEndDate { get; set; }
     
     public string? NaldVersionNumber { get; set; }
+
+    public static LicenceVersion Empty => new()
+    {
+        NaldStartDate = null,
+        NaldEndDate = null,
+        NaldVersionNumber = null,
+        Issuer = string.Empty,
+        EffectiveDate = DateTime.MinValue,
+        ExpiryDate = DateTime.MinValue,
+        IssueDate = DateTime.MinValue,
+        OriginalIssueDate = DateTime.MinValue
+    };
+    
+    public static string GetSchemaForPrompt()
+    {
+        return JsonSerializer.Serialize(Empty, JsonHelper.GetSerializer());
+    }
 }

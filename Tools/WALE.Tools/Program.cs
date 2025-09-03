@@ -6,7 +6,6 @@ using Azure.AI.OpenAI;
 using CsvHelper;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
-using OpenAI.Files;
 using PDFtoImage;
 using SkiaSharp;
 using WALE.ProcessFile.Services.Configuration;
@@ -36,17 +35,7 @@ return;
 
 async Task TestsForAiPromptsAsync()
 {
-    var tesseractOcr = new TesseractOcrDataExtractorService(
-        KeyConfig.TesseractPrefix
-        ?? throw new NullReferenceException(KeyConfig.TesseractPrefix));
-
-    var mockPdfDocument = new PdfDocument(
-        "[NOT_USED]",
-        KeyConfig.OutputFolder,
-        KeyConfig.CacheFolder,
-        true);
-
-    var pdfs = new List<string>
+    var pdfFilenames = new List<string>
     {
         "2-26-32-126 6937559.PDF",
         "2-27-29-012 7003124.PDF",
@@ -56,14 +45,14 @@ async Task TestsForAiPromptsAsync()
         "Application Minor Variation Issued Licence 03.10.24.pdf"
     };
 
-    foreach (var pdfName in pdfs)
+    foreach (var pdfFilename in pdfFilenames)
     {
         try
         {
-            var pdf = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfName);
+            var pdfFile = await File.ReadAllBytesAsync(KeyConfig.PdfFolder + pdfFilename);
 
             #pragma warning disable CA1416
-            var pageImages = Conversion.ToImages(pdf).ToList();
+            var pageImages = Conversion.ToImages(pdfFile).ToList();
             #pragma warning restore CA1416
 
             var totalPageCount = pageImages.Count;
@@ -83,190 +72,52 @@ async Task TestsForAiPromptsAsync()
                 pageImageGroups.Add(pageImageGroup);
             }
 
+            var imagePrompts = await GetImagePromptsAsync(
+                pdfFilename,
+                pageImageGroups);
+            
             var azureClient = new AzureOpenAIClient(
                 new Uri(KeyConfig.OpenAiEndpoint),
                 new ApiKeyCredential(KeyConfig.OpenAiKey));
-
-            // Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
-            // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
-            //var fileClient = azureClient.GetOpenAIFileClient();
-            
-            var imagePrompts = new List<ChatMessageContentPart>();
-            
-            Directory.CreateDirectory("Cache/PDFtoImage/Images");
-            var pageNumber = 0;
-
-            foreach (var pageImageGroup in pageImageGroups)
-            {
-                var filename = $"{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
-                var pdfImageName = $"Cache/PDFtoImage/Images/{filename}";
-
-                var regenerateImage = true;
-
-                if (regenerateImage)
-                {
-                    var totalHeight = pageImageGroup.Sum(image => image.Height);
-                    var width = pageImageGroup.Max(image => image.Width);
-                    var stitchedImage = new SKBitmap(width, totalHeight);
-                    var canvas = new SKCanvas(stitchedImage);
-                    var currentHeight = 0;
-
-                    foreach (var pageImage in pageImageGroup)
-                    {
-                        canvas.DrawBitmap(pageImage, 0, currentHeight);
-                        currentHeight += pageImage.Height;
-                    }
-
-                    await using var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write);
-                    stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
-                }
-
-                var lines =
-                    (await tesseractOcr.GetTextLinesFromImageAsync(
-                        pdfImageName,
-                        pageNumber,
-                        1,
-                        mockPdfDocument)).ToList();
-
-                var averageLineLength = lines.Average(line
-                    => line.Text.Length);
-
-                // Short lines indicate it may be a map page, no point processing that
-                if (averageLineLength < 30)
-                {
-                    pageNumber += 1;
-                    continue;
-                }
-
-                var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
-
-                // Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
-                // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
-                /*var uploadResult = await fileClient.UploadFileAsync(
-                    BinaryData.FromBytes(imageBytes),
-                    filename,
-                    FileUploadPurpose.Vision
-                );*/
-                
-                imagePrompts.Add(ChatMessageContentPart.CreateImagePart(
-                    BinaryData.FromBytes(imageBytes),
-                    "image/jpeg",
-                    ChatImageDetailLevel.Auto));
-
-                pageNumber += 1;
-            }
-            
-            var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
-            var chatClient = azureClient.GetChatClient(deploymentName);
             
             var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
+            var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
 
-            var userPrompts = new List<ChatMessageContentPart>
-            {
-                ChatMessageContentPart.CreateTextPart(
-                    "Please fetch me the whole section of the document that covers abstraction limits. Do "
-                    + "not change it at all. Give me only this - do not add any follow up questions or advice."
-                )
-            };
-            userPrompts.AddRange(imagePrompts);
+            var chatClient = azureClient.GetChatClient(deploymentName);
             
-            var abstractionLimitsSectionText = await GetTextResponseAsync(
+            Console.WriteLine("Looking up abstraction limits section");
+            
+            var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                 chatClient,
                 modelName,
-                [
-                    "You are an AI assistant that extracts a section of text from documents"
-                    + " and returns them as is. Return only this text, with no other instructions or text." ],
-                userPrompts,
-                false);
+                imagePrompts);
 
             if (string.IsNullOrEmpty(abstractionLimitsSectionText))
             {
                 break;
             }
             
-            /*var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
-            if (textResponse == null) break;
+            Console.WriteLine("Found abstraction limits section");
             
-            /var licenceVersion = JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
-
-            userPrompts =
-            [
-                ChatMessageContentPart.CreateTextPart(
-                    "If a value is not present, provide null. " +
-                    "This array relates to 'points of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
-                    "Only populate the 'purposeIds' property value when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' value should be '[]'. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1' DOES NOT contain a purpose. " +
-                    $"Use the following structure:\n\n[{PointOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
-                )
-            ];
-            userPrompts.AddRange(imagePrompts);
+            var individualAbstractionLimits = await GetAbstractionLimitsAsync(chatClient, modelName, abstractionLimitsSectionText);
+            Console.WriteLine($"Found {individualAbstractionLimits.Length} abstraction limits section");
             
-            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
-            if (textResponse == null) break;
-
-            var points = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+            var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, imagePrompts);
+            Console.WriteLine("Found licence version section");
             
-            userPrompts =
-            [
-                ChatMessageContentPart.CreateTextPart(
-                    "If a value is not present, provide null. " +
-                    "This array relates to 'purposes of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
-                    "Only populate the 'pointIds' property value when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be '[]'. As an example, 'Public water supply' DOES NOT contain a point. " +
-                    $"Use the following structure:\n\n[{PurposeOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
-                )
-            ];
-            userPrompts.AddRange(imagePrompts);
+            var points = await GetPointsAsync(chatClient, modelName, imagePrompts);
+            Console.WriteLine($"Found {points.Length} points section");
             
-            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
-            if (textResponse == null) break;
-
-            var purposes = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
-            */
-
-            /*var systemPrompts = new List<ChatMessageContentPart>
-            {
-                "You are an AI assistant that extracts data from documents"
-                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
-            };*/
+            var purposes = await GetPointsAsync(chatClient, modelName, imagePrompts);
+            Console.WriteLine($"Found {purposes.Length} purposes section");
             
-            var systemPrompts = new List<ChatMessageContentPart>
-            {
-                "You are an AI assistant that extracts data from documents"
-                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
-                + Environment.NewLine
-                + Environment.NewLine
-                + abstractionLimitsSectionText
-            };
-            
-            userPrompts =
-            [
-                ChatMessageContentPart.CreateTextPart(
-                    "If a value is not present, provide null. " +
-                    "Only populate the 'points' property value when the text explicitly mentions at least one point - if there are no point mentioned in the limit, 'points' value should be '[]'. " +
-                    "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
-                    "Exclude any limits that mention they are in aggregate. " +
-                    "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
-                    //"Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
-                    //"Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
-                    //"Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
-                    //"Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
-                    //"Property 'cutoffType' must be either 'Upto' or 'From'. " +
-                    $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
-                )
-            ];
-            
-            var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
-            if (textResponse == null) break;
-
-            var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
-            
-            //schema.Filename = pdfName;
-
             Console.WriteLine("OK");
-            var filenameNoExtension = pdfName.Split('.').First();
+            var filenameNoExtension = pdfFilename.Split('.').First();
             var filenameNoSpacesOrDashes = filenameNoExtension
                 .Replace("-", string.Empty)
                 .Replace(" ", string.Empty);
 
+            //schema.Filename = pdfName;
             //var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
             //var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
 
@@ -279,8 +130,229 @@ async Task TestsForAiPromptsAsync()
             throw;
         }
     }
+}
+
+async Task<PurposeOfAbstraction[]> GetPurposesAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> imagePrompts)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "This array relates to 'purposes of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
+            "Only populate the 'pointIds' property value when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be '[]'. As an example, 'Public water supply' DOES NOT contain a point. " +
+            $"Use the following structure:\n\n[{PurposeOfAbstractionArrayWrapped.GetSchemaForPrompt()}]")
+    };
+
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+    };
     
+    userPrompts.AddRange(imagePrompts);
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+            
+    var response = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return response.Data;
+}
+
+async Task<PointOfAbstraction[]> GetPointsAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> imagePrompts)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "This array relates to 'points of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
+            "Only populate the 'purposeIds' property value when the point text explicitly mentions at least one purpose - if there are no purposes mentioned in the point, 'purposeIds' value should be '[]'. As an example, 'At National Grid Reference SE 039 152 marked ‘A’ on map 1' DOES NOT contain a purpose. " +
+            $"Use the following structure:\n\n[{PointOfAbstractionArrayWrapped.GetSchemaForPrompt()}]")
+    };
+
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+    };
+    
+    userPrompts.AddRange(imagePrompts);
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+            
+    var response = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return response.Data;
+}
+
+async Task<LicenceVersion> GetLicenceVersionAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> imagePrompts)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart("If a value is not present, provide null. " +
+            "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
+            "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
+            $"Use the following structure: {LicenceVersion.GetSchemaForPrompt()}")
+    };
+
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+    };
+    
+    userPrompts.AddRange(imagePrompts);
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+            
+    return JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
+}
+
+async Task<AbstractionLimit[]> GetAbstractionLimitsAsync(
+    ChatClient chatClient,
+    string modelName,
+    string abstractionLimitsSectionText)
+{
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + abstractionLimitsSectionText
+    };
+    
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "Only populate the 'points' property value when the text explicitly mentions at least one point - if there are no point mentioned in the limit, 'points' value should be '[]'. " +
+            "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
+            "Exclude any limits that mention they are in aggregate. " +
+            "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
+            //"Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
+            //"Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
+            //"Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
+            //"Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
+            //"Property 'cutoffType' must be either 'Upto' or 'From'. " +
+            $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
+        )
+    };
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+
+    var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return individualAbstractionLimits.Data;
+}
+
+async Task<string?> GetAbstractionLimitsTextAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> imagePrompts)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "Please fetch me the whole section of the document that covers abstraction limits. Do "
+            + "not change it at all. Give me only this - do not add any follow up questions or advice."
+        )
+    };
+    
+    userPrompts.AddRange(imagePrompts);
+            
+    return await GetTextResponseAsync(
+        chatClient,
+        modelName,
+        [
+            "You are an AI assistant that extracts a section of text from documents"
+            + " and returns them as is. Return only this text, with no other instructions or text." ],
+        userPrompts,
+        false);
+}
+
+async Task<List<ChatMessageContentPart>> GetImagePromptsAsync(
+    string pdfFilename,
+    List<List<SKBitmap>> pageImageGroups)
+{
+    var tesseractOcr = new TesseractOcrDataExtractorService(
+        KeyConfig.TesseractPrefix
+        ?? throw new NullReferenceException(KeyConfig.TesseractPrefix));
+
+    var mockPdfDocument = new PdfDocument(
+        "[NOT_USED]",
+        KeyConfig.OutputFolder,
+        KeyConfig.CacheFolder,
+        true);
+    
+    var imagePrompts = new List<ChatMessageContentPart>();
+            
+    Directory.CreateDirectory("Cache/PDFtoImage/Images");
+    var pageNumber = 0;
+
+    foreach (var pageImageGroup in pageImageGroups)
+    {
+        var filename = $"{pdfFilename.Replace(".", "_")}_{pageNumber}.jpg";
+        var pdfImageName = $"Cache/PDFtoImage/Images/{filename}";
+
+        var regenerateImage = true;
+
+        if (regenerateImage)
+        {
+            var totalHeight = pageImageGroup.Sum(image => image.Height);
+            var width = pageImageGroup.Max(image => image.Width);
+            var stitchedImage = new SKBitmap(width, totalHeight);
+            var canvas = new SKCanvas(stitchedImage);
+            var currentHeight = 0;
+
+            foreach (var pageImage in pageImageGroup)
+            {
+                canvas.DrawBitmap(pageImage, 0, currentHeight);
+                currentHeight += pageImage.Height;
+            }
+
+            await using var stitchedFileStream = new FileStream(pdfImageName, FileMode.Create, FileAccess.Write);
+            stitchedImage.Encode(stitchedFileStream, SKEncodedImageFormat.Jpeg, 100);
+        }
+
+        var lines =
+            (await tesseractOcr.GetTextLinesFromImageAsync(
+                pdfImageName,
+                pageNumber,
+                1,
+                mockPdfDocument)).ToList();
+
+        var averageLineLength = lines.Average(line
+            => line.Text.Length);
+
+        // Short lines indicate it may be a map page, no point processing that
+        if (averageLineLength < 30)
+        {
+            pageNumber += 1;
+            continue;
+        }
+
+        var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
+        
+        imagePrompts.Add(ChatMessageContentPart.CreateImagePart(
+            BinaryData.FromBytes(imageBytes),
+            "image/jpeg",
+            ChatImageDetailLevel.Auto));
+
+        pageNumber += 1;
+    }
+
     tesseractOcr.Dispose();
+    return imagePrompts;
 }
 
 async Task<string?> GetTextResponseAsync(
@@ -620,3 +692,15 @@ internal class AbstractionLimitArrayWrapped()
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }
+
+// Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
+// https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
+/*var uploadResult = await fileClient.UploadFileAsync(
+    BinaryData.FromBytes(imageBytes),
+    filename,
+    FileUploadPurpose.Vision
+);*/
+
+// Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
+// https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
+//var fileClient = azureClient.GetOpenAIFileClient();

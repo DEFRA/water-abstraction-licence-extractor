@@ -45,29 +45,9 @@ public class Licence
     {
         LicenceNumber = string.Empty,
         Filename = null,
-        LicenceVersion = LicenceVersion.Empty,
-        Points = [
-            new()
-            {
-                Description = string.Empty,
-                Id = string.Empty,
-                NaldId = null,
-                PurposeIds = [
-                    "4.1"
-                ]
-            }
-        ],
-        Purposes = [
-            new()
-            {
-                Id = string.Empty,
-                NaldId = null,
-                Description = string.Empty,
-                PointIds = [
-                    "2.1"
-                ]
-            }
-        ],
+        LicenceVersion = LicenceVersion.Template,
+        Points = [PointOfAbstraction.Template],
+        Purposes = [PurposeOfAbstraction.Template],
         PeriodsOfAbstraction = [
             new PeriodOfAbstraction
             {
@@ -114,55 +94,7 @@ public class Licence
                 }
             }
         ],
-        AbstractionLimits = new()
-        {
-            Aggregates = [
-                new()
-                {
-                    AggregateSetId = string.Empty,
-                    NaldType = null,
-                    PrimaryType = PrimaryType.NotSet,
-                    SubType = SubType.NotSet,
-                    TimeCutoff = new TimeCutoff
-                    {
-                        Date = null,
-                        CutoffType = CutoffType.Unknown
-                    },
-                    TimePeriod = new TimePeriod
-                    {
-                        StartDate = null,
-                        EndDate = null
-                    },
-                    LicenceNumber = null,
-                    LicenceVersionId = null,
-                    Limits = [],
-                    LinkedLicences = []
-                }
-            ],
-            Individual = [
-                new()
-                {
-                    Value = 0,
-                    ImplicitLimit = false,
-                    PeriodType = LimitPeriodType.NotApplicable,
-                    Points = [
-                        new()
-                        {
-                            Description = string.Empty,
-                            Id = string.Empty
-                        }
-                    ],
-                    Purposes = [
-                        new()
-                        {
-                            Description = string.Empty,
-                            Id = string.Empty
-                        }
-                    ],
-                    Units = string.Empty
-                }
-            ]
-        },
+        AbstractionLimits = AbstractionLimits.Template,
         DefinitionOfYear = new()
         {
             StartDate = string.Empty,

@@ -6,7 +6,7 @@ public class PurposeOfAbstraction : Purpose
 
     public string[] PointIds { get; set; } = [];
     
-    public static PurposeOfAbstraction Empty => new()
+    public static PurposeOfAbstraction Template => new()
     {
         Description = string.Empty,
         Id = string.Empty,

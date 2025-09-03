@@ -6,7 +6,7 @@ public class PointOfAbstraction : Point
 
     public string[] PurposeIds { get; init; } = [];
     
-    public static PointOfAbstraction Empty => new()
+    public static PointOfAbstraction Template => new()
     {
         Description = string.Empty,
         Id = string.Empty,

@@ -35,7 +35,7 @@ public class LicenceVersion
     
     public string? NaldVersionNumber { get; set; }
 
-    public static LicenceVersion Empty => new()
+    public static LicenceVersion Template => new()
     {
         NaldStartDate = null,
         NaldEndDate = null,
@@ -49,6 +49,6 @@ public class LicenceVersion
     
     public static string GetSchemaForPrompt()
     {
-        return JsonSerializer.Serialize(Empty, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
     }
 }

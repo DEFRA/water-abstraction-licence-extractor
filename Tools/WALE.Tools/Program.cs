@@ -6,6 +6,7 @@ using Azure.AI.OpenAI;
 using CsvHelper;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
+using OpenAI.Files;
 using PDFtoImage;
 using SkiaSharp;
 using WALE.ProcessFile.Services.Configuration;
@@ -82,6 +83,14 @@ async Task TestsForAiPromptsAsync()
                 pageImageGroups.Add(pageImageGroup);
             }
 
+            var azureClient = new AzureOpenAIClient(
+                new Uri(KeyConfig.OpenAiEndpoint),
+                new ApiKeyCredential(KeyConfig.OpenAiKey));
+
+            // Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
+            // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
+            //var fileClient = azureClient.GetOpenAIFileClient();
+            
             var imagePrompts = new List<ChatMessageContentPart>();
             
             Directory.CreateDirectory("Cache/PDFtoImage/Images");
@@ -89,7 +98,8 @@ async Task TestsForAiPromptsAsync()
 
             foreach (var pageImageGroup in pageImageGroups)
             {
-                var pdfImageName = $"Cache/PDFtoImage/Images/{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
+                var filename = $"{pdfName.Replace(".", "_")}_{pageNumber}.jpg";
+                var pdfImageName = $"Cache/PDFtoImage/Images/{filename}";
 
                 var regenerateImage = true;
 
@@ -130,6 +140,14 @@ async Task TestsForAiPromptsAsync()
 
                 var imageBytes = await File.ReadAllBytesAsync(pdfImageName);
 
+                // Not currently supported: - Images can't be uploaded as a file and then referenced as input. Coming soon.
+                // https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses?tabs=rest-api- No point in doing this yet
+                /*var uploadResult = await fileClient.UploadFileAsync(
+                    BinaryData.FromBytes(imageBytes),
+                    filename,
+                    FileUploadPurpose.Vision
+                );*/
+                
                 imagePrompts.Add(ChatMessageContentPart.CreateImagePart(
                     BinaryData.FromBytes(imageBytes),
                     "image/jpeg",
@@ -137,36 +155,10 @@ async Task TestsForAiPromptsAsync()
 
                 pageNumber += 1;
             }
-
-            var azureClient = new AzureOpenAIClient(
-                new Uri(KeyConfig.OpenAiEndpoint),
-                new ApiKeyCredential(KeyConfig.OpenAiKey));
             
             var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
             var chatClient = azureClient.GetChatClient(deploymentName);
             
-            //se the following structure: {Licence.GetSchemaForPrompt()}
-            
-            /*var userPrompts1 = new List<ChatMessageContentPart>
-            {
-                ChatMessageContentPart.CreateTextPart(
-                    "Extract the data from this licence. " +
-                    Environment.NewLine +
-                    "If a value is not present, provide null. " +
-                    Environment.NewLine +
-                    "Only populate the 'pointIds' property value under the top level 'purposes' property when the purpose text explicitly mentions at least one point - if there are no points mentioned in the purpose, 'pointIds' value should be an empty array. As an example, 'Public water supply' DOES NOT contain a point. " +
-                    Environment.NewLine +
-                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
-                    Environment.NewLine +
-                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
-                    Environment.NewLine +
-                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
-                    Environment.NewLine +
-                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
-                    Environment.NewLine +
-                    "Property 'limitationType' must be either 'Upto' or 'From'. ")
-            };*/
-
             var systemPrompts = new List<ChatMessageContentPart>
             {
                 "You are an AI assistant that extracts data from documents"
@@ -223,6 +215,25 @@ async Task TestsForAiPromptsAsync()
 
             var purposes = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
             
+            userPrompts =
+            [
+                ChatMessageContentPart.CreateTextPart(
+                    "If a value is not present, provide null. " +
+                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
+                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
+                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
+                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
+                    "Property 'cutoffType' must be either 'Upto' or 'From'. " +
+                    $"Use the following structure:\n\n[{AbstractionLimits.GetSchemaForPrompt()}]"
+                )
+            ];
+            userPrompts.AddRange(imagePrompts);
+            
+            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            if (textResponse == null) break;
+
+            var abstractionLimits = JsonSerializer.Deserialize<AbstractionLimits>(textResponse, JsonHelper.GetSerializer())!;
+            
             //schema.Filename = pdfName;
 
             Console.WriteLine("OK");
@@ -262,7 +273,7 @@ async Task<string?> GetTextResponseAsync(
         new ChatCompletionOptions
         {
             MaxOutputTokenCount = GetMaxTokens(modelName, systemPrompts, userPrompts),
-            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
         });
 
     var textResponse = chatResponse.Value?.Content.FirstOrDefault()?.Text;
@@ -554,7 +565,7 @@ internal class PointOfAbstractionArrayWrapped()
     
     public static string GetSchemaForPrompt()
     {
-        var template = new PointOfAbstractionArrayWrapped { Data = [PointOfAbstraction.Empty] };
+        var template = new PointOfAbstractionArrayWrapped { Data = [PointOfAbstraction.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }
@@ -565,7 +576,7 @@ internal class PurposeOfAbstractionArrayWrapped()
     
     public static string GetSchemaForPrompt()
     {
-        var template = new PurposeOfAbstractionArrayWrapped { Data = [PurposeOfAbstraction.Empty] };
+        var template = new PurposeOfAbstractionArrayWrapped { Data = [PurposeOfAbstraction.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }

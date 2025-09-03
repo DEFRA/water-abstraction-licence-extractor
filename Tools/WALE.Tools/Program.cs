@@ -159,29 +159,35 @@ async Task TestsForAiPromptsAsync()
             var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
             var chatClient = azureClient.GetChatClient(deploymentName);
             
-            var systemPrompts = new List<ChatMessageContentPart>
-            {
-                "You are an AI assistant that extracts data from documents"
-                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
-            };
-            
+            var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
+
             var userPrompts = new List<ChatMessageContentPart>
             {
                 ChatMessageContentPart.CreateTextPart(
-                    "If a value is not present, provide null. " +
-                    "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
-                    "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
-                    $"Use the following structure: {LicenceVersion.GetSchemaForPrompt()}"
+                    "Please fetch me the whole section of the document that covers abstraction limits. Do "
+                    + "not change it at all. Give me only this - do not add any follow up questions or advice."
                 )
             };
             userPrompts.AddRange(imagePrompts);
             
-            var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
+            var abstractionLimitsSectionText = await GetTextResponseAsync(
+                chatClient,
+                modelName,
+                [
+                    "You are an AI assistant that extracts a section of text from documents"
+                    + " and returns them as is. Return only this text, with no other instructions or text." ],
+                userPrompts,
+                false);
 
-            var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            if (string.IsNullOrEmpty(abstractionLimitsSectionText))
+            {
+                break;
+            }
+            
+            /*var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
             if (textResponse == null) break;
             
-            var licenceVersion = JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
+            /var licenceVersion = JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
 
             userPrompts =
             [
@@ -214,25 +220,44 @@ async Task TestsForAiPromptsAsync()
             if (textResponse == null) break;
 
             var purposes = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+            */
+
+            /*var systemPrompts = new List<ChatMessageContentPart>
+            {
+                "You are an AI assistant that extracts data from documents"
+                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+            };*/
+            
+            var systemPrompts = new List<ChatMessageContentPart>
+            {
+                "You are an AI assistant that extracts data from documents"
+                + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
+                + Environment.NewLine
+                + Environment.NewLine
+                + abstractionLimitsSectionText
+            };
             
             userPrompts =
             [
                 ChatMessageContentPart.CreateTextPart(
                     "If a value is not present, provide null. " +
-                    "Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
-                    "Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
-                    "Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
-                    "Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
-                    "Property 'cutoffType' must be either 'Upto' or 'From'. " +
-                    $"Use the following structure:\n\n[{AbstractionLimits.GetSchemaForPrompt()}]"
+                    "Only populate the 'points' property value when the text explicitly mentions at least one point - if there are no point mentioned in the limit, 'points' value should be '[]'. " +
+                    "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
+                    "Exclude any limits that mention they are in aggregate. " +
+                    "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
+                    //"Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
+                    //"Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
+                    //"Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
+                    //"Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
+                    //"Property 'cutoffType' must be either 'Upto' or 'From'. " +
+                    $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
                 )
             ];
-            userPrompts.AddRange(imagePrompts);
             
-            textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+            var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
             if (textResponse == null) break;
 
-            var abstractionLimits = JsonSerializer.Deserialize<AbstractionLimits>(textResponse, JsonHelper.GetSerializer())!;
+            var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
             
             //schema.Filename = pdfName;
 
@@ -262,7 +287,8 @@ async Task<string?> GetTextResponseAsync(
     ChatClient chatClient,
     string modelName,
     List<ChatMessageContentPart> systemPrompts,
-    List<ChatMessageContentPart> userPrompts)
+    List<ChatMessageContentPart> userPrompts,
+    bool json = true)
 {
     var chatResponse = await chatClient.CompleteChatAsync(
         new List<ChatMessage>
@@ -273,25 +299,28 @@ async Task<string?> GetTextResponseAsync(
         new ChatCompletionOptions
         {
             MaxOutputTokenCount = GetMaxTokens(modelName, systemPrompts, userPrompts),
-            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+            ResponseFormat = json ? ChatResponseFormat.CreateJsonObjectFormat() : ChatResponseFormat.CreateTextFormat()
         });
 
     var textResponse = chatResponse.Value?.Content.FirstOrDefault()?.Text;
-            
-    if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
-    {
-        Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
-        Console.Write(textResponse);
 
-        return null;
-    }
-            
-    if (!textResponse!.EndsWith('}'))
+    if (json)
     {
-        Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
-        Console.Write(textResponse);
+        if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
+        {
+            Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
+            Console.Write(textResponse);
 
-        return null;
+            return null;
+        }
+
+        if (!textResponse!.EndsWith('}'))
+        {
+            Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
+            Console.Write(textResponse);
+
+            return null;
+        }
     }
 
     return textResponse;
@@ -577,6 +606,17 @@ internal class PurposeOfAbstractionArrayWrapped()
     public static string GetSchemaForPrompt()
     {
         var template = new PurposeOfAbstractionArrayWrapped { Data = [PurposeOfAbstraction.Template] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
+}
+
+internal class AbstractionLimitArrayWrapped()
+{
+    public AbstractionLimit[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new AbstractionLimitArrayWrapped { Data = [AbstractionLimit.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }

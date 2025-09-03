@@ -71,10 +71,6 @@ async Task TestsForAiPromptsAsync()
 
                 pageImageGroups.Add(pageImageGroup);
             }
-
-            var imagePrompts = await GetImagePromptsAsync(
-                pdfFilename,
-                pageImageGroups);
             
             var azureClient = new AzureOpenAIClient(
                 new Uri(KeyConfig.OpenAiEndpoint),
@@ -87,6 +83,10 @@ async Task TestsForAiPromptsAsync()
             
             Console.WriteLine("Looking up abstraction limits section");
 
+            var imagePrompts = await GetImagePromptsAsync(
+                pdfFilename,
+                pageImageGroups);
+            
             var allDocumentText = await GetDocumentTextAsync(
                 chatClient,
                 modelName,
@@ -100,7 +100,7 @@ async Task TestsForAiPromptsAsync()
             var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                 chatClient,
                 modelName,
-                imagePrompts);
+                allDocumentText);
 
             if (string.IsNullOrEmpty(abstractionLimitsSectionText))
             {
@@ -109,16 +109,20 @@ async Task TestsForAiPromptsAsync()
             
             Console.WriteLine("Found abstraction limits section");
             
-            var individualAbstractionLimits = await GetAbstractionLimitsAsync(chatClient, modelName, abstractionLimitsSectionText);
+            var individualAbstractionLimits = await GetAbstractionLimitsAsync(
+                chatClient,
+                modelName,
+                abstractionLimitsSectionText);
+            
             Console.WriteLine($"Found {individualAbstractionLimits.Length} abstraction limits section");
             
-            var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, imagePrompts);
+            var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
             Console.WriteLine("Found licence version section");
             
-            var points = await GetPointsAsync(chatClient, modelName, imagePrompts);
+            var points = await GetPointsAsync(chatClient, modelName, allDocumentText);
             Console.WriteLine($"Found {points.Length} points section");
             
-            var purposes = await GetPurposesAsync(chatClient, modelName, imagePrompts);
+            var purposes = await GetPurposesAsync(chatClient, modelName, allDocumentText);
             Console.WriteLine($"Found {purposes.Length} purposes section");
             
             Console.WriteLine("OK");
@@ -145,7 +149,7 @@ async Task TestsForAiPromptsAsync()
 async Task<PurposeOfAbstraction[]> GetPurposesAsync(
     ChatClient chatClient,
     string modelName,
-    List<ChatMessageContentPart> imagePrompts)
+    string allDocumentText)
 {
     var userPrompts = new List<ChatMessageContentPart>
     {
@@ -159,10 +163,11 @@ async Task<PurposeOfAbstraction[]> GetPurposesAsync(
     var systemPrompts = new List<ChatMessageContentPart>
     {
         "You are an AI assistant that extracts data from documents"
-        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence.  Here is the licence to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + allDocumentText
     };
-    
-    userPrompts.AddRange(imagePrompts);
             
     var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
     if (textResponse == null) throw new Exception("Some error occured");
@@ -174,7 +179,7 @@ async Task<PurposeOfAbstraction[]> GetPurposesAsync(
 async Task<PointOfAbstraction[]> GetPointsAsync(
     ChatClient chatClient,
     string modelName,
-    List<ChatMessageContentPart> imagePrompts)
+    string allDocumentText)
 {
     var userPrompts = new List<ChatMessageContentPart>
     {
@@ -188,11 +193,12 @@ async Task<PointOfAbstraction[]> GetPointsAsync(
     var systemPrompts = new List<ChatMessageContentPart>
     {
         "You are an AI assistant that extracts data from documents"
-        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the licence to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + allDocumentText
     };
     
-    userPrompts.AddRange(imagePrompts);
-            
     var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
     if (textResponse == null) throw new Exception("Some error occured");
             
@@ -203,12 +209,13 @@ async Task<PointOfAbstraction[]> GetPointsAsync(
 async Task<LicenceVersion> GetLicenceVersionAsync(
     ChatClient chatClient,
     string modelName,
-    List<ChatMessageContentPart> imagePrompts)
+    string allDocumentText)
 {
     var userPrompts = new List<ChatMessageContentPart>
     {
         ChatMessageContentPart.CreateTextPart("If a value is not present, provide null. " +
             "For the 'issuer' field, use the agency or company name, rather then a personal name. " +
+            "For the 'dateOfIssue' field, it may be named 'Date of Issue' in the document. " +            
             "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes. " + 
             $"Use the following structure: {LicenceVersion.GetSchemaForPrompt()}")
     };
@@ -216,11 +223,12 @@ async Task<LicenceVersion> GetLicenceVersionAsync(
     var systemPrompts = new List<ChatMessageContentPart>
     {
         "You are an AI assistant that extracts data from documents"
-        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. "
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the licence to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + allDocumentText
     };
     
-    userPrompts.AddRange(imagePrompts);
-            
     var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
     if (textResponse == null) throw new Exception("Some error occured");
             
@@ -268,18 +276,18 @@ async Task<AbstractionLimit[]> GetAbstractionLimitsAsync(
 async Task<string?> GetAbstractionLimitsTextAsync(
     ChatClient chatClient,
     string modelName,
-    List<ChatMessageContentPart> imagePrompts)
+    string allDocumentText)
 {
     var userPrompts = new List<ChatMessageContentPart>
     {
         ChatMessageContentPart.CreateTextPart(
-            "Please fetch me the whole section of the document that covers abstraction limits. Do "
-            + "not change it at all. Give me only this - do not add any follow up questions or advice."
-        )
+            "Please fetch me the whole section of the document that covers how much water is allowed to be pulled per day, per year etc... It may mention cubic metres etc... Do "
+            + "not change it at all. Give me only this - do not add any follow up questions or advice. Here is the document to look at;"
+            + Environment.NewLine
+            + Environment.NewLine
+            + allDocumentText)
     };
     
-    userPrompts.AddRange(imagePrompts);
-            
     return await GetTextResponseAsync(
         chatClient,
         modelName,

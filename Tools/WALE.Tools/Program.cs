@@ -86,6 +86,16 @@ async Task TestsForAiPromptsAsync()
             var chatClient = azureClient.GetChatClient(deploymentName);
             
             Console.WriteLine("Looking up abstraction limits section");
+
+            var allDocumentText = await GetDocumentTextAsync(
+                chatClient,
+                modelName,
+                imagePrompts);
+
+            if (string.IsNullOrEmpty(allDocumentText))
+            {
+                break;
+            }
             
             var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                 chatClient,
@@ -108,7 +118,7 @@ async Task TestsForAiPromptsAsync()
             var points = await GetPointsAsync(chatClient, modelName, imagePrompts);
             Console.WriteLine($"Found {points.Length} points section");
             
-            var purposes = await GetPointsAsync(chatClient, modelName, imagePrompts);
+            var purposes = await GetPurposesAsync(chatClient, modelName, imagePrompts);
             Console.WriteLine($"Found {purposes.Length} purposes section");
             
             Console.WriteLine("OK");
@@ -276,6 +286,31 @@ async Task<string?> GetAbstractionLimitsTextAsync(
         [
             "You are an AI assistant that extracts a section of text from documents"
             + " and returns them as is. Return only this text, with no other instructions or text." ],
+        userPrompts,
+        false);
+}
+
+async Task<string?> GetDocumentTextAsync(
+    ChatClient chatClient,
+    string modelName,
+    List<ChatMessageContentPart> imagePrompts)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "Please fetch me this whole document as text. Do "
+            + "not change it at all. Give me only this - do not add any follow up questions or advice."
+        )
+    };
+    
+    userPrompts.AddRange(imagePrompts);
+            
+    return await GetTextResponseAsync(
+        chatClient,
+        modelName,
+        [
+            "You are an AI assistant that extracts a the text from documents"
+            + " and returns it as is. Return only this text, with no other instructions or text." ],
         userPrompts,
         false);
 }

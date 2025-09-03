@@ -17,7 +17,20 @@ public class AggregateAbstractionLimit : AbstractionLimit
             Units = abstractionLimit.Units,
             Points = abstractionLimit.Points,
             Purposes = abstractionLimit.Purposes,
-            ImplicitLimit = abstractionLimit.ImplicitLimit
+            ImplicitLimit = abstractionLimit.ImplicitLimit,
+            IsAverage = false,
+            AveragePeriod = null
         };
+    }
+
+    public new static AggregateAbstractionLimit Template
+    {
+        get
+        {
+            var baseTemplate = AbstractionLimit.Template;
+            var returnItem = FromAbstractionLimit(baseTemplate);
+            
+            return returnItem;
+        }
     }
 }

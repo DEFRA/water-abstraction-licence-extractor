@@ -67,4 +67,26 @@ public class Aggregate
     public LinkedLicence[] LinkedLicences { get; init; } = [];
     
     public AggregateAbstractionLimit[] Limits { get; init; } = [];
+
+    public static Aggregate Template => new()
+    {
+        AggregateSetId = string.Empty,
+        NaldType = null,
+        PrimaryType = PrimaryType.NotSet,
+        SubType = Enums.OutputSchema.SubType.NotSet,
+        TimeCutoff = new TimeCutoff
+        {
+            Date = null,
+            CutoffType = CutoffType.Unknown
+        },
+        TimePeriod = new TimePeriod
+        {
+            StartDate = null,
+            EndDate = null
+        },
+        LicenceNumber = null,
+        LicenceVersionId = null,
+        Limits = [AggregateAbstractionLimit.Template],
+        LinkedLicences = []
+    };
 }

@@ -109,21 +109,45 @@ async Task TestsForAiPromptsAsync()
             
             Console.WriteLine("Found abstraction limits section");
             
-            var individualAbstractionLimits = await GetAbstractionLimitsAsync(
-                chatClient,
-                modelName,
-                abstractionLimitsSectionText);
-            
-            Console.WriteLine($"Found {individualAbstractionLimits.Length} abstraction limits section");
-            
-            var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
-            Console.WriteLine("Found licence version section");
-            
             var points = await GetPointsAsync(chatClient, modelName, allDocumentText);
             Console.WriteLine($"Found {points.Length} points section");
             
             var purposes = await GetPurposesAsync(chatClient, modelName, allDocumentText);
             Console.WriteLine($"Found {purposes.Length} purposes section");
+            
+            // TODO indiviidual limits and aggregate limits should take into account points and purposes
+            
+            var individualLimits = await GetIndividualAbstractionLimitsAsync(
+                chatClient,
+                modelName,
+                abstractionLimitsSectionText);
+            
+            Console.WriteLine($"Found {individualLimits.Length} individual abstraction limits");
+            
+            var aggregateLimits = await GetAggregateLimitsAsync(
+                chatClient,
+                modelName,
+                abstractionLimitsSectionText);
+            
+            Console.WriteLine($"Found {individualLimits.Length} aggregate limits");
+            
+            var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
+            Console.WriteLine("Found licence version section");
+            
+            // TODO get licence number, PeriodsOfAbstraction, MeanOfAbstraction, TimePeriod 
+            
+            var schema = new Licence
+            {
+                Filename = pdfFilename,
+                LicenceVersion = licenceVersion,
+                Points = points,
+                Purposes = purposes,
+                AbstractionLimits = new AbstractionLimits
+                {
+                    Individual = individualLimits,
+                    Aggregates = aggregateLimits
+                }
+            };
             
             Console.WriteLine("OK");
             var filenameNoExtension = pdfFilename.Split('.').First();
@@ -131,12 +155,11 @@ async Task TestsForAiPromptsAsync()
                 .Replace("-", string.Empty)
                 .Replace(" ", string.Empty);
 
-            //schema.Filename = pdfName;
-            //var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
-            //var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
+            var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
+            var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
 
-            //Console.Write(outputJs);
-            //await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
+            Console.Write(outputJs);
+            await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
         }
         catch (Exception e)
         {
@@ -235,7 +258,45 @@ async Task<LicenceVersion> GetLicenceVersionAsync(
     return JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
 }
 
-async Task<AbstractionLimit[]> GetAbstractionLimitsAsync(
+async Task<Aggregate[]> GetAggregateLimitsAsync(
+    ChatClient chatClient,
+    string modelName,
+    string abstractionLimitsSectionText)
+{
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + abstractionLimitsSectionText
+    };
+    
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "Only include limits that mention they are in 'aggregate'. " +
+            "Property 'periodType' value (as a sub property of 'timePeriod') must be either 'SetPeriod' (when the text mentions when a year starts and ends, 'PerYear' (when it says 'per year' in the text) or null (when neither previous condition is met). " +
+            "Property 'periodType' value (as a sub property of 'limits') must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
+            "Property 'primaryType' value must be either 'InLicence' (if there is no other licence mentioned) or 'LicenceToLicence' (when there is another licence mentioned). " +
+            "Property 'subType' value must be either 'PurposeToPurpose' (when a purpose is mentioned in the limit), 'PointToPoint' (when a point is mentioned in the limit) or null  (when neither a point or purpose is mentioned in the limit). " +
+            "Property 'cutoffType' must be either 'Upto' (if the text says 'upto'), 'From' (if the text says 'from') or null. " +
+            "Only populate the 'points' property value when the text explicitly mentions at least one point - if there are no point mentioned in the limit, 'points' value should be '[]'. " +
+            "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
+            "You should return '[]' if the document does not include the word 'aggregate'. " +
+            $"Use the following structure:\n\n[{AggregateArrayWrapped.GetSchemaForPrompt()}]"
+        )
+    };
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+
+    var aggregateLimits = JsonSerializer.Deserialize<AggregateArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return aggregateLimits.Data;
+}
+
+async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
     ChatClient chatClient,
     string modelName,
     string abstractionLimitsSectionText)
@@ -307,13 +368,13 @@ async Task<string?> GetDocumentTextAsync(
     {
         ChatMessageContentPart.CreateTextPart(
             "Please fetch me this whole document as text. Do "
-            + "not change it at all. Give me only this - do not add any follow up questions or advice."
+            + "not change it at all. Give me only this - do not add any follow up questions or advice. Do not add markdown."
         )
     };
     
     userPrompts.AddRange(imagePrompts);
             
-    return await GetTextResponseAsync(
+    var response = await GetTextResponseAsync(
         chatClient,
         modelName,
         [
@@ -321,6 +382,8 @@ async Task<string?> GetDocumentTextAsync(
             + " and returns it as is. Return only this text, with no other instructions or text." ],
         userPrompts,
         false);
+
+    return response?.Trim();
 }
 
 async Task<List<ChatMessageContentPart>> GetImagePromptsAsync(
@@ -703,7 +766,7 @@ internal class CsvLine
     public string? Data { get; set; }
 }
 
-internal class PointOfAbstractionArrayWrapped()
+internal class PointOfAbstractionArrayWrapped
 {
     public PointOfAbstraction[] Data { get; init; } = [];
     
@@ -714,7 +777,7 @@ internal class PointOfAbstractionArrayWrapped()
     }
 }
 
-internal class PurposeOfAbstractionArrayWrapped()
+internal class PurposeOfAbstractionArrayWrapped
 {
     public PurposeOfAbstraction[] Data { get; init; } = [];
     
@@ -725,13 +788,24 @@ internal class PurposeOfAbstractionArrayWrapped()
     }
 }
 
-internal class AbstractionLimitArrayWrapped()
+internal class AbstractionLimitArrayWrapped
 {
     public AbstractionLimit[] Data { get; init; } = [];
     
     public static string GetSchemaForPrompt()
     {
         var template = new AbstractionLimitArrayWrapped { Data = [AbstractionLimit.Template] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
+}
+
+internal class AggregateArrayWrapped
+{
+    public Aggregate[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new AggregateArrayWrapped { Data = [Aggregate.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }

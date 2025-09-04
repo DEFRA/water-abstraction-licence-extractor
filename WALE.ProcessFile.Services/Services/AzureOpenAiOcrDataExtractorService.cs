@@ -36,15 +36,15 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
             
         var response = await GetTextResponseAsync(
             chatClient,
-            modelName,
             [
                 "You are an AI assistant that extracts a the text from documents"
-                + " and returns it as is. Return only this text, with no other instructions or text." ],
-            userPrompts,
-            false);
+                + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
+            userPrompts);
 
         if (string.IsNullOrEmpty(response)
-            || response.Equals("I am unable to extract text from images.", StringComparison.InvariantCultureIgnoreCase))
+            || response.Contains("I am unable", StringComparison.InvariantCultureIgnoreCase)
+            || response.Contains("I am not able", StringComparison.InvariantCultureIgnoreCase)
+            || response.StartsWith("I'm sorry", StringComparison.InvariantCultureIgnoreCase))
         {
             return new List<DocumentLine>();
         }
@@ -99,10 +99,8 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
     
     private async Task<string?> GetTextResponseAsync(
         ChatClient chatClient,
-        string modelName,
         List<ChatMessageContentPart> systemPrompts,
-        List<ChatMessageContentPart> userPrompts,
-        bool json = true)
+        List<ChatMessageContentPart> userPrompts)
     {
         var chatResponse = await chatClient.CompleteChatAsync(
             new List<ChatMessage>
@@ -113,7 +111,7 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
             new ChatCompletionOptions
             {
                 MaxOutputTokenCount = GetMaxTokens(modelName, systemPrompts, userPrompts),
-                ResponseFormat = json ? ChatResponseFormat.CreateJsonObjectFormat() : ChatResponseFormat.CreateTextFormat()
+                ResponseFormat = ChatResponseFormat.CreateTextFormat()
             });
 
         return chatResponse.Value?.Content.FirstOrDefault()?.Text;

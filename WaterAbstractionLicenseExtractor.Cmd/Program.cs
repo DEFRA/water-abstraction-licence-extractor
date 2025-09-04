@@ -624,7 +624,7 @@ IEnumerable<string> GetPdfPaths()
         || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
     ).ToArray();
     
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("2-26-32-126 6937559.PDF")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("2-26-32-126 6937559.PDF")).ToArray();
     
     return pdfFilePaths;
 }

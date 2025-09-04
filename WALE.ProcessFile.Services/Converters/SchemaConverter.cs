@@ -535,7 +535,7 @@ public static class SchemaConverter
                 : null;
 
             var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
-            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
             
             var inclusive = text?.Contains("inclusive",
                 StringComparison.InvariantCultureIgnoreCase) ?? false;
@@ -553,7 +553,7 @@ public static class SchemaConverter
             
             returnList.Add(new PeriodOfAbstraction
             {
-                Id = id,
+                Id = number,
                 PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
                 Description = text,
                 Inclusive = inclusive,
@@ -617,7 +617,7 @@ public static class SchemaConverter
             {
                 Id = id,
                 Description = text,
-                Limit = value2 != null ? new AbstractionLimit
+                AbstractionLimit = value2 != null ? new AbstractionLimit
                 {
                     PeriodType = periodType,
                     Units = units?.Text?.FirstOrDefault()?.Text,

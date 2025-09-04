@@ -53,7 +53,7 @@ public class Licence
             {
                 Description = string.Empty,
                 EndDate = string.Empty,
-                Id = 0,
+                Id = string.Empty,
                 Inclusive = false,
                 NaldId = null,
                 PeriodType = AbstractionPeriodType.Unknown,
@@ -71,7 +71,7 @@ public class Licence
             {
                 Description = string.Empty,
                 Id = 0,
-                Limit = new()
+                AbstractionLimit = new()
                 {
                     ImplicitLimit = false,
                     PeriodType = LimitPeriodType.NotApplicable,

@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class PeriodOfAbstraction : TimePeriod
 {
-    public double? Id { get; set; }
+    public string? Id { get; set; }
     
     public string? Description { get; set; }
     

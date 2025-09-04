@@ -6,5 +6,5 @@ public class MeanOfAbstraction
     
     public string? Description { get; set; }
     
-    public AbstractionLimit? Limit { get; set; }
+    public AbstractionLimit? AbstractionLimit { get; set; }
 }

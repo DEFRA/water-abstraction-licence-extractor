@@ -72,6 +72,70 @@ public static class TestConfig
         }
     }
     
+    private static string? _openAiEndpoint;
+
+    public static string OpenAiEndpoint
+    {
+        get
+        {
+            if (_openAiEndpoint != null)
+            {
+                return _openAiEndpoint;
+            }
+            
+            _openAiEndpoint = Config["OpenAiEndpoint"]!;
+            return _openAiEndpoint;
+        }
+    }
+    
+    private static string? _openAiKey;
+
+    public static string OpenAiKey
+    {
+        get
+        {
+            if (_openAiKey != null)
+            {
+                return _openAiKey;
+            }
+            
+            _openAiKey = Config["OpenAiKey"]!;
+            return _openAiKey;
+        }
+    }
+
+    private static string? _openAiModelName;
+
+    public static string OpenAiModelName
+    {
+        get
+        {
+            if (_openAiModelName != null)
+            {
+                return _openAiModelName;
+            }
+            
+            _openAiModelName = Config["OpenAiModelName"]!;
+            return _openAiModelName;
+        }
+    }
+
+    private static string? _openAiDeploymentName;
+
+    public static string OpenAiDeploymentName
+    {
+        get
+        {
+            if (_openAiDeploymentName != null)
+            {
+                return _openAiDeploymentName;
+            }
+            
+            _openAiDeploymentName = Config["OpenAiDeploymentName"]!;
+            return _openAiDeploymentName;
+        }
+    }
+    
     private static string? _tesseractPath;
 
     public static string TesseractPath

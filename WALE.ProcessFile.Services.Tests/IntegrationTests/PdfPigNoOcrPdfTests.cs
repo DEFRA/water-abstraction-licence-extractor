@@ -2955,7 +2955,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("From 1 November to 31 March inclusive", agreedSchemaLicence.PeriodsOfAbstraction.Single().Description);
         Assert.Equal("1 November", agreedSchemaLicence.PeriodsOfAbstraction.Single().StartDate);
         Assert.Equal("31 March", agreedSchemaLicence.PeriodsOfAbstraction.Single().EndDate);
-        Assert.Equal(5.1, agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
+        Assert.Equal("5.1", agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
         Assert.Equal(true, agreedSchemaLicence.PeriodsOfAbstraction.Single().Inclusive);
         
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.Length);

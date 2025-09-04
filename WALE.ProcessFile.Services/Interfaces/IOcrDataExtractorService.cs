@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.Interfaces;
 public interface IOcrDataExtractorService
 {
     public Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument);    
+        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument);    
     
     public bool HasDirectCost { get; }
     

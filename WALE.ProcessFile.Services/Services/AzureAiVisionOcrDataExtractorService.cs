@@ -97,6 +97,11 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             }
             while (results.Status is OperationStatusCodes.Running or OperationStatusCodes.NotStarted);
             
+            if (results.AnalyzeResult.ReadResults.Count > 1)
+            {
+                throw new Exception("Cache is broken with more then one result");
+            }
+            
             Directory.CreateDirectory(folder);
             
             foreach (var page in results.AnalyzeResult.ReadResults)

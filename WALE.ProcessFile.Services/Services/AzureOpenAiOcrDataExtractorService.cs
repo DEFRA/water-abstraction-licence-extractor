@@ -17,29 +17,45 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var azureClient = new AzureOpenAIClient(
-            new Uri(endpoint),
-            new ApiKeyCredential(key));
+        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
+        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
+
+        string? response;
         
-        var chatClient = azureClient.GetChatClient(deploymentName);
-        
-        var userPrompts = new List<ChatMessageContentPart>
+        if (pdfDocument.FromCache && File.Exists(outputFilename))
         {
-            ChatMessageContentPart.CreateTextPart(
-                "Please fetch me this whole document as text. Do "
-                + "not change it at all. Give me only this - do not add any follow up questions or advice. Do not add markdown."
-            )
-        };
+            response = await File.ReadAllTextAsync(outputFilename);
+        }
+        else
+        {
+            var azureClient = new AzureOpenAIClient(
+                new Uri(endpoint),
+                new ApiKeyCredential(key));
         
-        var imagePrompt = await GetImagePromptAsync(imageFilepath);
-        userPrompts.Add(imagePrompt);
+            var chatClient = azureClient.GetChatClient(deploymentName);
+        
+            var userPrompts = new List<ChatMessageContentPart>
+            {
+                ChatMessageContentPart.CreateTextPart(
+                    "Please fetch me this whole document as text. Do "
+                    + "not change it at all. Give me only this - do not add any follow up questions or advice. Do not add markdown."
+                )
+            };
+        
+            var imagePrompt = await GetImagePromptAsync(imageFilepath);
+            userPrompts.Add(imagePrompt);
             
-        var response = await GetTextResponseAsync(
-            chatClient,
-            [
-                "You are an AI assistant that extracts a the text from documents"
-                + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
-            userPrompts);
+            response = await GetTextResponseAsync(
+                chatClient,
+                [
+                    "You are an AI assistant that extracts a the text from documents"
+                    + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
+                userPrompts);
+            
+            Directory.CreateDirectory(folder);
+            
+            await File.WriteAllTextAsync(outputFilename, response);
+        }
 
         if (string.IsNullOrEmpty(response)
             || response.Contains("I am unable", StringComparison.InvariantCultureIgnoreCase)

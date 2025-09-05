@@ -190,139 +190,138 @@ public class PdfDataExtractorService(
         foreach (var page in imagesMetadata.Pages)
         {
             pageNumber += 1;
-            var pageImageNumber = 1;
             
+            var pageImageNumber = 1;
             var breakPageLoop = false;
-            var breakImageLoop = false;
-
-            var serviceImageLines = new List<DocumentLine>();
-            var serviceMatches = new List<LabelGroupResult>();
-
-            var screenshotPath = noOcrDataExtractorService
-                .GetPageScreenshotPath(pdfDocument, pageNumber);
-
-            var imageFilename = screenshotPath.imgFolder + screenshotPath.imgOutputFilename;
-
-            foreach (var ocrService in ocrDataExtractorServices
-                .OrderBy(service => service.HasDirectCost))
+            
+            foreach (var imageFilename in page.ImageFiles)
             {
-                if (!returnResult.ServicesUsed.Contains(ocrService.Name))
-                {
-                    returnResult.ServicesUsed.Add(ocrService.Name);
-                }
+                var breakImageLoop = false;
 
-                try
+                var serviceImageLines = new List<DocumentLine>();
+                var serviceMatches = new List<LabelGroupResult>();
+                
+                foreach (var ocrService in ocrDataExtractorServices
+                    .OrderBy(service => service.HasDirectCost))
                 {
-                    serviceImageLines =
-                        (await ocrService.GetTextLinesFromImageAsync(
-                            imageFilename,
-                            pageNumber,
-                            pageImageNumber++,
-                            pdfDocument)).ToList();
-                }
-                catch (Exception ex)
-                {
-                    serviceImageLines = [];
+                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                    {
+                        returnResult.ServicesUsed.Add(ocrService.Name);
+                    }
+
+                    try
+                    {
+                        serviceImageLines =
+                            (await ocrService.GetTextLinesFromImageAsync(
+                                imageFilename,
+                                pageNumber,
+                                pageImageNumber++,
+                                pdfDocument)).ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        serviceImageLines = [];
+                        
+                        Console.WriteLine(ex);
+                        // TODO proper logging somewhere
+                    }
                     
-                    Console.WriteLine(ex);
-                    // TODO proper logging somewhere
-                }
-                
-                var allLinesSoFar = documentLines.ToList();
-                allLinesSoFar.AddRange(serviceImageLines);
+                    var allLinesSoFar = documentLines.ToList();
+                    allLinesSoFar.AddRange(serviceImageLines);
 
-                var providers = returnResult.Pages
-                    .Single(p => p.Number == page.Number).Providers;
+                    var providers = returnResult.Pages
+                        .Single(p => p.Number == page.Number).Providers;
 
-                if (providers.All(p => p.Provider != ocrService.Name))
-                {
-                    providers.Add(new PdfPageProvider
+                    if (providers.All(p => p.Provider != ocrService.Name))
                     {
-                        Provider = ocrService.Name,
-                        Text = serviceImageLines.Select(l => l.Text).ToList()
-                    });
-                }                    
-                
-                const bool isOcr = true;
-                
-                serviceMatches = await GetLabelGroupMatchesAsync(
-                    allLinesSoFar,
-                    unmatchedLabelLookups,
-                    isOcr,
-                    ocrService.Name,
-                    configuration.LicenceMapping,
-                    previouslyParsedPaths,
-                    configuration.OutputFolder,
-                    configuration.CacheFolder);
-
-                var noMatchesFound = serviceMatches.Count == 0;
-                
-                if (noMatchesFound)
-                {
-                    continue;
-                }
-                
-                foreach (var ocrResult in serviceMatches)
-                {
-                    var matchedLabel = ocrResult.MatchedLabel!;
-                    var ifMultiplePreferLast = matchedLabel.Text!.First().IfMultiplePreferLast;
-                    var ifMultiplePreferLongest = matchedLabel.Text!.First().IfMultiplePreferLongest;
-
-                    if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                    {
-                        var alreadyOutput = labelGroupMatches
-                            .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
-                            .ToList();
-
-                        if (alreadyOutput.Count >= 1)
+                        providers.Add(new PdfPageProvider
                         {
-                            var i = alreadyOutput
-                                .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
-                                .First();
+                            Provider = ocrService.Name,
+                            Text = serviceImageLines.Select(l => l.Text).ToList()
+                        });
+                    }                    
                     
-                            labelGroupMatches.Remove(i);
+                    const bool isOcr = true;
+                    
+                    serviceMatches = await GetLabelGroupMatchesAsync(
+                        allLinesSoFar,
+                        unmatchedLabelLookups,
+                        isOcr,
+                        ocrService.Name,
+                        configuration.LicenceMapping,
+                        previouslyParsedPaths,
+                        configuration.OutputFolder,
+                        configuration.CacheFolder);
+
+                    var noMatchesFound = serviceMatches.Count == 0;
+                    
+                    if (noMatchesFound)
+                    {
+                        continue;
+                    }
+                    
+                    foreach (var ocrResult in serviceMatches)
+                    {
+                        var matchedLabel = ocrResult.MatchedLabel!;
+                        var ifMultiplePreferLast = matchedLabel.Text!.First().IfMultiplePreferLast;
+                        var ifMultiplePreferLongest = matchedLabel.Text!.First().IfMultiplePreferLongest;
+
+                        if (ifMultiplePreferLast || ifMultiplePreferLongest)
+                        {
+                            var alreadyOutput = labelGroupMatches
+                                .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                                .ToList();
+
+                            if (alreadyOutput.Count >= 1)
+                            {
+                                var i = alreadyOutput
+                                    .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                                    .First();
+                        
+                                labelGroupMatches.Remove(i);
+                            }
                         }
+                    }
+                    
+                    var combinedList = labelGroupMatches.ToList();
+                    
+                    var labelsNotMatchedAtAll = GetUnmatchedLabels(
+                        unmatchedLabelLookups,
+                        combinedList,
+                        true);
+
+                    if (labelsNotMatchedAtAll.Count == 0)
+                    {
+                        breakImageLoop = true;
+                        breakPageLoop = true;
+
+                        break;
                     }
                 }
                 
-                var combinedList = labelGroupMatches.ToList();
+                documentLines.AddRange(serviceImageLines);
+                labelGroupMatches.AddRange(serviceMatches);
                 
-                var labelsNotMatchedAtAll = GetUnmatchedLabels(
+                unmatchedLabelLookups = GetUnmatchedLabels(
                     unmatchedLabelLookups,
-                    combinedList,
+                    labelGroupMatches,
+                    false);
+                    
+                var labelsNotMatchedAtAll2 = GetUnmatchedLabels(
+                    unmatchedLabelLookups,
+                    labelGroupMatches,
                     true);
 
-                if (labelsNotMatchedAtAll.Count == 0)
+                if (labelsNotMatchedAtAll2.Count == 0)
                 {
-                    breakImageLoop = true;
                     breakPageLoop = true;
-
                     break;
                 }
-            }
-            
-            documentLines.AddRange(serviceImageLines);
-            labelGroupMatches.AddRange(serviceMatches);
-            
-            unmatchedLabelLookups = GetUnmatchedLabels(
-                unmatchedLabelLookups,
-                labelGroupMatches,
-                false);
                 
-            var labelsNotMatchedAtAll2 = GetUnmatchedLabels(
-                unmatchedLabelLookups,
-                labelGroupMatches,
-                true);
-
-            if (labelsNotMatchedAtAll2.Count == 0)
-            {
-                breakPageLoop = true;
-                break;
-            }
-            
-            if (breakImageLoop)
-            {
-                break;
+                if (breakImageLoop)
+                {
+                    break;
+                }
             }
 
             unmatchedLabelLookups = GetUnmatchedLabels(

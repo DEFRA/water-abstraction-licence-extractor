@@ -14,6 +14,7 @@ using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.OutputSchema;
+using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools;
@@ -38,11 +39,11 @@ async Task TestsForAiPromptsAsync()
     var pdfFilenames = new List<string>
     {
         "2-26-32-126 6937559.PDF",
-        "2-27-29-012 7003124.PDF",
+        /*"2-27-29-012 7003124.PDF",
         "Application - New - Licence Issued 30092021.pdf",
         "Application Formal Variation Issued Licence 07032023 (1).pdf",
         "Application Formal Variation Issued Licence 07032023.pdf",
-        "Application Minor Variation Issued Licence 03.10.24.pdf"
+        "Application Minor Variation Issued Licence 03.10.24.pdf"*/
     };
 
     foreach (var pdfFilename in pdfFilenames)
@@ -80,61 +81,76 @@ async Task TestsForAiPromptsAsync()
             var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
 
             var chatClient = azureClient.GetChatClient(deploymentName);
-            
-            Console.WriteLine("Looking up abstraction limits section");
 
             var imagePrompts = await GetImagePromptsAsync(
                 pdfFilename,
                 pageImageGroups);
+            
+            Console.WriteLine("Looking up document text");
             
             var allDocumentText = await GetDocumentTextAsync(
                 chatClient,
                 modelName,
                 imagePrompts);
 
+            Console.WriteLine($"Found document text - {allDocumentText?.Length} lines");
+            
             if (string.IsNullOrEmpty(allDocumentText))
             {
+                Console.WriteLine("Moving on to the next record");
                 break;
             }
+            
+            Console.WriteLine("Looking up abstraction limits section");
             
             var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                 chatClient,
                 modelName,
                 allDocumentText);
 
+            Console.WriteLine("Found abstraction limits section");
+            
             if (string.IsNullOrEmpty(abstractionLimitsSectionText))
             {
+                Console.WriteLine("Moving on to the next record");
                 break;
             }
             
-            Console.WriteLine("Found abstraction limits section");
-            
+            Console.WriteLine("Looking up points");
             var points = await GetPointsAsync(chatClient, modelName, allDocumentText);
-            Console.WriteLine($"Found {points.Length} points section");
+            Console.WriteLine($"Found {points.Length} points");
             
+            Console.WriteLine("Looking up purposes");
             var purposes = await GetPurposesAsync(chatClient, modelName, allDocumentText);
-            Console.WriteLine($"Found {purposes.Length} purposes section");
+            Console.WriteLine($"Found {purposes.Length} purposes");
             
-            // TODO indiviidual limits and aggregate limits should take into account points and purposes
+            // TODO individual limits and aggregate limits should take into account points and purposes
+            
+            Console.WriteLine("Looking up individual limits");
             
             var individualLimits = await GetIndividualAbstractionLimitsAsync(
                 chatClient,
                 modelName,
                 abstractionLimitsSectionText);
             
-            Console.WriteLine($"Found {individualLimits.Length} individual abstraction limits");
+            Console.WriteLine($"Found {individualLimits.Length} individual abstraction limit(s)");
+            
+            Console.WriteLine("Looking up aggregate limits");
             
             var aggregateLimits = await GetAggregateLimitsAsync(
                 chatClient,
                 modelName,
                 abstractionLimitsSectionText);
             
-            Console.WriteLine($"Found {individualLimits.Length} aggregate limits");
+            Console.WriteLine($"Found {aggregateLimits.Length} aggregate limit(s)");
             
+            Console.WriteLine("Looking up licence version");
             var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
-            Console.WriteLine("Found licence version section");
+            Console.WriteLine("Found licence version");
             
-            // TODO get licence number, PeriodsOfAbstraction, MeanOfAbstraction, TimePeriod 
+            Console.WriteLine("Looking up general licence data");
+            var baseLicenceData = await GetBaseLicenceDataAsync(chatClient, modelName, allDocumentText);
+            Console.WriteLine("Found general licence data");
             
             var schema = new Licence
             {
@@ -146,10 +162,13 @@ async Task TestsForAiPromptsAsync()
                 {
                     Individual = individualLimits,
                     Aggregates = aggregateLimits
-                }
+                },
+                LicenceNumber = baseLicenceData.LicenceNumber,
+                MeansOfAbstraction = baseLicenceData.MeansOfAbstraction,
+                DefinitionOfYear = baseLicenceData.DefinitionOfYear,
+                PeriodsOfAbstraction = baseLicenceData.PeriodsOfAbstraction
             };
             
-            Console.WriteLine("OK");
             var filenameNoExtension = pdfFilename.Split('.').First();
             var filenameNoSpacesOrDashes = filenameNoExtension
                 .Replace("-", string.Empty)
@@ -157,9 +176,9 @@ async Task TestsForAiPromptsAsync()
 
             var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
             var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
-
-            Console.Write(outputJs);
+            
             await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
+            Console.Write(outputJs);            
         }
         catch (Exception e)
         {
@@ -227,6 +246,41 @@ async Task<PointOfAbstraction[]> GetPointsAsync(
             
     var response = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
     return response.Data;
+}
+
+async Task<BaseLicence> GetBaseLicenceDataAsync(
+    ChatClient chatClient,
+    string modelName,
+    string allDocumentText)
+{
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart("If a value is not present, provide null. " +
+            "The 'definitionOfYear' property and sub properties should come from a section of the document that " +
+                "says something similar to 'a year means the 12 month period beginning on 1st January and ending " +
+                "on 31st December' - If there is nothing like this in the document, set 'definitionOfYear' value to '[]'. " +
+            "Property 'periodsOfAbstraction' array relates to 'period of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these - DO NOT use any other section of the document for values for this property. " +
+            "Property 'meansOfAbstraction' array relates to 'period of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
+            "Property 'periodType' value (as a sub property of 'periodsOfAbstraction') must be either 'SetPeriod' (when the text mentions when a year starts and ends, 'PerYear' (when it says 'per year' or 'all year' in the text) or null (when neither previous condition is met). " +
+            "Property 'periodType' value (as a sub property of 'abstractionLimit') must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
+            "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes or empty strings. " +
+            // TODO 
+            $"Use the following structure: {BaseLicence.GetSchemaForPrompt()}")
+    };
+
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the licence to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + allDocumentText
+    };
+    
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+            
+    return JsonSerializer.Deserialize<BaseLicence>(textResponse, JsonHelper.GetSerializer())!;
 }
 
 async Task<LicenceVersion> GetLicenceVersionAsync(
@@ -318,11 +372,6 @@ async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
             "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
             "Exclude any limits that mention they are in aggregate. " +
             "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
-            //"Property 'aggregates' value should be '[]' if the abstraction limits section does not include the word 'aggregate'. " +
-            //"Property 'periodType' value must be either 'SetPeriod', 'PerYear' or null. " +
-            //"Property 'primaryType' value must be either 'InLicence' or 'LicenceToLicence'. " +
-            //"Property 'subType' value must be either 'PurposeToPurpose', 'PointToPoint' or null. " +
-            //"Property 'cutoffType' must be either 'Upto' or 'From'. " +
             $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
         )
     };

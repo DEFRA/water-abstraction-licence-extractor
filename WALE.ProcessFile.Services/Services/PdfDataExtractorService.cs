@@ -196,6 +196,8 @@ public class PdfDataExtractorService(
             
             foreach (var imageFilename in page.ImageFiles)
             {
+                // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
+                
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
@@ -225,6 +227,14 @@ public class PdfDataExtractorService(
                         Console.WriteLine(ex);
                         // TODO proper logging somewhere
                     }
+
+                    // No lines found, no point processing that with the other services
+                    if (serviceImageLines.Count == 0)
+                    {
+                        break;
+                    }
+
+                    var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
                     
                     var allLinesSoFar = documentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
@@ -257,6 +267,13 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
+                        // Short lines indicate it may be a map page,
+                        // no point processing that with the other services
+                        if (averageLineLength < 30)
+                        {
+                            break;
+                        }
+                        
                         continue;
                     }
                     
@@ -295,6 +312,13 @@ public class PdfDataExtractorService(
                         breakImageLoop = true;
                         breakPageLoop = true;
 
+                        break;
+                    }
+
+                    // Short lines indicate it may be a map page,
+                    // no point processing that with the other services
+                    if (averageLineLength < 30)
+                    {
                         break;
                     }
                 }

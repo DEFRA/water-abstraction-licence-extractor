@@ -544,8 +544,8 @@ async Task GenerateCsvForTestingAsync()
         },
         KeyConfig.PdfFolder);
 
-    var data = await GetYorkshire70DataAsync(pdfDataExtractor);
-    //var data = awaitGetYorkshire6DataAsync(pdfDataExtractor);
+    //var data = await GetYorkshire70DataAsync(pdfDataExtractor);
+    var data = await GetYorkshire6DataAsync(pdfDataExtractor);
 
     await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today.ToString("yyyyMMdd")}.csv");
     await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);

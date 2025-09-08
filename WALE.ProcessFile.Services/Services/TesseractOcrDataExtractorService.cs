@@ -17,7 +17,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
     public string Name => "TesseractOcr";
     
     public Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilename, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {
@@ -46,19 +46,19 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
 
                 try
                 {
-                    ocrImage = Pix.LoadFromFile(imageFilename);
+                    ocrImage = Pix.LoadFromFile(imageFilepath);
                 }
                 catch
                 {
-                    if (!imageFilename.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                    if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                     {
                         throw;
                     }
                     
-                    var bytAry = await File.ReadAllBytesAsync(imageFilename);
+                    var bytAry = await File.ReadAllBytesAsync(imageFilepath);
                     var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
 
-                    var imageFilenameDeflated = imageFilename.Replace(".jpg", "-deflated.jpg",
+                    var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
                         StringComparison.InvariantCultureIgnoreCase);
                     await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
 

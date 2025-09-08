@@ -13,6 +13,7 @@ public class Aggregate
             {
                 PrimaryType.LicenceToLicence => "LL",
                 PrimaryType.InLicence => "IL",
+                PrimaryType.NotSet => "NS",
                 _ => throw new ArgumentOutOfRangeException()
             };
             
@@ -20,6 +21,7 @@ public class Aggregate
             {
                 Enums.OutputSchema.SubType.PointToPoint => "PO",
                 Enums.OutputSchema.SubType.PurposeToPurpose => "PU",
+                Enums.OutputSchema.SubType.NotSet => "NS",
                 _ => string.Empty
             };
 
@@ -54,7 +56,7 @@ public class Aggregate
     
     public string? NaldType { get; set; }
 
-    public TimeLimited? TimeCutoff { get; set; }
+    public TimeCutoff? TimeCutoff { get; set; }
     
     public Purpose[] Purposes { get; set; } = [];
 
@@ -65,4 +67,26 @@ public class Aggregate
     public LinkedLicence[] LinkedLicences { get; init; } = [];
     
     public AggregateAbstractionLimit[] Limits { get; init; } = [];
+
+    public static Aggregate Template => new()
+    {
+        AggregateSetId = string.Empty,
+        NaldType = null,
+        PrimaryType = PrimaryType.NotSet,
+        SubType = Enums.OutputSchema.SubType.NotSet,
+        TimeCutoff = new TimeCutoff
+        {
+            Date = null,
+            CutoffType = CutoffType.Unknown
+        },
+        TimePeriod = new TimePeriod
+        {
+            StartDate = null,
+            EndDate = null
+        },
+        LicenceNumber = null,
+        LicenceVersionId = null,
+        Limits = [AggregateAbstractionLimit.Template],
+        LinkedLicences = []
+    };
 }

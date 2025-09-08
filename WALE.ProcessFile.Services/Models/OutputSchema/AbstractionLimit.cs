@@ -30,4 +30,28 @@ public class AbstractionLimit
             ImplicitLimit = ImplicitLimit
         };
     }
+
+    public static AbstractionLimit Template => new()
+    {
+        Value = 0,
+        ImplicitLimit = false,
+        PeriodType = LimitPeriodType.NotApplicable,
+        Points =
+        [
+            new()
+            {
+                Description = string.Empty,
+                Id = string.Empty
+            }
+        ],
+        Purposes =
+        [
+            new()
+            {
+                Description = string.Empty,
+                Id = string.Empty
+            }
+        ],
+        Units = string.Empty
+    };
 }

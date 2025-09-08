@@ -11,6 +11,36 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Data\2-26-32-126 6937559.json" />
+      <None Include="Data\2-26-32-126 6937559.js">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Data\2-27-29-012 7003124.js" />
+      <Content Include="Data\2-27-29-012 7003124.js">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\Application - New - Licence Issued 30092021.js" />
+      <Content Include="Data\Application - New - Licence Issued 30092021.js">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\Application Formal Variation Issued Licence 07032023.js" />
+      <Content Include="Data\Application Formal Variation Issued Licence 07032023.js">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\Application Formal Variation Issued Licence 07032023 (1).js" />
+      <Content Include="Data\Application Formal Variation Issued Licence 07032023 (1).js">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\Application Minor Variation Issued Licence 03.js" />
+      <Content Include="Data\Application Minor Variation Issued Licence 03-10-24.js">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
     <Target Name="link_deps" AfterTargets="AfterBuild">
         <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib"/>
         <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib"/>

@@ -1,8 +1,10 @@
+using WALE.ProcessFile.Services.Enums.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class PeriodOfAbstraction : TimePeriod
 {
-    public double? Id { get; set; }
+    public string? Id { get; set; }
     
     public string? Description { get; set; }
     
@@ -11,4 +13,23 @@ public class PeriodOfAbstraction : TimePeriod
     public string[] PointIds { get; set; } = [];
     
     public string[] PurposeIds { get; set; } = [];
+    
+    public static PeriodOfAbstraction Template => new()
+    {
+        Description = "All year.",
+        EndDate = string.Empty,
+        Id = "6",
+        Inclusive = false,
+        NaldId = null,
+        PeriodType = AbstractionPeriodType.PerYear,
+        PointIds =
+        [
+            string.Empty
+        ],
+        PurposeIds =
+        [
+            string.Empty
+        ],
+        StartDate = string.Empty
+    };
 }

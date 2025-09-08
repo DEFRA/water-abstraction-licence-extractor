@@ -9,8 +9,25 @@ function loadReport(filename) {
     }
 
     window.onload = function () {
-        let pdfPath = jssettings.pdfFolder + data.filename;
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const params = Object.fromEntries(urlSearchParams.entries());
+        let bodyEle = document.getElementsByTagName("body")[0];
 
+        if (params["showAll"] === "true") {
+            bodyEle.className += " show-all";
+        }
+        
+        loadScript(filename + '/PdfPig/Text/pages-all.js',
+            function() {
+                document.getElementById('textOutput').innerHTML = textData.replaceAll('\n', '<br/>\n');
+        });
+        
+        window.aiData = {};
+        
+        let aiPath = "../Data/" + data.filename.split('.')[0] + '.js';
+        loadScript(aiPath, setupAiTab);
+        let pdfPath = jssettings.pdfFolder + data.filename;
+        
         let filenameEle = document.getElementById("filename");
         filenameEle.innerHTML = filename;
         filenameEle.href = pdfPath;
@@ -30,6 +47,9 @@ function loadReport(filename) {
         document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
 
         addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'Company\')]', "grantedTo", "<strong>Licence holder</strong>", "grantedToGroup");
+        document.getElementById("grantedToGroup-dd").className = "default-hidden";
+        document.getElementById("grantedToGroup-dd").previousElementSibling.className = "default-hidden";
+        
         document.getElementById("licenceHolderTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'Company\')]');
 
         var sb2 = [];
@@ -44,9 +64,13 @@ function loadReport(filename) {
                 if (purposeMatch == null || purposeMatch.text == null || purposeMatch.text.length === 0) {
                     continue;
                 }
+                
+                var purposeText = purposeMatch.subResults != null
+                    && purposeMatch.subResults.length > 0
+                    ? purposeMatch.subResults[0].text[0].text : purposeMatch.text[0].text
 
                 sb2.push("<dt><a href='#' onclick='jumpToPage(this); return false;' data-page='" + purposeMatch.pageNumber + "'>"
-                    + purposeMatch.text[0].text + "</a></dt><dd><dl>");
+                    + purposeText + "</a></dt><dd><dl>");
 
                 let abstractionLimitsMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'AbstractionLimits\')]');
                 let meansOfAbstractionMatches = jsonPath(data, '$.matches[?(@.labelGroupName==\'MeansOfAbstraction\')]');
@@ -91,6 +115,16 @@ function loadReport(filename) {
         sb2.push("</dl></dd>");
         document.getElementById('properties').innerHTML += sb2.join('');
     };
+}
+
+function setupAiTab() {
+    document.getElementById('dataAiOutput').innerHTML = "";
+    
+    var data3 = window.aiData[Object.keys(window.aiData)[0]];
+    const tree = jsonview.create(data3);
+    
+    jsonview.render(tree, document.querySelector('#dataAiOutput'));
+    jsonview.toggleNode(tree);
 }
 
 function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
@@ -234,8 +268,8 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
                 let linkedAssignedTo = getText(linkedLicence,
                     '$.subResults[?(@.labelGroupName==\'Company\')]');
 
-                sb.push("<dt><strong>Licence holder</strong></dt>");
-                sb.push("<dd>");
+                sb.push("<dt class=\"default-hidden\"><strong>Licence holder</strong></dt>");
+                sb.push("<dd class=\"default-hidden\">");
                 sb.push(linkedAssignedTo);
                 sb.push("</dd>");
 
@@ -341,8 +375,9 @@ function jumpToPage(ele) {
 }
 
 function jumpToPageNumber(pageNumber) {
-    var imgEle = document.getElementById("page" + pageNumber);
-
+    let imgEle = document.getElementById("page" + pageNumber);
+    if (!imgEle) return;
+    
     document.getElementById("iframeParent").scrollTo({
         top: imgEle.offsetTop + 350,
         left: 0,
@@ -366,7 +401,7 @@ function evaluateJsonPath() {
 
     // render tree into dom element
     jsonview.render(tree2, document.querySelector('#dataNewOutput'));
-    jsonview.toggleNode(tree2);    
+    jsonview.toggleNode(tree2);
     
 //    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
 }
@@ -374,13 +409,17 @@ function evaluateJsonPath() {
 function disableAllTabs() {
     document.getElementById("pdfTabLink").className = "";
     document.getElementById("jsonNewTabLink").className = "";
+    document.getElementById("jsonAiTabLink").className = "";
     document.getElementById("jsonTabLink").className = "";
+    document.getElementById("textTabLink").className = "";
 }
 
 function hideAllAreas() {
     document.getElementById("iframeParent").style.display = "none";
     document.getElementById("jsonPath").style.display = "none";
     document.getElementById("jsonNewPath").style.display = "none";
+    document.getElementById("jsonAiPath").style.display = "none";
+    document.getElementById("text").style.display = "none";
 }
 
 function showTab(tabName) {
@@ -392,11 +431,20 @@ function showTab(tabName) {
         document.getElementById("iframeParent").style.display = "block";
         
         return false;
-    }
-    else if (tabName === "json-new") {
+    } else if (tabName === "json-new") {
         document.getElementById("jsonNewTabLink").className = "selectedTab";
         document.getElementById("jsonNewPath").style.display = "block";
         
+        return false;
+    } else if (tabName === "json-ai") {
+        document.getElementById("jsonAiTabLink").className = "selectedTab";
+        document.getElementById("jsonAiPath").style.display = "block";
+
+        return false;
+    } else if (tabName === "text") {
+        document.getElementById("textTabLink").className = "selectedTab";
+        document.getElementById("text").style.display = "block";
+
         return false;
     }
 

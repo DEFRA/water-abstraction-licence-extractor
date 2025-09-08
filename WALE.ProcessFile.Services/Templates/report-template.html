@@ -2,6 +2,14 @@
 <head>
     <title>Licence validation report</title>
     <link rel="stylesheet" href="Assets/styles.css" />
+    
+    <style>
+        .default-hidden { display: none; }
+        .show-all .default-hidden { display: block; }
+        #textOutput {
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
     <table>
@@ -20,7 +28,7 @@
                             <input type="text" id="licenceNumberTxt" />
                         </div>
 
-                        <div id="licenceHolderTxtDiv">
+                        <div id="licenceHolderTxtDiv" class="default-hidden">
                             <label for="licenceHolderTxt">Licence holder</label><br>
                             <input type="text" id="licenceHolderTxt" />
                         </div>                        
@@ -41,7 +49,8 @@
                     <ul>
                         <li><a id="pdfTabLink" href="#" onclick="return showTab('pdf-images')" class="selectedTab">PDF</a></li>
                         <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
-                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>
+                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (AI)</a></li>
+                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>                        
                         <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
                     </ul>
                     
@@ -53,9 +62,17 @@
                         <pre id="dataNewOutput"></pre>
                     </div>
 
+                    <div id="jsonAiPath">
+                        <pre id="dataAiOutput">AI data not available</pre>
+                    </div>
+
                     <div id="jsonPath">
                         <pre id="dataOutput"></pre>
-                    </div>                    
+                    </div>
+
+                    <div id="text">
+                        <span id="textOutput"></span>
+                    </div>
                 </div>
             </td>
         </tr>

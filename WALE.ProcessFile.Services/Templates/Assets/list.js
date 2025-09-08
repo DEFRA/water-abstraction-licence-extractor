@@ -1,11 +1,37 @@
 window.onload = function () {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
+    let bodyEle = document.getElementsByTagName("body")[0];
     
     if (params["showAll"] === "true") {
-        document.getElementsByTagName("body")[0].className += " show-all";
+        bodyEle.className += " show-all";
+    }
+
+    window.aiData = {};
+    window.loadedOrErrored = 0;
+    
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        loadScript(item.filename, bodyEle);
     }
     
+    let timeCount = 0;
+    let checkInterval = 50;
+    let timeout = 3000;
+    
+    let checksBeforeTimeout = timeout / checkInterval;
+
+    let intervalId = setInterval(function () {
+        if (window.loadedOrErrored !== data.length || timeCount++ >= checksBeforeTimeout) return;
+
+        setup();
+
+        clearInterval(intervalId);
+        intervalId = null;
+    }, checkInterval);
+};
+
+function setup() {
     populateTable();
     setTotals();
     populateDropdowns();
@@ -19,7 +45,23 @@ window.onload = function () {
         let select = selects[i];
         addChangeEvent(select);
     }
-};
+}
+
+function loadScript(filename, bodyEle) {
+    let script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = '../Data/' + filename + '.js';
+
+    script.onload = function () {
+        window.loadedOrErrored += 1;
+    };
+    
+    script.onerror = function () {
+        window.loadedOrErrored += 1;
+    }
+
+    bodyEle.appendChild(script);
+}
 
 function resetFilters(except) {
     window.resetting = true;
@@ -130,21 +172,87 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
         pointsSb.push('</ul>');
 
+        let filenameNoExtension = item.filename.split('.')[0];
+        let filenameNoSpacesOrDashes = filenameNoExtension
+            .replaceAll("-", "")
+            .replaceAll(" ", "");
+        let aiItem = window.aiData[filenameNoSpacesOrDashes];
+
+        let aiPurposesSb = [];
+        let aiPointsSb = [];
+
+        let aiLicenceNumberLine = "";
+        let aiLimitsFoundLine = "";
+        let aiAggregatesFoundLine = "";
+        let aiIssueDateLine = "";
+        let aiIssuerLine = "";
+        let aiMeansLine = "";
+        let aiLinkedLicencesLine = "";
+        let aiPurposesLine = "";
+        let aiPointsLine = "";
+        
+        if (!!aiItem) {
+            aiPurposesSb.push('<ul>');
+
+            for (let j = 0; j < aiItem.purposes.length; j++) {
+                let purpose = aiItem.purposes[j].description;
+                aiPurposesSb.push('<li>' + purpose + '</li>');
+            }
+
+            aiPurposesSb.push('</ul>');
+            aiPointsSb.push('<ul>');
+
+            for (let j = 0; j < aiItem.points.length; j++) {
+                let point = aiItem.points[j].description;
+                aiPointsSb.push('<li>' + point + '</li>');
+            }
+
+            aiPointsSb.push('</ul>');
+
+            let issueDate = aiItem.licenceVersion.issueDate;
+            if (!!issueDate) {
+                issueDate = issueDate.split('T')[0];
+            }
+            
+            let aggregates = aiItem.abstractionLimits.aggregates;
+            let hasLinkedLicences = false;
+            
+            for (let j = 0; j < aggregates.length; j++) {
+                let aggregate = aggregates[j];
+                
+                if (aggregate.linkedLicences.length > 0) {
+                    hasLinkedLicences = true;
+                    break;
+                }
+            }
+            
+            aiLicenceNumberLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(aiItem.licenceNumber) + "</span>";
+            aiLimitsFoundLine = "<br /><span class='ai-line'>" + (aiItem.abstractionLimits.individual.length > 0
+                || aiItem.abstractionLimits.aggregates.length > 0 ? "True" : "False") + "</span>";
+            aiAggregatesFoundLine = "<br /><span class='ai-line'>" + (aggregates.length > 0 ? "True" : "False") + "</span>";
+            aiIssueDateLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(issueDate) + "</span>";
+            aiIssuerLine = "<br /><span class='ai-line'>" + dashesIfNullOrEmpty(aiItem.licenceVersion.issuer) + "</span>";
+            aiMeansLine = "<br /><span class='ai-line'>" + (aiItem.meansOfAbstraction.length > 0 ? "True" : "False") + "</span>";
+            aiLinkedLicencesLine = "<br /><span class='ai-line'>" + (hasLinkedLicences ? "True" : "False") + "</span>";
+            aiPurposesLine = "\n<span class='ai-line'>" + (aiItem.purposes.length > 0 ? aiPurposesSb.join('') : '--') + "</span>";
+            aiPointsLine = "\n<span class='ai-line'>" + (aiItem.points.length > 0 ? aiPointsSb.join('') : '--') + "</span>";
+        }
+                
         let html =
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
-            "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
-            "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + "</td>" +
-            "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + "</td>" +
-            "<td>" + (item.limitsFound ? "True" : "False") + "</td>" +
-            "<td>" + (item.aggregatesFound ? "True" : "False") + "</td>" +
+            "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
+            "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + aiPointsLine + "</td>" +
+            "<td>" + (item.limitsFound ? "True" : "False") + aiLimitsFoundLine + "</td>" +
+            "<td>" + (item.aggregatesFound ? "True" : "False") + aiAggregatesFoundLine + "</td>" +
             "<td>" + (item.ocr ? "True" : "False") + "</td>" +
-            "<td>" + dashesIfNullOrEmpty(item.issueDate) + "</td>" +
-            "<td>" + item.issuer + "</td>" +
-            "<td>" + (item.meansFound ? "True" : "False") + "</td>" +
-            "<td>" + (item.linkedLicences ? "True" : "False") + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.issueDate) + aiIssueDateLine + "</td>" +
+            "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
+            "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
+            "<td>" + (item.linkedLicences ? "True" : "False") + aiLinkedLicencesLine + "</td>" +
             "</tr>";
 
         htmlSb.push(html);

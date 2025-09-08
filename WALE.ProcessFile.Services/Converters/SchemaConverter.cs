@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Models;
@@ -184,7 +183,6 @@ public static class SchemaConverter
             matches,
             licenceNumber,
             licenceVersion.LicenceVersionId,
-            means,
             points,
             purposes);
         
@@ -254,9 +252,8 @@ public static class SchemaConverter
         List<LabelGroupResult> matches,
         string? licenceNumber,
         string? licenceVersionId,
-        MeanOfAbstraction[] means,
-        PointOfAbstraction[] points,
-        PurposeOfAbstraction[] purposes)
+        PointOfAbstraction[] allPoints,
+        PurposeOfAbstraction[] allPurposes)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -387,7 +384,7 @@ public static class SchemaConverter
 
                 var pointsLoop = aggregateLimits.First().Points;
                 var purposesLoop = aggregateLimits.First().Purposes;
-                var timeCutoff = (TimeLimited?)null; // TODO
+                var timeCutoff = (TimeCutoff?)null; // TODO
                 var timePeriod = (TimePeriod?)null; // TODO
 
                 SubType? subType = null;
@@ -405,7 +402,7 @@ public static class SchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     LicenceVersionId = licenceVersionId,
-                    PrimaryType = !string.IsNullOrEmpty(licenceNumber)
+                    PrimaryType = linkedLicenceNumbers.Count >= 1
                         ? PrimaryType.LicenceToLicence
                         : PrimaryType.InLicence,
                     SubType = subType,
@@ -419,7 +416,17 @@ public static class SchemaConverter
                     TimePeriod = timePeriod
                 };
 
-                if (purposes?.Length > 0)
+                // If there are no points, purposes or licences specified, then it
+                // must mean its relevant to all points and purposes
+                if (aggregate.Points.Length == 0
+                    && aggregate.Purposes.Length == 0
+                    && linkedLicenceNumbers.Count == 0)
+                {
+                    aggregate.Points = allPoints.Select(Point (p) => p).ToArray();
+                    aggregate.Purposes = allPurposes.Select(Purpose (p) => p).ToArray();
+                }
+                
+                if (aggregate.Purposes.Length > 0)
                 {
                     foreach (var aggregateLimit in aggregateLimits)
                     {
@@ -427,7 +434,7 @@ public static class SchemaConverter
                     }
                 }
                 
-                if (points?.Length > 0)
+                if (aggregate.Points.Length > 0)
                 {
                     foreach (var aggregateLimit in aggregateLimits)
                     {
@@ -528,7 +535,7 @@ public static class SchemaConverter
                 : null;
 
             var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
-            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
             
             var inclusive = text?.Contains("inclusive",
                 StringComparison.InvariantCultureIgnoreCase) ?? false;
@@ -546,7 +553,7 @@ public static class SchemaConverter
             
             returnList.Add(new PeriodOfAbstraction
             {
-                Id = id,
+                Id = number,
                 PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
                 Description = text,
                 Inclusive = inclusive,
@@ -594,7 +601,7 @@ public static class SchemaConverter
                 : null;
             
             var number = meanId?.Text?.FirstOrDefault()?.Text;
-            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
             var value1 = value?.Text?.FirstOrDefault()?.Text;
             var value2 = double.TryParse(value1, out var valueResult) ? valueResult : (double?)null;
@@ -608,9 +615,9 @@ public static class SchemaConverter
             
             returnList.Add(new MeanOfAbstraction
             {
-                Id = id,
+                Id = number,
                 Description = text,
-                Limit = value2 != null ? new AbstractionLimit
+                AbstractionLimit = value2 != null ? new AbstractionLimit
                 {
                     PeriodType = periodType,
                     Units = units?.Text?.FirstOrDefault()?.Text,
@@ -641,7 +648,6 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => double.Parse(x!))
                 .ToArray() ?? [];
             
             var points = pointPurposeGroup.SubResults
@@ -697,7 +703,6 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PointGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => double.Parse(x!))
                 .ToArray() ?? [];
             
             var purposes = purposePointGroup?.SubResults

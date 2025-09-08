@@ -17,6 +17,9 @@ public static class TestsForAiPrompts
 {
     public static async Task TestsForAiPromptsAsync()
     {
+        var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
+        var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
+        
         var pdfFilenames = new List<string>
         {
             "2-26-32-126 6937559.PDF",
@@ -57,9 +60,6 @@ public static class TestsForAiPrompts
                 var azureClient = new AzureOpenAIClient(
                     new Uri(KeyConfig.OpenAiEndpoint),
                     new ApiKeyCredential(KeyConfig.OpenAiKey));
-                
-                var modelName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
-                var deploymentName = "gpt-4o"; // gpt-4o-mini gets stuck it seems
 
                 var chatClient = azureClient.GetChatClient(deploymentName);
 
@@ -67,7 +67,7 @@ public static class TestsForAiPrompts
                     pdfFilename,
                     pageImageGroups);
                 
-                Console.WriteLine("Looking up document text");
+                Console.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 
                 var allDocumentText = await GetDocumentTextAsync(
                     chatClient,
@@ -89,7 +89,7 @@ public static class TestsForAiPrompts
                     modelName,
                     allDocumentText);
 
-                Console.WriteLine("Found abstraction limits section");
+                Console.WriteLine($"Found abstraction limits section - {abstractionLimitsSectionText?.Length} lines");
                 
                 if (string.IsNullOrEmpty(abstractionLimitsSectionText))
                 {
@@ -98,48 +98,62 @@ public static class TestsForAiPrompts
                 }
                 
                 Console.WriteLine("Looking up points");
-                var points = await GetPointsAsync(chatClient, modelName, allDocumentText);
-                Console.WriteLine($"Found {points.Length} points");
+                var pointsTask = GetPointsAsync(chatClient, modelName, allDocumentText);
                 
                 Console.WriteLine("Looking up purposes");
-                var purposes = await GetPurposesAsync(chatClient, modelName, allDocumentText);
-                Console.WriteLine($"Found {purposes.Length} purposes");
-                
-                // TODO individual limits and aggregate limits should take into account points and purposes
-                
-                Console.WriteLine("Looking up individual limits");
-                
-                var individualLimits = await GetIndividualAbstractionLimitsAsync(
-                    chatClient,
-                    modelName,
-                    abstractionLimitsSectionText);
-                
-                Console.WriteLine($"Found {individualLimits.Length} individual abstraction limit(s)");
-                
-                Console.WriteLine("Looking up aggregate limits");
-                
-                var aggregateLimits = await GetAggregateLimitsAsync(
-                    chatClient,
-                    modelName,
-                    abstractionLimitsSectionText);
-                
-                Console.WriteLine($"Found {aggregateLimits.Length} aggregate limit(s)");
+                var purposesTask = GetPurposesAsync(chatClient, modelName, allDocumentText);
                 
                 Console.WriteLine("Looking up licence version");
-                var licenceVersion = await GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
-                Console.WriteLine("Found licence version");
+                var licenceVersionTask = GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
                 
                 Console.WriteLine("Looking up general licence data");
-                var baseLicenceData = await GetBaseLicenceDataAsync(chatClient, modelName, allDocumentText);
-                Console.WriteLine("Found general licence data");
+                var baseLicenceDataTask = GetBaseLicenceDataAsync(chatClient, modelName, allDocumentText);
                 
                 Console.WriteLine("Looking up means of abstraction");
-                var meansOfAbstraction = await GetMeansOfAbstractionAsync(chatClient, modelName, allDocumentText);
-                Console.WriteLine($"Found {meansOfAbstraction.Length} means of abstraction");
+                var meansOfAbstractionTask = GetMeansOfAbstractionAsync(chatClient, modelName, allDocumentText);
                 
                 Console.WriteLine("Looking up periods of abstraction");
-                var periodsOfAbstraction = await GetPeriodsOfAbstractionAsync(chatClient, modelName, allDocumentText);
+                var periodsOfAbstractionTask = GetPeriodsOfAbstractionAsync(chatClient, modelName, allDocumentText);
+
+                var points = await pointsTask;
+                Console.WriteLine($"Found {points.Length} points");
+                
+                var purposes = await purposesTask;
+                Console.WriteLine($"Found {purposes.Length} purposes");
+                
+                Console.WriteLine("Looking up individual limits");
+                var individualLimitsTask = GetIndividualAbstractionLimitsAsync(
+                    chatClient,
+                    modelName,
+                    abstractionLimitsSectionText,
+                    points,
+                    purposes);
+                
+                Console.WriteLine("Looking up aggregate limits");
+                var aggregateLimitsTask = GetAggregateLimitsAsync(
+                    chatClient,
+                    modelName,
+                    abstractionLimitsSectionText,
+                    points,
+                    purposes);
+                
+                var individualLimits = await individualLimitsTask;
+                Console.WriteLine($"Found {individualLimits.Length} individual abstraction limit(s)");
+                
+                var aggregateLimits = await aggregateLimitsTask;
+                Console.WriteLine($"Found {aggregateLimits.Length} aggregate limit(s)");
+                
+                var meansOfAbstraction = await meansOfAbstractionTask;
+                Console.WriteLine($"Found {meansOfAbstraction.Length} means of abstraction");
+                
+                var periodsOfAbstraction = await periodsOfAbstractionTask;
                 Console.WriteLine($"Found {periodsOfAbstraction.Length} periods of abstraction");
+                
+                var licenceVersion =  await licenceVersionTask;
+                Console.WriteLine("Found licence version");
+                
+                var baseLicenceData = await baseLicenceDataTask;
+                Console.WriteLine("Found general licence data");
                 
                 var schema = new Licence
                 {
@@ -303,7 +317,9 @@ public static class TestsForAiPrompts
     static async Task<Aggregate[]> GetAggregateLimitsAsync(
         ChatClient chatClient,
         string modelName,
-        string abstractionLimitsSectionText)
+        string abstractionLimitsSectionText,
+        PointOfAbstraction[] points,
+        PurposeOfAbstraction[] purpose)
     {
         var systemPrompts = new List<ChatMessageContentPart>
         {
@@ -312,6 +328,14 @@ public static class TestsForAiPrompts
             + Environment.NewLine
             + Environment.NewLine
             + abstractionLimitsSectionText
+            + Environment.NewLine
+            + Environment.NewLine
+            + "Here is the points of abstraction information in JSON format to use to enrich the relevant parts;"
+            + JsonSerializer.Serialize(points, JsonHelper.GetSerializer())
+            + Environment.NewLine
+            + Environment.NewLine
+            + "Here is the purpose of abstraction information in JSON format to use to enrich the relevant parts;"
+            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializer())    
         };
         
         var userPrompts = new List<ChatMessageContentPart>
@@ -404,7 +428,9 @@ public static class TestsForAiPrompts
     static async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
         ChatClient chatClient,
         string modelName,
-        string abstractionLimitsSectionText)
+        string abstractionLimitsSectionText,
+        PointOfAbstraction[] points,
+        PurposeOfAbstraction[] purpose)
     {
         var systemPrompts = new List<ChatMessageContentPart>
         {
@@ -413,7 +439,16 @@ public static class TestsForAiPrompts
             + Environment.NewLine
             + Environment.NewLine
             + abstractionLimitsSectionText
+            + Environment.NewLine
+            + Environment.NewLine
+            + "Here is the points of abstraction information in JSON format to use to enrich the relevant parts;"
+            + JsonSerializer.Serialize(points, JsonHelper.GetSerializer())
+            + Environment.NewLine
+            + Environment.NewLine
+            + "Here is the purpose of abstraction information in JSON format to use to enrich the relevant parts;"
+            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializer())            
         };
+        
         
         var userPrompts = new List<ChatMessageContentPart>
         {

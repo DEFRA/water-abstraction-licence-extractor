@@ -379,7 +379,6 @@ public static class TestsForAiPrompts
         var userPrompts = new List<ChatMessageContentPart>
         {
             ChatMessageContentPart.CreateTextPart(
-                "If a value is not present, provide null. " +
                 "This array relates to 'periods of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these - DO NOT use any other section of the document for values for this property " +
                 $"Use the following structure:\n\n[{PeriodOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
             )

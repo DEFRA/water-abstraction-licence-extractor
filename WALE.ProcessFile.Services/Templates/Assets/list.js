@@ -1,3 +1,5 @@
+const LOAD_AI = false;
+
 window.onload = function () {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
@@ -8,11 +10,16 @@ window.onload = function () {
     }
 
     window.aiData = {};
-    window.loadedOrErrored = 0;
     
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        loadScript(item.filename, bodyEle);
+    if (LOAD_AI) {
+        window.loadedOrErrored = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            loadScript(item.filename, bodyEle);
+        }
+    } else {
+        window.loadedOrErrored = data.length;
     }
     
     let timeCount = 0;

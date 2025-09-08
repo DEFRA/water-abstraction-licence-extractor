@@ -32,7 +32,7 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            _ = RemoveExcludes(label, line.Text, true, out var removesUsedLoopOuter);
+            _ = RemoveExcludes(label, line.Text, false, out var removesUsedLoopOuter);
 
             // The whole line wants removing
             if (removesUsedLoopOuter?.Contains(line.Text) == true)

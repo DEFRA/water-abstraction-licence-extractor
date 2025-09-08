@@ -13,6 +13,11 @@ public static class TextToFindIsBetweenLabels
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+
+        if (request.label.Name == "Point")
+        {
+            
+        }
         
         var labelGroupResult = request.labelGroupResult;//.Clone();
         
@@ -189,7 +194,7 @@ public static class TextToFindIsBetweenLabels
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.
-                TrimFormatting(firstLineTextAfterLabel, true)!;
+                TrimFormatting(firstLineTextAfterLabel, false)!;
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
@@ -271,9 +276,7 @@ public static class TextToFindIsBetweenLabels
 
             foreach (var column in line.Columns)
             {
-                var isLastColumn = line.Columns.Last() == column;
-                
-                var columnText = FormattingHelper.TrimFormatting(column.Text, isLastColumn)!;
+                var columnText = FormattingHelper.TrimFormatting(column.Text, false)!;
                 clonedLine.Columns.Add(new DocumentLineColumn(columnText));
             }
             

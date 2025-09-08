@@ -1188,8 +1188,8 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(periodsResult);
         var allPeriodsText = string.Join(' ', periodsResult.Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("5.1 For Purposes 4.1 and 4.2 From 1 November to 31 March inclusive " +
-            "5.2 For Purpose 4.3 From 1 April to 31 October inclusive", allPeriodsText);
+        Assert.Equal("5.1 For Purposes 4.1 and 4.2 From 1 November to 31 March inclusive. " +
+            "5.2 For Purpose 4.3 From 1 April to 31 October inclusive.", allPeriodsText);
 
         Assert.NotNull(periodsResult.SubResults);
         Assert.Equal(2, periodsResult.SubResults.Count);
@@ -1198,7 +1198,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, periodSubSection1.SubResults.Count);
         
         Assert.Equal("5.1 For Purposes 4.1 and 4.2" , periodSubSection1.Text![0].Text);
-        Assert.Equal("From 1 November to 31 March inclusive", periodSubSection1.Text![1].Text);
+        Assert.Equal("From 1 November to 31 March inclusive.", periodSubSection1.Text![1].Text);
 
         var periodSubSection1PurposesText = periodSubSection1.SubResults[1].Text!.Single().Text;
         Assert.Equal("4.1 and 4.2", periodSubSection1PurposesText);
@@ -1216,7 +1216,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, periodSubSection2.SubResults.Count);
         
         Assert.Equal("5.2 For Purpose 4.3", periodSubSection2.Text![0].Text);
-        Assert.Equal("From 1 April to 31 October inclusive", periodSubSection2.Text![1].Text);        
+        Assert.Equal("From 1 April to 31 October inclusive.", periodSubSection2.Text![1].Text);        
         
         var periodSubSection2PurposesText = periodSubSection2.SubResults[1].Text!.Single().Text;
         Assert.Equal("4.3", periodSubSection2PurposesText);

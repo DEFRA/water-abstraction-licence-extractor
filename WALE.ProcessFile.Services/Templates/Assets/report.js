@@ -23,9 +23,10 @@ function loadReport(filename) {
         });
         
         window.aiData = {};
-        
+
         let aiPath = "../Data/" + data.filename.split('.')[0] + '.js';
         loadScript(aiPath, setupAiTab);
+        
         let pdfPath = jssettings.pdfFolder + data.filename;
         
         let filenameEle = document.getElementById("filename");

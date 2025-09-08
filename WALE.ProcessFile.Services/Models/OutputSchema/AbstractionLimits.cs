@@ -38,9 +38,4 @@ public class AbstractionLimits
         ],
         Individual = [AbstractionLimit.Template]
     };
-    
-    public static string GetSchemaForPrompt()
-    {
-        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
-    }
 }

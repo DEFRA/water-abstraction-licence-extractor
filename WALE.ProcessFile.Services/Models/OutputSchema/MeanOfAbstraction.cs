@@ -1,6 +1,4 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -11,11 +9,6 @@ public class MeanOfAbstraction
     public string? Description { get; set; }
     
     public AbstractionLimit? AbstractionLimit { get; set; }
-    
-    public static string GetSchemaForPrompt()
-    {
-        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
-    }
     
     public static MeanOfAbstraction Template => new()
     {

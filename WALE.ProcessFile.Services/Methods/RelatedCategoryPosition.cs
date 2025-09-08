@@ -23,6 +23,7 @@ public static class RelatedCategoryPosition
         var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
             false,
+            true,
             out _,
             out _);
         
@@ -32,6 +33,7 @@ public static class RelatedCategoryPosition
             request.label,
             request.previousLines,
             false,
+            true,
             out _,
             out _);
         
@@ -39,6 +41,7 @@ public static class RelatedCategoryPosition
             request.label,
             request.nextLines,
             false,
+            true,
             out _,
             out _);        
         

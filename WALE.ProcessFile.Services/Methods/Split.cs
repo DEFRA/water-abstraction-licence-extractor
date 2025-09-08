@@ -107,7 +107,13 @@ public static class Split
             }
         }
         
-        leftPartLines = DataHelper.RemoveExcludesAndNotContains(request.label, leftPartLines, false, out _, out _);
+        leftPartLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            leftPartLines, 
+            false,
+            true,
+            out _, 
+            out _);
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(
@@ -118,7 +124,14 @@ public static class Split
         
         var results = FilterIntoFormat(request, leftPartResult, leftPartLines, false);
 
-        rightPartLines = DataHelper.RemoveExcludesAndNotContains(request.label, rightPartLines, false, out _, out _);        
+        rightPartLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            rightPartLines, 
+            false,
+            true,
+            out _,
+            out _);
+        
         rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
         
         if (rightPartLines.Count > 0)

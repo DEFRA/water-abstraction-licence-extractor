@@ -681,7 +681,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(4, points.Text!.Count);
         Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
-        Assert.Equal("and \"F\" on the map", points.Text![3].Text);
+        Assert.Equal("and \"F\" on the map.", points.Text![3].Text);
 
         var pointPurposeGroup = points.SubResults
             .Where(psr => psr.MatchedLabel?.Name == "PointPurposeGroup")
@@ -695,10 +695,10 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(4, pointsSubs.Count);
         
-        Assert.Equal("(1) TA 0417 2942", pointsSubs[0].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("(2) TA 0472 3425", pointsSubs[1].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("(1) TA 0417 2942,", pointsSubs[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("(2) TA 0472 3425,", pointsSubs[1].Text!.FirstOrDefault()!.Text);
         Assert.Single(pointsSubs[2].Text!);
-        Assert.Equal("(3) TA 0677 3514", pointsSubs[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("(3) TA 0677 3514", pointsSubs[2].Text!.FirstOrDefault()!.Text); // TODO this is wrong
         Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E", pointsSubs[3].Text!.FirstOrDefault()!.Text);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
@@ -706,7 +706,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(2, purpose.Text!.Count);
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purpose.Text![0].Text);
-        Assert.Equal("Water undertaking", purpose.Text![1].Text);
+        Assert.Equal("Water undertaking.", purpose.Text![1].Text);
         
         var abstractionLimitsResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         

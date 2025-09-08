@@ -27,6 +27,7 @@ public static class LabelIsAfterTextToFind
             request.label,
             request.previousLines,
             false,
+            true,
             out _,
             out var removedLines);
 

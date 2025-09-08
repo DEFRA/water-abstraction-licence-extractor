@@ -14,6 +14,7 @@ public static partial class DataHelper
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
         bool removeNotContains,
+        bool trimPunctuation,
         out bool isForbidden,
         out IReadOnlyList<string>? removesUsed)
     {
@@ -51,7 +52,12 @@ public static partial class DataHelper
                 }
 
                 var isLastColumn = line.Columns.Last() == column;
-                var alteredText = RemoveExcludes(label, column.Text, isLastColumn, out var removesUsedLoop);
+                var alteredText = RemoveExcludes(
+                    label,
+                    column.Text,
+                    isLastColumn && trimPunctuation,
+                    out var removesUsedLoop);
+                
                 var clonedColumn = new DocumentLineColumn(alteredText);
                 newColumns.Add(clonedColumn);
 

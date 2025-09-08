@@ -25,6 +25,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             request.label,
             inputLines,
             false,
+            true,
             out _,
             out var removedLines);
         

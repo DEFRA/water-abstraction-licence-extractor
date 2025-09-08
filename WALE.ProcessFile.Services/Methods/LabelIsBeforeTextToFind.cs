@@ -22,6 +22,7 @@ public static class LabelIsBeforeTextToFind
             request.label,
             request.nextLines,
             false,
+            true,
             out _,
             out var removedLines);
 

@@ -31,6 +31,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
             request.label,
             inputLines,
             false,
+            true,
             out _,
             out var removedLines);
         

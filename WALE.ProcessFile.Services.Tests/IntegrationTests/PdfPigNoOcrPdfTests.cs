@@ -135,7 +135,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
-        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Private Water Supply 4.2 Agriculture (other than Spray Irrigation)",
+        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Private Water Supply. 4.2 Agriculture (other than Spray Irrigation).",
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -311,14 +311,14 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purposeResult.Text?[0].Text);
-        Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass)", purposeResult.Text?[1].Text);
+        Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
         
         Assert.Single(purposeResult.SubResults);
         var firstPurposePointGroup = purposeResult.SubResults!.Single();
-        Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass)", firstPurposePointGroup.Text!.Single().Text);
+        Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", firstPurposePointGroup.Text!.Single().Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.LicenceSetId);
@@ -545,7 +545,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
         Assert.Equal(
-            "4. PURPOSE OF ABSTRACTION 4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below",
+            "4. PURPOSE OF ABSTRACTION 4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -554,7 +554,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(purposeResult.SubResults!);
         var firstPurposePointGroup = purposeResult.SubResults!.First();
         Assert.Equal(
-            "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below",
+            "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', firstPurposePointGroup.Text!.Select(x => x.Text).ToArray()));
     }
     
@@ -702,7 +702,7 @@ public class PdfPigNoOcrPdfTests
         Assert.False(purposeResult.IsOcr);
         
         Assert.Equal("4. PURPOSE OF ABSTRACTION 4.1 Spray irrigation, subject to the compensatory discharge of water from the borehole at TF 14084"
-            + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below",
+            + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below.",
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -711,7 +711,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(purposeResult.SubResults!);
         var firstPurposePointGroup = purposeResult.SubResults!.Single();
         Assert.Equal("4.1 Spray irrigation, subject to the compensatory discharge of water from the borehole at TF 14084"
-            + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below",
+            + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below.",
             string.Join(' ', firstPurposePointGroup.Text?.Select(x => x.Text).ToArray()!));
     }
     
@@ -1145,7 +1145,7 @@ public class PdfPigNoOcrPdfTests
         Assert.False(purposeResult.IsOcr);
 
         var allText = string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Trickle irrigation 4.2 Filling a reservoir for subsequent trickle irrigation", allText);
+        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Trickle irrigation. 4.2 Filling a reservoir for subsequent trickle irrigation.", allText);
 
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -1473,9 +1473,9 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 From Point 2.1 Transfer for subsequent discharge and re-abstraction for spray irrigation from" 
                      + " the points specified in condition 2.2 of this licence and points specified in"
-                     + " condition 2.1 of licence AN/033/0047/018"
-                     + " 4.2 Filling a reservoir for subsequent spray irrigation"
-                     + " 4.3 From Point 2.2"
+                     + " condition 2.1 of licence AN/033/0047/018."
+                     + " 4.2 Filling a reservoir for subsequent spray irrigation."
+                     + " 4.3 From Point 2.2."
                      + " Spray Irrigation",
             allPurposeText);
         
@@ -2071,7 +2071,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purposeResult.Text?[0].Text);
-        Assert.Equal("4.1 Fish farm and fishery", purposeResult.Text?[1].Text);
+        Assert.Equal("4.1 Fish farm and fishery.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
@@ -2086,7 +2086,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal(2, pointsResult.Text!.Count);
         Assert.Equal("2. POINT OF ABSTRACTION", pointsResult.Text![0].Text);
-        Assert.Equal("2.1 At National Grid Reference SJ 5179 4988 marked \"C\" on the map", pointsResult.Text![1].Text);
+        Assert.Equal("2.1 At National Grid Reference SJ 5179 4988 marked \"C\" on the map.", pointsResult.Text![1].Text);
         
         var pointPurposeGroup1 = pointsResult.SubResults[0];
         Assert.Equal("PointPurposeGroup", pointPurposeGroup1.MatchedLabel!.Name);
@@ -2747,7 +2747,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purposeResult.Text?[0].Text);
-        Assert.Equal("4.1 Public water supply", purposeResult.Text?[1].Text);
+        Assert.Equal("4.1 Public water supply.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
@@ -2895,14 +2895,14 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
         Assert.Equal("4. PURPOSE OF ABSTRACTION", purposeResult.Text?[0].Text);
-        Assert.Equal("4.1 Transfer for the purpose of dewatering", purposeResult.Text?[1].Text);
+        Assert.Equal("4.1 Transfer for the purpose of dewatering.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
         Assert.Equal(MatchType.Between, purposeResult.MatchType);
         
         Assert.Single(purposeResult.SubResults!);
         var firstPurposePointGroup = purposeResult.SubResults!.First();
-        Assert.Equal("4.1 Transfer for the purpose of dewatering", firstPurposePointGroup.Text!.First().Text);
+        Assert.Equal("4.1 Transfer for the purpose of dewatering.", firstPurposePointGroup.Text!.First().Text);
         
         var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.Single();
@@ -3032,7 +3032,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, points!.Text!.Count);
         Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
         Assert.Equal("2.1. At National Grid Reference TA 04990 38509 at the point marked \"A\" on the", points.Text![1].Text);
-        Assert.Equal("map", points.Text![2].Text);
+        Assert.Equal("map.", points.Text![2].Text);
         
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Lakeminster Park Limited", companyName?.Text?.FirstOrDefault()?.Text);

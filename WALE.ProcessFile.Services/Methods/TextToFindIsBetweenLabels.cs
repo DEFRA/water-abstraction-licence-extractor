@@ -129,6 +129,7 @@ public static class TextToFindIsBetweenLabels
             request.label,
             betweenText,
             true,
+            false,
             out var isForbidden,
             out var removedLines);
         

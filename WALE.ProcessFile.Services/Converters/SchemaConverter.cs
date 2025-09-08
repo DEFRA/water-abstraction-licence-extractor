@@ -601,7 +601,7 @@ public static class SchemaConverter
                 : null;
             
             var number = meanId?.Text?.FirstOrDefault()?.Text;
-            var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
+            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
             var value1 = value?.Text?.FirstOrDefault()?.Text;
             var value2 = double.TryParse(value1, out var valueResult) ? valueResult : (double?)null;
@@ -615,7 +615,7 @@ public static class SchemaConverter
             
             returnList.Add(new MeanOfAbstraction
             {
-                Id = id,
+                Id = number,
                 Description = text,
                 AbstractionLimit = value2 != null ? new AbstractionLimit
                 {

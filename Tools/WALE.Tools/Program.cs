@@ -101,7 +101,7 @@ async Task TestsForAiPromptsAsync()
                 break;
             }
             
-            Console.WriteLine("Looking up abstraction limits section");
+            /*Console.WriteLine("Looking up abstraction limits section");
             
             var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                 chatClient,
@@ -150,9 +150,17 @@ async Task TestsForAiPromptsAsync()
             
             Console.WriteLine("Looking up general licence data");
             var baseLicenceData = await GetBaseLicenceDataAsync(chatClient, modelName, allDocumentText);
-            Console.WriteLine("Found general licence data");
+            Console.WriteLine("Found general licence data");*/
             
-            var schema = new Licence
+            Console.WriteLine("Looking up means of abstraction");
+            var meansOfAbstraction = await GetMeansOfAbstractionAsync(chatClient, modelName, allDocumentText);
+            Console.WriteLine($"Found {meansOfAbstraction.Length} means of abstraction");
+            
+            Console.WriteLine("Looking up periods of abstraction");
+            var periodsOfAbstraction = await GetPeriodsOfAbstractionAsync(chatClient, modelName, allDocumentText);
+            Console.WriteLine($"Found {periodsOfAbstraction.Length} periods of abstraction");
+            
+            /*var schema = new Licence
             {
                 Filename = pdfFilename,
                 LicenceVersion = licenceVersion,
@@ -164,9 +172,9 @@ async Task TestsForAiPromptsAsync()
                     Aggregates = aggregateLimits
                 },
                 LicenceNumber = baseLicenceData.LicenceNumber,
-                MeansOfAbstraction = baseLicenceData.MeansOfAbstraction,
+                MeansOfAbstraction = meansOfAbstraction,
                 DefinitionOfYear = baseLicenceData.DefinitionOfYear,
-                PeriodsOfAbstraction = baseLicenceData.PeriodsOfAbstraction
+                PeriodsOfAbstraction = periodsOfAbstraction
             };
             
             var filenameNoExtension = pdfFilename.Split('.').First();
@@ -178,7 +186,7 @@ async Task TestsForAiPromptsAsync()
             var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
             
             await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
-            Console.Write(outputJs);            
+            Console.Write(outputJs);*/    
         }
         catch (Exception e)
         {
@@ -259,12 +267,11 @@ async Task<BaseLicence> GetBaseLicenceDataAsync(
             "The 'definitionOfYear' property and sub properties should come from a section of the document that " +
                 "says something similar to 'a year means the 12 month period beginning on 1st January and ending " +
                 "on 31st December' - If there is nothing like this in the document, set 'definitionOfYear' value to '[]'. " +
-            "Property 'periodsOfAbstraction' array relates to 'period of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these - DO NOT use any other section of the document for values for this property. " +
+            /*"Property 'periodsOfAbstraction' array relates to 'period of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these - DO NOT use any other section of the document for values for this property. " +
             "Property 'meansOfAbstraction' array relates to 'period of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these. " +
             "Property 'periodType' value (as a sub property of 'periodsOfAbstraction') must be either 'SetPeriod' (when the text mentions when a year starts and ends, 'PerYear' (when it says 'per year' or 'all year' in the text) or null (when neither previous condition is met). " +
-            "Property 'periodType' value (as a sub property of 'abstractionLimit') must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
-            "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes or empty strings. " +
-            // TODO 
+            "Property 'periodType' value (as a sub property of 'abstractionLimit') must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " 
+            "Do not populate any date fields values with minimum dates - set them as null rather then full of zeroes or empty strings. " + */
             $"Use the following structure: {BaseLicence.GetSchemaForPrompt()}")
     };
 
@@ -348,6 +355,69 @@ async Task<Aggregate[]> GetAggregateLimitsAsync(
 
     var aggregateLimits = JsonSerializer.Deserialize<AggregateArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
     return aggregateLimits.Data;
+}
+
+async Task<PeriodOfAbstraction[]> GetPeriodsOfAbstractionAsync(
+    ChatClient chatClient,
+    string modelName,
+    string abstractionLimitsSectionText)
+{
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + abstractionLimitsSectionText
+    };
+    
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "This array relates to 'periods of abstraction' or similarly titled in a specific section of the the document - there may be multiple of these - DO NOT use any other section of the document for values for this property " +
+            $"Use the following structure:\n\n[{PeriodOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
+        )
+    };
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+
+    var periodsOfAbstraction = JsonSerializer.Deserialize<PeriodOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return periodsOfAbstraction.Data;
+}
+
+async Task<MeanOfAbstraction[]> GetMeansOfAbstractionAsync(
+    ChatClient chatClient,
+    string modelName,
+    string abstractionLimitsSectionText)
+{
+    var systemPrompts = new List<ChatMessageContentPart>
+    {
+        "You are an AI assistant that extracts data from documents"
+        + " and returns them as structured JSON objects. Do not return as a code block. Extract the data from this licence. Here is the document to look at;"
+        + Environment.NewLine
+        + Environment.NewLine
+        + abstractionLimitsSectionText
+    };
+    
+    var userPrompts = new List<ChatMessageContentPart>
+    {
+        ChatMessageContentPart.CreateTextPart(
+            "If a value is not present, provide null. " +
+            "This array relates to the 'means of abstraction' or similarly titled in a specific section of the the document - there may be multiple array items under this. " +
+            "Property 'abstractionLimit' value should be 'null' UNLESS there are limits mentioned that relate to how quickly water can be abstracted. " +
+            "Provide one array item for each mean of abstraction mentioned. " +
+            "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
+            $"Use the following structure:\n\n[{MeanOfAbstractionArrayWrapped.GetSchemaForPrompt()}]"
+        )
+    };
+            
+    var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
+    if (textResponse == null) throw new Exception("Some error occured");
+
+    var meansOfAbstraction = JsonSerializer.Deserialize<MeanOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+    return meansOfAbstraction.Data;
 }
 
 async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
@@ -855,6 +925,28 @@ internal class AggregateArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new AggregateArrayWrapped { Data = [Aggregate.Template] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
+}
+
+internal class PeriodOfAbstractionArrayWrapped
+{
+    public PeriodOfAbstraction[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new PeriodOfAbstractionArrayWrapped { Data = [PeriodOfAbstraction.Template] };
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+    }
+}
+
+internal class MeanOfAbstractionArrayWrapped
+{
+    public MeanOfAbstraction[] Data { get; init; } = [];
+    
+    public static string GetSchemaForPrompt()
+    {
+        var template = new MeanOfAbstractionArrayWrapped { Data = [MeanOfAbstraction.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
     }
 }

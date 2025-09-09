@@ -386,17 +386,6 @@ public static class SchemaConverter
                 var purposesLoop = aggregateLimits.First().Purposes;
                 var timeCutoff = (TimeCutoff?)null; // TODO
                 var timePeriod = (TimePeriod?)null; // TODO
-
-                SubType? subType = null;
-
-                if (pointsLoop?.Length > 0)
-                {
-                    subType = SubType.PointToPoint;
-                }
-                else if (purposesLoop?.Length > 0)
-                {
-                    subType = SubType.PurposeToPurpose;
-                }
                 
                 var aggregate = new Aggregate
                 {
@@ -405,7 +394,6 @@ public static class SchemaConverter
                     PrimaryType = linkedLicenceNumbers.Count >= 1
                         ? PrimaryType.LicenceToLicence
                         : PrimaryType.InLicence,
-                    SubType = subType,
                     NaldType = GetNaldType(),
                     AggregateSetId = PositionConstants.ReplacementMarker,
                     LinkedLicences = linkedLicenceNumbers.ToArray(),
@@ -424,6 +412,15 @@ public static class SchemaConverter
                 {
                     aggregate.Points = allPoints.Select(Point (p) => p).ToArray();
                     aggregate.Purposes = allPurposes.Select(Purpose (p) => p).ToArray();
+                }
+                
+                if (aggregate.Points.Length > 1)
+                {
+                    aggregate.SubType = SubType.PointToPoint;
+                }
+                else if (aggregate.Purposes.Length > 1)
+                {
+                    aggregate.SubType = SubType.PurposeToPurpose;
                 }
                 
                 if (aggregate.Purposes.Length > 0)

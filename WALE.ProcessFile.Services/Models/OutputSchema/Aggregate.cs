@@ -52,7 +52,7 @@ public class Aggregate
     
     public PrimaryType PrimaryType { get; init; }
     
-    public SubType? SubType { get; init; }
+    public SubType? SubType { get; set; }
     
     public string? NaldType { get; set; }
 

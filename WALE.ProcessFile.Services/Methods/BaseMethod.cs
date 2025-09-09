@@ -9,7 +9,7 @@ public static class BaseMethod
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
-        bool isPrevious)
+        bool lineNumbersAreDescending)
     {
         if (request.label == null)
         {
@@ -34,7 +34,7 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,
+                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr,
                     out var companyNameLines))
                 {
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
@@ -94,7 +94,7 @@ public static class BaseMethod
                 
                 break;
             case Units.Constant:
-                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, isPrevious, labelGroupResult));
+                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, lineNumbersAreDescending, labelGroupResult));
                 
                 break;
             case SingleWord.Constant:

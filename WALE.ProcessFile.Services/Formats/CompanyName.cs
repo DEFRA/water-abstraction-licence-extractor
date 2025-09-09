@@ -14,7 +14,7 @@ public static class CompanyName
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isPrevious,
+        bool lineNumbersAreDescending,
         bool isOcr,
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
@@ -106,7 +106,7 @@ public static class CompanyName
             initialMatchedLines.Add(clonedLine);
         }
 
-        if (isPrevious)
+        if (lineNumbersAreDescending)
         {
             initialMatchedLines.Reverse();
         }

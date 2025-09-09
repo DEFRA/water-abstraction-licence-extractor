@@ -9,7 +9,7 @@ public static class Units
     public static List<LabelGroupResult> GetMatchesToPossibilities(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines,
-        bool isPrevious,
+        bool lineNumbersAreDescending,
         LabelGroupResult labelGroupResult)
     {
         if (label.Possibilities == null)
@@ -17,7 +17,7 @@ public static class Units
             return [];
         }
 
-        var newLines = isPrevious ? lines.Reverse().ToList() : lines.ToList();
+        var newLines = lineNumbersAreDescending ? lines.Reverse().ToList() : lines.ToList();
         
         foreach (var line in newLines)
         {

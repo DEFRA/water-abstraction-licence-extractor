@@ -1307,7 +1307,8 @@ public static class LabelConfiguration
                                             "thousand gallons",
                                             "million gallons",
                                             "gallons"                                    
-                                        }
+                                        },
+                                        //Multiple = MultipleType.MultipleLabelsMultipleValues
                                     },
                                     new()
                                     {
@@ -1455,7 +1456,8 @@ public static class LabelConfiguration
                                             "(1)",
                                             "(11)",
                                             "(111)"
-                                        ]
+                                        ],
+                                        //Multiple = MultipleType.MultipleLabelsMultipleValues
                                     },
                                     new()
                                     {

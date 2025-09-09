@@ -1140,12 +1140,12 @@ public class PdfDataExtractorService(
         }
         
         var textBeforeLabel = FormattingHelper.TrimFormatting(
-            line.Text[..labelTextPositionIndex], true);
+            line.Text[..labelTextPositionIndex], true, true);
 
         var textAtLabel = matchedLabelText;
         
         var textAfterLabel = FormattingHelper.TrimFormatting(
-            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], true);
+            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
         
         if (!string.IsNullOrEmpty(textAfterLabel)
             && label.Position is LabelPosition.LabelIsBeforeTextToFind

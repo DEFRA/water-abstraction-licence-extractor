@@ -13,11 +13,6 @@ public static class TextToFindIsBetweenLabels
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
-        if (request.label.Name == "Point")
-        {
-            
-        }
         
         var labelGroupResult = request.labelGroupResult;//.Clone();
         
@@ -78,8 +73,9 @@ public static class TextToFindIsBetweenLabels
             {
                 var firstBetweenLine = betweenText[0];
                 var firstColumn = firstBetweenLine.Columns[0];
+                var firstColumnText = FormattingHelper.TrimFormatting(firstColumn.Text, true, false);
 
-                var text = $"{labelText} {firstColumn.Text}";
+                var text = $"{labelText} {firstColumnText}";
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);
             }
         }
@@ -195,7 +191,7 @@ public static class TextToFindIsBetweenLabels
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.
-                TrimFormatting(firstLineTextAfterLabel, false)!;
+                TrimFormatting(firstLineTextAfterLabel, false, false)!;
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
@@ -262,7 +258,7 @@ public static class TextToFindIsBetweenLabels
                             var clonedLine2 = line.Clone();
                             clonedLine2.Columns.Clear();
                             clonedLine2.Columns.Add(new DocumentLineColumn(
-                                FormattingHelper.TrimFormatting(t, false)!));
+                                FormattingHelper.TrimFormatting(t, false, false)!));
 
                             returnList.Add(clonedLine2);
                         }
@@ -277,7 +273,7 @@ public static class TextToFindIsBetweenLabels
 
             foreach (var column in line.Columns)
             {
-                var columnText = FormattingHelper.TrimFormatting(column.Text, false)!;
+                var columnText = FormattingHelper.TrimFormatting(column.Text, false, false)!;
                 clonedLine.Columns.Add(new DocumentLineColumn(columnText));
             }
             

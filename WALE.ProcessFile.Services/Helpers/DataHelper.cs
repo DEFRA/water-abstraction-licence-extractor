@@ -33,7 +33,7 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            _ = RemoveExcludes(label, line.Text, false, out var removesUsedLoopOuter);
+            _ = RemoveExcludes(label, line.Text, false, false, out var removesUsedLoopOuter);
 
             // The whole line wants removing
             if (removesUsedLoopOuter?.Contains(line.Text) == true)
@@ -55,6 +55,7 @@ public static partial class DataHelper
                 var alteredText = RemoveExcludes(
                     label,
                     column.Text,
+                    isLastColumn && trimPunctuation,
                     isLastColumn && trimPunctuation,
                     out var removesUsedLoop);
                 
@@ -110,7 +111,8 @@ public static partial class DataHelper
     public static string RemoveExcludes(
         LabelToMatch label,
         string betweenText,
-        bool trimPunctuation,
+        bool trimPunctuationStart,
+        bool trimPunctuationEnd,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
@@ -201,7 +203,7 @@ public static partial class DataHelper
         }
 
         removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
-        return FormattingHelper.TrimFormatting(returnStr, trimPunctuation)!;
+        return FormattingHelper.TrimFormatting(returnStr, trimPunctuationStart, trimPunctuationEnd)!;
     }
     
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]

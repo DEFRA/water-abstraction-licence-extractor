@@ -697,9 +697,9 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal("(1) TA 0417 2942,", pointsSubs[0].Text!.FirstOrDefault()!.Text);
         Assert.Equal("(2) TA 0472 3425,", pointsSubs[1].Text!.FirstOrDefault()!.Text);
-        Assert.Single(pointsSubs[2].Text!);
-        Assert.Equal("(3) TA 0677 3514", pointsSubs[2].Text!.FirstOrDefault()!.Text); // TODO this is wrong
-        Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E", pointsSubs[3].Text!.FirstOrDefault()!.Text);
+        Assert.Single(pointsSubs[2].Text!);  // TODO this is wrong, should be 2
+        Assert.Equal("(3) TA 0677 3514 &", pointsSubs[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\"", pointsSubs[3].Text!.FirstOrDefault()!.Text);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);

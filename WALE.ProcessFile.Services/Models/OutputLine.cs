@@ -18,8 +18,8 @@ public class OutputLine
     public string? MatchedLabelPosition;
     public string? LicenceNumber;
     public double? LicenceNumberOcrConfidence;
-    public bool LimitsFound;
-    public bool AggregatesFound;
+    public int LimitsCount;
+    public int AggregatesCount;
     public string? IssueDate;
     public string? Issuer;
     public bool MeansFound;

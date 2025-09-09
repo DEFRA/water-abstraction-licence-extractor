@@ -183,7 +183,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
         $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
         $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
-        $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsFound}," +
+        $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
         $"{outputLine.LinkedLicenceNumbers},{anyLinkedLicenceNumbers}",
         resultFileStringBuilder);
     
@@ -211,8 +211,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     listJsStringBuilder.AppendLine($"\t\t\"licenceHolder\": \"{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}\",");
     listJsStringBuilder.AppendLine($"\t\t\"purposes\": {outputLine.Purposes},");
     listJsStringBuilder.AppendLine($"\t\t\"points\": {outputLine.Points},");
-    listJsStringBuilder.AppendLine($"\t\t\"limitsFound\": {outputLine.LimitsFound.ToString().ToLower()},");
-    listJsStringBuilder.AppendLine($"\t\t\"aggregatesFound\": {outputLine.AggregatesFound.ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"limitsCount\": {outputLine.LimitsCount},");
+    listJsStringBuilder.AppendLine($"\t\t\"aggregatesCount\": {outputLine.AggregatesCount},");
     listJsStringBuilder.AppendLine($"\t\t\"ocr\": {(outputLine.Ocr == "OCR").ToString().ToLower()},");
     listJsStringBuilder.AppendLine($"\t\t\"issueDate\": \"{outputLine.IssueDate}\",");
     listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
@@ -229,8 +229,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         && outputLine.Purposes != string.Empty) purposesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.Points)
         && outputLine.Points != string.Empty) pointsFoundCount++;
-    if (outputLine.LimitsFound) limitsFoundCount++;
-    if (outputLine.AggregatesFound) aggregatesFoundCount++;
+    if (outputLine.LimitsCount > 0) limitsFoundCount++;
+    if (outputLine.AggregatesCount > 0) aggregatesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
@@ -485,7 +485,6 @@ async Task HandleFileAsync(
             .FirstOrDefault()?
             .OcrConfidence;
 
-        var limitsFound = matches.Any(result => result.LabelGroupName == "AbstractionLimits");
         var meansFound = matches
             .FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction")?
             .SubResults?.Count > 0;
@@ -493,9 +492,7 @@ async Task HandleFileAsync(
         var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
         var agreedSchema = agreedSchemaGroup.Licences.First();
         
-        var aggregatesFound = agreedSchema.AbstractionLimits.Aggregates.Length > 0;
         var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
-
         var issuer = agreedSchema.LicenceVersion.Issuer;
         
         outputLines.Add(new OutputLine
@@ -516,8 +513,8 @@ async Task HandleFileAsync(
             MatchedLabelPosition = matchedLabelPosition,
             LicenceNumber = licenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
-            LimitsFound = limitsFound,
-            AggregatesFound = aggregatesFound,
+            LimitsCount = agreedSchema.AbstractionLimits.Individual.Length,
+            AggregatesCount = agreedSchema.AbstractionLimits.Aggregates.Sum(x => x.Limits.Length),
             IssueDate = issueDate,
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,

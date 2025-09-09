@@ -253,8 +253,8 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
             "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + aiPointsLine + "</td>" +
-            "<td>" + (item.limitsFound ? "True" : "False") + aiLimitsFoundLine + "</td>" +
-            "<td>" + (item.aggregatesFound ? "True" : "False") + aiAggregatesFoundLine + "</td>" +
+            "<td>" + item.limitsCount + aiLimitsFoundLine + "</td>" +
+            "<td>" + item.aggregatesCount + aiAggregatesFoundLine + "</td>" +
             "<td>" + (item.ocr ? "True" : "False") + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issueDate) + aiIssueDateLine + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +

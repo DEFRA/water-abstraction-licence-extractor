@@ -36,7 +36,7 @@ table tr td.right-cell {
 
 #iframeParent {
   position: absolute;
-  top: 75px;
+  top: 45px;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -48,14 +48,11 @@ table tr td.right-cell {
 }
 
 #dataOutput {
-  height: 1000px;
-  width: 50vw;
   overflow: scroll;
 }
 
 #jsonPath, #pdf-images {
   width: 100%;
-  border-top: 1px solid #000;
 }
 
 #pdf-images img {
@@ -183,4 +180,18 @@ dl a {
 
 .selectedTab {
   font-weight: bold;
+}
+
+.default-hidden { display: none; }
+.show-all .default-hidden { display: block; }
+#textOutput {
+  font-family: monospace;
+}
+
+#jsonNewPath, #jsonAiPath, #jsonPath, #text {
+  display: none;
+}
+
+.ul-links {
+  margin-bottom: 15px;
 }

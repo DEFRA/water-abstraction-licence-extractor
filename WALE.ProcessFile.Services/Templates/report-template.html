@@ -2,14 +2,6 @@
 <head>
     <title>Licence validation report</title>
     <link rel="stylesheet" href="Assets/styles.css" />
-    
-    <style>
-        .default-hidden { display: none; }
-        .show-all .default-hidden { display: block; }
-        #textOutput {
-            font-family: monospace;
-        }
-    </style>
 </head>
 <body>
     <table>
@@ -18,9 +10,35 @@
                 <div id="leftDetails">
                     <div id="view-edit">
                         <a href="#" onclick="showView(1); return false;" id="view1" class="viewSelected">View</a> | <a href="#" onclick="showView(2); return false;" id="view2">Edit</a>
-                    </div>                
+                    </div>
+
+                    <ul class="ul-links">
+                        <li><a id="overviewTabLink" href="#" onclick="return showTab('overview')" class="selectedTab">Overview</a></li>
+                        <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
+                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (AI)</a></li>
+                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>
+                        <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
+                    </ul>
                     
-                    <dl id="properties"></dl>
+                    <div id="jsonNewPath">
+                        <pre id="dataNewOutput"></pre>
+                    </div>
+
+                    <div id="jsonAiPath">
+                        <pre id="dataAiOutput">AI data not available</pre>
+                    </div>
+
+                    <div id="jsonPath">
+                        <pre id="dataOutput"></pre>
+                    </div>
+
+                    <div id="text">
+                        <span id="textOutput"></span>
+                    </div>
+                    
+                    <div id="overview">
+                        <dl id="properties"></dl>
+                    </div>
     
                     <div id="propertiesNew">
                         <div id="licenceNumberTxtDiv">
@@ -46,32 +64,8 @@
                 <div id="rightPdf">
                     <h1><a id="filename" href="#" target="_blank">Licence</a></h1>
                     
-                    <ul>
-                        <li><a id="pdfTabLink" href="#" onclick="return showTab('pdf-images')" class="selectedTab">PDF</a></li>
-                        <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
-                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (AI)</a></li>
-                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>                        
-                        <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
-                    </ul>
-                    
                     <div id="iframeParent">
                         <div id="pdf-images"></div>
-                    </div>
-                    
-                    <div id="jsonNewPath">
-                        <pre id="dataNewOutput"></pre>
-                    </div>
-
-                    <div id="jsonAiPath">
-                        <pre id="dataAiOutput">AI data not available</pre>
-                    </div>
-
-                    <div id="jsonPath">
-                        <pre id="dataOutput"></pre>
-                    </div>
-
-                    <div id="text">
-                        <span id="textOutput"></span>
                     </div>
                 </div>
             </td>

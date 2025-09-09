@@ -882,12 +882,22 @@ public class AzureAiVisionOcrPdfTests
 
         var abstractionLimitsSection = abstractionLimitsSections[0];
         Assert.NotNull(abstractionLimitsSection);
+        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
+        
         Assert.NotNull(abstractionLimitsSection.SubResults);
 
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults[0];
         
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(6, section1Sub1.SubResults.Count); // 2 units, 2 values, 2 dates
+
+        var datePeriod1 = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel!.Name == "DatePurposeRough");
+        Assert.Equal("November to May", datePeriod1?.Text?.FirstOrDefault()?.Text);
+
+        var datePeriod2 = section1Sub1.SubResults
+            .LastOrDefault(x => x.MatchedLabel!.Name == "DatePurposeRough");
+        Assert.Equal("June to October", datePeriod2?.Text?.FirstOrDefault()?.Text);        
         
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");

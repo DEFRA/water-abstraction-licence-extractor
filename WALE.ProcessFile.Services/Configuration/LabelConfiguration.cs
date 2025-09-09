@@ -1076,6 +1076,24 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
+                                        Name = "DatePurposeRough",
+                                        Format = "Text",
+                                        Text = [
+                                            new("November to May"),
+                                            new("June to October")
+                                        ],
+                                        Possibilities = [
+                                            new("November to May"),
+                                            new("June to October")
+                                        ],
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,
+                                        Position = LabelPosition.ApplicableToMost,
+                                        IncludeLabelText = true,
+                                        Multiple = MultipleType.MultipleLabelsMultipleValues
+                                    },
+                                    new()
+                                    {
                                         Name = "PurposeCondition",
                                         Text = [
                                             new("condition "),

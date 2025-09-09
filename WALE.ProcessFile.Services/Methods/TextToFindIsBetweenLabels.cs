@@ -14,7 +14,7 @@ public static class TextToFindIsBetweenLabels
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult;//.Clone();
+        var labelGroupResult = request.labelGroupResult;
         
         var linesToUse = new List<DocumentLine>();
 
@@ -247,20 +247,26 @@ public static class TextToFindIsBetweenLabels
                     matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
                     foundEndTag = true;
 
-                    if (returnList.Count == 0)
+                    if (returnList.Count == 0 || line.Columns.Count == 1)
                     {
                         var i = line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
                         if (i > -1)
                         {
                             var t = line.Text[..i];
+                            var ct = FormattingHelper.TrimFormatting(t, true, true);
 
-                            var clonedLine2 = line.Clone();
-                            clonedLine2.Columns.Clear();
-                            clonedLine2.Columns.Add(new DocumentLineColumn(
-                                FormattingHelper.TrimFormatting(t, false, false)!));
+                            var isOneDigitNumber = ct?.Length == 1 && int.TryParse(ct, out _);
+                            var isOneDigitNumberAndWeDontWantNumber = isOneDigitNumber && label.Format != "Number";
 
-                            returnList.Add(clonedLine2);
+                            if (!isOneDigitNumberAndWeDontWantNumber)
+                            {
+                                var clonedLine2 = line.Clone();
+                                clonedLine2.Columns.Clear();
+                                clonedLine2.Columns.Add(new DocumentLineColumn(ct!));
+
+                                returnList.Add(clonedLine2);
+                            }
                         }
                     }
                     

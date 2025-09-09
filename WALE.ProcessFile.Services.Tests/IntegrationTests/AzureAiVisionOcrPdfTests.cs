@@ -695,10 +695,11 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(4, pointsSubs.Count);
         
-        Assert.Equal("(1) TA 0417 2942,", pointsSubs[0].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("(2) TA 0472 3425,", pointsSubs[1].Text!.FirstOrDefault()!.Text);
-        Assert.Single(pointsSubs[2].Text!);  // TODO this is wrong, should be 2
+        Assert.Equal("(1) TA 0417 2942", pointsSubs[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("(2) TA 0472 3425", pointsSubs[1].Text!.FirstOrDefault()!.Text);
+        Assert.Equal(2, pointsSubs[2].Text!.Count);
         Assert.Equal("(3) TA 0677 3514 &", pointsSubs[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("TA 0678 3508", pointsSubs[2].Text!.LastOrDefault()!.Text);
         Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\"", pointsSubs[3].Text!.FirstOrDefault()!.Text);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
@@ -840,7 +841,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
         Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
         Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("TA 0677 3514", agreedSchemaLicence.Points[2].Description); // TODO should be TA 0677 3514 & TA 0678 3508
+        Assert.Equal("TA 0677 3514 TA 0678 3508", agreedSchemaLicence.Points[2].Description); // TODO should be TA 0677 3514 & TA 0678 3508
         Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E and \"F\" on the map", // TODO E should have the quotes around it
             agreedSchemaLicence.Points[3].Description);

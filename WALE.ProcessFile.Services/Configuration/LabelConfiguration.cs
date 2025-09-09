@@ -966,6 +966,7 @@ public static class LabelConfiguration
                     new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED"),
                     new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER"), //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
                     new("MEANS OF MEASUREMENT OF WATER ABSTRACTED"),
+                    new("AUTHORISED MEANS OF ABSTRACTION"), // TODO why does capitalisation matter
                     new("MEANS OF ABSTRACTION"),
                     new("Authorised means of abstraction"),
                     new("MEANS TO BE USED FOR MEASURING"),

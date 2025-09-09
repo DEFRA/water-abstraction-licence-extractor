@@ -20,7 +20,7 @@ public static class Split
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
-        
+
         var leftPartLines  = request.previousLines!.Reverse().ToList();
 
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
@@ -35,7 +35,26 @@ public static class Split
         {
             leftPartLines.Add(request.line!);
         }
-        
+
+        if (!lineContainsLabel)
+        {
+            foreach (var line in leftPartLines)
+            {
+                lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+                    line,
+                    request.label.Text,
+                    LabelPosition.Split,
+                    UnknownLinesTotal,
+                    int.MaxValue,
+                    out _);
+
+                if (lineContainsLabel)
+                {
+                    break;
+                }
+            }
+        }
+
         var rightPartLines = request.nextLines!.ToList();
 
         if (lineContainsLabel)
@@ -50,7 +69,7 @@ public static class Split
                 .FirstOrDefault()!
                 .Coordinates;
             
-            if (noPreviousLines && noNextLines)
+            if (noPreviousLines || noNextLines)
             {
                 var splitPhrase = string.Join(
                     PositionConstants.SpaceChar,
@@ -70,7 +89,9 @@ public static class Split
                 };
 
                 var leftLine = request.line.Clone(leftColumns);
-                leftPartLines = [leftLine];
+
+                leftPartLines.Remove(leftLine);
+                leftPartLines.Add(leftLine);
                 
                 var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
 
@@ -111,9 +132,10 @@ public static class Split
             request.label,
             leftPartLines, 
             false,
-            true,
+            !request.label.DoNotTrimLines,
             out _, 
             out _);
+        
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(

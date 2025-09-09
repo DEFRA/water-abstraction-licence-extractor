@@ -419,9 +419,12 @@ public static class LabelConfiguration
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
                                             new("For Purpose 4.4") { RemoveWholeLine = true } 
                                         ],
-                                        Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
-                                        Position = LabelPosition.ApplicableToMost,
+                                        Text = [
+                                            new("marked") // TODO ' marked ' doesn't work, change so it does
+                                        ],
+                                        Position = LabelPosition.Split,
                                         Format = "Text",
+                                        PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 100,
                                         DoNotTrimLines = true
                                     }

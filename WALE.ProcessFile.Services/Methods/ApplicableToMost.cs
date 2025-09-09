@@ -50,7 +50,7 @@ public static class ApplicableToMost
                 matchedLabel,
                 t!,
                 true,
-                true,
+                false,
                 out var removedLines);
 
             if (DataHelper.IsCorruptedText(outputText))
@@ -233,7 +233,11 @@ public static class ApplicableToMost
                 return r;
             }
 
-            outputText = FormattingHelper.TrimFormatting(outputText, true, true);
+            if (!request.label!.DoNotTrimLines)
+            {
+                outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
+            }
+            
             outputText = request.isOcr
                 ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType)
                 : outputText;

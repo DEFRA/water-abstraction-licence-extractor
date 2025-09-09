@@ -35,6 +35,7 @@ public class LabelToMatch
     public IReadOnlyList<string>? Possibilities { get; set; }
     public int PreviousLinesToFetch { get; init; } = 10;
     public int NextLinesToFetch { get; init; } = 10;
+    public bool DoNotTrimLines { get; init; }
     public MultipleType Multiple { get; init; } = MultipleType.False;
     
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -69,6 +70,7 @@ public class LabelToMatch
             NextLinesToFetch = NextLinesToFetch,
             Multiple = Multiple,
             Completed = false,
+            DoNotTrimLines = DoNotTrimLines
         };
     }    
 }

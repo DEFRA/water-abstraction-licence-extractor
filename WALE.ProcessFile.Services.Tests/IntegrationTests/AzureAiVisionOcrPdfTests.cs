@@ -841,9 +841,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
         Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
         Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("TA 0677 3514 TA 0678 3508", agreedSchemaLicence.Points[2].Description); // TODO should be TA 0677 3514 & TA 0678 3508
+        Assert.Equal("TA 0677 3514 & TA 0678 3508", agreedSchemaLicence.Points[2].Description); // TODO should be TA 0677 3514 & TA 0678 3508
         Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
-        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E and \"F\" on the map", // TODO E should have the quotes around it
+        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\" and \"F\" on the map.", // TODO E should have the quotes around it
             agreedSchemaLicence.Points[3].Description);
         
         // TODO 1 for each point

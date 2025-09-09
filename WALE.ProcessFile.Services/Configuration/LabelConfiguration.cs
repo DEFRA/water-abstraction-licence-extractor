@@ -422,7 +422,8 @@ public static class LabelConfiguration
                                         Multiple = MultipleType.SingleLabelSingleValueMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
-                                        NextLinesToFetch = 100
+                                        NextLinesToFetch = 100,
+                                        DoNotTrimLines = true
                                     }
                                 }
                             }

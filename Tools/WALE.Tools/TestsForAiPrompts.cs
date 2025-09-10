@@ -425,7 +425,7 @@ public static class TestsForAiPrompts
         return meansOfAbstraction.Data;
     }
 
-    static async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
+    static async Task<AbstractionLimitGroup[]> GetIndividualAbstractionLimitsAsync(
         ChatClient chatClient,
         string modelName,
         string abstractionLimitsSectionText,
@@ -449,7 +449,6 @@ public static class TestsForAiPrompts
             + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializer())            
         };
         
-        
         var userPrompts = new List<ChatMessageContentPart>
         {
             ChatMessageContentPart.CreateTextPart(
@@ -458,14 +457,14 @@ public static class TestsForAiPrompts
                 "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
                 "Exclude any limits that mention they are in aggregate. " +
                 "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
-                $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
+                $"Use the following structure:\n\n[{AbstractionLimitGroupArrayWrapped.GetSchemaForPrompt()}]"
             )
         };
                 
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
 
-        var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitGroupArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
         return individualAbstractionLimits.Data;
     }
 

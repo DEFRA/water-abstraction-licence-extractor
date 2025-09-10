@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AbstractionLimits
 {
-    public AbstractionLimit[] Individual { get; init; } = [];
+    public AbstractionLimitGroup[] Individual { get; init; } = [];
     
     public Aggregate[] Aggregates { get; init; } = [];
 
@@ -36,6 +36,6 @@ public class AbstractionLimits
                 LinkedLicences = []
             }
         ],
-        Individual = [AbstractionLimit.Template]
+        Individual = [AbstractionLimitGroup.Template]
     };
 }

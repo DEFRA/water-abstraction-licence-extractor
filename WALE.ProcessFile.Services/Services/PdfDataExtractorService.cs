@@ -876,19 +876,7 @@ public class PdfDataExtractorService(
                         
                         returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
-                        var xy = returnList
-                            .GroupBy(x => x.MatchedLabel?.Name
-                                + x.PageNumber
-                                + x.Text?.FirstOrDefault()?.Text)
-                            .Where(x => x.Count() > 1)
-                            .ToList();
-                        
-                        if (xy.Count > 0)
-                        {
-                            
-                        }
-                        
-                        // De-dupe
+                        // De-dupe exact matches
                         returnList = returnList
                             .GroupBy(x => x.PageNumber + "_" + x.LineNumber + x.MatchedLabel?.Name + x.Text?.FirstOrDefault()?.Text)
                              .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())

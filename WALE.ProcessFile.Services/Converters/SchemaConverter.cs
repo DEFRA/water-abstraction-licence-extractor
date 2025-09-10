@@ -247,8 +247,35 @@ public static class SchemaConverter
             .Replace("rd", string.Empty, StringComparison.InvariantCultureIgnoreCase)
             .Replace("th", string.Empty, StringComparison.InvariantCultureIgnoreCase);
     }
+
+    private static TimePeriod? GetTimePeriod(IReadOnlyList<LabelGroupResult> siblings)
+    {
+        var datePurposes = siblings?
+            .Where(x => x.MatchedLabel?.Name == "DatePurposeRough")
+            .ToList();
+
+        if (datePurposes == null)
+        {
+            return null;
+        }
+        
+        foreach (var datePurpose in datePurposes)
+        {
+            var value = datePurpose.Text?.FirstOrDefault()?.Text;
+            
+            return new TimePeriod
+            {
+                StartDate = value,
+                EndDate = value,
+                PeriodType = AbstractionPeriodType.SetPeriod,
+                Inclusive = true
+            };
+        }
+        
+        return new TimePeriod();
+    }
     
-    private static (Aggregate[] aggregates, AbstractionLimit[] indiviudal) GetAbstractionLimits(
+    private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(
         List<LabelGroupResult> matches,
         string? licenceNumber,
         string? licenceVersionId,
@@ -269,7 +296,7 @@ public static class SchemaConverter
             .ToList();
 
         var aggregates = new List<Aggregate>();
-        var individual = new List<AbstractionLimit>();    
+        var individual = new List<AggregateAbstractionLimit>();    
         
         if (abstractionLimitPointSubs != null)
         {
@@ -279,6 +306,7 @@ public static class SchemaConverter
                     .Any(t => t.Text.Contains("The aggregate quantity")) == true;
                 
                 var siblings = abstractionLimitPointSub.SubResults;
+                
                 var valueResults = siblings
                     .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                     .ToList();
@@ -381,11 +409,11 @@ public static class SchemaConverter
                 {
                     continue;
                 }
-
+                
                 var pointsLoop = aggregateLimits.First().Points;
                 var purposesLoop = aggregateLimits.First().Purposes;
                 var timeCutoff = (TimeCutoff?)null; // TODO
-                var timePeriod = (TimePeriod?)null; // TODO
+                var timePeriod = GetTimePeriod(siblings!);
                 
                 var aggregate = new Aggregate
                 {
@@ -442,8 +470,13 @@ public static class SchemaConverter
                 aggregates.Add(aggregate);
             }
         }
+
+        var individualGroup = new AbstractionLimitGroup
+        {
+            Limits = individual.ToArray()
+        };
         
-        return (aggregates.ToArray(), individual.ToArray());
+        return (aggregates.ToArray(), [individualGroup]);
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)

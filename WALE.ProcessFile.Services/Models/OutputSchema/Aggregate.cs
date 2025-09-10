@@ -3,7 +3,7 @@ using WALE.ProcessFile.Services.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
-public class Aggregate
+public class Aggregate : AbstractionLimitGroup
 {
     public string Id
     {
@@ -62,11 +62,7 @@ public class Aggregate
 
     public Point[] Points { get; set; } = [];
     
-    public TimePeriod? TimePeriod { get; set; }
-    
     public LinkedLicence[] LinkedLicences { get; init; } = [];
-    
-    public AggregateAbstractionLimit[] Limits { get; init; } = [];
 
     public static Aggregate Template => new()
     {

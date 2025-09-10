@@ -16,6 +16,7 @@ public static partial class LicenceNumber
     {
         matchedLines = [];
         var anyMatchFound = false;
+        var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
         
         foreach (var line in lines)
         {
@@ -129,7 +130,7 @@ public static partial class LicenceNumber
                 continue;
             }
 
-            if (label.Multiple is MultipleType.False)
+            if (findSingleResult)
             {
                 return anyMatchFound;
             }

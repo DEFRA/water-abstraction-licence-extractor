@@ -289,19 +289,31 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults);
         var section2Sub1 = abstractionLimitsSection2.SubResults![0];
         
-        Assert.Equal(4, section2Sub1.SubResults!.Count);  
+        Assert.Equal(6, section2Sub1.SubResults!.Count);  
         
-        var perYear = section2Sub1.SubResults
+        var perYear1 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
                 && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
-        Assert.Equal("6138", perYear);
+        Assert.Equal("6138", perYear1);
         
-        var perYearUnits = section2Sub1.SubResults
+        var perYearUnits1 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
                 && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
-        Assert.Equal("cubic metres", perYearUnits);
+        Assert.Equal("cubic metres", perYearUnits1);
+        
+        var perYear2 = section2Sub1.SubResults
+            .LastOrDefault(subResult =>
+                subResult.MatchedLabel!.Format == "Number"
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+        Assert.Equal("6138", perYear2);
+        
+        var perYearUnits2 = section2Sub1.SubResults
+            .LastOrDefault(subResult =>
+                subResult.MatchedLabel!.Format == "Units"
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+        Assert.Equal("cubic metres", perYearUnits2);        
 
         var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Equal(5, pointsResult?.Text?.Count);
@@ -355,7 +367,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates);
-        Assert.Single(primaryLicence.AbstractionLimits.Aggregates[0].Limits);
+        Assert.Equal(2, primaryLicence.AbstractionLimits.Aggregates[0].Limits.Length);
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates[0];
         Assert.Equal(LimitPeriodType.PerYear, aggregate.Limits[0].PeriodType);
@@ -474,7 +486,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults!);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(12, section2Sub1.SubResults!.Count);
+        Assert.Equal(13, section2Sub1.SubResults!.Count);
             
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -503,11 +515,17 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
-        var perYear2 = section2Sub1.SubResults
-            .FirstOrDefault(subResult =>
+        var perYearList = section2Sub1.SubResults
+            .Where(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
-        Assert.Equal("40000", perYear2);
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))
+            .ToList();
+        
+       var perYear2 = perYearList.FirstOrDefault()?.Text?.FirstOrDefault()?.Text;
+       Assert.Equal("40000", perYear2);
+       
+       perYear2 = perYearList.LastOrDefault()?.Text?.FirstOrDefault()?.Text;
+       Assert.Equal("40000", perYear2); // TODO check value
         
         perYearUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -677,7 +695,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults!);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(5, section2Sub1.SubResults!.Count);
+        Assert.Equal(6, section2Sub1.SubResults!.Count);
         
         var perYear2 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1040,7 +1058,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection9.SubResults!);
 
         var section9Sub1 = abstractionLimitsSection9.SubResults[0];
-        Assert.Equal(7, section9Sub1.SubResults!.Count);
+        Assert.Equal(9, section9Sub1.SubResults!.Count);
         
         perHour = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1074,6 +1092,18 @@ public class PdfPigNoOcrPdfTests
         
         perYearUnits = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
+                subResult.MatchedLabel!.Format == "Units"
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+        Assert.Equal("cubic metres", perYearUnits);
+        
+        perYear = section9Sub1.SubResults
+            .LastOrDefault(subResult =>
+                subResult.MatchedLabel!.Format == "Number"
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+        Assert.Equal("40900", perYear);
+        
+        perYearUnits = section9Sub1.SubResults
+            .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
                 && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
@@ -1373,14 +1403,28 @@ public class PdfPigNoOcrPdfTests
                 && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
-        perYear = section4Sub1.SubResults
-            .FirstOrDefault(subResult =>
+        var perYearList = section4Sub1.SubResults
+            .Where(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")))
+            .ToList();
 
+        perYear = perYearList.FirstOrDefault();
+        
         Assert.NotNull(perYear);
         Assert.Equal(177, perYear.LineNumber);
         Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
+        
+        perYear = perYearList.LastOrDefault();
+        
+        Assert.NotNull(perYear);
+        Assert.Equal(177, perYear.LineNumber);
+        Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
+
+        Assert.Equal(1, section4Sub1.SubResults
+            .Count(subResult =>
+                subResult.MatchedLabel!.Format == "Units"
+                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year"))));
         
         perYearUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1410,13 +1454,22 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection5.SubResults!);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        Assert.Equal(11, section5Sub1.SubResults!.Count);
+        Assert.Equal(12, section5Sub1.SubResults!.Count);
 
-        perYear = section5Sub1.SubResults
-            .FirstOrDefault(subResult =>
+        perYearList = section5Sub1.SubResults
+            .Where(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")))
+            .ToList();
 
+        perYear = perYearList.FirstOrDefault();
+        
+        Assert.NotNull(perYear);
+        Assert.Equal(185, perYear.LineNumber);
+        Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
+        
+        perYear = perYearList.LastOrDefault();
+        
         Assert.NotNull(perYear);
         Assert.Equal(185, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);

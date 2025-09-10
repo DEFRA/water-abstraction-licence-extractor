@@ -814,25 +814,21 @@ public class PdfDataExtractorService(
                         lineNumber = partialLine.LineNumber
                     };
 
+                    var singleValueWanted = matchedLabel.MultipleBehaviour is
+                        MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue
+                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+                    
                     foreach (var expression in lookupExpressions)
                     {
                         var results = await expression(request);
-
+                        
                         if (results.Count == 0)
                         {
                             continue;
                         }
 
-                        if (label.Name == "PurposePointGroup")
-                        {
-                            
-                        }
-
-                        if (results.Count > 1 && matchedLabel.Multiple == MultipleType.False)
-                        {
-                            results = [results.First()];
-                        }
-
+                        // TODO the below has some weird behaviour with line numbers 33 vs 32, but is kept for now
+                        // as some tests depend upon it
                         foreach (var result in results)
                         {
                             var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
@@ -842,6 +838,27 @@ public class PdfDataExtractorService(
                                 result.LineNumber = newLineNumber.Value;
                             }
                         }
+
+                        if (singleValueWanted && results.Count >= 1)
+                        {
+                            // Throw away any other results
+                            var singleValueResult = new List<LabelGroupResult> { results.First() };
+                            
+                            if (matchedLabel.MultipleBehaviour is
+                                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                            {
+                                label.Completed = true;
+                                return singleValueResult;
+                            }
+                            
+                            returnList.AddRange(singleValueResult);
+                            
+                            // Break the partial loop
+                            partialLine = null;
+                            
+                            continuePartialLoop = true;
+                            break;// The expressions loop
+                        }                        
                         
                         returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
 
@@ -885,17 +902,21 @@ public class PdfDataExtractorService(
                             }
                         }
 
-                        if (matchedLabel.Multiple is MultipleType.False)
+                        // NOTE - It may first appear we can do the following - but we need to keep looking because
+                        // of the way we look up labels per page
+                        /*if (label.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues)
                         {
+                            label.Completed = true;
                             return returnList;
-                        }
+                        }*/
                         
-                        if (matchedLabel.Multiple is MultipleType.SingleLabelMultipleValues
-                            && !ifMultiplePreferLast
-                            && !ifMultiplePreferLongest)
+                        /*var askedToLookForMore = ifMultiplePreferLast || ifMultiplePreferLongest;
+                        
+                        if (matchedLabel.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues
+                            && !askedToLookForMore)
                         {
                             return returnList;
-                        }
+                        }*/
 
                         if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
                             && results.Count > 0)
@@ -952,9 +973,14 @@ public class PdfDataExtractorService(
                 break;
             }
         }
+
+        var atLeastOneResultFound = returnList.Count > 1;
         
-        if (returnList.Count > 1 && returnList.All(match =>
-            match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
+        var allAreSingleLabelMultipleLines = returnList.All(match =>
+            match.MatchedLabel?.MultipleBehaviour is
+                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
+
+        if (atLeastOneResultFound && allAreSingleLabelMultipleLines)
         {
             var textList = new List<DocumentLine>();
 

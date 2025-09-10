@@ -12,6 +12,11 @@ public static class RelatedCategoryPosition
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+
+        if (request.label.Name == "PerDayValue" && request.line!.LineNumber > 108)
+        {
+            
+        }
         
         var labelGroupResult = request.labelGroupResult;//.Clone();
         
@@ -43,9 +48,9 @@ public static class RelatedCategoryPosition
             false,
             true,
             out _,
-            out _);        
-        
-        var matchedLabelLineNumber = PositionConstants.UnknownLineNumber;
+            out _);
+
+        var matchedLabelLineNumbers = new List<int>();
         var lineStartsWithLabel = false;
         
         foreach (var categoryItem in categoryItems)
@@ -68,10 +73,12 @@ public static class RelatedCategoryPosition
                 }
             }
 
-            matchedLabelLineNumber = categoryItem.LineNumber;
-
-            break;
+            matchedLabelLineNumbers.Add(categoryItem.LineNumber);
         }
+
+        var matchedLabelLineNumber = matchedLabelLineNumbers
+            .OrderBy(matchLineNumber => Math.Abs(request.line!.LineNumber - matchLineNumber))
+            .FirstOrDefault();
 
         // If matching line starts with the label (and its lowercase), prefer the line before (e.g. 150 gallons\nper hour)
         if (modifiedLine?.LineNumber == matchedLabelLineNumber && lineStartsWithLabel && char.IsLower(modifiedLine.Text![0]))

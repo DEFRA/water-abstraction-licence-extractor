@@ -163,26 +163,44 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(6, section1Sub1.SubResults!.Count);
+        Assert.Equal(12, section1Sub1.SubResults!.Count);
         
         // This file incorrectly gets results that have been crossed out
-        var perYearUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
+        var perYearUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("million gallons", perYearUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perYearValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("1.095", perYearValue?.Text?.FirstOrDefault()?.Text); // Should actually be 1,095
+        var perYearValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("1.095", perYearValue1?.Text?.FirstOrDefault()?.Text); // TODO Should actually be 1,095
         
-        var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+        var perYearUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("megalitres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
 
-        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("3.5", perDayValue?.Text?.FirstOrDefault()?.Text);
+        var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("720", perYearValue2?.Text?.FirstOrDefault()?.Text); // TODO Should actually be 3273.2
+        
+        var perDayUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("million gallons", perDayUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("thousand gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
+        var perDayValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("3.5", perDayValue1?.Text?.FirstOrDefault()?.Text);
 
-        var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("210", perHourValue?.Text?.FirstOrDefault()?.Text);
+        var perDayUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("megalitres", perDayUnits2?.Text?.FirstOrDefault()?.Text);
+
+        var perDayValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("2.25", perDayValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 10.2
+        
+        var perHourUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("thousand gallons", perHourUnits1?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("210", perHourValue1?.Text?.FirstOrDefault()?.Text);
+        
+        var perHourUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("cubic metres", perHourUnits2?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("95", perHourValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 431
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -240,7 +258,16 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(8, section1Sub1.SubResults!.Count);        
+        Assert.Equal(12, section1Sub1.SubResults!.Count);        
+        
+        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
+        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthValue"));
+        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearUnits"));
+        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearValue"));        
         
         var perHourUnits = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
@@ -250,22 +277,38 @@ public class AzureAiVisionOcrPdfTests
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
         Assert.Equal("1200", perHourValue?.Text?.FirstOrDefault()?.Text);
 
-        var perDayUnits = section1Sub1.SubResults?
+        var perDayUnits1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("gallons", perDayUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perDayValue = section1Sub1.SubResults?
+        var perDayValue1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("13400", perDayValue?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("13400", perDayValue1?.Text?.FirstOrDefault()?.Text);
+        
+        var perDayUnits2 = section1Sub1.SubResults?
+            .LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("gallons", perDayUnits2?.Text?.FirstOrDefault()?.Text);
 
-        var perMonthUnits = section1Sub1.SubResults?
+        var perDayValue2 = section1Sub1.SubResults?
+            .LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("26700", perDayValue2?.Text?.FirstOrDefault()?.Text);
+
+        var perMonthUnits1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerMonthUnits");
-        Assert.Equal("gallons", perMonthUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("gallons", perMonthUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perMonthValue = section1Sub1.SubResults?
+        var perMonthValue1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerMonthValue");
-        Assert.Equal("134000", perMonthValue?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("134000", perMonthValue1?.Text?.FirstOrDefault()?.Text);
 
+        var perMonthUnits2 = section1Sub1.SubResults?
+            .LastOrDefault(x => x.MatchedLabel!.Name == "PerMonthUnits");
+        Assert.Equal("gallons", perMonthUnits2?.Text?.FirstOrDefault()?.Text);
+
+        var perMonthValue2 = section1Sub1.SubResults?
+            .LastOrDefault(x => x.MatchedLabel!.Name == "PerMonthValue");
+        Assert.Equal("267000", perMonthValue2?.Text?.FirstOrDefault()?.Text);        
+        
         var perYearUnits = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
         Assert.Equal("gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
@@ -415,7 +458,7 @@ public class AzureAiVisionOcrPdfTests
 
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(6, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults!.Count);
         
         Assert.Equal("1 January and ending on 31 December", section1Sub1.SubResults.Last().Text!.Single().Text);        
         
@@ -425,11 +468,18 @@ public class AzureAiVisionOcrPdfTests
         var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
         Assert.Equal("77", perDayValue?.Text?.FirstOrDefault()?.Text);
         
-        var perYearUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("cubic metres", perYearUnits?.Text?.FirstOrDefault()?.Text);
+        var perYearUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("cubic metres", perYearUnits1?.Text?.FirstOrDefault()?.Text);
+        
+        var perYearUnits2 = section1Sub1.SubResults!.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("cubic metres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
 
-        var perYearValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("5116", perYearValue?.Text?.FirstOrDefault()?.Text); // This is actually from 1 april to 30 sept per year
+        var perYearValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("5116", perYearValue1?.Text?.FirstOrDefault()?.Text); // This is actually from 1 april to 30 sept per year
+ 
+        var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("5116", perYearValue2!.Text?.FirstOrDefault()?.Text); // This is actually from 1 april to 30 sept per year
+        
         
         // TODO - other 2 things
     }
@@ -475,30 +525,48 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(7, section1Sub1.SubResults!.Count);
+        Assert.Equal(13, section1Sub1.SubResults!.Count);
         
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
         
         Assert.Equal("(1)", pointName);
         
-        var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+        var perDayUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("million gallons", perDayUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("1.25", perDayValue?.Text?.FirstOrDefault()?.Text);        
+        var perDayValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("1.25", perDayValue1?.Text?.FirstOrDefault()?.Text);    
         
-        var perYearUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
+        var perDayUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("megalitres", perDayUnits2?.Text?.FirstOrDefault()?.Text);
 
-        var perYearValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text);
+        var perDayValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("1.25", perDayValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 5.7
         
-        var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("thousand gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
+        var perYearUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("million gallons", perYearUnits1?.Text?.FirstOrDefault()?.Text);
 
-        var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text);
+        var perYearValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("300", perYearValue1?.Text?.FirstOrDefault()?.Text);
+        
+        var perYearUnits2 = section1Sub1.SubResults!.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("megalitres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
+
+        var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("300", perYearValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        
+        var perHourUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("thousand gallons", perHourUnits1?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("52", perHourValue1?.Text?.FirstOrDefault()?.Text);
+        
+        var perHourUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("cubic metres", perHourUnits2?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("52", perHourValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 236
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -948,7 +1016,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length); // TODO should be 3
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual.Length);
         
 //        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);

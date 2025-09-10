@@ -704,7 +704,8 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.ContractIsSuccession,
                 Format = "CompanyName",
-                MatchAllText = true
+                MatchAllText = true,
+                Name = "IsSuccession"
             }
         ];
     }

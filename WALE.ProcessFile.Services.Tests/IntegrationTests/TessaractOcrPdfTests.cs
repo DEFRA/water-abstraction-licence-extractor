@@ -732,7 +732,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -744,7 +744,7 @@ public class TessaractOcrPdfTests
         // abstraction limits that come out of OCR all scrambled
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        Assert.Null(nameResult);
+        Assert.NotNull(nameResult);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

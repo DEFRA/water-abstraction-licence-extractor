@@ -201,7 +201,7 @@ public class PdfDataExtractorService(
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
-                var serviceMatches = new List<LabelGroupResult>();
+                var serviceMatchesDict = new Dictionary<string, List<LabelGroupResult>>();
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -252,8 +252,7 @@ public class PdfDataExtractorService(
                     }                    
                     
                     const bool isOcr = true;
-                    
-                    serviceMatches = await GetLabelGroupMatchesAsync(
+                    var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
                         unmatchedLabelLookups,
                         isOcr,
@@ -262,7 +261,8 @@ public class PdfDataExtractorService(
                         previouslyParsedPaths,
                         configuration.OutputFolder,
                         configuration.CacheFolder);
-
+                    
+                    serviceMatchesDict.Add(ocrService.Name, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
                     
                     if (noMatchesFound)
@@ -322,9 +322,27 @@ public class PdfDataExtractorService(
                         break;
                     }
                 }
+
+                var uniqueServiceMatches = new List<LabelGroupResult>();
+
+                foreach (var kvp in serviceMatchesDict)
+                {
+                    var serviceMatches = kvp.Value;
+
+                    foreach (var match in serviceMatches)
+                    {
+                        var alreadyFound = uniqueServiceMatches
+                            .Any(x => x.LabelGroupName == match.LabelGroupName);
+
+                        if (!alreadyFound)
+                        {
+                            uniqueServiceMatches.Add(match);
+                        }
+                    }
+                }
                 
                 documentLines.AddRange(serviceImageLines);
-                labelGroupMatches.AddRange(serviceMatches);
+                labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
                     unmatchedLabelLookups,
@@ -772,6 +790,11 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
+
+                    if (label.Name == "DateOfIssueOldStyle")
+                    {
+                        
+                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
@@ -960,11 +983,11 @@ public class PdfDataExtractorService(
                     partialLine = null;
 
                     // Don't carry on if we've identified it was a succession document
-                    if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
+                    /*if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
                     {
                         breakLineLoop = true;
                         break;
-                    }
+                    }*/
                 }
             }
             

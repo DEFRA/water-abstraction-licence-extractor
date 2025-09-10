@@ -201,7 +201,7 @@ public class PdfDataExtractorService(
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
-                var serviceMatchesDict = new Dictionary<string, List<LabelGroupResult>>();
+                var serviceMatchesDict = new Dictionary<bool, List<LabelGroupResult>>();
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -262,7 +262,7 @@ public class PdfDataExtractorService(
                         configuration.OutputFolder,
                         configuration.CacheFolder);
                     
-                    serviceMatchesDict.Add(ocrService.Name, serviceMatches);
+                    serviceMatchesDict.Add(ocrService.HasDirectCost, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
                     
                     if (noMatchesFound)
@@ -325,19 +325,21 @@ public class PdfDataExtractorService(
 
                 var uniqueServiceMatches = new List<LabelGroupResult>();
 
-                foreach (var kvp in serviceMatchesDict)
+                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key))
                 {
                     var serviceMatches = kvp.Value;
 
                     foreach (var match in serviceMatches)
                     {
                         var alreadyFound = uniqueServiceMatches
-                            .Any(x => x.LabelGroupName == match.LabelGroupName);
+                            .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
 
-                        if (!alreadyFound)
+                        if (alreadyFound != null)
                         {
-                            uniqueServiceMatches.Add(match);
+                            uniqueServiceMatches.Remove(alreadyFound);
                         }
+
+                        uniqueServiceMatches.Add(match);
                     }
                 }
                 
@@ -455,11 +457,6 @@ public class PdfDataExtractorService(
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
-            if (labelGroupName == "Points" && documentLines.Count == 68)
-            {
-                
-            }
-            
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
             {
                 continue;
@@ -496,11 +493,6 @@ public class PdfDataExtractorService(
                 
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
-            }
-            
-            if (labelGroupName == "Points" && documentLines.Count == 68)
-            {
-                
             }
         }
 
@@ -870,7 +862,6 @@ public class PdfDataExtractorService(
                             if (matchedLabel.MultipleBehaviour is
                                 MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                             {
-                                label.Completed = true;
                                 return singleValueResult;
                             }
                             
@@ -880,7 +871,7 @@ public class PdfDataExtractorService(
                             partialLine = null;
                             
                             continuePartialLoop = true;
-                            break;// The expressions loop
+                            break; // The expressions loop
                         }                        
                         
                         returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));

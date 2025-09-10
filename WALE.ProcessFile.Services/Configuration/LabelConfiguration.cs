@@ -106,7 +106,7 @@ public static class LabelConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("DATED THIS ") { LineMustStartWith = true }
+                    new("DATED THIS") { LineMustStartWith = true }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

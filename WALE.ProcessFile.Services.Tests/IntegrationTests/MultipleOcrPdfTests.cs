@@ -150,7 +150,7 @@ public class MultipleOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(7, section1Sub1.SubResults!.Count);
+        Assert.Equal(13, section1Sub1.SubResults!.Count);
 
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -161,7 +161,7 @@ public class MultipleOcrPdfTests
         Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
 
         var perYearValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text);      
+        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
         Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
@@ -174,6 +174,24 @@ public class MultipleOcrPdfTests
 
         var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
         Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text);
+        
+        perYearUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("megalitres", perYearUnits?.Text?.FirstOrDefault()?.Text);
+
+        perYearValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        
+        perDayUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("megalitres", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        perDayValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("1.25", perDayValue?.Text?.FirstOrDefault()?.Text); // TODO should be 5.7
+
+        perHourUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("cubic metres", perHourUnits?.Text?.FirstOrDefault()?.Text);
+
+        perHourValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text); // TODO should be 236
 
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

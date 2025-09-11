@@ -6,7 +6,7 @@ public class AbstractionLimitGroup
 {
     public TimePeriod? TimePeriod { get; set; }
     
-    public AggregateAbstractionLimit[] Limits { get; init; } = [];
+    public List<AggregateAbstractionLimit> Limits { get; init; } = [];
     
     public static AbstractionLimitGroup Template => new()
     {

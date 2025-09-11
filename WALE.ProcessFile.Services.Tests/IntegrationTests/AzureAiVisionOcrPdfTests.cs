@@ -848,13 +848,13 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Length);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);        
         Assert.Equal(100000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Units);        
         Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         
-        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Length);
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
         var limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[0];
         
         Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
@@ -1001,8 +1001,6 @@ public class AzureAiVisionOcrPdfTests
             .LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
         Assert.Equal("1721", perYearValue?.Text?.FirstOrDefault()?.Text);
         
-        // TODO - Should have 2 per day entries
-        
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
@@ -1034,7 +1032,10 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Length);
+        
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[1].Limits);
         
 //        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);

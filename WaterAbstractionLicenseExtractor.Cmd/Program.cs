@@ -514,7 +514,7 @@ async Task HandleFileAsync(
             LicenceNumber = licenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = agreedSchema.AbstractionLimits.Individual.Length,
-            AggregatesCount = agreedSchema.AbstractionLimits.Aggregates.Sum(x => x.Limits.Length),
+            AggregatesCount = agreedSchema.AbstractionLimits.Aggregates.Sum(x => x.Limits.Count),
             IssueDate = issueDate,
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,

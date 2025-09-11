@@ -228,7 +228,8 @@ public static class TextToFindIsBetweenLabels
                 label.Position,
                 lineCount++,
                 totalLines,
-                out var matchedEndTextTemp);
+                out var matchedEndTextTemp,
+                out _);
 
             if (lineContainsLabel)
             {

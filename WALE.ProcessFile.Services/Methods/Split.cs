@@ -29,7 +29,8 @@ public static class Split
             LabelPosition.Split,
             UnknownLinesTotal,
             int.MaxValue,
-            out _);        
+            out _,
+            out _);
         
         if (!lineContainsLabel)
         {
@@ -46,6 +47,7 @@ public static class Split
                     LabelPosition.Split,
                     UnknownLinesTotal,
                     int.MaxValue,
+                    out _,
                     out _);
 
                 if (lineContainsLabel)

@@ -608,6 +608,7 @@ public class PdfDataExtractorService(
                 label.Position,
                 lineCount,
                 PositionConstants.UnknownLinesTotal,
+                out _,
                 out _))
             {
                 continue;
@@ -623,6 +624,7 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
                     out _))
                 {
                     continueOuterLoop = true;
@@ -638,6 +640,7 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
                     out _))
                 {
                     continueOuterLoop = true;
@@ -740,7 +743,8 @@ public class PdfDataExtractorService(
                             label.Position,
                             lineCount,
                             totalLineCount,
-                            out matchedStartText))
+                            out matchedStartText,
+                            out labelCharPosition))
                         {
                             partialLine = null;
                             continue;

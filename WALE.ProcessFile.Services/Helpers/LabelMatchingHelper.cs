@@ -50,9 +50,11 @@ public static class LabelMatchingHelper
         LabelPosition position,
         int lineCount,
         int howManyLinesTotal,
-        out TextToMatch? matchedText)
+        out TextToMatch? matchedText,
+        out int labelCharPosition)
     {
         matchedText = null;
+        labelCharPosition = -1;
 
         var labelHasNoTextToMatch = labelTextOptions == null;
         
@@ -77,6 +79,8 @@ public static class LabelMatchingHelper
             if (firstLine && isStartOfBlock)
             {
                 matchedText = labelTextOption;
+                labelCharPosition = 0;
+                
                 return true;
             }
             
@@ -102,6 +106,8 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                labelCharPosition = 0;
+                                
                                 return true;
                             }
                         }
@@ -110,12 +116,16 @@ public static class LabelMatchingHelper
                             if (lineStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                labelCharPosition = 0;
+                                
                                 return true;
                             }
                         }
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                            labelCharPosition = column.Text.Length - labelTextWithoutMarkers.Length;
+                            
                             return true;                        
                         }
                     }
@@ -132,6 +142,8 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                labelCharPosition = 0;
+                                
                                 return true;
                             }
                         }
@@ -140,12 +152,16 @@ public static class LabelMatchingHelper
                             if (lineStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                                labelCharPosition = 0;
+                                
                                 return true;
                             }
                         }
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
+                            labelCharPosition = line.Text.Length - labelTextWithoutMarkers.Length;
+                            
                             return true;                        
                         }
                     }
@@ -167,6 +183,8 @@ public static class LabelMatchingHelper
                         if (columnStartsWithLabel)
                         {
                             matchedText = labelTextOption;
+                            labelCharPosition = 0;
+                            
                             return true;
                         }
                     }
@@ -175,6 +193,8 @@ public static class LabelMatchingHelper
                         if (lineStartsWithLabel)
                         {
                             matchedText = labelTextOption;
+                            labelCharPosition = 0;
+                            
                             return true;
                         }
                     }
@@ -186,6 +206,24 @@ public static class LabelMatchingHelper
                         || lineEndsWithLabel)
                     {
                         matchedText = labelTextOption;
+
+                        if (columnStartsWithLabel || lineStartsWithLabel)
+                        {
+                            labelCharPosition = 0;
+                        }
+                        else if (columnStartsWithLabelWithSpaceBefore || lineStartsWithLabelWithSpaceBefore)
+                        {
+                            labelCharPosition = 1;
+                        }
+                        else if (columnEndsWithLabel)
+                        {
+                            labelCharPosition = column.Text.Length - labelTextWithoutMarkers.Length;
+                        }
+                        else if (lineEndsWithLabel)
+                        {
+                            labelCharPosition = line.Text.Length - labelTextWithoutMarkers.Length;
+                        }
+                        
                         return true;
                     }
                 }

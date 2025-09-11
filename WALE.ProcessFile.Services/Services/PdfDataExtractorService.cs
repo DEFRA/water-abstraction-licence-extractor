@@ -785,11 +785,6 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
-                    if (label.Name == "PerDayUnits")
-                    {
-                        
-                    }
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
@@ -844,7 +839,8 @@ public class PdfDataExtractorService(
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
                             && request.label.Position is not LabelPosition.Split
-                            and not LabelPosition.TextToFindIsBetweenLabels)
+                            and not LabelPosition.TextToFindIsBetweenLabels
+                            and not LabelPosition.RelatedCategoryPosition)
                         {
                             var additionalResults = await ProcessExpressionResultAsync(
                                 AfterTextContainsAnotherMatch.FunctionAsync,
@@ -853,6 +849,7 @@ public class PdfDataExtractorService(
                                 singleValueWanted);
 
                             result.Results.AddRange(additionalResults.Results);
+                            //result.Results = FilterDownResults(result.Results, request.label);
                         }
                         
                         if (result.Continue)
@@ -1163,6 +1160,7 @@ public class PdfDataExtractorService(
                     default:
                         return expression.Position is LabelPosition.ApplicableToMost
                            && label.Position != LabelPosition.Split
+                           && label.Position != LabelPosition.RelatedCategoryPosition
                            && label.Position != LabelPosition.TextToFindIsBetweenLabels;
                 }
             })

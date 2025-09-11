@@ -13,8 +13,6 @@ public static class RelatedCategoryPosition
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
-        var labelGroupResult = request.labelGroupResult;//.Clone();
         
         var categoryItems = request.siblingMatches!
             .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)
@@ -150,28 +148,42 @@ public static class RelatedCategoryPosition
             return Task.FromResult(returnList);
         }
 
-        var line = absoluteMatches.First();
+        var howManyResults = 1;
+        
+        if (request.label.FindMultipleOnSingleLine)
+        {
+            var howManyMatchingLabelsOnLine =
+                categoryItems.Count(x => x.LineNumber == matchedLabelLineNumber);
 
-        var documentLine = new DocumentLine(
-            PositionConstants.UnknownLineNumber,
-            PositionConstants.UnknownPageNumber,
-            line.Columns,
-            PositionConstants.UnknownCoordinate,
-            PositionConstants.UnknownCoordinate,
-            PositionConstants.UnknownCoordinate);
+                //howManyResults = howManyMatchingLabelsOnLine;
+        }
 
-        labelGroupResult.Text = [documentLine];
-        labelGroupResult.MatchedLabel = request.label;
+        var lines = absoluteMatches.Take(howManyResults);
 
-        // TODO should set match type
-        FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
+        foreach (var line in lines)
+        {
+            var labelGroupResult = request.labelGroupResult.Clone();
+            
+            var documentLine = new DocumentLine(
+                PositionConstants.UnknownLineNumber,
+                PositionConstants.UnknownPageNumber,
+                line.Columns,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate,
+                PositionConstants.UnknownCoordinate);
 
-        returnList.Add(labelGroupResult);
-        returnList = FilterIntoFormat(
-            request,
-            labelGroupResult,
-            absoluteMatches.Take(1).ToList(),
-            false);
+            labelGroupResult.Text = [documentLine];
+            labelGroupResult.MatchedLabel = request.label;
+
+            // TODO should set match type
+            FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
+
+            returnList.AddRange(FilterIntoFormat(
+                request,
+                labelGroupResult,
+                [line],
+                false));
+        }
 
         return ProcessSubLabelsAsync(request, returnList);
     }

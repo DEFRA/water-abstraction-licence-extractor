@@ -1432,7 +1432,8 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {

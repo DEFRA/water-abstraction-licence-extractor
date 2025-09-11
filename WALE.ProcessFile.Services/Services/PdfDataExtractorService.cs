@@ -1234,7 +1234,7 @@ public class PdfDataExtractorService(
             returnItems.Add((textAfterLabel.Trim(), returnLabel));
         }
 
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeLabelText)
+        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
         {
             var returnLabel = label.Clone();
             returnLabel.Position = LabelPosition.ActuallyLabel;

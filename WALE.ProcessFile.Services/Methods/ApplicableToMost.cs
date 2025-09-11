@@ -43,7 +43,7 @@ public static class ApplicableToMost
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;
             
-            var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
+            var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(

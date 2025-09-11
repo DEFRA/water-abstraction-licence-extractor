@@ -74,7 +74,7 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ApplicableToMost,
-                IncludeLabelText = true
+                IncludeStartLabelText = true
             }
         ];
     }
@@ -351,7 +351,7 @@ public static class LabelConfiguration
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 Format = "Text",
                                 NextLinesToFetch = 100,
-                                IncludeLabelText = true,
+                                IncludeStartLabelText = true,
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                                 SubLabels = new List<LabelToMatch>
                                 {
@@ -549,7 +549,7 @@ public static class LabelConfiguration
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
-                                IncludeLabelText = true,
+                                IncludeStartLabelText = true,
                                 Format = "Text",
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                                 //Remove = [
@@ -765,7 +765,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 10,
-                        IncludeLabelText = true,
+                        IncludeStartLabelText = true,
                         SubLabels =
                         [
                             new()
@@ -875,7 +875,7 @@ public static class LabelConfiguration
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         NextLinesToFetch = 6,
-                        IncludeLabelText = true,
+                        IncludeStartLabelText = true,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels =
                         [
@@ -1001,7 +1001,7 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
-                IncludeLabelText = true,
+                IncludeStartLabelText = true,
                 SubLabels = new List<LabelToMatch>
                 {
                     new()
@@ -1042,7 +1042,7 @@ public static class LabelConfiguration
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[END_OF_BLOCK]")
                         ],
-                        IncludeLabelText = true,
+                        IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
@@ -1059,7 +1059,7 @@ public static class LabelConfiguration
                                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
-                                IncludeLabelText = true,
+                                IncludeStartLabelText = true,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -1072,22 +1072,44 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "DateOrPurpose",
-                                        IncludeLabelText = true,
+                                        IncludeStartLabelText = true,
                                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     },
                                     new()
                                     {
                                         Name = "DatePurposeRough",
                                         Format = "Text",
-                                        Possibilities = [
-                                            // TODO add the other possiblities
-                                            new("November to May"),
-                                            new("June to October")
+                                        TextStart = [
+                                            new("January") { LineMustStartWith = true },
+                                            new("February") { LineMustStartWith = true },
+                                            new("March") { LineMustStartWith = true },
+                                            new("April") { LineMustStartWith = true },
+                                            new("May") { LineMustStartWith = true },
+                                            new("June") { LineMustStartWith = true },
+                                            new("July") { LineMustStartWith = true },
+                                            new("August") { LineMustStartWith = true },
+                                            new("September") { LineMustStartWith = true },
+                                            new("October") { LineMustStartWith = true },
+                                            new("November") { LineMustStartWith = true }
+                                        ],
+                                        TextEnd = [
+                                            new("February[END_OF_COLUMN]"),
+                                            new("March[END_OF_COLUMN]"),
+                                            new("April[END_OF_COLUMN]"),
+                                            new("May[END_OF_COLUMN]"),
+                                            new("June[END_OF_COLUMN]"),
+                                            new("July[END_OF_COLUMN]"),
+                                            new("August[END_OF_COLUMN]"),
+                                            new("September[END_OF_COLUMN]"),
+                                            new("October[END_OF_COLUMN]"),
+                                            new("November[END_OF_COLUMN]"),
+                                            new("December[END_OF_COLUMN]")
                                         ],
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 0,
-                                        Position = LabelPosition.ApplicableToMost,
-                                        IncludeLabelText = true,
+                                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                                        IncludeStartLabelText = true,
+                                        IncludeEndLabelText = true,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                                     },
                                     new()
@@ -1149,7 +1171,7 @@ public static class LabelConfiguration
                                             new("[END_OF_BLOCK]")                                            
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
-                                        IncludeLabelText = true,
+                                        IncludeStartLabelText = true,
                                         Format = "Text",
                                         Possibilities = [
                                             "2.1",

@@ -28,7 +28,8 @@ public class LabelToMatch
     public int LeewayBefore { get; init; } // TODO can likely get rid of this now ordering is sorted
     public IReadOnlyList<LabelToMatch>? SubLabels { get; set; }
     public string Format { get; set; } = "Text";
-    public bool IncludeLabelText { get; init; }
+    public bool IncludeStartLabelText { get; init; }
+    public bool IncludeEndLabelText { get; init; }
     public bool IncludeWholeLine { get; init; }
     public string? Name { get; init; }
     public string? CategoryName { get; init; }
@@ -61,7 +62,8 @@ public class LabelToMatch
             LeewayBefore = LeewayBefore,
             SubLabels = SubLabels?.Select(s => s.Clone()).ToList(),
             Format = Format,
-            IncludeLabelText = IncludeLabelText,
+            IncludeStartLabelText = IncludeStartLabelText,
+            IncludeEndLabelText = IncludeEndLabelText,            
             IncludeWholeLine = IncludeWholeLine,
             Name = Name,
             CategoryName = CategoryName,

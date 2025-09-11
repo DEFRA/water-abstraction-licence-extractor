@@ -1290,7 +1290,8 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {

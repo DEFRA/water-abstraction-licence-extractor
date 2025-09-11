@@ -14,19 +14,9 @@ public static class AfterTextContainsAnotherMatch
 
         var afterText = request.textBeforeAtAndAfterLabel?
             .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsBeforeTextToFind);
-
-        if (request.textBeforeAtAndAfterLabel?.Count > 1)
-        {
-            
-        }
         
-        if (afterText == null)
-        {
-            return Task.FromResult(returnListTop);
-        }
-        
-        // TODO just look in the after text for more results 
-        
-        return Task.FromResult(returnListTop);
+        return afterText == null ?
+            Task.FromResult(returnListTop)
+            : ApplicableToMost.FunctionAsync(request);
     }
 }

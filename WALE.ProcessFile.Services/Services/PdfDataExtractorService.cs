@@ -836,11 +836,25 @@ public class PdfDataExtractorService(
                     foreach (var expression in lookupExpressions)
                     {
                         var result = await ProcessExpressionResultAsync(
-                            expression,
+                            expression.Value,
                             request,
                             partialLine!,
                             singleValueWanted);
 
+                        if (request.label.FindMultipleOnSingleLine
+                            && request.textBeforeAtAndAfterLabel.Count >= 1
+                            && request.label.Position is not LabelPosition.Split
+                            and not LabelPosition.TextToFindIsBetweenLabels)
+                        {
+                            var additionalResults = await ProcessExpressionResultAsync(
+                                AfterTextContainsAnotherMatch.FunctionAsync,
+                                request,
+                                partialLine!,
+                                singleValueWanted);
+
+                            result.Results.AddRange(additionalResults.Results);
+                        }
+                        
                         if (result.Continue)
                         {
                             continue;
@@ -868,33 +882,7 @@ public class PdfDataExtractorService(
                             break;
                         }
 
-                        // De-dupe exact matches
-                        returnList = returnList
-                            .GroupBy(x => x.PageNumber + "_" + x.LineNumber + x.MatchedLabel?.Name + x.Text?.FirstOrDefault()?.Text)
-                            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
-                            .ToList();
-        
-                        var ifMultiplePreferLast = request.label!.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                        var ifMultiplePreferLongest =
-                            request.label!.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
-
-                        // TOOD there should only be one below - not 2 or more
-                        if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                        {
-                            var alreadyOutput = returnList
-                                .Where(r => r.MatchedLabel?.Name == request.label!.Name)
-                                .ToList();
-
-                            if (alreadyOutput.Count >= 2)
-                            {
-                                var i = alreadyOutput
-                                    .OrderBy(x =>
-                                        ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
-                                    .First();
-
-                                returnList.Remove(i);
-                            }
-                        }
+                        returnList = FilterDownResults(returnList, request.label);
                         
                         if (result.NewPartialLine != null)
                         {
@@ -958,6 +946,38 @@ public class PdfDataExtractorService(
         return returnList;
     }
 
+    private List<LabelGroupResult> FilterDownResults(List<LabelGroupResult> returnList, LabelToMatch? label)
+    {
+        // De-dupe exact matches
+        returnList = returnList
+            .GroupBy(x => x.PageNumber + "_" + x.LineNumber + x.MatchedLabel?.Name + x.Text?.FirstOrDefault()?.Text)
+            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
+            .ToList();
+        
+        var ifMultiplePreferLast = label!.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+        var ifMultiplePreferLongest =
+            label.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+
+        // TOOD there should only be one below - not 2 or more
+        if (!ifMultiplePreferLast && !ifMultiplePreferLongest) return returnList;
+        
+        var alreadyOutput = returnList
+            .Where(r => r.MatchedLabel?.Name == label.Name)
+            .ToList();
+
+        if (alreadyOutput.Count >= 2)
+        {
+            var i = alreadyOutput
+                .OrderBy(x =>
+                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                .First();
+
+            returnList.Remove(i);
+        }
+
+        return returnList;
+    }
+    
     private class ExpressionResult
     {
         public bool Continue { get; set; }
@@ -969,13 +989,13 @@ public class PdfDataExtractorService(
     }
     
     private async Task<ExpressionResult> ProcessExpressionResultAsync(
-        KeyValuePair<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>> expression,
+        Func<FunctionInputModel, Task<List<LabelGroupResult>>> expression,
         FunctionInputModel request,
         DocumentLine partialLine,
         bool singleValueWanted)
     {
         var returnList = new List<LabelGroupResult>();
-        var results = await expression.Value(request);
+        var results = await expression(request);
         
         var continuePartialLoop = false;
         DocumentLine? newPartialLine = null;

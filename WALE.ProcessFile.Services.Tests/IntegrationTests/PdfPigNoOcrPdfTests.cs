@@ -3080,13 +3080,14 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults![0];
-        Assert.Equal(5, section3Sub1.SubResults!.Count);
+        Assert.Equal(6, section3Sub1.SubResults!.Count);
 
         Assert.Equal("cubic metres", section3Sub1.SubResults[0].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("cubic metres", section3Sub1.SubResults[1].Text!.FirstOrDefault()!.Text);        
-        Assert.Equal("15", section3Sub1.SubResults[2].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("360", section3Sub1.SubResults[3].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("1 January and ending on 31 December", section3Sub1.SubResults[4].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("cubic metres", section3Sub1.SubResults[1].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("cubic metres", section3Sub1.SubResults[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("15", section3Sub1.SubResults[3].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("360", section3Sub1.SubResults[4].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("1 January and ending on 31 December", section3Sub1.SubResults[5].Text!.FirstOrDefault()!.Text);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Equal(3, points!.Text!.Count);

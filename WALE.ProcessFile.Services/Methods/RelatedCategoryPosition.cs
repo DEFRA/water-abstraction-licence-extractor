@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -13,11 +14,6 @@ public static class RelatedCategoryPosition
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
-        if (request.label.Name == "PerDayValue" && request.line!.LineNumber > 108)
-        {
-            
-        }
-        
         var labelGroupResult = request.labelGroupResult;//.Clone();
         
         var categoryItems = request.siblingMatches!
@@ -52,6 +48,7 @@ public static class RelatedCategoryPosition
 
         var matchedLabelLineNumbers = new List<int>();
         var lineStartsWithLabel = false;
+        var isBeforeTextToFind = false;
         
         foreach (var categoryItem in categoryItems)
         {
@@ -74,6 +71,7 @@ public static class RelatedCategoryPosition
             }
 
             matchedLabelLineNumbers.Add(categoryItem.LineNumber);
+            isBeforeTextToFind = categoryItem.MatchedLabel?.Position == LabelPosition.LabelIsBeforeTextToFind;
         }
 
         var matchedLabelLineNumber = matchedLabelLineNumbers
@@ -141,7 +139,7 @@ public static class RelatedCategoryPosition
                 var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
 
                 var diff = labelIndexStart - matchIndexEnd;
-                return Math.Abs(diff);
+                return isBeforeTextToFind ? -diff : Math.Abs(diff);
             })
             .ToList();
 

@@ -10,21 +10,15 @@ public static class Number
     public const string Constant = "Number";
     
     public static bool AnyIsNumber(
-        IEnumerable<DocumentLine?> lines,
+        IReadOnlyList<DocumentLine?> linesList,
         LabelToMatch? label,
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
-
-        if (lines?.FirstOrDefault()?.PageNumber == 4)
-        {
-            
-        }
         
         var matched = false;
         var returnLines = new List<string>();
 
-        var linesList = lines.ToList();
         var firstLine = linesList.FirstOrDefault();
         
         var lineNumber = firstLine?.LineNumber ?? PositionConstants.UnknownLineNumber;
@@ -62,11 +56,6 @@ public static class Number
                     returnLines.Add(numberLineDbl + string.Empty);   
                 }
 
-                if (returnLines.Last().Contains(","))
-                {
-                    
-                }
-
                 if (!matched)
                 {
                     lineNumber = line.LineNumber;
@@ -82,7 +71,7 @@ public static class Number
             return matched;
         }
         
-        foreach (var tempLine in returnLines.OrderByDescending(text => text))
+        foreach (var tempLine in returnLines)// TODO why do the following when its text - .OrderByDescending(text => text))
         {
             if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(tempLine, label))
             {

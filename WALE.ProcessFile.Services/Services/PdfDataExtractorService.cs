@@ -782,11 +782,6 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
-
-                    if (label.Name == "DateOfIssueOldStyle")
-                    {
-                        
-                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));

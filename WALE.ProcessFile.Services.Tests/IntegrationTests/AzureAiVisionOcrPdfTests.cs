@@ -1035,7 +1035,12 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal("November", agreedSchemaLicence.AbstractionLimits.Individual[0].TimePeriod!.StartDate);
+        Assert.Equal("May", agreedSchemaLicence.AbstractionLimits.Individual[0].TimePeriod!.EndDate);
+        
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[1].Limits);
+        Assert.Equal("June", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.StartDate);
+        Assert.Equal("October", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.EndDate);
         
 //        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);

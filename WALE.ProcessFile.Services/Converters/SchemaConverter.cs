@@ -256,11 +256,17 @@ public static class SchemaConverter
         }
         
         var value = datePurpose.Text?.FirstOrDefault()?.Text;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+        
+        var parts = value.Split(" to ");
         
         return new TimePeriod
         {
-            StartDate = value,
-            EndDate = value,
+            StartDate = parts[0],
+            EndDate = parts.Length > 1 ? parts[1] : null,
             PeriodType = AbstractionPeriodType.SetPeriod,
             Inclusive = true
         };
@@ -306,6 +312,8 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList();
 
+            var shouldAddGroups = true;
+            
             if (datePurposes.Count >= 1)
             {
                 foreach (var datePurpose in datePurposes)
@@ -317,12 +325,17 @@ public static class SchemaConverter
                     });
                 }
             }
-            else
+            else if (allIndividualGroups.Count == 0 && individualGroups.Count == 0)
             {
                 individualGroups.Add(new AbstractionLimitGroup
                 {
                     Limits = []
                 });
+            }
+            else if (individualGroups.Count == 0)
+            {
+                shouldAddGroups = false;
+                individualGroups.Add(allIndividualGroups[0]);
             }
             
             var valueResults = siblings
@@ -425,8 +438,11 @@ public static class SchemaConverter
                     aggregateLimits.Add(abstractionLimit);
                 }
             }
-            
-            allIndividualGroups.AddRange(individualGroups);
+
+            if (shouldAddGroups)
+            {
+                allIndividualGroups.AddRange(individualGroups);
+            }
 
             if (aggregateLimits.Count == 0)
             {
@@ -497,7 +513,7 @@ public static class SchemaConverter
 
     private static int GetPositionRelativeToDateLines(List<LabelGroupResult>? dateLines, int lineNumber)
     {
-        if (dateLines == null)
+        if (dateLines == null || dateLines.Count == 0)
         {
             return 0;
         }

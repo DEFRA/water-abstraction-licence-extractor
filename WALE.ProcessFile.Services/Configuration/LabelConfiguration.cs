@@ -1079,11 +1079,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "DatePurposeRough",
                                         Format = "Text",
-                                        Text = [
-                                            new("November to May"),
-                                            new("June to October")
-                                        ],
                                         Possibilities = [
+                                            // TODO add the other possiblities
                                             new("November to May"),
                                             new("June to October")
                                         ],

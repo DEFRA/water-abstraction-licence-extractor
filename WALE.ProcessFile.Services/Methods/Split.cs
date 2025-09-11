@@ -25,6 +25,7 @@ public static class Split
 
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
+            request.lineForPosition!,
             request.label.Text,
             LabelPosition.Split,
             UnknownLinesTotal,
@@ -42,6 +43,7 @@ public static class Split
             foreach (var line in leftPartLines)
             {
                 lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+                    line,
                     line,
                     request.label.Text,
                     LabelPosition.Split,

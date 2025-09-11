@@ -593,6 +593,7 @@ public class PdfDataExtractorService(
 
     private bool ProcessMatchAll(
         DocumentLine line,
+        DocumentLine lineForPosition,
         LabelToMatch label,
         int lineCount,
         IReadOnlyList<DocumentLine> previousLines,
@@ -604,6 +605,7 @@ public class PdfDataExtractorService(
         {
             if (LabelMatchingHelper.LineContainsLabel(
                 line,
+                lineForPosition,
                 [labelText],
                 label.Position,
                 lineCount,
@@ -620,6 +622,7 @@ public class PdfDataExtractorService(
             {
                 if (LabelMatchingHelper.LineContainsLabel(
                     previousLine,
+                    previousLine,
                     [labelText],
                     label.Position,
                     lineCount,
@@ -635,6 +638,7 @@ public class PdfDataExtractorService(
             foreach (var nextLine in nextLines)
             {
                 if (LabelMatchingHelper.LineContainsLabel(
+                    nextLine,
                     nextLine,
                     [labelText],
                     label.Position,
@@ -739,6 +743,7 @@ public class PdfDataExtractorService(
                     {
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
+                            lineOuter,
                             label.Text,
                             label.Position,
                             lineCount,
@@ -764,8 +769,6 @@ public class PdfDataExtractorService(
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
                     
-                    labelCharPosition = 0; // TODO temp
-                    
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {
                         partialLine = null;
@@ -774,7 +777,7 @@ public class PdfDataExtractorService(
 
                     if (label.MatchAllText)
                     {
-                        if (ProcessMatchAll(partialLine, label, lineCount, previousLines, nextLines))
+                        if (ProcessMatchAll(partialLine, lineOuter, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -829,6 +832,7 @@ public class PdfDataExtractorService(
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
+                        lineForPosition = lineOuter,
                         lineNumber = partialLine.LineNumber
                     };
 

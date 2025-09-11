@@ -7,6 +7,7 @@ public class FunctionInputModel
     public LabelToMatch? label { get; set; }
     public LabelGroupResult? labelGroupResult { get; set; }
     public DocumentLine? line { get; set; }
+    public DocumentLine? lineForPosition { get; set; }
     public IReadOnlyList<DocumentLine>? previousLines { get; set; }
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }

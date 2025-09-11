@@ -45,7 +45,8 @@ public static class LabelMatchingHelper
     }
     
     public static bool LineContainsLabel(
-        DocumentLine line,
+        DocumentLine lineToCheck,
+        DocumentLine lineForPosition,
         IReadOnlyList<TextToMatch>? labelTextOptions,
         LabelPosition position,
         int lineCount,
@@ -85,9 +86,13 @@ public static class LabelMatchingHelper
             }
             
             var lineStartsWithLabel =
-                line.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
+                lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
             
-            foreach (var column in line.Columns)
+            labelCharPosition = lineForPosition.Text.IndexOf(
+                labelTextWithoutMarkers,
+                StringComparison.InvariantCultureIgnoreCase);
+            
+            foreach (var column in lineToCheck.Columns)
             {
                 var columnStartsWithLabel =
                     column.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
@@ -106,10 +111,6 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = line.Text.IndexOf(
-                                    labelTextWithoutMarkers,
-                                    StringComparison.InvariantCultureIgnoreCase);
-                                
                                 return true;
                             }
                         }
@@ -118,18 +119,12 @@ public static class LabelMatchingHelper
                             if (lineStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = 0;
-                                
                                 return true;
                             }
                         }
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                            labelCharPosition = line.Text.IndexOf(
-                                labelTextWithoutMarkers,
-                                StringComparison.InvariantCultureIgnoreCase);
-                            
                             return true;                        
                         }
                     }
@@ -137,7 +132,7 @@ public static class LabelMatchingHelper
                 else if (lineMustContainEndOfLineMarker)
                 {
                     var lineEndsWithMarker =
-                        line.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);                    
+                        lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);                    
                     
                     if (lineEndsWithMarker)
                     {
@@ -146,10 +141,6 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = line.Text.IndexOf(
-                                    labelTextWithoutMarkers,
-                                    StringComparison.InvariantCultureIgnoreCase);
-                                
                                 return true;
                             }
                         }
@@ -158,18 +149,12 @@ public static class LabelMatchingHelper
                             if (lineStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = 0;
-                                
                                 return true;
                             }
                         }
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                            labelCharPosition = line.Text.IndexOf(
-                                labelTextWithoutMarkers,
-                                StringComparison.InvariantCultureIgnoreCase);
-                            
                             return true;                        
                         }
                     }
@@ -182,19 +167,15 @@ public static class LabelMatchingHelper
                         column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                     
                     var lineStartsWithLabelWithSpaceBefore =
-                        line.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                        lineToCheck.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
                     var lineEndsWithLabel =
-                        line.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                        lineToCheck.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
 
                     if (labelTextOption.ColumnMustStartWith)
                     {
                         if (columnStartsWithLabel)
                         {
                             matchedText = labelTextOption;
-                            labelCharPosition = line.Text.IndexOf(
-                                labelTextWithoutMarkers,
-                                StringComparison.InvariantCultureIgnoreCase);
-                            
                             return true;
                         }
                     }
@@ -203,8 +184,6 @@ public static class LabelMatchingHelper
                         if (lineStartsWithLabel)
                         {
                             matchedText = labelTextOption;
-                            labelCharPosition = 0;
-                            
                             return true;
                         }
                     }
@@ -216,18 +195,6 @@ public static class LabelMatchingHelper
                         || lineEndsWithLabel)
                     {
                         matchedText = labelTextOption;
-
-                        if (lineStartsWithLabel)
-                        {
-                            labelCharPosition = 0;
-                        }
-                        else
-                        {
-                            labelCharPosition = line.Text.IndexOf(
-                                labelTextWithoutMarkers,
-                                StringComparison.InvariantCultureIgnoreCase);
-                        }
-                        
                         return true;
                     }
                 }

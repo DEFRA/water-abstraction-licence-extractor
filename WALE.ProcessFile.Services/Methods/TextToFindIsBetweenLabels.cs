@@ -224,6 +224,7 @@ public static class TextToFindIsBetweenLabels
 
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                 line,
+                line,
                 label.Text,
                 label.Position,
                 lineCount++,

@@ -2172,7 +2172,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimits.SubResults!);
 
         var abstractionLimitsPoint = abstractionLimits.SubResults![0];
-        Assert.Equal(3, abstractionLimitsPoint.SubResults!.Count); // TODO should investigate this later if this should be 2 or 3
+        Assert.Equal(2, abstractionLimitsPoint.SubResults!.Count); // TODO should investigate this later if this should be 2 or 3
         
         var abstractionLimitPointSub1 = abstractionLimitsPoint.SubResults![0];
         

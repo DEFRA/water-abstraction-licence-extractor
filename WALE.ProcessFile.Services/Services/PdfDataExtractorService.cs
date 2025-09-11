@@ -764,6 +764,8 @@ public class PdfDataExtractorService(
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
                     
+                    labelCharPosition = 0; // TODO temp
+                    
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {
                         partialLine = null;

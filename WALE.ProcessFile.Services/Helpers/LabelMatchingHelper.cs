@@ -106,7 +106,9 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = 0;
+                                labelCharPosition = line.Text.IndexOf(
+                                    labelTextWithoutMarkers,
+                                    StringComparison.InvariantCultureIgnoreCase);
                                 
                                 return true;
                             }
@@ -124,7 +126,9 @@ public static class LabelMatchingHelper
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                            labelCharPosition = column.Text.Length - labelTextWithoutMarkers.Length;
+                            labelCharPosition = line.Text.IndexOf(
+                                labelTextWithoutMarkers,
+                                StringComparison.InvariantCultureIgnoreCase);
                             
                             return true;                        
                         }
@@ -142,7 +146,9 @@ public static class LabelMatchingHelper
                             if (columnStartsWithLabel)
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                                labelCharPosition = 0;
+                                labelCharPosition = line.Text.IndexOf(
+                                    labelTextWithoutMarkers,
+                                    StringComparison.InvariantCultureIgnoreCase);
                                 
                                 return true;
                             }
@@ -160,7 +166,9 @@ public static class LabelMatchingHelper
                         else
                         {
                             matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
-                            labelCharPosition = line.Text.Length - labelTextWithoutMarkers.Length;
+                            labelCharPosition = line.Text.IndexOf(
+                                labelTextWithoutMarkers,
+                                StringComparison.InvariantCultureIgnoreCase);
                             
                             return true;                        
                         }
@@ -183,7 +191,9 @@ public static class LabelMatchingHelper
                         if (columnStartsWithLabel)
                         {
                             matchedText = labelTextOption;
-                            labelCharPosition = 0;
+                            labelCharPosition = line.Text.IndexOf(
+                                labelTextWithoutMarkers,
+                                StringComparison.InvariantCultureIgnoreCase);
                             
                             return true;
                         }
@@ -207,21 +217,15 @@ public static class LabelMatchingHelper
                     {
                         matchedText = labelTextOption;
 
-                        if (columnStartsWithLabel || lineStartsWithLabel)
+                        if (lineStartsWithLabel)
                         {
                             labelCharPosition = 0;
                         }
-                        else if (columnStartsWithLabelWithSpaceBefore || lineStartsWithLabelWithSpaceBefore)
+                        else
                         {
-                            labelCharPosition = 1;
-                        }
-                        else if (columnEndsWithLabel)
-                        {
-                            labelCharPosition = column.Text.Length - labelTextWithoutMarkers.Length;
-                        }
-                        else if (lineEndsWithLabel)
-                        {
-                            labelCharPosition = line.Text.Length - labelTextWithoutMarkers.Length;
+                            labelCharPosition = line.Text.IndexOf(
+                                labelTextWithoutMarkers,
+                                StringComparison.InvariantCultureIgnoreCase);
                         }
                         
                         return true;

@@ -26,16 +26,16 @@ public static class LabelMatchingHelper
     }
     
     public static bool PotentialMatchOnLabelLine(
-        IEnumerable<(string? Text, LabelToMatch Label)> textBeforeAndAfterLabel)
+        IEnumerable<TextAndLabel> textBeforeAndAfterLabel)
     {
         const string shortHyphen = "-";
         const string longHyphen = "—";
         
-        foreach (var (text, _) in textBeforeAndAfterLabel)
+        foreach (var item in textBeforeAndAfterLabel)
         {
-            if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(text)
-                && text!.Trim() != shortHyphen
-                && text.Trim() != longHyphen)
+            if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(item.Text)
+                && item.Text!.Trim() != shortHyphen
+                && item.Text.Trim() != longHyphen)
             {
                 return true;
             }

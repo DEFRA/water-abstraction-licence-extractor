@@ -4,7 +4,7 @@ public class TextToMatch(string text)
 {
     public string Text { get; } = text;
 
-    public bool LineMustStartWith { get; init; }    
+    public bool LineMustStartWith { get; init; }
     
     public bool ColumnMustStartWith { get; init; }
     

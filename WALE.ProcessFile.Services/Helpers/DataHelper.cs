@@ -83,17 +83,17 @@ public static partial class DataHelper
     }
 
     public static string GetTextBeforeAtAndAfterLabelAsSingleString(
-        List<(string? Text, LabelToMatch Label)>? textBeforeAtAndAfterLabel,
+        List<TextAndLabel>? textBeforeAtAndAfterLabel,
         bool includeLabelText)
     {
         var beforeStuff = textBeforeAtAndAfterLabel!
             .Where(tuple =>
-                (includeLabelText && tuple.Label.Position == LabelPosition.ActuallyLabel)
-                    || tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
+                (includeLabelText && tuple.Label?.Position == LabelPosition.ActuallyLabel)
+                    || tuple.Label?.Position is LabelPosition.LabelIsBeforeTextToFind
                         or LabelPosition.TextToFindIsBetweenLabels)
             .OrderBy(x =>
             {
-                return x.Label.Position switch
+                return x.Label?.Position switch
                 {
                     LabelPosition.LabelIsAfterTextToFind => -2,
                     LabelPosition.ActuallyLabel => -1,

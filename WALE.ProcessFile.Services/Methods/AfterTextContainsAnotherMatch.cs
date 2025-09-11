@@ -13,8 +13,13 @@ public static class AfterTextContainsAnotherMatch
         var returnListTop = new List<LabelGroupResult>();
 
         var afterText = request.textBeforeAtAndAfterLabel?
-            .FirstOrDefault(x => x.Label.Position == LabelPosition.LabelIsBeforeTextToFind);
+            .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsBeforeTextToFind);
 
+        if (request.textBeforeAtAndAfterLabel?.Count > 1)
+        {
+            
+        }
+        
         if (afterText == null)
         {
             return Task.FromResult(returnListTop);

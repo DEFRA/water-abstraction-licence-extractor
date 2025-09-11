@@ -26,10 +26,13 @@ public static class ApplicableToMost
         if (request.textBeforeAtAndAfterLabel?.Any() != true
             && request.line?.Text.Equals(request.label.Text?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
         {
-            request.textBeforeAtAndAfterLabel = new List<(string Text, LabelToMatch Label)>
-            {
-                (request.label.Text?.FirstOrDefault()?.Text, request.label)!
-            }!;
+            request.textBeforeAtAndAfterLabel = [
+                new()
+                {
+                    Text = request.label.Text?.FirstOrDefault()?.Text,
+                    Label = request.label
+                }
+            ]!;
         }
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAtAndAfterLabel!))
@@ -37,8 +40,11 @@ public static class ApplicableToMost
             return returnListTop;
         }
         
-        foreach (var (text, matchedLabel) in request.textBeforeAtAndAfterLabel!)
+        foreach (var item in request.textBeforeAtAndAfterLabel!)
         {
+            var matchedLabel = item.Label!;
+            var text = item.Text;
+            
             var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;

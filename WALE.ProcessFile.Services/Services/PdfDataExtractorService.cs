@@ -699,7 +699,7 @@ public class PdfDataExtractorService(
 
                     previousPartialLine = partialLine;
                     
-                    var textBeforeAtAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
+                    var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
@@ -785,6 +785,11 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
+
+                    if (label.Name == "PerDayUnits")
+                    {
+                        
+                    }
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
@@ -830,62 +835,54 @@ public class PdfDataExtractorService(
                     
                     foreach (var expression in lookupExpressions)
                     {
-                        var results = await expression(request);
-                        
-                        if (results.Count == 0)
+                        var result = await ProcessExpressionResultAsync(
+                            expression,
+                            request,
+                            partialLine!,
+                            singleValueWanted);
+
+                        if (result.Continue)
                         {
                             continue;
                         }
-
-                        // TODO the below has some weird behaviour with line numbers 33 vs 32, but is kept for now
-                        // as some tests depend upon it
-                        foreach (var result in results)
+                        
+                        if (result.Return)
                         {
-                            var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
-
-                            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
-                            {
-                                result.LineNumber = newLineNumber.Value;
-                            }
+                            return result.Results;
                         }
-
-                        if (singleValueWanted && results.Count >= 1)
+                        
+                        if (result.ContinuePartialLoop)
                         {
-                            // Throw away any other results
-                            var singleValueResult = new List<LabelGroupResult> { results.First() };
-                            
-                            if (matchedLabel.MultipleBehaviour is
-                                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                            if (result.NewPartialLine == null)
                             {
-                                return singleValueResult;
+                                partialLine = null;
                             }
-                            
-                            returnList.AddRange(singleValueResult);
-                            
-                            // Break the partial loop
-                            partialLine = null;
                             
                             continuePartialLoop = true;
-                            break; // The expressions loop
-                        }                        
+                        }
                         
-                        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+                        returnList.AddRange(result.Results);
+                        
+                        if (result.Break)
+                        {
+                            break;
+                        }
 
                         // De-dupe exact matches
                         returnList = returnList
                             .GroupBy(x => x.PageNumber + "_" + x.LineNumber + x.MatchedLabel?.Name + x.Text?.FirstOrDefault()?.Text)
-                             .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
+                            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
                             .ToList();
-                        
-                        var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+        
+                        var ifMultiplePreferLast = request.label!.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
                         var ifMultiplePreferLongest =
-                            matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+                            request.label!.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
 
                         // TOOD there should only be one below - not 2 or more
                         if (ifMultiplePreferLast || ifMultiplePreferLongest)
                         {
                             var alreadyOutput = returnList
-                                .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
+                                .Where(r => r.MatchedLabel?.Name == request.label!.Name)
                                 .ToList();
 
                             if (alreadyOutput.Count >= 2)
@@ -898,54 +895,10 @@ public class PdfDataExtractorService(
                                 returnList.Remove(i);
                             }
                         }
-
-                        // NOTE - It may first appear we can do the following - but we need to keep looking because
-                        // of the way we look up labels per page
-                        /*if (label.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues)
-                        {
-                            label.Completed = true;
-                            return returnList;
-                        }*/
                         
-                        /*var askedToLookForMore = ifMultiplePreferLast || ifMultiplePreferLongest;
-                        
-                        if (matchedLabel.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues
-                            && !askedToLookForMore)
+                        if (result.NewPartialLine != null)
                         {
-                            return returnList;
-                        }*/
-
-                        if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
-                            && results.Count > 0)
-                        {
-                            var result = results[0];
-
-                            if (result.LineNumber == partialLine?.LineNumber)
-                            {
-                                var resultText = result.Text?.FirstOrDefault()?.Text;
-
-                                if (resultText != null)
-                                {
-                                    var startIndexOfMatch =
-                                        partialLine.Text.IndexOf(resultText, StringComparison.InvariantCultureIgnoreCase);
-                                    
-                                    var endIndexOfMatch = startIndexOfMatch + resultText.Length;
-
-                                    if (startIndexOfMatch > -1 && partialLine.Text.Length > endIndexOfMatch)
-                                    {
-                                        var newPartialLineText = partialLine.Text[endIndexOfMatch..];
-
-                                        if (newPartialLineText != string.Empty)
-                                        {
-                                            partialLine = partialLine.Clone();
-                                            partialLine.Columns.Clear();
-                                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
-
-                                            continuePartialLoop = true;
-                                        }
-                                    }
-                                }
-                            }
+                            partialLine = result.NewPartialLine;
                         }
                     }
 
@@ -1004,8 +957,136 @@ public class PdfDataExtractorService(
         
         return returnList;
     }
+
+    private class ExpressionResult
+    {
+        public bool Continue { get; set; }
+        public bool Return { get; set; }
+        public bool ContinuePartialLoop { get; set; }
+        public bool Break { get; set; }
+        public DocumentLine? NewPartialLine { get; set; }
+        public List<LabelGroupResult> Results { get; set; } = [];
+    }
     
-    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
+    private async Task<ExpressionResult> ProcessExpressionResultAsync(
+        KeyValuePair<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>> expression,
+        FunctionInputModel request,
+        DocumentLine partialLine,
+        bool singleValueWanted)
+    {
+        var returnList = new List<LabelGroupResult>();
+        var results = await expression.Value(request);
+        
+        var continuePartialLoop = false;
+        DocumentLine? newPartialLine = null;
+                        
+        if (results.Count == 0)
+        {
+            return new ExpressionResult
+            {
+                Continue = true
+            };
+        }
+
+        // TODO the below has some weird behaviour with line numbers 33 vs 32, but is kept for now
+        // as some tests depend upon it
+        foreach (var result in results)
+        {
+            var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
+
+            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
+            {
+                result.LineNumber = newLineNumber.Value;
+            }
+        }
+
+        if (singleValueWanted && results.Count >= 1)
+        {
+            // Throw away any other results
+            var singleValueResult = new List<LabelGroupResult> { results.First() };
+            
+            if (request.label!.MultipleBehaviour is
+                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+            {
+                return new ExpressionResult
+                {
+                    Return = true,
+                    Results = singleValueResult
+                };
+            }
+            
+            returnList.AddRange(singleValueResult);
+            
+            return new ExpressionResult
+            {
+                Break = true,
+                ContinuePartialLoop = true,
+                Results = returnList
+            };
+        }                        
+                        
+        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+
+        // NOTE - It may first appear we can do the following - but we need to keep looking because
+        // of the way we look up labels per page
+        /*if (label.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues)
+        {
+            label.Completed = true;
+            return returnList;
+        }*/
+        
+        /*var askedToLookForMore = ifMultiplePreferLast || ifMultiplePreferLongest;
+        
+        if (matchedLabel.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues
+            && !askedToLookForMore)
+        {
+            return returnList;
+        }*/
+
+        if (request.label!.Position == LabelPosition.TextToFindIsBetweenLabels
+            && results.Count > 0)
+        {
+            var result = results[0];
+
+            if (result.LineNumber == partialLine?.LineNumber)
+            {
+                var resultText = result.Text?.FirstOrDefault()?.Text;
+
+                if (resultText != null)
+                {
+                    var startIndexOfMatch =
+                        partialLine.Text.IndexOf(resultText,
+                            StringComparison.InvariantCultureIgnoreCase);
+
+                    var endIndexOfMatch = startIndexOfMatch + resultText.Length;
+
+                    if (startIndexOfMatch > -1 && partialLine.Text.Length > endIndexOfMatch)
+                    {
+                        var newPartialLineText = partialLine.Text[endIndexOfMatch..];
+
+                        if (newPartialLineText != string.Empty)
+                        {
+                            partialLine = partialLine.Clone();
+                            partialLine.Columns.Clear();
+                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
+
+                            newPartialLine = partialLine;
+                            continuePartialLoop = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ExpressionResult
+        {
+            ContinuePartialLoop = continuePartialLoop,
+            NewPartialLine = newPartialLine,
+            Results = returnList
+        };
+    }
+    
+    private Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
         GetRelevantLookupExpressions(LabelToMatch label)
     {
         var expressions = new List<(
@@ -1025,7 +1106,7 @@ public class PdfDataExtractorService(
             (LabelPosition.LabelIsBeforeTextToFind, LabelIsBeforeTextToFind.FunctionAsync, 0),
             (LabelPosition.LabelIsAfterTextToFind, LabelIsAfterTextToFind.FunctionAsync, 1)
         };
-        
+
         return expressions
             .Where(expression =>
             {
@@ -1047,11 +1128,11 @@ public class PdfDataExtractorService(
                     case LabelPosition.LabelIsBeforeTextToFind
                         when expression.Position is LabelPosition.LabelIsBeforeTextToFind:
                     case LabelPosition.LabelIsAfterTextToFind
-                        when expression.Position is LabelPosition.LabelIsAfterTextToFind:                        
+                        when expression.Position is LabelPosition.LabelIsAfterTextToFind:
                     case LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                         when expression.Position is LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                        or LabelPosition.LabelIsBeforeTextToFind
-                        or LabelPosition.LabelIsAfterTextToFind:
+                            or LabelPosition.LabelIsBeforeTextToFind
+                            or LabelPosition.LabelIsAfterTextToFind:
                     case LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                         when expression.Position is LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                             or LabelPosition.LabelIsBeforeTextToFind
@@ -1060,9 +1141,9 @@ public class PdfDataExtractorService(
                         when expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind:
                         return true;
                     default:
-                        return expression.Position == LabelPosition.ApplicableToMost
-                            && label.Position != LabelPosition.Split
-                            && label.Position != LabelPosition.TextToFindIsBetweenLabels;
+                        return expression.Position is LabelPosition.ApplicableToMost
+                           && label.Position != LabelPosition.Split
+                           && label.Position != LabelPosition.TextToFindIsBetweenLabels;
                 }
             })
             .OrderBy(expression =>
@@ -1079,11 +1160,15 @@ public class PdfDataExtractorService(
                     LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore =>
                         expression.Position is LabelPosition.LabelIsBeforeTextToFind
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore ? -0.25 : 1,
+                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                            ? -0.25
+                            : 1,
                     LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter =>
                         expression.Position is LabelPosition.LabelIsAfterTextToFind
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore ? -0.25 : 1,
+                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                            ? -0.25
+                            : 1,
                     LabelPosition.LabelIsInMiddleOfTextToFind =>
                         expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind ? -0.25 : 1,
                     LabelPosition.LabelIsBeforeTextToFind or LabelPosition.ContractIsSuccession
@@ -1092,8 +1177,8 @@ public class PdfDataExtractorService(
                 };
             })
             .ThenBy(expression => expression.Order)
-            .Select(expression => expression.ResultIfMatched)
-            .ToList();
+            .Select(expression => (expression.Position, expression.ResultIfMatched))
+            .ToDictionary(x => x.Position, x => x.ResultIfMatched);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
@@ -1164,15 +1249,20 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
-    private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAtAndAfterText(
+    private static IEnumerable<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
-        var returnItems = new List<(string?, LabelToMatch)>();
+        var returnItems = new List<TextAndLabel>();
         
         if (label.Text == null)
         {
-            returnItems.Add((line.Text, label));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = line.Text,
+                Label = label
+            });
+            
             return returnItems;
         }
         
@@ -1226,7 +1316,11 @@ public class PdfDataExtractorService(
                     ? LabelPosition.LabelIsBeforeTextToFind
                     : label.Position;
             
-            returnItems.Add((textAfterLabel.Trim(), returnLabel));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAfterLabel.Trim(),
+                Label = returnLabel
+            });
         }
 
         if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
@@ -1234,7 +1328,11 @@ public class PdfDataExtractorService(
             var returnLabel = label.Clone();
             returnLabel.Position = LabelPosition.ActuallyLabel;
             
-            returnItems.Add((textAtLabel.Trim(), returnLabel));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAtLabel.Trim(),
+                Label = returnLabel
+            });
         }
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
@@ -1256,7 +1354,11 @@ public class PdfDataExtractorService(
                     ? LabelPosition.LabelIsAfterTextToFind
                     : label.Position;
             
-            returnItems.Add((textBeforeLabel.Trim(), returnLabel));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textBeforeLabel.Trim(),
+                Label = returnLabel
+            });
         }
 
         return returnItems;

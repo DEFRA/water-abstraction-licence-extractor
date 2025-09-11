@@ -39,8 +39,16 @@ public static class ApplicableToMost
         {
             return returnListTop;
         }
+
+        var textBeforeAtAndAfterLabel = request.textBeforeAtAndAfterLabel!.ToList();
+
+        if (request.label.Position is LabelPosition.LabelIsBeforeTextToFind
+            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore)
+        {
+            textBeforeAtAndAfterLabel.Reverse();
+        }
         
-        foreach (var item in request.textBeforeAtAndAfterLabel!)
+        foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
             var text = item.Text;

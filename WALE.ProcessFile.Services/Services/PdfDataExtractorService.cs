@@ -768,6 +768,11 @@ public class PdfDataExtractorService(
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
+
+                    if (label.Name == "PerDayUnits" && lineOuter.PageNumber > 1)
+                    {
+                        
+                    }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {
@@ -860,8 +865,13 @@ public class PdfDataExtractorService(
                                 partialLine!,
                                 singleValueWanted);
 
+                            if (additionalResults.Results.FirstOrDefault()?.PageNumber > 1)
+                            {
+                                
+                            }
+                            
                             result.Results.AddRange(additionalResults.Results);
-                            //result.Results = FilterDownResults(result.Results, request.label);
+                            result.Results = FilterDownResults(result.Results, request.label);
                         }
                         
                         if (result.Continue)
@@ -1335,43 +1345,6 @@ public class PdfDataExtractorService(
         var textAfterLabel = FormattingHelper.TrimFormatting(
             line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
         
-        if (!string.IsNullOrEmpty(textAfterLabel)
-            && label.Position is LabelPosition.LabelIsBeforeTextToFind
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.LabelIsInMiddleOfTextToFind
-                or LabelPosition.TextToFindIsBetweenLabels
-                or LabelPosition.ContractIsSuccession
-                or LabelPosition.RelatedCategoryPosition
-                or LabelPosition.ApplicableToMost
-                or LabelPosition.Split)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = label.Position is
-                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.TextToFindIsBetweenLabels
-                    ? LabelPosition.LabelIsBeforeTextToFind
-                    : label.Position;
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = textAfterLabel.Trim(),
-                Label = returnLabel
-            });
-        }
-
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = LabelPosition.ActuallyLabel;
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = textAtLabel.Trim(),
-                Label = returnLabel
-            });
-        }
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
@@ -1389,12 +1362,50 @@ public class PdfDataExtractorService(
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                 or LabelPosition.TextToFindIsBetweenLabels
-                    ? LabelPosition.LabelIsAfterTextToFind
-                    : label.Position;
+                ? LabelPosition.LabelIsAfterTextToFind
+                : label.Position;
             
             returnItems.Add(new TextAndLabel
             {
                 Text = textBeforeLabel.Trim(),
+                Label = returnLabel
+            });
+        }
+
+        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
+        {
+            var returnLabel = label.Clone();
+            returnLabel.Position = LabelPosition.ActuallyLabel;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAtLabel.Trim(),
+                Label = returnLabel
+            });
+        }
+        
+        if (!string.IsNullOrEmpty(textAfterLabel)
+            && label.Position is LabelPosition.LabelIsBeforeTextToFind
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                or LabelPosition.LabelIsInMiddleOfTextToFind
+                or LabelPosition.TextToFindIsBetweenLabels
+                or LabelPosition.ContractIsSuccession
+                or LabelPosition.RelatedCategoryPosition
+                or LabelPosition.ApplicableToMost
+                or LabelPosition.Split)
+        {
+            var returnLabel = label.Clone();
+            returnLabel.Position = label.Position is
+                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                or LabelPosition.TextToFindIsBetweenLabels
+                ? LabelPosition.LabelIsBeforeTextToFind
+                : label.Position;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAfterLabel.Trim(),
                 Label = returnLabel
             });
         }

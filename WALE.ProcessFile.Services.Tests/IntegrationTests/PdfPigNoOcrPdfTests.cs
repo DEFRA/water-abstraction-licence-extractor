@@ -3080,7 +3080,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults![0];
-        Assert.Equal(6, section3Sub1.SubResults!.Count);
+        Assert.Equal(5, section3Sub1.SubResults!.Count);
 
         Assert.Equal("cubic metres", section3Sub1.SubResults[0].Text!.FirstOrDefault()!.Text);
         Assert.Equal("cubic metres", section3Sub1.SubResults[1].Text!.FirstOrDefault()!.Text);

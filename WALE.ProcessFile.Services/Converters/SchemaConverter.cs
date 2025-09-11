@@ -316,6 +316,11 @@ public static class SchemaConverter
             
             if (datePurposes.Count >= 1)
             {
+                individualGroups.Add(new AbstractionLimitGroup
+                {
+                    Limits = []
+                });
+                
                 foreach (var datePurpose in datePurposes)
                 {
                     individualGroups.Add(new AbstractionLimitGroup
@@ -368,7 +373,7 @@ public static class SchemaConverter
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
             var aggregateLimits = new List<AggregateAbstractionLimit>();
                 
-            var purposeCondition = siblings?
+            var purposeCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
                     
             var purposeConditionSub = purposeCondition?
@@ -378,10 +383,10 @@ public static class SchemaConverter
                     
             var limitPurposes = purposeConditionSub?.Count > 0 ?
                 purposeConditionSub.Select(pcs =>
-                    new Purpose { Id = pcs!.Text!.First().Text }).ToList()
+                    new Purpose { Id = pcs.Text!.First().Text }).ToList()
                 : null;
                     
-            var pointCondition = siblings?
+            var pointCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
 
             var pointConditionSub = pointCondition?
@@ -428,7 +433,7 @@ public static class SchemaConverter
                 if ((limitPoints == null || limitPoints.Count < 2)
                     && (limitPurposes == null || limitPurposes.Count < 2))
                 {
-                    var pos = GetPositionRelativeToDateLines(datePurposes, valueResult.LineNumber);
+                    var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
 
                     var individualGroup = individualGroups[pos];
                     individualGroup.Limits.Add(abstractionLimit);
@@ -471,7 +476,7 @@ public static class SchemaConverter
             };
 
             // If there are no points, purposes or licences specified, then it
-            // must mean its relevant to all points and purposes
+            // must mean it's relevant to all points and purposes
             if (aggregate.Points.Length == 0
                 && aggregate.Purposes.Length == 0
                 && linkedLicenceNumbers.Count == 0)
@@ -511,17 +516,24 @@ public static class SchemaConverter
         return (allAggregates.ToArray(), allIndividualGroups.ToArray());
     }
 
-    private static int GetPositionRelativeToDateLines(List<LabelGroupResult>? dateLines, int lineNumber)
+    private static int GetPositionRelativeToDateLines(
+        List<LabelGroupResult>? dateLines,
+        LabelGroupResult line)
     {
         if (dateLines == null || dateLines.Count == 0)
         {
             return 0;
         }
 
+        if (line.MatchedLabel?.Name == "PerYearValue")
+        {
+            return 0;
+        }
+        
         var match = dateLines
             .OrderBy(matchLineNumber =>
             {
-                var diff = matchLineNumber.LineNumber - lineNumber;
+                var diff = matchLineNumber.LineNumber - line.LineNumber;
 
                 if (0 > diff)
                 {
@@ -532,7 +544,7 @@ public static class SchemaConverter
             })
             .First();
 
-        return dateLines.IndexOf(match);
+        return dateLines.IndexOf(match) + 1;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
@@ -762,7 +774,7 @@ public static class SchemaConverter
                 {
                     Description = description,
                     Id = number,
-                    PurposeIds = purposeIds
+                    PurposeIds = (purposeIds ?? [])!
                 });
             }
         }
@@ -791,13 +803,8 @@ public static class SchemaConverter
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToArray() ?? [];
             
-            var purposes = purposePointGroup?.SubResults
+            var purposes = purposePointGroup.SubResults
                 .Where(x => x.MatchedLabel!.Name == "Purpose");
-
-            if (purposes == null)
-            {
-                continue;
-            }
             
             foreach (var purpose in purposes)
             {
@@ -825,7 +832,7 @@ public static class SchemaConverter
                 {
                     Id = number,
                     Description = description,
-                    PointIds = pointIds
+                    PointIds = (pointIds ?? [])!
                 });
             }
         }
@@ -850,6 +857,7 @@ public static class SchemaConverter
         };
     }
     
+    // ReSharper disable once IdentifierTypo
     private static string? GetNaldType()
     {
         return null;

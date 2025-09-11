@@ -64,7 +64,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public LinkedLicence[] LinkedLicences { get; init; } = [];
 
-    public static Aggregate Template => new()
+    public new static Aggregate Template => new()
     {
         AggregateSetId = string.Empty,
         NaldType = null,

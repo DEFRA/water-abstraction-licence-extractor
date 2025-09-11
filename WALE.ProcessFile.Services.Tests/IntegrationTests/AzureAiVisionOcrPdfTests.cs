@@ -238,7 +238,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("SHERBORNE SCHOOL", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text), StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
@@ -1025,14 +1025,16 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
-        Assert.Equal("November", agreedSchemaLicence.AbstractionLimits.Individual[0].TimePeriod!.StartDate);
-        Assert.Equal("May", agreedSchemaLicence.AbstractionLimits.Individual[0].TimePeriod!.EndDate);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[0].Limits);
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[1].Limits);
-        Assert.Equal("June", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.StartDate);
-        Assert.Equal("October", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.EndDate);
+        Assert.Equal("November", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.StartDate);
+        Assert.Equal("May", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.EndDate);
+        
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[2].Limits);
+        Assert.Equal("June", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.StartDate);
+        Assert.Equal("October", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.EndDate);
         
 //        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
  //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);

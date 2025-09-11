@@ -13,6 +13,8 @@ public class LabelGroupResult
 
     public int LineNumber { get; set; }
     
+    public int CharPosition { get; set; }
+    
     public int PageNumber { get; init; }
 
     public string? ServiceName { get; init; }
@@ -33,6 +35,7 @@ public class LabelGroupResult
             MatchType = MatchType,
             IsOcr = IsOcr,
             LineNumber = LineNumber,
+            CharPosition = CharPosition,
             PageNumber = PageNumber,
             ServiceName = ServiceName,
             LabelGroupName = LabelGroupName,

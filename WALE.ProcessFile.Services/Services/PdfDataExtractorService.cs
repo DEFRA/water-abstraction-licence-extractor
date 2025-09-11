@@ -730,6 +730,7 @@ public class PdfDataExtractorService(
                     }
 
                     TextToMatch? matchedStartText = null;
+                    var labelCharPosition = 0;
                     
                     if (label.Text?.Any() == true)
                     {
@@ -788,11 +789,12 @@ public class PdfDataExtractorService(
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
-
+                    
                     var labelGroupResult = new LabelGroupResult
                     {
                         IsOcr = isOcr,
                         LineNumber = partialLine.LineNumber,
+                        CharPosition = labelCharPosition,
                         PageNumber = partialLine.PageNumber,
                         ServiceName = serviceName
                     };
@@ -947,7 +949,8 @@ public class PdfDataExtractorService(
     {
         // De-dupe exact matches
         returnList = returnList
-            .GroupBy(x => x.PageNumber + "_" + x.LineNumber + x.MatchedLabel?.Name + x.Text?.FirstOrDefault()?.Text)
+            .GroupBy(x =>
+                $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
             .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
             .ToList();
         
@@ -1065,7 +1068,7 @@ public class PdfDataExtractorService(
         {
             var result = results[0];
 
-            if (result.LineNumber == partialLine?.LineNumber)
+            if (result.LineNumber == partialLine.LineNumber)
             {
                 var resultText = result.Text?.FirstOrDefault()?.Text;
 

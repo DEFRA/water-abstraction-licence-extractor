@@ -1267,6 +1267,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
@@ -1287,6 +1288,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
@@ -1308,6 +1310,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
@@ -1331,6 +1334,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
@@ -1351,6 +1355,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
@@ -1371,6 +1376,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",

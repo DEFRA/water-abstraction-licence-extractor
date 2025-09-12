@@ -1275,7 +1275,8 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1320,7 +1321,8 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1368,7 +1370,8 @@ public static class LabelConfiguration
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1392,7 +1395,9 @@ public static class LabelConfiguration
                                         },
                                         SkipLineWhenContains = [
                                             "abstracted in total"
-                                        ]
+                                        ],
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1427,7 +1432,8 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1478,7 +1484,8 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1532,7 +1539,8 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1550,7 +1558,9 @@ public static class LabelConfiguration
                                             "(1)",
                                             "(11)",
                                             "(111)"
-                                        ]
+                                        ],
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {

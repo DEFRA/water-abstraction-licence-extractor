@@ -258,10 +258,10 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(14, section1Sub1.SubResults!.Count);        
+        Assert.Equal(16, section1Sub1.SubResults!.Count);        
         
-        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
-        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));

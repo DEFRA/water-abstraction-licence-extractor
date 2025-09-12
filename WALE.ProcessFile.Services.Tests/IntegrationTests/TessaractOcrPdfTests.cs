@@ -563,7 +563,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -579,10 +579,12 @@ public class TessaractOcrPdfTests
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
-        Assert.Null(abstractionLimitsResult); // TODO doesnt play nicely with the m3 units stuff
-        //Assert.True(abstractionLimitsResult.IsOcr);
-        //Assert.Equal(4, abstractionLimitsResult.Text?.Count);
+
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.True(abstractionLimitsResult.IsOcr);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
+
+        // TODO doesnt play nicely with the m3 units stuff
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

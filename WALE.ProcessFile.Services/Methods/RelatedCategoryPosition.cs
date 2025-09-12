@@ -184,6 +184,12 @@ public static class RelatedCategoryPosition
         var howManyResults = request.label.FindMultipleOnSingleLine ?
             categoryItemsOnLine.Count
             : 1;
+
+        if (howManyResults == 0)
+        {
+            howManyResults = 1; // TODO look into why this is - something to do with line numbers
+            // being one out
+        }
         
         var lines = absoluteMatches.Take(howManyResults);
         var lineCount = 0;

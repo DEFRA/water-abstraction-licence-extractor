@@ -258,11 +258,11 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(13, section1Sub1.SubResults!.Count);        
+        Assert.Equal(12, section1Sub1.SubResults!.Count);        
         
         Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
         Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
-        Assert.Equal(3, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthValue"));
@@ -275,7 +275,7 @@ public class AzureAiVisionOcrPdfTests
 
         var perHourValue = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("1", perHourValue?.Text?.FirstOrDefault()?.Text); // TODO should be 1200
+        Assert.Equal("1200", perHourValue?.Text?.FirstOrDefault()?.Text);
 
         var perDayUnits1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");

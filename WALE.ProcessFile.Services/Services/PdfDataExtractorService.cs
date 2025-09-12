@@ -859,19 +859,37 @@ public class PdfDataExtractorService(
                             and not LabelPosition.TextToFindIsBetweenLabels
                             and not LabelPosition.RelatedCategoryPosition)
                         {
-                            var additionalResults = await ProcessExpressionResultAsync(
-                                AfterTextContainsAnotherMatch.FunctionAsync,
-                                request,
-                                partialLine!,
-                                singleValueWanted);
+                            var clonedRequest = request.Clone();
+                            
+                            var matchBefore = clonedRequest.textBeforeAtAndAfterLabel?.FirstOrDefault(x =>
+                                x.Label?.Position == LabelPosition.LabelIsAfterTextToFind);
 
-                            if (additionalResults.Results.FirstOrDefault()?.PageNumber > 1)
+                            if (matchBefore != null)
+                            {
+                                clonedRequest.textBeforeAtAndAfterLabel?.Remove(matchBefore);
+                            }
+                            
+                            if (request.label.Name == "PerDayUnits"
+                                && request.line.PageNumber > 1)
                             {
                                 
                             }
                             
+                            var additionalResults = await ProcessExpressionResultAsync(
+                                AfterTextContainsAnotherMatch.FunctionAsync,
+                                clonedRequest,
+                                partialLine!,
+                                singleValueWanted);
+                            
                             result.Results.AddRange(additionalResults.Results);
                             result.Results = FilterDownResults(result.Results, request.label);
+                            
+                            if (request.label.Name == "PerDayUnits"
+                                && request.line.PageNumber > 1
+                                && result.Results.Count >= 2)
+                            {
+                                
+                            }
                         }
                         
                         if (result.Continue)
@@ -969,15 +987,9 @@ public class PdfDataExtractorService(
     {
         // De-dupe exact matches
         returnList = returnList
-            .GroupBy(x =>
-            {
-                if (x.MatchedLabel!.FindMultipleOnSingleLine)
-                {
-                    return $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}";
-                }
-
-                return $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}";
-            })
+            .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?
+                $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
+                : $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
             .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
             .ToList();
         
@@ -1049,20 +1061,20 @@ public class PdfDataExtractorService(
 
         if (singleValueWanted && results.Count >= 1)
         {
-            // Throw away any other results
-            var singleValueResult = new List<LabelGroupResult> { results.First() };
-            
             if (request.label!.MultipleBehaviour is
                 MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
             {
+                var singleValueResult = new List<LabelGroupResult> { results.First() };
+                
                 return new ExpressionResult
                 {
                     Return = true,
                     Results = singleValueResult
                 };
             }
-            
-            returnList.AddRange(singleValueResult);
+
+            var deDupedResults = FilterDownResults(results, request.label);
+            returnList.AddRange(deDupedResults);
             
             return new ExpressionResult
             {

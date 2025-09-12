@@ -398,20 +398,32 @@ public static class SchemaConverter
                 pointConditionSub.Select(pcs =>
                     new Point { Id = pcs.Text!.First().Text }).ToList()
                 : null;
-                
+
+            var dict = new Dictionary<string, int>();
+            
             foreach (var valueResult in valueResults)
             {
                 if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
                 {
                     continue;
                 }
-                    
-                var units = siblings?
-                    .FirstOrDefault(sibling =>
-                        sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)?
+
+                if (!dict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
+                {
+                    dict[valueResult.MatchedLabel?.RelatedName!] += 1;
+                }
+
+                var allUnits = siblings?
+                    .Where(sibling =>
+                        sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)
+                    .ToList();
+
+                var unitPosition = dict[valueResult.MatchedLabel?.RelatedName!];
+                
+                var units = allUnits!.Count > unitPosition ? allUnits?[unitPosition]
                     .Text?
                     .FirstOrDefault()?
-                    .Text;
+                    .Text : null;
 
                 var text = valueResult.MatchedLabel?.Text?.FirstOrDefault()?.Text;
                     

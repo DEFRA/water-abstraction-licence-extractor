@@ -45,8 +45,10 @@ public static class RelatedCategoryPosition
             out _);
 
         var matchedLabelLineNumbers = new List<int>();
+        var relevantCategoryItems = new List<LabelGroupResult>();
+        
         var lineStartsWithLabel = false;
-        var isBeforeTextToFind = false;
+        var valueBeforeLabel = false;
         
         foreach (var categoryItem in categoryItems)
         {
@@ -69,7 +71,11 @@ public static class RelatedCategoryPosition
             }
 
             matchedLabelLineNumbers.Add(categoryItem.LineNumber);
-            isBeforeTextToFind = categoryItem.MatchedLabel?.Position == LabelPosition.LabelIsBeforeTextToFind;
+            relevantCategoryItems.Add(categoryItem);
+
+            valueBeforeLabel =
+                categoryItem.MatchedLabel?.Position is LabelPosition.LabelIsAfterTextToFind
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter;
         }
 
         var matchedLabelLineNumber = matchedLabelLineNumbers
@@ -123,24 +129,47 @@ public static class RelatedCategoryPosition
         allLines.AddRange(modifiedNextLines);
         if (modifiedLine != null)allLines.Add(modifiedLine);
         
-        var absoluteMatches = matches
+        var absoluteMatchesQuery = matches
             .OrderBy(match => Math.Abs(matchedLabelLineNumber - match.LineNumber))
-            .ThenBy(match => match.LineNumber)
-            .ThenBy(match =>
-            {
-                var line = allLines.First(x => x.LineNumber == match.LineNumber);
+            .ThenBy(match => match.LineNumber);
+            
+        var absoluteMatches = valueBeforeLabel
+            ? absoluteMatchesQuery.ThenByDescending(match =>
+                {
+                    var line = allLines.First(x => x.LineNumber == match.LineNumber);
 
-                var lineText = line.Text.Replace(",", string.Empty);
-                var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
+                    var lineText = line.Text.Replace(",", string.Empty);
+                    var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
+                    
+                    var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
+                    var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
+
+                    var diff = matchIndexEnd - labelIndexStart;
+                    if (diff > 0) diff = -diff - 100;
+                    
+                    return diff;
+                }).ToList()
+            : absoluteMatchesQuery.ThenBy(match =>
+                {
+                    var line = allLines.First(x => x.LineNumber == match.LineNumber);
+
+                    var lineText = line.Text.Replace(",", string.Empty);
+                    var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                 
-                var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
-                var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
+                    var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
+                    var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
 
-                var diff = labelIndexStart - matchIndexEnd;
-                return isBeforeTextToFind ? -diff : Math.Abs(diff);
-            })
-            .ToList();
+                    var diff = matchIndexEnd - labelIndexStart;
+                    return Math.Abs(diff);
+                }).ToList();
 
+        if ((request.label.Name == "PerDayValue" || request.label.Name == "PerYearValue")
+            && request.line?.PageNumber >= 3
+            && request.line.LineNumber >= 9)
+        {
+            
+        }
+        
         var returnList = new List<LabelGroupResult>();
         
         if (absoluteMatches.Count <= 0)
@@ -148,18 +177,17 @@ public static class RelatedCategoryPosition
             return Task.FromResult(returnList);
         }
 
-        var howManyResults = 1;
+        var categoryItemsOnLine = relevantCategoryItems
+            .Where(x => x.LineNumber == matchedLabelLineNumber)
+            .ToList();
         
-        if (request.label.FindMultipleOnSingleLine)
-        {
-            var howManyMatchingLabelsOnLine =
-                categoryItems.Count(x => x.LineNumber == matchedLabelLineNumber);
-
-                //howManyResults = howManyMatchingLabelsOnLine;
-        }
-
+        var howManyResults = request.label.FindMultipleOnSingleLine ?
+            categoryItemsOnLine.Count
+            : 1;
+        
         var lines = absoluteMatches.Take(howManyResults);
-
+        var lineCount = 0;
+        
         foreach (var line in lines)
         {
             var labelGroupResult = request.labelGroupResult.Clone();
@@ -174,6 +202,16 @@ public static class RelatedCategoryPosition
 
             labelGroupResult.Text = [documentLine];
             labelGroupResult.MatchedLabel = request.label;
+
+            if (categoryItemsOnLine.Count >= lineCount + 2)
+            {
+                var categoryItem = categoryItemsOnLine[lineCount++];
+                labelGroupResult.CharPosition = categoryItem.CharPosition;
+            }
+            else
+            {
+                // TODO - why?
+            }
 
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else

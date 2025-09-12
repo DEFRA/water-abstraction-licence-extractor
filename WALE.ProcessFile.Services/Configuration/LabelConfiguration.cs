@@ -1265,6 +1265,7 @@ public static class LabelConfiguration
                                         {
                                             "megalitres",
                                             "litres",
+                                            "thousand cubic metres",
                                             "cubic metres",
                                             "megagallons",
                                             "thousand gallons",
@@ -1305,6 +1306,7 @@ public static class LabelConfiguration
                                         {
                                             "megalitres",
                                             "litres",
+                                            "thousand cubic metres",
                                             "cubic metres",
                                             "megagallons",
                                             "thousand gallons",
@@ -1327,6 +1329,7 @@ public static class LabelConfiguration
                                         {
                                             "megalitres",
                                             "litres",
+                                            "thousand cubic metres",
                                             "cubic metres",
                                             "megagallons",
                                             "thousand gallons",
@@ -1346,6 +1349,7 @@ public static class LabelConfiguration
                                         {
                                             "megalitres",
                                             "litres",
+                                            "thousand cubic metres",
                                             "cubic metres",
                                             "megagallons",
                                             "thousand gallons",
@@ -1365,6 +1369,7 @@ public static class LabelConfiguration
                                         {
                                             "megalitres",
                                             "litres",
+                                            "thousand cubic metres",
                                             "cubic metres",
                                             "megagallons",
                                             "thousand gallons",

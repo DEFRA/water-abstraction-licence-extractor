@@ -902,6 +902,7 @@ public static class LabelConfiguration
                                     "megalitres",
                                     "litres",
                                     "cubic metres",
+                                    "cubic meters",
                                     "megagallons",
                                     "thousand gallons",
                                     "million gallons",
@@ -1267,6 +1268,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1288,6 +1290,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1310,6 +1313,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1334,13 +1338,15 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
                                             "million gallons",
                                             "gallons"                                    
                                         },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
@@ -1355,6 +1361,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1376,6 +1383,7 @@ public static class LabelConfiguration
                                             "litres",
                                             "thousand cubic metres",
                                             "cubic metres",
+                                            "cubic meters",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1498,7 +1506,8 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {

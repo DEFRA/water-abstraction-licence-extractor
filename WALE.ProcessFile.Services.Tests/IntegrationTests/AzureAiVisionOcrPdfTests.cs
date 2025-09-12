@@ -258,7 +258,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(12, section1Sub1.SubResults!.Count);        
+        Assert.Equal(14, section1Sub1.SubResults!.Count);        
         
         Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
         Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
@@ -266,8 +266,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthValue"));
-        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearUnits"));
-        Assert.Equal(1, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearValue"));        
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearUnits"));
+        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearValue"));
         
         var perHourUnits = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
@@ -958,7 +958,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        //Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -973,7 +973,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults[0];
         
-        Assert.Equal(12, section1Sub1.SubResults.Count); // 3 units, 3 values, 2 dates - TODO update
+        Assert.Equal(14, section1Sub1.SubResults.Count); // 6 units, 6 values, 2 dates
 
         var datePeriod1 = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Name == "DatePurposeRough");
@@ -1018,14 +1018,30 @@ public class AzureAiVisionOcrPdfTests
         
         perDayValue = perDayValueAll[3];
         Assert.Equal("5", perDayValue.Text?.FirstOrDefault()?.Text);
-        
-        var perYearUnits = section1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("thousand cubic metres", perYearUnits?.Text?.FirstOrDefault()?.Text);
 
-        var perYearValue = section1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        var perYearUnitsAll = section1Sub1.SubResults
+            .Where(x => x.MatchedLabel!.Name == "PerYearUnits")
+            .ToList();
+        
+        Assert.Equal(2, perYearUnitsAll.Count);
+
+        var perYearUnits = perYearUnitsAll[0];
+        Assert.Equal("thousand cubic metres", perYearUnits.Text?.FirstOrDefault()?.Text);
+
+        perYearUnits = perYearUnitsAll[1];
+        Assert.Equal("million gallons", perYearUnits.Text?.FirstOrDefault()?.Text);
+
+        var perYearValueAll = section1Sub1.SubResults
+            .Where(x => x.MatchedLabel!.Name == "PerYearValue")
+            .ToList();
+        
+        Assert.Equal(2, perYearValueAll.Count);
+        
+        var perYearValue = perYearValueAll[0];
         Assert.Equal("7823", perYearValue?.Text?.FirstOrDefault()?.Text);
+        
+        perYearValue = perYearValueAll[1];
+        Assert.Equal("1721", perYearValue?.Text?.FirstOrDefault()?.Text);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -1060,7 +1076,12 @@ public class AzureAiVisionOcrPdfTests
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual.Length);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[0].Limits);
+        
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal(7823, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Value);
+        Assert.Equal("thousand cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Units);
+        Assert.Equal(1721, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[1].Value);
+        Assert.Equal("million gallons", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[1].Units);
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.Equal(20.45, agreedSchemaLicence.AbstractionLimits.Individual[1].Limits[0].Value);

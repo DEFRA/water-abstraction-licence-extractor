@@ -38,8 +38,9 @@ public static class TextToFindIsBetweenLabels
             out _);
         
         var labelLineAlreadyIncluded = false;
+        var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.Text?.FirstOrDefault()?.Text;
         
-        if (lineContainsLabel != true || request.label.IncludeWholeLine)
+        if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
         {
             labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);

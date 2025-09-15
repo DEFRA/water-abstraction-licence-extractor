@@ -318,7 +318,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("cubic metres", perYearUnits2);        
 
         var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.Equal(5, pointsResult?.Text?.Count);
+        Assert.Equal(4, pointsResult?.Text?.Count);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
 
@@ -1633,16 +1633,15 @@ public class PdfPigNoOcrPdfTests
         Assert.False(pointsResult.IsOcr);
         Assert.Equal("DocumentPointsAll", pointsResult.MatchedLabel!.Name);
         
-        Assert.Equal(54, pointsResult.Text!.Count);
-        Assert.Equal("2. POINTS OF ABSTRACTION", pointsResult.Text![0].Text);
-        Assert.Equal("2.1 For Purpose 4.1 and 4.2", pointsResult.Text![1].Text);
-        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![2].Text);
-        Assert.Equal("marked 'Point A' and 'Point B' on Map 1.", pointsResult.Text![3].Text);
-        Assert.Equal("2.2 For Purpose 4.3", pointsResult.Text![4].Text);
-        Assert.Equal("National Grid References", pointsResult.Text![5].Text);
-        Assert.Equal("From To", pointsResult.Text![6].Text);
-        Assert.Equal("TL5584494741 TL5453692523", pointsResult.Text![7].Text);
-        Assert.Equal("TL5502493346 TL5522093137", pointsResult.Text![8].Text);
+        Assert.Equal(53, pointsResult.Text!.Count);
+        Assert.Equal("2.1 For Purpose 4.1 and 4.2", pointsResult.Text![0].Text);
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![1].Text);
+        Assert.Equal("marked 'Point A' and 'Point B' on Map 1.", pointsResult.Text![2].Text);
+        Assert.Equal("2.2 For Purpose 4.3", pointsResult.Text![3].Text);
+        Assert.Equal("National Grid References", pointsResult.Text![4].Text);
+        Assert.Equal("From To", pointsResult.Text![5].Text);
+        Assert.Equal("TL5584494741 TL5453692523", pointsResult.Text![6].Text);
+        Assert.Equal("TL5502493346 TL5522093137", pointsResult.Text![7].Text);
         
         Assert.Equal(2, pointsResult.SubResults!.Count);
 
@@ -2140,9 +2139,8 @@ public class PdfPigNoOcrPdfTests
         Assert.False(pointsResult.IsOcr);
         Assert.Equal("DocumentPointsAll", pointsResult.MatchedLabel!.Name);
         
-        Assert.Equal(2, pointsResult.Text!.Count);
-        Assert.Equal("2. POINT OF ABSTRACTION", pointsResult.Text![0].Text);
-        Assert.Equal("2.1 At National Grid Reference SJ 5179 4988 marked \"C\" on the map.", pointsResult.Text![1].Text);
+        Assert.Single(pointsResult.Text!);
+        Assert.Equal("2.1 At National Grid Reference SJ 5179 4988 marked \"C\" on the map.", pointsResult.Text![0].Text);
         
         var pointPurposeGroup1 = pointsResult.SubResults[0];
         Assert.Equal("PointPurposeGroup", pointPurposeGroup1.MatchedLabel!.Name);
@@ -3089,10 +3087,9 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("1 January and ending on 31 December", section3Sub1.SubResults[4].Text!.FirstOrDefault()!.Text);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.Equal(3, points!.Text!.Count);
-        Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
-        Assert.Equal("2.1. At National Grid Reference TA 04990 38509 at the point marked \"A\" on the", points.Text![1].Text);
-        Assert.Equal("map.", points.Text![2].Text);
+        Assert.Equal(2, points!.Text!.Count);
+        Assert.Equal("2.1. At National Grid Reference TA 04990 38509 at the point marked \"A\" on the", points.Text![0].Text);
+        Assert.Equal("map.", points.Text![1].Text);
         
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Lakeminster Park Limited", companyName?.Text?.FirstOrDefault()?.Text);
@@ -3167,8 +3164,8 @@ public class PdfPigNoOcrPdfTests
         var actualPoints = purposeGroup.SubResults;
         Assert.Equal(5, actualPoints.Count);
         
-        Assert.Equal(11, points.Text!.Count);
-        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        Assert.Equal(10, points.Text!.Count);
+        Assert.StartsWith("2.1 Winscar Reservoir at National Grid Re", points.Text![0].Text);
         
         var purposes = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purposes);
@@ -3282,8 +3279,8 @@ public class PdfPigNoOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(10, points.Text!.Count);
-        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        Assert.Equal(9, points.Text!.Count);
+        Assert.StartsWith("2.1 At National Grid Reference SE 069 076", points.Text![0].Text);
 
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
@@ -3360,8 +3357,8 @@ public class PdfPigNoOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(23, points.Text!.Count);
-        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
+        Assert.Equal(22, points.Text!.Count);
+        Assert.StartsWith("2.1 At the following National Grid Refe", points.Text![0].Text);
 
         var pointPurposeGroup = points.SubResults[0];
         var pointsAll = pointPurposeGroup.SubResults.Where(x => x.MatchedLabel?.Name == "Point").ToList();
@@ -3430,10 +3427,9 @@ public class PdfPigNoOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(3, points.Text!.Count);
-        Assert.Equal("2. POINTS OF ABSTRACTION", points.Text![0].Text);
-        Assert.StartsWith("2.1 At National Grid Reference ", points.Text![1].Text);
-        Assert.StartsWith("2.2 At National Grid Reference ", points.Text![2].Text);
+        Assert.Equal(2, points.Text!.Count);
+        Assert.StartsWith("2.1 At National Grid Reference ", points.Text![0].Text);
+        Assert.StartsWith("2.2 At National Grid Reference ", points.Text![1].Text);
         
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);

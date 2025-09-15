@@ -849,9 +849,9 @@ public class AzureAiVisionOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(4, points.Text!.Count);
-        Assert.Equal("2. POINT OF ABSTRACTION", points.Text![0].Text);
-        Assert.Equal("and \"F\" on the map.", points.Text![3].Text);
+        Assert.Equal(3, points.Text!.Count);
+        Assert.StartsWith("At National Grid Reference", points.Text![0].Text);
+        Assert.Equal("and \"F\" on the map.", points.Text![2].Text);
 
         var pointPurposeGroup = points.SubResults
             .Where(psr => psr.MatchedLabel?.Name == "PointPurposeGroup")
@@ -1148,12 +1148,12 @@ public class AzureAiVisionOcrPdfTests
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
         
-        Assert.Equal(3, points.Text!.Count); // TODO should be 5
-        Assert.Equal("Source of supply and authorised place(s) of abstraction", points.Text![0].Text);
+        Assert.Equal(2, points.Text!.Count); // TODO should be 5
+        //Assert.Equal("Source of supply and authorised place(s) of abstraction", points.Text![0].Text);
         //Assert.StartsWith("Delete the existing", points.Text![1].Text);
         //Assert.Equal("the following :", points.Text![2].Text); // TODO work out what is hapening here
-        Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![1].Text);
-        Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![2].Text);
+        Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![0].Text);
+        Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![1].Text);
 
         var pointPurposeGroup = points.SubResults.Single();
         Assert.NotNull(pointPurposeGroup);

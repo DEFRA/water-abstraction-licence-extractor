@@ -450,7 +450,7 @@ public static class LabelConfiguration
                     new("PURPOSE OF ABSTRACTION"),
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
-                    new("Purpose for which water is authorised to be used"),
+                    new("Purpose for which water is authorised to be used[END_OF_LINE]"),
                     new("Purpose(s) for which water is authorised to be used"),
                     new("Purpose for which the water is to be used") { LineMustStartWith = true }
                 ],

@@ -24,9 +24,19 @@ public static class TextToFindIsBetweenLabels
             linesToUse.Add(request.previousLines[^request.label.LeewayBefore]);
         }
 
-        var lineContainsLabel = request.label.Text?.Any(labelText =>
-            request.line!.Text.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase));
+        var nextLine = request.nextLines?.FirstOrDefault();
 
+        var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+            request.line!,
+            nextLine,
+            request.line!,
+            request.label.Text,
+            request.label.Position,
+            0,
+            0,
+            out _,
+            out _);
+        
         var labelLineAlreadyIncluded = false;
         
         if (lineContainsLabel != true || request.label.IncludeWholeLine)

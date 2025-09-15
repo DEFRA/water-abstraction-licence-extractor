@@ -2207,10 +2207,10 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(linkedLicenceNumbers[1].Text!);
 
         var linkedLicenceNumber1 = linkedLicenceNumbers[0].Text![0].Text;
-        Assert.Equal("25 68 001 247", linkedLicenceNumber1);
+        Assert.Equal("25 68 001 248", linkedLicenceNumber1);
 
         var linkedLicenceNumber2 = linkedLicenceNumbers[1].Text![0].Text;
-        Assert.Equal("25 68 001 248", linkedLicenceNumber2);
+        Assert.Equal("25 68 001 247", linkedLicenceNumber2);
         
         var linkedLicences = abstractionLimitPointSub2.SubResults!
             .Where(subResult =>
@@ -2233,7 +2233,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 247", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("25 68 001 248", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var linkedLicence2 = linkedLicences[1].SubResults;
         
@@ -2250,13 +2250,13 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 248", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("25 68 001 247", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var linkedNameResult = linkedLicences[0].SubResults?.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Equal("J & S Accessories Limited", linkedNameResult?.Text?.FirstOrDefault()?.Text);
         
         var linkedLicenceNumber = linkedLicences[0].SubResults?.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        Assert.Equal("25 68 001 247", linkedLicenceNumber?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("25 68 001 248", linkedLicenceNumber?.Text?.FirstOrDefault()?.Text);
         
         // TODO and the other licence
         licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
@@ -2296,7 +2296,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates.Single());
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates.Single();
-        Assert.Equal("2568001249LV20190619-LL-2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249LV20190619-LL-2568001248-2568001247", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Count);
         
@@ -2324,11 +2324,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.IssueDate);
         
         var firstLinkedLicence = agreedSchemaLicenceGroup.Licences[1];
-        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25 68 001 248", firstLinkedLicence.LicenceNumber);
         Assert.Single(firstLinkedLicence.AbstractionLimits.Aggregates);
         
         var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
-        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25 68 001 247", secondLinkedLicence.LicenceNumber);
         Assert.Single(secondLinkedLicence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);

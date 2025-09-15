@@ -513,7 +513,7 @@ async Task HandleFileAsync(
             MatchedLabelPosition = matchedLabelPosition,
             LicenceNumber = licenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
-            LimitsCount = agreedSchema.AbstractionLimits.Individual.Length,
+            LimitsCount = agreedSchema.AbstractionLimits.Individual.Sum(x => x.Limits.Count),
             AggregatesCount = agreedSchema.AbstractionLimits.Aggregates.Sum(x => x.Limits.Count),
             IssueDate = issueDate,
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,

@@ -791,11 +791,6 @@ public class PdfDataExtractorService(
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
-
-                    if (label.Name == "PerDayUnits" && lineOuter.PageNumber >= 2)
-                    {
-                        
-                    }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {
@@ -824,11 +819,6 @@ public class PdfDataExtractorService(
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
 
-                    if (label.Name == "DocumentAbstractionLimitsSection")
-                    {
-                        
-                    }
-                    
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
                     
@@ -1342,8 +1332,11 @@ public class PdfDataExtractorService(
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
-        
-        if (label.Text == null)
+
+        var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
+            .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
+
+        if (label.Text == null || isStartOfBlock)
         {
             returnItems.Add(new TextAndLabel
             {

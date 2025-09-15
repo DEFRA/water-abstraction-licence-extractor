@@ -65,9 +65,27 @@ public static class LabelMatchingHelper
             return true;
         }
         
+        var combinedText = nextLineToContinueOnto != null ?
+            $"{lineToCheck.Text} {nextLineToContinueOnto.Text}"
+            : null;
+        
         foreach (var labelTextOption in labelTextOptions!)
         {
             var labelText = labelTextOption.Text;
+
+            if (combinedText?.Contains(labelText, StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                var position2 = combinedText.IndexOf(labelText,
+                    StringComparison.InvariantCultureIgnoreCase);
+                var endPoint = position2 + labelText.Length;
+
+                if (endPoint > lineToCheck.Text.Length && lineToCheck.Text.Length > position2)
+                {
+                    lineToCheck = lineToCheck.Clone();
+                    lineToCheck.Columns.AddRange(nextLineToContinueOnto!.Columns);
+                }
+            }
+            
             var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
             
             var labelTextWithoutMarkers = labelText

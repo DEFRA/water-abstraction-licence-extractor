@@ -450,7 +450,8 @@ public static class LabelConfiguration
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
                     new("Purpose for which water is authorised to be used"),
-                    new("Purpose(s) for which water is authorised to be used")
+                    new("Purpose(s) for which water is authorised to be used"),
+                    new("Purpose for which the water is to be used") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
@@ -980,6 +981,7 @@ public static class LabelConfiguration
                     //new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
                     //new("5. ") { LineMustStartWith = true },
+                    new("CONDITIONS[END_OF_LINE]") { LineMustStartWith = true},
                     new("[END_OF_BLOCK]")
                 ],
                 MustContain =

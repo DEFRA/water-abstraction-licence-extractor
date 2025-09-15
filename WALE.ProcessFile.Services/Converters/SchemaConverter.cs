@@ -768,17 +768,37 @@ public static class SchemaConverter
                 var pointNumber = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
 
-                var allTextWithoutNumber = point.SubResults
+                var tLines = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                     .Text?
                     .Select(t => t.Text)
+                    .ToList();
+                
+                var allTextWithoutNumber = tLines?
+                    .Where(t => !t.StartsWith("Up to and Including "))
                     .ToArray();
-
+                
                 if (allTextWithoutNumber == null)
                 {
                     continue;
                 }
 
+                var tKey = "Up to and Including ";
+                var upToAndIncludeLine = tLines?
+                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                TimeCutoff? timeCutoff = null;
+
+                if (upToAndIncludeLine == null)
+                {
+                    var date = upToAndIncludeLine?.Replace(tKey, string.Empty);
+                    
+                    timeCutoff = new TimeCutoff
+                    {
+                        CutoffType = CutoffType.Upto,
+                        Date = date
+                    };
+                }
+                
                 var description = string.Join(' ', allTextWithoutNumber);
                 var number = pointNumber?.Text?.FirstOrDefault()?.Text;
 
@@ -786,7 +806,8 @@ public static class SchemaConverter
                 {
                     Description = description,
                     Id = number,
-                    PurposeIds = (purposeIds ?? [])!
+                    PurposeIds = (purposeIds ?? [])!,
+                    TimeCutoff = timeCutoff
                 });
             }
         }

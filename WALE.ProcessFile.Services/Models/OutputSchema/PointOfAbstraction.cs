@@ -6,6 +6,8 @@ public class PointOfAbstraction : Point
 
     public string[] PurposeIds { get; init; } = [];
     
+    public TimeCutoff? TimeCutoff { get; set; }
+    
     public static PointOfAbstraction Template => new()
     {
         Description = string.Empty,

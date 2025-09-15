@@ -406,42 +406,32 @@ async Task HandleFileAsync(
         }
 
         var purposesJs = "[" + purposeSb + "]";
+
+        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
+        var agreedSchema = agreedSchemaGroup.Licences.First();
         
-        var pointsSection = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
+        /*var pointsSection = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var pointPurposeGroups = pointsSection?.SubResults
-            .Where(x => x.MatchedLabel!.Name == "PointPurposeGroup");
+            .Where(x => x.MatchedLabel!.Name == "PointPurposeGroup");*/
 
         var pointsSb = new StringBuilder();
-
-        if (pointPurposeGroups != null)
+        first = true;
+        
+        foreach (var point in agreedSchema.Points)
         {
-            var first = true;
-            
-            foreach (var pointPurposeGroup in pointPurposeGroups)
+            if (point.Description != null)
             {
-                var points = pointPurposeGroup.SubResults
-                    .Where(x => x.MatchedLabel!.Name == "Point");
-
-                foreach (var point in points!)
+                if (first)
                 {
-                    var t1 = point.SubResults
-                        .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPurposeAndPoint");
-
-                    if (t1?.Text != null)
-                    {
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            pointsSb.Append(",");
-                        }
-                        
-                        var t = string.Join(' ', t1.Text?.Select(y => y.Text).ToArray()!).Replace("\"", "\\\"");
-                        pointsSb.AppendLine("\"" + t + "\"");
-                    }
+                    first = false;
                 }
+                else
+                {
+                    pointsSb.Append(",");
+                }
+                
+                var t = point.Description.Replace("\"", "\\\"");
+                pointsSb.AppendLine("\"" + t + "\"");
             }
         }
 
@@ -488,9 +478,6 @@ async Task HandleFileAsync(
         var meansFound = matches
             .FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction")?
             .SubResults?.Count > 0;
-
-        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
-        var agreedSchema = agreedSchemaGroup.Licences.First();
         
         var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = agreedSchema.LicenceVersion.Issuer;
@@ -607,7 +594,7 @@ IEnumerable<string> GetPdfPaths()
     {
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(200).ToList();
+    }).OrderBy(x => x).Skip(0).Take(100).ToList();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();

@@ -1,7 +1,3 @@
-using System.Text.Json;
-using WALE.ProcessFile.Services.Enums.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class Licence

@@ -60,11 +60,14 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
         Assert.Equal("Spray irrigation", purpose.Text!.First().Text);
+        
+        var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
         
         var abstractionLimitsResult = resultList
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -229,8 +232,11 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(8, resultList.Count);
 
+        var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
+        Assert.NotNull(points);
+        
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
         Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);

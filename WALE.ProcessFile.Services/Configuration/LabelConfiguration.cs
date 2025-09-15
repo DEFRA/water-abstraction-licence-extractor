@@ -472,6 +472,9 @@ public static class LabelConfiguration
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9/]*/")
                 ],
+                IgnoreMatchIfContains = [
+                    "You can find our forms"
+                ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,

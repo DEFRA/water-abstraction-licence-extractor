@@ -603,8 +603,11 @@ public class PdfDataExtractorService(
                     
         foreach (var labelText in label.Text!)
         {
+            var nextLineTemp = nextLines.FirstOrDefault();
+            
             if (LabelMatchingHelper.LineContainsLabel(
                 line,
+                nextLineTemp,
                 lineForPosition,
                 [labelText],
                 label.Position,
@@ -617,11 +620,19 @@ public class PdfDataExtractorService(
             }
 
             var continueOuterLoop = false;
-                        
+            var count = 0;
+            
             foreach (var previousLine in previousLines)
             {
+                var previousPreviousLine = previousLines.Count > count + 1 ?
+                    previousLines[count + 1]
+                    : null;
+
+                count += 1;
+                
                 if (LabelMatchingHelper.LineContainsLabel(
                     previousLine,
+                    previousPreviousLine,
                     previousLine,
                     [labelText],
                     label.Position,
@@ -633,12 +644,21 @@ public class PdfDataExtractorService(
                     continueOuterLoop = true;
                     break;
                 }
-            }                        
+            }
+
+            count = 0;
                         
             foreach (var nextLine in nextLines)
             {
+                var nextNextLine = nextLines.Count > count + 1 ?
+                    nextLines[count + 1]
+                    : null;
+
+                count += 1;
+                
                 if (LabelMatchingHelper.LineContainsLabel(
                     nextLine,
+                    nextNextLine,
                     nextLine,
                     [labelText],
                     label.Position,
@@ -741,8 +761,11 @@ public class PdfDataExtractorService(
                     
                     if (label.Text?.Any() == true)
                     {
+                        var nextLine = nextLines.FirstOrDefault();
+                        
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
+                            nextLine,
                             lineOuter,
                             label.Text,
                             label.Position,
@@ -800,6 +823,11 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
+
+                    if (label.Name == "DocumentAbstractionLimitsSection")
+                    {
+                        
+                    }
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();

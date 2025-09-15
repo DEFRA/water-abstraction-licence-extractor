@@ -23,8 +23,11 @@ public static class Split
 
         var leftPartLines  = request.previousLines!.Reverse().ToList();
 
+        var nextLine = request.nextLines?.FirstOrDefault();
+        
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
+            nextLine,
             request.lineForPosition!,
             request.label.Text,
             LabelPosition.Split,
@@ -44,6 +47,7 @@ public static class Split
             {
                 lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                     line,
+                    null,
                     line,
                     request.label.Text,
                     LabelPosition.Split,

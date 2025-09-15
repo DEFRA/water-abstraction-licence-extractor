@@ -34,9 +34,12 @@ public static class AfterTextContainsAnotherMatch
         {
             Columns = [new DocumentLineColumn(afterText)]
         };
+
+        var nextLine = request.nextLines?.FirstOrDefault();
         
         if (!LabelMatchingHelper.LineContainsLabel(
             asLine,
+            nextLine,
             asLine,
             request.label.Text,
             request.label.Position,

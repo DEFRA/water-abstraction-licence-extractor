@@ -603,23 +603,23 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    /*pdfFilePaths = pdfFilePaths.Where(x =>
+    pdfFilePaths = pdfFilePaths.Where(x =>
     {
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(200).ToList();*/
+    }).OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
     
-    pdfFilePaths = pdfFilePaths.Where(x =>
+    /*pdfFilePaths = pdfFilePaths.Where(x =>
         x.Contains("2-26-32-126 6937559.PDF")
         || x.Contains("2-27-29-012 7003124.PDF")
         || x.Contains("Application - New - Licence Issued 30092021.pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023.pdf")
         || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
-    ).ToArray();
+    ).ToArray();*/
     
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("2-26-32-126 6937559.PDF")).ToArray();
     

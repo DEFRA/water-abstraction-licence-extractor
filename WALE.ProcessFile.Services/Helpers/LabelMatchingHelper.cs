@@ -46,6 +46,7 @@ public static class LabelMatchingHelper
     
     public static bool LineContainsLabel(
         DocumentLine lineToCheck,
+        DocumentLine? nextLineToContinueOnto,
         DocumentLine lineForPosition,
         IReadOnlyList<TextToMatch>? labelTextOptions,
         LabelPosition position,

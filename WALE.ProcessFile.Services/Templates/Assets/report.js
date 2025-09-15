@@ -48,8 +48,13 @@ function loadReport(filename) {
         document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
 
         addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'Company\')]', "grantedTo", "<strong>Licence holder</strong>", "grantedToGroup");
-        document.getElementById("grantedToGroup-dd").className = "default-hidden";
-        document.getElementById("grantedToGroup-dd").previousElementSibling.className = "default-hidden";
+        
+        var grantedToGroupEle = document.getElementById("grantedToGroup-dd");
+        
+        if (!!grantedToGroupEle) {
+            grantedToGroupEle.className = "default-hidden";
+            grantedToGroupEle.previousElementSibling.className = "default-hidden";
+        }
         
         document.getElementById("licenceHolderTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'Company\')]');
 

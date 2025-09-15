@@ -22,20 +22,52 @@ public class AzureAiVisionOcrPdfTests
         },
         TestConfig.PdfFolder);
     
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
-
-    private string PdfFolder => TestConfig.PdfFolder;
+    private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new AzureAiVisionOcrDataExtractorService(
+                TestConfig.AiVisionEndpoint,
+                TestConfig.AiVisionKey)
+        },
+        TestConfig.PdfFolder2);
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    
+    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + fileName,
+        var pdfFolder = useMainPdfFolder ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
+        var service = useMainPdfFolder ? _pdfDataExtractor : _pdfDataExtractor2;
+        
+        return service.GetMatchesAsync(
+            pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 "Output/",
                 "Cache/"),
-            [PdfFolder + fileName]);
+            [pdfFolder + fileName]);
+    }
+    
+    [Fact]
+    public async Task FROM_6000_SET_LabelOver2Lines()
+    {
+        // Arrange
+        const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
+        
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(3, resultList.Count);
+
+        var abstractionLimitsResult = resultList
+            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.True(abstractionLimitsResult.IsOcr);
+        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
     }
     
     [Fact]
@@ -1092,6 +1124,11 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("May", agreedSchemaLicence.AbstractionLimits.Individual[1].TimePeriod!.EndDate);
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[2].Limits.Count);
+        Assert.Equal(22.73, agreedSchemaLicence.AbstractionLimits.Individual[2].Limits[0].Value);
+        Assert.Equal("thousand cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[2].Limits[0].Units);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual[2].Limits[1].Value);
+        Assert.Equal("million gallons", agreedSchemaLicence.AbstractionLimits.Individual[1].Limits[1].Units);
+
         Assert.Equal("June", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.StartDate);
         Assert.Equal("October", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.EndDate);
         

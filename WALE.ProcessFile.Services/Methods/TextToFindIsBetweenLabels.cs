@@ -214,6 +214,8 @@ public static class TextToFindIsBetweenLabels
         
         linesLoop.AddRange(lines);
         var totalLines = linesLoop.Count;
+
+        var count = 0;
         
         foreach (var line in linesLoop)
         {
@@ -222,8 +224,15 @@ public static class TextToFindIsBetweenLabels
                 Text = textEnd
             };
 
+            var nextLine = linesLoop.Count > count + 1 ?
+                linesLoop[count + 1]
+                : null;
+
+            count += 1;
+            
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                 line,
+                nextLine,
                 line,
                 label.Text,
                 label.Position,

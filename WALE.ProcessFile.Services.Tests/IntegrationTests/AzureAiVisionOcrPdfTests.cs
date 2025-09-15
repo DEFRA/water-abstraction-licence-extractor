@@ -144,6 +144,25 @@ public class AzureAiVisionOcrPdfTests
     }
     
     [Fact]
+    public async Task FROM_6000_SET_PurposeWasntSplitCorrectly()
+    {
+        // Arrange
+        const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
+        
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(5, resultList.Count);
+
+        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        Assert.NotNull(purpose);
+        Assert.Single(purpose.Text!);
+        Assert.Equal("Spray Irrigation", purpose.Text!.First().Text);
+    }
+    
+    [Fact]
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange

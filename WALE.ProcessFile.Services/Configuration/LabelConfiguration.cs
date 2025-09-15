@@ -463,6 +463,8 @@ public static class LabelConfiguration
                     new("Quantities of water authorised to be abstracted"),
                     new("QUANTITY(IES) OF WATER AUTHORISED"),
                     new("The quantity of water authorised to be abstracted shall be"),
+                    new("During the months") { LineMustStartWith = true},
+                    new("the months of"), // For some licence with bad scanning
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =

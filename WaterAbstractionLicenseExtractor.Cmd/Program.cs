@@ -18,6 +18,9 @@ var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCo
 var regenerateMappingJson = bool.Parse(Environment.GetEnvironmentVariable("REGENERATE_MAPPING_JSON")
     ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
 
+var loadAiJs = bool.Parse(Environment.GetEnvironmentVariable("LOAD_AI_JS")
+    ?? throw new NullReferenceException("LOAD_AI_JS"));
+
 var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
     ?? throw new NullReferenceException("PdfFolderPath");
 var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
@@ -91,8 +94,15 @@ var fileMappingContents = File.Exists(fileMappingPath)
 
 Copy(reportTemplatePath, outputFolder);
 
+var indexPath = $"{outputFolder}index.html";
+
 File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
-File.Move($"{outputFolder}list-template.html", $"{outputFolder}index.html", true);
+File.Move($"{outputFolder}list-template.html", indexPath, true);
+
+var indexHtml = await File.ReadAllTextAsync(indexPath);
+indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
+
+await File.WriteAllTextAsync(indexPath, indexHtml);
 
 var count = 0;
 foreach (var line in fileMappingContents)
@@ -594,24 +604,27 @@ IEnumerable<string> GetPdfPaths()
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    pdfFilePaths = pdfFilePaths.Where(x =>
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
+
+    // YORKSHIRE 200 - From new files
+    /*pdfFilePaths = pdfFilePaths.Where(x =>
     {
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(10).ToList();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
+    }).OrderBy(x => x).Skip(0).Take(10).ToList();*/
     
-    /*pdfFilePaths = pdfFilePaths.Where(x =>
+    // YORKSHIRE 6 - From original files
+    pdfFilePaths = pdfFilePaths.Where(x =>
         x.Contains("2-26-32-126 6937559.PDF")
         || x.Contains("2-27-29-012 7003124.PDF")
         || x.Contains("Application - New - Licence Issued 30092021.pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
         || x.Contains("Application Formal Variation Issued Licence 07032023.pdf")
         || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
-    ).ToArray();*/
+    ).ToArray();
     
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0270025037")).ToArray();
     

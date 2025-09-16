@@ -531,6 +531,12 @@ async Task HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
             $"var data2 = {agreedSchemaJson}");
         
+        var agreedSchemaSetJson = JsonHelper.GetAsString(agreedSchemaGroup);
+        
+        File.WriteAllText(
+            $"{outputFolder}/{filenameOnlyNoExtension}/licence-set.jsonp",
+            $"var licenceSet = {agreedSchemaSetJson}");
+        
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
     }
     catch (Exception exception)
@@ -594,7 +600,7 @@ IEnumerable<string> GetPdfPaths()
     {
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(100).ToList();
+    }).OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();

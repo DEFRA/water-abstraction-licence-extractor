@@ -408,6 +408,13 @@ function evaluateJsonPath() {
     // render tree into dom element
     jsonview.render(tree2, document.querySelector('#dataNewOutput'));
     jsonview.toggleNode(tree2);
+
+    // create json tree object
+    const tree3 = jsonview.create(licenceSet);
+
+    // render tree into dom element
+    jsonview.render(tree3, document.querySelector('#dataSetOutput'));
+    jsonview.toggleNode(tree3);
     
 //    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
 }
@@ -415,6 +422,7 @@ function evaluateJsonPath() {
 function disableAllTabs() {
     document.getElementById("overviewTabLink").className = "";
     document.getElementById("jsonNewTabLink").className = "";
+    document.getElementById("jsonSetTabLink").className = "";
     document.getElementById("jsonAiTabLink").className = "";
     document.getElementById("jsonTabLink").className = "";
     document.getElementById("textTabLink").className = "";
@@ -424,6 +432,7 @@ function hideAllAreas() {
     document.getElementById("overview").style.display = "none";
     document.getElementById("jsonPath").style.display = "none";
     document.getElementById("jsonNewPath").style.display = "none";
+    document.getElementById("jsonSetPath").style.display = "none";
     document.getElementById("jsonAiPath").style.display = "none";
     document.getElementById("text").style.display = "none";
 }
@@ -441,6 +450,11 @@ function showTab(tabName) {
         document.getElementById("jsonNewTabLink").className = "selectedTab";
         document.getElementById("jsonNewPath").style.display = "block";
         
+        return false;
+    }  else if (tabName === "json-set") {
+        document.getElementById("jsonSetTabLink").className = "selectedTab";
+        document.getElementById("jsonSetPath").style.display = "block";
+
         return false;
     } else if (tabName === "json-ai") {
         document.getElementById("jsonAiTabLink").className = "selectedTab";

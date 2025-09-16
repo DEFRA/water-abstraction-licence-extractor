@@ -188,7 +188,7 @@ dl a {
   font-family: monospace;
 }
 
-#jsonNewPath, #jsonAiPath, #jsonPath, #text {
+#jsonNewPath, #jsonSetPath, #jsonAiPath, #jsonPath, #text {
   display: none;
 }
 

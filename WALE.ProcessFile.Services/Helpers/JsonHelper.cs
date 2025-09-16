@@ -18,6 +18,11 @@ public static class JsonHelper
         return JsonSerializer.Serialize(licence, GetSerializer());
     }
     
+    public static string GetAsString(LicenceSet licenceSet)
+    {
+        return JsonSerializer.Serialize(licenceSet, GetSerializer());
+    }
+    
     public static JsonSerializerOptions GetSerializer()
     {
         _options ??= new JsonSerializerOptions

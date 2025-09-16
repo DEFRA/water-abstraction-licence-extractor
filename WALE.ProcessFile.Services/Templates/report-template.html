@@ -15,8 +15,9 @@
                     <ul class="ul-links">
                         <li><a id="overviewTabLink" href="#" onclick="return showTab('overview')" class="selectedTab">Overview</a></li>
                         <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
-                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (AI)</a></li>
-                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (internal)</a></li>
+                        <li><a id="jsonSetTabLink" href="#" onclick="return showTab('json-set')">JSON (set)</a></li>
+                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (LLM)</a></li>
+                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (int.)</a></li>
                         <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
                     </ul>
                     
@@ -24,6 +25,10 @@
                         <pre id="dataNewOutput"></pre>
                     </div>
 
+                    <div id="jsonSetPath">
+                        <pre id="dataSetOutput"></pre>
+                    </div>                    
+                    
                     <div id="jsonAiPath">
                         <pre id="dataAiOutput">AI data not available</pre>
                     </div>
@@ -83,6 +88,7 @@
 
         loadScript(filename + "/data.jsonp", function () { loadReport(filename); });
         loadScript(filename + "/data2.jsonp", function () { loadReport(filename); });
+        loadScript(filename + "/licence-set.jsonp", function () { loadReport(filename); });
     </script>
 </body>
 </html>

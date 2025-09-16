@@ -40,7 +40,6 @@ window.onload = function () {
 
 function setup() {
     populateTable();
-    setTotals();
     populateDropdowns();
 
     window.sortedAsc = true;
@@ -95,35 +94,18 @@ function sortBy(filterField) {
     populateTable(undefined, undefined, undefined, filterField, sortedAsc);
 }
 
-function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
-    const tbody1 = document.getElementsByTagName("tbody")[0];
-    let htmlSb = [];
-
-    let dataSorted = data.slice(0);
-    
-    if (!!sortByField) {
-        dataSorted.sort(function(a, b) {
-            if (a[sortByField] === b[sortByField]) {
-                return 0;
-            }
-
-            return (a[sortByField] < b[sortByField]) ? -1 : 1;
-        });
-        
-        if (!sortAsc) {
-            dataSorted.reverse();
-        }
-    }
+function filterData(dataSorted, filterType, filterField, filterValue) {
+    let returnData = [];
     
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
 
         if (filterField !== undefined && filterValue !== undefined && filterValue !== 'All') {
             let value = item[filterField];
-            
+
             if (filterType === 'Year') {
                 let valueParts = value.split('-');
-                
+
                 if (valueParts[0] !== filterValue) {
                     continue;
                 }
@@ -155,6 +137,39 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 continue;
             }
         }
+        
+        returnData.push(item);
+    }
+    
+    return returnData;
+}
+
+function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
+    const tbody1 = document.getElementsByTagName("tbody")[0];
+    let htmlSb = [];
+
+    let dataSorted = data.slice(0);
+    
+    if (!!sortByField) {
+        dataSorted.sort(function(a, b) {
+            if (a[sortByField] === b[sortByField]) {
+                return 0;
+            }
+
+            return (a[sortByField] < b[sortByField]) ? -1 : 1;
+        });
+        
+        if (!sortAsc) {
+            dataSorted.reverse();
+        }
+    }
+    
+    dataSorted = filterData(dataSorted, filterType, filterField, filterValue);
+    window.dataFiltered = dataSorted;
+    setTotals();
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
         
         let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
         let backgroundCss = "background-color: " + color;
@@ -290,27 +305,27 @@ function addChangeEvent(select) {
     });
 }
 
-function setTotals() {
-    document.getElementById('filename-total').innerHTML = getCount('filename', '');
-    document.getElementById('licence-number-total').innerHTML = getCount('licenceNumber', '');
-    document.getElementById('licence-holder-total').innerHTML = getCount('licenceHolder', '');
-    document.getElementById('purposes-total').innerHTML = getCount('purposes', []);
-    document.getElementById('points-total').innerHTML = getCount('points', []);
-    document.getElementById('limits-total').innerHTML = getCount('limitsFound', false);
-    document.getElementById('aggregates-total').innerHTML = getCount('aggregatesFound', false);
-    document.getElementById('ocr-total').innerHTML = getCount('ocr', false);
-    document.getElementById('issue-date-total').innerHTML = getCount('issueDate', '');
-    document.getElementById('issuer-total').innerHTML = getCount('issuer', '');
-    document.getElementById('means-total').innerHTML = getCount('meansFound', false);
-    document.getElementById('linked-licences-total').innerHTML = getCount('linkedLicences', false);
+function setTotals() {    
+    document.getElementById('filename-total').innerHTML = getCount(window.dataFiltered, 'filename', '');
+    document.getElementById('licence-number-total').innerHTML = getCount(window.dataFiltered, 'licenceNumber', '');
+    document.getElementById('licence-holder-total').innerHTML = getCount(window.dataFiltered, 'licenceHolder', '');
+    document.getElementById('purposes-total').innerHTML = getCount(window.dataFiltered, 'purposes', []);
+    document.getElementById('points-total').innerHTML = getCount(window.dataFiltered, 'points', []);
+    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsFound', false);
+    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesFound', false);
+    document.getElementById('ocr-total').innerHTML = getCount(window.dataFiltered, 'ocr', false);
+    document.getElementById('issue-date-total').innerHTML = getCount(window.dataFiltered, 'issueDate', '');
+    document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
+    document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
+    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
 }
 
-function getCount(field, comparisonValue) {
+function getCount(dataFiltered, field, comparisonValue) {
     let count = 0;
     
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        var value = item[field];
+    for (let i = 0; i < dataFiltered.length; i++) {
+        let item = dataFiltered[i];
+        let value = item[field];
         
         if (value !== comparisonValue) {
             count++;

@@ -599,7 +599,7 @@ IEnumerable<string> GetPdfPaths()
         var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(100).ToList();
+    }).OrderBy(x => x).Skip(0).Take(10).ToList();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
@@ -613,7 +613,7 @@ IEnumerable<string> GetPdfPaths()
         || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
     ).ToArray();*/
     
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0270025037")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0270025037")).ToArray();
     
     return pdfFilePaths;
 }

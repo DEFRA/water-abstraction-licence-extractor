@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -67,6 +68,11 @@ public static class BaseMethod
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
+                        if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                        {
+                            continue;
+                        }
+                        
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         returnList.Add(labelGroupResult);
                     }

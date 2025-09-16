@@ -1240,7 +1240,10 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                                         Format = "LicenceNumber",
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                                        SkipLineWhenContains = [
+                                            new("Licence Serial No: ")
+                                        ]
                                     },
                                     new()
                                     {

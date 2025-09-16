@@ -17,9 +17,12 @@ public class PdfPigNoOcrPdfTests
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
-        PdfFolder);
-
-    private static string PdfFolder => TestConfig.PdfFolder;
+        TestConfig.PdfFolder);
+    
+    private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>(),
+        TestConfig.PdfFolder2);
     
     private static Dictionary<string, string> FileLicenceMapping =>
         new()
@@ -34,16 +37,19 @@ public class PdfPigNoOcrPdfTests
             }
         };
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + fileName,
+        var pdfFolder = useMainPdfFolder ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
+        var service = useMainPdfFolder ? _pdfDataExtractor : _pdfDataExtractor2;
+        
+        return service.GetMatchesAsync(
+            pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
               FileLicenceMapping,
                 "Output/",
                 "Cache/"),
-            [PdfFolder + fileName]);
+            [pdfFolder + fileName]);
     }
     
     [Fact]
@@ -3386,8 +3392,8 @@ public class PdfPigNoOcrPdfTests
         
         var point = agreedSchemaLicence.Points[0];
         Assert.Null(point.Id);
-        Assert.StartsWith("A SE 06", point.Description);
-        Assert.Equal(18, point.Description!.Length);
+        Assert.StartsWith("SE 066 152", point.Description);
+        Assert.Equal(10, point.Description!.Length);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -3501,5 +3507,47 @@ public class PdfPigNoOcrPdfTests
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
-    }    
+    }
+    
+    [Fact]
+    public async Task When_FileThatDidntGetPurposes_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "22718045__Application - Reduction -Application New Licence Issued 24_06_2019 00_00_00 10897641.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(11, resultFull.Matches?.Count);
+        
+        var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+            
+        var purposeResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+
+        Assert.NotNull(purposeResult);
+        Assert.False(purposeResult.IsOcr);
+        Assert.Equal("4. PURPOSE OF ABSTRACTION 4.1 Cooling water make up (68% returned to source).",
+            string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
+    }
+    
+    [Fact]
+    public async Task When_PurposeHasAnUptoInIt_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "22719149__Application Formal Variation - Issued Licence [04-09-2018] 10474343.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(11, resultFull.Matches?.Count);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.Single();
+        
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Equal("Power production: hydro-electric power generation", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal(CutoffType.Upto,  agreedSchemaLicence.Purposes[0].TimeCutoff!.CutoffType); 
+        Assert.Equal("Up to and including 31 March 2030", agreedSchemaLicence.Purposes[0].TimeCutoff!.Date);        
+        Assert.Equal("Fish farming", agreedSchemaLicence.Purposes[1].Description);
+    }
 }

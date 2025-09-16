@@ -389,73 +389,55 @@ async Task HandleFileAsync(
 
         var matches = matchesFull.Matches!;
         
-        var purposesSection = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
-        var purposePointGroups = purposesSection?.SubResults
-            .Where(x => x.MatchedLabel!.Name == "PurposePointGroup");
-
-        var purposeSb = new StringBuilder();
-
-        if (purposePointGroups != null)
-        {
-            var first = true;
-            
-            foreach (var purposePointGroup in purposePointGroups)
-            {
-                var purposes = purposePointGroup.SubResults
-                    .Where(x => x.MatchedLabel!.Name == "Purpose");
-
-                foreach (var purpose in purposes!)
-                {
-                    var t1 = purpose.SubResults
-                        .FirstOrDefault(x => x.MatchedLabel!.Name == "TextWithoutPoints");
-
-                    var ary = t1?.Text?.Select(y => y.Text).ToArray();
-
-                    if (ary != null)
-                    {
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            purposeSb.Append(",");
-                        }
-                        
-                        purposeSb.AppendLine("\"" + string.Join(' ', ary).Replace("\"", "\\\"") + "\"");
-                    }
-                }
-            }
-        }
-
-        var purposesJs = "[" + purposeSb + "]";
-
         var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
         var agreedSchema = agreedSchemaGroup.Licences.First();
         
-        /*var pointsSection = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
-        var pointPurposeGroups = pointsSection?.SubResults
-            .Where(x => x.MatchedLabel!.Name == "PointPurposeGroup");*/
-
+        var purposeSb = new StringBuilder();
+        first = true;
+        
+        foreach (var purpose in agreedSchema.Purposes)
+        {
+            if (purpose.Description == null)
+            {
+                continue;
+            }
+            
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                purposeSb.Append(",");
+            }
+                
+            var t = purpose.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
+            purposeSb.AppendLine("\"" + t + "\"");
+        }
+        
+        var purposesJs = "[" + purposeSb + "]";
+        
         var pointsSb = new StringBuilder();
         first = true;
         
         foreach (var point in agreedSchema.Points)
         {
-            if (point.Description != null)
+            if (point.Description == null)
             {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    pointsSb.Append(",");
-                }
-                
-                var t = point.Description.Replace("\"", "\\\"");
-                pointsSb.AppendLine("\"" + t + "\"");
+                continue;
             }
+            
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                pointsSb.Append(",");
+            }
+                
+            var t = point.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
+            pointsSb.AppendLine("\"" + t + "\"");
         }
 
         var pointsJs = "[" + pointsSb + "]";
@@ -604,51 +586,39 @@ IEnumerable<string> GetPdfPaths()
         .GetFiles(pdfFolderPath)
         .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
 
-    //var rnd = new Random();
     var yorkshire = Yorkshire200Files();
-    
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence - Old 6078869.PDF")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application Minor Variation Issued Licence 11.12.2019 11149448.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Non-Application Licence Document (08.06.1987).PDF")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => 
-    //    x.Contains("original licence (12.03.1975).PDF")
-    //||
-    //    x.Contains("Issued Licence - 01081966")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence - Old 6078947.PDF")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Licence Original 5652046.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("permit_01_01_1998.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("Application - New - Issued Licence Dec 2015 9146886.pdf")).ToArray();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("04071r01")).ToArray();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("08-37-31-S-0199 5835643.PDF")).ToArray();
 
     // YORKSHIRE 200 - From new files
-    /*pdfFilePaths = pdfFilePaths.Where(x =>
+    
+    pdfFilePaths = pdfFilePaths.Where(filePath =>
     {
-        var filename = x.Split('/').Last();//.Replace(".pdf", string.Empty, StringComparison.InvariantCultureIgnoreCase);
+        var filename = filePath.Split('/').Last();
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(x => x).Skip(0).Take(10).ToList();*/
+    }).OrderBy(filename => filename).Skip(0).Take(200).ToList();
     
     // YORKSHIRE 6 - From original files
-    pdfFilePaths = pdfFilePaths.Where(x =>
-        x.Contains("2-26-32-126 6937559.PDF")
-        || x.Contains("2-27-29-012 7003124.PDF")
-        || x.Contains("Application - New - Licence Issued 30092021.pdf")
-        || x.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
-        || x.Contains("Application Formal Variation Issued Licence 07032023.pdf")
-        || x.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
-    ).ToArray();
+
+    /*pdfFilePaths = pdfFilePaths.Where(filePath =>
+        filePath.Contains("2-26-32-126 6937559.PDF")
+        || filePath.Contains("2-27-29-012 7003124.PDF")
+        || filePath.Contains("Application - New - Licence Issued 30092021.pdf")
+        || filePath.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
+        || filePath.Contains("Application Formal Variation Issued Licence 07032023.pdf")
+        || filePath.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
+    ).ToArray();*/
+    
+    // Any additional filtering
     
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0270025037")).ToArray();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     
     return pdfFilePaths;
 }
 
 void Log(string message, StringBuilder outputStringBuilder)
 {
-//    Console.WriteLine(message);
+    //Console.WriteLine(message);
     outputStringBuilder.Append(message);
 }
 

@@ -14,6 +14,8 @@ public class PeriodOfAbstraction : TimePeriod
     
     public string[] PurposeIds { get; set; } = [];
     
+    public TimeCutoff? TimeCutoff { get; set; }
+    
     public static PeriodOfAbstraction Template => new()
     {
         Description = "All year.",
@@ -30,6 +32,11 @@ public class PeriodOfAbstraction : TimePeriod
         [
             string.Empty
         ],
-        StartDate = string.Empty
+        StartDate = string.Empty,
+        TimeCutoff = new TimeCutoff
+        {
+            CutoffType = CutoffType.Upto,
+            Date = "31 March 2030"
+        }
     };
 }

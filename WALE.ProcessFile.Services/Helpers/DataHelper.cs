@@ -220,6 +220,7 @@ public static partial class DataHelper
             .Replace(" ", string.Empty)
             .Replace("/", string.Empty)
             .Replace(".", string.Empty)
+            .Replace("%", string.Empty)
             .Replace("(", string.Empty)
             .Replace(")", string.Empty)            
             .Replace(",", string.Empty)

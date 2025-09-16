@@ -633,13 +633,40 @@ public static class SchemaConverter
             var textWithoutNumber = pointResult.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
                 .Text?
-                .Select(t => t.Text);
+                .Select(t => t.Text)
+                .ToList();
             
             if (textWithoutNumber == null && periodPeriodNumber == null)
             {
                 continue;
             }
+            
+            var tKey = "Up to and Including ";
+            
+            var allTextWithoutNumber = textWithoutNumber?
+                .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
                 
+            if (allTextWithoutNumber == null)
+            {
+                continue;
+            }
+            
+            var upToAndIncludeLine = textWithoutNumber?
+                .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+            TimeCutoff? timeCutoff = null;
+
+            if (upToAndIncludeLine != null)
+            {
+                var date = upToAndIncludeLine?.Replace(tKey, string.Empty);
+                    
+                timeCutoff = new TimeCutoff
+                {
+                    CutoffType = CutoffType.Upto,
+                    Date = date
+                };
+            }
+            
             var text = textWithoutNumber != null
                 ? string.Join('\n', textWithoutNumber)
                 : null;
@@ -668,7 +695,8 @@ public static class SchemaConverter
                 Description = text,
                 Inclusive = inclusive,
                 StartDate = startDate,
-                EndDate = endDate
+                EndDate = endDate,
+                TimeCutoff = timeCutoff
             });
         }
 
@@ -774,21 +802,22 @@ public static class SchemaConverter
                     .Select(t => t.Text)
                     .ToList();
                 
+                var tKey = "Up to and Including ";
+                
                 var allTextWithoutNumber = tLines?
-                    .Where(t => !t.StartsWith("Up to and Including "))
+                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
                     .ToArray();
                 
                 if (allTextWithoutNumber == null)
                 {
                     continue;
                 }
-
-                var tKey = "Up to and Including ";
+                
                 var upToAndIncludeLine = tLines?
                     .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
                 TimeCutoff? timeCutoff = null;
 
-                if (upToAndIncludeLine == null)
+                if (upToAndIncludeLine != null)
                 {
                     var date = upToAndIncludeLine?.Replace(tKey, string.Empty);
                     
@@ -850,15 +879,36 @@ public static class SchemaConverter
                 var purposeNumber = purpose.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeNumber");
                 
-                var allTextWithoutNumber = purpose.SubResults
+                var tLines = purpose.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints")?
                     .Text?
                     .Select(t => t.Text)
                     .ToArray();
 
+                var tKey = "Up to and Including ";
+                
+                var allTextWithoutNumber = tLines?
+                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                    .ToArray();
+                
                 if (allTextWithoutNumber == null && purposeNumber == null)
                 {
                     continue;
+                }
+                
+                var upToAndIncludeLine = tLines?
+                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                TimeCutoff? timeCutoff = null;
+
+                if (upToAndIncludeLine != null)
+                {
+                    var date = upToAndIncludeLine.Replace(tKey, string.Empty);
+                    
+                    timeCutoff = new TimeCutoff
+                    {
+                        CutoffType = CutoffType.Upto,
+                        Date = date
+                    };
                 }
                 
                 var description = allTextWithoutNumber != null
@@ -871,7 +921,8 @@ public static class SchemaConverter
                 {
                     Id = number,
                     Description = description,
-                    PointIds = (pointIds ?? [])!
+                    PointIds = (pointIds ?? [])!,
+                    TimeCutoff = timeCutoff
                 });
             }
         }

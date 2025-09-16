@@ -54,7 +54,7 @@ function setup() {
 function loadScript(filename, bodyEle) {
     let script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = '../Data/' + filename + '.js';
+    script.src = filename + '/ai-data.jsonp';
 
     script.onload = function () {
         window.loadedOrErrored += 1;

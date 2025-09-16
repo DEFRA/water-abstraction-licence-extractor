@@ -802,6 +802,12 @@ public static class SchemaConverter
                 var description = string.Join(' ', allTextWithoutNumber);
                 var number = pointNumber?.Text?.FirstOrDefault()?.Text;
 
+                // If its like 'A SE' or 'B NE' get rid of the A and B
+                if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
+                {
+                    description = description.Substring(2);
+                }
+                
                 returnList.Add(new PointOfAbstraction
                 {
                     Description = description,

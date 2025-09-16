@@ -96,6 +96,21 @@ Copy(reportTemplatePath, outputFolder);
 
 var indexPath = $"{outputFolder}index.html";
 
+var aiFiles = Directory.GetFiles("Data");
+
+foreach (var aiFile in aiFiles)
+{
+    if (!aiFile.EndsWith(".js"))
+    {
+        continue;    
+    }
+    
+    var aiFilePath = aiFile.Split('/').Last().Replace(".js", string.Empty);
+    
+    Directory.CreateDirectory($"{outputFolder}{aiFilePath}");
+    File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
+}
+
 File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
 File.Move($"{outputFolder}list-template.html", indexPath, true);
 

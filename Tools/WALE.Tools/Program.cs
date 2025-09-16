@@ -1,6 +1,7 @@
 ﻿using WALE.Tools;
 
 const string workflow = "TestsForAiPrompts";
+//const string workflow = "GenerateCsvForTesting";
 
 switch (workflow)
 {

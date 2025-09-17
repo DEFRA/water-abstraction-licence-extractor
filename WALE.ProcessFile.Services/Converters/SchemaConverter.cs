@@ -914,8 +914,103 @@ public static class SchemaConverter
                 var description = allTextWithoutNumber != null
                     ? string.Join('\n', allTextWithoutNumber)
                     : null;
-                    
+
                 var number = purposeNumber?.Text?.FirstOrDefault()?.Text;
+                
+                // TODO more of this should be done in the parser
+                if (description?.Contains("i) ") == true && description.Contains("ii)"))
+                {
+                    var points = RomanNumeralsSplit(description);
+
+                    foreach (var point in points)
+                    {
+                        returnList.Add(new PurposeOfAbstraction
+                        {
+                            Id = number,
+                            Description = point.Trim(),
+                            PointIds = (pointIds ?? [])!,
+                            TimeCutoff = timeCutoff
+                        });
+                    }
+                    
+                    continue;
+                }
+                
+                // TODO more of this should be done in the parser
+                if (description?.Contains("(1) ") == true && description.Contains("(2)"))
+                {
+                    var points = BracketNumbersSplit(description);
+
+                    foreach (var point in points)
+                    {
+                        returnList.Add(new PurposeOfAbstraction
+                        {
+                            Id = number,
+                            Description = point.Trim(),
+                            PointIds = (pointIds ?? [])!,
+                            TimeCutoff = timeCutoff
+                        });
+                    }
+                    
+                    continue;
+                }
+                
+                // TODO more of this should be done in the parser
+                if (description?.Contains("1. ") == true && description.Contains("2. "))
+                {
+                    var points = NumberDotSplit(description);
+
+                    foreach (var point in points)
+                    {
+                        returnList.Add(new PurposeOfAbstraction
+                        {
+                            Id = number,
+                            Description = point.Trim(),
+                            PointIds = (pointIds ?? [])!,
+                            TimeCutoff = timeCutoff
+                        });
+                    }
+                    
+                    continue;
+                }
+                
+                // TODO more of this should be done in the parser
+                if (description?.Contains("(a) ") == true && description.Contains("(b) "))
+                {
+                    var points = LetterBracketSplit(description);
+
+                    foreach (var point in points)
+                    {
+                        returnList.Add(new PurposeOfAbstraction
+                        {
+                            Id = number,
+                            Description = point.Trim(),
+                            PointIds = (pointIds ?? [])!,
+                            TimeCutoff = timeCutoff
+                        });
+                    }
+                    
+                    continue;
+                }
+                
+                // TODO more of this should be done in the parser
+                if (description?.Contains("4.2 ") == true && description.Contains("4.3 "))
+                {
+                    var points = FourPointSplit(description);
+
+                    foreach (var point in points)
+                    {
+                        returnList.Add(new PurposeOfAbstraction
+                        {
+                            Id = number,
+                            Description = point.Trim(),
+                            PointIds = (pointIds ?? [])!,
+                            TimeCutoff = timeCutoff
+                        });
+                    }
+                    
+                    continue;
+                }
                 
                 returnList.Add(new PurposeOfAbstraction
                 {
@@ -928,6 +1023,101 @@ public static class SchemaConverter
         }
 
         return returnList.ToArray();
+    }
+
+    private static string[] FourPointSplit(string text)
+    {
+        var x = text
+            .Replace("4.1 ", "$")
+            .Replace("4.2 ", "$")
+            .Replace("4.3 ", "$")
+            .Replace("4.4 ", "$")
+            .Replace("4.5 ", "$")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (x.StartsWith("$"))
+        {
+            x = x[1..];
+        }
+
+        return x.Split('$');
+    }
+    
+    private static string[] LetterBracketSplit(string text)
+    {
+        var x = text
+            .Replace("(a) ", "$")
+            .Replace("(b) ", "$")
+            .Replace("(c) ", "$")
+            .Replace("(d) ", "$")
+            .Replace("(e) ", "$")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (x.StartsWith("$"))
+        {
+            x = x[1..];
+        }
+
+        return x.Split('$');
+    }
+    
+    private static string[] NumberDotSplit(string text)
+    {
+        var x = text
+            .Replace("1. ", "$")
+            .Replace("2. ", "$")
+            .Replace("3. ", "$")
+            .Replace("4. ", "$")
+            .Replace("5. ", "$")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (x.StartsWith("$"))
+        {
+            x = x[1..];
+        }
+
+        return x.Split('$');
+    }
+    
+    private static string[] BracketNumbersSplit(string text)
+    {
+        var x = text
+            .Replace("(1) ", "$")
+            .Replace("(2) ", "$")
+            .Replace("(3) ", "$")
+            .Replace("(4) ", "$")
+            .Replace("(5) ", "$")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (x.StartsWith("$"))
+        {
+            x = x[1..];
+        }
+
+        return x.Split('$');
+    }
+    
+    private static string[] RomanNumeralsSplit(string text)
+    {
+        var x = text
+            .Replace("iii) ", "$")
+            .Replace("ii) ", "$")
+            .Replace("iv) ", "$")
+            .Replace("i) ", "$")
+            .Replace("v) ", "$")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (x.StartsWith("$"))
+        {
+            x = x[1..];
+        }
+
+        return x.Split('$');
     }
 
     private static LimitPeriodType ToLimitPeriodType(string? text)

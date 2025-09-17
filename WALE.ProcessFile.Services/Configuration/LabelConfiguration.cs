@@ -455,7 +455,8 @@ public static class LabelConfiguration
                     new("PURPOSES OF ABSTRACTION"),
                     new("Purpose for which water is authorised to be used[END_OF_LINE]"),
                     new("Purpose(s) for which water is authorised to be used"),
-                    new("Purpose for which the water is to be used") { LineMustStartWith = true }
+                    new("Purpose for which the water is to be used") { LineMustStartWith = true },
+                    new("Purpose for which water is to be used :") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
@@ -507,7 +508,8 @@ public static class LabelConfiguration
                             new("PURPOSES OF ABSTRACTION"),
                             new("PURPOSE(S) OF ABSTRACTION"),
                             new("Purpose(s) for which water is authorised to be used"),
-                            new("PURPOSE(S) FOR WHICH WATER IS AUTHORISED TO BE USED") // TODO why does the capitalisation matter here?
+                            new("PURPOSE(S) FOR WHICH WATER IS AUTHORISED TO BE USED"), // TODO why does the capitalisation matter here?
+                            new("PURPOSE FOR WHICH WATER IS TO BE USED :")
                         ],
                         SubLabels =
                         [

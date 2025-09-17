@@ -173,7 +173,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(12, resultList.Count);
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);

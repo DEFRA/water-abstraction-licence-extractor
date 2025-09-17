@@ -20,10 +20,63 @@ public static class LabelConfiguration
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
             ("DateEffective", GetDateEffectiveLabels()),
             ("DateOfExpiry", GetDateOfExpiryLabels()),
-            ("Issuer", GetIssuerLabels())
+            ("Issuer", GetIssuerLabels()),
+            ("FurtherConditions", GetFurtherConditions())
         ];
     }
-    
+
+    private static List<LabelToMatch> GetFurtherConditions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "FurtherConditionsAll",
+                TextStart =
+                [
+                    new("FURTHER CONDITIONS")
+                ],
+                TextEnd =
+                [
+                    new("ADDITIONAL INFORMATION[END_OF_LINE]") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    new(@"/Page \d* of \d*/"),
+                    new("/Licence Serial No: [A-Z0-9/]*/")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                NextLinesToFetch = 60,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "LinkedLicenceNumber",
+                        Text =
+                        [
+                            new("licence number "),
+                            new("licence serial number "),
+                            new("licence serial numbers "),
+                            new("under this licence and licence"),
+                            new("and licence "),
+                            new("and under licence "),
+                            new("and under license ") // spelling mistake in licence                                    
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                        Format = "LicenceNumber",
+                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+
     private static List<LabelToMatch> GetIssuerLabels()
     {
         return

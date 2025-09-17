@@ -228,6 +228,30 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     {
         listJsStringBuilder.AppendLine(",");
     }
+
+    var linkedLicencesSb = new StringBuilder();
+    linkedLicencesSb.Append("[");
+
+    if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != string.Empty)
+    {
+        first = true;
+        
+        foreach (var linkedLicenceNumber in outputLine.LinkedLicenceNumbers.Split('|'))
+        {
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                linkedLicencesSb.Append(",");
+            }
+            
+            linkedLicencesSb.Append($"\"{linkedLicenceNumber}\"");
+        }
+    }
+    
+    linkedLicencesSb.Append("]");
     
     listJsStringBuilder.AppendLine("\t{");
     listJsStringBuilder.AppendLine($"\t\t\"imagePath\": \"{filename}/PdfPig/Images/page-1.jpg\",");
@@ -242,7 +266,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     listJsStringBuilder.AppendLine($"\t\t\"issueDate\": \"{outputLine.IssueDate}\",");
     listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
     listJsStringBuilder.AppendLine($"\t\t\"meansFound\": {outputLine.MeansFound.ToString().ToLower()},"); 
-    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {(!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != string.Empty).ToString().ToLower()},");
+    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {linkedLicencesSb.ToString()},");
     listJsStringBuilder.Append("\t}");
     
     if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
@@ -360,11 +384,6 @@ async Task HandleFileAsync(
     var dtStart = DateTime.Now;
     var fileName = pdfFilePath.Split('/').Last().Replace("–", "-");
 
-    if (fileName.Contains("03286902901r01"))
-    {
-        
-    }
-    
     Console.WriteLine($"Attempting {fileNumber} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
     pdfDataExtractor.InUse = true;
@@ -461,7 +480,7 @@ async Task HandleFileAsync(
             .ToList();
         
         var linkedLicenceNumbers = linkedLicenceNumbersList != null ?
-            string.Join("|", linkedLicenceNumbersList.Select(x => x?.Text).ToArray())
+            string.Join("|", linkedLicenceNumbersList.Select(linkedLicenceNumber => linkedLicenceNumber.Text).ToArray())
             : string.Empty;
 
         var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;

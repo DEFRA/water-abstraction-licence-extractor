@@ -142,6 +142,18 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
     return returnData;
 }
 
+function licenceInList(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+        
+        if (item.licenceNumber === licenceNumber) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
     const tbody1 = document.getElementsByTagName("tbody")[0];
     let htmlSb = [];
@@ -191,7 +203,19 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         }
 
         pointsSb.push('</ul>');
+        
+        let linkedLicencesSb = [];
 
+        for (let j = 0; j < item.linkedLicences.length; j++) {
+            let linkedLicence = item.linkedLicences[j];
+            
+            if (licenceInList(linkedLicence)) {
+                linkedLicencesSb.push('<li><a href="#' + linkedLicence + '">' + linkedLicence + '</a></li>');
+            } else {
+                linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
+            }
+        }
+        
         let filenameNoExtension = item.filename.split('.')[0];
         let filenameNoSpacesOrDashes = filenameNoExtension
             .replaceAll("-", "")
@@ -262,7 +286,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
-            "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
+            "<td id='" + dashesIfNullOrEmpty(item.licenceNumber) + "'>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
             "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + aiPointsLine + "</td>" +
@@ -272,7 +296,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + dashesIfNullOrEmpty(item.issueDate) + aiIssueDateLine + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
-            "<td>" + (item.linkedLicences ? "True" : "False") + aiLinkedLicencesLine + "</td>" +
+            "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
             "</tr>";
 
         htmlSb.push(html);

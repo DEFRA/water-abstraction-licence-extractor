@@ -870,9 +870,10 @@ public static class SchemaConverter
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
                 .ToArray() ?? [];
-            
+
             var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purpose");
+                .Where(x => x.MatchedLabel!.Name == "Purpose")
+                .ToList();
             
             foreach (var purpose in purposes)
             {
@@ -916,102 +917,105 @@ public static class SchemaConverter
                     : null;
 
                 var number = purposeNumber?.Text?.FirstOrDefault()?.Text;
-                
-                // TODO more of this should be done in the parser
-                if (description?.Contains("i) ") == true && description.Contains("ii)"))
-                {
-                    var points = RomanNumeralsSplit(description);
 
-                    foreach (var point in points)
-                    {
-                        returnList.Add(new PurposeOfAbstraction
-                        {
-                            Id = number,
-                            Description = point.Trim(),
-                            PointIds = (pointIds ?? [])!,
-                            TimeCutoff = timeCutoff
-                        });
-                    }
-                    
-                    continue;
-                }
-                
-                // TODO more of this should be done in the parser
-                if (description?.Contains("(1) ") == true && description.Contains("(2)"))
+                if (purposes.Count == 1)
                 {
-                    var points = BracketNumbersSplit(description);
-
-                    foreach (var point in points)
+                    // TODO more of this should be done in the parser
+                    if (description?.Contains("i) ") == true && description.Contains("ii)"))
                     {
-                        returnList.Add(new PurposeOfAbstraction
-                        {
-                            Id = number,
-                            Description = point.Trim(),
-                            PointIds = (pointIds ?? [])!,
-                            TimeCutoff = timeCutoff
-                        });
-                    }
-                    
-                    continue;
-                }
-                
-                // TODO more of this should be done in the parser
-                if (description?.Contains("1. ") == true && description.Contains("2. "))
-                {
-                    var points = NumberDotSplit(description);
+                        var points = RomanNumeralsSplit(description);
 
-                    foreach (var point in points)
-                    {
-                        returnList.Add(new PurposeOfAbstraction
+                        foreach (var point in points)
                         {
-                            Id = number,
-                            Description = point.Trim(),
-                            PointIds = (pointIds ?? [])!,
-                            TimeCutoff = timeCutoff
-                        });
-                    }
-                    
-                    continue;
-                }
-                
-                // TODO more of this should be done in the parser
-                if (description?.Contains("(a) ") == true && description.Contains("(b) "))
-                {
-                    var points = LetterBracketSplit(description);
+                            returnList.Add(new PurposeOfAbstraction
+                            {
+                                Id = number,
+                                Description = point.Trim(),
+                                PointIds = (pointIds ?? [])!,
+                                TimeCutoff = timeCutoff
+                            });
+                        }
 
-                    foreach (var point in points)
-                    {
-                        returnList.Add(new PurposeOfAbstraction
-                        {
-                            Id = number,
-                            Description = point.Trim(),
-                            PointIds = (pointIds ?? [])!,
-                            TimeCutoff = timeCutoff
-                        });
+                        continue;
                     }
-                    
-                    continue;
-                }
-                
-                // TODO more of this should be done in the parser
-                if (description?.Contains("4.2 ") == true && description.Contains("4.3 "))
-                {
-                    var points = FourPointSplit(description);
 
-                    foreach (var point in points)
+                    // TODO more of this should be done in the parser
+                    if (description?.Contains("(1) ") == true && description.Contains("(2)"))
                     {
-                        returnList.Add(new PurposeOfAbstraction
+                        var points = BracketNumbersSplit(description);
+
+                        foreach (var point in points)
                         {
-                            Id = number,
-                            Description = point.Trim(),
-                            PointIds = (pointIds ?? [])!,
-                            TimeCutoff = timeCutoff
-                        });
+                            returnList.Add(new PurposeOfAbstraction
+                            {
+                                Id = number,
+                                Description = point.Trim(),
+                                PointIds = (pointIds ?? [])!,
+                                TimeCutoff = timeCutoff
+                            });
+                        }
+
+                        continue;
                     }
-                    
-                    continue;
+
+                    // TODO more of this should be done in the parser
+                    if (description?.Contains("1. ") == true && description.Contains("2. "))
+                    {
+                        var points = NumberDotSplit(description);
+
+                        foreach (var point in points)
+                        {
+                            returnList.Add(new PurposeOfAbstraction
+                            {
+                                Id = number,
+                                Description = point.Trim(),
+                                PointIds = (pointIds ?? [])!,
+                                TimeCutoff = timeCutoff
+                            });
+                        }
+
+                        continue;
+                    }
+
+                    // TODO more of this should be done in the parser
+                    if (description?.Contains("(a) ") == true && description.Contains("(b) "))
+                    {
+                        var points = LetterBracketSplit(description);
+
+                        foreach (var point in points)
+                        {
+                            returnList.Add(new PurposeOfAbstraction
+                            {
+                                Id = number,
+                                Description = point.Trim(),
+                                PointIds = (pointIds ?? [])!,
+                                TimeCutoff = timeCutoff
+                            });
+                        }
+
+                        continue;
+                    }
+
+                    // TODO more of this should be done in the parser
+                    if (description?.Contains("4.2 ") == true && description.Contains("4.3 "))
+                    {
+                        var points = FourPointSplit(description);
+
+                        foreach (var point in points)
+                        {
+                            returnList.Add(new PurposeOfAbstraction
+                            {
+                                Id = number,
+                                Description = point.Trim(),
+                                PointIds = (pointIds ?? [])!,
+                                TimeCutoff = timeCutoff
+                            });
+                        }
+
+                        continue;
+                    }
                 }
-                
+
                 returnList.Add(new PurposeOfAbstraction
                 {
                     Id = number,

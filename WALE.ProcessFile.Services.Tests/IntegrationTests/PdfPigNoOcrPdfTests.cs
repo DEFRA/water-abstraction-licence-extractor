@@ -3550,4 +3550,22 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("Up to and including 31 March 2030", agreedSchemaLicence.Purposes[0].TimeCutoff!.Date);        
         Assert.Equal("Fish farming", agreedSchemaLicence.Purposes[1].Description);
     }
+    
+    [Fact]
+    public async Task When_PurposeHasPointsInIt_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(12, resultFull.Matches?.Count);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Equal(3, agreedSchemaLicence.Purposes.Length);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].Description);
+    }
 }

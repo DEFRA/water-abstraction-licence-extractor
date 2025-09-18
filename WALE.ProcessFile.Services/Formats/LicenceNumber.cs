@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, AA 123 123 123 or AA.123.123.123 (and some other variations of this)
     public const string RegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .][0-9]{1,4}[\/ .][0-9]{1,4}([\/ .][0-9]{1,4}[\/ .]?([A-Z0-9]{1,3})?)?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .][A-Z0-9]{1,5}([\/ .][0-9]{1,4})?([\/ .][0-9A-Z\*]{1,4})?([\/ .][0-9]{1,4})?([\/ .][0-9A-Z]{1,3})?[\/ .]?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
     
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
@@ -86,9 +86,18 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
+
+                    var value = regexMatches[0].Value;
+                    var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))                                               
+                        || (value.Contains('/') && value.Contains(' '));
+                    
+                    if (hasInvalidComboOfSeperators)
+                    {
+                        continue;
+                    }
                     
                     var colText = FormattingHelper.TrimFormatting(
-                        regexMatches[0].Value,
+                        value,
                         true,
                         true);
                         

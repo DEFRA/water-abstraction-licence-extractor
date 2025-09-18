@@ -1085,7 +1085,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(5, abstractionLimitsSection9.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection9.SubResults);
-        Assert.Single(abstractionLimitsSection9.SubResults!);
+        Assert.Single(abstractionLimitsSection9.SubResults);
 
         var section9Sub1 = abstractionLimitsSection9.SubResults[0];
         Assert.Equal(9, section9Sub1.SubResults!.Count);

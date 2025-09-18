@@ -95,6 +95,22 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
+
+                    var atLeastOneDigit = value.Count(char.IsDigit) >= 1;
+
+                    if (!atLeastOneDigit)
+                    {
+                        continue;
+                    }
+
+                    var isOsRef = value.StartsWith("SE ")
+                        && value.All(x => x != '/')
+                        && value.All(x => x != '.');
+
+                    if (isOsRef)
+                    {
+                        continue;
+                    }
                     
                     var colText = FormattingHelper.TrimFormatting(
                         value,

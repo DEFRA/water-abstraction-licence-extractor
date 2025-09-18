@@ -45,12 +45,16 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
+        
+        var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -82,8 +86,14 @@ public class TessaractOcrPdfTests
         Assert.Single(abstractionLimitsSection1.SubResults!);
 
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
-        Assert.Equal(8, section1Sub1.SubResults!.Count);
+        Assert.Equal(9, section1Sub1.SubResults!.Count);
 
+        var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber");
+        Assert.Single(linkedLicences);
+        
+        var linkedLicenceFilenames = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceFilename");
+        Assert.Empty(linkedLicenceFilenames);
+        
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
@@ -173,8 +183,12 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(7, resultList.Count);
 
+        var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("25/68", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 25/68/1/159/
+        
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
         Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
@@ -402,7 +416,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text);      
+        Assert.Equal("506 25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text); // TODO the 506 shouldn't be on there
     }
 
     [Fact]

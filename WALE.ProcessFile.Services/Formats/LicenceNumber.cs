@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, AA 123 123 123 or AA.123.123.123 (and some other variations of this)
     public const string RegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .][0-9]{1,4}[\/ .][0-9]{1,4}([\/ .][0-9]{2,4}([\/ .][A-Z0-9]{3})?)?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .][0-9]{1,4}[\/ .][0-9]{1,4}([\/ .][0-9]{1,4}[\/ .]?([A-Z0-9]{1,3})?)?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
     
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
@@ -27,11 +27,6 @@ public static partial class LicenceNumber
             if (line == null)
             {
                 continue;
-            }
-
-            if (line.Text.Contains("NE/026/0034/052"))
-            {
-                
             }
             
             var anyMatchFoundForLine = false;
@@ -62,29 +57,9 @@ public static partial class LicenceNumber
 
                 foreach (var subLine in subLines)
                 {
-                    var invalid = subLine.Any(character =>
-                        !char.IsLetter(character)
-                        && !char.IsNumber(character)
-                        && character != ' '
-                        && character != '/'
-                        && character != '.'
-                        && character != '*');
-
-                    var words = subLine.Split(' ');
-
-                    if (words.Any(word => word.Length >= 3
-                        && word.All(char.IsLetter)
-                        && DataHelper.Dictionary.Check(word)))
-                    {
-                        invalid = true;
-                    }
-
-                    if (invalid)
-                    {
-                        continue;
-                    }
-                    
-                    var containsSplitter = subLine.Contains(' ') || column.Text.Contains('/')|| column.Text.Contains('.');
+                    var containsSplitter = subLine.Contains(' ')
+                       || column.Text.Contains('/')
+                       || column.Text.Contains('.');
 
                     if (!containsSplitter || subLine.Length < 4)
                     {
@@ -104,27 +79,29 @@ public static partial class LicenceNumber
                         .Split('/')
                         .Count(p => p.Any(char.IsDigit)) >= 2;
 
-                    var regexMatches = LicenceNumbersRegex().IsMatch(numberLine);
-                    var match = regexMatches && enoughPartsWithNumbers;
+                    var regexMatches = LicenceNumbersRegex().Matches(numberLine);
+                    var isMatch = regexMatches.Count >= 1 && enoughPartsWithNumbers;
 
-                    if (match)
+                    if (!isMatch)
                     {
-                        var colText = FormattingHelper.TrimFormatting(
-                            numberLine,
-                            true,
-                            true);
-                        
-                        var clonedColumn = new DocumentLineColumn(colText!);
-                        newColumns.Add(clonedColumn);
-
-                        var clonedLine = line.Clone(newColumns);
-                        matchedLines.Add(clonedLine);
-
-                        newColumns = [];
-                        anyMatchFoundForColumn = true;
-                        anyMatchFoundForLine = true;
-                        anyMatchFound = true;
+                        continue;
                     }
+                    
+                    var colText = FormattingHelper.TrimFormatting(
+                        regexMatches[0].Value,
+                        true,
+                        true);
+                        
+                    var clonedColumn = new DocumentLineColumn(colText!);
+                    newColumns.Add(clonedColumn);
+
+                    var clonedLine = line.Clone(newColumns);
+                    matchedLines.Add(clonedLine);
+
+                    newColumns = [];
+                    anyMatchFoundForColumn = true;
+                    anyMatchFoundForLine = true;
+                    anyMatchFound = true;
                 }
 
                 if (!anyMatchFoundForColumn)

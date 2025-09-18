@@ -190,11 +190,14 @@ public static class SchemaConverter
             .Where(x => x.LinkedLicences.Length >= 1)
             .SelectMany(x => x.LinkedLicences)
             .ToList();
-            
+
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
+        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
+        
         linkedLicences = linkedLicences
             .GroupBy(x => x.LicenceNumber)
             .Select(x => x.First())
+            .Where(x => x.LicenceNumber != licenceNumber)
             .ToList();
         
         var limits = new AbstractionLimits
@@ -284,6 +287,26 @@ public static class SchemaConverter
         };
     }
 
+    private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var additional = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Additional");
+
+        if (additional == null)
+        {
+            return [];
+        }
+
+        return additional.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber
+            })
+            .ToList();
+    }
+    
     private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(List<LabelGroupResult> matches)
     {
         var furtherConditions = matches

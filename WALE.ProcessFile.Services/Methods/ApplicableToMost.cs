@@ -48,6 +48,10 @@ public static class ApplicableToMost
             textBeforeAtAndAfterLabel.Reverse();
         }
         
+        var isMultiple = request.label?.MultipleBehaviour is
+            MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
@@ -127,7 +131,9 @@ public static class ApplicableToMost
             if (request.isLicenceNumberLookup)
             {
                 // TODO can swap this out now for shared method in Base
-                
+
+                var isLast = textBeforeAtAndAfterLabel.Last() == item;
+
                 if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -139,7 +145,17 @@ public static class ApplicableToMost
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
 
-                    return returnList;
+                    if (!isMultiple)
+                    {
+                        return returnList;
+                    }
+
+                    returnListTop.AddRange(returnList);
+                }
+                
+                if (isLast)
+                {
+                    return returnListTop;
                 }
                 
                 continue;

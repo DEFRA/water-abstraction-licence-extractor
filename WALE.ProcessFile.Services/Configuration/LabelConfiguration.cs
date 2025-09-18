@@ -22,7 +22,59 @@ public static class LabelConfiguration
             ("DateEffective", GetDateEffectiveLabels()),
             ("DateOfExpiry", GetDateOfExpiryLabels()),
             ("Issuer", GetIssuerLabels()),
-            ("FurtherConditions", GetFurtherConditions())
+            ("FurtherConditions", GetFurtherConditions()),
+            ("Additional", GetAdditional())
+        ];
+    }
+    
+    private static List<LabelToMatch> GetAdditional()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "AdditionalAll",
+                TextStart =
+                [
+                    new("ADDITIONAL INFORMATION[END_OF_LINE]"),
+                    new("ADDITIONAL[END_OF_LINE]")
+                ],
+                TextEnd =
+                [
+                    new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    new(@"/Page \d* of \d*/"),
+                    new("/Licence Serial No: [A-Z0-9/]*/")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "AdditionalLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.RegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    }
+                ]
+            }
         ];
     }
 
@@ -35,7 +87,7 @@ public static class LabelConfiguration
                 Name = "FurtherConditionsAll",
                 TextStart =
                 [
-                    new("FURTHER CONDITIONS")
+                    new("FURTHER CONDITIONS[END_OF_LINE]")
                 ],
                 TextEnd =
                 [

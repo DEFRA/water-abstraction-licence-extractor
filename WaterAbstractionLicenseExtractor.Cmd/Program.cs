@@ -470,19 +470,6 @@ async Task HandleFileAsync(
 
         var serviceName = companyNameMatch?.ServiceName ?? "PdfPig";
 
-        var limitsResult = matches.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        var linkedLicenceNumbersList = limitsResult?
-            .SubResults?
-            .SelectMany(x => x.SubResults!)
-            .SelectMany(section => section.SubResults?.Where(sr => sr.MatchedLabel?.Name == "LinkedLicenceNumber")!)
-            .SelectMany(x => x.Text!)
-            .Where(x => !string.IsNullOrEmpty(x?.Text))
-            .ToList();
-        
-        var linkedLicenceNumbers = linkedLicenceNumbersList != null ?
-            string.Join("|", linkedLicenceNumbersList.Select(linkedLicenceNumber => linkedLicenceNumber.Text).ToArray())
-            : string.Empty;
-
         var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
         var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
         var matchedLabelPosition = companyNameMatch?.MatchedLabel?.Position.ToString();
@@ -505,6 +492,10 @@ async Task HandleFileAsync(
         
         var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = agreedSchema.LicenceVersion.Issuer;
+
+        var linkedLicenceNumbers = string.Join(
+            '|',
+            agreedSchema.LinkedLicences.Select(x => x.LicenceNumber));
         
         outputLines.Add(new OutputLine
         {

@@ -96,8 +96,13 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var atLeastOneDigit = value.Count(char.IsDigit) >= 1;
+                    var veryShort = value.Length < 5;
+                    if (veryShort)
+                    {
+                        continue;
+                    }
 
+                    var atLeastOneDigit = value.Count(char.IsDigit) >= 1;
                     if (!atLeastOneDigit)
                     {
                         continue;

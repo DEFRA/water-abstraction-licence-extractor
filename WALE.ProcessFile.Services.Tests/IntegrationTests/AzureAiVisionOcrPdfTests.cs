@@ -608,7 +608,10 @@ public class AzureAiVisionOcrPdfTests
 
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(8, section1Sub1.SubResults!.Count);
+        Assert.Equal(9, section1Sub1.SubResults!.Count);
+
+        var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber");
+        Assert.Single(linkedLicences);
         
         Assert.Equal("1 January and ending on 31 December", section1Sub1.SubResults.Last().Text!.Single().Text);        
         

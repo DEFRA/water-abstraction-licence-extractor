@@ -96,7 +96,8 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var veryShort = value.Length < 5;
+                    var shortLimit = value.Contains('/') ? 5 : 6;
+                    var veryShort = value.Length < shortLimit;
                     if (veryShort)
                     {
                         continue;

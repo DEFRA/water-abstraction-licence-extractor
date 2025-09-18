@@ -36,8 +36,8 @@ public static class LabelConfiguration
                 Name = "AdditionalAll",
                 TextStart =
                 [
-                    new("ADDITIONAL INFORMATION[END_OF_LINE]"),
-                    new("ADDITIONAL[END_OF_LINE]")
+                    new("ADDITIONAL INFORMATION[END_OF_LINE]") { LineMustStartWith = true },
+                    new("ADDITIONAL[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [

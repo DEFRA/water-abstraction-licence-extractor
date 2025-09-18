@@ -1113,7 +1113,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(6, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1127,8 +1127,7 @@ public class TessaractOcrPdfTests
         Assert.Equal("13/43/37/110", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
-        Assert.NotNull(additionalInformation);
-        Assert.Equal(16, additionalInformation.Text!.Count);
+        Assert.Null(additionalInformation);
     }
     
     [Fact]

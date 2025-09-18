@@ -1285,4 +1285,21 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("Through flow for Purveys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
         Assert.Equal("Augmentation of Purveys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].Description);
     }
+
+    [Fact]
+    public async Task When_LinkedLicenceLooksSuspect_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(6, resultFull.Matches?.Count);
+
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+
+        Assert.Null(agreedSchemaLicence.LicenceNumber);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+    }
 }

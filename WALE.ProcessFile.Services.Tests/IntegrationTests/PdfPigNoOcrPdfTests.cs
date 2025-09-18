@@ -3582,5 +3582,15 @@ public class PdfPigNoOcrPdfTests
         var furtherConditions = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
         Assert.NotNull(furtherConditions);
         Assert.Equal("9. FURTHER CONDITIONS", furtherConditions.Text?.FirstOrDefault()?.Text);
+        Assert.Equal(36, furtherConditions.Text?.Count);
+
+        Assert.Equal(4, furtherConditions.SubResults.Count);
+        
+        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
     }
 }

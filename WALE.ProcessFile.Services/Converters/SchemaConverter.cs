@@ -185,6 +185,17 @@ public static class SchemaConverter
             licenceVersion.LicenceVersionId,
             points,
             purposes);
+
+        var linkedLicences = aggregates
+            .Where(x => x.LinkedLicences.Length >= 1)
+            .SelectMany(x => x.LinkedLicences)
+            .ToList();
+            
+        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
+        linkedLicences = linkedLicences
+            .GroupBy(x => x.LicenceNumber)
+            .Select(x => x.First())
+            .ToList();
         
         var limits = new AbstractionLimits
         {
@@ -202,7 +213,8 @@ public static class SchemaConverter
             Purposes = purposes,
             PeriodsOfAbstraction = GetPeriods(matches),
             DefinitionOfYear = GetDefinitionOfYear(matches),
-            AbstractionLimits = limits
+            AbstractionLimits = limits,
+            LinkedLicences = linkedLicences.ToArray()
         };
     }
 
@@ -271,7 +283,27 @@ public static class SchemaConverter
             Inclusive = true
         };
     }
-    
+
+    private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var furtherConditions = matches
+            .FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
+
+        if (furtherConditions == null)
+        {
+            return [];
+        }
+
+        return furtherConditions.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber
+            })
+            .ToList();
+    }
+
     private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(
         List<LabelGroupResult> matches,
         string? licenceNumber,
@@ -479,7 +511,8 @@ public static class SchemaConverter
                     : PrimaryType.InLicence,
                 NaldType = GetNaldType(),
                 AggregateSetId = PositionConstants.ReplacementMarker,
-                LinkedLicences = linkedLicenceNumbers.ToArray(),
+                LinkedLicences = 
+                    linkedLicenceNumbers.ToArray(),
                 Limits = aggregateLimits,
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],

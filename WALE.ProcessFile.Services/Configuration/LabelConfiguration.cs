@@ -53,20 +53,17 @@ public static class LabelConfiguration
                 [
                     new()
                     {
-                        Name = "LinkedLicenceNumber",
+                        Name = "FCLinkedLicenceNumber",
                         Text =
                         [
-                            new("licence number "),
-                            new("licence serial number "),
-                            new("licence serial numbers "),
-                            new("under this licence and licence"),
-                            new("and licence "),
-                            new("and under licence "),
-                            new("and under license ") // spelling mistake in licence                                    
+                            new(@"[A-Z0-9]{1,3}\/[0-9]{1,4}\/[0-9]{1,4}\/[0-9]{1,4}(\/[A-Z0-9]{3})?")
+                            {
+                                IsRegularExpression = true
+                            }
                         ],
-                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "LicenceNumber",
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                        Position = LabelPosition.ActuallyLabel,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")

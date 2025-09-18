@@ -25,6 +25,11 @@ public static partial class LicenceNumber
                 continue;
             }
 
+            if (line.Text.Contains("NE/026/0034/052"))
+            {
+                
+            }
+            
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
             
@@ -90,7 +95,7 @@ public static partial class LicenceNumber
                     }
 
                     var regexMatches = LicenceNumbersSlashesRegex().IsMatch(numberLine)
-                                       || LicenceNumbersSpacesRegex().IsMatch(numberLine);
+                        || LicenceNumbersSpacesRegex().IsMatch(numberLine);
 
                     var enoughPartsWithNumbers = numberLine
                         .Replace(" ", "/")
@@ -142,6 +147,6 @@ public static partial class LicenceNumber
     [GeneratedRegex(@"[0-9A-Z]{1,2}\/[0-9]{1,5}(\/[0-9\.A-Z\*]{1,4}\/\d{1,4})*")]
     private static partial Regex LicenceNumbersSlashesRegex();
 
-    [GeneratedRegex(@"[0-9A-Z]{1,2} [0-9]{1,5}( [0-9\.A-Z\*]{1,4} \d{1,4})*")]
+    [GeneratedRegex(@"[0-9A-Z]{1,2} [0-9]{1,5} [0-9\.A-Z\*]{1,4} [0-9]{1,5}( \d{1,4})?")]
     private static partial Regex LicenceNumbersSpacesRegex();    
 }

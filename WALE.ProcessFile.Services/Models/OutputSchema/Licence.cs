@@ -31,4 +31,6 @@ public class Licence
     public AbstractionLimits AbstractionLimits { get; init; } = new();    
     
     public TimePeriod? DefinitionOfYear { get; init; }
+    
+    public LinkedLicence[] LinkedLicences { get; init; } = [];
 }

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Models;
@@ -73,6 +74,21 @@ public static class LabelMatchingHelper
         {
             var labelText = labelTextOption.Text;
 
+            if (labelTextOption.IsRegularExpression)
+            {
+                var matches = Regex.Matches(lineToCheck.Text, labelTextOption.Text);
+                
+                if (matches.Count > 0)
+                {
+                    matchedText = labelTextOption.Clone(labelTextOption.Text);
+                    labelCharPosition = lineForPosition.Text.IndexOf(
+                        matches[0].Value,
+                        StringComparison.InvariantCultureIgnoreCase);
+                    
+                    return true;
+                }
+            }
+            
             if (combinedText?.Contains(labelText, StringComparison.InvariantCultureIgnoreCase) == true)
             {
                 var position2 = combinedText.IndexOf(labelText,

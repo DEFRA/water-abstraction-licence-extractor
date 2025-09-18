@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
@@ -818,6 +819,11 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
+
+                    if (partialLine.Text.Contains("NE/026/0034/052"))
+                    {
+                        
+                    }
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
@@ -1332,7 +1338,7 @@ public class PdfDataExtractorService(
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
-
+        
         var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
             .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
 
@@ -1345,6 +1351,46 @@ public class PdfDataExtractorService(
             });
             
             return returnItems;
+        }
+        
+        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
+        {
+            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text);
+                
+            var position = line.Text.IndexOf(
+                matches[0].Value,
+                StringComparison.InvariantCultureIgnoreCase);
+
+            var beforeText = line.Text.Substring(0, position);
+            var beforeLabel = label.Clone();
+            beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = beforeText,
+                Label = beforeLabel
+            });
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = matches.FirstOrDefault()?.Value,
+                Label = label
+            });
+
+            if (line.Text.Length > position + matches.FirstOrDefault()?.Value.Length + 1)
+            {
+                var afterLabel = label.Clone();
+                var afterText = line.Text.Substring(position + matches.FirstOrDefault()!.Value.Length);
+                beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                returnItems.Add(new TextAndLabel
+                {
+                    Text = afterText,
+                    Label = afterLabel
+                });
+            }
+
+            return returnItems; 
         }
         
         var labelTextPositionIndex = PositionConstants.PositionNotFound;
@@ -1377,7 +1423,6 @@ public class PdfDataExtractorService(
         
         var textAfterLabel = FormattingHelper.TrimFormatting(
             line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
-        
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind

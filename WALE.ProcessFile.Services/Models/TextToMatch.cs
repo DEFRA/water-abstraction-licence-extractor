@@ -17,6 +17,8 @@ public class TextToMatch(string text)
     public bool RemoveWholeLine { get; init; }
 
     public int InstanceNumber { get; init; } = 1;
+    
+    public bool IsRegularExpression { get; init; }
 
     public TextToMatch Clone(string textToSet)
     {
@@ -28,7 +30,8 @@ public class TextToMatch(string text)
             IfMultiplePreferLongest = IfMultiplePreferLongest,
             ColumnMustHave2SequentialNumbers = ColumnMustHave2SequentialNumbers,
             RemoveWholeLine = RemoveWholeLine,
-            InstanceNumber = InstanceNumber
+            InstanceNumber = InstanceNumber,
+            IsRegularExpression = IsRegularExpression
         };
     }
 }

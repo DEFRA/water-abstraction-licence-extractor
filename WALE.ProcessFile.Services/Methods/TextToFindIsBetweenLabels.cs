@@ -58,11 +58,6 @@ public static class TextToFindIsBetweenLabels
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
                     && lineBeforeText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
 
-        if (request.label.Name == "DocumentPurposesAll")
-        {
-            
-        }
-        
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
             lineBeforeText,

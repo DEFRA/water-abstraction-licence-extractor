@@ -102,16 +102,32 @@ public static partial class LicenceNumber
                         continue;
                     }
 
+                    var isPostcode = value.Length == 7 || value.Length == 8
+                        && char.IsUpper(value[0])
+                        && value.Count(x => x == ' ') == 1
+                        && value.Split(' ')[1].Length == 3;
+                            
+                    if (isPostcode)
+                    {
+                        continue;
+                    }
+                    
                     var atLeastOneDigit = value.Count(char.IsDigit) >= 1;
                     if (!atLeastOneDigit)
                     {
                         continue;
                     }
 
-                    var isOsRef = (value.StartsWith("SE ") || value.StartsWith("SJ "))
+                    var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
+                        && value[2] == ' '
                         && value.All(x => x != '/')
                         && value.All(x => x != '.');
 
+                    if (!isOsRef)
+                    {
+                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ");
+                    }
+                    
                     if (isOsRef)
                     {
                         continue;
@@ -125,6 +141,14 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
+
+                    /*var valueWords = value.Split(' ');
+                    var anyDictWord = valueWords.Any(vw =>  DataHelper.Dictionary.Check(vw));
+
+                    if (anyDictWord)
+                    {
+                        continue;
+                    }*/
                     
                     var colText = FormattingHelper.TrimFormatting(
                         value,

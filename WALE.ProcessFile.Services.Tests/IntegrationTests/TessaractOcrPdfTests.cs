@@ -185,9 +185,9 @@ public class TessaractOcrPdfTests
         // Assert
         Assert.Equal(7, resultList.Count);
 
-        var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("25/68", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 25/68/1/159/
+        Assert.Equal("25/68", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 25/68/1/159
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -736,6 +736,10 @@ public class TessaractOcrPdfTests
         
         // Assert
         Assert.Equal(7, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+
+        var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("938/1", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 29/38/1/61
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

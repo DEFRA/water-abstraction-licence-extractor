@@ -103,11 +103,20 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var isOsRef = value.StartsWith("SE ")
+                    var isOsRef = (value.StartsWith("SE ") || value.StartsWith("SJ "))
                         && value.All(x => x != '/')
                         && value.All(x => x != '.');
 
                     if (isOsRef)
+                    {
+                        continue;
+                    }
+                    
+                    var noCharSlashOrDot = !value.Any(x => x == '/')
+                        && !value.Any(x => x == '.')
+                        && !value.Any(char.IsLetter);
+
+                    if (noCharSlashOrDot && value.Split(' ') .Length < 3)
                     {
                         continue;
                     }

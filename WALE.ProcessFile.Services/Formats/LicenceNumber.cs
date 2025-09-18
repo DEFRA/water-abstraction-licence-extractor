@@ -8,6 +8,10 @@ namespace WALE.ProcessFile.Services.Formats;
 public static partial class LicenceNumber
 {
     public const string Constant = "LicenceNumber";
+
+    // AA/123, AA/123/123, AA/123/123/123, AA 123 123 123 or AA.123.123.123 (and some other variations of this)
+    public const string RegexPatten =
+        @"([A-Z0-9]{1,3}[\/ .][0-9]{1,4}[\/ .][0-9]{1,4}([\/ .][0-9]{2,4}([\/ .][A-Z0-9]{3})?)?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
     
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
@@ -80,7 +84,7 @@ public static partial class LicenceNumber
                         continue;
                     }
                     
-                    var containsSplitter = subLine.Contains(' ') || column.Text.Contains('/');
+                    var containsSplitter = subLine.Contains(' ') || column.Text.Contains('/')|| column.Text.Contains('.');
 
                     if (!containsSplitter || subLine.Length < 4)
                     {
@@ -93,15 +97,14 @@ public static partial class LicenceNumber
                     {
                         numberLine = numberLine.Replace(" ", string.Empty);
                     }
-
-                    var regexMatches = LicenceNumbersSlashesRegex().IsMatch(numberLine)
-                        || LicenceNumbersSpacesRegex().IsMatch(numberLine);
-
+                    
                     var enoughPartsWithNumbers = numberLine
                         .Replace(" ", "/")
+                        .Replace(".", "/")
                         .Split('/')
                         .Count(p => p.Any(char.IsDigit)) >= 2;
 
+                    var regexMatches = LicenceNumbersRegex().IsMatch(numberLine);
                     var match = regexMatches && enoughPartsWithNumbers;
 
                     if (match)
@@ -144,9 +147,6 @@ public static partial class LicenceNumber
         return anyMatchFound;
     }
     
-    [GeneratedRegex(@"[0-9A-Z]{1,2}\/[0-9]{1,5}(\/[0-9\.A-Z\*]{1,4}\/\d{1,4})*")]
-    private static partial Regex LicenceNumbersSlashesRegex();
-
-    [GeneratedRegex(@"[0-9A-Z]{1,2} [0-9]{1,5} [0-9\.A-Z\*]{1,4} [0-9]{1,5}( \d{1,4})?")]
-    private static partial Regex LicenceNumbersSpacesRegex();    
+    [GeneratedRegex(RegexPatten)]
+    private static partial Regex LicenceNumbersRegex();
 }

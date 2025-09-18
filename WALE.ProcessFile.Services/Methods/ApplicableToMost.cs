@@ -128,14 +128,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                var lines = new List<DocumentLine> { documentLine };
-
-                if (request.nextLines != null)
-                {
-                    lines.AddRange(request.nextLines!);
-                }
-
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();

@@ -819,11 +819,6 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
-                    if (partialLine.Text.Contains("NE/026/0034/052"))
-                    {
-                        
-                    }
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();

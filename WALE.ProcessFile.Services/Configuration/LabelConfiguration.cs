@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Configuration;
@@ -56,12 +57,12 @@ public static class LabelConfiguration
                         Name = "FCLinkedLicenceNumber",
                         Text =
                         [
-                            new(@"[A-Z0-9]{1,3}\/[0-9]{1,4}\/[0-9]{1,4}\/[0-9]{1,4}(\/[A-Z0-9]{3})?")
+                            new(LicenceNumber.RegexPatten)
                             {
                                 IsRegularExpression = true
                             }
                         ],
-                        Format = "LicenceNumber",
+                        Format = LicenceNumber.Constant,
                         Position = LabelPosition.ActuallyLabel,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
@@ -687,7 +688,8 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                Format = "LicenceNumber"
+                Format = LicenceNumber.Constant,
+                Name = "DocumentLicenceNumber"
             }
         ];
     }
@@ -1294,7 +1296,7 @@ public static class LabelConfiguration
                                             new("and under license ") // spelling mistake in licence                                    
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = "LicenceNumber",
+                                        Format = LicenceNumber.Constant,
                                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                                         SkipLineWhenContains = [
                                             new("Licence Serial No: ")

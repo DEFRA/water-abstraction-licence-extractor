@@ -22,8 +22,62 @@ public static class LabelConfiguration
             ("DateEffective", GetDateEffectiveLabels()),
             ("DateOfExpiry", GetDateOfExpiryLabels()),
             ("Issuer", GetIssuerLabels()),
+            ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional())
+        ];
+    }
+    
+    private static List<LabelToMatch> GetRecords()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "RecordsAll",
+                TextStart =
+                [
+                    new("8. Records[END_OF_LINE]"),
+                    new("Records[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("9. Further conditions"),
+                    new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    new(@"/Page \d* of \d*/"),
+                    new("/Licence Serial No: [A-Z0-9/]*/")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "RecordsLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.RegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    }
+                ]
+            }
         ];
     }
     

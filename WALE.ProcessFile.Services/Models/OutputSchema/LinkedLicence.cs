@@ -7,4 +7,6 @@ public class LinkedLicence
     public string? Filename { get; set; }
     
     public Condition? Condition { get; set; }
+    
+    public string[]? FromSection { get; set; }
 }

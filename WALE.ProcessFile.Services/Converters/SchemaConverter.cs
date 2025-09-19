@@ -191,13 +191,46 @@ public static class SchemaConverter
             .SelectMany(x => x.LinkedLicences)
             .ToList();
 
+        linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         
         linkedLicences = linkedLicences
-            .GroupBy(x => x.LicenceNumber)
-            .Select(x => x.First())
-            .Where(x => x.LicenceNumber != licenceNumber)
+            .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
+            .Select(linkedLicencesGroup =>
+            {
+                var firstLinkedLicence = linkedLicencesGroup.First();
+                var fromSection = new List<string>();
+
+                foreach (var linkedLicence in linkedLicencesGroup)
+                {
+                    if (linkedLicence.FromSection == null)
+                    {
+                        continue;
+                    }
+                    
+                    var sectionItems = linkedLicence.FromSection;
+
+                    foreach (var sectionItem in sectionItems)
+                    {
+                        if (fromSection.Contains(sectionItem))
+                        {
+                            continue;
+                        }
+                        
+                        fromSection.Add(sectionItem);
+                    }
+                }
+                
+                return new LinkedLicence
+                {
+                    LicenceNumber = firstLinkedLicence.LicenceNumber,
+                    Filename = firstLinkedLicence.Filename,
+                    Condition = firstLinkedLicence.Condition,
+                    FromSection = fromSection.ToArray()
+                };
+            })
+            .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumber)
             .ToList();
         
         var limits = new AbstractionLimits
@@ -302,7 +335,29 @@ public static class SchemaConverter
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
             .Select(linkedLicenceNumber => new LinkedLicence
             {
-                LicenceNumber = linkedLicenceNumber
+                LicenceNumber = linkedLicenceNumber,
+                FromSection = ["AdditionalInformation"]
+            })
+            .ToList();
+    }
+    
+    private static List<LinkedLicence> GetRecordsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var records = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Records");
+
+        if (records?.SubResults == null || records.SubResults.Count == 0)
+        {
+            return [];
+        }
+
+        return records.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                FromSection = ["Records"]
             })
             .ToList();
     }
@@ -322,7 +377,8 @@ public static class SchemaConverter
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
             .Select(linkedLicenceNumber => new LinkedLicence
             {
-                LicenceNumber = linkedLicenceNumber
+                LicenceNumber = linkedLicenceNumber,
+                FromSection = ["FurtherConditions"]
             })
             .ToList();
     }
@@ -420,7 +476,8 @@ public static class SchemaConverter
                     {
                         LicenceNumber = linkedLicenceNumber,
                         Filename = filename,
-                        Condition = condition
+                        Condition = condition,
+                        FromSection = ["AbstractionLimits"]
                     };
                 })
                 .ToList();

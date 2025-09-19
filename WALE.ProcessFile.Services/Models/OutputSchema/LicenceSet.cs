@@ -25,7 +25,6 @@ public class LicenceSet
                     .Replace("/", string.Empty);
 
                 var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
-                
                 outputSb.Append($"{licenceNumber}-{licenceVersionId}");
             }
 

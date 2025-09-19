@@ -51,7 +51,7 @@ public static class LabelConfiguration
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -95,14 +95,16 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
+                    new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
+                    new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -151,7 +153,7 @@ public static class LabelConfiguration
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -364,7 +366,7 @@ public static class LabelConfiguration
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -631,7 +633,7 @@ public static class LabelConfiguration
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 IgnoreMatchIfContains = [
                     "You can find our forms"
@@ -1165,7 +1167,7 @@ public static class LabelConfiguration
                 Remove =
                 [
                     new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9/]*/")
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,

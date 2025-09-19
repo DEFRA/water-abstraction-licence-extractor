@@ -142,14 +142,6 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-
-                    /*var valueWords = value.Split(' ');
-                    var anyDictWord = valueWords.Any(vw =>  DataHelper.Dictionary.Check(vw));
-
-                    if (anyDictWord)
-                    {
-                        continue;
-                    }*/
                     
                     var colText = FormattingHelper.TrimFormatting(
                         value,

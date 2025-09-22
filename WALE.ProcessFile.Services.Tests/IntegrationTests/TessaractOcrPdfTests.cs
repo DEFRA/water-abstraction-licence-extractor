@@ -11,6 +11,9 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class TessaractOcrPdfTests
 {
+    private static readonly string CacheFolder = "Cache/";
+    private static readonly string OutputFolder = "Output/";
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -29,8 +32,8 @@ public class TessaractOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                "Output/",
-                "Cache/"),
+                OutputFolder,
+                CacheFolder),
             [PdfFolder + fileName]);
     }
     
@@ -489,7 +492,13 @@ public class TessaractOcrPdfTests
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor,
+            OutputFolder,
+            CacheFolder);
+        
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();

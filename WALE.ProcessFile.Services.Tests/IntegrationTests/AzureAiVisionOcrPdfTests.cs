@@ -12,6 +12,9 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureAiVisionOcrPdfTests
 {
+    private static readonly string CacheFolder = "Cache/";
+    private static readonly string OutputFolder = "Output/";
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -44,8 +47,8 @@ public class AzureAiVisionOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                "Output/",
-                "Cache/"),
+                OutputFolder,
+                CacheFolder),
             [pdfFolder + fileName]);
     }
     
@@ -111,7 +114,13 @@ public class AzureAiVisionOcrPdfTests
 
         Assert.Equal(2, perHourValuesAll.Count);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor2,
+            OutputFolder,
+            CacheFolder);
+        
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
@@ -552,7 +561,13 @@ public class AzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor,
+            OutputFolder,
+            CacheFolder);
+        
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
@@ -1006,7 +1021,13 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor,
+            OutputFolder,
+            CacheFolder);
+        
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
@@ -1225,7 +1246,13 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(2, purpose.Text!.Count);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor,
+            OutputFolder,
+            CacheFolder);
+        
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
@@ -1282,7 +1309,13 @@ public class AzureAiVisionOcrPdfTests
         var resultFull = await GetMatchesAsync(filename, false);
         Assert.Equal(7, resultFull.Matches?.Count);
         
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor2,
+            OutputFolder,
+            CacheFolder);
+        
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -1300,7 +1333,13 @@ public class AzureAiVisionOcrPdfTests
         var resultFull = await GetMatchesAsync(filename, false);
         Assert.Equal(6, resultFull.Matches?.Count);
 
-        var agreedSchemaLicenceGroup = SchemaConverter.ToLicenceGroup(resultFull);
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _pdfDataExtractor2,
+            OutputFolder,
+            CacheFolder);
+        
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
         Assert.Null(agreedSchemaLicence.LicenceNumber);

@@ -408,7 +408,13 @@ async Task HandleFileAsync(
 
         var matches = matchesFull.Matches!;
         
-        var agreedSchemaGroup = SchemaConverter.ToLicenceGroup(matchesFull);
+        var agreedSchemaGroup = await SchemaConverter.ToLicenceGroupAsync(
+            matchesFull,
+            fileLicenceMapping,
+            pdfDataExtractor,
+            outputFolder,
+            cacheFolder);
+        
         var agreedSchema = agreedSchemaGroup.Licences.First();
         
         var purposeSb = new StringBuilder();

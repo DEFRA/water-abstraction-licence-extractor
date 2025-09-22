@@ -1,5 +1,7 @@
+using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
+using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -156,11 +158,25 @@ public static class SchemaConverter
         };
     }
     
-    public static LicenceSet ToLicenceGroup(MatchesResult matchesResult)
+    public static async Task<LicenceSet> ToLicenceGroupAsync(
+        MatchesResult matchesResult,
+        Dictionary<string, string> fileLicenceMapping,
+        IPdfDataExtractorService  pdfDataExtractorService,
+        string outputFolder,
+        string cacheFolder)
     {
         var primaryLicence = ToLicence(matchesResult);
+        var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
-        var allLicences = GetLinkedLicences(matchesResult, primaryLicence);
+        var allLicences = await GetLinkedLicencesAsync(
+            matchesResult,
+            primaryLicence,
+            fileLicenceMapping,
+            pdfDataExtractorService,
+            outputFolder,
+            cacheFolder,
+            previouslyParsedPaths);
+        
         allLicences.Insert(0, primaryLicence);
 
         var licenceSet = new LicenceSet
@@ -213,7 +229,14 @@ public static class SchemaConverter
         return aggregateSets.ToArray();
     }
 
-    private static List<Licence> GetLinkedLicences(MatchesResult matchesResult, Licence primaryLicence)
+    private static async Task<List<Licence>> GetLinkedLicencesAsync(
+        MatchesResult matchesResult,
+        Licence primaryLicence,
+        Dictionary<string, string> licenceMapping,
+        IPdfDataExtractorService  pdfDataExtractorService,
+        string outputFolder,
+        string cacheFolder,
+        List<string> previouslyParsedPaths)
     {
         var returnLicences = new List<Licence>();
         
@@ -260,11 +283,23 @@ public static class SchemaConverter
                     {
                         continue;
                     }
-                        
-                    returnLicences.Add(new Licence
+                    
+                    if (!licenceMapping.TryGetValue(licenceNumber!, out var relatedFileName))
                     {
-                        LicenceNumber = licenceNumber
-                    });
+                        returnLicences.Add(new Licence
+                        {
+                            LicenceNumber = licenceNumber
+                        });
+                        
+                        continue;
+                    }
+                    
+                    var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                        relatedFileName!,
+                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
+                        previouslyParsedPaths);
+                    
+                    returnLicences.Add(ToLicence(relatedFileMatches));
                 }
             }
         }

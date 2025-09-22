@@ -3921,7 +3921,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.SelectMany(x => x.Limits).Count());
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length); // TODO should be 3 (with implicit link to /056)
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].FromSection!);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].FromSection![0]);
@@ -3929,6 +3929,10 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].FromSection!);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].FromSection![0]);
+        
+        Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[2].FromSection!);
+        Assert.Equal("ImplicitBackLink", agreedSchemaLicence.LinkedLicences[2].FromSection![0]);
         
         // For third licence
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[2];
@@ -3940,7 +3944,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
         
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].FromSection!.Length);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].FromSection![0]);
@@ -3953,6 +3957,10 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].FromSection!);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[2].FromSection![0]);
+        
+        Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LinkedLicences[3].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[3].FromSection!);
+        Assert.Equal("ImplicitBackLink", agreedSchemaLicence.LinkedLicences[3].FromSection![0]);
         
         // For fourth licence
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[3];

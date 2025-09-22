@@ -190,9 +190,65 @@ public static class SchemaConverter
             PopulateAggregateSetIds(
                 licence.AbstractionLimits.Aggregates,
                 licenceSet);
+
+            AddMissingBackLinks(licenceSet);
         }
         
         return licenceSet;
+    }
+    
+    private static void AddMissingBackLinks(LicenceSet licenceSet)
+    {
+        foreach (var licence in licenceSet.Licences)
+        {
+            if (licence.Status == LicenceStatus.NotFound)
+            {
+                continue;
+            }
+            
+            var incomingLinks = GetLicencesThatReferenceLicence(licenceSet.Licences, licence.LicenceNumber!);
+            var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
+
+            foreach (var incomingLink in incomingLinks)
+            {
+                if (outgoingLinks.Contains(incomingLink))
+                {
+                    continue;
+                }
+                
+                // Back link is missing
+                var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
+                {
+                    new()
+                    {
+                        LicenceNumber = incomingLink,
+                        FromSection = [ "ImplicitBackLink" ]
+                    }
+                };
+
+                licence.LinkedLicences = linkedLicencesNew.ToArray();
+            }
+        }
+    }
+
+    private static List<string> GetLicencesThatReferenceLicence(Licence[] licences, string licenceNumber)
+    {
+        var returnList = new List<string>();
+        
+        foreach (var licence in licences)
+        {
+            if (licence.LicenceNumber == licenceNumber)
+            {
+                continue;
+            }
+
+            if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
+            {
+                returnList.Add(licence.LicenceNumber!);
+            }
+        }
+
+        return returnList;
     }
     
     private static void PopulateAggregateSetIds(Aggregate[] licenceAggregates, LicenceSet licenceSet)

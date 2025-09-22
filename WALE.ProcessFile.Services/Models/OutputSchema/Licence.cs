@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Services.Enums.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class Licence
@@ -13,6 +15,8 @@ public class Licence
             return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
         }
     }
+    
+    public LicenceStatus Status { get; init; }
     
     public string? LicenceNumber { get; init; }
     

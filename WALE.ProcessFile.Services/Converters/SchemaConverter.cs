@@ -288,14 +288,15 @@ public static class SchemaConverter
                     {
                         returnLicences.Add(new Licence
                         {
-                            LicenceNumber = licenceNumber
+                            LicenceNumber = licenceNumber,
+                            Status = LicenceStatus.NotFound
                         });
                         
                         continue;
                     }
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                        relatedFileName!,
+                        relatedFileName,
                         new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
                         previouslyParsedPaths);
                     
@@ -306,15 +307,29 @@ public static class SchemaConverter
 
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
+            // Already found it
             if (returnLicences.Any(returnLicence => returnLicence.LicenceNumber == linkedLicence.LicenceNumber))
             {
                 continue;
             }
             
-            returnLicences.Add(new Licence
+            if (!licenceMapping.TryGetValue(linkedLicence.LicenceNumber!, out var relatedFileName))
             {
-                LicenceNumber = linkedLicence.LicenceNumber
-            });
+                returnLicences.Add(new Licence
+                {
+                    LicenceNumber = linkedLicence.LicenceNumber,
+                    Status = LicenceStatus.NotFound
+                });
+                        
+                continue;
+            }
+            
+            var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                relatedFileName,
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
+                previouslyParsedPaths);
+                    
+            returnLicences.Add(ToLicence(relatedFileMatches));
         }
 
         return returnLicences;

@@ -3883,18 +3883,25 @@ public class PdfPigNoOcrPdfTests
             OutputFolder,
             CacheFolder);
         
+
+        Assert.Equal("NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN-NE0260034056-LV2020091020370331",
+            agreedSchemaLicenceGroup.LicenceSetId);
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
         
         Assert.Equal("NE/026/0034/056", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[0].Status);
         Assert.NotEmpty(agreedSchemaLicenceGroup.Licences[0].AbstractionLimits.Individual);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[1].Status);
         Assert.NotEmpty(agreedSchemaLicenceGroup.Licences[1].AbstractionLimits.Individual);
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[2].Status);
         Assert.NotEmpty(agreedSchemaLicenceGroup.Licences[2].AbstractionLimits.Individual);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicenceGroup.Licences[3].LicenceNumber);
+        Assert.Equal(LicenceStatus.NotFound, agreedSchemaLicenceGroup.Licences[3].Status);
         Assert.Empty(agreedSchemaLicenceGroup.Licences[3].AbstractionLimits.Individual);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();

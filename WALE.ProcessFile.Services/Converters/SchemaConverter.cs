@@ -719,6 +719,11 @@ public static class SchemaConverter
             allAggregates.Add(aggregate);
         }
 
+        if (allIndividualGroups is [{ Limits.Count: 0 }])
+        {
+            allIndividualGroups.Clear();
+        }
+        
         return (allAggregates.ToArray(), allIndividualGroups.ToArray());
     }
 

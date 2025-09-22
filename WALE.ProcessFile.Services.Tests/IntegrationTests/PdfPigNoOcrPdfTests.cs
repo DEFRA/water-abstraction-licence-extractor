@@ -4020,4 +4020,84 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].FromSection!);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[2].FromSection![0]);
     }
+    
+    [Fact]
+    public async Task When_BackLinkX_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "NE0260034018__Application Minor Variation Issued Licence 11-12-2019 11149535.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(15, resultFull.Matches?.Count);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+            resultFull,
+            FileLicenceMapping,
+            _pdfDataExtractor2,
+            OutputFolder,
+            CacheFolder);
+
+        var expectedLicenceSetId =
+            "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN";
+        
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);
+        
+        Assert.Equal(2, agreedSchemaLicenceGroup.AggregateSets.Length);
+        Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length); // TODO should have a /056 back link ideally
+        
+        // For primary licence
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Single(agreedSchemaLicence.LicenceSetIds);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[0]);
+        
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].FromSection!);
+        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].FromSection![0]);
+        
+        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[1].FromSection!);
+        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].FromSection![0]);
+        
+        // For second licence
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[1];
+        
+        Assert.Single(agreedSchemaLicence.LicenceSetIds);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[0]);
+        
+        Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.SelectMany(x => x.Limits).Count());
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.Length);
+        
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].FromSection!.Length);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].FromSection![0]);
+        
+        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[1].FromSection!);
+        Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[1].FromSection![0]);
+        
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[2].FromSection!);
+        Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[2].FromSection![0]);
+        
+        // For third licence
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[2];
+        
+        Assert.Single(agreedSchemaLicence.LicenceSetIds);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[0]);
+        
+        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal(LicenceStatus.NotFound, agreedSchemaLicence.Status);
+    }
 }

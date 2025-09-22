@@ -15,6 +15,8 @@ public class Licence
             return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
         }
     }
+
+    public string[] LicenceSetIds { get; set; } = [];
     
     public LicenceStatus Status { get; init; }
     

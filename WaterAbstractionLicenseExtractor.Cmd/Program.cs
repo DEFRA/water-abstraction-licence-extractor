@@ -501,7 +501,8 @@ async Task HandleFileAsync(
 
         var linkedLicenceNumbers = string.Join(
             '|',
-            agreedSchema.LinkedLicences.Select(x => x.LicenceNumber));
+            agreedSchema.LinkedLicences
+                .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
         
         outputLines.Add(new OutputLine
         {
@@ -626,7 +627,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0270025037")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11149535") || x.Contains("11149440") || x.Contains("1497061")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
     
     return pdfFilePaths;

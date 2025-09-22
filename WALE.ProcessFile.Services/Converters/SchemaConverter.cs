@@ -190,8 +190,14 @@ public static class SchemaConverter
             PopulateAggregateSetIds(
                 licence.AbstractionLimits.Aggregates,
                 licenceSet);
-
+            
             AddMissingBackLinks(licenceSet);
+            
+            // Add LicenceSetIds to licence
+            licence.LicenceSetIds = new List<string>(licence.LicenceSetIds)
+            {
+                licenceSet.LicenceSetId
+            }.ToArray();
         }
         
         return licenceSet;

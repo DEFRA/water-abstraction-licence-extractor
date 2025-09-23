@@ -181,7 +181,7 @@ catch (Exception e)
     throw;
 }
 
-SchemaConverter.AddMissingBackLinks(allLicenceSetGroups);
+SchemaConverter.AddMissingBackLinks(allLicenceSetGroups, true);
 var fileNumber = 1;
 
 foreach (var licenceSetGroup in allLicenceSetGroups)

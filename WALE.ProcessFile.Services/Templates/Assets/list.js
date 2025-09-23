@@ -364,7 +364,7 @@ function setTotals() {
     document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
     document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
-    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
+    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSetIds', false);
 }
 
 function getCount(dataFiltered, field, comparisonValue) {
@@ -436,4 +436,32 @@ function populateDropdowns() {
 
     issueDateSb.push('<option value="">--</option>');
     issueDateFilter.innerHTML = issueDateSb.join('');
+
+    let licenceSetsFilter = document.getElementById('licence-sets-filter');
+    uniqueValues = [];
+    
+    let licenceSetsSb = [];
+    licenceSetsSb.push('<option value="All">All</option>');
+
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        let ary = item["licenceSetIds"];
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+            
+            if (uniqueValues.indexOf(value) === -1) {
+                uniqueValues.push(value);
+            }
+        }
+    }
+
+    uniqueValues.sort();
+
+    for (let i = 0; i < uniqueValues.length; i++) {
+        let value = uniqueValues[i];
+        licenceSetsSb.push('<option value="' + value + '">' + value + '</option>')
+    }
+
+    licenceSetsFilter.innerHTML = licenceSetsSb.join('');
 }

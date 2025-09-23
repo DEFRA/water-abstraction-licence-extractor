@@ -285,6 +285,30 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     
     linkedLicencesSb.Append("]");
     
+    var licenceSetsSb = new StringBuilder();
+    licenceSetsSb.Append("[");
+
+    if (!string.IsNullOrEmpty(outputLine.LicenceSetIds) && outputLine.LicenceSetIds != string.Empty)
+    {
+        first = true;
+        
+        foreach (var licenceSetId in outputLine.LicenceSetIds.Split('|'))
+        {
+            if (first)
+            {
+                first = false;
+            }
+            else
+            {
+                licenceSetsSb.Append(",");
+            }
+            
+            licenceSetsSb.Append($"\"{licenceSetId}\"");
+        }
+    }
+    
+    licenceSetsSb.Append("]");
+    
     listJsStringBuilder.AppendLine("\t{");
     listJsStringBuilder.AppendLine($"\t\t\"imagePath\": \"{filename}/PdfPig/Images/page-1.jpg\",");
     listJsStringBuilder.AppendLine($"\t\t\"filename\": \"{filename}\",");
@@ -299,6 +323,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
     listJsStringBuilder.AppendLine($"\t\t\"meansFound\": {outputLine.MeansFound.ToString().ToLower()},"); 
     listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {linkedLicencesSb.ToString()},");
+    listJsStringBuilder.AppendLine($"\t\t\"licenceSetIds\": {licenceSetsSb.ToString()}");
     listJsStringBuilder.Append("\t}");
     
     if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
@@ -565,6 +590,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         '|',
         licence.LinkedLicences
             .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
+
+    var licenceSetIds = string.Join('|', licence.LicenceSetIds);
     
     return new OutputLine
     {
@@ -589,7 +616,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         IssueDate = issueDate,
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
-        LinkedLicenceNumbers = linkedLicenceNumbers
+        LinkedLicenceNumbers = linkedLicenceNumbers,
+        LicenceSetIds = licenceSetIds
     };
 }
 

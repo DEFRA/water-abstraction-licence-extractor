@@ -206,6 +206,10 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         
         let linkedLicencesSb = [];
 
+        if (item.linkedLicences.length > 0) {
+            linkedLicencesSb.push('<ul>');
+        }
+        
         for (let j = 0; j < item.linkedLicences.length; j++) {
             let linkedLicence = item.linkedLicences[j];
             
@@ -214,6 +218,25 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             } else {
                 linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
             }
+        }
+
+        if (item.linkedLicences.length > 0) {
+            linkedLicencesSb.push('</ul>');
+        }
+
+        let licenceSetsSb = [];
+
+        if (item.licenceSetIds.length > 0) {
+            licenceSetsSb.push('<ul>');
+        }
+
+        for (let j = 0; j < item.licenceSetIds.length; j++) {
+            let licenceSetId = item.licenceSetIds[j];
+            licenceSetsSb.push('<li>' + licenceSetId + '</li>');
+        }
+
+        if (item.licenceSetIds.length > 0) {
+            licenceSetsSb.push('</ul>');
         }
         
         let filenameNoExtension = item.filename.split('.')[0];
@@ -297,6 +320,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
             "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
+            "<td>" + (item.licenceSetIds.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
             "</tr>";
 
         htmlSb.push(html);
@@ -340,6 +364,7 @@ function setTotals() {
     document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
     document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
+    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
 }
 
 function getCount(dataFiltered, field, comparisonValue) {

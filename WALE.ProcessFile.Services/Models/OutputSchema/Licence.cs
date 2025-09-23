@@ -39,4 +39,6 @@ public class Licence
     public TimePeriod? DefinitionOfYear { get; init; }
     
     public LinkedLicence[] LinkedLicences { get; set; } = [];
+    
+    public Dictionary<string, object> NoneSchemaData { get; set; } = [];
 }

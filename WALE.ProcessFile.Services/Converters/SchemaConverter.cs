@@ -142,6 +142,62 @@ public static class SchemaConverter
             Aggregates = aggregates,
             Individual = individual
         };
+
+        var noneSchemaData = new Dictionary<string, object>();
+
+        var issuedToMatch = matchesResult.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "Company");
+
+        if (issuedToMatch != null)
+        {
+            var issuedToMatchType = issuedToMatch.MatchType;
+            noneSchemaData.Add("issuedToMatchType", issuedToMatchType.ToString());
+            
+            var issuedTo = issuedToMatch
+                .Text?
+                .FirstOrDefault()?
+                .Text;
+
+            if (!string.IsNullOrEmpty(issuedTo))
+            {
+                noneSchemaData.Add("issuedTo", issuedTo);
+            }
+
+            var issuedToConfidence = issuedToMatch
+                .Text?
+                .FirstOrDefault()?
+                .OcrConfidence;
+
+            if (issuedToConfidence != null)
+            {
+                noneSchemaData.Add("issuedToConfidence", issuedToConfidence);
+            }
+
+            var issuedToMatchedLabelText = issuedToMatch.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
+            noneSchemaData.Add("issuedToMatchedLabelText", issuedToMatchedLabelText);
+            
+            var issuedToMatchLabelPosition = issuedToMatch.MatchedLabel?.Position.ToString() ?? "--";
+            noneSchemaData.Add("issuedToMatchLabelPosition", issuedToMatchLabelPosition);
+            
+            var issuedToCertainty = (int)issuedToMatchType / 100;
+            noneSchemaData.Add("issuedToCertainty", issuedToCertainty);
+        }
+
+        var licenceNumberOcrConfidence = matchesResult.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
+            .Text?
+            .FirstOrDefault()?
+            .OcrConfidence;
+        
+        if (licenceNumberOcrConfidence != null)
+        {
+            noneSchemaData.Add("licenceNumberConfidence", licenceNumberOcrConfidence);
+        }
+        
+        var ocr = matchesResult.ScannedFile ? "OCR" : "NoOCR";
+        noneSchemaData.Add("ocr", ocr);
+        
+        noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
         
         return new Licence
         {
@@ -154,7 +210,8 @@ public static class SchemaConverter
             PeriodsOfAbstraction = GetPeriods(matches),
             DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
-            LinkedLicences = linkedLicences.ToArray()
+            LinkedLicences = linkedLicences.ToArray(),
+            NoneSchemaData = noneSchemaData
         };
     }
     
@@ -191,7 +248,7 @@ public static class SchemaConverter
                 licence.AbstractionLimits.Aggregates,
                 licenceSet);
             
-            AddMissingBackLinks(licenceSet);
+            AddMissingBackLinks(licenceSet.Licences);
             
             // Add LicenceSetIds to licence
             licence.LicenceSetIds = new List<string>(licence.LicenceSetIds)
@@ -203,16 +260,16 @@ public static class SchemaConverter
         return licenceSet;
     }
     
-    private static void AddMissingBackLinks(LicenceSet licenceSet)
+    public static void AddMissingBackLinks(IReadOnlyList<Licence> licences)
     {
-        foreach (var licence in licenceSet.Licences)
+        foreach (var licence in licences)
         {
             if (licence.Status == LicenceStatus.NotFound)
             {
                 continue;
             }
             
-            var incomingLinks = GetLicencesThatReferenceLicence(licenceSet.Licences, licence.LicenceNumber!);
+            var incomingLinks = GetLicencesThatReferenceLicence(licences, licence.LicenceNumber!);
             var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
 
             foreach (var incomingLink in incomingLinks)
@@ -237,7 +294,7 @@ public static class SchemaConverter
         }
     }
 
-    private static List<string> GetLicencesThatReferenceLicence(Licence[] licences, string licenceNumber)
+    private static List<string> GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
     {
         var returnList = new List<string>();
         
@@ -675,7 +732,7 @@ public static class SchemaConverter
 
                 var unitPosition = dict[valueResult.MatchedLabel?.RelatedName!];
                 
-                var units = allUnits!.Count > unitPosition ? allUnits?[unitPosition]
+                var units = allUnits!.Count > unitPosition ? allUnits[unitPosition]
                     .Text?
                     .FirstOrDefault()?
                     .Text : null;
@@ -916,7 +973,7 @@ public static class SchemaConverter
 
             if (upToAndIncludeLine != null)
             {
-                var date = upToAndIncludeLine?.Replace(tKey, string.Empty);
+                var date = upToAndIncludeLine.Replace(tKey, string.Empty);
                     
                 timeCutoff = new TimeCutoff
                 {
@@ -1077,7 +1134,7 @@ public static class SchemaConverter
 
                 if (upToAndIncludeLine != null)
                 {
-                    var date = upToAndIncludeLine?.Replace(tKey, string.Empty);
+                    var date = upToAndIncludeLine.Replace(tKey, string.Empty);
                     
                     timeCutoff = new TimeCutoff
                     {

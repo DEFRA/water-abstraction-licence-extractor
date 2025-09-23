@@ -6,6 +6,7 @@ using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
@@ -137,9 +138,11 @@ foreach (var line in fileMappingContents)
     }
 }
 
+var allLicences = new List<Licence>();
+
 try
 {
-    var processingTasks = new List<Task>();
+    var processingTasks = new List<Task<Licence?>>();
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
@@ -147,14 +150,31 @@ try
 
         if (processingTasks.Count == concurrentCount)
         {
-            var completedTask = await Task.WhenAny(processingTasks);
-            processingTasks.Remove(completedTask);
+            var licenceTask = await Task.WhenAny(processingTasks);
+            processingTasks.Remove(licenceTask);
+
+            var licence = await licenceTask;
+
+            if (licence != null)
+            {
+                allLicences.Add(licence);
+            }
         }
     }
 
     if (processingTasks.Count > 0)
     {
         await Task.WhenAll(processingTasks);
+
+        foreach (var processingTask in processingTasks)
+        {
+            var licence = await processingTask;
+
+            if (licence != null)
+            {
+                allLicences.Add(licence);
+            }
+        }
     }
 
     foreach (var pdfDataExtractor in pdfDataExtractors)
@@ -167,6 +187,8 @@ catch (Exception e)
     Console.WriteLine(e);
     throw;
 }
+
+SchemaConverter.AddMissingBackLinks(allLicences);
 
 var resultFileStringBuilder = new StringBuilder(
     "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
@@ -367,7 +389,7 @@ var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
     {
         "links",
         linksDictionaries
-    }    
+    }
 };
 
 var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
@@ -376,7 +398,7 @@ File.WriteAllText(nodeGraphDataFile,
 
 return;
 
-async Task HandleFileAsync(
+async Task<Licence?> HandleFileAsync(
     string pdfFilePath,
     int fileNumber,
     Dictionary<string, string> licenceMapping)
@@ -405,8 +427,6 @@ async Task HandleFileAsync(
             pdfFilePath,
             lookupConfig,
             previouslyParsedPaths);
-
-        var matches = matchesFull.Matches!;
         
         var agreedSchemaGroup = await SchemaConverter.ToLicenceGroupAsync(
             matchesFull,
@@ -467,34 +487,22 @@ async Task HandleFileAsync(
 
         var pointsJs = "[" + pointsSb + "]";
 
-        var companyNameMatch = matches.FirstOrDefault(result => result.LabelGroupName == "Company");
-        var licenceHolder = companyNameMatch?.Text?.FirstOrDefault()?.Text.Replace("\"", "\\\"") ?? string.Empty;
-        var licenceHolderOcrConfidence = companyNameMatch?.Text?.FirstOrDefault()?.OcrConfidence;
-        
-        var certainty = (int) (companyNameMatch?.MatchType ?? MatchType.NotApplicable) / 100;
-        var ocr = matchesFull.ScannedFile ? "OCR" : "NoOCR";
-
-        var serviceName = companyNameMatch?.ServiceName ?? "PdfPig";
+        var licenceHolder = agreedSchema.NoneSchemaData.TryGetValue("issuedTo", out var value4)
+            ? (string)value4 : null;
+        var licenceHolderOcrConfidence = agreedSchema.NoneSchemaData.TryGetValue("issuedToConfidence", out var value5)
+            ? (double)value5 : (double?)null;
+        var ocr = agreedSchema.NoneSchemaData.TryGetValue("ocr", out var value6)
+            ? (string)value6 : "--";
+        var serviceName = agreedSchema.NoneSchemaData.TryGetValue("servicesUsed", out var value7)
+            ? ((string[])value7!).FirstOrDefault() : "PdfPig";
 
         var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
-        var matchedLabelText = companyNameMatch?.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
-        var matchedLabelPosition = companyNameMatch?.MatchedLabel?.Position.ToString();
 
-        var licenceNumber = matches
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .Text ?? string.Empty;
+        var licenceNumber = agreedSchema.LicenceNumber;
+        var licenceNumberOcrConfidence = agreedSchema.NoneSchemaData.TryGetValue("licenceNumberConfidence", out var value8)
+            ? (double)value8 : (double?)null;
 
-        var licenceNumberOcrConfidence = matches
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .OcrConfidence;
-
-        var meansFound = matches
-            .FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction")?
-            .SubResults?.Count > 0;
+        var meansFound = agreedSchema.MeansOfAbstraction.Length > 0;
         
         var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = agreedSchema.LicenceVersion.Issuer;
@@ -515,11 +523,11 @@ async Task HandleFileAsync(
             Purposes = purposesJs,
             Points = pointsJs,
             ServiceName = serviceName,
-            Certainty = certainty,
-            MatchType = companyNameMatch?.MatchType.ToString() ?? "N/A",
+            Certainty = agreedSchema.NoneSchemaData.TryGetValue("issuedToCertainty", out var value) ? (int)value : -1,
+            MatchType = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchType", out var value1) ? (string)value1 : "N/A",
             Duration = durationInMSeconds,
-            MatchedLabelText = matchedLabelText,
-            MatchedLabelPosition = matchedLabelPosition,
+            MatchedLabelText = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchedLabelText", out var value2) ? (string)value2 : null,
+            MatchedLabelPosition = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchLabelPosition", out var value3) ? (string)value3 : null,
             LicenceNumber = licenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = agreedSchema.AbstractionLimits.Individual.Sum(x => x.Limits.Count),
@@ -560,6 +568,8 @@ async Task HandleFileAsync(
             $"var licenceSet = {agreedSchemaSetJson}");
         
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
+
+        return agreedSchema;
     }
     catch (Exception exception)
     {
@@ -575,6 +585,8 @@ async Task HandleFileAsync(
             ServiceName = "NA",
             Duration = durationInSeconds
         });
+
+        return null;
     }
     finally
     {

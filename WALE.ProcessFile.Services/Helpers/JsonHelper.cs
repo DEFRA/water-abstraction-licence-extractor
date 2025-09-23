@@ -18,9 +18,9 @@ public static class JsonHelper
         return JsonSerializer.Serialize(licence, GetSerializer());
     }
     
-    public static string GetAsString(LicenceSet licenceSet)
+    public static string GetAsString(IReadOnlyList<LicenceSet> licenceSets)
     {
-        return JsonSerializer.Serialize(licenceSet, GetSerializer());
+        return JsonSerializer.Serialize(licenceSets, GetSerializer());
     }
     
     public static JsonSerializerOptions GetSerializer()

@@ -215,13 +215,15 @@ public static class SchemaConverter
         };
     }
     
-    public static async Task<LicenceSet> ToLicenceGroupAsync(
+    public static async Task<IReadOnlyList<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
         Dictionary<string, string> fileLicenceMapping,
         IPdfDataExtractorService  pdfDataExtractorService,
         string outputFolder,
         string cacheFolder)
     {
+        var returnList = new List<LicenceSet>();
+        
         var primaryLicence = ToLicence(matchesResult);
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
@@ -236,28 +238,39 @@ public static class SchemaConverter
         
         allLicences.Insert(0, primaryLicence);
 
-        var licenceSet = new LicenceSet
+        var singleLicenceSet = new LicenceSet
+        {
+            Licences = [primaryLicence],
+            AggregateSets = GetAggregateSets([primaryLicence])
+        };
+        
+        returnList.Add(singleLicenceSet);
+        
+        var multipleLicenceSet = new LicenceSet
         {
             Licences = allLicences.ToArray(),
             AggregateSets = GetAggregateSets(allLicences)
         };
 
+        returnList.Add(multipleLicenceSet);
+
         foreach (var licence in allLicences)
         {
             PopulateAggregateSetIds(
                 licence.AbstractionLimits.Aggregates,
-                licenceSet);
+                multipleLicenceSet);
             
-            AddMissingBackLinks(licenceSet.Licences);
+            AddMissingBackLinks(multipleLicenceSet.Licences);
             
             // Add LicenceSetIds to licence
             licence.LicenceSetIds = new List<string>(licence.LicenceSetIds)
             {
-                licenceSet.LicenceSetId
+                singleLicenceSet.LicenceSetId,
+                multipleLicenceSet.LicenceSetId
             }.ToArray();
         }
         
-        return licenceSet;
+        return returnList;
     }
     
     public static void AddMissingBackLinks(IReadOnlyList<Licence> licences)

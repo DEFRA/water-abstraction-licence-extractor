@@ -139,11 +139,11 @@ foreach (var line in fileMappingContents)
     }
 }
 
-var allLicenceSets = new List<LicenceSet>();
+var allLicenceSets = new List<IReadOnlyList<LicenceSet>>();
 
 try
 {
-    var processingTasks = new List<Task<LicenceSet?>>();
+    var processingTasks = new List<Task<IReadOnlyList<LicenceSet>>>();
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
@@ -151,15 +151,11 @@ try
 
         if (processingTasks.Count == concurrentCount)
         {
-            var licenceSetTask = await Task.WhenAny(processingTasks);
-            processingTasks.Remove(licenceSetTask);
+            var licenceSetsTask = await Task.WhenAny(processingTasks);
+            processingTasks.Remove(licenceSetsTask);
 
-            var licenceSet = await licenceSetTask;
-
-            if (licenceSet != null)
-            {
-                allLicenceSets.Add(licenceSet);
-            }
+            var licenceSets = await licenceSetsTask;
+            allLicenceSets.Add(licenceSets);
         }
     }
 
@@ -170,11 +166,7 @@ try
         foreach (var processingTask in processingTasks)
         {
             var licenceSet = await processingTask;
-
-            if (licenceSet != null)
-            {
-                allLicenceSets.Add(licenceSet);
-            }
+            allLicenceSets.Add(licenceSet);
         }
     }
 
@@ -189,12 +181,17 @@ catch (Exception e)
     throw;
 }
 
-SchemaConverter.AddMissingBackLinks(allLicenceSets.SelectMany(licenceSet => licenceSet.Licences).ToList());
+var allLicences = allLicenceSets
+    .SelectMany(licenceSets => licenceSets)
+    .SelectMany(licenceSet => licenceSet.Licences)
+    .ToList();
+
+SchemaConverter.AddMissingBackLinks(allLicences);
 var fileNumber = 1;
 
-foreach (var licenceSet in allLicenceSets)
+foreach (var licenceSetGroup in allLicenceSets)
 {
-    var licence = licenceSet.Licences.First();
+    var licence = licenceSetGroup.First().Licences.First();
     
     var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++);
     outputLines.Add(outputLine);
@@ -433,7 +430,7 @@ File.WriteAllText(nodeGraphDataFile,
 
 return;
 
-async Task<LicenceSet?> HandleFileAsync(
+async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     string pdfFilePath,
     int fileNumberX,
     Dictionary<string, string> licenceMapping)
@@ -463,7 +460,7 @@ async Task<LicenceSet?> HandleFileAsync(
             lookupConfig,
             previouslyParsedPaths);
         
-        var licenceSet = await SchemaConverter.ToLicenceGroupAsync(
+        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
             pdfDataExtractor,
@@ -483,7 +480,7 @@ async Task<LicenceSet?> HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
 
-        var licence = licenceSet.Licences.First();
+        var licence = licenceSets.First().Licences.First();
         var agreedSchemaJson = JsonHelper.GetAsString(licence);
     
         /*File.WriteAllText(
@@ -494,19 +491,19 @@ async Task<LicenceSet?> HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
             $"var data2 = {agreedSchemaJson}");
     
-        var agreedSchemaSetJson = JsonHelper.GetAsString(licenceSet);
+        var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
     
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/licence-set.jsonp",
-            $"var licenceSet = {agreedSchemaSetJson}");
+            $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
+            $"var licenceSets = {licenceSetsJson}");
     
         Console.WriteLine($"Finished {fileNumberX} {fileName}...");
-        return licenceSet;
+        return licenceSets;
     }
     catch (Exception exception)
     {
         // TODO log
-        return null;
+        return [];
     }
     finally
     {

@@ -410,7 +410,7 @@ function evaluateJsonPath() {
     jsonview.toggleNode(tree2);
 
     // create json tree object
-    const tree3 = jsonview.create(licenceSet);
+    const tree3 = jsonview.create(licenceSets);
 
     // render tree into dom element
     jsonview.render(tree3, document.querySelector('#dataSetOutput'));

@@ -492,16 +492,17 @@ public class TessaractOcrPdfTests
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("3/974", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceGroupAsync(
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder);
         
-        Assert.Single(agreedSchemaLicenceGroup.Licences);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(new DateTime(1997, 12, 12), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 

@@ -189,6 +189,13 @@ catch (Exception e)
 }
 
 SchemaConverter.AddMissingBackLinks(allLicences);
+var fileNumber = 1;
+
+foreach (var licence in allLicences)
+{
+    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber);
+    outputLines.Add(outputLine);
+}
 
 var resultFileStringBuilder = new StringBuilder(
     "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
@@ -434,115 +441,13 @@ async Task<Licence?> HandleFileAsync(
             pdfDataExtractor,
             outputFolder,
             cacheFolder);
-        
-        var agreedSchema = agreedSchemaGroup.Licences.First();
-        
-        var purposeSb = new StringBuilder();
-        first = true;
-        
-        foreach (var purpose in agreedSchema.Purposes)
-        {
-            if (purpose.Description == null)
-            {
-                continue;
-            }
-            
-            if (first)
-            {
-                first = false;
-            }
-            else
-            {
-                purposeSb.Append(",");
-            }
-                
-            var t = purpose.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
-            purposeSb.AppendLine("\"" + t + "\"");
-        }
-        
-        var purposesJs = "[" + purposeSb + "]";
-        
-        var pointsSb = new StringBuilder();
-        first = true;
-        
-        foreach (var point in agreedSchema.Points)
-        {
-            if (point.Description == null)
-            {
-                continue;
-            }
-            
-            if (first)
-            {
-                first = false;
-            }
-            else
-            {
-                pointsSb.Append(",");
-            }
-                
-            var t = point.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
-            pointsSb.AppendLine("\"" + t + "\"");
-        }
 
-        var pointsJs = "[" + pointsSb + "]";
-
-        var licenceHolder = agreedSchema.NoneSchemaData.TryGetValue("issuedTo", out var value4)
-            ? (string)value4 : null;
-        var licenceHolderOcrConfidence = agreedSchema.NoneSchemaData.TryGetValue("issuedToConfidence", out var value5)
-            ? (double)value5 : (double?)null;
-        var ocr = agreedSchema.NoneSchemaData.TryGetValue("ocr", out var value6)
-            ? (string)value6 : "--";
-        var serviceName = agreedSchema.NoneSchemaData.TryGetValue("servicesUsed", out var value7)
-            ? ((string[])value7!).FirstOrDefault() : "PdfPig";
-
-        var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
-
-        var licenceNumber = agreedSchema.LicenceNumber;
-        var licenceNumberOcrConfidence = agreedSchema.NoneSchemaData.TryGetValue("licenceNumberConfidence", out var value8)
-            ? (double)value8 : (double?)null;
-
-        var meansFound = agreedSchema.MeansOfAbstraction.Length > 0;
-        
-        var issueDate = agreedSchema.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
-        var issuer = agreedSchema.LicenceVersion.Issuer;
-
-        var linkedLicenceNumbers = string.Join(
-            '|',
-            agreedSchema.LinkedLicences
-                .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
-        
-        outputLines.Add(new OutputLine
-        {
-            LineNumber = completeNumber++,
-            StartNumber = fileNumber,
-            Filename = fileName.Replace("–", "-"),
-            LicenceHolder = licenceHolder,
-            LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
-            Ocr = ocr,
-            Purposes = purposesJs,
-            Points = pointsJs,
-            ServiceName = serviceName,
-            Certainty = agreedSchema.NoneSchemaData.TryGetValue("issuedToCertainty", out var value) ? (int)value : -1,
-            MatchType = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchType", out var value1) ? (string)value1 : "N/A",
-            Duration = durationInMSeconds,
-            MatchedLabelText = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchedLabelText", out var value2) ? (string)value2 : null,
-            MatchedLabelPosition = agreedSchema.NoneSchemaData.TryGetValue("issuedToMatchLabelPosition", out var value3) ? (string)value3 : null,
-            LicenceNumber = licenceNumber,
-            LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
-            LimitsCount = agreedSchema.AbstractionLimits.Individual.Sum(x => x.Limits.Count),
-            AggregatesCount = agreedSchema.AbstractionLimits.Aggregates.Sum(x => x.Limits.Count),
-            IssueDate = issueDate,
-            Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
-            MeansFound = meansFound,
-            LinkedLicenceNumbers = linkedLicenceNumbers
-        });
-
+        var licence = agreedSchemaGroup.Licences.First();
         var json = JsonHelper.GetAsString(matchesFull);
-        
+    
         var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
-        
+    
         /*File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.json",
             json);*/
@@ -551,8 +456,8 @@ async Task<Licence?> HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
 
-        var agreedSchemaJson = JsonHelper.GetAsString(agreedSchema);
-        
+        var agreedSchemaJson = JsonHelper.GetAsString(licence);
+    
         /*File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.json",
             agreedSchemaJson);*/
@@ -560,16 +465,16 @@ async Task<Licence?> HandleFileAsync(
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
             $"var data2 = {agreedSchemaJson}");
-        
+    
         var agreedSchemaSetJson = JsonHelper.GetAsString(agreedSchemaGroup);
-        
+    
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/licence-set.jsonp",
             $"var licenceSet = {agreedSchemaSetJson}");
-        
+    
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
 
-        return agreedSchema;
+        return licence;
     }
     catch (Exception exception)
     {
@@ -592,6 +497,110 @@ async Task<Licence?> HandleFileAsync(
     {
         pdfDataExtractor.InUse = false;
     }
+}
+
+static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber)
+{
+    var purposeSb = new StringBuilder();
+    var first = true;
+        
+    foreach (var purpose in licence.Purposes)
+    {
+        if (purpose.Description == null)
+        {
+            continue;
+        }
+        
+        if (first)
+        {
+            first = false;
+        }
+        else
+        {
+            purposeSb.Append(",");
+        }
+            
+        var t = purpose.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
+        purposeSb.AppendLine("\"" + t + "\"");
+    }
+        
+    var purposesJs = "[" + purposeSb + "]";
+    
+    var pointsSb = new StringBuilder();
+    first = true;
+    
+    foreach (var point in licence.Points)
+    {
+        if (point.Description == null)
+        {
+            continue;
+        }
+        
+        if (first)
+        {
+            first = false;
+        }
+        else
+        {
+            pointsSb.Append(",");
+        }
+            
+        var t = point.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
+        pointsSb.AppendLine("\"" + t + "\"");
+    }
+
+    var pointsJs = "[" + pointsSb + "]";
+
+    var licenceHolder = licence.NoneSchemaData.TryGetValue("issuedTo", out var value4)
+        ? (string)value4 : null;
+    var licenceHolderOcrConfidence = licence.NoneSchemaData.TryGetValue("issuedToConfidence", out var value5)
+        ? (double)value5 : (double?)null;
+    var ocr = licence.NoneSchemaData.TryGetValue("ocr", out var value6)
+        ? (string)value6 : "--";
+    var serviceName = licence.NoneSchemaData.TryGetValue("servicesUsed", out var value7)
+        ? ((string[])value7!).FirstOrDefault() : "PdfPig";
+
+    var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
+
+    var licenceNumber = licence.LicenceNumber;
+    var licenceNumberOcrConfidence = licence.NoneSchemaData.TryGetValue("licenceNumberConfidence", out var value8)
+        ? (double)value8 : (double?)null;
+
+    var meansFound = licence.MeansOfAbstraction.Length > 0;
+    
+    var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
+    var issuer = licence.LicenceVersion.Issuer;
+
+    var linkedLicenceNumbers = string.Join(
+        '|',
+        licence.LinkedLicences
+            .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
+    
+    return new OutputLine
+    {
+        LineNumber = completeNumber,
+        StartNumber = fileNumber,
+        Filename = licence.Filename?.Replace("–", "-"),
+        LicenceHolder = licenceHolder,
+        LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
+        Ocr = ocr,
+        Purposes = purposesJs,
+        Points = pointsJs,
+        ServiceName = serviceName,
+        Certainty = licence.NoneSchemaData.TryGetValue("issuedToCertainty", out var value) ? (int)value : -1,
+        MatchType = licence.NoneSchemaData.TryGetValue("issuedToMatchType", out var value1) ? (string)value1 : "N/A",
+        Duration = durationInMSeconds,
+        MatchedLabelText = licence.NoneSchemaData.TryGetValue("issuedToMatchedLabelText", out var value2) ? (string)value2 : null,
+        MatchedLabelPosition = licence.NoneSchemaData.TryGetValue("issuedToMatchLabelPosition", out var value3) ? (string)value3 : null,
+        LicenceNumber = licenceNumber,
+        LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
+        LimitsCount = licence.AbstractionLimits.Individual.Sum(x => x.Limits.Count),
+        AggregatesCount = licence.AbstractionLimits.Aggregates.Sum(x => x.Limits.Count),
+        IssueDate = issueDate,
+        Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
+        MeansFound = meansFound,
+        LinkedLicenceNumbers = linkedLicenceNumbers
+    };
 }
 
 static string ToPercent(double? value, string? ocr)

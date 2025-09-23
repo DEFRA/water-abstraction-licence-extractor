@@ -244,7 +244,7 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
     
     licence.LicenceSetIds = newLicenceSetIds.ToArray();
     
-    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++);
+    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++, distinctLicenceSets);
     outputLines.Add(outputLine);
 }
 
@@ -579,7 +579,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     }
 }
 
-static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber)
+static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets)
 {
     var purposeSb = new StringBuilder();
     var first = true;
@@ -655,8 +655,9 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         '|',
         licence.LinkedLicences
             .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
-
-    var licenceSetIds = string.Join('|', licence.LicenceSetIds);
+    
+    var shortLicenceSetIds = string.Join('|', licence.LicenceSetIds
+        .Select(licenceSetId => allLicenceSets.First(als => als.LicenceSetId == licenceSetId).ShortLicenceSetId));
     
     return new OutputLine
     {
@@ -682,7 +683,7 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
         LinkedLicenceNumbers = linkedLicenceNumbers,
-        LicenceSetIds = licenceSetIds
+        LicenceSetIds = shortLicenceSetIds
     };
 }
 

@@ -33,6 +33,34 @@ public class LicenceSet
         }
     }
     
+    public string ShortLicenceSetId
+    {
+        get
+        {
+            var licencesAlphabetical = Licences
+                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
+
+            var outputSb = new StringBuilder();
+            
+            foreach (var licence in licencesAlphabetical)
+            {
+                if (outputSb.Length > 0)
+                {
+                    outputSb.Append('-');
+                }
+
+                var licenceNumberParts = licence.LicenceNumber?
+                    .Replace(" ", "/")
+                    .Replace(".", "/")
+                    .Split('/');
+
+                outputSb.Append(licenceNumberParts?.Last());
+            }
+
+            return outputSb.ToString();
+        }
+    }
+    
     public LicenceSetType LicenceSetType { get; init; }
     
     public AggregateSet[] AggregateSets { get; init; } = [];

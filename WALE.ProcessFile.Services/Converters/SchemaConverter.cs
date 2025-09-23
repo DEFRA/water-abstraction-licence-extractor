@@ -240,6 +240,7 @@ public static class SchemaConverter
 
         var singleLicenceSet = new LicenceSet
         {
+            LicenceSetType = LicenceSetType.Single,
             Licences = [primaryLicence],
             AggregateSets = GetAggregateSets([primaryLicence])
         };
@@ -248,6 +249,7 @@ public static class SchemaConverter
         
         var multipleLicenceSet = new LicenceSet
         {
+            LicenceSetType = LicenceSetType.Multiple,
             Licences = allLicences.ToArray(),
             AggregateSets = GetAggregateSets(allLicences)
         };
@@ -287,7 +289,8 @@ public static class SchemaConverter
 
             foreach (var incomingLink in incomingLinks)
             {
-                if (outgoingLinks.Contains(incomingLink))
+                if (outgoingLinks.Contains(incomingLink)
+                    || licence.LinkedLicences.Any(linkedLicence => linkedLicence.LicenceNumber == incomingLink))
                 {
                     continue;
                 }

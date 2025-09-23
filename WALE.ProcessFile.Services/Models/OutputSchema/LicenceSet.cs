@@ -1,4 +1,5 @@
 using System.Text;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -31,6 +32,8 @@ public class LicenceSet
             return outputSb.ToString();
         }
     }
+    
+    public LicenceSetType LicenceSetType { get; init; }
     
     public AggregateSet[] AggregateSets { get; init; } = [];
     

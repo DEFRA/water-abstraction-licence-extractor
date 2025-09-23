@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -138,11 +139,11 @@ foreach (var line in fileMappingContents)
     }
 }
 
-var allLicences = new List<Licence>();
+var allLicenceSets = new List<LicenceSet>();
 
 try
 {
-    var processingTasks = new List<Task<Licence?>>();
+    var processingTasks = new List<Task<LicenceSet?>>();
     
     foreach (var pdfFilePath in GetPdfPaths())
     {
@@ -150,14 +151,14 @@ try
 
         if (processingTasks.Count == concurrentCount)
         {
-            var licenceTask = await Task.WhenAny(processingTasks);
-            processingTasks.Remove(licenceTask);
+            var licenceSetTask = await Task.WhenAny(processingTasks);
+            processingTasks.Remove(licenceSetTask);
 
-            var licence = await licenceTask;
+            var licenceSet = await licenceSetTask;
 
-            if (licence != null)
+            if (licenceSet != null)
             {
-                allLicences.Add(licence);
+                allLicenceSets.Add(licenceSet);
             }
         }
     }
@@ -168,11 +169,11 @@ try
 
         foreach (var processingTask in processingTasks)
         {
-            var licence = await processingTask;
+            var licenceSet = await processingTask;
 
-            if (licence != null)
+            if (licenceSet != null)
             {
-                allLicences.Add(licence);
+                allLicenceSets.Add(licenceSet);
             }
         }
     }
@@ -188,12 +189,14 @@ catch (Exception e)
     throw;
 }
 
-SchemaConverter.AddMissingBackLinks(allLicences);
+SchemaConverter.AddMissingBackLinks(allLicenceSets.SelectMany(licenceSet => licenceSet.Licences).ToList());
 var fileNumber = 1;
 
-foreach (var licence in allLicences)
+foreach (var licenceSet in allLicenceSets)
 {
-    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber);
+    var licence = licenceSet.Licences.First();
+    
+    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++);
     outputLines.Add(outputLine);
 }
 
@@ -405,15 +408,15 @@ File.WriteAllText(nodeGraphDataFile,
 
 return;
 
-async Task<Licence?> HandleFileAsync(
+async Task<LicenceSet?> HandleFileAsync(
     string pdfFilePath,
-    int fileNumber,
+    int fileNumberX,
     Dictionary<string, string> licenceMapping)
 {
     var dtStart = DateTime.Now;
     var fileName = pdfFilePath.Split('/').Last().Replace("–", "-");
 
-    Console.WriteLine($"Attempting {fileNumber} {fileName}...");
+    Console.WriteLine($"Attempting {fileNumberX} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
     pdfDataExtractor.InUse = true;
     
@@ -435,14 +438,13 @@ async Task<Licence?> HandleFileAsync(
             lookupConfig,
             previouslyParsedPaths);
         
-        var agreedSchemaGroup = await SchemaConverter.ToLicenceGroupAsync(
+        var licenceSet = await SchemaConverter.ToLicenceGroupAsync(
             matchesFull,
             fileLicenceMapping,
             pdfDataExtractor,
             outputFolder,
             cacheFolder);
 
-        var licence = agreedSchemaGroup.Licences.First();
         var json = JsonHelper.GetAsString(matchesFull);
     
         var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
@@ -456,6 +458,7 @@ async Task<Licence?> HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
             $"var data = {json}");
 
+        var licence = licenceSet.Licences.First();
         var agreedSchemaJson = JsonHelper.GetAsString(licence);
     
         /*File.WriteAllText(
@@ -466,31 +469,18 @@ async Task<Licence?> HandleFileAsync(
             $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
             $"var data2 = {agreedSchemaJson}");
     
-        var agreedSchemaSetJson = JsonHelper.GetAsString(agreedSchemaGroup);
+        var agreedSchemaSetJson = JsonHelper.GetAsString(licenceSet);
     
         File.WriteAllText(
             $"{outputFolder}/{filenameOnlyNoExtension}/licence-set.jsonp",
             $"var licenceSet = {agreedSchemaSetJson}");
     
-        Console.WriteLine($"Finished {fileNumber} {fileName}...");
-
-        return licence;
+        Console.WriteLine($"Finished {fileNumberX} {fileName}...");
+        return licenceSet;
     }
     catch (Exception exception)
     {
-        var durationInSeconds = (int) (DateTime.Now - dtStart).TotalSeconds;
-
-        outputLines.Add(new OutputLine
-        {
-            LineNumber = completeNumber++,
-            StartNumber = fileNumber,
-            Filename = fileName,
-            LicenceHolder = $"[Error] {exception.Message} {exception.StackTrace}",
-            Ocr = "0",
-            ServiceName = "NA",
-            Duration = durationInSeconds
-        });
-
+        // TODO log
         return null;
     }
     finally

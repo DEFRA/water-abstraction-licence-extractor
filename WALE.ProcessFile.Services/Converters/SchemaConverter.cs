@@ -276,10 +276,12 @@ public static class SchemaConverter
         return returnList;
     }
     
-    public static void AddMissingBackLinks(
+    public static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet)
     {
+        var returnList = new List<LicenceSet>();
+        
         var allLicences = licenceSetGroups
             .SelectMany(ls => ls)
             .SelectMany(ls => ls.Licences)
@@ -353,6 +355,8 @@ public static class SchemaConverter
                             Licences = implicitLicences.ToArray(),
                             AggregateSets = [] // TODO
                         };
+                        
+                        returnList.Add(implicitLicenceSet);
 
                         var newLicenceSetIds = new List<string>(licence.LicenceSetIds)
                         {
@@ -364,6 +368,13 @@ public static class SchemaConverter
                 }
             }
         }
+
+        returnList = returnList
+            .GroupBy(i => i.LicenceSetId)
+            .Select(g => g.First())
+            .ToList();
+        
+        return returnList;
     }
 
     private static Licence[] GetLicencesFromStrings(

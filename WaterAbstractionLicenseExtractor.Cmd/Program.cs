@@ -139,7 +139,7 @@ foreach (var line in fileMappingContents)
     }
 }
 
-var allLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+var initialLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
 try
 {
@@ -155,7 +155,7 @@ try
             processingTasks.Remove(licenceSetsTask);
 
             var licenceSets = await licenceSetsTask;
-            allLicenceSetGroups.Add(licenceSets);
+            initialLicenceSetGroups.Add(licenceSets);
         }
     }
 
@@ -166,7 +166,7 @@ try
         foreach (var processingTask in processingTasks)
         {
             var licenceSet = await processingTask;
-            allLicenceSetGroups.Add(licenceSet);
+            initialLicenceSetGroups.Add(licenceSet);
         }
     }
 
@@ -181,12 +181,68 @@ catch (Exception e)
     throw;
 }
 
-SchemaConverter.AddMissingBackLinks(allLicenceSetGroups, true);
+var distinctLicenceSets = new List<LicenceSet>();
+
+foreach (var licenceSetGroup in initialLicenceSetGroups)
+{
+    foreach (var licenceSet in licenceSetGroup)
+    {
+        if (distinctLicenceSets.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
+        {
+            continue;
+        }
+        
+        distinctLicenceSets.Add(licenceSet);
+    }
+}
+
+var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true);
+
+foreach (var licenceSet in newImplicitSets)
+{
+    if (distinctLicenceSets.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
+    {
+        continue;
+    }
+    
+    distinctLicenceSets.Add(licenceSet);
+}
+
+distinctLicenceSets = distinctLicenceSets
+    .OrderBy(x => x.LicenceSetId.Length)
+    .ThenBy(x => x.LicenceSetId)
+    .ToList();
+
 var fileNumber = 1;
 
-foreach (var licenceSetGroup in allLicenceSetGroups)
+foreach (var licenceSetGroup in initialLicenceSetGroups)
 {
     var licence = licenceSetGroup.First().Licences.First();
+    var allLicenceSetsForLicence = GetAllLicenceSetsForLicence(
+        licence.LicenceNumber!,
+        distinctLicenceSets);
+
+    var newLicenceSetIds = new List<string>(licence.LicenceSetIds);
+    
+    foreach (var licenceSetForLicence in allLicenceSetsForLicence)
+    {
+        if (newLicenceSetIds.Contains(licenceSetForLicence.LicenceSetId))
+        {
+            continue;
+        }
+
+        var anyInSetNotLinkedLicenceOfLicence = licenceSetForLicence.Licences
+            .Any(l => licence.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+
+        if (anyInSetNotLinkedLicenceOfLicence)
+        {
+            continue;
+        }
+        
+        newLicenceSetIds.Add(licenceSetForLicence.LicenceSetId);
+    }
+    
+    licence.LicenceSetIds = newLicenceSetIds.ToArray();
     
     var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++);
     outputLines.Add(outputLine);
@@ -424,6 +480,23 @@ File.WriteAllText(nodeGraphDataFile,
     $"var data = {JsonSerializer.Serialize(nodeGraphData, jsonOptions)};");
 
 return;
+
+List<LicenceSet> GetAllLicenceSetsForLicence(string licenceNumber, IReadOnlyList<LicenceSet> licenceSets)
+{
+    var returnList = new List<LicenceSet>();
+
+    foreach (var licenceSet in licenceSets)
+    {
+        if (licenceSet.Licences.All(l => l.LicenceNumber != licenceNumber))
+        {
+            continue;
+        }
+        
+        returnList.Add(licenceSet);
+    }
+    
+    return returnList;
+}
 
 async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     string pdfFilePath,

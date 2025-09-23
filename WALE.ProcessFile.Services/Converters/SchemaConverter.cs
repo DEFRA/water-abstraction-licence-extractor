@@ -286,6 +286,8 @@ public static class SchemaConverter
         {
             foreach (var licenceSet in licenceSetGroup)
             {
+                var originalLicenceSetId = licenceSet.LicenceSetId;
+                
                 foreach (var licence in licenceSet.Licences)
                 {
                     if (licence.Status == LicenceStatus.NotFound)
@@ -315,6 +317,50 @@ public static class SchemaConverter
                         };
 
                         licence.LinkedLicences = linkedLicencesNew.ToArray();
+
+                        if (licenceSet.LicenceSetType == LicenceSetType.Single)
+                        {
+                            continue;
+                        }
+                        
+                        // TODO update the licence set if it needs updating
+                        var licenceSetContainsIncomingLink = licenceSet.Licences.Any(l => l.LicenceNumber == incomingLink);
+
+                        if (licenceSetContainsIncomingLink)
+                        {
+                            continue;
+                        }
+                        
+                        var incomingLinkLicence = allLicences.FirstOrDefault(l => l.LicenceNumber == incomingLink)
+                            ?? new Licence
+                            {
+                                LicenceNumber = incomingLink,
+                                Status = LicenceStatus.NotFound
+                            };
+                        
+                        var licenceSetLicences = new List<Licence>(licenceSet.Licences) { incomingLinkLicence };
+                        licenceSet.Licences = licenceSetLicences.ToArray();
+                    }
+                }
+
+                if (licenceSet.LicenceSetId != originalLicenceSetId)
+                {
+                    foreach (var licence in licenceSet.Licences)
+                    {
+                        var newLicenceSetIds = new List<string>();
+
+                        foreach (var licenceSetIds in licence.LicenceSetIds)
+                        {
+                            if (licenceSetIds == originalLicenceSetId)
+                            {
+                                newLicenceSetIds.Add(licenceSet.LicenceSetId);
+                                continue;
+                            }
+
+                            newLicenceSetIds.Add(licenceSetIds);
+                        }
+
+                        licence.LicenceSetIds = newLicenceSetIds.ToArray();
                     }
                 }
             }

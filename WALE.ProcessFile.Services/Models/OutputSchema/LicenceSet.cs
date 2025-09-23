@@ -37,5 +37,5 @@ public class LicenceSet
     
     public AggregateSet[] AggregateSets { get; init; } = [];
     
-    public Licence[] Licences { get; init; } = [];
+    public Licence[] Licences { get; set; } = [];
 }

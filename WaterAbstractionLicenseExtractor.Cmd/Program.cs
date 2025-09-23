@@ -231,10 +231,10 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
             continue;
         }
 
-        var anyInSetNotLinkedLicenceOfLicence = licenceSetForLicence.Licences
-            .Any(l => licence.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+        var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
+            .All(l => licence.LicenceNumber == l.LicenceNumber || licence.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
 
-        if (anyInSetNotLinkedLicenceOfLicence)
+        if (!allLinkedLicenceOfLicence)
         {
             continue;
         }

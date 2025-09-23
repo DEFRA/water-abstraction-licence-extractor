@@ -131,6 +131,10 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
                 if (filterValue === 'empty' && value.length > 0) {
                     continue;
                 }
+            } else if (filterType === 'ArrayValue') {
+                if (filterValue !== 'All' && value.indexOf(filterValue) === -1) {
+                    continue;
+                }
             } else if (value !== filterValue) {
                 continue;
             }

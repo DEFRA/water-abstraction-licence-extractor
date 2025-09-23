@@ -262,7 +262,7 @@ public static class SchemaConverter
                 licence.AbstractionLimits.Aggregates,
                 multipleLicenceSet);
             
-            AddMissingBackLinks(multipleLicenceSet.Licences);
+            AddMissingBackLinks([[multipleLicenceSet]]);
             
             // Add LicenceSetIds to licence
             licence.LicenceSetIds = new List<string>(licence.LicenceSetIds)
@@ -275,37 +275,48 @@ public static class SchemaConverter
         return returnList;
     }
     
-    public static void AddMissingBackLinks(IReadOnlyList<Licence> licences)
+    public static void AddMissingBackLinks(IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups)
     {
-        foreach (var licence in licences)
+        var allLicences = licenceSetGroups
+            .SelectMany(ls => ls)
+            .SelectMany(ls => ls.Licences)
+            .ToList();
+        
+        foreach (var licenceSetGroup in licenceSetGroups)
         {
-            if (licence.Status == LicenceStatus.NotFound)
+            foreach (var licenceSet in licenceSetGroup)
             {
-                continue;
-            }
-            
-            var incomingLinks = GetLicencesThatReferenceLicence(licences, licence.LicenceNumber!);
-            var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
-
-            foreach (var incomingLink in incomingLinks)
-            {
-                if (outgoingLinks.Contains(incomingLink)
-                    || licence.LinkedLicences.Any(linkedLicence => linkedLicence.LicenceNumber == incomingLink))
+                foreach (var licence in licenceSet.Licences)
                 {
-                    continue;
-                }
-                
-                // Back link is missing
-                var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
-                {
-                    new()
+                    if (licence.Status == LicenceStatus.NotFound)
                     {
-                        LicenceNumber = incomingLink,
-                        FromSection = [ "ImplicitBackLink" ]
+                        continue;
                     }
-                };
 
-                licence.LinkedLicences = linkedLicencesNew.ToArray();
+                    var incomingLinks = GetLicencesThatReferenceLicence(allLicences, licence.LicenceNumber!);
+                    var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
+
+                    foreach (var incomingLink in incomingLinks)
+                    {
+                        if (outgoingLinks.Contains(incomingLink)
+                            || licence.LinkedLicences.Any(linkedLicence => linkedLicence.LicenceNumber == incomingLink))
+                        {
+                            continue;
+                        }
+
+                        // Back link is missing
+                        var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
+                        {
+                            new()
+                            {
+                                LicenceNumber = incomingLink,
+                                FromSection = ["ImplicitBackLink"]
+                            }
+                        };
+
+                        licence.LinkedLicences = linkedLicencesNew.ToArray();
+                    }
+                }
             }
         }
     }

@@ -139,7 +139,7 @@ foreach (var line in fileMappingContents)
     }
 }
 
-var allLicenceSets = new List<IReadOnlyList<LicenceSet>>();
+var allLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
 try
 {
@@ -155,7 +155,7 @@ try
             processingTasks.Remove(licenceSetsTask);
 
             var licenceSets = await licenceSetsTask;
-            allLicenceSets.Add(licenceSets);
+            allLicenceSetGroups.Add(licenceSets);
         }
     }
 
@@ -166,7 +166,7 @@ try
         foreach (var processingTask in processingTasks)
         {
             var licenceSet = await processingTask;
-            allLicenceSets.Add(licenceSet);
+            allLicenceSetGroups.Add(licenceSet);
         }
     }
 
@@ -181,15 +181,10 @@ catch (Exception e)
     throw;
 }
 
-var allLicences = allLicenceSets
-    .SelectMany(licenceSets => licenceSets)
-    .SelectMany(licenceSet => licenceSet.Licences)
-    .ToList();
-
-SchemaConverter.AddMissingBackLinks(allLicences);
+SchemaConverter.AddMissingBackLinks(allLicenceSetGroups);
 var fileNumber = 1;
 
-foreach (var licenceSetGroup in allLicenceSets)
+foreach (var licenceSetGroup in allLicenceSetGroups)
 {
     var licence = licenceSetGroup.First().Licences.First();
     

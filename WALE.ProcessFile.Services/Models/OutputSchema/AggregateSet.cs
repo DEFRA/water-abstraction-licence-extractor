@@ -27,8 +27,9 @@ public class AggregateSet
                 {
                     continue;
                 }
-                
-                licencesDict.Add(linkedLicence.LicenceNumber!, "UNKNOWN");
+
+                var lookedUpLicence = allLicences.FirstOrDefault(l => l.LicenceNumber == linkedLicence.LicenceNumber);
+                licencesDict.Add(linkedLicence.LicenceNumber!, lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
             }
         }
             

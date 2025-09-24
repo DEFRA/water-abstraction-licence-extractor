@@ -598,7 +598,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
         Console.WriteLine($"Finished {fileNumberX} {fileName}...");
         return licenceSets;
     }
-    catch (Exception exception)
+    catch
     {
         // TODO log
         return [];

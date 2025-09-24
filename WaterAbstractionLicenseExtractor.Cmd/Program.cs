@@ -196,7 +196,22 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
     }
 }
 
-var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true);
+var allLicences = new List<Licence>();
+
+foreach (var distinctLicenceSet in distinctLicenceSets)
+{
+    foreach (var licence in distinctLicenceSet.Licences)
+    {
+        if (allLicences.Any(al => al.LicenceNumber == licence.LicenceNumber))
+        {
+            continue;
+        }
+        
+        allLicences.Add(licence);
+    }
+}
+
+var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true, allLicences);
 
 foreach (var licenceSet in newImplicitSets)
 {

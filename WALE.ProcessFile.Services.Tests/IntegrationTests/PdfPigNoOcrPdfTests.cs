@@ -413,7 +413,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Equal("2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
+        Assert.Equal("2839220338-UNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates);
         Assert.Equal(2, primaryLicence.AbstractionLimits.Aggregates[0].Limits.Count);
@@ -2419,7 +2419,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates.Single());
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates.Single();
-        Assert.Equal("2568001249LV20190619-LL-2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249-LV20190619-LL-2568001247-2568001248", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Count);
         
@@ -3226,7 +3226,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(556, limitGroup.Limits[3].Value);        
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal("SW0470051003LV2023020720380331-LL-1547013S020",
+        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].Id);
         Assert.Equal("LV2023020720380331",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
@@ -3470,7 +3470,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
 
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
-        Assert.Equal("22705026LV20210930-ILPU", aggregate.Id);
+        Assert.Equal("22705026-LV20210930-ILPU", aggregate.Id);
         Assert.Equal(2, aggregate.Purposes.Length);
         Assert.Equal("4.1", aggregate.Purposes[0].Id);
         Assert.Equal("4.2", aggregate.Purposes[1].Id);

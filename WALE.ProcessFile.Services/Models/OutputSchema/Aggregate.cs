@@ -40,7 +40,7 @@ public class Aggregate : AbstractionLimitGroup
                 outputSb.Append($"-{linkedLicenceNumber}");
             }
 
-            return $"{licenceNumber}{LicenceVersionId}-{primaryType}{subType}{outputSb}";
+            return $"{licenceNumber}-{LicenceVersionId}-{primaryType}{subType}{outputSb}";
         }
     }
     

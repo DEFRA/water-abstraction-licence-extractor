@@ -4,36 +4,58 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class AggregateSet
 {
-    public string AggregateSetId
+    public void SetAggregateSetId(IReadOnlyList<Licence> allLicences)
     {
-        get
+        var groupedAggregates = Aggregates
+            .GroupBy(aggregate => aggregate.AggregateSetId)
+            .Select(group => group.First());
+
+        var licencesDict = new Dictionary<string, string>();
+        
+        foreach (var licence in groupedAggregates)
         {
-            var licencesAlphabetical = Aggregates
-                .GroupBy(aggregate => aggregate.AggregateSetId)
-                .Select(group => group.First())
-                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersionId);
-
-            var outputSb = new StringBuilder();
-            
-            foreach (var licence in licencesAlphabetical)
+            if (licencesDict.ContainsKey(licence.LicenceNumber!))
             {
-                if (outputSb.Length > 0)
+                continue;
+            }
+            
+            licencesDict.Add(licence.LicenceNumber!, licence.LicenceVersionId!);
+            
+            foreach (var linkedLicence in licence.LinkedLicences)
+            {
+                if (licencesDict.ContainsKey(linkedLicence.LicenceNumber!))
                 {
-                    outputSb.Append('-');
+                    continue;
                 }
-
-                var licenceNumber = licence.LicenceNumber?
-                    .Replace(" ", string.Empty)
-                    .Replace("/", string.Empty);
-
-                var licenceVersionId = licence.LicenceVersionId;
                 
-                outputSb.Append($"{licenceNumber}-{licenceVersionId}");
+                licencesDict.Add(linkedLicence.LicenceNumber!, "UNKNOWN");
+            }
+        }
+            
+        var licencesAlphabetical = licencesDict
+            .OrderBy(licence => licence.Key + licence.Value);
+
+        var outputSb = new StringBuilder();
+        
+        foreach (var licence in licencesAlphabetical)
+        {
+            if (outputSb.Length > 0)
+            {
+                outputSb.Append('-');
             }
 
-            return outputSb.ToString();
+            var licenceNumber = licence.Key
+                .Replace(" ", string.Empty)
+                .Replace("/", string.Empty);
+
+            var licenceVersionId = licence.Value;
+            outputSb.Append($"{licenceNumber}-{licenceVersionId}");
         }
+
+        AggregateSetId = outputSb.ToString();
     }
+
+    public string? AggregateSetId { get; private set; }
     
     /*public string? VersionNumber { get; set; }*/
 

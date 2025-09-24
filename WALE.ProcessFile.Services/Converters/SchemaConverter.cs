@@ -243,7 +243,7 @@ public static class SchemaConverter
         {
             LicenceSetType = LicenceSetType.SingleLicenceOnly,
             Licences = [primaryLicence],
-            AggregateSets = GetAggregateSets([primaryLicence])
+            AggregateSets = GetAggregateSets([primaryLicence], allLicences)
         };
         
         returnList.Add(singleLicenceOnlySet);
@@ -252,18 +252,15 @@ public static class SchemaConverter
         {
             LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferenced,
             Licences = allLicences.ToArray(),
-            AggregateSets = GetAggregateSets(allLicences)
+            AggregateSets = GetAggregateSets(allLicences, allLicences)
         };
 
         returnList.Add(explicitlyReferencedLicenceSet);
 
         foreach (var licence in allLicences)
         {
-            PopulateAggregateSetIds(
-                licence.AbstractionLimits.Aggregates,
-                explicitlyReferencedLicenceSet);
-            
-            AddMissingBackLinks([[explicitlyReferencedLicenceSet]], false);
+            PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
+            AddMissingBackLinks([[explicitlyReferencedLicenceSet]], false, allLicences);
             
             // Add LicenceSetIds to licence
             licence.LicenceSetIds = new List<string>
@@ -278,11 +275,12 @@ public static class SchemaConverter
     
     public static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        bool addImplicitLicenceSet)
+        bool addImplicitLicenceSet,
+        IReadOnlyList<Licence> allLicences)
     {
         var returnList = new List<LicenceSet>();
         
-        var allLicences = licenceSetGroups
+        var allLicencesInSets = licenceSetGroups
             .SelectMany(ls => ls)
             .SelectMany(ls => ls.Licences)
             .GroupBy(l => l.LicenceNumber)
@@ -300,7 +298,7 @@ public static class SchemaConverter
                         continue;
                     }
 
-                    var incomingLinks = GetLicencesThatReferenceLicence(allLicences, licence.LicenceNumber!);
+                    var incomingLinks = GetLicencesThatReferenceLicence(allLicencesInSets, licence.LicenceNumber!);
                     var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
 
                     var incomingAndOutgoingLinks = new List<string>(incomingLinks);
@@ -347,13 +345,13 @@ public static class SchemaConverter
                         };
                         
                         implicitLicences.AddRange(
-                            GetLicencesFromStrings(allLicences, incomingAndOutgoingLinks));
+                            GetLicencesFromStrings(allLicencesInSets, incomingAndOutgoingLinks));
                         
                         var implicitLicenceSet = new LicenceSet
                         {
                             LicenceSetType = LicenceSetType.AllLicencesIncludingImplicitlyReferenced,
                             Licences = implicitLicences.ToArray(),
-                            AggregateSets = [] // TODO
+                            AggregateSets = GetAggregateSets(implicitLicences, allLicencesInSets)
                         };
                         
                         returnList.Add(implicitLicenceSet);
@@ -416,19 +414,28 @@ public static class SchemaConverter
         return returnList;
     }
     
-    private static void PopulateAggregateSetIds(Aggregate[] licenceAggregates, LicenceSet licenceSet)
+    private static void PopulateAggregateSetIds(Aggregate[] licenceAggregates, IReadOnlyList<Licence> allLicences)
     {
-        _ = licenceAggregates
+        licenceAggregates
             .Where(aggregate => aggregate.AggregateSetId == PositionConstants.ReplacementMarker)
-            .Select(aggregate => aggregate.AggregateSetId = licenceSet.LicenceSetId)
-            .ToList();
+            .ToList()
+            .ForEach(aggregate =>
+            {
+                var aggregateSet = new AggregateSet
+                {
+                    Aggregates = [aggregate]
+                };
+
+                aggregateSet.SetAggregateSetId(allLicences);
+                aggregate.AggregateSetId = aggregateSet.AggregateSetId;
+            });
     }
     
-    private static AggregateSet[] GetAggregateSets(List<Licence> allLicences)
+    private static AggregateSet[] GetAggregateSets(IReadOnlyList<Licence> licences, IReadOnlyList<Licence> allLicences)
     {
         var aggregates = new List<Aggregate>();
 
-        foreach (var licence in allLicences)
+        foreach (var licence in licences)
         {
             aggregates.AddRange(licence.AbstractionLimits.Aggregates);
         }
@@ -441,10 +448,13 @@ public static class SchemaConverter
 
         foreach (var aggregatesGroupedByLicences in aggregatesGroupedByLicencesList)
         {
-            aggregateSets.Add(new AggregateSet
+            var aggregateSet = new AggregateSet
             {
                 Aggregates = aggregatesGroupedByLicences.ToArray()
-            });
+            };
+            
+            aggregateSet.SetAggregateSetId(allLicences);
+            aggregateSets.Add(aggregateSet);
         }
 
         return aggregateSets.ToArray();

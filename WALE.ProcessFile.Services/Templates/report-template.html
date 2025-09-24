@@ -86,8 +86,8 @@
         const searchParams = new URLSearchParams(window.location.search);
         const filename = searchParams.get('filename');
 
-        loadScript(filename + "/data.jsonp", function () { loadReport(filename); });
-        loadScript(filename + "/data2.jsonp", function () { loadReport(filename); });
+        loadScript(filename + "/internal.jsonp", function () { loadReport(filename); });
+        loadScript(filename + "/licence.jsonp", function () { loadReport(filename); });
         loadScript(filename + "/licence-sets.jsonp", function () { loadReport(filename); });
     </script>
 </body>

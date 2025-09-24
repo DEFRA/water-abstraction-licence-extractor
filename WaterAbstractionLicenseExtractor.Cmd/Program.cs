@@ -217,7 +217,9 @@ var fileNumber = 1;
 
 foreach (var licenceSetGroup in initialLicenceSetGroups)
 {
-    var licence = licenceSetGroup.First().Licences.First();
+    var licenceSetGroupUpdated = licenceSetGroup.ToList();
+    
+    var licence = licenceSetGroupUpdated.First().Licences.First();
     var allLicenceSetsForLicence = GetAllLicenceSetsForLicence(
         licence.LicenceNumber!,
         distinctLicenceSets);
@@ -232,7 +234,8 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         }
 
         var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
-            .All(l => licence.LicenceNumber == l.LicenceNumber || licence.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+            .All(l => licence.LicenceNumber == l.LicenceNumber
+                || licence.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
 
         if (!allLinkedLicenceOfLicence)
         {
@@ -243,6 +246,22 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
     }
     
     licence.LicenceSetIds = newLicenceSetIds.ToArray();
+    
+    var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
+    Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
+    
+    var licenceJson = JsonHelper.GetAsString(licence);
+    
+    File.WriteAllText(
+        $"{outputFolder}/{filenameOnlyNoExtension}/licence.jsonp",
+        $"var data2 = {licenceJson}");
+
+    licenceSetGroupUpdated = GetLicenceSetsForLicenceSetIds(newLicenceSetIds, distinctLicenceSets);
+    var licenceSetsJson = JsonHelper.GetAsString(licenceSetGroupUpdated);
+    
+    File.WriteAllText(
+        $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
+        $"var licenceSets = {licenceSetsJson}");
     
     var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++, distinctLicenceSets);
     outputLines.Add(outputLine);
@@ -481,6 +500,23 @@ File.WriteAllText(nodeGraphDataFile,
 
 return;
 
+List<LicenceSet> GetLicenceSetsForLicenceSetIds(List<string> licenceSetIds, IReadOnlyList<LicenceSet> licenceSets)
+{
+    var returnList = new List<LicenceSet>();
+
+    foreach (var licenceSet in licenceSets)
+    {
+        if (!licenceSetIds.Contains(licenceSet.LicenceSetId))
+        {
+            continue;
+        }
+        
+        returnList.Add(licenceSet);
+    }
+    
+    return returnList;
+}
+
 List<LicenceSet> GetAllLicenceSetsForLicence(string licenceNumber, IReadOnlyList<LicenceSet> licenceSets)
 {
     var returnList = new List<LicenceSet>();
@@ -535,35 +571,14 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
             outputFolder,
             cacheFolder);
 
-        var json = JsonHelper.GetAsString(matchesFull);
+        var internalJson = JsonHelper.GetAsString(matchesFull);
     
         var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
     
-        /*File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/data.json",
-            json);*/
-
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/data.jsonp",
-            $"var data = {json}");
-
-        var licence = licenceSets.First().Licences.First();
-        var agreedSchemaJson = JsonHelper.GetAsString(licence);
-    
-        /*File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/data2.json",
-            agreedSchemaJson);*/
-
-        File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/data2.jsonp",
-            $"var data2 = {agreedSchemaJson}");
-    
-        var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
-    
-        File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
-            $"var licenceSets = {licenceSetsJson}");
+            $"{outputFolder}/{filenameOnlyNoExtension}/internal.jsonp",
+            $"var data = {internalJson}");
     
         Console.WriteLine($"Finished {fileNumberX} {fileName}...");
         return licenceSets;

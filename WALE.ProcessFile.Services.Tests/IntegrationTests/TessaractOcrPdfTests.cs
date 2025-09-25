@@ -497,7 +497,8 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);

@@ -119,7 +119,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor2,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder2);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -567,7 +568,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1028,7 +1030,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1254,7 +1257,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder);
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1318,7 +1322,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor2,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder2);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1343,7 +1348,8 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _pdfDataExtractor2,
             OutputFolder,
-            CacheFolder);
+            CacheFolder,
+            TestConfig.PdfFolder2);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

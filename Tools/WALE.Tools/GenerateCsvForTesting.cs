@@ -78,7 +78,9 @@ public static class GenerateCsvForTesting
                 _fileLicenceMapping,
                 pdfDataExtractor,
                 OutputFolder,
-                CacheFolder))[0].Licences[0];
+                CacheFolder,
+                KeyConfig.PdfFolder
+                ))[0].Licences[0];
             
             returnList.Add(new()
             {
@@ -96,22 +98,22 @@ public static class GenerateCsvForTesting
     static async Task<List<CsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
     {
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
-        var file1 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file1 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
-        var file2 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file2 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
-        var file3 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file3 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
-        var file4 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file4 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
-        var file5 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file5 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
-        var file6 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder))[0].Licences[0];
+        var file6 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
 
         return
         [

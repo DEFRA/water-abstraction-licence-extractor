@@ -20,16 +20,21 @@ public class AggregateSet
             }
             
             licencesDict.Add(licence.LicenceNumber!, licence.LicenceVersionId!);
-            
-            foreach (var linkedLicence in licence.LinkedLicences)
-            {
-                if (licencesDict.ContainsKey(linkedLicence.LicenceNumber!))
-                {
-                    continue;
-                }
 
-                var lookedUpLicence = allLicences.FirstOrDefault(l => l.LicenceNumber == linkedLicence.LicenceNumber);
-                licencesDict.Add(linkedLicence.LicenceNumber!, lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
+            if (licence.LinkedLicences != null)
+            {
+                foreach (var linkedLicence in licence.LinkedLicences)
+                {
+                    if (licencesDict.ContainsKey(linkedLicence.LicenceNumber!))
+                    {
+                        continue;
+                    }
+
+                    var lookedUpLicence =
+                        allLicences.FirstOrDefault(l => l.LicenceNumber == linkedLicence.LicenceNumber);
+                    licencesDict.Add(linkedLicence.LicenceNumber!,
+                        lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
+                }
             }
         }
             

@@ -84,7 +84,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file.Filename,
                 LicenceNumber = file.LicenceNumber,
-                HasAggregate = file.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file)
             });
@@ -119,7 +119,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file1.Filename,
                 LicenceNumber = file1.LicenceNumber,
-                HasAggregate = file1.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file1.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file1)
             },
@@ -127,7 +127,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file2.Filename,
                 LicenceNumber = file2.LicenceNumber,
-                HasAggregate = file2.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file2.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file2)
             },
@@ -135,7 +135,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file3.Filename,
                 LicenceNumber = file3.LicenceNumber,
-                HasAggregate = file3.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file3.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file3)
             },
@@ -143,7 +143,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file4.Filename,
                 LicenceNumber = file4.LicenceNumber,
-                HasAggregate = file4.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file4.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file4)
             },
@@ -151,7 +151,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file5.Filename,
                 LicenceNumber = file5.LicenceNumber,
-                HasAggregate = file5.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file5.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file5)
             },
@@ -159,7 +159,7 @@ public static class GenerateCsvForTesting
             {
                 Filename = file6.Filename,
                 LicenceNumber = file6.LicenceNumber,
-                HasAggregate = file6.AbstractionLimits.Aggregates.Length > 0,
+                HasAggregate = file6.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates),
                 Data = JsonSerializer.Serialize(file6)
             }

@@ -125,8 +125,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
-        Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Units);
         Assert.Equal(48, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Value);
@@ -1044,15 +1044,15 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("LV20050202", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
         
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits.Count);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);        
         Assert.Equal(100000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Units);        
         Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         
-        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         var limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[0];
         
         Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
@@ -1264,9 +1264,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
-        Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(7823, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Value);

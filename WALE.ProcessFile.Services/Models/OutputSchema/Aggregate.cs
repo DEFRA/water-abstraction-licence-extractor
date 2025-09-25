@@ -30,14 +30,17 @@ public class Aggregate : AbstractionLimitGroup
                 .Replace(" ", string.Empty);
 
             var outputSb = new StringBuilder();
-            
-            foreach (var linkedLicence in LinkedLicences)
+
+            if (LinkedLicences != null)
             {
-                var linkedLicenceNumber = linkedLicence.LicenceNumber?
-                    .Replace("/", string.Empty)
-                    .Replace(" ", string.Empty);
-                
-                outputSb.Append($"-{linkedLicenceNumber}");
+                foreach (var linkedLicence in LinkedLicences)
+                {
+                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                        .Replace("/", string.Empty)
+                        .Replace(" ", string.Empty);
+
+                    outputSb.Append($"-{linkedLicenceNumber}");
+                }
             }
 
             return $"{licenceNumber}-{LicenceVersionId}-{primaryType}{subType}{outputSb}";
@@ -62,7 +65,7 @@ public class Aggregate : AbstractionLimitGroup
 
     public Point[]? Points { get; set; } = [];
     
-    public LinkedLicence[] LinkedLicences { get; init; } = [];
+    public LinkedLicence[]? LinkedLicences { get; init; } = [];
 
     public new static Aggregate Template => new()
     {

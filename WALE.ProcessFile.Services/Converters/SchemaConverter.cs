@@ -91,8 +91,8 @@ public static class SchemaConverter
             purposes);
 
         var linkedLicences = aggregates
-            .Where(x => x.LinkedLicences.Length >= 1)
-            .SelectMany(x => x.LinkedLicences)
+            .Where(x => x.LinkedLicences?.Length >= 1)
+            .SelectMany(x => x.LinkedLicences!)
             .ToList();
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
@@ -136,6 +136,16 @@ public static class SchemaConverter
             })
             .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumber)
             .ToList();
+
+        if (aggregates.Length == 0)
+        {
+            aggregates = null;
+        }
+        
+        if (individual.Length == 0)
+        {
+            individual = null;
+        }
         
         var limits = new AbstractionLimits
         {
@@ -259,7 +269,11 @@ public static class SchemaConverter
 
         foreach (var licence in allLicences)
         {
-            PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
+            if (licence.AbstractionLimits.Aggregates != null)
+            {
+                PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
+            }
+            
             AddMissingBackLinks([[explicitlyReferencedLicenceSet]], false, allLicences);
             
             // Add LicenceSetIds to licence
@@ -431,17 +445,22 @@ public static class SchemaConverter
             });
     }
     
-    private static AggregateSet[] GetAggregateSets(IReadOnlyList<Licence> licences, IReadOnlyList<Licence> allLicences)
+    private static AggregateSet[]? GetAggregateSets(IReadOnlyList<Licence> licences, IReadOnlyList<Licence> allLicences)
     {
         var aggregates = new List<Aggregate>();
 
         foreach (var licence in licences)
         {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+            
             aggregates.AddRange(licence.AbstractionLimits.Aggregates);
         }
         
         var aggregatesGroupedByLicencesList = aggregates
-            .GroupBy(aggregate => string.Join(',', aggregate.LinkedLicences.OrderBy(y => y.LicenceNumber)))
+            .GroupBy(aggregate => string.Join(',', (aggregate.LinkedLicences ?? []).OrderBy(y => y.LicenceNumber)))
             .ToList();
                 
         var aggregateSets = new List<AggregateSet>();
@@ -457,7 +476,7 @@ public static class SchemaConverter
             aggregateSets.Add(aggregateSet);
         }
 
-        return aggregateSets.ToArray();
+        return aggregateSets.Count == 0 ? null : aggregateSets.ToArray();
     }
 
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
@@ -909,8 +928,7 @@ public static class SchemaConverter
                     : PrimaryType.InLicence,
                 NaldType = GetNaldType(),
                 AggregateSetId = PositionConstants.ReplacementMarker,
-                LinkedLicences = 
-                    linkedLicenceNumbers.ToArray(),
+                LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],
@@ -1137,7 +1155,9 @@ public static class SchemaConverter
                 Inclusive = inclusive,
                 StartDate = startDate,
                 EndDate = endDate,
-                TimeCutoff = timeCutoff
+                TimeCutoff = timeCutoff,
+                PointIds = null, // TODO set purpose ids and point ids
+                PurposeIds = null // TODO set purpose ids and point ids
             });
         }
 

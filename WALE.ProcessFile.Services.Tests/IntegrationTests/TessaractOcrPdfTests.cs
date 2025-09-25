@@ -93,7 +93,7 @@ public class TessaractOcrPdfTests
         Assert.Single(abstractionLimitsSection1.SubResults!);
 
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
-        Assert.Equal(9, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults!.Count);
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber");
         Assert.Single(linkedLicences);
@@ -1147,7 +1147,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(8, abstractionLimitsSection.Text?.Count); // TODO should be 8
+        Assert.Equal(8, abstractionLimitsSection.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

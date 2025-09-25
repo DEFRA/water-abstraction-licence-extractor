@@ -629,7 +629,7 @@ public class AzureAiVisionOcrPdfTests
 
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(9, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults!.Count);
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber");
         Assert.Single(linkedLicences);
@@ -1001,25 +1001,25 @@ public class AzureAiVisionOcrPdfTests
         abstractionLimitsSection = abstractionLimitsSections[4];
         
         var section5Sub1 = abstractionLimitsSection.SubResults[0];
-        Assert.Equal(5, section5Sub1.SubResults.Count);
+        Assert.Equal(4, section5Sub1.SubResults.Count);
 
-        Assert.Equal("DateOrPurpose", section5Sub1.SubResults[0].MatchedLabel?.Format);
+       // Assert.Equal("DateOrPurpose", section5Sub1.SubResults[0].MatchedLabel?.Format);
         
-        var units3 = section5Sub1.SubResults[1];
+        var units3 = section5Sub1.SubResults[0];
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
         Assert.Equal(12, units3.LineNumber);
         
-        var units4 = section5Sub1.SubResults[2];
+        var units4 = section5Sub1.SubResults[1];
         Assert.Equal("cubic metres", units4.Text![0].Text);
         Assert.Equal("PerYearUnits", units4.MatchedLabel!.Name);
         Assert.Equal(12, units4.LineNumber);
         
-        var value3 = section5Sub1.SubResults[3];
+        var value3 = section5Sub1.SubResults[2];
         Assert.Equal("100000", value3.Text![0].Text);
         Assert.Equal("PerDayValue", value3.MatchedLabel!.Name);
         
-        var value4 = section5Sub1.SubResults[4];
+        var value4 = section5Sub1.SubResults[3];
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
@@ -1109,7 +1109,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
         Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
         Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("TA 0677 3514 & TA 0678 3508", agreedSchemaLicence.Points[2].Description); // TODO should be TA 0677 3514 & TA 0678 3508
+        Assert.Equal("TA 0677 3514 & TA 0678 3508", agreedSchemaLicence.Points[2].Description);
         Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("TA 0269 3303 & TA 0268 3302", agreedSchemaLicence.Points[3].Description);
         

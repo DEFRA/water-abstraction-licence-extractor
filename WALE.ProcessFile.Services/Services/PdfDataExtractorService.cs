@@ -56,7 +56,6 @@ public class PdfDataExtractorService(
 
         if (pdfDocument.FromCache)
         {
-            // TODO load the cached image metadata new ImageMetadata();
             return (await LoadImageMetadataFromCacheAsync(pdfDocument), false);
         }
 
@@ -550,8 +549,8 @@ public class PdfDataExtractorService(
             {
                 if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
                 {
+                    // TODO this should log a warning
                     continue;
-                    // TODO ultimately this should throw an error, but silently skip while developing
                 }
                 
                 relatedFileName = $"{pdfFolderPath}{relatedFileName}";
@@ -837,6 +836,7 @@ public class PdfDataExtractorService(
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
                         textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
                         isCompanyType = matchedLabel.Format == CompanyName.Constant,
+                        isDateLookup = matchedLabel.Format == Date.Constant,
                         isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
                         isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
                         isNumberLookup = matchedLabel.Format == Number.Constant,
@@ -859,7 +859,7 @@ public class PdfDataExtractorService(
                         lineForPosition = lineOuter,
                         lineNumber = partialLine.LineNumber
                     };
-
+                    
                     var singleValueWanted = matchedLabel.MultipleBehaviour is
                         MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue
                         or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
@@ -888,12 +888,6 @@ public class PdfDataExtractorService(
                                 clonedRequest.textBeforeAtAndAfterLabel?.Remove(matchBefore);
                             }
                             
-                            if (request.label.Name == "PerDayUnits"
-                                && request.line.PageNumber > 1)
-                            {
-                                
-                            }
-                            
                             var additionalResults = await ProcessExpressionResultAsync(
                                 AfterTextContainsAnotherMatch.FunctionAsync,
                                 clonedRequest,
@@ -902,13 +896,6 @@ public class PdfDataExtractorService(
                             
                             result.Results.AddRange(additionalResults.Results);
                             result.Results = FilterDownResults(result.Results, request.label);
-                            
-                            if (request.label.Name == "PerDayUnits"
-                                && request.line.PageNumber > 1
-                                && result.Results.Count >= 2)
-                            {
-                                
-                            }
                         }
                         
                         if (result.Continue)

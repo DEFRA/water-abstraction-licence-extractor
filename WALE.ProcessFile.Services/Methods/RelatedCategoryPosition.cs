@@ -216,7 +216,7 @@ public static class RelatedCategoryPosition
             }
             else
             {
-                // TODO - why?
+                // TODO - why? log? error?
             }
 
             // TODO should set match type

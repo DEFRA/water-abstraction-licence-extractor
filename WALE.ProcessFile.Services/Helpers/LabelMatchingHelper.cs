@@ -11,19 +11,26 @@ public static class LabelMatchingHelper
     {
         return label.SkipLineWhenContains?
             .Any(mustNotContainText =>
-                TextContainsForbiddenText(text, mustNotContainText)) == true;
+                TextContainsText(text, mustNotContainText)) == true;
     }
     
     public static bool ShouldSkipResultAsForbidden(string? text, LabelToMatch label)
     {
         return label.IgnoreMatchIfContains?
             .Any(mustNotContainText =>
-                TextContainsForbiddenText(text, mustNotContainText)) == true;
+                TextContainsText(text, mustNotContainText)) == true;
+    }
+    
+    public static bool ShouldSkipBlockAsForbidden(string? text, LabelToMatch label)
+    {
+        return label.IgnoreBlockIfContains?
+            .Any(mustNotContainText =>
+                TextContainsText(text, mustNotContainText)) == true;
     }
 
-    private static bool TextContainsForbiddenText(string? text, string mustNotContainText)
+    private static bool TextContainsText(string? text, string subText)
     {
-        return text?.Contains(mustNotContainText, StringComparison.InvariantCultureIgnoreCase) == true;
+        return text?.Contains(subText, StringComparison.InvariantCultureIgnoreCase) == true;
     }
     
     public static bool PotentialMatchOnLabelLine(

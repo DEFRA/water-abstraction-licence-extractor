@@ -71,7 +71,7 @@ public static class Number
             return matched;
         }
         
-        foreach (var tempLine in returnLines)// TODO why do the following when its text - .OrderByDescending(text => text))
+        foreach (var tempLine in returnLines)
         {
             if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(tempLine, label))
             {

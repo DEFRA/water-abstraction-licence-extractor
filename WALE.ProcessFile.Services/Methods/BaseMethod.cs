@@ -19,8 +19,26 @@ public static class BaseMethod
         
         var returnList = new List<LabelGroupResult>();
 
+        if (lines.Any(line => LabelMatchingHelper.ShouldSkipBlockAsForbidden(line.Text, request.label)))
+        {
+            return returnList;
+        }
+        
         switch (request.label.Format)
         {
+            case Date.Constant:
+                if (Date.AnyIsDate(lines, out var matchedLinesDates)) // TODO when just want one column, this function should get it
+                {
+                    matchedLinesDates = RestrictToPossibilities(request.label?.Possibilities, matchedLinesDates);
+                    
+                    foreach (var matchedLine in matchedLinesDates)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                
+                break;
             case DateOrPurpose.Constant:
                 if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines)) // TODO when just want one column, this function should get it
                 {

@@ -621,11 +621,15 @@ public static class SchemaConverter
             return null;
         }
         
-        var parts = value.Split(" to ");
+        var parts = value
+            .Replace(" and ending on ", " to ")
+            .Split(" to ");
+        var startDate = parts[0]
+            .Replace("beginning on ", string.Empty);
         
         return new TimePeriod
         {
-            StartDate = parts[0],
+            StartDate = startDate,
             EndDate = parts.Length > 1 ? parts[1] : null,
             PeriodType = AbstractionPeriodType.SetPeriod,
             Inclusive = true
@@ -893,7 +897,9 @@ public static class SchemaConverter
             var pointsLoop = aggregateLimits.First().Points;
             var purposesLoop = aggregateLimits.First().Purposes;
             var timeCutoff = (TimeCutoff?)null; // TODO
-                
+            var timePeriod = GetTimePeriod(
+                siblings?.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
+            
             var aggregate = new Aggregate
             {
                 LicenceNumber = licenceNumber,
@@ -909,7 +915,7 @@ public static class SchemaConverter
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],
                 TimeCutoff = timeCutoff,
-                TimePeriod = GetTimePeriod(siblings?.FirstOrDefault())
+                TimePeriod = timePeriod
             };
 
             // If there are no points, purposes or licences specified, then it

@@ -79,6 +79,26 @@ public static class ApplicableToMost
             var documentLine = request.line!.Clone();
             documentLine.Columns.Clear();
             documentLine.Columns.Add(new DocumentLineColumn(outputText));
+
+            if (request.isDateLookup)
+            {
+                // TODO can swap this out now for shared method in Base
+                
+                if (Date.AnyIsDate([documentLine], out var matchedLines))
+                {
+                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
+                    
+                    foreach (var matchedLine in matchedLines)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        
+                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);                        
+                    }
+                }
+                
+                continue;
+            }
             
             if (request.isDateOrPurposeLookup)
             {

@@ -1238,14 +1238,17 @@ public static class LabelConfiguration
                                 {
                                     new()
                                     {
-                                        Name = "DatePurpose",
+                                        Name = "DateOnly",
                                         Text = [
                                             new("Up to and including "),
                                             new("From "),
                                             new("aggregate quantity of water authorised")
                                         ],
+                                        IgnoreBlockIfContains = [
+                                            "Note:"
+                                        ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = "DateOrPurpose",
+                                        Format = "Date",
                                         IncludeStartLabelText = true,
                                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     },

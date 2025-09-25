@@ -12,6 +12,7 @@ public class FunctionInputModel
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }
     public List<TextAndLabel>? textBeforeAtAndAfterLabel { get; set; }
+    public bool isDateLookup { get; set; }
     public bool isDateOrPurposeLookup { get; set; }
     public bool isCompanyType { get; set; }
     public bool isNumberLookup { get; set; }
@@ -42,6 +43,7 @@ public class FunctionInputModel
             siblingMatches = siblingMatches,
             textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
             isDateOrPurposeLookup = isDateOrPurposeLookup,
+            isDateLookup = isDateLookup,
             isCompanyType = isCompanyType,
             isNumberLookup = isNumberLookup,
             isLicenceNumberLookup = isLicenceNumberLookup,

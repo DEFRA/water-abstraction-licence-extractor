@@ -121,8 +121,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
@@ -569,8 +569,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(new DateTime(2014, 08, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
@@ -1030,8 +1030,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
@@ -1256,8 +1256,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
 
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.Last().Licences);
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("27/29/12", agreedSchemaLicence.LicenceNumber);
@@ -1320,8 +1320,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
+        Assert.Single(agreedSchemaLicenceGroup);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         Assert.Equal("Through flow for Purveys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
@@ -1345,8 +1345,8 @@ public class AzureAiVisionOcrPdfTests
             OutputFolder,
             CacheFolder);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Single(agreedSchemaLicenceGroup);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
         Assert.Null(agreedSchemaLicence.LicenceNumber);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);

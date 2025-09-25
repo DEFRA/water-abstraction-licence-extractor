@@ -54,7 +54,14 @@ public class LicenceSet
                     .Replace(".", "/")
                     .Split('/');
 
-                outputSb.Append(licenceNumberParts?.Last());
+                var part = licenceNumberParts?.Last();
+
+                if (part?.StartsWith("R0") == true)
+                {
+                    part = licenceNumberParts![licenceNumberParts.Length - 2];
+                }
+                
+                outputSb.Append(part);
             }
 
             return outputSb.ToString();

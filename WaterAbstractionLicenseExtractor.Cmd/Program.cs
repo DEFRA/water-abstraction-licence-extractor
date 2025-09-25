@@ -3,14 +3,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 Console.WriteLine("Started");
 
@@ -333,7 +331,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         filenameForScreen = filenameForScreen[..30] + "-<br>" + filenameForScreen[30..];
     }*/
 
-    var ll = outputLine.LinkedLicenceNumbers?.Split('|');
+    var ll = outputLine.LinkedLicenceNumbers?.Split('|').OrderBy(x => x).ToArray();
     if (ll?.Length == 1 && string.IsNullOrEmpty(ll[0])) ll = [];
 
     var lsi = outputLine.LicenceSetIds?.Split('|');
@@ -659,7 +657,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11149535") || x.Contains("11149440") || x.Contains("1497061")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11149535") || x.Contains("11149440") || x.Contains("1497061")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

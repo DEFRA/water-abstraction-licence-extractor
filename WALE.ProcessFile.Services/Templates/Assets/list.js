@@ -238,19 +238,19 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
         let licenceSetsSb = [];
 
-        if (item.licenceSetIds.length > 0) {
+        if (item.shortLicenceSetIds.length > 0 && item.shortLicenceSetIds[0] !== '') {
             licenceSetsSb.push('<ul>');
-        }
 
-        for (let j = 0; j < item.licenceSetIds.length; j++) {
-            let licenceSetId = item.licenceSetIds[j];
-            let shortLicenceSetId = item.shortLicenceSetIds[j];
-            
-            licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
-        }
+            for (let j = 0; j < item.licenceSetIds.length; j++) {
+                let licenceSetId = item.licenceSetIds[j];
+                let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
+                
+                licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
+            }
 
-        if (item.licenceSetIds.length > 0) {
             licenceSetsSb.push('</ul>');
+        } else {
+            licenceSetsSb.push('--');
         }
         
         let filenameNoExtension = item.filename.split('.')[0];

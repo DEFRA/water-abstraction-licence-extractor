@@ -21,7 +21,7 @@ public class PdfDocument
         OutputFolder = outputFolder;
         CacheFolder = cacheFolder;
         FromCache = fromCache;
-
+        
         if (fromCache)
         {
             return;

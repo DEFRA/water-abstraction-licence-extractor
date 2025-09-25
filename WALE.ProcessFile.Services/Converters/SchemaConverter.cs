@@ -230,13 +230,14 @@ public static class SchemaConverter
         Dictionary<string, string> fileLicenceMapping,
         IPdfDataExtractorService  pdfDataExtractorService,
         string outputFolder,
-        string cacheFolder)
+        string cacheFolder,
+        string pdfFolder)
     {
         var returnList = new List<LicenceSet>();
         
         var primaryLicence = ToLicence(matchesResult);
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
-
+        
         var linkedLicences = await GetLinkedLicencesAsync(
             matchesResult,
             primaryLicence,
@@ -244,6 +245,7 @@ public static class SchemaConverter
             pdfDataExtractorService,
             outputFolder,
             cacheFolder,
+            pdfFolder,
             previouslyParsedPaths);
         
         var allLicences = new List<Licence>(linkedLicences);
@@ -495,9 +497,10 @@ public static class SchemaConverter
         MatchesResult matchesResult,
         Licence primaryLicence,
         Dictionary<string, string> licenceMapping,
-        IPdfDataExtractorService  pdfDataExtractorService,
+        IPdfDataExtractorService pdfDataExtractorService,
         string outputFolder,
         string cacheFolder,
+        string pdfFolder,
         List<string> previouslyParsedPaths)
     {
         var returnLicences = new List<Licence>();
@@ -556,6 +559,11 @@ public static class SchemaConverter
                         
                         continue;
                     }
+
+                    if (!relatedFileName.Contains('/'))
+                    {
+                        relatedFileName = $"{pdfFolder}{relatedFileName}";
+                    }
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
@@ -566,7 +574,7 @@ public static class SchemaConverter
                 }
             }
         }
-
+        
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
             // Already found it
@@ -584,6 +592,11 @@ public static class SchemaConverter
                 });
                         
                 continue;
+            }
+            
+            if (!relatedFileName.Contains('/'))
+            {
+                relatedFileName = $"{pdfFolder}{relatedFileName}";
             }
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(

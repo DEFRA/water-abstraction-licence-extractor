@@ -558,7 +558,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "TextWithoutPurposeAndPoint",
+                                        Name = "PointTextWithoutPurposeAndPoint",
                                         Remove = [
                                             new("2.1") { ColumnMustStartWith = true },
                                             new("2.2") { ColumnMustStartWith = true },
@@ -973,7 +973,7 @@ public static class LabelConfiguration
                             },
                             new()
                             {
-                                Name = "TextWithoutPurposeAndPoint",
+                                Name = "PeriodTextWithoutPurposeAndPoint",
                                 Remove = [
                                     new("5.1") { ColumnMustStartWith = true },
                                     new("5.2") { ColumnMustStartWith = true },

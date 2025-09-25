@@ -1102,7 +1102,7 @@ public static class SchemaConverter
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodPeriodNumber");
             
             var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodTextWithoutPurposeAndPoint")?
                 .Text?
                 .Select(t => t.Text)
                 .ToList();
@@ -1271,7 +1271,7 @@ public static class SchemaConverter
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
 
                 var tLines = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPurposeAndPoint")?
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint")?
                     .Text?
                     .Select(t => t.Text)
                     .ToList();

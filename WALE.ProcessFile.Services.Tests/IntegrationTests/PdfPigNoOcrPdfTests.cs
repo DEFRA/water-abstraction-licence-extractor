@@ -1756,7 +1756,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("4.2", point1PurposeLinkSub2.Text![0].Text);
         
         var point1TTextWithoutPurposeAndPoint= point1.SubResults[2];
-        Assert.Equal("TextWithoutPurposeAndPoint", point1TTextWithoutPurposeAndPoint.MatchedLabel!.Name);
+        Assert.Equal("PointTextWithoutPurposeAndPoint", point1TTextWithoutPurposeAndPoint.MatchedLabel!.Name);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741",
             string.Join(' ', point1TTextWithoutPurposeAndPoint.Text?.Select(x => x.Text).ToArray()!));
         

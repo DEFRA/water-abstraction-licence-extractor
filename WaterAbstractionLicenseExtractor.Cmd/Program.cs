@@ -153,6 +153,8 @@ try
             processingTasks.Remove(licenceSetsTask);
 
             var licenceSets = await licenceSetsTask;
+            if (licenceSets.Count <= 0) continue;
+            
             initialLicenceSetGroups.Add(licenceSets);
         }
     }
@@ -164,6 +166,8 @@ try
         foreach (var processingTask in processingTasks)
         {
             var licenceSet = await processingTask;
+            if (licenceSet.Count <= 0) continue;
+            
             initialLicenceSetGroups.Add(licenceSet);
         }
     }
@@ -231,6 +235,11 @@ var fileNumber = 1;
 foreach (var licenceSetGroup in initialLicenceSetGroups)
 {
     var licenceSetGroupUpdated = licenceSetGroup.ToList();
+
+    if (licenceSetGroupUpdated.Count == 0 || licenceSetGroupUpdated.First().Licences.Length == 0)
+    {
+        continue;
+    }
     
     var licence = licenceSetGroupUpdated.First().Licences.First();
     var allLicenceSetsForLicence = GetAllLicenceSetsForLicence(
@@ -517,6 +526,8 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
             pdfFilePath
         };
 
+        var pdfFolder = pdfFilePath.Substring(0, pdfFilePath.LastIndexOf('/') + 1);
+
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             licenceMapping,
@@ -533,7 +544,8 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
             fileLicenceMapping,
             pdfDataExtractor,
             outputFolder,
-            cacheFolder);
+            cacheFolder,
+            pdfFolder);
 
         var internalJson = JsonHelper.GetAsString(matchesFull);
     
@@ -547,7 +559,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
         Console.WriteLine($"Finished {fileNumberX} {fileName}...");
         return licenceSets;
     }
-    catch
+    catch (Exception ex)
     {
         // TODO log
         return [];
@@ -665,7 +677,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22720211")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("E0270025037")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

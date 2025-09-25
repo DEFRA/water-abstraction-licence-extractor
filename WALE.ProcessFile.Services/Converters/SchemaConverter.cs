@@ -944,6 +944,10 @@ public static class SchemaConverter
                     aggregateLimit.Purposes = null;
                 }
             }
+            else
+            {
+                aggregate.Purposes = null;
+            }
                 
             if (aggregate.Points.Length > 0)
             {
@@ -951,6 +955,10 @@ public static class SchemaConverter
                 {
                     aggregateLimit.Points = null;
                 }
+            }
+            else
+            {
+                aggregate.Points = null;
             }
                         
             allAggregates.Add(aggregate);
@@ -1219,7 +1227,8 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .ToArray() ?? [];
+                .Select(x => x!)
+                .ToArray();
             
             var points = pointPurposeGroup.SubResults
                 .Where(x => x.MatchedLabel?.Name == "Point");
@@ -1274,7 +1283,7 @@ public static class SchemaConverter
                 {
                     Description = description,
                     Id = number,
-                    PurposeIds = (purposeIds ?? [])!,
+                    PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff
                 });
             }
@@ -1302,7 +1311,8 @@ public static class SchemaConverter
                 .Where(x => x.MatchedLabel?.Name == "PointGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
-                .ToArray() ?? [];
+                .Select(x => x!)
+                .ToArray();
 
             var purposes = purposePointGroup.SubResults
                 .Where(x => x.MatchedLabel!.Name == "Purpose")
@@ -1364,7 +1374,7 @@ public static class SchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                PointIds = (pointIds ?? [])!,
+                                PointIds = pointIds,
                                 TimeCutoff = timeCutoff
                             });
                         }
@@ -1383,7 +1393,7 @@ public static class SchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                PointIds = (pointIds ?? [])!,
+                                PointIds = pointIds,
                                 TimeCutoff = timeCutoff
                             });
                         }
@@ -1402,7 +1412,7 @@ public static class SchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                PointIds = (pointIds ?? [])!,
+                                PointIds = pointIds,
                                 TimeCutoff = timeCutoff
                             });
                         }
@@ -1421,7 +1431,7 @@ public static class SchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                PointIds = (pointIds ?? [])!,
+                                PointIds = pointIds,
                                 TimeCutoff = timeCutoff
                             });
                         }
@@ -1440,7 +1450,7 @@ public static class SchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                PointIds = (pointIds ?? [])!,
+                                PointIds = pointIds,
                                 TimeCutoff = timeCutoff
                             });
                         }
@@ -1453,7 +1463,7 @@ public static class SchemaConverter
                 {
                     Id = number,
                     Description = description,
-                    PointIds = (pointIds ?? [])!,
+                    PointIds = pointIds,
                     TimeCutoff = timeCutoff
                 });
             }

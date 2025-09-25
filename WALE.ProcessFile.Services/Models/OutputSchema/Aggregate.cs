@@ -58,9 +58,9 @@ public class Aggregate : AbstractionLimitGroup
 
     public TimeCutoff? TimeCutoff { get; set; }
     
-    public Purpose[] Purposes { get; set; } = [];
+    public Purpose[]? Purposes { get; set; } = [];
 
-    public Point[] Points { get; set; } = [];
+    public Point[]? Points { get; set; } = [];
     
     public LinkedLicence[] LinkedLicences { get; init; } = [];
 

@@ -420,7 +420,7 @@ function populateDropdowns() {
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
         let value = item["issueDate"];
-        let year = value.split('-')[0];
+        let year = !!value ? value.split('-')[0] : '';
         
         if (uniqueValues.indexOf(year) === -1 && year !== '') {
             uniqueValues.push(year);

@@ -258,14 +258,20 @@ public static class SchemaConverter
         
         returnList.Add(singleLicenceOnlySet);
         
-        var explicitlyReferencedLicenceSet = new LicenceSet
+        var hasExplicitlyReferencedLicenceSet = allLicences.Count > 1
+            || allLicences[0].LicenceNumber != primaryLicence.LicenceNumber;
+        
+        var explicitlyReferencedLicenceSet = hasExplicitlyReferencedLicenceSet ? new LicenceSet
         {
             LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferenced,
             Licences = allLicences.ToArray(),
             AggregateSets = GetAggregateSets(allLicences, allLicences)
-        };
+        } : null;
 
-        returnList.Add(explicitlyReferencedLicenceSet);
+        if (explicitlyReferencedLicenceSet != null)
+        {
+            returnList.Add(explicitlyReferencedLicenceSet);            
+        }
 
         foreach (var licence in allLicences)
         {
@@ -274,14 +280,20 @@ public static class SchemaConverter
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
             }
             
-            AddMissingBackLinks([[explicitlyReferencedLicenceSet]], false, allLicences);
+            AddMissingBackLinks([[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]], false, allLicences);
+
+            var newLicenceSetIds = new List<string>
+            {
+                singleLicenceOnlySet.LicenceSetId
+            };
+
+            if (explicitlyReferencedLicenceSet != null)
+            {
+                newLicenceSetIds.Add(explicitlyReferencedLicenceSet.LicenceSetId);
+            }
             
             // Add LicenceSetIds to licence
-            licence.LicenceSetIds = new List<string>
-            {
-                singleLicenceOnlySet.LicenceSetId,
-                explicitlyReferencedLicenceSet.LicenceSetId
-            }.ToArray();
+            licence.LicenceSetIds = newLicenceSetIds.ToArray();
         }
         
         return returnList;

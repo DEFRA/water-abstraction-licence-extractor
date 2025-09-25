@@ -8,8 +8,8 @@ public class OutputLine
     public string? LicenceHolder;
     public double? LicenceHolderOcrConfidence;
     public string? Ocr;
-    public string? Purposes;
-    public string? Points;
+    public string?[]? Purposes;
+    public string?[]? Points;
     public string? ServiceName;
     public int Certainty;
     public string? MatchType;

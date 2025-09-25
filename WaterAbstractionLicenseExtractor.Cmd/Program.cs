@@ -309,8 +309,7 @@ var nodeIndex = 1;
 var nodesDictionaries = new List<Dictionary<string, object>>();
 var linksDictionaries = new List<Dictionary<string, object>>();
 
-var listJsStringBuilder = new StringBuilder("var data = [\n");
-var first = true;
+var listJs = new List<ListRow>();
 
 foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 {
@@ -327,96 +326,46 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         resultFileStringBuilder);
     
     var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
-    var filenameForScreen = outputLine.Filename;
+    /*var filenameForScreen = outputLine.Filename;
 
     if (filenameForScreen?.Length > 30)
     {
         filenameForScreen = filenameForScreen[..30] + "-<br>" + filenameForScreen[30..];
-    }
+    }*/
 
-    if (first)
-    {
-        first = false;
-    }
-    else
-    {
-        listJsStringBuilder.AppendLine(",");
-    }
+    var ll = outputLine.LinkedLicenceNumbers?.Split('|');
+    if (ll?.Length == 1 && string.IsNullOrEmpty(ll[0])) ll = [];
 
-    var linkedLicencesSb = new StringBuilder();
-    linkedLicencesSb.Append("[");
-
-    if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers) && outputLine.LinkedLicenceNumbers != string.Empty)
+    var lsi = outputLine.LicenceSetIds?.Split('|');
+    if (lsi?.Length == 1 && string.IsNullOrEmpty(lsi[0])) lsi = [];
+    
+    var listRow = new ListRow
     {
-        first = true;
-        
-        foreach (var linkedLicenceNumber in outputLine.LinkedLicenceNumbers.Split('|'))
-        {
-            if (first)
-            {
-                first = false;
-            }
-            else
-            {
-                linkedLicencesSb.Append(",");
-            }
-            
-            linkedLicencesSb.Append($"\"{linkedLicenceNumber}\"");
-        }
-    }
+        imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
+        filename = filename,
+        licenceNumber = $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+        licenceHolder = $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
+        purposes = outputLine.Purposes,
+        points = outputLine.Points,
+        limitsCount = outputLine.LimitsCount,
+        aggregatesCount = outputLine.AggregatesCount,
+        ocr = outputLine.Ocr == "OCR",
+        issueDate = outputLine.IssueDate,
+        issuer = outputLine.Issuer,
+        meansFound = outputLine.MeansFound,
+        linkedLicences = ll,
+        licenceSetIds = lsi
+    };
     
-    linkedLicencesSb.Append("]");
-    
-    var licenceSetsSb = new StringBuilder();
-    licenceSetsSb.Append("[");
-
-    if (!string.IsNullOrEmpty(outputLine.LicenceSetIds) && outputLine.LicenceSetIds != string.Empty)
-    {
-        first = true;
-        
-        foreach (var licenceSetId in outputLine.LicenceSetIds.Split('|'))
-        {
-            if (first)
-            {
-                first = false;
-            }
-            else
-            {
-                licenceSetsSb.Append(",");
-            }
-            
-            licenceSetsSb.Append($"\"{licenceSetId}\"");
-        }
-    }
-    
-    licenceSetsSb.Append("]");
-    
-    listJsStringBuilder.AppendLine("\t{");
-    listJsStringBuilder.AppendLine($"\t\t\"imagePath\": \"{filename}/PdfPig/Images/page-1.jpg\",");
-    listJsStringBuilder.AppendLine($"\t\t\"filename\": \"{filename}\",");
-    listJsStringBuilder.AppendLine($"\t\t\"licenceNumber\": \"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}\",");
-    listJsStringBuilder.AppendLine($"\t\t\"licenceHolder\": \"{outputLine.LicenceHolder}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}\",");
-    listJsStringBuilder.AppendLine($"\t\t\"purposes\": {outputLine.Purposes},");
-    listJsStringBuilder.AppendLine($"\t\t\"points\": {outputLine.Points},");
-    listJsStringBuilder.AppendLine($"\t\t\"limitsCount\": {outputLine.LimitsCount},");
-    listJsStringBuilder.AppendLine($"\t\t\"aggregatesCount\": {outputLine.AggregatesCount},");
-    listJsStringBuilder.AppendLine($"\t\t\"ocr\": {(outputLine.Ocr == "OCR").ToString().ToLower()},");
-    listJsStringBuilder.AppendLine($"\t\t\"issueDate\": \"{outputLine.IssueDate}\",");
-    listJsStringBuilder.AppendLine($"\t\t\"issuer\": \"{outputLine.Issuer}\",");
-    listJsStringBuilder.AppendLine($"\t\t\"meansFound\": {outputLine.MeansFound.ToString().ToLower()},"); 
-    listJsStringBuilder.AppendLine($"\t\t\"linkedLicences\": {linkedLicencesSb.ToString()},");
-    listJsStringBuilder.AppendLine($"\t\t\"licenceSetIds\": {licenceSetsSb.ToString()}");
-    listJsStringBuilder.Append("\t}");
+    listJs.Add(listRow);
     
     if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
         && outputLine.LicenceNumber != string.Empty) licenceNumberFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
         && outputLine.LicenceHolder != string.Empty) licenceHolderFoundCount++;
     if (outputLine.Ocr == "OCR") scannedCount++;
-    if (!string.IsNullOrEmpty(outputLine.Purposes)
-        && outputLine.Purposes != string.Empty) purposesFoundCount++;
-    if (!string.IsNullOrEmpty(outputLine.Points)
-        && outputLine.Points != string.Empty) pointsFoundCount++;
+    if (outputLine.Purposes?.Length > 0) purposesFoundCount++;
+    if (outputLine.Points?.Length > 0) pointsFoundCount++;
     if (outputLine.LimitsCount > 0) limitsFoundCount++;
     if (outputLine.AggregatesCount > 0) aggregatesFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
@@ -448,8 +397,6 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
     fileCount += 1;
 }
-
-listJsStringBuilder.Append("\n];");
 
 foreach (var outputLine in outputLines)
 {
@@ -495,7 +442,7 @@ if (regenerateMappingJson)
 #pragma warning restore CS0162 // Unreachable code detected
 
 var jsListFilePath = $"{outputFolder}list-data.js";
-File.WriteAllText(jsListFilePath, listJsStringBuilder.ToString());
+File.WriteAllText(jsListFilePath, "var data = " + JsonSerializer.Serialize(listJs, jsonOptions) + ";");
 
 var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
 {
@@ -611,56 +558,6 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
 
 static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets)
 {
-    var purposeSb = new StringBuilder();
-    var first = true;
-        
-    foreach (var purpose in licence.Purposes)
-    {
-        if (purpose.Description == null)
-        {
-            continue;
-        }
-        
-        if (first)
-        {
-            first = false;
-        }
-        else
-        {
-            purposeSb.Append(",");
-        }
-            
-        var t = purpose.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
-        purposeSb.AppendLine("\"" + t + "\"");
-    }
-        
-    var purposesJs = "[" + purposeSb + "]";
-    
-    var pointsSb = new StringBuilder();
-    first = true;
-    
-    foreach (var point in licence.Points)
-    {
-        if (point.Description == null)
-        {
-            continue;
-        }
-        
-        if (first)
-        {
-            first = false;
-        }
-        else
-        {
-            pointsSb.Append(",");
-        }
-            
-        var t = point.Description.Replace("\n", "\\n").Replace("\"", "\\\"");
-        pointsSb.AppendLine("\"" + t + "\"");
-    }
-
-    var pointsJs = "[" + pointsSb + "]";
-
     var licenceHolder = licence.NoneSchemaData.TryGetValue("issuedTo", out var value4)
         ? (string)value4 : null;
     var licenceHolderOcrConfidence = licence.NoneSchemaData.TryGetValue("issuedToConfidence", out var value5)
@@ -697,8 +594,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         LicenceHolder = licenceHolder,
         LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
         Ocr = ocr,
-        Purposes = purposesJs,
-        Points = pointsJs,
+        Purposes = licence.Purposes.Select(p => p.Description).ToArray(),
+        Points = licence.Points.Select(p => p.Description).ToArray(),
         ServiceName = serviceName,
         Certainty = licence.NoneSchemaData.TryGetValue("issuedToCertainty", out var value) ? (int)value : -1,
         MatchType = licence.NoneSchemaData.TryGetValue("issuedToMatchType", out var value1) ? (string)value1 : "N/A",
@@ -763,7 +660,7 @@ IEnumerable<string> GetPdfPaths()
     // Any additional filtering
     
     pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11149535") || x.Contains("11149440") || x.Contains("1497061")).ToArray();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;
 }

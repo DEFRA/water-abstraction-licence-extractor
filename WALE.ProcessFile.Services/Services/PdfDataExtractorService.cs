@@ -1023,16 +1023,6 @@ public class PdfDataExtractorService(
         return returnList;
     }
     
-    private class ExpressionResult
-    {
-        public bool Continue { get; set; }
-        public bool Return { get; set; }
-        public bool ContinuePartialLoop { get; set; }
-        public bool Break { get; set; }
-        public DocumentLine? NewPartialLine { get; set; }
-        public List<LabelGroupResult> Results { get; set; } = [];
-    }
-    
     private async Task<ExpressionResult> ProcessExpressionResultAsync(
         Func<FunctionInputModel, Task<List<LabelGroupResult>>> expression,
         FunctionInputModel request,
@@ -1070,7 +1060,11 @@ public class PdfDataExtractorService(
             if (request.label!.MultipleBehaviour is
                 MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
             {
-                var singleValueResult = new List<LabelGroupResult> { results.First() };
+                // Prefer ones that have some text (important in split logic)
+                var singleValueResult = new List<LabelGroupResult>
+                {
+                    results.OrderByDescending(x => x.Text?.Count > 0).First()
+                };
                 
                 return new ExpressionResult
                 {

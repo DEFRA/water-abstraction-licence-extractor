@@ -337,6 +337,9 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     var lsi = outputLine.LicenceSetIds?.Split('|');
     if (lsi?.Length == 1 && string.IsNullOrEmpty(lsi[0])) lsi = [];
     
+    var slsi = outputLine.ShortLicenceSetIds?.Split('|');
+    if (slsi?.Length == 1 && string.IsNullOrEmpty(slsi[0])) slsi = [];
+    
     var listRow = new ListRow
     {
         imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
@@ -352,7 +355,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         issuer = outputLine.Issuer,
         meansFound = outputLine.MeansFound,
         linkedLicences = ll,
-        licenceSetIds = lsi
+        licenceSetIds = lsi,
+        shortLicenceSetIds = slsi
     };
     
     listJs.Add(listRow);
@@ -580,6 +584,9 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         '|',
         licence.LinkedLicences
             .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
+
+    var licenceSetIds = string.Join('|', licence.LicenceSetIds
+        .Select(licenceSetId => allLicenceSets.First(als => als.LicenceSetId == licenceSetId).LicenceSetId));
     
     var shortLicenceSetIds = string.Join('|', licence.LicenceSetIds
         .Select(licenceSetId => allLicenceSets.First(als => als.LicenceSetId == licenceSetId).ShortLicenceSetId));
@@ -608,7 +615,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
         LinkedLicenceNumbers = linkedLicenceNumbers,
-        LicenceSetIds = shortLicenceSetIds
+        LicenceSetIds = licenceSetIds,
+        ShortLicenceSetIds = shortLicenceSetIds
     };
 }
 

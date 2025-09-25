@@ -236,7 +236,9 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
         for (let j = 0; j < item.licenceSetIds.length; j++) {
             let licenceSetId = item.licenceSetIds[j];
-            licenceSetsSb.push('<li>' + licenceSetId + '</li>');
+            let shortLicenceSetId = item.shortLicenceSetIds[j];
+            
+            licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
         }
 
         if (item.licenceSetIds.length > 0) {
@@ -449,7 +451,7 @@ function populateDropdowns() {
 
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
-        let ary = item["licenceSetIds"];
+        let ary = item["shortLicenceSetIds"];
 
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];

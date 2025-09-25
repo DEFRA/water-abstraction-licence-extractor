@@ -16,4 +16,5 @@ public class ListRow
     public bool meansFound { get; set; }
     public string?[]? linkedLicences { get; set; }
     public string?[]? licenceSetIds { get; set; }
+    public string?[]? shortLicenceSetIds { get; set; }
 }

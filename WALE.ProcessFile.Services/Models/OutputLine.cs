@@ -25,5 +25,6 @@ public class OutputLine
     public bool MeansFound;
     public string? LinkedLicenceNumbers;
     public string? LicenceSetIds;
+    public string? ShortLicenceSetIds;
     public int NodeId;
 }

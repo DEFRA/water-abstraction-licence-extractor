@@ -102,7 +102,7 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
             let value = item[filterField];
 
             if (filterType === 'Year') {
-                let valueParts = value.split('-');
+                let valueParts = value !== undefined ? value.split('-') : "";
 
                 if (valueParts[0] !== filterValue) {
                     continue;
@@ -123,7 +123,15 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
                 if (filterValue === 'empty' && value !== '') {
                     continue;
                 }
-            } else if (filterType === 'EmptyOrNotArray') {
+            }  else if (filterType === 'EmptyOrNotInt') {
+                if (filterValue === 'populated' && value === 0) {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value !== 0) {
+                    continue;
+                }
+            }  else if (filterType === 'EmptyOrNotArray') {
                 if (filterValue === 'populated' && value.length === 0) {
                     continue;
                 }
@@ -319,8 +327,8 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
             "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + aiPointsLine + "</td>" +
-            "<td>" + item.limitsCount + aiLimitsFoundLine + "</td>" +
-            "<td>" + item.aggregatesCount + aiAggregatesFoundLine + "</td>" +
+            "<td>" + (item.limitsCount > 0 ? item.limitsCount : "--") + aiLimitsFoundLine + "</td>" +
+            "<td>" + (item.aggregatesCount > 0 ? item.aggregatesCount : "--") + aiAggregatesFoundLine + "</td>" +
             "<td>" + (item.ocr ? "True" : "False") + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issueDate) + aiIssueDateLine + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +

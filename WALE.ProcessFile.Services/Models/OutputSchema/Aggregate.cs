@@ -3,7 +3,7 @@ using WALE.ProcessFile.Services.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
-public class Aggregate
+public class Aggregate : AbstractionLimitGroup
 {
     public string Id
     {
@@ -30,17 +30,20 @@ public class Aggregate
                 .Replace(" ", string.Empty);
 
             var outputSb = new StringBuilder();
-            
-            foreach (var linkedLicence in LinkedLicences)
+
+            if (LinkedLicences != null)
             {
-                var linkedLicenceNumber = linkedLicence.LicenceNumber?
-                    .Replace("/", string.Empty)
-                    .Replace(" ", string.Empty);
-                
-                outputSb.Append($"-{linkedLicenceNumber}");
+                foreach (var linkedLicence in LinkedLicences)
+                {
+                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                        .Replace("/", string.Empty)
+                        .Replace(" ", string.Empty);
+
+                    outputSb.Append($"-{linkedLicenceNumber}");
+                }
             }
 
-            return $"{licenceNumber}{LicenceVersionId}-{primaryType}{subType}{outputSb}";
+            return $"{licenceNumber}-{LicenceVersionId}-{primaryType}{subType}{outputSb}";
         }
     }
     
@@ -52,23 +55,19 @@ public class Aggregate
     
     public PrimaryType PrimaryType { get; init; }
     
-    public SubType? SubType { get; init; }
+    public SubType? SubType { get; set; }
     
     public string? NaldType { get; set; }
 
     public TimeCutoff? TimeCutoff { get; set; }
     
-    public Purpose[] Purposes { get; set; } = [];
+    public Purpose[]? Purposes { get; set; } = [];
 
-    public Point[] Points { get; set; } = [];
+    public Point[]? Points { get; set; } = [];
     
-    public TimePeriod? TimePeriod { get; set; }
-    
-    public LinkedLicence[] LinkedLicences { get; init; } = [];
-    
-    public AggregateAbstractionLimit[] Limits { get; init; } = [];
+    public LinkedLicence[]? LinkedLicences { get; init; } = [];
 
-    public static Aggregate Template => new()
+    public new static Aggregate Template => new()
     {
         AggregateSetId = string.Empty,
         NaldType = null,

@@ -10,6 +10,6 @@ public class PurposeOfAbstractionArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new PurposeOfAbstractionArrayWrapped { Data = [PurposeOfAbstraction.Template] };
-        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

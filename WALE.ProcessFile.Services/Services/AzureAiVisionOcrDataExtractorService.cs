@@ -30,7 +30,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             var cachedText = await File.ReadAllTextAsync(outputFilename);
             var cachedPage = JsonSerializer.Deserialize<ReadResult>(
                 cachedText,
-                JsonHelper.GetSerializer());
+                JsonHelper.GetSerializerOptions());
 
             var pageLines = ToPageLines(cachedPage!);
             returnLines.AddRange(pageLines);
@@ -56,7 +56,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                         await File.WriteAllTextAsync(
                             outputFilename,
                             JsonSerializer.Serialize(new ReadResult { Lines = [] },
-                            JsonHelper.GetSerializer()));
+                            JsonHelper.GetSerializerOptions()));
                         
                         return [];
                     }
@@ -106,7 +106,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             
             foreach (var page in results.AnalyzeResult.ReadResults)
             {
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page, JsonHelper.GetSerializer()));
+                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page, JsonHelper.GetSerializerOptions()));
 
                 var pageLines = ToPageLines(page!);
                 returnLines.AddRange(pageLines);

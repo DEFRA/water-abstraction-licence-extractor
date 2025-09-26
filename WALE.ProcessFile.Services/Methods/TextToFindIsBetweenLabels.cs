@@ -14,7 +14,7 @@ public static class TextToFindIsBetweenLabels
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var labelGroupResult = request.labelGroupResult;//.Clone();
+        var labelGroupResult = request.labelGroupResult;
         
         var linesToUse = new List<DocumentLine>();
 
@@ -24,12 +24,23 @@ public static class TextToFindIsBetweenLabels
             linesToUse.Add(request.previousLines[^request.label.LeewayBefore]);
         }
 
-        var lineContainsLabel = request.label.Text?.Any(labelText =>
-            request.line!.Text.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase));
+        var nextLine = request.nextLines?.FirstOrDefault();
 
-        var labelLineAlreadyIncluded = false;
+        var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+            request.line!,
+            nextLine,
+            request.line!,
+            request.label.Text,
+            request.label.Position,
+            0,
+            0,
+            out _,
+            out _);
         
-        if (lineContainsLabel != true || request.label.IncludeWholeLine)
+        var labelLineAlreadyIncluded = false;
+        var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.Text?.FirstOrDefault()?.Text;
+        
+        if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
         {
             labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);
@@ -42,9 +53,11 @@ public static class TextToFindIsBetweenLabels
             false);
         
         var beforeTextContainsLabel = request.label.Text?.Any(labelText =>
-            ((!labelText.LineMustStartWith && !labelText.ColumnMustStartWith) && lineBeforeText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
-            || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith) && lineBeforeText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
-        
+            ((!labelText.LineMustStartWith && !labelText.ColumnMustStartWith)
+                && lineBeforeText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
+            || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
+                    && lineBeforeText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
+
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
             lineBeforeText,
@@ -61,20 +74,28 @@ public static class TextToFindIsBetweenLabels
         }
         
         // Add label text if asked for
-        if (request.label.IncludeLabelText
+        if (request.label.IncludeStartLabelText
             && betweenText.Count >= 1
             && !labelLineAlreadyIncluded
             && beforeTextContainsLabel != true)
         {
-            var labelText =
-                request.textBeforeAtAndAfterLabel?.FirstOrDefault(x => x.Label.Position == LabelPosition.ActuallyLabel).Text;
+            var labelText = request.textBeforeAtAndAfterLabel?
+                .FirstOrDefault(x => x.Label?.Position == LabelPosition.ActuallyLabel)?
+                .Text;
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {
                 var firstBetweenLine = betweenText[0];
                 var firstColumn = firstBetweenLine.Columns[0];
+                var firstColumnText = FormattingHelper.TrimFormatting(firstColumn.Text, true, false);
+                var text = $"{labelText} {firstColumnText}";
+                
+                if (request.label.IncludeEndLabelText)
+                {
+                    var endText = matchedEndText?.matchedEndText.Text;
+                    text += $" {endText}";
+                }
 
-                var text = $"{labelText} {firstColumn.Text}";
                 betweenText[0].Columns[0] = new DocumentLineColumn(text);
             }
         }
@@ -124,6 +145,7 @@ public static class TextToFindIsBetweenLabels
             request.label,
             betweenText,
             true,
+            false,
             out var isForbidden,
             out var removedLines);
         
@@ -189,7 +211,7 @@ public static class TextToFindIsBetweenLabels
         if (!string.IsNullOrEmpty(firstLineTextAfterLabel) && !labelLineAlreadyIncluded)
         {
             var text = FormattingHelper.
-                TrimFormatting(firstLineTextAfterLabel, true)!;
+                TrimFormatting(firstLineTextAfterLabel, false, false)!;
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
@@ -203,6 +225,8 @@ public static class TextToFindIsBetweenLabels
         
         linesLoop.AddRange(lines);
         var totalLines = linesLoop.Count;
+
+        var count = 0;
         
         foreach (var line in linesLoop)
         {
@@ -211,13 +235,22 @@ public static class TextToFindIsBetweenLabels
                 Text = textEnd
             };
 
+            var nextLine = linesLoop.Count > count + 1 ?
+                linesLoop[count + 1]
+                : null;
+
+            count += 1;
+            
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+                line,
+                nextLine,
                 line,
                 label.Text,
                 label.Position,
                 lineCount++,
                 totalLines,
-                out var matchedEndTextTemp);
+                out var matchedEndTextTemp,
+                out _);
 
             if (lineContainsLabel)
             {
@@ -245,20 +278,26 @@ public static class TextToFindIsBetweenLabels
                     matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
                     foundEndTag = true;
 
-                    if (returnList.Count == 0)
+                    if (returnList.Count == 0 || line.Columns.Count == 1)
                     {
                         var i = line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
                         if (i > -1)
                         {
                             var t = line.Text[..i];
+                            var ct = FormattingHelper.TrimFormatting(t, true, true);
 
-                            var clonedLine2 = line.Clone();
-                            clonedLine2.Columns.Clear();
-                            clonedLine2.Columns.Add(new DocumentLineColumn(
-                                FormattingHelper.TrimFormatting(t, false)!));
+                            var isOneDigitNumber = ct?.Length == 1 && int.TryParse(ct, out _);
+                            var isOneDigitNumberAndWeDontWantNumber = isOneDigitNumber && label.Format != "Number";
 
-                            returnList.Add(clonedLine2);
+                            if (!isOneDigitNumberAndWeDontWantNumber)
+                            {
+                                var clonedLine2 = line.Clone();
+                                clonedLine2.Columns.Clear();
+                                clonedLine2.Columns.Add(new DocumentLineColumn(ct!));
+
+                                returnList.Add(clonedLine2);
+                            }
                         }
                     }
                     
@@ -271,9 +310,7 @@ public static class TextToFindIsBetweenLabels
 
             foreach (var column in line.Columns)
             {
-                var isLastColumn = line.Columns.Last() == column;
-                
-                var columnText = FormattingHelper.TrimFormatting(column.Text, isLastColumn)!;
+                var columnText = FormattingHelper.TrimFormatting(column.Text, false, false)!;
                 clonedLine.Columns.Add(new DocumentLineColumn(columnText));
             }
             

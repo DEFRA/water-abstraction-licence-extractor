@@ -10,6 +10,6 @@ public class PeriodOfAbstractionArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new PeriodOfAbstractionArrayWrapped { Data = [PeriodOfAbstraction.Template] };
-        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

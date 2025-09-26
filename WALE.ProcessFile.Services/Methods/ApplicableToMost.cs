@@ -26,27 +26,50 @@ public static class ApplicableToMost
         if (request.textBeforeAtAndAfterLabel?.Any() != true
             && request.line?.Text.Equals(request.label.Text?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
         {
-            request.textBeforeAtAndAfterLabel = new List<(string Text, LabelToMatch Label)>
-            {
-                (request.label.Text?.FirstOrDefault()?.Text, request.label)!
-            }!;
+            request.textBeforeAtAndAfterLabel = [
+                new()
+                {
+                    Text = request.label.Text?.FirstOrDefault()?.Text,
+                    Label = request.label
+                }
+            ]!;
         }
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAtAndAfterLabel!))
         {
             return returnListTop;
         }
-        
-        foreach (var (text, matchedLabel) in request.textBeforeAtAndAfterLabel!)
+
+        var textBeforeAtAndAfterLabel = request.textBeforeAtAndAfterLabel!.ToList();
+
+        if (request.label.Position is LabelPosition.LabelIsBeforeTextToFind
+            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore)
         {
+            textBeforeAtAndAfterLabel.Reverse();
+        }
+        
+        var isMultiple = request.label?.MultipleBehaviour is
+            MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+
+        foreach (var item in textBeforeAtAndAfterLabel)
+        {
+            var matchedLabel = item.Label!;
+            var text = item.Text;
+            
             var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;
             
-            var t = matchedLabel.IncludeLabelText ? request.line!.Text : text;
+            var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
             
             var over2Lines = false;
-            var outputText = DataHelper.RemoveExcludes(matchedLabel, t!, true, out var removedLines);
+            var outputText = DataHelper.RemoveExcludes(
+                matchedLabel,
+                t!,
+                true,
+                false,
+                out var removedLines);
 
             if (DataHelper.IsCorruptedText(outputText))
             {
@@ -56,6 +79,26 @@ public static class ApplicableToMost
             var documentLine = request.line!.Clone();
             documentLine.Columns.Clear();
             documentLine.Columns.Add(new DocumentLineColumn(outputText));
+
+            if (request.isDateLookup)
+            {
+                // TODO can swap this out now for shared method in Base
+                
+                if (Date.AnyIsDate([documentLine], out var matchedLines))
+                {
+                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
+                    
+                    foreach (var matchedLine in matchedLines)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        
+                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);                        
+                    }
+                }
+                
+                continue;
+            }
             
             if (request.isDateOrPurposeLookup)
             {
@@ -108,15 +151,10 @@ public static class ApplicableToMost
             if (request.isLicenceNumberLookup)
             {
                 // TODO can swap this out now for shared method in Base
-                
-                var lines = new List<DocumentLine> { documentLine };
 
-                if (request.nextLines != null)
-                {
-                    lines.AddRange(request.nextLines!);
-                }
+                var isLast = textBeforeAtAndAfterLabel.Last() == item;
 
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -127,7 +165,17 @@ public static class ApplicableToMost
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
 
-                    return returnList;
+                    if (!isMultiple)
+                    {
+                        return returnList;
+                    }
+
+                    returnListTop.AddRange(returnList);
+                }
+                
+                if (isLast)
+                {
+                    return returnListTop;
                 }
                 
                 continue;
@@ -228,7 +276,11 @@ public static class ApplicableToMost
                 return r;
             }
 
-            outputText = FormattingHelper.TrimFormatting(outputText, true);
+            if (!request.label!.DoNotTrimLines)
+            {
+                outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
+            }
+            
             outputText = request.isOcr
                 ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType)
                 : outputText;

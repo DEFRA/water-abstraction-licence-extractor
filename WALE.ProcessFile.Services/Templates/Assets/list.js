@@ -8,11 +8,16 @@ window.onload = function () {
     }
 
     window.aiData = {};
-    window.loadedOrErrored = 0;
     
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        loadScript(item.filename, bodyEle);
+    if (LOAD_AI) {
+        window.loadedOrErrored = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            loadScript(item.filename, bodyEle);
+        }
+    } else {
+        window.loadedOrErrored = data.length;
     }
     
     let timeCount = 0;
@@ -33,7 +38,6 @@ window.onload = function () {
 
 function setup() {
     populateTable();
-    setTotals();
     populateDropdowns();
 
     window.sortedAsc = true;
@@ -50,7 +54,7 @@ function setup() {
 function loadScript(filename, bodyEle) {
     let script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = '../Data/' + filename + '.js';
+    script.src = filename + '/ai-data.jsonp';
 
     script.onload = function () {
         window.loadedOrErrored += 1;
@@ -88,6 +92,80 @@ function sortBy(filterField) {
     populateTable(undefined, undefined, undefined, filterField, sortedAsc);
 }
 
+function filterData(dataSorted, filterType, filterField, filterValue) {
+    let returnData = [];
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+
+        if (filterField !== undefined && filterValue !== undefined && filterValue !== 'All') {
+            let value = item[filterField];
+
+            if (filterType === 'Year') {
+                let valueParts = value !== undefined ? value.split('-') : "";
+
+                if (valueParts[0] !== filterValue) {
+                    continue;
+                }
+            } else if (filterType === 'Bool') {
+                if (filterValue === 'true' && !value) {
+                    continue;
+                }
+
+                if (filterValue === 'false' && value) {
+                    continue;
+                }
+            } else if (filterType === 'EmptyOrNot') {
+                if (filterValue === 'populated' && value === '') {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value !== '') {
+                    continue;
+                }
+            }  else if (filterType === 'EmptyOrNotInt') {
+                if (filterValue === 'populated' && value === 0) {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value !== 0) {
+                    continue;
+                }
+            }  else if (filterType === 'EmptyOrNotArray') {
+                if (filterValue === 'populated' && value.length === 0) {
+                    continue;
+                }
+
+                if (filterValue === 'empty' && value.length > 0) {
+                    continue;
+                }
+            } else if (filterType === 'ArrayValue') {
+                if (filterValue !== 'All' && value.indexOf(filterValue) === -1) {
+                    continue;
+                }
+            } else if (value !== filterValue) {
+                continue;
+            }
+        }
+        
+        returnData.push(item);
+    }
+    
+    return returnData;
+}
+
+function licenceInList(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+        
+        if (item.licenceNumber === licenceNumber) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
     const tbody1 = document.getElementsByTagName("tbody")[0];
     let htmlSb = [];
@@ -108,46 +186,12 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         }
     }
     
+    dataSorted = filterData(dataSorted, filterType, filterField, filterValue);
+    window.dataFiltered = dataSorted;
+    setTotals();
+    
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
-
-        if (filterField !== undefined && filterValue !== undefined && filterValue !== 'All') {
-            let value = item[filterField];
-            
-            if (filterType === 'Year') {
-                let valueParts = value.split('-');
-                
-                if (valueParts[0] !== filterValue) {
-                    continue;
-                }
-            } else if (filterType === 'Bool') {
-                if (filterValue === 'true' && !value) {
-                    continue;
-                }
-
-                if (filterValue === 'false' && value) {
-                    continue;
-                }
-            } else if (filterType === 'EmptyOrNot') {
-                if (filterValue === 'populated' && value === '') {
-                    continue;
-                }
-
-                if (filterValue === 'empty' && value !== '') {
-                    continue;
-                }
-            } else if (filterType === 'EmptyOrNotArray') {
-                if (filterValue === 'populated' && value.length === 0) {
-                    continue;
-                }
-
-                if (filterValue === 'empty' && value.length > 0) {
-                    continue;
-                }
-            } else if (value !== filterValue) {
-                continue;
-            }
-        }
         
         let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
         let backgroundCss = "background-color: " + color;
@@ -171,7 +215,44 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         }
 
         pointsSb.push('</ul>');
+        
+        let linkedLicencesSb = [];
 
+        if (item.linkedLicences.length > 0) {
+            linkedLicencesSb.push('<ul>');
+        }
+        
+        for (let j = 0; j < item.linkedLicences.length; j++) {
+            let linkedLicence = item.linkedLicences[j];
+            
+            if (licenceInList(linkedLicence)) {
+                linkedLicencesSb.push('<li><a href="#' + linkedLicence + '">' + linkedLicence + '</a></li>');
+            } else {
+                linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
+            }
+        }
+
+        if (item.linkedLicences.length > 0) {
+            linkedLicencesSb.push('</ul>');
+        }
+
+        let licenceSetsSb = [];
+
+        if (item.shortLicenceSetIds.length > 0 && item.shortLicenceSetIds[0] !== '') {
+            licenceSetsSb.push('<ul>');
+
+            for (let j = 0; j < item.licenceSetIds.length; j++) {
+                let licenceSetId = item.licenceSetIds[j];
+                let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
+                
+                licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
+            }
+
+            licenceSetsSb.push('</ul>');
+        } else {
+            licenceSetsSb.push('--');
+        }
+        
         let filenameNoExtension = item.filename.split('.')[0];
         let filenameNoSpacesOrDashes = filenameNoExtension
             .replaceAll("-", "")
@@ -242,17 +323,18 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
-            "<td>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
+            "<td id='" + dashesIfNullOrEmpty(item.licenceNumber) + "'>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
             "<td>" + (item.points.length > 0 ? pointsSb.join('') : '--') + aiPointsLine + "</td>" +
-            "<td>" + (item.limitsFound ? "True" : "False") + aiLimitsFoundLine + "</td>" +
-            "<td>" + (item.aggregatesFound ? "True" : "False") + aiAggregatesFoundLine + "</td>" +
+            "<td>" + (item.limitsCount > 0 ? item.limitsCount : "--") + aiLimitsFoundLine + "</td>" +
+            "<td>" + (item.aggregatesCount > 0 ? item.aggregatesCount : "--") + aiAggregatesFoundLine + "</td>" +
             "<td>" + (item.ocr ? "True" : "False") + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issueDate) + aiIssueDateLine + "</td>" +
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
-            "<td>" + (item.linkedLicences ? "True" : "False") + aiLinkedLicencesLine + "</td>" +
+            "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
+            "<td>" + (item.licenceSetIds.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
             "</tr>";
 
         htmlSb.push(html);
@@ -283,27 +365,28 @@ function addChangeEvent(select) {
     });
 }
 
-function setTotals() {
-    document.getElementById('filename-total').innerHTML = getCount('filename', '');
-    document.getElementById('licence-number-total').innerHTML = getCount('licenceNumber', '');
-    document.getElementById('licence-holder-total').innerHTML = getCount('licenceHolder', '');
-    document.getElementById('purposes-total').innerHTML = getCount('purposes', []);
-    document.getElementById('points-total').innerHTML = getCount('points', []);
-    document.getElementById('limits-total').innerHTML = getCount('limitsFound', false);
-    document.getElementById('aggregates-total').innerHTML = getCount('aggregatesFound', false);
-    document.getElementById('ocr-total').innerHTML = getCount('ocr', false);
-    document.getElementById('issue-date-total').innerHTML = getCount('issueDate', '');
-    document.getElementById('issuer-total').innerHTML = getCount('issuer', '');
-    document.getElementById('means-total').innerHTML = getCount('meansFound', false);
-    document.getElementById('linked-licences-total').innerHTML = getCount('linkedLicences', false);
+function setTotals() {    
+    document.getElementById('filename-total').innerHTML = getCount(window.dataFiltered, 'filename', '');
+    document.getElementById('licence-number-total').innerHTML = getCount(window.dataFiltered, 'licenceNumber', '');
+    document.getElementById('licence-holder-total').innerHTML = getCount(window.dataFiltered, 'licenceHolder', '');
+    document.getElementById('purposes-total').innerHTML = getCount(window.dataFiltered, 'purposes', []);
+    document.getElementById('points-total').innerHTML = getCount(window.dataFiltered, 'points', []);
+    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsFound', false);
+    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesFound', false);
+    document.getElementById('ocr-total').innerHTML = getCount(window.dataFiltered, 'ocr', false);
+    document.getElementById('issue-date-total').innerHTML = getCount(window.dataFiltered, 'issueDate', '');
+    document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
+    document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
+    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
+    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSetIds', false);
 }
 
-function getCount(field, comparisonValue) {
+function getCount(dataFiltered, field, comparisonValue) {
     let count = 0;
     
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        var value = item[field];
+    for (let i = 0; i < dataFiltered.length; i++) {
+        let item = dataFiltered[i];
+        let value = item[field];
         
         if (value !== comparisonValue) {
             count++;
@@ -347,7 +430,7 @@ function populateDropdowns() {
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
         let value = item["issueDate"];
-        let year = value.split('-')[0];
+        let year = !!value ? value.split('-')[0] : '';
         
         if (uniqueValues.indexOf(year) === -1 && year !== '') {
             uniqueValues.push(year);
@@ -367,4 +450,32 @@ function populateDropdowns() {
 
     issueDateSb.push('<option value="">--</option>');
     issueDateFilter.innerHTML = issueDateSb.join('');
+
+    let licenceSetsFilter = document.getElementById('licence-sets-filter');
+    uniqueValues = [];
+    
+    let licenceSetsSb = [];
+    licenceSetsSb.push('<option value="All">All</option>');
+
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        let ary = item["shortLicenceSetIds"];
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+            
+            if (uniqueValues.indexOf(value) === -1) {
+                uniqueValues.push(value);
+            }
+        }
+    }
+
+    uniqueValues.sort();
+
+    for (let i = 0; i < uniqueValues.length; i++) {
+        let value = uniqueValues[i];
+        licenceSetsSb.push('<option value="' + value + '">' + value + '</option>')
+    }
+
+    licenceSetsFilter.innerHTML = licenceSetsSb.join('');
 }

@@ -5,14 +5,15 @@ namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
 public class LicenceVersion
 {
+    public static string UnknownVersion = "LVUNKNOWN";
+    
     public string LicenceVersionId
     {
         get
         {
             if (EffectiveDate == null && ExpiryDate == null)
             {
-                const string unknownVersion = "LVUNKNOWN";
-                return unknownVersion;
+                return UnknownVersion;
             }
 
             return $"LV{EffectiveDate:yyyyMMdd}{ExpiryDate:yyyyMMdd}";
@@ -49,6 +50,6 @@ public class LicenceVersion
     
     public static string GetSchemaForPrompt()
     {
-        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializerOptions());
     }
 }

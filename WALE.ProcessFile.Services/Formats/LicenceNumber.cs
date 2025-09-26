@@ -8,6 +8,10 @@ namespace WALE.ProcessFile.Services.Formats;
 public static partial class LicenceNumber
 {
     public const string Constant = "LicenceNumber";
+
+    // AA/123, AA/123/123, AA/123/123/123, AA 123 123 123 or AA.123.123.123 (and some other variations of this)
+    public const string RegexPatten =
+        @"([A-Z0-9]{1,3}[\/ .][A-Z0-9]{1,5}([\/ .][0-9]{1,4})?([\/ .][0-9A-Z\*]{1,4})?([\/ .][0-9]{1,4})?([\/ .][0-9A-Z]{1,3})?[\/ .]?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
     
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
@@ -16,6 +20,7 @@ public static partial class LicenceNumber
     {
         matchedLines = [];
         var anyMatchFound = false;
+        var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
         
         foreach (var line in lines)
         {
@@ -23,7 +28,7 @@ public static partial class LicenceNumber
             {
                 continue;
             }
-
+            
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
             
@@ -52,29 +57,9 @@ public static partial class LicenceNumber
 
                 foreach (var subLine in subLines)
                 {
-                    var invalid = subLine.Any(character =>
-                        !char.IsLetter(character)
-                        && !char.IsNumber(character)
-                        && character != ' '
-                        && character != '/'
-                        && character != '.'
-                        && character != '*');
-
-                    var words = subLine.Split(' ');
-
-                    if (words.Any(word => word.Length >= 3
-                        && word.All(char.IsLetter)
-                        && DataHelper.Dictionary.Check(word)))
-                    {
-                        invalid = true;
-                    }
-
-                    if (invalid)
-                    {
-                        continue;
-                    }
-                    
-                    var containsSplitter = subLine.Contains(' ') || column.Text.Contains('/');
+                    var containsSplitter = subLine.Contains(' ')
+                       || column.Text.Contains('/')
+                       || column.Text.Contains('.');
 
                     if (!containsSplitter || subLine.Length < 4)
                     {
@@ -87,30 +72,92 @@ public static partial class LicenceNumber
                     {
                         numberLine = numberLine.Replace(" ", string.Empty);
                     }
-
-                    var regexMatches = LicenceNumbersSlashesRegex().IsMatch(numberLine)
-                                       || LicenceNumbersSpacesRegex().IsMatch(numberLine);
-
+                    
                     var enoughPartsWithNumbers = numberLine
                         .Replace(" ", "/")
+                        .Replace(".", "/")
                         .Split('/')
                         .Count(p => p.Any(char.IsDigit)) >= 2;
 
-                    var match = regexMatches && enoughPartsWithNumbers;
+                    var regexMatches = LicenceNumbersRegex().Matches(numberLine);
+                    var isMatch = regexMatches.Count >= 1 && enoughPartsWithNumbers;
 
-                    if (match)
+                    if (!isMatch)
                     {
-                        var clonedColumn = new DocumentLineColumn(numberLine.Trim());
-                        newColumns.Add(clonedColumn);
-
-                        var clonedLine = line.Clone(newColumns);
-                        matchedLines.Add(clonedLine);
-
-                        newColumns = [];
-                        anyMatchFoundForColumn = true;
-                        anyMatchFoundForLine = true;
-                        anyMatchFound = true;
+                        continue;
                     }
+
+                    var value = regexMatches[0].Value;
+                    var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))                                               
+                        || (value.Contains('/') && value.Contains(' '));
+                    
+                    if (hasInvalidComboOfSeperators)
+                    {
+                        continue;
+                    }
+
+                    var shortLimit = value.Contains('/') ? 5 : 6;
+                    var veryShort = value.Length < shortLimit;
+                    if (veryShort)
+                    {
+                        continue;
+                    }
+
+                    var isPostcode = value.Length == 7 || value.Length == 8
+                        && char.IsUpper(value[0])
+                        && value.Count(x => x == ' ') == 1
+                        && value.Split(' ')[1].Length == 3;
+                            
+                    if (isPostcode)
+                    {
+                        continue;
+                    }
+                    
+                    var atLeastOneDigit = value.Count(char.IsDigit) >= 1;
+                    if (!atLeastOneDigit)
+                    {
+                        continue;
+                    }
+
+                    var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
+                        && value[2] == ' '
+                        && value.All(x => x != '/')
+                        && value.All(x => x != '.');
+
+                    if (!isOsRef)
+                    {
+                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ");
+                    }
+                    
+                    if (isOsRef)
+                    {
+                        continue;
+                    }
+                    
+                    var noCharSlashOrDot = !value.Any(x => x == '/')
+                        && !value.Any(x => x == '.')
+                        && !value.Any(char.IsLetter);
+
+                    if (noCharSlashOrDot && value.Split(' ') .Length < 3)
+                    {
+                        continue;
+                    }
+                    
+                    var colText = FormattingHelper.TrimFormatting(
+                        value,
+                        true,
+                        true);
+                        
+                    var clonedColumn = new DocumentLineColumn(colText!);
+                    newColumns.Add(clonedColumn);
+
+                    var clonedLine = line.Clone(newColumns);
+                    matchedLines.Add(clonedLine);
+
+                    newColumns = [];
+                    anyMatchFoundForColumn = true;
+                    anyMatchFoundForLine = true;
+                    anyMatchFound = true;
                 }
 
                 if (!anyMatchFoundForColumn)
@@ -124,7 +171,7 @@ public static partial class LicenceNumber
                 continue;
             }
 
-            if (label.Multiple is MultipleType.False)
+            if (findSingleResult)
             {
                 return anyMatchFound;
             }
@@ -133,9 +180,6 @@ public static partial class LicenceNumber
         return anyMatchFound;
     }
     
-    [GeneratedRegex(@"[0-9A-Z]{1,2}\/[0-9]{1,5}(\/[0-9\.A-Z\*]{1,4}\/\d{1,4})*")]
-    private static partial Regex LicenceNumbersSlashesRegex();
-
-    [GeneratedRegex(@"[0-9A-Z]{1,2} [0-9]{1,5}( [0-9\.A-Z\*]{1,4} \d{1,4})*")]
-    private static partial Regex LicenceNumbersSpacesRegex();    
+    [GeneratedRegex(RegexPatten)]
+    private static partial Regex LicenceNumbersRegex();
 }

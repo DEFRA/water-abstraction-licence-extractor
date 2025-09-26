@@ -14,7 +14,7 @@ public static class CompanyName
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isPrevious,
+        bool lineNumbersAreDescending,
         bool isOcr,
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
@@ -57,7 +57,7 @@ public static class CompanyName
                     ? AutoCorrectHelper.AutoCorrectText(column.Text, true)
                     : column.Text;
 
-                var text = FormattingHelper.TrimFormatting(clonedText, true)!;
+                var text = FormattingHelper.TrimFormatting(clonedText, true, true)!;
 
                 if (DataHelper.IsCorruptedText(text)
                     || !TryGetCompanyOrPersonalName(text, label, out var companyOrPersonalName))
@@ -106,7 +106,7 @@ public static class CompanyName
             initialMatchedLines.Add(clonedLine);
         }
 
-        if (isPrevious)
+        if (lineNumbersAreDescending)
         {
             initialMatchedLines.Reverse();
         }

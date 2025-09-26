@@ -1,6 +1,4 @@
-using System.Text.Json;
 using WALE.ProcessFile.Services.Enums.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -17,6 +15,10 @@ public class Licence
             return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
         }
     }
+
+    public string[] LicenceSetIds { get; set; } = [];
+    
+    public LicenceStatus Status { get; init; }
     
     public string? LicenceNumber { get; init; }
     
@@ -35,4 +37,8 @@ public class Licence
     public AbstractionLimits AbstractionLimits { get; init; } = new();    
     
     public TimePeriod? DefinitionOfYear { get; init; }
+    
+    public LinkedLicence[] LinkedLicences { get; set; } = [];
+    
+    public Dictionary<string, object> NoneSchemaData { get; set; } = [];
 }

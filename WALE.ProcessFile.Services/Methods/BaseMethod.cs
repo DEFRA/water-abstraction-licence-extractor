@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -9,7 +10,7 @@ public static class BaseMethod
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
-        bool isPrevious)
+        bool lineNumbersAreDescending)
     {
         if (request.label == null)
         {
@@ -18,8 +19,26 @@ public static class BaseMethod
         
         var returnList = new List<LabelGroupResult>();
 
+        if (lines.Any(line => LabelMatchingHelper.ShouldSkipBlockAsForbidden(line.Text, request.label)))
+        {
+            return returnList;
+        }
+        
         switch (request.label.Format)
         {
+            case Date.Constant:
+                if (Date.AnyIsDate(lines, out var matchedLinesDates)) // TODO when just want one column, this function should get it
+                {
+                    matchedLinesDates = RestrictToPossibilities(request.label?.Possibilities, matchedLinesDates);
+                    
+                    foreach (var matchedLine in matchedLinesDates)
+                    {
+                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                
+                break;
             case DateOrPurpose.Constant:
                 if (DateOrPurpose.AnyIsDateOrPurpose(lines, out var matchedLines)) // TODO when just want one column, this function should get it
                 {
@@ -34,7 +53,7 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, isPrevious, request.isOcr,
+                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr,
                     out var companyNameLines))
                 {
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
@@ -67,6 +86,11 @@ public static class BaseMethod
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
+                        if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                        {
+                            continue;
+                        }
+                        
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         returnList.Add(labelGroupResult);
                     }
@@ -94,7 +118,7 @@ public static class BaseMethod
                 
                 break;
             case Units.Constant:
-                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, isPrevious, labelGroupResult));
+                returnList.AddRange( Units.GetMatchesToPossibilities(request.label, lines, lineNumbersAreDescending, labelGroupResult));
                 
                 break;
             case SingleWord.Constant:

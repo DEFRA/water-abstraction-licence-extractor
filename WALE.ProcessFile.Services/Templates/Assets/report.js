@@ -23,9 +23,10 @@ function loadReport(filename) {
         });
         
         window.aiData = {};
-        
-        let aiPath = "../Data/" + data.filename.split('.')[0] + '.js';
+
+        let aiPath = filename + '/ai-data.jsonp';
         loadScript(aiPath, setupAiTab);
+        
         let pdfPath = jssettings.pdfFolder + data.filename;
         
         let filenameEle = document.getElementById("filename");
@@ -47,8 +48,13 @@ function loadReport(filename) {
         document.getElementById("licenceNumberTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
 
         addJsonPathElement(data, '$.matches[?(@.labelGroupName==\'Company\')]', "grantedTo", "<strong>Licence holder</strong>", "grantedToGroup");
-        document.getElementById("grantedToGroup-dd").className = "default-hidden";
-        document.getElementById("grantedToGroup-dd").previousElementSibling.className = "default-hidden";
+        
+        var grantedToGroupEle = document.getElementById("grantedToGroup-dd");
+        
+        if (!!grantedToGroupEle) {
+            grantedToGroupEle.className = "default-hidden";
+            grantedToGroupEle.previousElementSibling.className = "default-hidden";
+        }
         
         document.getElementById("licenceHolderTxt").value = getText(data, '$.matches[?(@.labelGroupName==\'Company\')]');
 
@@ -402,22 +408,31 @@ function evaluateJsonPath() {
     // render tree into dom element
     jsonview.render(tree2, document.querySelector('#dataNewOutput'));
     jsonview.toggleNode(tree2);
+
+    // create json tree object
+    const tree3 = jsonview.create(licenceSets);
+
+    // render tree into dom element
+    jsonview.render(tree3, document.querySelector('#dataSetOutput'));
+    jsonview.toggleNode(tree3);
     
 //    document.getElementById("jsonPathOutput").innerHTML = JSON.stringify(result)
 }
 
 function disableAllTabs() {
-    document.getElementById("pdfTabLink").className = "";
+    document.getElementById("overviewTabLink").className = "";
     document.getElementById("jsonNewTabLink").className = "";
+    document.getElementById("jsonSetTabLink").className = "";
     document.getElementById("jsonAiTabLink").className = "";
     document.getElementById("jsonTabLink").className = "";
     document.getElementById("textTabLink").className = "";
 }
 
 function hideAllAreas() {
-    document.getElementById("iframeParent").style.display = "none";
+    document.getElementById("overview").style.display = "none";
     document.getElementById("jsonPath").style.display = "none";
     document.getElementById("jsonNewPath").style.display = "none";
+    document.getElementById("jsonSetPath").style.display = "none";
     document.getElementById("jsonAiPath").style.display = "none";
     document.getElementById("text").style.display = "none";
 }
@@ -426,15 +441,20 @@ function showTab(tabName) {
     disableAllTabs();
     hideAllAreas();   
     
-    if (tabName === "pdf-images") {
-        document.getElementById("pdfTabLink").className = "selectedTab";
-        document.getElementById("iframeParent").style.display = "block";
+    if (tabName === "overview") {
+        document.getElementById("overviewTabLink").className = "selectedTab";
+        document.getElementById("overview").style.display = "block";
         
         return false;
     } else if (tabName === "json-new") {
         document.getElementById("jsonNewTabLink").className = "selectedTab";
         document.getElementById("jsonNewPath").style.display = "block";
         
+        return false;
+    }  else if (tabName === "json-set") {
+        document.getElementById("jsonSetTabLink").className = "selectedTab";
+        document.getElementById("jsonSetPath").style.display = "block";
+
         return false;
     } else if (tabName === "json-ai") {
         document.getElementById("jsonAiTabLink").className = "selectedTab";

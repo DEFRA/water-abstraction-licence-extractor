@@ -11,7 +11,7 @@ public class BaseLicence
     
     public static string GetSchemaForPrompt()
     {
-        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializerOptions());
     }
     
     public static BaseLicence Template => new()

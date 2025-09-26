@@ -15,6 +15,7 @@ public class LabelToMatch
     }
     
     public bool MatchAllText { get; init; }
+    public IReadOnlyList<string>? IgnoreBlockIfContains { get; init; }
     public IReadOnlyList<string>? IgnoreMatchIfContains { get; init; }
     public IReadOnlyList<string>? SkipLineWhenContains { get; init; }    
     public IReadOnlyList<TextToMatch>? Remove { get; set; }
@@ -28,15 +29,18 @@ public class LabelToMatch
     public int LeewayBefore { get; init; } // TODO can likely get rid of this now ordering is sorted
     public IReadOnlyList<LabelToMatch>? SubLabels { get; set; }
     public string Format { get; set; } = "Text";
-    public bool IncludeLabelText { get; init; }
+    public bool IncludeStartLabelText { get; init; }
+    public bool IncludeEndLabelText { get; init; }
     public bool IncludeWholeLine { get; init; }
     public string? Name { get; init; }
     public string? CategoryName { get; init; }
     public IReadOnlyList<string>? Possibilities { get; set; }
     public int PreviousLinesToFetch { get; init; } = 10;
     public int NextLinesToFetch { get; init; } = 10;
-    public MultipleType Multiple { get; init; } = MultipleType.False;
-    
+    public bool DoNotTrimLines { get; init; }
+    public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+    public bool FindMultipleOnSingleLine { get; init; }
+        
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     
@@ -49,6 +53,7 @@ public class LabelToMatch
             TextStart = TextStart,
             MatchAllText = MatchAllText,
             IgnoreMatchIfContains = IgnoreMatchIfContains?.ToList(),
+            IgnoreBlockIfContains = IgnoreBlockIfContains?.ToList(),
             SkipLineWhenContains = SkipLineWhenContains?.ToList(),
             Remove = Remove?.ToList(),
             TextEnd = TextEnd?.ToList(),
@@ -60,15 +65,18 @@ public class LabelToMatch
             LeewayBefore = LeewayBefore,
             SubLabels = SubLabels?.Select(s => s.Clone()).ToList(),
             Format = Format,
-            IncludeLabelText = IncludeLabelText,
+            IncludeStartLabelText = IncludeStartLabelText,
+            IncludeEndLabelText = IncludeEndLabelText,            
             IncludeWholeLine = IncludeWholeLine,
             Name = Name,
             CategoryName = CategoryName,
             Possibilities = Possibilities?.ToList(),
             PreviousLinesToFetch = PreviousLinesToFetch,
             NextLinesToFetch = NextLinesToFetch,
-            Multiple = Multiple,
+            MultipleBehaviour = MultipleBehaviour,
+            FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
+            DoNotTrimLines = DoNotTrimLines
         };
     }    
 }

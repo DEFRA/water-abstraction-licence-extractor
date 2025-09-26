@@ -1,4 +1,5 @@
 using System.Text;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema;
 
@@ -25,7 +26,6 @@ public class LicenceSet
                     .Replace("/", string.Empty);
 
                 var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
-                
                 outputSb.Append($"{licenceNumber}-{licenceVersionId}");
             }
 
@@ -33,7 +33,44 @@ public class LicenceSet
         }
     }
     
-    public AggregateSet[] AggregateSets { get; init; } = [];
+    public string ShortLicenceSetId
+    {
+        get
+        {
+            var licencesAlphabetical = Licences
+                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
+
+            var outputSb = new StringBuilder();
+            
+            foreach (var licence in licencesAlphabetical)
+            {
+                if (outputSb.Length > 0)
+                {
+                    outputSb.Append('-');
+                }
+
+                var licenceNumberParts = licence.LicenceNumber?
+                    .Replace(" ", "/")
+                    .Replace(".", "/")
+                    .Split('/');
+
+                var part = licenceNumberParts?.Last();
+
+                if (part?.StartsWith("R0") == true)
+                {
+                    part = licenceNumberParts![licenceNumberParts.Length - 2];
+                }
+                
+                outputSb.Append(part);
+            }
+
+            return outputSb.ToString();
+        }
+    }
     
-    public Licence[] Licences { get; init; } = [];
+    public LicenceSetType LicenceSetType { get; init; }
+    
+    public AggregateSet[]? AggregateSets { get; init; } = [];
+    
+    public Licence[] Licences { get; set; } = [];
 }

@@ -37,7 +37,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
         var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
             metaDataFileText,
-            JsonHelper.GetSerializer())!;
+            JsonHelper.GetSerializerOptions())!;
 
         var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
         var pagesList = new List<PdfPage>();
@@ -102,7 +102,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var metaDataFileText = await File.ReadAllTextAsync(metadataFilename);
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText,
-                JsonHelper.GetSerializer());
+                JsonHelper.GetSerializerOptions());
             
             var pageCount = ((JsonElement)metadata!["pages"]).GetArrayLength();
             
@@ -125,7 +125,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
                     fileText,
-                    JsonHelper.GetSerializer())!;
+                    JsonHelper.GetSerializerOptions())!;
                 
                 pageLines.AddRange(cachedTextBlocks.Select(
                     cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -173,7 +173,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     var cachedTextBlocks =
                         JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
                             fileText,
-                            JsonHelper.GetSerializer())!;
+                            JsonHelper.GetSerializerOptions())!;
 
                     pageLines.AddRange(cachedTextBlocks.Select(
                         cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
@@ -200,7 +200,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
 
-                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializer()));
+                await File.WriteAllTextAsync(txtOutputFilename, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
                 
                 var pageLinesTransformedX = FormatPageLines(
                     pageLines,
@@ -215,7 +215,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 { "allTextFilename", "pages-all.txt" }
             };
             
-            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data, JsonHelper.GetSerializer()));
+            await File.WriteAllTextAsync(metadataFilename, JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions()));
         }
 
         // Update line numbers, now in one big list

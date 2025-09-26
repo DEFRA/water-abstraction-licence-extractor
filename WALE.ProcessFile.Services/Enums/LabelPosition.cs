@@ -3,6 +3,7 @@ namespace WALE.ProcessFile.Services.Enums;
 public enum LabelPosition
 {
     ApplicableToMost,
+    AfterTextContainsAnotherMatch,
     Unknown,
     LabelIsBeforeTextToFind,
     LabelIsAfterTextToFind,

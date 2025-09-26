@@ -27,10 +27,11 @@ public static class LabelIsAfterTextToFind
             request.label,
             request.previousLines,
             false,
+            true,
             out _,
             out var removedLines);
 
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedPreviousLines, true);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedPreviousLines, true);//false);
 
         foreach (var item in returnList)
         {

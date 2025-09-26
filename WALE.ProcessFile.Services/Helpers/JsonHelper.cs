@@ -10,15 +10,20 @@ public static class JsonHelper
     public static string GetAsString(MatchesResult matches)
     {
         FormattingHelper.NullOutSubLabels(matches.Matches!);
-        return JsonSerializer.Serialize(matches, GetSerializer());
+        return JsonSerializer.Serialize(matches, GetSerializerOptions());
     }
     
     public static string GetAsString(Licence licence)
     {
-        return JsonSerializer.Serialize(licence, GetSerializer());
+        return JsonSerializer.Serialize(licence, GetSerializerOptions());
     }
     
-    public static JsonSerializerOptions GetSerializer()
+    public static string GetAsString(IReadOnlyList<LicenceSet> licenceSets)
+    {
+        return JsonSerializer.Serialize(licenceSets, GetSerializerOptions());
+    }
+    
+    public static JsonSerializerOptions GetSerializerOptions()
     {
         _options ??= new JsonSerializerOptions
         {

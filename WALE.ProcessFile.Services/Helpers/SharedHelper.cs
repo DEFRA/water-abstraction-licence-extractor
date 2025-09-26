@@ -9,6 +9,6 @@ public static class SharedHelper
     public static string GetJson(MatchesResult matches)
     {
         DataHelper.NullOutSubLabels(matches.Matches!);
-        return JsonSerializer.Serialize(matches, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(matches, JsonHelper.GetSerializerOptions());
     }
 }

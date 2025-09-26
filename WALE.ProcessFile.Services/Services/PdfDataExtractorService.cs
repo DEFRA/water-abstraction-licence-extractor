@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Enums;
@@ -25,7 +26,7 @@ public class PdfDataExtractorService(
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
         var metadata = JsonSerializer.Deserialize<ImageMetadata>(
             metaDataFileText,
-            JsonHelper.GetSerializer());
+            JsonHelper.GetSerializerOptions());
 
         return metadata!;
     }
@@ -55,7 +56,6 @@ public class PdfDataExtractorService(
 
         if (pdfDocument.FromCache)
         {
-            // TODO load the cached image metadata new ImageMetadata();
             return (await LoadImageMetadataFromCacheAsync(pdfDocument), false);
         }
 
@@ -201,7 +201,7 @@ public class PdfDataExtractorService(
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
-                var serviceMatches = new List<LabelGroupResult>();
+                var serviceMatchesDict = new Dictionary<bool, List<LabelGroupResult>>();
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -252,8 +252,7 @@ public class PdfDataExtractorService(
                     }                    
                     
                     const bool isOcr = true;
-                    
-                    serviceMatches = await GetLabelGroupMatchesAsync(
+                    var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
                         unmatchedLabelLookups,
                         isOcr,
@@ -262,7 +261,8 @@ public class PdfDataExtractorService(
                         previouslyParsedPaths,
                         configuration.OutputFolder,
                         configuration.CacheFolder);
-
+                    
+                    serviceMatchesDict.Add(ocrService.HasDirectCost, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
                     
                     if (noMatchesFound)
@@ -322,9 +322,29 @@ public class PdfDataExtractorService(
                         break;
                     }
                 }
+
+                var uniqueServiceMatches = new List<LabelGroupResult>();
+
+                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key))
+                {
+                    var serviceMatches = kvp.Value;
+
+                    foreach (var match in serviceMatches)
+                    {
+                        var alreadyFound = uniqueServiceMatches
+                            .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
+
+                        if (alreadyFound != null)
+                        {
+                            uniqueServiceMatches.Remove(alreadyFound);
+                        }
+
+                        uniqueServiceMatches.Add(match);
+                    }
+                }
                 
                 documentLines.AddRange(serviceImageLines);
-                labelGroupMatches.AddRange(serviceMatches);
+                labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
                     unmatchedLabelLookups,
@@ -415,7 +435,7 @@ public class PdfDataExtractorService(
         
         await File.WriteAllTextAsync(
             GetImageMetadataFilename(pdfDocument),
-            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializer()));
+            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
@@ -437,11 +457,6 @@ public class PdfDataExtractorService(
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
-            if (labelGroupName == "Points" && documentLines.Count == 68)
-            {
-                
-            }
-            
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
             {
                 continue;
@@ -478,11 +493,6 @@ public class PdfDataExtractorService(
                 
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
-            }
-            
-            if (labelGroupName == "Points" && documentLines.Count == 68)
-            {
-                
             }
         }
 
@@ -539,8 +549,8 @@ public class PdfDataExtractorService(
             {
                 if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
                 {
+                    // TODO this should log a warning
                     continue;
-                    // TODO ultimately this should throw an error, but silently skip while developing
                 }
                 
                 relatedFileName = $"{pdfFolderPath}{relatedFileName}";
@@ -583,6 +593,7 @@ public class PdfDataExtractorService(
 
     private bool ProcessMatchAll(
         DocumentLine line,
+        DocumentLine lineForPosition,
         LabelToMatch label,
         int lineCount,
         IReadOnlyList<DocumentLine> previousLines,
@@ -592,42 +603,68 @@ public class PdfDataExtractorService(
                     
         foreach (var labelText in label.Text!)
         {
+            var nextLineTemp = nextLines.FirstOrDefault();
+            
             if (LabelMatchingHelper.LineContainsLabel(
                 line,
+                nextLineTemp,
+                lineForPosition,
                 [labelText],
                 label.Position,
                 lineCount,
                 PositionConstants.UnknownLinesTotal,
+                out _,
                 out _))
             {
                 continue;
             }
 
             var continueOuterLoop = false;
-                        
+            var count = 0;
+            
             foreach (var previousLine in previousLines)
             {
+                var previousPreviousLine = previousLines.Count > count + 1 ?
+                    previousLines[count + 1]
+                    : null;
+
+                count += 1;
+                
                 if (LabelMatchingHelper.LineContainsLabel(
+                    previousLine,
+                    previousPreviousLine,
                     previousLine,
                     [labelText],
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
                     out _))
                 {
                     continueOuterLoop = true;
                     break;
                 }
-            }                        
+            }
+
+            count = 0;
                         
             foreach (var nextLine in nextLines)
             {
+                var nextNextLine = nextLines.Count > count + 1 ?
+                    nextLines[count + 1]
+                    : null;
+
+                count += 1;
+                
                 if (LabelMatchingHelper.LineContainsLabel(
+                    nextLine,
+                    nextNextLine,
                     nextLine,
                     [labelText],
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
                     out _))
                 {
                     continueOuterLoop = true;
@@ -689,7 +726,7 @@ public class PdfDataExtractorService(
 
                     previousPartialLine = partialLine;
                     
-                    var textBeforeAtAndAfterLabel = new List<(string? Text, LabelToMatch Label)>();
+                    var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
@@ -720,16 +757,22 @@ public class PdfDataExtractorService(
                     }
 
                     TextToMatch? matchedStartText = null;
+                    var labelCharPosition = 0;
                     
                     if (label.Text?.Any() == true)
                     {
+                        var nextLine = nextLines.FirstOrDefault();
+                        
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
+                            nextLine,
+                            lineOuter,
                             label.Text,
                             label.Position,
                             lineCount,
                             totalLineCount,
-                            out matchedStartText))
+                            out matchedStartText,
+                            out labelCharPosition))
                         {
                             partialLine = null;
                             continue;
@@ -757,7 +800,7 @@ public class PdfDataExtractorService(
 
                     if (label.MatchAllText)
                     {
-                        if (ProcessMatchAll(partialLine, label, lineCount, previousLines, nextLines))
+                        if (ProcessMatchAll(partialLine, lineOuter, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -775,14 +818,15 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-                    
+
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
-
+                    
                     var labelGroupResult = new LabelGroupResult
                     {
                         IsOcr = isOcr,
                         LineNumber = partialLine.LineNumber,
+                        CharPosition = labelCharPosition,
                         PageNumber = partialLine.PageNumber,
                         ServiceName = serviceName
                     };
@@ -792,6 +836,7 @@ public class PdfDataExtractorService(
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
                         textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
                         isCompanyType = matchedLabel.Format == CompanyName.Constant,
+                        isDateLookup = matchedLabel.Format == Date.Constant,
                         isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
                         isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
                         isNumberLookup = matchedLabel.Format == Number.Constant,
@@ -811,100 +856,80 @@ public class PdfDataExtractorService(
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
+                        lineForPosition = lineOuter,
                         lineNumber = partialLine.LineNumber
                     };
-
+                    
+                    var singleValueWanted = matchedLabel.MultipleBehaviour is
+                        MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue
+                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+                    
                     foreach (var expression in lookupExpressions)
                     {
-                        var results = await expression(request);
+                        var result = await ProcessExpressionResultAsync(
+                            expression.Value,
+                            request,
+                            partialLine!,
+                            singleValueWanted);
 
-                        if (results.Count == 0)
+                        if (request.label.FindMultipleOnSingleLine
+                            && request.textBeforeAtAndAfterLabel.Count >= 1
+                            && request.label.Position is not LabelPosition.Split
+                            and not LabelPosition.TextToFindIsBetweenLabels
+                            and not LabelPosition.RelatedCategoryPosition)
+                        {
+                            var clonedRequest = request.Clone();
+                            
+                            var matchBefore = clonedRequest.textBeforeAtAndAfterLabel?.FirstOrDefault(x =>
+                                x.Label?.Position == LabelPosition.LabelIsAfterTextToFind);
+
+                            if (matchBefore != null)
+                            {
+                                clonedRequest.textBeforeAtAndAfterLabel?.Remove(matchBefore);
+                            }
+                            
+                            var additionalResults = await ProcessExpressionResultAsync(
+                                AfterTextContainsAnotherMatch.FunctionAsync,
+                                clonedRequest,
+                                partialLine!,
+                                singleValueWanted);
+                            
+                            result.Results.AddRange(additionalResults.Results);
+                            result.Results = FilterDownResults(result.Results, request.label);
+                        }
+                        
+                        if (result.Continue)
                         {
                             continue;
                         }
-
-                        if (results.Count > 1 && matchedLabel.Multiple == MultipleType.False)
+                        
+                        if (result.Return)
                         {
-                            results = [results.First()];
-                        }
-
-                        foreach (var result in results)
-                        {
-                            var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
-
-                            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
-                            {
-                                result.LineNumber = newLineNumber.Value;
-                            }
-                        }
-
-                        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
-
-                        var ifMultiplePreferLast = matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                        var ifMultiplePreferLongest =
-                            matchedLabel.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
-
-                        // TOOD there should only be one below - not 2 or more
-                        if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                        {
-                            var alreadyOutput = returnList
-                                .Where(r => r.MatchedLabel?.Name == matchedLabel.Name)
-                                .ToList();
-
-                            if (alreadyOutput.Count >= 2)
-                            {
-                                var i = alreadyOutput
-                                    .OrderBy(x =>
-                                        ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
-                                    .First();
-
-                                returnList.Remove(i);
-                            }
-                        }
-
-                        if (matchedLabel.Multiple is MultipleType.False)
-                        {
-                            return returnList;
+                            return result.Results;
                         }
                         
-                        if (matchedLabel.Multiple is MultipleType.SingleLabelMultipleValues
-                            && !ifMultiplePreferLast
-                            && !ifMultiplePreferLongest)
+                        if (result.ContinuePartialLoop)
                         {
-                            return returnList;
+                            if (result.NewPartialLine == null)
+                            {
+                                partialLine = null;
+                            }
+                            
+                            continuePartialLoop = true;
+                        }
+                        
+                        returnList.AddRange(result.Results);
+                        
+                        if (result.Break)
+                        {
+                            break;
                         }
 
-                        if (matchedLabel.Position == LabelPosition.TextToFindIsBetweenLabels
-                            && results.Count > 0)
+                        returnList = FilterDownResults(returnList, request.label);
+                        
+                        if (result.NewPartialLine != null)
                         {
-                            var result = results[0];
-
-                            if (result.LineNumber == partialLine?.LineNumber)
-                            {
-                                var resultText = result.Text?.FirstOrDefault()?.Text;
-
-                                if (resultText != null)
-                                {
-                                    var startIndexOfMatch =
-                                        partialLine.Text.IndexOf(resultText, StringComparison.InvariantCultureIgnoreCase);
-                                    
-                                    var endIndexOfMatch = startIndexOfMatch + resultText.Length;
-
-                                    if (startIndexOfMatch > -1 && partialLine.Text.Length > endIndexOfMatch)
-                                    {
-                                        var newPartialLineText = partialLine.Text[endIndexOfMatch..];
-
-                                        if (newPartialLineText != string.Empty)
-                                        {
-                                            partialLine = partialLine.Clone();
-                                            partialLine.Columns.Clear();
-                                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
-
-                                            continuePartialLoop = true;
-                                        }
-                                    }
-                                }
-                            }
+                            partialLine = result.NewPartialLine;
                         }
                     }
 
@@ -916,11 +941,11 @@ public class PdfDataExtractorService(
                     partialLine = null;
 
                     // Don't carry on if we've identified it was a succession document
-                    if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
+                    /*if (matchedLabel.Position == LabelPosition.ContractIsSuccession)
                     {
                         breakLineLoop = true;
                         break;
-                    }
+                    }*/
                 }
             }
             
@@ -929,9 +954,14 @@ public class PdfDataExtractorService(
                 break;
             }
         }
+
+        var atLeastOneResultFound = returnList.Count > 1;
         
-        if (returnList.Count > 1 && returnList.All(match =>
-            match.MatchedLabel?.Multiple == MultipleType.SingleLabelSingleValueMultipleLines))
+        var allAreSingleLabelMultipleLines = returnList.All(match =>
+            match.MatchedLabel?.MultipleBehaviour is
+                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
+
+        if (atLeastOneResultFound && allAreSingleLabelMultipleLines)
         {
             var textList = new List<DocumentLine>();
 
@@ -958,8 +988,164 @@ public class PdfDataExtractorService(
         
         return returnList;
     }
+
+    private static List<LabelGroupResult> FilterDownResults(List<LabelGroupResult> returnList, LabelToMatch? label)
+    {
+        // De-dupe exact matches
+        returnList = returnList
+            .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?
+                $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
+                : $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
+            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
+            .ToList();
+        
+        var ifMultiplePreferLast = label!.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+        var ifMultiplePreferLongest =
+            label.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+
+        // TOOD there should only be one below - not 2 or more
+        if (!ifMultiplePreferLast && !ifMultiplePreferLongest) return returnList;
+        
+        var alreadyOutput = returnList
+            .Where(r => r.MatchedLabel?.Name == label.Name)
+            .ToList();
+
+        if (alreadyOutput.Count >= 2)
+        {
+            var i = alreadyOutput
+                .OrderBy(x =>
+                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                .First();
+
+            returnList.Remove(i);
+        }
+
+        return returnList;
+    }
     
-    private IEnumerable<Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
+    private async Task<ExpressionResult> ProcessExpressionResultAsync(
+        Func<FunctionInputModel, Task<List<LabelGroupResult>>> expression,
+        FunctionInputModel request,
+        DocumentLine partialLine,
+        bool singleValueWanted)
+    {
+        var returnList = new List<LabelGroupResult>();
+        var results = await expression(request);
+        
+        var continuePartialLoop = false;
+        DocumentLine? newPartialLine = null;
+                        
+        if (results.Count == 0)
+        {
+            return new ExpressionResult
+            {
+                Continue = true
+            };
+        }
+
+        // TODO the below has some weird behaviour with line numbers 33 vs 32, but is kept for now
+        // as some tests depend upon it
+        foreach (var result in results)
+        {
+            var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
+
+            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
+            {
+                result.LineNumber = newLineNumber.Value;
+            }
+        }
+
+        if (singleValueWanted && results.Count >= 1)
+        {
+            if (request.label!.MultipleBehaviour is
+                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+            {
+                // Prefer ones that have some text (important in split logic)
+                var singleValueResult = new List<LabelGroupResult>
+                {
+                    results.OrderByDescending(x => x.Text?.Count > 0).First()
+                };
+                
+                return new ExpressionResult
+                {
+                    Return = true,
+                    Results = singleValueResult
+                };
+            }
+
+            var deDupedResults = FilterDownResults(results, request.label);
+            returnList.AddRange(deDupedResults);
+            
+            return new ExpressionResult
+            {
+                Break = true,
+                ContinuePartialLoop = true,
+                Results = returnList
+            };
+        }                        
+                        
+        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+
+        // NOTE - It may first appear we can do the following - but we need to keep looking because
+        // of the way we look up labels per page
+        /*if (label.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues)
+        {
+            label.Completed = true;
+            return returnList;
+        }*/
+        
+        /*var askedToLookForMore = ifMultiplePreferLast || ifMultiplePreferLongest;
+        
+        if (matchedLabel.MultipleBehaviour is MultipleType.FindSingleInstanceOfLabelWithMultipleValues
+            && !askedToLookForMore)
+        {
+            return returnList;
+        }*/
+
+        if (request.label!.Position == LabelPosition.TextToFindIsBetweenLabels
+            && results.Count > 0)
+        {
+            var result = results[0];
+
+            if (result.LineNumber == partialLine.LineNumber)
+            {
+                var resultText = result.Text?.FirstOrDefault()?.Text;
+
+                if (resultText != null)
+                {
+                    var startIndexOfMatch =
+                        partialLine.Text.IndexOf(resultText,
+                            StringComparison.InvariantCultureIgnoreCase);
+
+                    var endIndexOfMatch = startIndexOfMatch + resultText.Length;
+
+                    if (startIndexOfMatch > -1 && partialLine.Text.Length > endIndexOfMatch)
+                    {
+                        var newPartialLineText = partialLine.Text[endIndexOfMatch..];
+
+                        if (newPartialLineText != string.Empty)
+                        {
+                            partialLine = partialLine.Clone();
+                            partialLine.Columns.Clear();
+                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
+
+                            newPartialLine = partialLine;
+                            continuePartialLoop = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ExpressionResult
+        {
+            ContinuePartialLoop = continuePartialLoop,
+            NewPartialLine = newPartialLine,
+            Results = returnList
+        };
+    }
+    
+    private Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
         GetRelevantLookupExpressions(LabelToMatch label)
     {
         var expressions = new List<(
@@ -979,7 +1165,7 @@ public class PdfDataExtractorService(
             (LabelPosition.LabelIsBeforeTextToFind, LabelIsBeforeTextToFind.FunctionAsync, 0),
             (LabelPosition.LabelIsAfterTextToFind, LabelIsAfterTextToFind.FunctionAsync, 1)
         };
-        
+
         return expressions
             .Where(expression =>
             {
@@ -1001,11 +1187,11 @@ public class PdfDataExtractorService(
                     case LabelPosition.LabelIsBeforeTextToFind
                         when expression.Position is LabelPosition.LabelIsBeforeTextToFind:
                     case LabelPosition.LabelIsAfterTextToFind
-                        when expression.Position is LabelPosition.LabelIsAfterTextToFind:                        
+                        when expression.Position is LabelPosition.LabelIsAfterTextToFind:
                     case LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                         when expression.Position is LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                        or LabelPosition.LabelIsBeforeTextToFind
-                        or LabelPosition.LabelIsAfterTextToFind:
+                            or LabelPosition.LabelIsBeforeTextToFind
+                            or LabelPosition.LabelIsAfterTextToFind:
                     case LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                         when expression.Position is LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                             or LabelPosition.LabelIsBeforeTextToFind
@@ -1014,9 +1200,10 @@ public class PdfDataExtractorService(
                         when expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind:
                         return true;
                     default:
-                        return expression.Position == LabelPosition.ApplicableToMost
-                            && label.Position != LabelPosition.Split
-                            && label.Position != LabelPosition.TextToFindIsBetweenLabels;
+                        return expression.Position is LabelPosition.ApplicableToMost
+                           && label.Position != LabelPosition.Split
+                           && label.Position != LabelPosition.RelatedCategoryPosition
+                           && label.Position != LabelPosition.TextToFindIsBetweenLabels;
                 }
             })
             .OrderBy(expression =>
@@ -1033,11 +1220,15 @@ public class PdfDataExtractorService(
                     LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore =>
                         expression.Position is LabelPosition.LabelIsBeforeTextToFind
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore ? -0.25 : 1,
+                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                            ? -0.25
+                            : 1,
                     LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter =>
                         expression.Position is LabelPosition.LabelIsAfterTextToFind
                             or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore ? -0.25 : 1,
+                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                            ? -0.25
+                            : 1,
                     LabelPosition.LabelIsInMiddleOfTextToFind =>
                         expression.Position is LabelPosition.LabelIsInMiddleOfTextToFind ? -0.25 : 1,
                     LabelPosition.LabelIsBeforeTextToFind or LabelPosition.ContractIsSuccession
@@ -1046,8 +1237,8 @@ public class PdfDataExtractorService(
                 };
             })
             .ThenBy(expression => expression.Order)
-            .Select(expression => expression.ResultIfMatched)
-            .ToList();
+            .Select(expression => (expression.Position, expression.ResultIfMatched))
+            .ToDictionary(x => x.Position, x => x.ResultIfMatched);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
@@ -1090,30 +1281,92 @@ public class PdfDataExtractorService(
                 }
             }
         }
-        
-        var anyDidntStartAtStartOfBlock = subResults.Any(subResult =>
-            subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
 
-        if (anyDidntStartAtStartOfBlock)
+        var groups = subResults
+            .GroupBy(x => x.MatchedLabel!.Name)
+            .Where(x => x.Count() > 1)
+            .ToList();
+
+        if (groups.Any())
         {
-            subResults = subResults
-                .Where(subResult => subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
-                .ToList();
+            foreach (var group in groups)
+            {
+                var anyDidntStartAtStartOfBlock = group.Any(subResult =>
+                    subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
+                
+                var anyDidStartAtStartOfBlock = group.Any(subResult =>
+                    subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
+
+                if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+                {
+                    subResults = subResults
+                        .Where(subResult => subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
+                        .ToList();
+                }                
+            }
         }
 
         return subResults;
     }
 
-    private static IEnumerable<(string?, LabelToMatch)> GetLineBeforeAtAndAfterText(
+    private static IEnumerable<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
-        var returnItems = new List<(string?, LabelToMatch)>();
+        var returnItems = new List<TextAndLabel>();
         
-        if (label.Text == null)
+        var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
+            .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
+
+        if (label.Text == null || isStartOfBlock)
         {
-            returnItems.Add((line.Text, label));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = line.Text,
+                Label = label
+            });
+            
             return returnItems;
+        }
+        
+        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
+        {
+            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text);
+                
+            var position = line.Text.IndexOf(
+                matches[0].Value,
+                StringComparison.InvariantCultureIgnoreCase);
+
+            var beforeText = line.Text.Substring(0, position);
+            var beforeLabel = label.Clone();
+            beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = beforeText,
+                Label = beforeLabel
+            });
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = matches.FirstOrDefault()?.Value,
+                Label = label
+            });
+
+            if (line.Text.Length > position + matches.FirstOrDefault()?.Value.Length + 1)
+            {
+                var afterLabel = label.Clone();
+                var afterText = line.Text.Substring(position + matches.FirstOrDefault()!.Value.Length);
+                beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                returnItems.Add(new TextAndLabel
+                {
+                    Text = afterText,
+                    Label = afterLabel
+                });
+            }
+
+            return returnItems; 
         }
         
         var labelTextPositionIndex = PositionConstants.PositionNotFound;
@@ -1140,42 +1393,12 @@ public class PdfDataExtractorService(
         }
         
         var textBeforeLabel = FormattingHelper.TrimFormatting(
-            line.Text[..labelTextPositionIndex], true);
+            line.Text[..labelTextPositionIndex], true, true);
 
         var textAtLabel = matchedLabelText;
         
         var textAfterLabel = FormattingHelper.TrimFormatting(
-            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], true);
-        
-        if (!string.IsNullOrEmpty(textAfterLabel)
-            && label.Position is LabelPosition.LabelIsBeforeTextToFind
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.LabelIsInMiddleOfTextToFind
-                or LabelPosition.TextToFindIsBetweenLabels
-                or LabelPosition.ContractIsSuccession
-                or LabelPosition.RelatedCategoryPosition
-                or LabelPosition.ApplicableToMost
-                or LabelPosition.Split)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = label.Position is
-                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.TextToFindIsBetweenLabels
-                    ? LabelPosition.LabelIsBeforeTextToFind
-                    : label.Position;
-            
-            returnItems.Add((textAfterLabel.Trim(), returnLabel));
-        }
-
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeLabelText)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = LabelPosition.ActuallyLabel;
-            
-            returnItems.Add((textAtLabel.Trim(), returnLabel));
-        }
+            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
         
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
@@ -1193,10 +1416,52 @@ public class PdfDataExtractorService(
                 LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
                 or LabelPosition.TextToFindIsBetweenLabels
-                    ? LabelPosition.LabelIsAfterTextToFind
-                    : label.Position;
+                ? LabelPosition.LabelIsAfterTextToFind
+                : label.Position;
             
-            returnItems.Add((textBeforeLabel.Trim(), returnLabel));
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textBeforeLabel.Trim(),
+                Label = returnLabel
+            });
+        }
+
+        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
+        {
+            var returnLabel = label.Clone();
+            returnLabel.Position = LabelPosition.ActuallyLabel;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAtLabel.Trim(),
+                Label = returnLabel
+            });
+        }
+        
+        if (!string.IsNullOrEmpty(textAfterLabel)
+            && label.Position is LabelPosition.LabelIsBeforeTextToFind
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                or LabelPosition.LabelIsInMiddleOfTextToFind
+                or LabelPosition.TextToFindIsBetweenLabels
+                or LabelPosition.ContractIsSuccession
+                or LabelPosition.RelatedCategoryPosition
+                or LabelPosition.ApplicableToMost
+                or LabelPosition.Split)
+        {
+            var returnLabel = label.Clone();
+            returnLabel.Position = label.Position is
+                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                or LabelPosition.TextToFindIsBetweenLabels
+                ? LabelPosition.LabelIsBeforeTextToFind
+                : label.Position;
+            
+            returnItems.Add(new TextAndLabel
+            {
+                Text = textAfterLabel.Trim(),
+                Label = returnLabel
+            });
         }
 
         return returnItems;

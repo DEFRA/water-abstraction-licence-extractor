@@ -14,6 +14,7 @@ public static partial class DataHelper
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
         bool removeNotContains,
+        bool trimPunctuation,
         out bool isForbidden,
         out IReadOnlyList<string>? removesUsed)
     {
@@ -32,7 +33,7 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            _ = RemoveExcludes(label, line.Text, true, out var removesUsedLoopOuter);
+            _ = RemoveExcludes(label, line.Text, false, false, out var removesUsedLoopOuter);
 
             // The whole line wants removing
             if (removesUsedLoopOuter?.Contains(line.Text) == true)
@@ -51,7 +52,13 @@ public static partial class DataHelper
                 }
 
                 var isLastColumn = line.Columns.Last() == column;
-                var alteredText = RemoveExcludes(label, column.Text, isLastColumn, out var removesUsedLoop);
+                var alteredText = RemoveExcludes(
+                    label,
+                    column.Text,
+                    isLastColumn && trimPunctuation,
+                    isLastColumn && trimPunctuation,
+                    out var removesUsedLoop);
+                
                 var clonedColumn = new DocumentLineColumn(alteredText);
                 newColumns.Add(clonedColumn);
 
@@ -76,17 +83,17 @@ public static partial class DataHelper
     }
 
     public static string GetTextBeforeAtAndAfterLabelAsSingleString(
-        List<(string? Text, LabelToMatch Label)>? textBeforeAtAndAfterLabel,
+        List<TextAndLabel>? textBeforeAtAndAfterLabel,
         bool includeLabelText)
     {
         var beforeStuff = textBeforeAtAndAfterLabel!
             .Where(tuple =>
-                (includeLabelText && tuple.Label.Position == LabelPosition.ActuallyLabel)
-                    || tuple.Label.Position is LabelPosition.LabelIsBeforeTextToFind
+                (includeLabelText && tuple.Label?.Position == LabelPosition.ActuallyLabel)
+                    || tuple.Label?.Position is LabelPosition.LabelIsBeforeTextToFind
                         or LabelPosition.TextToFindIsBetweenLabels)
             .OrderBy(x =>
             {
-                return x.Label.Position switch
+                return x.Label?.Position switch
                 {
                     LabelPosition.LabelIsAfterTextToFind => -2,
                     LabelPosition.ActuallyLabel => -1,
@@ -104,7 +111,8 @@ public static partial class DataHelper
     public static string RemoveExcludes(
         LabelToMatch label,
         string betweenText,
-        bool trimPunctuation,
+        bool trimPunctuationStart,
+        bool trimPunctuationEnd,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
@@ -195,7 +203,7 @@ public static partial class DataHelper
         }
 
         removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
-        return FormattingHelper.TrimFormatting(returnStr, trimPunctuation)!;
+        return FormattingHelper.TrimFormatting(returnStr, trimPunctuationStart, trimPunctuationEnd)!;
     }
     
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
@@ -212,6 +220,7 @@ public static partial class DataHelper
             .Replace(" ", string.Empty)
             .Replace("/", string.Empty)
             .Replace(".", string.Empty)
+            .Replace("%", string.Empty)
             .Replace("(", string.Empty)
             .Replace(")", string.Empty)            
             .Replace(",", string.Empty)

@@ -20,22 +20,49 @@ public static class Split
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
-        
+
         var leftPartLines  = request.previousLines!.Reverse().ToList();
 
+        var nextLine = request.nextLines?.FirstOrDefault();
+        
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
+            nextLine,
+            request.lineForPosition!,
             request.label.Text,
             LabelPosition.Split,
             UnknownLinesTotal,
             int.MaxValue,
-            out _);        
+            out _,
+            out _);
         
         if (!lineContainsLabel)
         {
             leftPartLines.Add(request.line!);
         }
-        
+
+        if (!lineContainsLabel)
+        {
+            foreach (var line in leftPartLines)
+            {
+                lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
+                    line,
+                    null,
+                    line,
+                    request.label.Text,
+                    LabelPosition.Split,
+                    UnknownLinesTotal,
+                    int.MaxValue,
+                    out _,
+                    out _);
+
+                if (lineContainsLabel)
+                {
+                    break;
+                }
+            }
+        }
+
         var rightPartLines = request.nextLines!.ToList();
 
         if (lineContainsLabel)
@@ -50,7 +77,7 @@ public static class Split
                 .FirstOrDefault()!
                 .Coordinates;
             
-            if (noPreviousLines && noNextLines)
+            if (noPreviousLines || noNextLines)
             {
                 var splitPhrase = string.Join(
                     PositionConstants.SpaceChar,
@@ -70,7 +97,9 @@ public static class Split
                 };
 
                 var leftLine = request.line.Clone(leftColumns);
-                leftPartLines = [leftLine];
+
+                leftPartLines.Remove(leftLine);
+                leftPartLines.Add(leftLine);
                 
                 var rightPart = separateParts.Length >= 2 ? separateParts[1].Trim() : null;
 
@@ -107,7 +136,14 @@ public static class Split
             }
         }
         
-        leftPartLines = DataHelper.RemoveExcludesAndNotContains(request.label, leftPartLines, false, out _, out _);
+        leftPartLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            leftPartLines, 
+            false,
+            !request.label.DoNotTrimLines,
+            out _, 
+            out _);
+        
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(
@@ -118,7 +154,14 @@ public static class Split
         
         var results = FilterIntoFormat(request, leftPartResult, leftPartLines, false);
 
-        rightPartLines = DataHelper.RemoveExcludesAndNotContains(request.label, rightPartLines, false, out _, out _);        
+        rightPartLines = DataHelper.RemoveExcludesAndNotContains(
+            request.label,
+            rightPartLines, 
+            false,
+            true,
+            out _,
+            out _);
+        
         rightPartLines = FormattingHelper.RemoveMultipleBlankLines(rightPartLines);
         
         if (rightPartLines.Count > 0)

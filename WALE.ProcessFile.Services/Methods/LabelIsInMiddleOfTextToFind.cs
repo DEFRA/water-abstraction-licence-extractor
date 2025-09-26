@@ -49,6 +49,7 @@ public static class LabelIsInMiddleOfTextToFind
             request.label,
             inputLines,
             false,
+            true,
             out _,
             out var removedLines);
         

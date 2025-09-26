@@ -3,13 +3,13 @@ using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 
-public class AggregateArrayWrapped
+public class AbstractionLimitGroupArrayWrapped
 {
-    public Aggregate[] Data { get; init; } = [];
+    public AbstractionLimitGroup[] Data { get; init; } = [];
     
     public static string GetSchemaForPrompt()
     {
-        var template = new AggregateArrayWrapped { Data = [Aggregate.Template] };
+        var template = new AbstractionLimitGroupArrayWrapped { Data = [AbstractionLimitGroup.Template] };
         return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

@@ -70,7 +70,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
     }
 
-    public static byte[] Deflate(byte[] input) // TODO use again
+    public static byte[] Deflate(byte[] input)
     {
         var cutInput = new byte[input.Length - 2];
         Array.Copy(input, 2, cutInput, 0, cutInput.Length);

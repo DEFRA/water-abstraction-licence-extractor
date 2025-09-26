@@ -177,7 +177,7 @@ public static class TestsForAiPrompts
                     .Replace("-", string.Empty)
                     .Replace(" ", string.Empty);
 
-                var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializer());
+                var json = JsonSerializer.Serialize(schema, JsonHelper.GetSerializerOptions());
                 var outputJs = $"window.aiData['{filenameNoSpacesOrDashes}'] = {json};";
                 
                 await File.WriteAllTextAsync(filenameNoExtension + ".js", outputJs);
@@ -217,7 +217,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
                 
-        var response = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var response = JsonSerializer.Deserialize<PurposeOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return response.Data;
     }
 
@@ -247,7 +247,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
                 
-        var response = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var response = JsonSerializer.Deserialize<PointOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return response.Data;
     }
 
@@ -282,7 +282,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
                 
-        return JsonSerializer.Deserialize<BaseLicence>(textResponse, JsonHelper.GetSerializer())!;
+        return JsonSerializer.Deserialize<BaseLicence>(textResponse, JsonHelper.GetSerializerOptions())!;
     }
 
     static async Task<LicenceVersion> GetLicenceVersionAsync(
@@ -311,7 +311,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
                 
-        return JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializer())!;
+        return JsonSerializer.Deserialize<LicenceVersion>(textResponse, JsonHelper.GetSerializerOptions())!;
     }
 
     static async Task<Aggregate[]> GetAggregateLimitsAsync(
@@ -331,11 +331,11 @@ public static class TestsForAiPrompts
             + Environment.NewLine
             + Environment.NewLine
             + "Here is the points of abstraction information in JSON format to use to enrich the relevant parts;"
-            + JsonSerializer.Serialize(points, JsonHelper.GetSerializer())
+            + JsonSerializer.Serialize(points, JsonHelper.GetSerializerOptions())
             + Environment.NewLine
             + Environment.NewLine
             + "Here is the purpose of abstraction information in JSON format to use to enrich the relevant parts;"
-            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializer())    
+            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializerOptions())    
         };
         
         var userPrompts = new List<ChatMessageContentPart>
@@ -358,7 +358,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
 
-        var aggregateLimits = JsonSerializer.Deserialize<AggregateArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var aggregateLimits = JsonSerializer.Deserialize<AggregateArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return aggregateLimits.Data;
     }
 
@@ -388,7 +388,7 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
 
-        var periodsOfAbstraction = JsonSerializer.Deserialize<PeriodOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var periodsOfAbstraction = JsonSerializer.Deserialize<PeriodOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return periodsOfAbstraction.Data;
     }
 
@@ -421,11 +421,11 @@ public static class TestsForAiPrompts
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
 
-        var meansOfAbstraction = JsonSerializer.Deserialize<MeanOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var meansOfAbstraction = JsonSerializer.Deserialize<MeanOfAbstractionArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return meansOfAbstraction.Data;
     }
 
-    static async Task<AbstractionLimit[]> GetIndividualAbstractionLimitsAsync(
+    static async Task<AbstractionLimitGroup[]> GetIndividualAbstractionLimitsAsync(
         ChatClient chatClient,
         string modelName,
         string abstractionLimitsSectionText,
@@ -442,13 +442,12 @@ public static class TestsForAiPrompts
             + Environment.NewLine
             + Environment.NewLine
             + "Here is the points of abstraction information in JSON format to use to enrich the relevant parts;"
-            + JsonSerializer.Serialize(points, JsonHelper.GetSerializer())
+            + JsonSerializer.Serialize(points, JsonHelper.GetSerializerOptions())
             + Environment.NewLine
             + Environment.NewLine
             + "Here is the purpose of abstraction information in JSON format to use to enrich the relevant parts;"
-            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializer())            
+            + JsonSerializer.Serialize(purpose, JsonHelper.GetSerializerOptions())            
         };
-        
         
         var userPrompts = new List<ChatMessageContentPart>
         {
@@ -458,14 +457,14 @@ public static class TestsForAiPrompts
                 "Only populate the 'purposes' property value when the text explicitly mentions at least one purpose - if there are no purpose mentioned in the limit, 'purposes' value should be '[]'. " +
                 "Exclude any limits that mention they are in aggregate. " +
                 "Property 'periodType' value must be either 'PerSecond', 'PerMinute', 'PerHour', 'PerDay', 'PerWeek', 'PerMonth', 'PerYear', or 'InTotal'. " +
-                $"Use the following structure:\n\n[{AbstractionLimitArrayWrapped.GetSchemaForPrompt()}]"
+                $"Use the following structure:\n\n[{AbstractionLimitGroupArrayWrapped.GetSchemaForPrompt()}]"
             )
         };
                 
         var textResponse = await GetTextResponseAsync(chatClient, modelName, systemPrompts, userPrompts);
         if (textResponse == null) throw new Exception("Some error occured");
 
-        var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitArrayWrapped>(textResponse, JsonHelper.GetSerializer())!;
+        var individualAbstractionLimits = JsonSerializer.Deserialize<AbstractionLimitGroupArrayWrapped>(textResponse, JsonHelper.GetSerializerOptions())!;
         return individualAbstractionLimits.Data;
     }
 

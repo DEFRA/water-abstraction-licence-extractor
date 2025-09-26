@@ -18,6 +18,7 @@
         
         select { width: 100%; }
     </style>
+    <script>const LOAD_AI = [LOAD_AI_JS];</script>
     
     <title>Water licences list</title>
 </head>
@@ -45,30 +46,30 @@
             </td>
             <td>
                 <select id="purposes-filter" data-field="purposes" data-type="EmptyOrNotArray">
-                    <option value="all">All</option>
+                    <option value="all">Any amount</option>
                     <option value="populated">Not empty</option>
                     <option value="empty">--</option>
                 </select>
             </td>
             <td>
                 <select id="points-filter" data-field="points" data-type="EmptyOrNotArray">
-                    <option value="all">All</option>
+                    <option value="all">Any amount</option>
                     <option value="populated">Not empty</option>
                     <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="limits-filter" data-field="limitsFound" data-type="Bool">
-                    <option value="all">All</option>
-                    <option value="true">True</option>
-                    <option value="false">False</option>
+                <select id="limits-filter" data-field="limitsCount" data-type="EmptyOrNotInt">
+                    <option value="all">Any amount</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
-                <select id="aggregates-filter" data-field="aggregatesFound" data-type="Bool">
-                    <option value="all">All</option>
-                    <option value="true">True</option>
-                    <option value="false">False</option>
+                <select id="aggregates-filter" data-field="aggregatesCount" data-type="EmptyOrNotInt">
+                    <option value="all">Any amount</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
             <td>
@@ -100,27 +101,35 @@
                 </select>
             </td>
             <td>
-                <select id="linked-licences-filter" data-field="linkedLicences" data-type="Bool">
+                <select id="linked-licences-filter" data-field="linkedLicences" data-type="EmptyOrNotArray">
+                    <option value="all">Any amount</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
+                </select>
+            </td>
+            <td>
+                <select id="licence-sets-filter" data-field="shortLicenceSetIds" data-type="ArrayValue">
                     <option value="all">All</option>
-                    <option value="true">True</option>
-                    <option value="false">False</option>
+                    <option value="populated">Not empty</option>
+                    <option value="empty">--</option>
                 </select>
             </td>
         </tr>
         <tr>
             <td style='width: 5%'>&nbsp;</td>
-            <td style='width: 10%'>Filename <a href="javascript: sortBy('filename')">&#8693;</a></td>
-            <td style='width: 10%'>Licence number <a href="javascript: sortBy('licenceNumber')">&#8693;</a></td>
-            <td style='width: 10%' class="default-hidden">Licence holder <a href="javascript: sortBy('licenceHolder')">&#8693;</a></td>
-            <td style='width: 15%'>Purposes <a href="javascript: sortBy('purposes')">&#8693;</a></td>
-            <td style='width: 13%'>Points <a href="javascript: sortBy('points')">&#8693;</a></td>
-            <td style='width: 7%'>Abstraction limits <a href="javascript: sortBy('limitsFound')">&#8693;</a></td>
-            <td style='width: 5%'>Aggregates <a href="javascript: sortBy('aggregatesFound')">&#8693;</a></td>
-            <td style='width: 5%'>Scanned file <a href="javascript: sortBy('ocr')">&#8693;</a></td>
-            <td style='width: 5%'>Issue date <a href="javascript: sortBy('issueDate')">&#8693;</a></td>
-            <td style='width: 5%'>Issuer <a href="javascript: sortBy('issuer')">&#8693;</a></td>
-            <td style='width: 5%'>Means of abstraction <a href="javascript: sortBy('meansFound')">&#8693;</a></td>
-            <td style='width: 5%'>Linked&nbsp;licences <a href="javascript: sortBy('linkedLicences')">&#8693;</a></td>
+            <td style='width: 10%'>Filename <a href="javascript: sortBy('filename')">&#8693;</a></td><!--15-->
+            <td style='width: 7%'>Licence number <a href="javascript: sortBy('licenceNumber')">&#8693;</a></td><!--22-->
+            <td style='width: 5%' class="default-hidden">Licence holder <a href="javascript: sortBy('licenceHolder')">&#8693;</a></td>
+            <td style='width: 14%'>Purposes <a href="javascript: sortBy('purposes')">&#8693;</a></td><!--36-->
+            <td style='width: 14%'>Points <a href="javascript: sortBy('points')">&#8693;</a></td><!--50-->
+            <td style='width: 7%'>Abstraction limits <a href="javascript: sortBy('limitsCount')">&#8693;</a></td><!--57-->
+            <td style='width: 5%'>Aggregates <a href="javascript: sortBy('aggregatesCount')">&#8693;</a></td><!--62-->
+            <td style='width: 5%'>Scanned file <a href="javascript: sortBy('ocr')">&#8693;</a></td><!--67-->
+            <td style='width: 5%'>Issue date <a href="javascript: sortBy('issueDate')">&#8693;</a></td><!--72-->
+            <td style='width: 6%'>Issuer <a href="javascript: sortBy('issuer')">&#8693;</a></td><!--78-->
+            <td style='width: 7%'>Means of abstraction <a href="javascript: sortBy('meansFound')">&#8693;</a></td><!--85-->
+            <td style='width: 7%'>Linked&nbsp;licences <a href="javascript: sortBy('linkedLicences')">&#8693;</a></td><!--92-->
+            <td style='width: 8%'>Licence sets <a href="javascript: sortBy('shortLicenceSetIds')">&#8693;</a></td><!--100-->
         </tr>
         </thead>
         <tbody>
@@ -140,6 +149,7 @@
                 <td id="issuer-total"></td>
                 <td id="means-total"></td>
                 <td id="linked-licences-total"></td>
+                <td id="licence-sets-total"></td>
             </tr>
         </tfoot>
     </table>

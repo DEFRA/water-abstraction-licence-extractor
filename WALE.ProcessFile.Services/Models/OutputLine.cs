@@ -8,8 +8,8 @@ public class OutputLine
     public string? LicenceHolder;
     public double? LicenceHolderOcrConfidence;
     public string? Ocr;
-    public string? Purposes;
-    public string? Points;
+    public string?[]? Purposes;
+    public string?[]? Points;
     public string? ServiceName;
     public int Certainty;
     public string? MatchType;
@@ -18,11 +18,13 @@ public class OutputLine
     public string? MatchedLabelPosition;
     public string? LicenceNumber;
     public double? LicenceNumberOcrConfidence;
-    public bool LimitsFound;
-    public bool AggregatesFound;
+    public int LimitsCount;
+    public int AggregatesCount;
     public string? IssueDate;
     public string? Issuer;
     public bool MeansFound;
     public string? LinkedLicenceNumbers;
+    public string? LicenceSetIds;
+    public string? ShortLicenceSetIds;
     public int NodeId;
 }

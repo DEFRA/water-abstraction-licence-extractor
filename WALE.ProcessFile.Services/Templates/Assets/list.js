@@ -400,22 +400,25 @@ function populateLicenceSetTable(dataSorted) {
         let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
         let licenceInSet = licencesInSet[0];
         
+        let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\">" + licenceInSet.filename + "</a>" : "--";
+        
         let html =
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'><span title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
-                "<td>" + licenceInSet.filename + "</td>" +
+                "<td>" + linkHtml + "</td>" +
             "</tr>";
 
         htmlSb.push(html);
         
         for (let j = 1; j < licencesInSet.length; j++) {
             let licenceInSet = licencesInSet[j];
+            linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\">" + licenceInSet.filename + "</a>" : "--";
             
             html =
                 "<tr style='" + backgroundCss + "'>" +
                     "<td>" + licenceInSet.licenceNumber + "</td>" +
-                    "<td>" + licenceInSet.filename + "</td>" +
+                    "<td>" + linkHtml + "</td>" +
                 "</tr>";
 
             htmlSb.push(html);

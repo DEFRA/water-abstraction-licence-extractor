@@ -10,6 +10,6 @@ public class PointOfAbstractionArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new PointOfAbstractionArrayWrapped { Data = [PointOfAbstraction.Template] };
-        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

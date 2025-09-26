@@ -26,7 +26,7 @@ public class PdfDataExtractorService(
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
         var metadata = JsonSerializer.Deserialize<ImageMetadata>(
             metaDataFileText,
-            JsonHelper.GetSerializer());
+            JsonHelper.GetSerializerOptions());
 
         return metadata!;
     }
@@ -435,7 +435,7 @@ public class PdfDataExtractorService(
         
         await File.WriteAllTextAsync(
             GetImageMetadataFilename(pdfDocument),
-            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializer()));
+            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(

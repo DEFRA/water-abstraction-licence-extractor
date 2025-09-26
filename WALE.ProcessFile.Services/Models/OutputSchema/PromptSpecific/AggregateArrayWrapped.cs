@@ -10,6 +10,6 @@ public class AggregateArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new AggregateArrayWrapped { Data = [Aggregate.Template] };
-        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

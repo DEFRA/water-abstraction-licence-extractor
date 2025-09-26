@@ -50,6 +50,6 @@ public class LicenceVersion
     
     public static string GetSchemaForPrompt()
     {
-        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializerOptions());
     }
 }

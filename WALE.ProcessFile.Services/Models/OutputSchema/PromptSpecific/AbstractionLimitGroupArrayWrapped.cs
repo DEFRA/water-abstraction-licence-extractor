@@ -10,6 +10,6 @@ public class AbstractionLimitGroupArrayWrapped
     public static string GetSchemaForPrompt()
     {
         var template = new AbstractionLimitGroupArrayWrapped { Data = [AbstractionLimitGroup.Template] };
-        return JsonSerializer.Serialize(template, JsonHelper.GetSerializer());
+        return JsonSerializer.Serialize(template, JsonHelper.GetSerializerOptions());
     }
 }

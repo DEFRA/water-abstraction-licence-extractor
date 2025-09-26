@@ -32,7 +32,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                 var fileText = await File.ReadAllTextAsync(outputFilename);
                 var pageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
                     fileText,
-                    JsonHelper.GetSerializer());
+                    JsonHelper.GetSerializerOptions());
                 
                 returnLines.AddRange(pageLines!);
             }
@@ -98,7 +98,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                 await File.WriteAllTextAsync(
                     outputFilename,
                     JsonSerializer.Serialize(returnLines,
-                        JsonHelper.GetSerializer()));
+                        JsonHelper.GetSerializerOptions()));
             }
             
             var lineNumber = 0;

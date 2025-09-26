@@ -4,18 +4,20 @@ using System.Text.Json;
 using CsvHelper;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Models;
 
 namespace WALE.Tools;
 
 public static class GenerateCsvForTesting
 {
-    public static string OutputFolder = "Output/";
-    public static string CacheFolder = "Cache/";
-    public static readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private static readonly string OutputFolder = "Output/";
+    private static readonly string CacheFolder = "Cache/";
+    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
     
     public static async Task GenerateCsvForTestingAsync()
     {
@@ -29,10 +31,10 @@ public static class GenerateCsvForTesting
             },
             KeyConfig.PdfFolder);
 
-        //var data = await GetYorkshire70DataAsync(pdfDataExtractor);
-        var data = await GetYorkshire6DataAsync(pdfDataExtractor);
+        var data = await GetYorkshire70DataAsync(pdfDataExtractor);
+        //var data = await GetYorkshire6DataAsync(pdfDataExtractor);
 
-        await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today.ToString("yyyyMMdd")}.csv");
+        await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today:yyyyMMdd}.csv");
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         await csv.WriteRecordsAsync((IEnumerable)data);
@@ -46,7 +48,7 @@ public static class GenerateCsvForTesting
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
+                FileLicenceMapping,
                 OutputFolder,
                 CacheFolder),
             [pdfFolder + fileName]);
@@ -73,22 +75,26 @@ public static class GenerateCsvForTesting
         foreach (var pdfFilePath in pdfFilePaths)
         {
             var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
-            var file = (await SchemaConverter.ToLicenceSetsAsync(
+            var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
                 internalJson,
-                _fileLicenceMapping,
+                FileLicenceMapping,
                 pdfDataExtractor,
                 OutputFolder,
                 CacheFolder,
                 KeyConfig.PdfFolder
-                ))[0].Licences[0];
+            );
+            
+            var file = licenceSets[0].Licences[0];
             
             returnList.Add(new()
             {
                 Filename = file.Filename,
                 LicenceNumber = file.LicenceNumber,
                 HasAggregate = file.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file)
+                AggregateData = JsonSerializer.Serialize(file.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
+                IndividualLimits = JsonSerializer.Serialize(file.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file, JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
             });
         }
 
@@ -98,23 +104,35 @@ public static class GenerateCsvForTesting
     static async Task<List<CsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
     {
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
-        var file1 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
+        var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file1 = licenceSets1[0].Licences[0];
 
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
-        var file2 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
+        var licenceSets2 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file2 = licenceSets2[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
-        var file3 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
+        var licenceSets3 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file3 = licenceSets3[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
-        var file4 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
-
+        var licenceSets4 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file4 = licenceSets4[0].Licences[0];
+        
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
-        var file5 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
-
+        var licenceSets5 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file5 = licenceSets5[0].Licences[0];
+        
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
-        var file6 = (await SchemaConverter.ToLicenceSetsAsync(internalJson, _fileLicenceMapping, pdfDataExtractor, OutputFolder, CacheFolder, KeyConfig.PdfFolder))[0].Licences[0];
-
+        var licenceSets6 = await SchemaConverter.ToLicenceSetsAsync(internalJson, FileLicenceMapping, pdfDataExtractor,
+            OutputFolder, CacheFolder, KeyConfig.PdfFolder);
+        var file6 = licenceSets6[0].Licences[0];
+        
         return
         [
             new()
@@ -123,7 +141,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file1.LicenceNumber,
                 HasAggregate = file1.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file1)
+                IndividualLimits = JsonSerializer.Serialize(file1.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file1,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets1,  JsonHelper.GetSerializerOptions()),
             },
             new()
             {
@@ -131,7 +151,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file2.LicenceNumber,
                 HasAggregate = file2.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file2)
+                IndividualLimits = JsonSerializer.Serialize(file2.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file2,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets2,  JsonHelper.GetSerializerOptions())
             },
             new()
             {
@@ -139,7 +161,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file3.LicenceNumber,
                 HasAggregate = file3.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file3)
+                IndividualLimits = JsonSerializer.Serialize(file3.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file3,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets3,  JsonHelper.GetSerializerOptions())
             },
             new()
             {
@@ -147,7 +171,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file4.LicenceNumber,
                 HasAggregate = file4.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file4)
+                IndividualLimits = JsonSerializer.Serialize(file4.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file4,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets4,  JsonHelper.GetSerializerOptions())
             },
             new()
             {
@@ -155,7 +181,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file5.LicenceNumber,
                 HasAggregate = file5.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file5)
+                IndividualLimits = JsonSerializer.Serialize(file5.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file5,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets5,  JsonHelper.GetSerializerOptions())
             },
             new()
             {
@@ -163,7 +191,9 @@ public static class GenerateCsvForTesting
                 LicenceNumber = file6.LicenceNumber,
                 HasAggregate = file6.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates),
-                Data = JsonSerializer.Serialize(file6)
+                IndividualLimits = JsonSerializer.Serialize(file6.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
+                Data = JsonSerializer.Serialize(file6,  JsonHelper.GetSerializerOptions()),
+                LicenceSets = JsonSerializer.Serialize(licenceSets6,  JsonHelper.GetSerializerOptions())
             }
         ];
     }
@@ -246,14 +276,5 @@ public static class GenerateCsvForTesting
             "NE0270020038__Application - New Licence Issued - Licence Issued - PDF - 28.10.2022.pdf",
             "NE0270020044__Application New Licence Issued - 20112024.pdf"
         ];
-    }
-
-    internal class CsvLine
-    {
-        public string? Filename { get; set; }
-        public string? LicenceNumber { get; set; }
-        public bool HasAggregate { get; set; }
-        public string? AggregateData { get; set; }
-        public string? Data { get; set; }
     }
 }

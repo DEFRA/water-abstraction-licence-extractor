@@ -154,6 +154,18 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
     return returnData;
 }
 
+function getLicence(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+
+        if (item.licenceNumber === licenceNumber) {
+            return item;
+        }
+    }
+
+    return null;
+}
+
 function getFilename(licenceNumber) {
     for (let itemNumber in data) {
         let item = data[itemNumber];
@@ -179,7 +191,7 @@ function licenceInList(licenceNumber) {
 }
 
 function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
-    const tbody1 = document.getElementsByTagName("tbody")[0];
+    const tbody1 = document.querySelector("#licencesTable tbody");
     let htmlSb = [];
 
     let dataSorted = data.slice(0);
@@ -355,6 +367,144 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
     }
 
     tbody1.innerHTML = htmlSb.join('');
+    
+    populateLicenceSetTable(dataSorted);
+}
+
+function populateLicenceSetTable(dataSorted) {
+    let uniqueValues = [];
+    let uniqueShortValues = [];
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let ary = item.licenceSetIds;
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+
+            if (uniqueValues.indexOf(value) === -1) {
+                uniqueValues.push(value);
+                uniqueShortValues.push(item.shortLicenceSetIds[j]);
+            }
+        }
+    }
+
+    let htmlSb = [];
+    
+    for (let i = 0; i < uniqueValues.length; i++) {
+        let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
+        let backgroundCss = "background-color: " + color;
+        let licenceSetId = uniqueValues[i];
+        let shortLicenceSetId = uniqueShortValues[i];
+        
+        let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
+        let licenceInSet = licencesInSet[0];
+        
+        let html =
+            "<tr style='" + backgroundCss + "'>" +
+                "<td rowspan='" + licencesInSet.length + "'><span title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
+                "<td>" + licenceInSet.licenceNumber + "</td>" +
+                "<td>" + licenceInSet.filename + "</td>" +
+            "</tr>";
+
+        htmlSb.push(html);
+        
+        for (let j = 1; j < licencesInSet.length; j++) {
+            let licenceInSet = licencesInSet[j];
+            
+            html =
+                "<tr style='" + backgroundCss + "'>" +
+                    "<td>" + licenceInSet.licenceNumber + "</td>" +
+                    "<td>" + licenceInSet.filename + "</td>" +
+                "</tr>";
+
+            htmlSb.push(html);
+        }
+    }
+
+    const tbody2 = document.querySelector("#licenceSets tbody");
+    tbody2.innerHTML = htmlSb.join('');
+}
+
+function getLicencesInSet(dataSorted, licenceSetId) {
+    let returnList = [];
+    let licenceNumbers = [];
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let ary = item.licenceSetIds;
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+
+            if (value === licenceSetId && licenceNumbers.indexOf(item.licenceNumber) === -1) {
+                returnList.push(item);
+                licenceNumbers.push(item.licenceNumber);
+            }
+        }
+    }
+    
+    let parts = licenceSetId.split('-');
+
+    for (let i = 0; i < parts.length; i += 2) {
+        let licenceNumber = parts[i];
+        let fullLicenceNumber = getFullLicenceNumber(dataSorted, licenceNumber);
+
+        if (licenceNumbers.indexOf(fullLicenceNumber) === -1) {
+            let licence = getLicence(fullLicenceNumber) ?? {
+                filename: '--',
+                licenceNumber: fullLicenceNumber,
+            };
+            
+            licenceNumbers.push(fullLicenceNumber);
+            returnList.push(licence);
+        }
+    }
+
+    returnList.sort(compareItems);
+    return returnList;
+}
+
+function compareItems(a, b) {
+    if (a.licenceNumber < b.licenceNumber) {
+        return -1;
+    }
+    
+    if (a.licenceNumber > b.licenceNumber) {
+        return 1;
+    }
+    
+    return 0;
+}
+
+function getFullLicenceNumber(dataSorted, shortLicenceNumber) {
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let licenceNumberStripped = item.licenceNumber
+            .replaceAll("/", "")
+            .replaceAll(" ", "")
+            .replaceAll(".", "");
+        
+        if (licenceNumberStripped === shortLicenceNumber) {
+            return item.licenceNumber;
+        }
+        
+        let ary = item.linkedLicences ?? [];
+
+        for (let j = 0; j < ary.length; j++) {
+            let value = ary[j];
+            licenceNumberStripped = value
+                .replaceAll("/", "")
+                .replaceAll(" ", "")
+                .replaceAll(".", "");
+
+            if (licenceNumberStripped === shortLicenceNumber) {
+                return value;
+            }
+        }
+    }
+    
+    return shortLicenceNumber;
 }
 
 function dashesIfNullOrEmpty(str) {

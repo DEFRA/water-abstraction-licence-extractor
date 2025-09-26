@@ -154,6 +154,18 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
     return returnData;
 }
 
+function getFilename(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+
+        if (item.licenceNumber === licenceNumber) {
+            return item.filename;
+        }
+    }
+
+    return false;
+}
+
 function licenceInList(licenceNumber) {
     for (let itemNumber in data) {
         let item = data[itemNumber];
@@ -226,7 +238,9 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             let linkedLicence = item.linkedLicences[j];
             
             if (licenceInList(linkedLicence)) {
-                linkedLicencesSb.push('<li><a href="#' + linkedLicence + '">' + linkedLicence + '</a></li>');
+                let linkedFilename = getFilename(linkedLicence);
+                linkedLicencesSb.push('<li><a href="report.html?filename=' + linkedFilename
+                    + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + linkedLicence + '</a></li>');
             } else {
                 linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
             }
@@ -506,6 +520,36 @@ document.getElementById('minimiseLink').onclick = function () {
     iframeDiv.style.height = "calc(100% - 60px)";
     iframeDiv.style.left = "350px";
     iframeDiv.style.width = "calc(100% - 370px)";
+
+    return false;
+}
+
+let licencesLinkEle = document.getElementById('licencesLink');
+licencesLinkEle.onclick = function () {
+    if (licencesLinkEle.classList.contains('selected')) {
+        return false;
+    }
+
+    licencesLinkEle.classList.add('selected');
+    licenceSetsLinkEle.classList.remove('selected');
+
+    document.getElementById('licences').style.display = 'block';
+    document.getElementById('licenceSets').style.display = 'none';
+    
+    return false;
+}
+
+let licenceSetsLinkEle = document.getElementById('licenceSetsLink');
+licenceSetsLinkEle.onclick = function () {
+    if (licenceSetsLinkEle.classList.contains('selected')) {
+        return false;
+    }
+
+    licencesLinkEle.classList.remove('selected');
+    licenceSetsLinkEle.classList.add('selected');
+
+    document.getElementById('licences').style.display = 'none';
+    document.getElementById('licenceSets').style.display = 'block';
 
     return false;
 }

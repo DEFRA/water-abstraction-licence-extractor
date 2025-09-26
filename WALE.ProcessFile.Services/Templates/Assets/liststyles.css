@@ -17,13 +17,13 @@ select { width: 100%; }
 
 #list-page #iframe {
   border: 0;
-  height: 100%;
+  height: calc(100% - 25px);
   width: 100%;
   background-color: rgba(255, 255, 255, 0.97);
 }
 
 #list-page #iframeDiv {
-  position: absolute;
+  position: fixed;
   display: none;
   top: 40px;
   height: calc(100% - 60px);
@@ -48,4 +48,19 @@ select { width: 100%; }
   font-size: 16px;
   color: #AAA;
   padding-right: 5px;
+}
+
+h1 a {
+  text-decoration: none;
+  color: #00A;
+  font-weight: normal;
+}
+
+h1 a.selected {
+  font-weight: bold;
+  color: #000;
+}
+
+#licenceSets {
+  display: none;
 }

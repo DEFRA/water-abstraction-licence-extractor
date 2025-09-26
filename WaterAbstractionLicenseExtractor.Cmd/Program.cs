@@ -662,7 +662,7 @@ IEnumerable<string> GetPdfPaths()
         var filename = filePath.Split('/').Last();
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(filename => filename).Skip(0).Take(2).ToList();
+    }).OrderBy(filename => filename).Skip(0).Take(200).ToList();
     
     // YORKSHIRE 6 - From original files
 
@@ -677,7 +677,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("E0270025037")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

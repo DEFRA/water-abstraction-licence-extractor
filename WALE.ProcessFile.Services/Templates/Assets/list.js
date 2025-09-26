@@ -322,7 +322,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         let html =
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
-            "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
+            "<td><a href='report.html?filename=" + item.filename + "' onclick=\"openIframe('" + item.filename + "'); return false;\">" + item.filename + "</a></td>" +
             "<td id='" + dashesIfNullOrEmpty(item.licenceNumber) + "'>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
@@ -478,4 +478,73 @@ function populateDropdowns() {
     }
 
     licenceSetsFilter.innerHTML = licenceSetsSb.join('');
+}
+
+function openIframe(filename) {
+    document.getElementById('iframeDiv').style.display = 'block';
+    document.getElementById('iframe').src = 'report.html?filename=' + filename + '&hideBackLink=true';
+}
+
+document.getElementById('closeLink').onclick = function () {
+    document.getElementById('iframeDiv').style.display = 'none';
+    return false;
+}
+
+document.getElementById('maximiseLink').onclick = function () {
+    let iframeDiv = document.getElementById('iframeDiv');
+    iframeDiv.style.top = '0';
+    iframeDiv.style.width = '100%';
+    iframeDiv.style.left = '0';
+    iframeDiv.style.height = '100%';
+    
+    return false;
+}
+
+document.getElementById('minimiseLink').onclick = function () {
+    let iframeDiv = document.getElementById('iframeDiv');
+    iframeDiv.style.top = "40px";
+    iframeDiv.style.height = "calc(100% - 60px)";
+    iframeDiv.style.left = "350px";
+    iframeDiv.style.width = "calc(100% - 370px)";
+
+    return false;
+}
+
+dragElement(document.getElementById("iframeDiv"));
+
+function dragElement(elmnt) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    document.getElementById(elmnt.id + "Header").onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
 }

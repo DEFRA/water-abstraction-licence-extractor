@@ -662,7 +662,7 @@ IEnumerable<string> GetPdfPaths()
         var filename = filePath.Split('/').Last();
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(filename => filename).Skip(0).Take(200).ToList();
+    }).OrderBy(filename => filename).Skip(0).Take(2).ToList();
     
     // YORKSHIRE 6 - From original files
 

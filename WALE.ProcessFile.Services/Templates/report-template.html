@@ -62,7 +62,7 @@
                         </div>
                     </div>
     
-                    <h1><a href="index.html">Back to all licences</a></h1>
+                    <h1 id="backLink"><a href="index.html">Back to all licences</a></h1>
                 </div>
             </td>
             <td class="right-cell">
@@ -85,6 +85,11 @@
     <script>
         const searchParams = new URLSearchParams(window.location.search);
         const filename = searchParams.get('filename');
+        const hideBackLink = searchParams.get('hideBackLink');
+        
+        if (!!hideBackLink) {
+            document.getElementById('backLink').style.display = 'none';
+        }
 
         loadScript(filename + "/internal.jsonp", function () { loadReport(filename); });
         loadScript(filename + "/licence.jsonp", function () { loadReport(filename); });

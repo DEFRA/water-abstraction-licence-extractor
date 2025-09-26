@@ -1,28 +1,11 @@
 <html lang="en">
 <head>
-    <style>
-        table td { padding: 5px; }
-        table thead tr td { font-weight: bold; }
-        table thead tr a { text-decoration: none; color: #000; cursor: pointer; }
-        table tbody tr { max-height: 40px; vertical-align: top; }
-        .ai-line {
-            color: #88A;
-        }
-        td ul {
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-        
-        .default-hidden { display: none; }
-        .show-all .default-hidden { display: table-cell; }
-        
-        select { width: 100%; }
-    </style>
     <script>const LOAD_AI = [LOAD_AI_JS];</script>
+    <link rel="stylesheet" href="Assets/liststyles.css" />
     
     <title>Water licences list</title>
 </head>
-<body>
+<body id="list-page">
     <h1>All licences</h1>
     
     <table>
@@ -154,6 +137,16 @@
         </tfoot>
     </table>
 
+    <div id="iframeDiv">
+        <div id="iframeDivHeader">
+            <a id="closeLink" href="#">&#10006;</a>
+            <a id="maximiseLink" href="#">&#128470;</a>
+            <a id="minimiseLink" href="#">&#95;</a>
+        </div>
+
+        <iframe id="iframe" src="about:blank"></iframe>
+    </div>
+    
     <script src="list-data.js"></script>
     <script src="Assets/list.js"></script>
 </body>

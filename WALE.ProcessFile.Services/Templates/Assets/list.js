@@ -400,11 +400,12 @@ function populateLicenceSetTable(dataSorted) {
         let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
         let licenceInSet = licencesInSet[0];
         
-        let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\">" + licenceInSet.filename + "</a>" : "--";
+        let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
         
         let html =
             "<tr style='" + backgroundCss + "'>" +
-                "<td rowspan='" + licencesInSet.length + "'><span title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'></td>" +
+                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";
@@ -413,7 +414,7 @@ function populateLicenceSetTable(dataSorted) {
         
         for (let j = 1; j < licencesInSet.length; j++) {
             let licenceInSet = licencesInSet[j];
-            linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\">" + licenceInSet.filename + "</a>" : "--";
+            linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
             
             html =
                 "<tr style='" + backgroundCss + "'>" +
@@ -427,6 +428,8 @@ function populateLicenceSetTable(dataSorted) {
 
     const tbody2 = document.querySelector("#licenceSets tbody");
     tbody2.innerHTML = htmlSb.join('');
+
+    setLicenceSetTotals();
 }
 
 function getLicencesInSet(dataSorted, licenceSetId) {
@@ -546,6 +549,12 @@ function setTotals() {
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
     document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
     document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSetIds', false);
+}
+
+function setLicenceSetTotals() {    
+    document.getElementById('ls-licence-set-total').innerHTML = document.getElementsByClassName('lsId').length;
+    document.getElementById('ls-licence-number-total').innerHTML = document.querySelectorAll("#licenceSets tbody tr").length;
+    document.getElementById('ls-filename-total').innerHTML = document.getElementsByClassName('filenameSet').length;
 }
 
 function getCount(dataFiltered, field, comparisonValue) {

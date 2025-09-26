@@ -677,7 +677,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

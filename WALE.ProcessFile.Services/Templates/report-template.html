@@ -4,79 +4,123 @@
     <link rel="stylesheet" href="Assets/styles.css" />
 </head>
 <body>
-    <table>
-        <tr>
-            <td class="left-cell">
-                <div id="leftDetails">
-                    <div id="view-edit">
-                        <a href="#" onclick="showView(1); return false;" id="view1" class="viewSelected">View</a> | <a href="#" onclick="showView(2); return false;" id="view2">Edit</a>
-                    </div>
-
-                    <ul class="ul-links">
-                        <li><a id="overviewTabLink" href="#" onclick="return showTab('overview')" class="selectedTab">Overview</a></li>
-                        <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
-                        <li><a id="jsonSetTabLink" href="#" onclick="return showTab('json-set')">JSON (set)</a></li>
-                        <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (LLM)</a></li>
-                        <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (int.)</a></li>
-                        <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
-                    </ul>
-                    
-                    <div id="jsonNewPath">
-                        <pre id="dataNewOutput"></pre>
-                    </div>
-
-                    <div id="jsonSetPath">
-                        <pre id="dataSetOutput"></pre>
-                    </div>                    
-                    
-                    <div id="jsonAiPath">
-                        <pre id="dataAiOutput">AI data not available</pre>
-                    </div>
-
-                    <div id="jsonPath">
-                        <pre id="dataOutput"></pre>
-                    </div>
-
-                    <div id="text">
-                        <span id="textOutput"></span>
-                    </div>
-                    
-                    <div id="overview">
-                        <dl id="properties"></dl>
-                    </div>
-    
-                    <div id="propertiesNew">
-                        <div id="licenceNumberTxtDiv">
-                            <label for="licenceNumberTxt">Licence number</label><br>
-                            <input type="text" id="licenceNumberTxt" />
+    <div id="container">
+        <div id="leftCol">
+            <table>
+                <tr>
+                    <td class="left-cell">
+                        <div id="leftDetails">
+                            <div id="view-edit">
+                                <a href="#" onclick="showView(1); return false;" id="view1" class="viewSelected">View</a> | <a href="#" onclick="showView(2); return false;" id="view2">Edit</a>
+                            </div>
+        
+                            <ul class="ul-links">
+                                <li><a id="overviewTabLink" href="#" onclick="return showTab('overview')" class="selectedTab">Overview</a></li>
+                                <li><a id="jsonNewTabLink" href="#" onclick="return showTab('json-new')">JSON</a></li>
+                                <li><a id="jsonSetTabLink" href="#" onclick="return showTab('json-set')">JSON (set)</a></li>
+                                <li><a id="jsonAiTabLink" href="#" onclick="return showTab('json-ai')">JSON (LLM)</a></li>
+                                <li><a id="jsonTabLink" href="#" onclick="return showTab('json')">JSON (int.)</a></li>
+                                <li><a id="textTabLink" href="#" onclick="return showTab('text')">Text</a></li>
+                            </ul>
+                            
+                            <div id="jsonNewPath">
+                                <pre id="dataNewOutput"></pre>
+                            </div>
+        
+                            <div id="jsonSetPath">
+                                <pre id="dataSetOutput"></pre>
+                            </div>                    
+                            
+                            <div id="jsonAiPath">
+                                <pre id="dataAiOutput">AI data not available</pre>
+                            </div>
+        
+                            <div id="jsonPath">
+                                <pre id="dataOutput"></pre>
+                            </div>
+        
+                            <div id="text">
+                                <span id="textOutput"></span>
+                            </div>
+                            
+                            <div id="overview">
+                                <dl id="properties"></dl>
+                            </div>
+            
+                            <div id="propertiesNew">
+                                <div id="licenceNumberTxtDiv">
+                                    <label for="licenceNumberTxt">Licence number</label><br>
+                                    <input type="text" id="licenceNumberTxt" />
+                                </div>
+        
+                                <div id="licenceHolderTxtDiv" class="default-hidden">
+                                    <label for="licenceHolderTxt">Licence holder</label><br>
+                                    <input type="text" id="licenceHolderTxt" />
+                                </div>                        
+                                
+                                <div id="back-continue-area">
+                                    <button id="backButton" onclick="return backPressed()">Back</button>
+                                    <button id="continueButton" onclick="return continuePressed()">Continue</button>
+                                </div>
+                            </div>
+            
+                            <h1 id="backLink"><a href="index.html">Back to all licences</a></h1>
                         </div>
-
-                        <div id="licenceHolderTxtDiv" class="default-hidden">
-                            <label for="licenceHolderTxt">Licence holder</label><br>
-                            <input type="text" id="licenceHolderTxt" />
-                        </div>                        
-                        
-                        <div id="back-continue-area">
-                            <button id="backButton" onclick="return backPressed()">Back</button>
-                            <button id="continueButton" onclick="return continuePressed()">Continue</button>
+                    </td>
+                    <td class="right-cell">
+                        <div id="rightPdf">
+                            <h1><a id="filename" href="#" target="_blank">Licence</a></h1>
+                            
+                            <div id="iframeParent">
+                                <div id="pdf-images"></div>
+                            </div>
                         </div>
-                    </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="rightCol">
+            <iframe id="iframe" src="about:blank"></iframe>        
+        </div>
+    </div>
     
-                    <h1 id="backLink"><a href="index.html">Back to all licences</a></h1>
-                </div>
-            </td>
-            <td class="right-cell">
-                <div id="rightPdf">
-                    <h1><a id="filename" href="#" target="_blank">Licence</a></h1>
-                    
-                    <div id="iframeParent">
-                        <div id="pdf-images"></div>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    <style>
+        #leftCol {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+       #leftCol.half {
+            width: 50%;
+        }
 
+        #rightCol {
+            display: none;
+            position: absolute;
+            top: 0;
+            height: 100%;
+            border-left: 3px solid #eee;
+            background-color: #777;
+        }
+
+        #rightCol.half {
+            display: block;
+            left: 50%;
+            width: 50%;
+        }
+        
+    #iframe {
+        width: 100%;
+        height: calc(100% - 30px);
+        border: 0;
+        margin-top: 30px;
+        background-color: #FFF;
+    }
+    </style>
+    
     <script src="Assets/settings.js"></script>
     <script src="Assets/report.js"></script>
     <script src="Assets/jsonpath-0.8.0.js"></script>
@@ -90,7 +134,7 @@
         if (!!hideBackLink) {
             document.getElementById('backLink').style.display = 'none';
         }
-
+        
         loadScript(filename + "/internal.jsonp", function () { loadReport(filename); });
         loadScript(filename + "/licence.jsonp", function () { loadReport(filename); });
         loadScript(filename + "/licence-sets.jsonp", function () { loadReport(filename); });

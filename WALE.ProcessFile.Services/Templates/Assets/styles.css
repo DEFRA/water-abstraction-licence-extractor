@@ -195,3 +195,37 @@ dl a {
 .ul-links {
   margin-bottom: 15px;
 }
+
+#leftCol.half .ul-links li a {
+  font-size: 12px;
+}
+
+@media only screen and (max-width: 1500px) {
+  .ul-links li a {
+    font-size: 12px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 10px;
+  }
+}
+
+@media only screen and (max-width: 1200px) {
+  .ul-links li a {
+    font-size: 11px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 9px;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .ul-links li a {
+    font-size: 10px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 8px;
+  }
+}

@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -355,11 +356,27 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         issuer = outputLine.Issuer,
         meansFound = outputLine.MeansFound,
         linkedLicences = outputLine.LinkedLicences ?? [],
-        licenceSets = outputLine.LicenceSets?.Select(ls => new ListRowLicenceSet
+        licenceSets = outputLine.LicenceSets?.Select(ls =>
         {
-            LicenceSetId = ls.LicenceSetId,
-            ShortLicenceSetId = ls.ShortLicenceSetId,
-            LicenceSetType = ls.LicenceSetType
+            var licenceSetType = ls.LicenceSetType;
+            var anyLicenceNotLinked = ls.Licences.Any(lsl =>
+                lsl.LicenceNumber != outputLine.LicenceNumber
+                && outputLine.LinkedLicences?
+                    .Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
+                    .Select(ll => ll.LicenceNumber)
+                    .Contains(lsl.LicenceNumber) != true);
+            
+            if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedInLimits && anyLicenceNotLinked)
+            {
+                licenceSetType = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+            }
+            
+            return new ListRowLicenceSet
+            {
+                LicenceSetId = ls.LicenceSetId,
+                ShortLicenceSetId = ls.ShortLicenceSetId,
+                LicenceSetType = licenceSetType
+            };
         }).ToArray() ?? []
     };
     

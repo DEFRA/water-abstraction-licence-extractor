@@ -5,5 +5,6 @@ public enum LicenceSetType
     SingleLicenceOnly,
     AllLicencesExplicitlyReferencedAnywhere,
     AllLicencesExplicitlyReferencedInLimits,
+    AllLicencesImplicitlyReferencedInLimits,
     AllLicencesIncludingImplicitlyReferenced
 }

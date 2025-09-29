@@ -271,8 +271,9 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             for (let j = 0; j < item.licenceSetIds.length; j++) {
                 let licenceSetId = item.licenceSetIds[j];
                 let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
-                
-                licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
+
+                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
+                licenceSetsSb.push('<li title="' + licenceSetId + '">' + html1 + '</li>');
             }
 
             licenceSetsSb.push('</ul>');
@@ -415,12 +416,12 @@ function populateLicenceSetTable(dataSorted) {
             }
         }
         
-        var imgs = imgsSb.join('');
+        let imgs = imgsSb.join('');
         
         let html =
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
-                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";

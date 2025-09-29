@@ -402,9 +402,23 @@ function populateLicenceSetTable(dataSorted) {
         
         let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
         
+        var imgsSb = [];
+
+        for (let j = 0; j < licencesInSet.length; j++) {
+            let item = licencesInSet[j];
+            
+            if (item.imagePath === undefined) {
+                imgsSb.push("<div style='display: inline-block; width: 57px; text-align: center; font-size: 80px; line-height: 60px; vertical-align: top; color: #EEE'>--</div>");
+            } else {
+                imgsSb.push("<img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' />");
+            }
+        }
+        
+        var imgs = imgsSb.join('');
+        
         let html =
             "<tr style='" + backgroundCss + "'>" +
-                "<td rowspan='" + licencesInSet.length + "'></td>" +
+                "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
                 "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +

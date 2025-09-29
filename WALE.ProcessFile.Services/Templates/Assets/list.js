@@ -288,18 +288,23 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
                 let backLink = licenceSet.licenceSetType === "allLicencesImplicitlyReferencedInLimits";
                 let abstractionLimits = licenceSet.licenceSetType === "allLicencesExplicitlyReferencedInLimits";
-
-                let color = backLink ? "#888" : "rebeccapurple";
+                let mixed = licenceSet.licenceSetType === "allLicencesIncludingImplicitlyReferenced";
+                
+                let color = backLink ? "#AAA" : "rebeccapurple";
 
                 if (abstractionLimits) {
                     color = "lightseagreen";
                 }
                 
-                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
+                if (mixed) {
+                    color = "orange";
+                }
+                
+                let html1 = "<span class='lsId' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
                     + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
                     + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
                 
-                licenceSetsSb.push('<li title="' + licenceSetId + '">' + html1 + '</li>');
+                licenceSetsSb.push('<li>' + html1 + '</li>');
             }
 
             licenceSetsSb.push('</ul>');

@@ -360,7 +360,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         {
             var licenceSetType = ls.LicenceSetType;
             var anyLicenceNotLinked = ls.Licences.Any(lsl =>
-                lsl.LicenceNumber != outputLine.LicenceNumber
+                outputLine.LicenceNumber != lsl.LicenceNumber
                 && outputLine.LinkedLicences?
                     .Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
                     .Select(ll => ll.LicenceNumber)
@@ -369,6 +369,11 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
             if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedInLimits && anyLicenceNotLinked)
             {
                 licenceSetType = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+            }
+            
+            if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere && anyLicenceNotLinked)
+            {
+                licenceSetType = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
             }
             
             return new ListRowLicenceSet

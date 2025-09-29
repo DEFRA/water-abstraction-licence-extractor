@@ -249,13 +249,16 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         
         for (let j = 0; j < item.linkedLicences.length; j++) {
             let linkedLicence = item.linkedLicences[j];
+            let licenceNumber = linkedLicence.licenceNumber;
+            let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
+            let styledLicenceNumber = backLink ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
             
-            if (licenceInList(linkedLicence)) {
-                let linkedFilename = getFilename(linkedLicence);
+            if (licenceInList(licenceNumber)) {
+                let linkedFilename = getFilename(licenceNumber);
                 linkedLicencesSb.push('<li><a href="report.html?filename=' + linkedFilename
-                    + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + linkedLicence + '</a></li>');
+                    + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + styledLicenceNumber + '</a></li>');
             } else {
-                linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
+                linkedLicencesSb.push('<li>' + styledLicenceNumber + '</li>');                
             }
         }
 
@@ -265,12 +268,12 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
         let licenceSetsSb = [];
 
-        if (item.shortLicenceSetIds.length > 0 && item.shortLicenceSetIds[0] !== '') {
+        if (item.licenceSets.length > 0) {
             licenceSetsSb.push('<ul>');
 
-            for (let j = 0; j < item.licenceSetIds.length; j++) {
-                let licenceSetId = item.licenceSetIds[j];
-                let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
+            for (let j = 0; j < item.licenceSets.length; j++) {
+                let licenceSetId = item.licenceSets[j].licenceSetId;
+                let shortLicenceSetId = item.licenceSets[j].shortLicenceSetId;
                 let type = '';
                 
                 let html1 = "<span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
@@ -366,7 +369,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
             "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
-            "<td>" + (item.licenceSetIds.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
+            "<td>" + (item.licenceSets.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
             "</tr>";
 
         htmlSb.push(html);
@@ -383,14 +386,14 @@ function populateLicenceSetTable(dataSorted) {
     
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
-        let ary = item.licenceSetIds;
+        let ary = item.licenceSets;
 
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];
 
-            if (uniqueValues.indexOf(value) === -1) {
-                uniqueValues.push(value);
-                uniqueShortValues.push(item.shortLicenceSetIds[j]);
+            if (uniqueValues.indexOf(value.licenceSetId) === -1) {
+                uniqueValues.push(value.licenceSetId);
+                uniqueShortValues.push(value.shortLicenceSetId);
             }
         }
     }
@@ -458,7 +461,7 @@ function getLicencesInSet(dataSorted, licenceSetId) {
     
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
-        let ary = item.licenceSetIds;
+        let ary = item.licenceSets;
 
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];
@@ -469,9 +472,8 @@ function getLicencesInSet(dataSorted, licenceSetId) {
             }
         }
     }
-    
     let parts = licenceSetId.split('-');
-
+    
     for (let i = 0; i < parts.length; i += 2) {
         let licenceNumber = parts[i];
         let fullLicenceNumber = getFullLicenceNumber(dataSorted, licenceNumber);
@@ -518,7 +520,8 @@ function getFullLicenceNumber(dataSorted, shortLicenceNumber) {
         let ary = item.linkedLicences ?? [];
 
         for (let j = 0; j < ary.length; j++) {
-            let value = ary[j];
+            let value = ary[j].licenceNumber;
+            
             licenceNumberStripped = value
                 .replaceAll("/", "")
                 .replaceAll(" ", "")
@@ -568,7 +571,7 @@ function setTotals() {
     document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
     document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
-    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSetIds', false);
+    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
 }
 
 function setLicenceSetTotals() {    
@@ -655,7 +658,7 @@ function populateDropdowns() {
 
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
-        let ary = item["shortLicenceSetIds"];
+        let ary = item.licenceSets;
 
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];

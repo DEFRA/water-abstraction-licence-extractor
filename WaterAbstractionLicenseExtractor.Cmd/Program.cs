@@ -286,7 +286,7 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
         $"var licenceSets = {licenceSetsJson}");
     
-    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++, distinctLicenceSets);
+    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++, distinctLicenceSets, jsonOptions);
     outputLines.Add(outputLine);
 }
 
@@ -321,16 +321,15 @@ var listJs = new List<ListRow>();
 
 foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 {
-    var anyLinkedLicenceNumbers = outputLine.LinkedLicenceNumbers?
-        .Split('|')
-        .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln) > 0) ?? false;
-            
+    var anyLinkedLicenceNumbers = outputLine.LinkedLicences?
+        .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln.LicenceNumber) > 0);
+
     Log(
         $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
         $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
         $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
         $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
-        $"{outputLine.LinkedLicenceNumbers},{anyLinkedLicenceNumbers}",
+        $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
         resultFileStringBuilder);
     
     var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
@@ -340,15 +339,6 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     {
         filenameForScreen = filenameForScreen[..30] + "-<br>" + filenameForScreen[30..];
     }*/
-
-    var ll = outputLine.LinkedLicenceNumbers?.Split('|').OrderBy(x => x).ToArray();
-    if (ll?.Length == 1 && string.IsNullOrEmpty(ll[0])) ll = [];
-
-    var lsi = outputLine.LicenceSetIds?.Split('|');
-    if (lsi?.Length == 1 && string.IsNullOrEmpty(lsi[0])) lsi = [];
-    
-    var slsi = outputLine.ShortLicenceSetIds?.Split('|');
-    if (slsi?.Length == 1 && string.IsNullOrEmpty(slsi[0])) slsi = [];
     
     var listRow = new ListRow
     {
@@ -364,9 +354,13 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         issueDate = outputLine.IssueDate,
         issuer = outputLine.Issuer,
         meansFound = outputLine.MeansFound,
-        linkedLicences = ll,
-        licenceSetIds = lsi,
-        shortLicenceSetIds = slsi
+        linkedLicences = outputLine.LinkedLicences ?? [],
+        licenceSets = outputLine.LicenceSets?.Select(ls => new ListRowLicenceSet
+        {
+            LicenceSetId = ls.LicenceSetId,
+            ShortLicenceSetId = ls.ShortLicenceSetId,
+            LicenceSetType = ls.LicenceSetType
+        }).ToArray() ?? []
     };
     
     listJs.Add(listRow);
@@ -383,8 +377,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
     if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
     if (outputLine.MeansFound) meansFoundCount++;
-    if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers)
-        && outputLine.LinkedLicenceNumbers != string.Empty) linkedLicenceNumbersFoundCount++;
+    if (outputLine.LinkedLicences?.Length > 0) linkedLicenceNumbersFoundCount++;
     
     if (outputLine.LicenceNumber != null)
     {
@@ -412,11 +405,11 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 
 foreach (var outputLine in outputLines)
 {
-    if (!string.IsNullOrEmpty(outputLine.LinkedLicenceNumbers))
+    if (outputLine.LinkedLicences != null)
     {
-        foreach (var linkedLicenceNumber in outputLine.LinkedLicenceNumbers.Split('|'))
+        foreach (var linkedLicence in outputLine.LinkedLicences)
         {
-            var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicenceNumber);
+            var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
 
             if (linkedOutputLine != null)
             {
@@ -571,7 +564,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     }
 }
 
-static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets)
+static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets, JsonSerializerOptions jsonOptions)
 {
     var licenceHolder = licence.NoneSchemaData.TryGetValue("issuedTo", out var value4)
         ? (string)value4 : null;
@@ -593,16 +586,11 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
     var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
     var issuer = licence.LicenceVersion.Issuer;
 
-    var linkedLicenceNumbers = string.Join(
-        '|',
-        licence.LinkedLicences
-            .Select(x => x.FromSection?.FirstOrDefault() == "ImplicitBackLink" ? $"({x.LicenceNumber})" : x.LicenceNumber));
-
-    var licenceSetIds = string.Join('|', licence.LicenceSetIds
-        .Select(licenceSetId => allLicenceSets.First(als => als.LicenceSetId == licenceSetId).LicenceSetId));
-    
-    var shortLicenceSetIds = string.Join('|', licence.LicenceSetIds
-        .Select(licenceSetId => allLicenceSets.First(als => als.LicenceSetId == licenceSetId).ShortLicenceSetId));
+    var licenceSets = licence.LicenceSetIds
+        .Select(lsi => allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi))
+        .Where(ls => ls != null)
+        .Select(ls => ls!)
+        .ToList();
     
     return new OutputLine
     {
@@ -627,9 +615,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         IssueDate = issueDate,
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
-        LinkedLicenceNumbers = linkedLicenceNumbers,
-        LicenceSetIds = licenceSetIds,
-        ShortLicenceSetIds = shortLicenceSetIds
+        LinkedLicences = licence.LinkedLicences,
+        LicenceSets = licenceSets
     };
 }
 

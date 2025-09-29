@@ -15,14 +15,14 @@ td ul {
 
 select { width: 100%; }
 
-#list-page #iframe {
+#list-page .iframe {
   border: 0;
   height: calc(100% - 25px);
   width: 100%;
   background-color: rgba(255, 255, 255, 0.97);
 }
 
-#list-page #iframeDiv {
+#list-page .iframeDiv {
   position: fixed;
   display: none;
   top: 40px;
@@ -36,14 +36,14 @@ select { width: 100%; }
   overflow: auto;
 }
 
-#list-page #iframeDivHeader {
+#list-page .iframeDivHeader {
   padding: 3px;
   /*cursor: move;*/
   background-color: #F6F6F6;
   text-align: left;
 }
 
-#list-page #iframeDivHeader a {
+#list-page .iframeDivHeader a {
   text-decoration: none;
   font-size: 16px;
   color: #AAA;

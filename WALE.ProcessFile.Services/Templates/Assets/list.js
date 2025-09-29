@@ -7,6 +7,7 @@ window.onload = function () {
         bodyEle.className += " show-all";
     }
 
+    window.iframeCounter = 0;
     window.aiData = {};
     
     if (LOAD_AI) {
@@ -671,38 +672,23 @@ function populateDropdowns() {
 }
 
 function openIframe(filename) {
-    document.getElementById('iframeDiv').style.display = 'block';
-    document.getElementById('iframe').src = 'report.html?filename=' + filename + '&hideBackLink=true';
+    let iframeOpen = document.getElementById('iframeDiv' + window.iframeCounter)?.style.display === 'block';
+    if (iframeOpen) window.iframeCounter += 1;
+
+    setupIframe(window.iframeCounter);
+    
+    document.getElementById('iframeDiv' + window.iframeCounter).style.display = 'block';
+    document.getElementById('iframe' + window.iframeCounter).src = 'report.html?filename=' + filename + '&hideBackLink=true';
 }
 
 function openIframeSet(filename) {
-    document.getElementById('iframeDiv').style.display = 'block';
-    document.getElementById('iframe').src = 'licencesetreport.html?filename=' + filename + '&hideBackLink=true';
-}
-
-document.getElementById('closeLink').onclick = function () {
-    document.getElementById('iframeDiv').style.display = 'none';
-    return false;
-}
-
-document.getElementById('maximiseLink').onclick = function () {
-    let iframeDiv = document.getElementById('iframeDiv');
-    iframeDiv.style.top = '0';
-    iframeDiv.style.width = '100%';
-    iframeDiv.style.left = '0';
-    iframeDiv.style.height = '100%';
+    let iframeOpen = document.getElementById('iframeDiv' + window.iframeCounter)?.style.display === 'block';
+    if (iframeOpen) window.iframeCounter += 1;
     
-    return false;
-}
+    setupIframe(window.iframeCounter);
 
-document.getElementById('minimiseLink').onclick = function () {
-    let iframeDiv = document.getElementById('iframeDiv');
-    iframeDiv.style.top = "40px";
-    iframeDiv.style.height = "calc(100% - 60px)";
-    iframeDiv.style.left = "350px";
-    iframeDiv.style.width = "calc(100% - 370px)";
-
-    return false;
+    document.getElementById('iframeDiv' + window.iframeCounter).style.display = 'block';
+    document.getElementById('iframe' + window.iframeCounter).src = 'licencesetreport.html?filename=' + filename + '&hideBackLink=true';
 }
 
 let licencesLinkEle = document.getElementById('licencesLink');
@@ -735,7 +721,66 @@ licenceSetsLinkEle.onclick = function () {
     return false;
 }
 
-dragElement(document.getElementById("iframeDiv"));
+function setupIframe(number) {
+    let ele = document.getElementById('iframeDiv' + number);
+    if (!!ele) {
+        document.getElementById('iframe' + number).src = "about:blank";
+        return;
+    }
+    
+    let template = document.getElementsByClassName('iframeDivTemplate')[0];
+    ele = template.cloneNode(true);
+    
+    ele.classList.remove('iframeDivTemplate');
+    ele.id = 'iframeDiv' + number;
+
+    for (let i = 0; i < ele.childNodes.length; i++) {
+        let childNode = ele.childNodes[i];
+        
+        if (!!childNode.id) {
+            childNode.id = childNode.id.replace('NUMBER', number);
+        } else {
+            continue;
+        }
+
+        for (let j = 0; j < childNode.childNodes.length; j++) {
+            let childNode2 = childNode.childNodes[j];
+
+            if (!!childNode2.id) {
+                childNode2.id = childNode2.id.replace('NUMBER', number);
+            }
+        }
+    }
+    
+    document.getElementsByTagName('body')[0].appendChild(ele);
+    
+    document.getElementById('closeLink' + number).onclick = function () {
+        document.getElementById('iframeDiv' + number).style.display = 'none';
+        return false;
+    }
+
+    document.getElementById('maximiseLink' + number).onclick = function () {
+        let iframeDiv = document.getElementById('iframeDiv' + number);
+        iframeDiv.style.top = '0';
+        iframeDiv.style.width = '100%';
+        iframeDiv.style.left = '0';
+        iframeDiv.style.height = '100%';
+
+        return false;
+    }
+
+    document.getElementById('minimiseLink' + number).onclick = function () {
+        let iframeDiv = document.getElementById('iframeDiv' + number);
+        iframeDiv.style.top = "40px";
+        iframeDiv.style.height = "calc(100% - 60px)";
+        iframeDiv.style.left = "350px";
+        iframeDiv.style.width = "calc(100% - 370px)";
+
+        return false;
+    }
+
+    dragElement(document.getElementById("iframeDiv" + number));
+}
 
 function dragElement(elmnt) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;

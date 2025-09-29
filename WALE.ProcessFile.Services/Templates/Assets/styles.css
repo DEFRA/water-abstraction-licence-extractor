@@ -9,29 +9,28 @@ h1 {
   font-size: 14pt;
 }
 
-table {
+#leftCol {
   width: 100%;
   height: 100vh;
   overflow: hidden;
 }
 
-table tr {
+#left-cell, #right-cell {
   height: 100%;
 }
 
-table tr td {
-  width: 50%;
-  height: 100%;
-  vertical-align: top
-}
-
-table tr td.left-cell {
-  position:relative;
-  border-right: 1px solid #DDD;
-}
-
-table tr td.right-cell {
+#left-cell {
   position: relative;
+  float: left;
+  width: 50%;
+  resize: horizontal;
+  overflow: auto;
+}
+
+#right-cell {
+  border-left: 3px solid #EEE;
+  float: none;
+  overflow: hidden;
 }
 
 #iframeParent {

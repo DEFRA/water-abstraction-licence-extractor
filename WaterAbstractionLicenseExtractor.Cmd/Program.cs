@@ -112,6 +112,7 @@ foreach (var aiFile in aiFiles)
 }
 
 File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
+File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
 File.Move($"{outputFolder}list-template.html", indexPath, true);
 
 var indexHtml = await File.ReadAllTextAsync(indexPath);

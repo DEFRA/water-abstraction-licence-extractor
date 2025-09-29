@@ -419,7 +419,7 @@ function populateLicenceSetTable(dataSorted) {
         let html =
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
-                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'>" + shortLicenceSetId + "</span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";
@@ -673,6 +673,11 @@ function populateDropdowns() {
 function openIframe(filename) {
     document.getElementById('iframeDiv').style.display = 'block';
     document.getElementById('iframe').src = 'report.html?filename=' + filename + '&hideBackLink=true';
+}
+
+function openIframeSet(filename) {
+    document.getElementById('iframeDiv').style.display = 'block';
+    document.getElementById('iframe').src = 'licencesetreport.html?filename=' + filename + '&hideBackLink=true';
 }
 
 document.getElementById('closeLink').onclick = function () {

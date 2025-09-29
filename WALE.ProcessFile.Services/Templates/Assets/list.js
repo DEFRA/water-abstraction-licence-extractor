@@ -251,14 +251,22 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             let linkedLicence = item.linkedLicences[j];
             let licenceNumber = linkedLicence.licenceNumber;
             let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
+            let abstractionLimits = linkedLicence.fromSection.length >= 1 && linkedLicence.fromSection.indexOf("AbstractionLimits") > -1;
+            
             let styledLicenceNumber = backLink ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
+            let text = backLink ? 'Implicit back link' : linkedLicence.fromSection[0];
+            let color = backLink ? "#888" : "default";
+            
+            if (abstractionLimits) {
+                color = "lightseagreen";
+            }
             
             if (licenceInList(licenceNumber)) {
                 let linkedFilename = getFilename(licenceNumber);
-                linkedLicencesSb.push('<li><a href="report.html?filename=' + linkedFilename
+                linkedLicencesSb.push('<li title="' + text + '"><a style="color: ' + color + '" href="report.html?filename=' + linkedFilename
                     + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + styledLicenceNumber + '</a></li>');
             } else {
-                linkedLicencesSb.push('<li>' + styledLicenceNumber + '</li>');                
+                linkedLicencesSb.push('<li style="color: ' + color + '" title="' + text + '">' + styledLicenceNumber + '</li>');                
             }
         }
 
@@ -272,13 +280,22 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             licenceSetsSb.push('<ul>');
 
             for (let j = 0; j < item.licenceSets.length; j++) {
-                let licenceSetId = item.licenceSets[j].licenceSetId;
-                let shortLicenceSetId = item.licenceSets[j].shortLicenceSetId;
-                let type = '';
+                let licenceSet = item.licenceSets[j];
+                let licenceSetId = licenceSet.licenceSetId;
+                let shortLicenceSetId = licenceSet.shortLicenceSetId;
+
+                let backLink = false;
+                let abstractionLimits = licenceSet.licenceSetType === "allLicencesExplicitlyReferencedInLimits";
+
+                let color = backLink ? "#888" : "default";
+
+                if (abstractionLimits) {
+                    color = "lightseagreen";
+                }
                 
-                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
+                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
                     + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
-                    + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a> " + type + "</span>";
+                    + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
                 
                 licenceSetsSb.push('<li title="' + licenceSetId + '">' + html1 + '</li>');
             }

@@ -214,7 +214,7 @@ foreach (var distinctLicenceSet in distinctLicenceSets)
     }
 }
 
-var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true, allLicences);
+var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true);
 
 foreach (var licenceSet in newImplicitSets)
 {

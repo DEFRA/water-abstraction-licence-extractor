@@ -271,8 +271,12 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             for (let j = 0; j < item.licenceSetIds.length; j++) {
                 let licenceSetId = item.licenceSetIds[j];
                 let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
-
-                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
+                let type = '';
+                
+                let html1 = "<span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
+                    + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
+                    + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a> " + type + "</span>";
+                
                 licenceSetsSb.push('<li title="' + licenceSetId + '">' + html1 + '</li>');
             }
 

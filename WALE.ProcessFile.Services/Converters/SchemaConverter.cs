@@ -265,7 +265,7 @@ public static class SchemaConverter
         
         var explicitlyReferencedLicenceSet = hasExplicitlyReferencedLicenceSet ? new LicenceSet
         {
-            LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferenced,
+            LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferencedAnywhere,
             Licences = allLicences.ToArray(),
             AggregateSets = GetAggregateSets(allLicences, allLicences)
         } : null;
@@ -275,6 +275,33 @@ public static class SchemaConverter
             returnList.Add(explicitlyReferencedLicenceSet);            
         }
 
+        var licencesReferencedInLimits = primaryLicence.LinkedLicences
+            .Where(linkedLicence => linkedLicence.FromSection?.Contains("AbstractionLimits") == true)
+            .Select(ll => ll.LicenceNumber)
+            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber == ln))
+            .Where(ln => ln != null)
+            .Select(ln => ln!)
+            .ToList();
+        
+        var licencesExplicitlyMentionedInLimits = licencesReferencedInLimits.Any();
+
+        if (licencesExplicitlyMentionedInLimits)
+        {
+            licencesReferencedInLimits.Insert(0, primaryLicence);
+        }
+
+        var explicitlyReferencedLimitsLicenceSet = licencesExplicitlyMentionedInLimits ? new LicenceSet
+        {
+            LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferencedInLimits,
+            Licences = licencesReferencedInLimits.ToArray(),
+            AggregateSets = GetAggregateSets(licencesReferencedInLimits, allLicences)
+        } : null;
+
+        if (explicitlyReferencedLimitsLicenceSet != null)
+        {
+            returnList.Add(explicitlyReferencedLimitsLicenceSet);            
+        }
+        
         foreach (var licence in allLicences)
         {
             if (licence.AbstractionLimits.Aggregates != null)
@@ -282,7 +309,7 @@ public static class SchemaConverter
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
             }
             
-            AddMissingBackLinks([[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]], false, allLicences);
+            AddMissingBackLinks([[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]], false);
 
             var newLicenceSetIds = new List<string>
             {
@@ -303,8 +330,7 @@ public static class SchemaConverter
     
     public static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        bool addImplicitLicenceSet,
-        IReadOnlyList<Licence> allLicences)
+        bool addImplicitLicenceSet)
     {
         var returnList = new List<LicenceSet>();
         

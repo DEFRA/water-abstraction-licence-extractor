@@ -784,37 +784,49 @@ function setupIframe(number) {
 
 function dragElement(elmnt) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    document.getElementById(elmnt.id + "Header").onmousedown = dragMouseDown;
 
-    function dragMouseDown(e) {
+    document.getElementById(elmnt.id + "Header").onmousedown = startDrag;
+
+    function startDrag(e) {
         e = e || window.event;
         e.preventDefault();
 
         // get the mouse cursor position at startup:
         pos3 = e.clientX;
         pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
+        document.onmouseup = stopDrag;
 
         // call a function whenever the cursor moves:
         document.onmousemove = elementDrag;
+        document.getElementsByTagName('body')[0].classList.add('dragging');
     }
 
     function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
+        
         // calculate the new cursor position:
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
+        
         // set the element's new position:
-        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        
+        let top = elmnt.offsetTop - pos2;
+        if (0 > top) top = 0;
+
+        let left = elmnt.offsetLeft - pos1;
+        if (0 > left) left = 0;
+        
+        elmnt.style.top = top + "px";
+        elmnt.style.left = left + "px";
     }
 
-    function closeDragElement() {
-        // stop moving when mouse button is released:
+    function stopDrag() {
         document.onmouseup = null;
         document.onmousemove = null;
+        
+        document.getElementsByTagName('body')[0].classList.remove('dragging');
     }
 }

@@ -267,11 +267,16 @@ public static class SchemaConverter
         {
             LicenceSetType = LicenceSetType.AllLicencesExplicitlyReferencedAnywhere,
             Licences = allLicences.ToArray(),
-            AggregateSets = GetAggregateSets(allLicences, allLicences)
+            AggregateSets = GetAggregateSets(allLicences, allLicences, true)
         } : null;
 
         if (explicitlyReferencedLicenceSet != null)
         {
+            if (explicitlyReferencedLicenceSet.LicenceSetId == "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN")
+            {
+                
+            }
+            
             returnList.Add(explicitlyReferencedLicenceSet);            
         }
 
@@ -485,7 +490,10 @@ public static class SchemaConverter
             });
     }
     
-    private static AggregateSet[]? GetAggregateSets(IReadOnlyList<Licence> licences, IReadOnlyList<Licence> allLicences)
+    private static AggregateSet[]? GetAggregateSets(
+        IReadOnlyList<Licence> licences,
+        IReadOnlyList<Licence> allLicences,
+        bool excludeAnyLinksNotInSet = false)
     {
         var aggregates = new List<Aggregate>();
 
@@ -495,8 +503,17 @@ public static class SchemaConverter
             {
                 continue;
             }
+
+            var relevantAggregates = licence.AbstractionLimits.Aggregates;
+            if (excludeAnyLinksNotInSet)
+            {
+                relevantAggregates = relevantAggregates.Where(agg => agg.LinkedLicences == null
+                     || agg.LinkedLicences.Length == 0
+                     || agg.LinkedLicences.All(linkedLicence =>
+                         licences.Any(l => l.LicenceNumber == linkedLicence.LicenceNumber))).ToArray();
+            }
             
-            aggregates.AddRange(licence.AbstractionLimits.Aggregates);
+            aggregates.AddRange(relevantAggregates);
         }
         
         var aggregatesGroupedByLicencesList = aggregates

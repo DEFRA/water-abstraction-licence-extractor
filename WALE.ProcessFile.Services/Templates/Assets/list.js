@@ -604,7 +604,7 @@ function setTotals() {
 }
 
 function setLicenceSetTotals() {    
-    document.getElementById('ls-licence-set-total').innerHTML = document.getElementsByClassName('lsId').length;
+    document.getElementById('ls-licence-set-total').innerHTML = document.querySelectorAll('#licenceSets .lsId').length;
     document.getElementById('ls-licence-number-total').innerHTML = document.querySelectorAll("#licenceSets tbody tr").length;
     document.getElementById('ls-filename-total').innerHTML = document.getElementsByClassName('filenameSet').length;
 }

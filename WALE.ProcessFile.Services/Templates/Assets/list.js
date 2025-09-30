@@ -257,7 +257,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
             let abstractionLimits = linkedLicence.fromSection.length >= 1 && linkedLicence.fromSection.indexOf("AbstractionLimits") > -1;
             
-            let styledLicenceNumber = backLink ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
+            let styledLicenceNumber = backLink && false ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
             let text = backLink ? 'Implicit back link' : linkedLicence.fromSection[0];
             let color = backLink ? "#888" : "rebeccapurple";
             

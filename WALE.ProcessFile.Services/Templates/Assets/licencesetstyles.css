@@ -11,13 +11,14 @@
 
 #cols > div {
     display: inline-block;
-    overflow: hidden;
     padding: 0;
     margin: 0;
     font-size: 12pt;
     vertical-align: top;
     height: 100%;
     border-left: 2px solid #F6F6F6;
+    resize: horizontal;
+    overflow: auto;
 }
 
 #cols > div#col0 {

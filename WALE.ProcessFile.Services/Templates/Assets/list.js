@@ -305,7 +305,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 }
                 
                 let html1 = "<span class='lsId' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
-                    + item.filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
+                    + item.filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
                     + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
                 
                 licenceSetsSb.push('<li>' + html1 + '</li>');
@@ -456,7 +456,7 @@ function populateLicenceSetTable(dataSorted) {
         let html =
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
-                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "&licenceSetId= " + licenceSetId + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";
@@ -718,14 +718,14 @@ function openIframe(filename) {
     document.getElementById('iframe' + window.iframeCounter).src = 'report.html?filename=' + filename + '&hideBackLink=true';
 }
 
-function openIframeSet(filename) {
+function openIframeSet(filename, licenceSetId) {
     let iframeOpen = document.getElementById('iframeDiv' + window.iframeCounter)?.style.display === 'block';
     if (iframeOpen) window.iframeCounter += 1;
     
     setupIframe(window.iframeCounter);
 
     document.getElementById('iframeDiv' + window.iframeCounter).style.display = 'block';
-    document.getElementById('iframe' + window.iframeCounter).src = 'licencesetreport.html?filename=' + filename + '&hideBackLink=true';
+    document.getElementById('iframe' + window.iframeCounter).src = 'licencesetreport.html?filename=' + filename + '&licenceSetId=' + licenceSetId + '&hideBackLink=true';
 }
 
 let licencesLinkEle = document.getElementById('licencesLink');

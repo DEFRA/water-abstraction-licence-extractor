@@ -90,10 +90,10 @@ function sortBy(filterField) {
     
     window.sortedBy = filterField;
     
-    populateTable(undefined, undefined, undefined, filterField, sortedAsc);
+    populateTable(undefined, undefined, undefined, filterField, sortedAsc, undefined);
 }
 
-function filterData(dataSorted, filterType, filterField, filterValue) {
+function filterData(dataSorted, filterType, filterField, filterValue, filterSubField) {
     let returnData = [];
     
     for (let i = 0; i < dataSorted.length; i++) {
@@ -144,6 +144,10 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
                 if (filterValue !== 'All' && value.indexOf(filterValue) === -1) {
                     continue;
                 }
+            } else if (filterType === 'ArrayValueMapped') {
+                if (filterValue !== 'All' && value.map(x => x[filterSubField]).indexOf(filterValue) === -1) {
+                    continue;
+                }
             } else if (value !== filterValue) {
                 continue;
             }
@@ -191,7 +195,7 @@ function licenceInList(licenceNumber) {
     return false;
 }
 
-function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
+function populateTable(filterField, filterValue, filterType, sortByField, sortAsc, filterSubField) {
     const tbody1 = document.querySelector("#licencesTable tbody");
     let htmlSb = [];
 
@@ -211,7 +215,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         }
     }
     
-    dataSorted = filterData(dataSorted, filterType, filterField, filterValue);
+    dataSorted = filterData(dataSorted, filterType, filterField, filterValue, filterSubField);
     window.dataFiltered = dataSorted;
     setTotals();
     
@@ -571,6 +575,7 @@ function dashesIfNullOrEmpty(str) {
 function addChangeEvent(select) {
     let dataField = select.getAttribute("data-field");
     let dataType = select.getAttribute("data-type");
+    let dataSubField = select.getAttribute("data-subfield");
     
     select.addEventListener("change", function (event) {
         if (window.resetting) {
@@ -578,7 +583,7 @@ function addChangeEvent(select) {
         }
 
         resetFilters(select);
-        populateTable(dataField, event.target.value, dataType, null);
+        populateTable(dataField, event.target.value, dataType, null, null, dataSubField);
     });
 }
 
@@ -685,7 +690,7 @@ function populateDropdowns() {
         let ary = item.licenceSets;
 
         for (let j = 1; j < ary.length; j++) {
-            let value = ary[j];
+            let value = ary[j].shortLicenceSetId;
             
             if (uniqueValues.indexOf(value) === -1) {
                 uniqueValues.push(value);

@@ -232,11 +232,6 @@ distinctLicenceSets = distinctLicenceSets
     .ThenBy(x => x.LicenceSetId)
     .ToList();
 
-foreach (var distinctLicenceSet in distinctLicenceSets)
-{
-    
-}
-
 var fileNumber = 1;
 
 foreach (var licenceSetGroup in initialLicenceSetGroups)
@@ -272,7 +267,7 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         }
 
         var type = licenceSetForLicence.LicenceSetTypes[0];
-
+        
         if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
         {
             type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;

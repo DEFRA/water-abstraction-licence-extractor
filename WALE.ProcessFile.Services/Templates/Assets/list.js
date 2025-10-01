@@ -409,7 +409,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 }
 
 function populateLicenceSetTable(dataSorted) {
-    let uniqueValues = [];
+    let licenceSets = [];
     
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
@@ -418,18 +418,21 @@ function populateLicenceSetTable(dataSorted) {
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];
 
-            if (uniqueValues.find(uv => uv.licenceSetId === value.licenceSetId) === undefined) {
-                uniqueValues.push(value);
+            if (licenceSets.find(uv => uv.licenceSetId === value.licenceSetId) === undefined) {
+                licenceSets.push(value);
             }
         }
     }
-
+    
+    let topLevelLicenceSets = getTopLevelLicenceSets(licenceSets);
+    licenceSets = topLevelLicenceSets;
+    
     let htmlSb = [];
     
-    for (let i = 0; i < uniqueValues.length; i++) {
+    for (let i = 0; i < licenceSets.length; i++) {
         let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
         let backgroundCss = "background-color: " + color;
-        let licenceSet = uniqueValues[i];
+        let licenceSet = licenceSets[i];
         let licenceSetId = licenceSet.licenceSetId;
         
         let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
@@ -483,6 +486,61 @@ function populateLicenceSetTable(dataSorted) {
     tbody2.innerHTML = htmlSb.join('');
 
     setLicenceSetTotals();
+}
+
+function getTopLevelLicenceSets(licenceSets) {
+    let topLevelLicenceSets = [];
+    let remainingLicenceSets = [];
+
+    licenceSets.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+    
+    for (let i = 0; i < licenceSets.length; i++) {
+        let licenceSetA = licenceSets[i];
+        let shortLicenceIdsA = licenceSetA.shortLicenceSetId.split('-');
+        let bContainsLicenceNotInA = false;
+
+        for (let j = 0; j < licenceSets.length; j++) {
+            if (i === j) {
+                continue;
+            }
+
+            let licenceSetB = licenceSets[j];
+            let shortLicenceIdsB = licenceSetB.shortLicenceSetId.split('-');
+
+            if (shortLicenceIdsA.length === shortLicenceIdsB.length) {
+                continue;
+            }
+            
+            for (let k = 0; k < shortLicenceIdsB.length; k++) {
+                let shortLicenceIdB = shortLicenceIdsB[k]
+
+                if (shortLicenceIdsA.indexOf(shortLicenceIdB) === -1) {
+                    bContainsLicenceNotInA = true;
+                    break;
+                }
+            }
+            
+            if (bContainsLicenceNotInA) {
+                break;
+            }
+        }
+
+        if (!bContainsLicenceNotInA) {
+            topLevelLicenceSets.push(licenceSetA);
+        } else {
+            remainingLicenceSets.push(licenceSetA);
+        }
+    }
+
+    if (topLevelLicenceSets.length > 0 && remainingLicenceSets.length > 0) {
+        for (let i = 0; i < topLevelLicenceSets.length; i++) {
+            let licenceSet = topLevelLicenceSets[i];
+
+            licenceSet.childLicences = getTopLevelLicenceSets(remainingLicenceSets);
+        }
+    }
+    
+    return topLevelLicenceSets;
 }
 
 function getLicencesInSet(dataSorted, licenceSetId) {

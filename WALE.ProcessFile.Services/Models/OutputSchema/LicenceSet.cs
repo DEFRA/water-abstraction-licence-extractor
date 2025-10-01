@@ -67,8 +67,8 @@ public class LicenceSet
             return outputSb.ToString();
         }
     }
-    
-    public LicenceSetType LicenceSetType { get; init; }
+
+    public LicenceSetType[] LicenceSetTypes { get; init; } = [];
     
     public AggregateSet[]? AggregateSets { get; init; } = [];
     

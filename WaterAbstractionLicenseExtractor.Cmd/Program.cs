@@ -271,7 +271,7 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
             continue;
         }
 
-        var type = licenceSetForLicence.LicenceSetType;
+        var type = licenceSetForLicence.LicenceSetTypes[0];
 
         if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
         {
@@ -378,7 +378,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         linkedLicences = outputLine.LinkedLicences ?? [],
         licenceSets = outputLine.LicenceSets?.Select(ls =>
         {
-            var licenceSetType = ls.LicenceSetType;
+            var licenceSetType = ls.LicenceSetTypes[0];
             var anyLicenceNotLinked = ls.Licences.Any(lsl =>
                 outputLine.LicenceNumber != lsl.LicenceNumber
                 && outputLine.LinkedLicences?

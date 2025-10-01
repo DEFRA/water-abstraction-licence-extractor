@@ -4051,12 +4051,12 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("NE0260034018-LV2019121120250331", licenceSets[0].LicenceSetId);
-        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
 
         var expectedLicenceSetId =
             "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN";
         Assert.Equal(expectedLicenceSetId, licenceSets[1].LicenceSetId);
-        Assert.Equal(LicenceSetType.AllLicencesExplicitlyReferencedAnywhere, licenceSets[1].LicenceSetType);
+        Assert.Equal([LicenceSetType.AllLicencesExplicitlyReferencedAnywhere], licenceSets[1].LicenceSetTypes);
 
         var agreedSchemaLicenceGroup = licenceSets[1];
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);

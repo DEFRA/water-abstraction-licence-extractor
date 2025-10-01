@@ -426,61 +426,31 @@ function populateLicenceSetTable(dataSorted) {
 
     setHierarchy(licenceSets);
     
-    var topLevel = getChildrenOf(licenceSets, null);
-    var level2 = getChildrenOf(licenceSets, topLevel[0].shortLicenceSetId);
-    
+    let topLevel = getChildrenOf(licenceSets, null);
     let htmlSb = [];
     
-    for (let i = 0; i < licenceSets.length; i++) {
-        let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
-        let backgroundCss = "background-color: " + color;
+    for (let i = 0; i < topLevel.length; i++) {
         let licenceSet = licenceSets[i];
-        let licenceSetId = licenceSet.licenceSetId;
-        
-        let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
-        let licenceInSet = licencesInSet[0];
-        
-        let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
-        
-        let imgsSb = [];
+        htmlSb = renderListRow(licenceSet, i, htmlSb, dataSorted, 0);
 
-        for (let j = 0; j < licencesInSet.length; j++) {
-            let item = licencesInSet[j];
-            
-            if (item.imagePath === undefined) {
-                imgsSb.push("<div style='display: inline-block; width: 57px; text-align: center; font-size: 80px; line-height: 60px; vertical-align: top; color: #EEE'>--</div>");
-            } else {
-                imgsSb.push("<img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' />");
+        let children = getChildrenOf(licenceSets, licenceSet);
+        
+        for (let j = 0; j < children.length; j++) {
+            let child = children[j];
+            htmlSb = renderListRow(child, j, htmlSb, dataSorted, 1);
+
+            let children2 = getChildrenOf(licenceSets, child);
+
+            for (let k = 0; k < children2.length; k++) {
+                let child2 = children2[k];
+                htmlSb = renderListRow(child2, k, htmlSb, dataSorted, 2);
+
+                let children3 = getChildrenOf(licenceSets, child2);
+                
+                if (children3.length > 0) {
+                    alert('Licence set at a lower level not showing');
+                }
             }
-        }
-        
-        let imgs = imgsSb.join('');
-        let licenceSetTypes = licenceSet.licenceSetTypes.join('</li><li>');
-        
-        let html =
-            "<tr style='" + backgroundCss + "'>" +
-                "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
-                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
-                    + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
-                    + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
-                "<td rowspan='" + licencesInSet.length + "'><ul><li>" + licenceSetTypes + "</li></ul></td>" +
-                "<td>" + licenceInSet.licenceNumber + "</td>" +
-                "<td>" + linkHtml + "</td>" +
-            "</tr>";
-
-        htmlSb.push(html);
-        
-        for (let j = 1; j < licencesInSet.length; j++) {
-            let licenceInSet = licencesInSet[j];
-            linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
-            
-            html =
-                "<tr style='" + backgroundCss + "'>" +
-                    "<td>" + licenceInSet.licenceNumber + "</td>" +
-                    "<td>" + linkHtml + "</td>" +
-                "</tr>";
-
-            htmlSb.push(html);
         }
     }
 
@@ -490,20 +460,74 @@ function populateLicenceSetTable(dataSorted) {
     setLicenceSetTotals();
 }
 
-function getChildrenOf(licenceSets, shortLicenceSetId) {
+function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
+    let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
+    let backgroundCss = "background-color: " + color;
+    let licenceSetId = licenceSet.licenceSetId;
+
+    let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
+    let licenceInSet = licencesInSet[0];
+
+    let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
+
+    let imgsSb = [];
+
+    for (let j = 0; j < licencesInSet.length; j++) {
+        let item = licencesInSet[j];
+
+        if (item.imagePath === undefined) {
+            imgsSb.push("<div style='display: inline-block; width: 57px; text-align: center; font-size: 80px; line-height: 60px; vertical-align: top; color: #EEE'>--</div>");
+        } else {
+            imgsSb.push("<img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' />");
+        }
+    }
+
+    let imgs = imgsSb.join('');
+    let licenceSetTypes = licenceSet.licenceSetTypes.join('</li><li class="ls-type">');
+
+    let html =
+        "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
+            "<td rowspan='" + licencesInSet.length + "'><div class='indentDiv'></div>" + imgs + "</td>" +
+            "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
+            + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
+            + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
+            "<td rowspan='" + licencesInSet.length + "'><ul><li class='ls-type'>" + licenceSetTypes + "</li></ul></td>" +
+            "<td>" + licenceInSet.licenceNumber + "</td>" +
+            "<td>" + linkHtml + "</td>" +
+        "</tr>";
+
+    htmlSb.push(html);
+
+    for (let j = 1; j < licencesInSet.length; j++) {
+        let licenceInSet = licencesInSet[j];
+        linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
+
+        html =
+            "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
+            "<td>" + licenceInSet.licenceNumber + "</td>" +
+            "<td>" + linkHtml + "</td>" +
+            "</tr>";
+
+        htmlSb.push(html);
+    }
+    
+    return htmlSb;
+}
+
+function getChildrenOf(licenceSets, licenceSet) {
     return licenceSets.filter(x => {
-        if (!shortLicenceSetId) {
-            return x.parentLicences.length === 0;            
+        if (!licenceSet) {
+            return x.ancestors.length === 0;            
         }
 
-        if (x.parentLicences.length === 0) {
+        if (x.ancestors.length === 0) {
             return false;
         }
         
-        x.parentLicences.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
-        let shortestId = x.parentLicences[x.parentLicences.length - 1];
+        x.ancestors.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+        let shortestId = x.ancestors[x.ancestors.length - 1];
         
-        return shortestId.shortLicenceSetId === shortLicenceSetId;
+        return shortestId.shortLicenceSetId === licenceSet.shortLicenceSetId;
     });
 }
 
@@ -513,12 +537,12 @@ function setHierarchy(licenceSets) {
     for (let i = 0; i < licenceSets.length; i++) {
         let licenceSet = licenceSets[i];
 
-        if (licenceSet.childLicences === undefined) {
-            licenceSet.childLicences = [];
+        if (licenceSet.descendants === undefined) {
+            licenceSet.descendants = [];
         }
 
-        if (licenceSet.parentLicences === undefined) {
-            licenceSet.parentLicences = [];
+        if (licenceSet.ancestors === undefined) {
+            licenceSet.ancestors = [];
         }
     }
     
@@ -551,12 +575,12 @@ function setHierarchy(licenceSets) {
             if (!bContainsLicenceNotInA) {
                 // A is a parent of B
                 
-                if (licenceSetA.childLicences.find(cl => cl.shortLicenceSetId === licenceSetB.shortLicenceSetId) === undefined) {
-                    licenceSetA.childLicences.push(licenceSetB);
+                if (licenceSetA.descendants.find(cl => cl.shortLicenceSetId === licenceSetB.shortLicenceSetId) === undefined) {
+                    licenceSetA.descendants.push(licenceSetB);
                 }
 
-                if (licenceSetB.parentLicences.find(cl => cl.shortLicenceSetId === licenceSetA.shortLicenceSetId) === undefined) {
-                    licenceSetB.parentLicences.push(licenceSetA);
+                if (licenceSetB.ancestors.find(cl => cl.shortLicenceSetId === licenceSetA.shortLicenceSetId) === undefined) {
+                    licenceSetB.ancestors.push(licenceSetA);
                 }
             }
         }
@@ -685,7 +709,7 @@ function setTotals() {
 
 function setLicenceSetTotals() {
     document.getElementById('ls-licence-set-total').innerHTML = document.querySelectorAll('#licenceSets .lsId').length;
-    document.getElementById('ls-types-total').innerHTML = "TODO";
+    document.getElementById('ls-types-total').innerHTML = document.querySelectorAll('.ls-type').length;
     document.getElementById('ls-licence-number-total').innerHTML = document.querySelectorAll("#licenceSets tbody tr").length;
     document.getElementById('ls-filename-total').innerHTML = document.getElementsByClassName('filenameSet').length;
 }

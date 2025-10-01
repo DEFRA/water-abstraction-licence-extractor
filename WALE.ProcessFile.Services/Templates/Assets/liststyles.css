@@ -66,3 +66,36 @@ h1 a.selected {
 #licenceSets {
   display: none;
 }
+
+#licenceSets tbody tr td {
+  position: relative;
+}
+
+#licenceSets tbody tr td .indentDiv {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: #FFF;
+  font-size: 0;
+}
+
+.indent-level-1 td {
+  padding-left: 50px;
+  /*background-color: antiquewhite;*/
+}
+
+#licenceSets tbody tr.indent-level-1 div.indentDiv {
+  width: 40px;
+}
+
+.indent-level-2 td {
+  padding-left: 100px;
+  /*background-color: mintcream;*/
+}
+
+#licenceSets tbody tr.indent-level-2 div.indentDiv {
+  width: 90px;
+}

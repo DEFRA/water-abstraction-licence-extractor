@@ -232,6 +232,11 @@ distinctLicenceSets = distinctLicenceSets
     .ThenBy(x => x.LicenceSetId)
     .ToList();
 
+foreach (var distinctLicenceSet in distinctLicenceSets)
+{
+    
+}
+
 var fileNumber = 1;
 
 foreach (var licenceSetGroup in initialLicenceSetGroups)
@@ -248,11 +253,11 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         licence.LicenceNumber!,
         distinctLicenceSets);
 
-    var newLicenceSetIds = new List<string>(licence.LicenceSetIds);
+    var newLicenceSetIds = new List<LicenceSetReference>(licence.LicenceSets);
     
     foreach (var licenceSetForLicence in allLicenceSetsForLicence)
     {
-        if (newLicenceSetIds.Contains(licenceSetForLicence.LicenceSetId))
+        if (newLicenceSetIds.Any(lsi => lsi.LicenceSetId == licenceSetForLicence.LicenceSetId))
         {
             continue;
         }
@@ -265,11 +270,26 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         {
             continue;
         }
+
+        var type = licenceSetForLicence.LicenceSetType;
+
+        if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
+        {
+            type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+        }
+        else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
+        {
+            type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
+        }
         
-        newLicenceSetIds.Add(licenceSetForLicence.LicenceSetId);
+        newLicenceSetIds.Add(new()
+        {
+            LicenceSetId = licenceSetForLicence.LicenceSetId,
+            LicenceSetType = type
+        });
     }
     
-    licence.LicenceSetIds = newLicenceSetIds.ToArray();
+    licence.LicenceSets = newLicenceSetIds.ToArray();
     
     var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
     Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
@@ -489,13 +509,13 @@ File.WriteAllText(nodeGraphDataFile,
 
 return;
 
-List<LicenceSet> GetLicenceSetsForLicenceSetIds(List<string> licenceSetIds, IReadOnlyList<LicenceSet> licenceSets)
+List<LicenceSet> GetLicenceSetsForLicenceSetIds(List<LicenceSetReference> licenceSetIds, IReadOnlyList<LicenceSet> licenceSets)
 {
     var returnList = new List<LicenceSet>();
 
     foreach (var licenceSet in licenceSets)
     {
-        if (!licenceSetIds.Contains(licenceSet.LicenceSetId))
+        if (licenceSetIds.All(lsi => lsi.LicenceSetId != licenceSet.LicenceSetId))
         {
             continue;
         }
@@ -608,8 +628,8 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
     var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
     var issuer = licence.LicenceVersion.Issuer;
 
-    var licenceSets = licence.LicenceSetIds
-        .Select(lsi => allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi))
+    var licenceSets = licence.LicenceSets
+        .Select(lsi => allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId))
         .Where(ls => ls != null)
         .Select(ls => ls!)
         .ToList();

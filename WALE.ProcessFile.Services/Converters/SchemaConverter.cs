@@ -234,8 +234,8 @@ public static class SchemaConverter
         string pdfFolder)
     {
         var returnList = new List<LicenceSet>();
-        
         var primaryLicence = ToLicence(matchesResult);
+        
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
         var linkedLicences = await GetLinkedLicencesAsync(
@@ -316,18 +316,26 @@ public static class SchemaConverter
             
             AddMissingBackLinks([[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]], false);
 
-            var newLicenceSetIds = new List<string>
+            var newLicenceSetIds = new List<LicenceSetReference>
             {
-                singleLicenceOnlySet.LicenceSetId
+                new()
+                {
+                    LicenceSetId = singleLicenceOnlySet.LicenceSetId,
+                    LicenceSetType =  singleLicenceOnlySet.LicenceSetType
+                }
             };
 
             if (explicitlyReferencedLicenceSet != null)
             {
-                newLicenceSetIds.Add(explicitlyReferencedLicenceSet.LicenceSetId);
+                newLicenceSetIds.Add(new ()
+                {
+                    LicenceSetId = explicitlyReferencedLicenceSet.LicenceSetId,
+                    LicenceSetType =  explicitlyReferencedLicenceSet.LicenceSetType
+                });
             }
             
             // Add LicenceSetIds to licence
-            licence.LicenceSetIds = newLicenceSetIds.ToArray();
+            licence.LicenceSets = newLicenceSetIds.ToArray();
         }
         
         return returnList;
@@ -415,12 +423,16 @@ public static class SchemaConverter
                         
                         returnList.Add(implicitLicenceSet);
 
-                        var newLicenceSetIds = new List<string>(licence.LicenceSetIds)
+                        var newLicenceSetIds = new List<LicenceSetReference>(licence.LicenceSets)
                         {
-                            implicitLicenceSet.LicenceSetId
+                            new()
+                            {
+                                LicenceSetId = implicitLicenceSet.LicenceSetId,
+                                LicenceSetType = implicitLicenceSet.LicenceSetType
+                            }
                         };
                         
-                        licence.LicenceSetIds = newLicenceSetIds.ToArray();
+                        licence.LicenceSets = newLicenceSetIds.ToArray();
                     }
                 }
             }

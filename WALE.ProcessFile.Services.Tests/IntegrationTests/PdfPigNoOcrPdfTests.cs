@@ -4069,9 +4069,9 @@ public class PdfPigNoOcrPdfTests
         // For primary licence
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
-        Assert.Equal(2, agreedSchemaLicence.LicenceSetIds.Length);
-        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSetIds[0]);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[1]);
+        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
+        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
@@ -4090,9 +4090,9 @@ public class PdfPigNoOcrPdfTests
         // For second licence
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[1];
         
-        Assert.Equal(2, agreedSchemaLicence.LicenceSetIds.Length);
-        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSetIds[0]);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[1]);
+        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
+        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
@@ -4116,9 +4116,9 @@ public class PdfPigNoOcrPdfTests
         // For third licence
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[2];
         
-        Assert.Equal(2, agreedSchemaLicence.LicenceSetIds.Length);
-        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSetIds[0]);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSetIds[1]);
+        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
+        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.NotFound, agreedSchemaLicence.Status);

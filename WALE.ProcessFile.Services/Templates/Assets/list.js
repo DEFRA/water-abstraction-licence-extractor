@@ -457,6 +457,7 @@ function populateLicenceSetTable(dataSorted) {
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
                 "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'>TODO</td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";
@@ -603,8 +604,9 @@ function setTotals() {
     document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
 }
 
-function setLicenceSetTotals() {    
+function setLicenceSetTotals() {
     document.getElementById('ls-licence-set-total').innerHTML = document.querySelectorAll('#licenceSets .lsId').length;
+    document.getElementById('ls-types-total').innerHTML = "TODO";
     document.getElementById('ls-licence-number-total').innerHTML = document.querySelectorAll("#licenceSets tbody tr").length;
     document.getElementById('ls-filename-total').innerHTML = document.getElementsByClassName('filenameSet').length;
 }

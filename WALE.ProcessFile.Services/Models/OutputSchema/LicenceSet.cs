@@ -68,7 +68,7 @@ public class LicenceSet
         }
     }
 
-    public LicenceSetType[] LicenceSetTypes { get; init; } = [];
+    public LicenceSetType[] LicenceSetTypes { get; set; } = [];
     
     public AggregateSet[]? AggregateSets { get; init; } = [];
     

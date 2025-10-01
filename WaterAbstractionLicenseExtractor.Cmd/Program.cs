@@ -276,10 +276,22 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
         {
             type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+
+            if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+            {
+                var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+            }
         }
         else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
         {
             type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
+            
+            if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+            {
+                var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+            }
         }
         
         newLicenceSetIds.Add(new()

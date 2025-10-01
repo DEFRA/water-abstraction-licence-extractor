@@ -81,7 +81,7 @@ for (var idx = 0; idx < concurrentCount; idx++)
     pdfDataExtractors.Add(pdfDataExtractor);
 }
 
-var outputLines = new List<OutputLine>();
+var outputLines = new List<IntermediateOutputLicence>();
 var processCount = 1;
 var completeNumber = 1;
 
@@ -350,7 +350,7 @@ var nodeIndex = 1;
 var nodesDictionaries = new List<Dictionary<string, object>>();
 var linksDictionaries = new List<Dictionary<string, object>>();
 
-var listJs = new List<ListRow>();
+var listJs = new List<OutputListDataItem>();
 
 foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
 {
@@ -366,14 +366,8 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         resultFileStringBuilder);
     
     var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
-    /*var filenameForScreen = outputLine.Filename;
-
-    if (filenameForScreen?.Length > 30)
-    {
-        filenameForScreen = filenameForScreen[..30] + "-<br>" + filenameForScreen[30..];
-    }*/
     
-    var listRow = new ListRow
+    var listRow = new OutputListDataItem
     {
         imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
         filename = filename,
@@ -408,11 +402,13 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
                 licenceSetType = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
             }
             
-            return new ListRowLicenceSet
+            return new OutputListDataItemLicenceSet
             {
                 LicenceSetId = ls.LicenceSetId,
                 ShortLicenceSetId = ls.ShortLicenceSetId,
+                LicenceSetTypes = ls.LicenceSetTypes,
                 LicenceSetType = licenceSetType
+
             };
         }).ToArray() ?? []
     };
@@ -618,7 +614,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     }
 }
 
-static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets, JsonSerializerOptions jsonOptions)
+static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets, JsonSerializerOptions jsonOptions)
 {
     var licenceHolder = licence.NoneSchemaData.TryGetValue("issuedTo", out var value4)
         ? (string)value4 : null;
@@ -646,7 +642,7 @@ static OutputLine ToOutputLine(Licence licence, DateTime dtStart, int completeNu
         .Select(ls => ls!)
         .ToList();
     
-    return new OutputLine
+    return new IntermediateOutputLicence
     {
         LineNumber = completeNumber,
         StartNumber = fileNumber,

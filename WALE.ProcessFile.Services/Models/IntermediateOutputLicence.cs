@@ -2,7 +2,7 @@ using WALE.ProcessFile.Services.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models;
 
-public class OutputLine
+public class IntermediateOutputLicence
 {
     public int LineNumber;
     public int StartNumber;

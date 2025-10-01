@@ -2,7 +2,7 @@ using WALE.ProcessFile.Services.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models;
 
-public class ListRow
+public class OutputListDataItem
 {
     public string? imagePath { get; set; }
     public string? filename{ get; set; }
@@ -17,5 +17,5 @@ public class ListRow
     public string? issuer { get; set; }
     public bool meansFound { get; set; }
     public LinkedLicence[]? linkedLicences { get; set; }
-    public ListRowLicenceSet[]? licenceSets { get; set; }
+    public OutputListDataItemLicenceSet[]? licenceSets { get; set; }
 }

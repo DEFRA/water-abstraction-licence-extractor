@@ -410,7 +410,6 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
 function populateLicenceSetTable(dataSorted) {
     let uniqueValues = [];
-    let uniqueShortValues = [];
     
     for (let i = 0; i < dataSorted.length; i++) {
         let item = dataSorted[i];
@@ -419,9 +418,8 @@ function populateLicenceSetTable(dataSorted) {
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j];
 
-            if (uniqueValues.indexOf(value.licenceSetId) === -1) {
-                uniqueValues.push(value.licenceSetId);
-                uniqueShortValues.push(value.shortLicenceSetId);
+            if (uniqueValues.find(uv => uv.licenceSetId === value.licenceSetId) === undefined) {
+                uniqueValues.push(value);
             }
         }
     }
@@ -431,15 +429,15 @@ function populateLicenceSetTable(dataSorted) {
     for (let i = 0; i < uniqueValues.length; i++) {
         let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
         let backgroundCss = "background-color: " + color;
-        let licenceSetId = uniqueValues[i];
-        let shortLicenceSetId = uniqueShortValues[i];
+        let licenceSet = uniqueValues[i];
+        let licenceSetId = licenceSet.licenceSetId;
         
         let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
         let licenceInSet = licencesInSet[0];
         
         let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
         
-        var imgsSb = [];
+        let imgsSb = [];
 
         for (let j = 0; j < licencesInSet.length; j++) {
             let item = licencesInSet[j];
@@ -452,12 +450,15 @@ function populateLicenceSetTable(dataSorted) {
         }
         
         let imgs = imgsSb.join('');
+        let licenceSetTypes = licenceSet.licenceSetTypes.join('</li><li>');
         
         let html =
             "<tr style='" + backgroundCss + "'>" +
                 "<td rowspan='" + licencesInSet.length + "'>" + imgs + "</td>" +
-                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename=" + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span></td>" +
-                "<td rowspan='" + licencesInSet.length + "'>TODO</td>" +
+                "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
+                    + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
+                    + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
+                "<td rowspan='" + licencesInSet.length + "'><ul><li>" + licenceSetTypes + "</li></ul></td>" +
                 "<td>" + licenceInSet.licenceNumber + "</td>" +
                 "<td>" + linkHtml + "</td>" +
             "</tr>";

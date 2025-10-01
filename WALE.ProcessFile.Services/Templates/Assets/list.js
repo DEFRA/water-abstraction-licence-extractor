@@ -423,9 +423,11 @@ function populateLicenceSetTable(dataSorted) {
             }
         }
     }
+
+    setHierarchy(licenceSets);
     
-    let topLevelLicenceSets = getTopLevelLicenceSets(licenceSets);
-    licenceSets = topLevelLicenceSets;
+    var topLevel = getChildrenOf(licenceSets, null);
+    var level2 = getChildrenOf(licenceSets, topLevel[0].shortLicenceSetId);
     
     let htmlSb = [];
     
@@ -488,11 +490,37 @@ function populateLicenceSetTable(dataSorted) {
     setLicenceSetTotals();
 }
 
-function getTopLevelLicenceSets(licenceSets) {
-    let topLevelLicenceSets = [];
-    let remainingLicenceSets = [];
+function getChildrenOf(licenceSets, shortLicenceSetId) {
+    return licenceSets.filter(x => {
+        if (!shortLicenceSetId) {
+            return x.parentLicences.length === 0;            
+        }
 
+        if (x.parentLicences.length === 0) {
+            return false;
+        }
+        
+        x.parentLicences.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+        let shortestId = x.parentLicences[x.parentLicences.length - 1];
+        
+        return shortestId.shortLicenceSetId === shortLicenceSetId;
+    });
+}
+
+function setHierarchy(licenceSets) {
     licenceSets.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+
+    for (let i = 0; i < licenceSets.length; i++) {
+        let licenceSet = licenceSets[i];
+
+        if (licenceSet.childLicences === undefined) {
+            licenceSet.childLicences = [];
+        }
+
+        if (licenceSet.parentLicences === undefined) {
+            licenceSet.parentLicences = [];
+        }
+    }
     
     for (let i = 0; i < licenceSets.length; i++) {
         let licenceSetA = licenceSets[i];
@@ -507,7 +535,7 @@ function getTopLevelLicenceSets(licenceSets) {
             let licenceSetB = licenceSets[j];
             let shortLicenceIdsB = licenceSetB.shortLicenceSetId.split('-');
 
-            if (shortLicenceIdsA.length === shortLicenceIdsB.length) {
+            if (shortLicenceIdsA.length <= shortLicenceIdsB.length) {
                 continue;
             }
             
@@ -520,27 +548,19 @@ function getTopLevelLicenceSets(licenceSets) {
                 }
             }
             
-            if (bContainsLicenceNotInA) {
-                break;
+            if (!bContainsLicenceNotInA) {
+                // A is a parent of B
+                
+                if (licenceSetA.childLicences.find(cl => cl.shortLicenceSetId === licenceSetB.shortLicenceSetId) === undefined) {
+                    licenceSetA.childLicences.push(licenceSetB);
+                }
+
+                if (licenceSetB.parentLicences.find(cl => cl.shortLicenceSetId === licenceSetA.shortLicenceSetId) === undefined) {
+                    licenceSetB.parentLicences.push(licenceSetA);
+                }
             }
         }
-
-        if (!bContainsLicenceNotInA) {
-            topLevelLicenceSets.push(licenceSetA);
-        } else {
-            remainingLicenceSets.push(licenceSetA);
-        }
     }
-
-    if (topLevelLicenceSets.length > 0 && remainingLicenceSets.length > 0) {
-        for (let i = 0; i < topLevelLicenceSets.length; i++) {
-            let licenceSet = topLevelLicenceSets[i];
-
-            licenceSet.childLicences = getTopLevelLicenceSets(remainingLicenceSets);
-        }
-    }
-    
-    return topLevelLicenceSets;
 }
 
 function getLicencesInSet(dataSorted, licenceSetId) {

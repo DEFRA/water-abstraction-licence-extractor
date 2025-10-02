@@ -568,8 +568,7 @@ function setHierarchy(licenceSets) {
     for (let i = 0; i < licenceSets.length; i++) {
         let licenceSetA = licenceSets[i];
         let shortLicenceIdsA = licenceSetA.shortLicenceSetId.split('-');
-        let bContainsLicenceNotInA = false;
-
+        
         for (let j = 0; j < licenceSets.length; j++) {
             if (i === j) {
                 continue;
@@ -577,10 +576,12 @@ function setHierarchy(licenceSets) {
 
             let licenceSetB = licenceSets[j];
             let shortLicenceIdsB = licenceSetB.shortLicenceSetId.split('-');
-
+            
             if (shortLicenceIdsA.length <= shortLicenceIdsB.length) {
                 continue;
             }
+
+            let bContainsLicenceNotInA = false;
             
             for (let k = 0; k < shortLicenceIdsB.length; k++) {
                 let shortLicenceIdB = shortLicenceIdsB[k]

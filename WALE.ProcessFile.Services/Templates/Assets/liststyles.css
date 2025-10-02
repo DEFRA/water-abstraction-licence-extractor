@@ -84,7 +84,6 @@ h1 a.selected {
 
 .indent-level-1 td {
   padding-left: 50px;
-  /*background-color: antiquewhite;*/
 }
 
 #licenceSets tbody tr.indent-level-1 div.indentDiv {
@@ -93,9 +92,28 @@ h1 a.selected {
 
 .indent-level-2 td {
   padding-left: 100px;
-  /*background-color: mintcream;*/
 }
 
 #licenceSets tbody tr.indent-level-2 div.indentDiv {
   width: 90px;
+}
+
+.fullyEncompassedIn, {
+  color: forestgreen;
+}
+
+.allLicencesExplicitlyReferencedAnywhere {
+  color: black;
+}
+
+.allLicencesExplicitlyReferencedInLimits {
+  color: lightseagreen;
+}
+
+.allLicencesIncludingImplicitlyReferenced, .allLicencesImplicitlyReferencedInLimits {
+  color: orange;
+}
+
+.partiallyEncompassedIn {
+  color: hotpink;
 }

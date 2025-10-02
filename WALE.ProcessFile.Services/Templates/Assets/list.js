@@ -491,15 +491,20 @@ function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
     }
 
     let imgs = imgsSb.join('');
-    let licenceSetTypes = licenceSet.licenceSetTypes.join('</li><li class="ls-type">');
+    let licenceSetTypesSb = [];
 
+    for (let j = 0; j < licenceSet.licenceSetTypes.length; j++) {
+        let licenceSetType = licenceSet.licenceSetTypes[j];
+        licenceSetTypesSb.push("<li class='ls-type " + licenceSetType + "'>" + licenceSetType + "</li>")
+    }
+    
     let html =
         "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
             "<td rowspan='" + licencesInSet.length + "'><div class='indentDiv'></div>" + imgs + "</td>" +
             "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
             + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
             + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
-            "<td rowspan='" + licencesInSet.length + "'><ul><li class='ls-type'>" + licenceSetTypes + "</li></ul></td>" +
+            "<td rowspan='" + licencesInSet.length + "'><ul>" + licenceSetTypesSb.join('') + "</ul></td>" +
             "<td>" + licenceInSet.licenceNumber + "</td>" +
             "<td>" + linkHtml + "</td>" +
         "</tr>";

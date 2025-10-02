@@ -436,7 +436,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         issueDate = outputLine.IssueDate,
         issuer = outputLine.Issuer,
         meansFound = outputLine.MeansFound,
-        linkedLicences = outputLine.LinkedLicences ?? [],
+        linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
         licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
         {
             var ls = outputLine.LicenceSets!.First(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);

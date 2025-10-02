@@ -259,7 +259,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             
             let styledLicenceNumber = backLink && false ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
             let text = backLink ? 'Implicit back link' : linkedLicence.fromSection[0];
-            let color = backLink ? "#888" : "rebeccapurple";
+            let color = backLink ? "#888" : "black";
             
             if (abstractionLimits) {
                 color = "lightseagreen";
@@ -270,8 +270,6 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 linkedLicencesSb.push('<li title="' + text + '"><a style="color: ' + color + '" href="report.html?filename=' + linkedFilename
                     + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + styledLicenceNumber + '</a></li>');
             } else {
-                if (color === 'rebeccapurple') color = 'default';
-                
                 linkedLicencesSb.push('<li style="color: ' + color + '" title="' + text + '">' + styledLicenceNumber + '</li>');                
             }
         }
@@ -295,7 +293,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 let mixed = licenceSet.licenceSetType === "allLicencesIncludingImplicitlyReferenced";
                 let fullyEncompassedIn = licenceSet.licenceSetType === "fullyEncompassedIn";
                 
-                let color = backLink ? "#AAA" : "rebeccapurple";
+                let color = backLink ? "#AAA" : "black";
 
                 if (abstractionLimits) {
                     color = "lightseagreen";

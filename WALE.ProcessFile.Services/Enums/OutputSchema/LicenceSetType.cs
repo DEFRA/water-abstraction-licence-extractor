@@ -7,5 +7,6 @@ public enum LicenceSetType
     AllLicencesExplicitlyReferencedInLimits,
     AllLicencesImplicitlyReferencedInLimits,
     AllLicencesIncludingImplicitlyReferenced,
-    FullyEncompassedIn
+    FullyEncompassedIn,
+    PartiallyEncompassedIn
 }

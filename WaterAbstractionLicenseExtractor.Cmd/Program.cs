@@ -305,12 +305,15 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         
         if (setContainsLicence && !licenceContainsSet)
         {
+            var fullyEncompassedIn = licence.LinkedLicences
+                .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
+            
             var newLicenceSets = new List<LicenceSetReference>(licence.LicenceSets)
             {
                 new()
                 {
                     LicenceSetId = distinctLicenceSet.LicenceSetId,
-                    LicenceSetType = LicenceSetType.FullyEncompassedIn
+                    LicenceSetType = fullyEncompassedIn ? LicenceSetType.FullyEncompassedIn : LicenceSetType.PartiallyEncompassedIn
                 }
             };
 

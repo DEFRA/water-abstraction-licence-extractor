@@ -11,17 +11,15 @@ using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
-Console.WriteLine("Started");
+var pdfDataExtractors = new List<IPdfDataExtractorService>();
+var fileLicenceMapping = new Dictionary<string, string>();
 
 var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
-
 var regenerateMappingJson = bool.Parse(Environment.GetEnvironmentVariable("REGENERATE_MAPPING_JSON")
     ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
-
 var loadAiJs = bool.Parse(Environment.GetEnvironmentVariable("LOAD_AI_JS")
     ?? throw new NullReferenceException("LOAD_AI_JS"));
-
 var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
     ?? throw new NullReferenceException("PdfFolderPath");
 var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
@@ -33,548 +31,388 @@ var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
 var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
     ?? throw new NullReferenceException("CacheFolder");
 
-const bool refreshCache = false;
-
-if (refreshCache)
-{
-    // TODO clear out the Cache directory
-}
-
-var jsonOptions = new JsonSerializerOptions
-{
-    WriteIndented = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    Converters =
-    {
-        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-    }
-};
-
-Directory.CreateDirectory(outputFolder);
-Directory.CreateDirectory(cacheFolder);
-
-var pdfDataExtractors = new List<IPdfDataExtractorService>();
-
-for (var idx = 0; idx < concurrentCount; idx++)
-{
-    var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
-
-    var tesseractOcr = new TesseractOcrDataExtractorService(
-        Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-            ?? throw new NullReferenceException("TESSDATA_PREFIX"));
-
-    var azureAiServices = new AzureAiVisionOcrDataExtractorService(
-        Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
-            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
-        Environment.GetEnvironmentVariable("AzureAIVisionKey")
-            ?? throw new NullReferenceException("AzureAIVisionKey"));
-
-    var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
-        pdfPigNoOcr,
-        [
-            tesseractOcr,
-            azureAiServices
-        ],
-        pdfFolderPath);
-
-    pdfDataExtractors.Add(pdfDataExtractor);
-}
-
-var outputLines = new List<IntermediateOutputLicence>();
-var processCount = 1;
-var completeNumber = 1;
-
-var fileLicenceMapping = new Dictionary<string, string>();
-
-var fileMappingContents = File.Exists(fileMappingPath)
-    ? File.ReadAllText(fileMappingPath)
-        .Replace("\r", string.Empty)
-        .Split('\n')
-    : [];
-
-Copy(reportTemplatePath, outputFolder);
-
-var indexPath = $"{outputFolder}index.html";
-
-var aiFiles = Directory.GetFiles("Data");
-
-foreach (var aiFile in aiFiles)
-{
-    if (!aiFile.EndsWith(".js"))
-    {
-        continue;    
-    }
-    
-    var aiFilePath = aiFile.Split('/').Last().Replace(".js", string.Empty);
-    
-    Directory.CreateDirectory($"{outputFolder}{aiFilePath}");
-    File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
-}
-
-File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
-File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
-File.Move($"{outputFolder}list-template.html", indexPath, true);
-
-var indexHtml = await File.ReadAllTextAsync(indexPath);
-indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
-
-await File.WriteAllTextAsync(indexPath, indexHtml);
-
-var count = 0;
-foreach (var line in fileMappingContents)
-{
-    if (count++ == 0)
-    {
-        continue;
-    }
-    
-    var parts = line.Split(',');
-    var licenceNumber = parts[1];
-    var filename = parts[0].Split('/').Last();
-
-    if (!fileLicenceMapping.TryAdd(licenceNumber, filename))
-    {
-        fileLicenceMapping[licenceNumber] = filename;
-    }
-}
-
-var initialLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
-
-try
-{
-    var processingTasks = new List<Task<IReadOnlyList<LicenceSet>>>();
-    
-    foreach (var pdfFilePath in GetPdfPaths())
-    {
-        processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping));
-
-        if (processingTasks.Count == concurrentCount)
-        {
-            var licenceSetsTask = await Task.WhenAny(processingTasks);
-            processingTasks.Remove(licenceSetsTask);
-
-            var licenceSets = await licenceSetsTask;
-            if (licenceSets.Count <= 0) continue;
-            
-            initialLicenceSetGroups.Add(licenceSets);
-        }
-    }
-
-    if (processingTasks.Count > 0)
-    {
-        await Task.WhenAll(processingTasks);
-
-        foreach (var processingTask in processingTasks)
-        {
-            var licenceSet = await processingTask;
-            if (licenceSet.Count <= 0) continue;
-            
-            initialLicenceSetGroups.Add(licenceSet);
-        }
-    }
-
-    foreach (var pdfDataExtractor in pdfDataExtractors)
-    {
-        pdfDataExtractor.Dispose();
-    }
-}
-catch (Exception e)
-{
-    Console.WriteLine(e);
-    throw;
-}
-
-var distinctLicenceSets = new List<LicenceSet>();
-
-foreach (var licenceSetGroup in initialLicenceSetGroups)
-{
-    foreach (var licenceSet in licenceSetGroup)
-    {
-        if (distinctLicenceSets.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
-        {
-            continue;
-        }
-        
-        distinctLicenceSets.Add(licenceSet);
-    }
-}
-
-var allLicences = new List<Licence>();
-
-foreach (var distinctLicenceSet in distinctLicenceSets)
-{
-    foreach (var licence in distinctLicenceSet.Licences)
-    {
-        if (allLicences.Any(al => al.LicenceNumber == licence.LicenceNumber))
-        {
-            continue;
-        }
-        
-        allLicences.Add(licence);
-    }
-}
-
-var newImplicitSets = SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true);
-
-foreach (var licenceSet in newImplicitSets)
-{
-    if (distinctLicenceSets.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
-    {
-        continue;
-    }
-    
-    distinctLicenceSets.Add(licenceSet);
-}
-
-distinctLicenceSets = distinctLicenceSets
-    .OrderBy(x => x.LicenceSetId.Length)
-    .ThenBy(x => x.LicenceSetId)
-    .ToList();
-
-var fileNumber = 1;
-
-foreach (var licenceSetGroup in initialLicenceSetGroups)
-{
-    var licenceSetGroupUpdated = licenceSetGroup.ToList();
-
-    if (licenceSetGroupUpdated.Count == 0 || licenceSetGroupUpdated.First().Licences.Length == 0)
-    {
-        continue;
-    }
-    
-    var licence1 = licenceSetGroupUpdated.First().Licences.First();
-    var allLicenceSetsForLicence = GetAllLicenceSetsForLicence(
-        licence1.LicenceNumber!,
-        distinctLicenceSets);
-
-    var newLicenceSetIds = new List<LicenceSetReference>(licence1.LicenceSets);
-    
-    foreach (var licenceSetForLicence in allLicenceSetsForLicence)
-    {
-        if (newLicenceSetIds.Any(lsi => lsi.LicenceSetId == licenceSetForLicence.LicenceSetId))
-        {
-            continue;
-        }
-
-        var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
-            .All(l => licence1.LicenceNumber == l.LicenceNumber
-                || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
-        
-        if (!allLinkedLicenceOfLicence)
-        {
-            continue;
-        }
-        
-        var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
-            .All(l => licence1.LicenceNumber == l.LicenceNumber
-                || licence1.LinkedLicences.Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true).Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
-        
-        var type = licenceSetForLicence.LicenceSetTypes[0];
-
-        if (!allLinkedLicenceOfLicenceExplicit)
-        {
-            if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
-            {
-                type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
-
-                if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
-                {
-                    var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
-                    licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
-                }
-            }
-            else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
-            {
-                type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
-
-                if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
-                {
-                    var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
-                    licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
-                }
-            }
-        }
-
-        newLicenceSetIds.Add(new()
-        {
-            LicenceSetId = licenceSetForLicence.LicenceSetId,
-            LicenceSetType = type
-        });
-    }
-    
-    foreach (var distinctLicenceSet in distinctLicenceSets)
-    {
-        var setContainsLicence = distinctLicenceSet.Licences.Any(l => l.LicenceNumber == licence1.LicenceNumber);
-        
-        if (setContainsLicence)
-        {
-            var licenceContainsSet = newLicenceSetIds.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
-            
-            if (!licenceContainsSet)
-            {
-                var fullyEncompassedIn = licence1.LinkedLicences
-                    .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
-                
-                var type = fullyEncompassedIn
-                    ? LicenceSetType.FullyEncompassedIn
-                    : LicenceSetType.PartiallyEncompassedIn;
-
-                var toAdd = new LicenceSetReference
-                {
-                    LicenceSetId = distinctLicenceSet.LicenceSetId,
-                    LicenceSetType = type
-                };
-
-                newLicenceSetIds.Add(toAdd);
-
-                if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
-                {
-                    var dls = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { type };
-                    distinctLicenceSet.LicenceSetTypes = dls.ToArray();
-                }
-            }
-
-            var licencesLicenceSet =
-                newLicenceSetIds.First(x => x.LicenceSetId == distinctLicenceSet.LicenceSetId); // TODO should be single, but that errors for some reaosn in some circumstances
-            
-            var licencesLicenceSetType = licencesLicenceSet.LicenceSetType;
-            var licenceSetContainsType = distinctLicenceSet.LicenceSetTypes.Contains(licencesLicenceSetType);
-
-            if (!licenceSetContainsType)
-            {
-                var ndlst = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { licencesLicenceSetType };
-                distinctLicenceSet.LicenceSetTypes = ndlst.ToArray();
-            }
-        }
-    }
-    
-    licence1.LicenceSets = newLicenceSetIds.ToArray();
-    
-    var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence1.Filename!);
-    Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
-    
-    var licenceJson = JsonHelper.GetAsString(licence1);
-    
-    File.WriteAllText(
-        $"{outputFolder}/{filenameOnlyNoExtension}/licence.jsonp",
-        $"var data2 = {licenceJson}");
-
-    licenceSetGroupUpdated = GetLicenceSetsForLicenceSetIds(newLicenceSetIds, distinctLicenceSets);
-    var licenceSetsJson = JsonHelper.GetAsString(licenceSetGroupUpdated);
-    
-    File.WriteAllText(
-        $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
-        $"var licenceSets = {licenceSetsJson}");
-    
-    var outputLine = ToOutputLine(
-        licence1,
-        DateTime.Now,
-        completeNumber++,
-        fileNumber++,
-        distinctLicenceSets,
-        jsonOptions);
-    
-    outputLines.Add(outputLine);
-}
-
-var resultFileStringBuilder = new StringBuilder(
-    "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
-    "MatchedLabelPosition,LicenceNumber,LimitsFound,LinkedLicenceNumbers,LinkedLicenceNumbersExistInDataset");
-
-var mappingFileStringBuilder = new StringBuilder(
-    "Filename,LicenceNumber");
-
-var filenameToLicenceNumberMap = new Dictionary<string, string>();
-var licenceNumberToFilenameMap = new Dictionary<string, string>();
-var fileCount = 1;
-
-var licenceNumberFoundCount = 0;
-var licenceHolderFoundCount = 0;
-var scannedCount = 0;
-var purposesFoundCount = 0;
-var pointsFoundCount = 0;
-var limitsFoundCount = 0;
-var aggregatesFoundCount = 0;
-var issueDateFoundCount = 0;
-var issuerFoundCount = 0;
-var linkedLicenceNumbersFoundCount = 0;
-var meansFoundCount = 0;
-
-var nodeIndex = 1;
-var nodesDictionaries = new List<Dictionary<string, object>>();
-var linksDictionaries = new List<Dictionary<string, object>>();
-
-var listJs = new List<OutputListDataItem>();
-
-foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
-{
-    var anyLinkedLicenceNumbers = outputLine.LinkedLicences?
-        .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln.LicenceNumber) > 0);
-
-    Log(
-        $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
-        $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
-        $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
-        $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
-        $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
-        resultFileStringBuilder);
-    
-    var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
-    
-    var listRow = new OutputListDataItem
-    {
-        imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
-        filename = filename,
-        licenceNumber = $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
-        licenceHolder = $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
-        purposes = outputLine.Purposes,
-        points = outputLine.Points,
-        limitsCount = outputLine.LimitsCount,
-        aggregatesCount = outputLine.AggregatesCount,
-        ocr = outputLine.Ocr == "OCR",
-        issueDate = outputLine.IssueDate,
-        issuer = outputLine.Issuer,
-        meansFound = outputLine.MeansFound,
-        linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
-        licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
-        {
-            var ls = outputLine.LicenceSets!.First(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
-            var licenceSetType = lsr.LicenceSetType;
-            
-            /*var anyLicenceNotLinked = ls.Licences.Any(lsl =>
-                outputLine.LicenceNumber != lsl.LicenceNumber
-                && outputLine.LinkedLicences?
-                    .Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
-                    .Select(ll => ll.LicenceNumber)
-                    .Contains(lsl.LicenceNumber) != true);
-            
-            if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedInLimits && anyLicenceNotLinked)
-            {
-                licenceSetType = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
-            }
-            
-            if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere && anyLicenceNotLinked)
-            {
-                licenceSetType = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
-            }*/
-            
-            return new OutputListDataItemLicenceSet
-            {
-                LicenceSetId = ls.LicenceSetId,
-                ShortLicenceSetId = ls.ShortLicenceSetId,
-                LicenceSetTypes = ls.LicenceSetTypes,
-                LicenceSetType = licenceSetType
-
-            };
-        }).ToArray() ?? []
-    };
-    
-    listJs.Add(listRow);
-    
-    if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
-        && outputLine.LicenceNumber != string.Empty) licenceNumberFoundCount++;
-    if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
-        && outputLine.LicenceHolder != string.Empty) licenceHolderFoundCount++;
-    if (outputLine.Ocr == "OCR") scannedCount++;
-    if (outputLine.Purposes?.Length > 0) purposesFoundCount++;
-    if (outputLine.Points?.Length > 0) pointsFoundCount++;
-    if (outputLine.LimitsCount > 0) limitsFoundCount++;
-    if (outputLine.AggregatesCount > 0) aggregatesFoundCount++;
-    if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
-    if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
-    if (outputLine.MeansFound) meansFoundCount++;
-    if (outputLine.LinkedLicences?.Length > 0) linkedLicenceNumbersFoundCount++;
-    
-    if (outputLine.LicenceNumber != null)
-    {
-        filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
-        licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);
-    }
-
-    outputLine.NodeId = nodeIndex++;
-    var nodeName = outputLine.Filename!;
-
-    if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != string.Empty)
-    {
-        nodeName = outputLine.LicenceNumber;
-    }
-    
-    nodesDictionaries.Add(new Dictionary<string, object>
-    {
-        { "id", outputLine.NodeId},
-        { "name", nodeName}
-    });
-    
-    Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
-    fileCount += 1;
-}
-
-foreach (var outputLine in outputLines)
-{
-    if (outputLine.LinkedLicences != null)
-    {
-        foreach (var linkedLicence in outputLine.LinkedLicences)
-        {
-            var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
-
-            if (linkedOutputLine != null)
-            {
-                linksDictionaries.Add(new Dictionary<string, object>
-                {
-                    {"source", outputLine.NodeId},
-                    {"target", linkedOutputLine.NodeId}
-                });
-            }
-        }
-    }
-}
-
-Directory.CreateDirectory($"{outputFolder}Additional");
-
-var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
-File.WriteAllText(resultFile, resultFileStringBuilder.ToString());
-
-#pragma warning disable CS0162 // Unreachable code detected
-if (regenerateMappingJson)
-{
-    var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
-    File.WriteAllText(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
-    
-    var licenceFilenameMapJsonFile = $"{outputFolder}Additional/licence-number-filename-map.jsonp";
-    var licenceFilenameMapDictionary = new Dictionary<string, object>
-    {
-        {"filenameToLicenceNumber", filenameToLicenceNumberMap},
-        {"licenceNumberToFilename", licenceNumberToFilenameMap}
-    };
-
-    File.WriteAllText(licenceFilenameMapJsonFile,
-        $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, jsonOptions)};");
-}
-#pragma warning restore CS0162 // Unreachable code detected
-
-var jsListFilePath = $"{outputFolder}list-data.js";
-File.WriteAllText(jsListFilePath, "var data = " + JsonSerializer.Serialize(listJs, jsonOptions) + ";");
-
-var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
-{
-    {
-        "nodes",
-        nodesDictionaries
-    },
-    {
-        "links",
-        linksDictionaries
-    }
-};
-
-var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
-File.WriteAllText(nodeGraphDataFile,
-    $"var data = {JsonSerializer.Serialize(nodeGraphData, jsonOptions)};");
-
+await AllWork();
 return;
 
-List<LicenceSet> GetLicenceSetsForLicenceSetIds(List<LicenceSetReference> licenceSetIds, IReadOnlyList<LicenceSet> licenceSets)
+async Task AllWork()
+{
+    Console.WriteLine("Started");
+
+    const bool refreshCache = false;
+
+    if (refreshCache)
+    {
+        // TODO clear out the Cache directory
+    }
+
+    var jsonOptions = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+        }
+    };
+
+    Directory.CreateDirectory(outputFolder);
+    Directory.CreateDirectory(cacheFolder);
+
+    for (var idx = 0; idx < concurrentCount; idx++)
+    {
+        var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
+
+        var tesseractOcr = new TesseractOcrDataExtractorService(
+            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+            ?? throw new NullReferenceException("TESSDATA_PREFIX"));
+
+        var azureAiServices = new AzureAiVisionOcrDataExtractorService(
+            Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
+            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
+            Environment.GetEnvironmentVariable("AzureAIVisionKey")
+            ?? throw new NullReferenceException("AzureAIVisionKey"));
+
+        var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
+            pdfPigNoOcr,
+            [
+                tesseractOcr,
+                azureAiServices
+            ],
+            pdfFolderPath);
+
+        pdfDataExtractors.Add(pdfDataExtractor);
+    }
+
+    var outputLines = new List<IntermediateOutputLicence>();
+    var processCount = 1;
+    var completeNumber = 1;
+
+    var fileMappingContents = File.Exists(fileMappingPath)
+        ? File.ReadAllText(fileMappingPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+
+    Copy(reportTemplatePath, outputFolder);
+
+    var indexPath = $"{outputFolder}index.html";
+
+    var aiFiles = Directory.GetFiles("Data");
+
+    foreach (var aiFile in aiFiles)
+    {
+        if (!aiFile.EndsWith(".js"))
+        {
+            continue;
+        }
+
+        var aiFilePath = aiFile.Split('/').Last().Replace(".js", string.Empty);
+
+        Directory.CreateDirectory($"{outputFolder}{aiFilePath}");
+        File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
+    }
+
+    File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
+    File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
+    File.Move($"{outputFolder}list-template.html", indexPath, true);
+
+    var indexHtml = await File.ReadAllTextAsync(indexPath);
+    indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
+
+    await File.WriteAllTextAsync(indexPath, indexHtml);
+
+    var count = 0;
+    foreach (var line in fileMappingContents)
+    {
+        if (count++ == 0)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+        var licenceNumber = parts[1];
+        var filename = parts[0].Split('/').Last();
+
+        if (!fileLicenceMapping.TryAdd(licenceNumber, filename))
+        {
+            fileLicenceMapping[licenceNumber] = filename;
+        }
+    }
+
+    var initialLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+
+    try
+    {
+        var processingTasks = new List<Task<IReadOnlyList<LicenceSet>>>();
+
+        foreach (var pdfFilePath in GetPdfPaths())
+        {
+            processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping));
+
+            if (processingTasks.Count == concurrentCount)
+            {
+                var licenceSetsTask = await Task.WhenAny(processingTasks);
+                processingTasks.Remove(licenceSetsTask);
+
+                var licenceSets = await licenceSetsTask;
+                if (licenceSets.Count <= 0) continue;
+
+                initialLicenceSetGroups.Add(licenceSets);
+            }
+        }
+
+        if (processingTasks.Count > 0)
+        {
+            await Task.WhenAll(processingTasks);
+
+            foreach (var processingTask in processingTasks)
+            {
+                var licenceSet = await processingTask;
+                if (licenceSet.Count <= 0) continue;
+
+                initialLicenceSetGroups.Add(licenceSet);
+            }
+        }
+
+        foreach (var pdfDataExtractor in pdfDataExtractors)
+        {
+            pdfDataExtractor.Dispose();
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        throw;
+    }
+
+    var distinctLicenceSets = GetDistinctLicenceSets(initialLicenceSetGroups);
+    distinctLicenceSets.AddRange(SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true));
+
+    var fileNumber = 1;
+
+    foreach (var licenceSetGroup in initialLicenceSetGroups)
+    {
+        if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
+        {
+            continue;
+        }
+
+        AddImplicitExplicitAndEncompassingLicenceSets(initialLicenceSetGroups, distinctLicenceSets);
+    }
+    
+    foreach (var licenceSetGroup in initialLicenceSetGroups)
+    {
+        var licence = licenceSetGroup.First().Licences.First();
+
+        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
+        Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
+
+        var licenceJson = JsonHelper.GetAsString(licence);
+
+        File.WriteAllText(
+            $"{outputFolder}/{filenameOnlyNoExtension}/licence.jsonp",
+            $"var data2 = {licenceJson}");
+
+        var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, distinctLicenceSets);
+        var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
+
+        File.WriteAllText(
+            $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
+            $"var licenceSets = {licenceSetsJson}");
+
+        var outputLine = ToOutputLine(
+            licence,
+            DateTime.Now,
+            completeNumber++,
+            fileNumber++,
+            distinctLicenceSets,
+            jsonOptions);
+
+        outputLines.Add(outputLine);
+    }
+
+    var resultFileStringBuilder = new StringBuilder(
+        "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
+        "MatchedLabelPosition,LicenceNumber,LimitsFound,LinkedLicenceNumbers,LinkedLicenceNumbersExistInDataset");
+
+    var mappingFileStringBuilder = new StringBuilder(
+        "Filename,LicenceNumber");
+
+    var filenameToLicenceNumberMap = new Dictionary<string, string>();
+    var licenceNumberToFilenameMap = new Dictionary<string, string>();
+    var fileCount = 1;
+
+    var licenceNumberFoundCount = 0;
+    var licenceHolderFoundCount = 0;
+    var scannedCount = 0;
+    var purposesFoundCount = 0;
+    var pointsFoundCount = 0;
+    var limitsFoundCount = 0;
+    var aggregatesFoundCount = 0;
+    var issueDateFoundCount = 0;
+    var issuerFoundCount = 0;
+    var linkedLicenceNumbersFoundCount = 0;
+    var meansFoundCount = 0;
+
+    var nodeIndex = 1;
+    var nodesDictionaries = new List<Dictionary<string, object>>();
+    var linksDictionaries = new List<Dictionary<string, object>>();
+
+    var listJs = new List<OutputListDataItem>();
+
+    foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
+    {
+        var anyLinkedLicenceNumbers = outputLine.LinkedLicences?
+            .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln.LicenceNumber) > 0);
+
+        Log(
+            $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
+            $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
+            $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
+            $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
+            $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
+            resultFileStringBuilder);
+
+        var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
+
+        var listRow = new OutputListDataItem
+        {
+            imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
+            filename = filename,
+            licenceNumber =
+                $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+            licenceHolder =
+                $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
+            purposes = outputLine.Purposes,
+            points = outputLine.Points,
+            limitsCount = outputLine.LimitsCount,
+            aggregatesCount = outputLine.AggregatesCount,
+            ocr = outputLine.Ocr == "OCR",
+            issueDate = outputLine.IssueDate,
+            issuer = outputLine.Issuer,
+            meansFound = outputLine.MeansFound,
+            linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
+            licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
+            {
+                var ls = outputLine.LicenceSets!.First(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+                var licenceSetType = lsr.LicenceSetType;
+
+                return new OutputListDataItemLicenceSet
+                {
+                    LicenceSetId = ls.LicenceSetId,
+                    ShortLicenceSetId = ls.ShortLicenceSetId,
+                    LicenceSetTypes = ls.LicenceSetTypes,
+                    LicenceSetType = licenceSetType
+
+                };
+            }).ToArray() ?? []
+        };
+
+        listJs.Add(listRow);
+
+        if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
+            && outputLine.LicenceNumber != string.Empty) licenceNumberFoundCount++;
+        if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
+            && outputLine.LicenceHolder != string.Empty) licenceHolderFoundCount++;
+        if (outputLine.Ocr == "OCR") scannedCount++;
+        if (outputLine.Purposes?.Length > 0) purposesFoundCount++;
+        if (outputLine.Points?.Length > 0) pointsFoundCount++;
+        if (outputLine.LimitsCount > 0) limitsFoundCount++;
+        if (outputLine.AggregatesCount > 0) aggregatesFoundCount++;
+        if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
+        if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
+        if (outputLine.MeansFound) meansFoundCount++;
+        if (outputLine.LinkedLicences?.Length > 0) linkedLicenceNumbersFoundCount++;
+
+        if (outputLine.LicenceNumber != null)
+        {
+            filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
+            licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);
+        }
+
+        outputLine.NodeId = nodeIndex++;
+        var nodeName = outputLine.Filename!;
+
+        if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != string.Empty)
+        {
+            nodeName = outputLine.LicenceNumber;
+        }
+
+        nodesDictionaries.Add(new Dictionary<string, object>
+        {
+            { "id", outputLine.NodeId },
+            { "name", nodeName }
+        });
+
+        Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
+        fileCount += 1;
+    }
+
+    foreach (var outputLine in outputLines)
+    {
+        if (outputLine.LinkedLicences != null)
+        {
+            foreach (var linkedLicence in outputLine.LinkedLicences)
+            {
+                var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
+
+                if (linkedOutputLine != null)
+                {
+                    linksDictionaries.Add(new Dictionary<string, object>
+                    {
+                        { "source", outputLine.NodeId },
+                        { "target", linkedOutputLine.NodeId }
+                    });
+                }
+            }
+        }
+    }
+
+    Directory.CreateDirectory($"{outputFolder}Additional");
+
+    var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
+    File.WriteAllText(resultFile, resultFileStringBuilder.ToString());
+
+#pragma warning disable CS0162 // Unreachable code detected
+    if (regenerateMappingJson)
+    {
+        var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
+        File.WriteAllText(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
+
+        var licenceFilenameMapJsonFile = $"{outputFolder}Additional/licence-number-filename-map.jsonp";
+        var licenceFilenameMapDictionary = new Dictionary<string, object>
+        {
+            { "filenameToLicenceNumber", filenameToLicenceNumberMap },
+            { "licenceNumberToFilename", licenceNumberToFilenameMap }
+        };
+
+        File.WriteAllText(licenceFilenameMapJsonFile,
+            $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, jsonOptions)};");
+    }
+#pragma warning restore CS0162 // Unreachable code detected
+
+    var jsListFilePath = $"{outputFolder}list-data.js";
+    File.WriteAllText(jsListFilePath, "var data = " + JsonSerializer.Serialize(listJs, jsonOptions) + ";");
+
+    var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
+    {
+        {
+            "nodes",
+            nodesDictionaries
+        },
+        {
+            "links",
+            linksDictionaries
+        }
+    };
+
+    var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
+    File.WriteAllText(nodeGraphDataFile,
+        $"var data = {JsonSerializer.Serialize(nodeGraphData, jsonOptions)};");
+}
+
+List<LicenceSet> GetLicenceSetsForLicenceSetIds(IReadOnlyList<LicenceSetReference> licenceSetIds, IReadOnlyList<LicenceSet> licenceSets)
 {
     var returnList = new List<LicenceSet>();
 
@@ -776,7 +614,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;
@@ -786,6 +624,171 @@ void Log(string message, StringBuilder outputStringBuilder)
 {
     //Console.WriteLine(message);
     outputStringBuilder.Append(message);
+}
+
+void AddImplicitExplicitAndEncompassingLicenceSets(
+    List<IReadOnlyList<LicenceSet>> initialLicenceSetGroups,
+    List<LicenceSet> distinctLicenceSets)
+{
+    foreach (var licenceSetGroup in initialLicenceSetGroups)
+    {
+        if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
+        {
+            continue;
+        }
+
+        var licence = licenceSetGroup.First().Licences.First();
+        var licenceSetsForLicence = GetAllLicenceSetsForLicence(
+            licence.LicenceNumber!,
+            distinctLicenceSets);
+
+        var updatedLicenceSetIds = AddImplicitAndExplicitLicenceSets(licence, licenceSetsForLicence);
+        updatedLicenceSetIds = AddEncompassingLicenceSets(licence, distinctLicenceSets, updatedLicenceSetIds);
+
+        licence.LicenceSets = updatedLicenceSetIds.ToArray();
+    }
+}
+
+List<LicenceSet> GetDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+{
+    var returnList = new List<LicenceSet>();
+
+    foreach (var licenceSetGroup in licenceSetGroups)
+    {
+        foreach (var licenceSet in licenceSetGroup)
+        {
+            if (returnList.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
+            {
+                continue;
+            }
+        
+            returnList.Add(licenceSet);
+        }
+    }
+
+    return returnList;
+}
+
+List<LicenceSetReference> AddEncompassingLicenceSets(
+    Licence licence1,
+    List<LicenceSet> distinctLicenceSets,
+    List<LicenceSetReference> newLicenceSetIds)
+{
+    var returnList = new List<LicenceSetReference>(newLicenceSetIds);
+    
+    foreach (var distinctLicenceSet in distinctLicenceSets)
+    {
+        var setContainsLicence = distinctLicenceSet.Licences.Any(l => l.LicenceNumber == licence1.LicenceNumber);
+
+        if (setContainsLicence)
+        {
+            var licenceContainsSet = returnList.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
+
+            if (!licenceContainsSet)
+            {
+                var fullyEncompassedIn = licence1.LinkedLicences
+                    .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
+
+                var type = fullyEncompassedIn
+                    ? LicenceSetType.FullyEncompassedIn
+                    : LicenceSetType.PartiallyEncompassedIn;
+
+                var toAdd = new LicenceSetReference
+                {
+                    LicenceSetId = distinctLicenceSet.LicenceSetId,
+                    LicenceSetType = type
+                };
+
+                returnList.Add(toAdd);
+
+                if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
+                {
+                    var dls = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { type };
+                    distinctLicenceSet.LicenceSetTypes = dls.ToArray();
+                }
+            }
+
+            var licencesLicenceSet =
+                returnList.First(x =>
+                    x.LicenceSetId ==
+                    distinctLicenceSet
+                        .LicenceSetId); // TODO should be single, but that errors for some reaosn in some circumstances
+
+            var licencesLicenceSetType = licencesLicenceSet.LicenceSetType;
+            var licenceSetContainsType = distinctLicenceSet.LicenceSetTypes.Contains(licencesLicenceSetType);
+
+            if (!licenceSetContainsType)
+            {
+                var ndlst = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { licencesLicenceSetType };
+                distinctLicenceSet.LicenceSetTypes = ndlst.ToArray();
+            }
+        }
+    }
+
+    return returnList;
+}
+
+List<LicenceSetReference> AddImplicitAndExplicitLicenceSets(
+    Licence licence1,
+    List<LicenceSet> allLicenceSetsForLicence)
+{
+    var returnList = new List<LicenceSetReference>(licence1.LicenceSets);
+
+    foreach (var licenceSetForLicence in allLicenceSetsForLicence)
+    {
+        if (returnList.Any(lsi => lsi.LicenceSetId == licenceSetForLicence.LicenceSetId))
+        {
+            continue;
+        }
+
+        var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
+            .All(l => licence1.LicenceNumber == l.LicenceNumber
+                || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+
+        if (!allLinkedLicenceOfLicence)
+        {
+            continue;
+        }
+
+        var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
+            .All(l => licence1.LicenceNumber == l.LicenceNumber
+                  || licence1.LinkedLicences.Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
+                      .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+
+        var type = licenceSetForLicence.LicenceSetTypes[0];
+
+        if (!allLinkedLicenceOfLicenceExplicit)
+        {
+            if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
+            {
+                type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+
+                if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+                {
+                    var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                    licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+                }
+            }
+            else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
+            {
+                type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
+
+                if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+                {
+                    var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                    licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+                }
+            }
+        }
+
+        returnList.Add(new()
+        {
+            LicenceSetId = licenceSetForLicence.LicenceSetId,
+            LicenceSetType = type
+        });
+    }
+
+    return returnList;
 }
 
 void Copy(string sourceDir, string targetDir)

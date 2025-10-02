@@ -298,6 +298,26 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
     
     licence.LicenceSets = newLicenceSetIds.ToArray();
     
+    foreach (var distinctLicenceSet in distinctLicenceSets)
+    {
+        var setContainsLicence = distinctLicenceSet.Licences.Any(l => l.LicenceNumber == licence.LicenceNumber);
+        var licenceContainsSet = licence.LicenceSets.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
+        
+        if (setContainsLicence && !licenceContainsSet)
+        {
+            var newLicenceSets = new List<LicenceSetReference>(licence.LicenceSets)
+            {
+                new()
+                {
+                    LicenceSetId = distinctLicenceSet.LicenceSetId,
+                    LicenceSetType = LicenceSetType.FullyEncompassedIn
+                }
+            };
+
+            licence.LicenceSets = newLicenceSets.ToArray();
+        }
+    }
+    
     var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
     Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
     
@@ -314,7 +334,13 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
         $"var licenceSets = {licenceSetsJson}");
     
-    var outputLine = ToOutputLine(licence, DateTime.Now, completeNumber++, fileNumber++, distinctLicenceSets, jsonOptions);
+    var outputLine = ToOutputLine(
+        licence, DateTime.Now,
+        completeNumber++,
+        fileNumber++,
+        distinctLicenceSets,
+        jsonOptions);
+    
     outputLines.Add(outputLine);
 }
 
@@ -377,10 +403,12 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         issuer = outputLine.Issuer,
         meansFound = outputLine.MeansFound,
         linkedLicences = outputLine.LinkedLicences ?? [],
-        licenceSets = outputLine.LicenceSets?.Select(ls =>
+        licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
         {
-            var licenceSetType = ls.LicenceSetTypes[0];
-            var anyLicenceNotLinked = ls.Licences.Any(lsl =>
+            var ls = outputLine.LicenceSets!.First(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+            var licenceSetType = lsr.LicenceSetType;
+            
+            /*var anyLicenceNotLinked = ls.Licences.Any(lsl =>
                 outputLine.LicenceNumber != lsl.LicenceNumber
                 && outputLine.LinkedLicences?
                     .Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
@@ -395,7 +423,7 @@ foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
             if (licenceSetType == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere && anyLicenceNotLinked)
             {
                 licenceSetType = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
-            }
+            }*/
             
             return new OutputListDataItemLicenceSet
             {
@@ -632,7 +660,10 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
     var issuer = licence.LicenceVersion.Issuer;
 
     var licenceSets = licence.LicenceSets
-        .Select(lsi => allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId))
+        .Select(lsi =>
+        {
+            return allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId);
+        })
         .Where(ls => ls != null)
         .Select(ls => ls!)
         .ToList();
@@ -661,7 +692,8 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
         LinkedLicences = licence.LinkedLicences,
-        LicenceSets = licenceSets
+        LicenceSets = licenceSets,
+        LicenceSetReferences = licence.LicenceSets
     };
 }
 

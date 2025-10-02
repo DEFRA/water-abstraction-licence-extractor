@@ -27,5 +27,6 @@ public class IntermediateOutputLicence
     public bool MeansFound;
     public LinkedLicence[]? LinkedLicences;
     public List<LicenceSet>? LicenceSets;
+    public LicenceSetReference[] ? LicenceSetReferences;
     public int NodeId;
 }

@@ -293,6 +293,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 let backLink = licenceSet.licenceSetType === "allLicencesImplicitlyReferencedInLimits";
                 let abstractionLimits = licenceSet.licenceSetType === "allLicencesExplicitlyReferencedInLimits";
                 let mixed = licenceSet.licenceSetType === "allLicencesIncludingImplicitlyReferenced";
+                let fullyEncompassedIn = licenceSet.licenceSetType === "fullyEncompassedIn";
                 
                 let color = backLink ? "#AAA" : "rebeccapurple";
 
@@ -302,6 +303,10 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 
                 if (mixed) {
                     color = "orange";
+                }
+                
+                if (fullyEncompassedIn) {
+                    color = "forestgreen"
                 }
                 
                 let html1 = "<span class='lsId' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="

@@ -272,11 +272,6 @@ public static class SchemaConverter
 
         if (explicitlyReferencedLicenceSet != null)
         {
-            if (explicitlyReferencedLicenceSet.LicenceSetId == "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN")
-            {
-                
-            }
-            
             returnList.Add(explicitlyReferencedLicenceSet);            
         }
 
@@ -331,6 +326,15 @@ public static class SchemaConverter
                 {
                     LicenceSetId = explicitlyReferencedLicenceSet.LicenceSetId,
                     LicenceSetType =  explicitlyReferencedLicenceSet.LicenceSetTypes[0]
+                });
+            }
+
+            if (explicitlyReferencedLimitsLicenceSet != null)
+            {
+                newLicenceSetIds.Add(new ()
+                {
+                    LicenceSetId = explicitlyReferencedLimitsLicenceSet.LicenceSetId,
+                    LicenceSetType =  explicitlyReferencedLimitsLicenceSet.LicenceSetTypes[0]
                 });
             }
             

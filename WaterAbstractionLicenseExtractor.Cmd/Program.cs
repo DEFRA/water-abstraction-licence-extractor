@@ -296,29 +296,24 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         });
     }
     
-    licence.LicenceSets = newLicenceSetIds.ToArray();
-    
     foreach (var distinctLicenceSet in distinctLicenceSets)
     {
         var setContainsLicence = distinctLicenceSet.Licences.Any(l => l.LicenceNumber == licence.LicenceNumber);
-        var licenceContainsSet = licence.LicenceSets.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
+        var licenceContainsSet = newLicenceSetIds.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
         
         if (setContainsLicence && !licenceContainsSet)
         {
             var fullyEncompassedIn = licence.LinkedLicences
                 .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
             var type = fullyEncompassedIn ? LicenceSetType.FullyEncompassedIn : LicenceSetType.PartiallyEncompassedIn;
-            
-            var newLicenceSets = new List<LicenceSetReference>(licence.LicenceSets)
+
+            var toAdd = new LicenceSetReference()
             {
-                new()
-                {
-                    LicenceSetId = distinctLicenceSet.LicenceSetId,
-                    LicenceSetType = type
-                }
+                LicenceSetId = distinctLicenceSet.LicenceSetId,
+                LicenceSetType = type
             };
 
-            licence.LicenceSets = newLicenceSets.ToArray();
+            newLicenceSetIds.Add(toAdd);
 
             if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
             {
@@ -327,6 +322,8 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
             }
         }
     }
+    
+    licence.LicenceSets = newLicenceSetIds.ToArray();
     
     var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
     Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");

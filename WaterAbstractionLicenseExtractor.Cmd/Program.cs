@@ -3,7 +3,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -155,10 +154,8 @@ async Task AllWork()
                 var licenceSetsTask = await Task.WhenAny(processingTasks);
                 processingTasks.Remove(licenceSetsTask);
 
-                var licenceSets = await licenceSetsTask;
-                if (licenceSets.Count <= 0) continue;
-
-                licenceSetGroups.Add(licenceSets);
+                var licenceSets1 = await licenceSetsTask;
+                licenceSetGroups.Add(licenceSets1);
             }
         }
 
@@ -186,27 +183,26 @@ async Task AllWork()
         throw;
     }
 
-    var distinctLicenceSets = SchemaConverter.GetDistinctLicenceSetsWithAddedRefs(licenceSetGroups);
+    var licenceSets = SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
     var fileNumber = 1;
     
     foreach (var licenceSetGroup in licenceSetGroups)
     {
         var licence = licenceSetGroup.First().Licences.First();
-
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
-        Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
+        var folderName = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
+        Directory.CreateDirectory($"{outputFolder}/{folderName}");
 
         var licenceJson = JsonHelper.GetAsString(licence);
 
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/licence.jsonp",
+            $"{outputFolder}/{folderName}/licence.jsonp",
             $"var data2 = {licenceJson}");
 
-        var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, distinctLicenceSets);
-        var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
+        var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, licenceSets);
+        var licenceSetsJson = JsonHelper.GetAsString(licenceSetsFull);
 
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/licence-sets.jsonp",
+            $"{outputFolder}/{folderName}/licence-sets.jsonp",
             $"var licenceSets = {licenceSetsJson}");
 
         var outputLine = ToOutputLine(
@@ -214,7 +210,7 @@ async Task AllWork()
             DateTime.Now,
             completeNumber++,
             fileNumber++,
-            distinctLicenceSets,
+            licenceSets,
             jsonOptions);
 
         outputLines.Add(outputLine);
@@ -229,19 +225,6 @@ async Task AllWork()
 
     var filenameToLicenceNumberMap = new Dictionary<string, string>();
     var licenceNumberToFilenameMap = new Dictionary<string, string>();
-    var fileCount = 1;
-
-    var licenceNumberFoundCount = 0;
-    var licenceHolderFoundCount = 0;
-    var scannedCount = 0;
-    var purposesFoundCount = 0;
-    var pointsFoundCount = 0;
-    var limitsFoundCount = 0;
-    var aggregatesFoundCount = 0;
-    var issueDateFoundCount = 0;
-    var issuerFoundCount = 0;
-    var linkedLicenceNumbersFoundCount = 0;
-    var meansFoundCount = 0;
 
     var nodeIndex = 1;
     var nodesDictionaries = new List<Dictionary<string, object>>();
@@ -299,20 +282,6 @@ async Task AllWork()
 
         listJs.Add(listRow);
 
-        if (!string.IsNullOrEmpty(outputLine.LicenceNumber)
-            && outputLine.LicenceNumber != string.Empty) licenceNumberFoundCount++;
-        if (!string.IsNullOrEmpty(outputLine.LicenceHolder)
-            && outputLine.LicenceHolder != string.Empty) licenceHolderFoundCount++;
-        if (outputLine.Ocr == "OCR") scannedCount++;
-        if (outputLine.Purposes?.Length > 0) purposesFoundCount++;
-        if (outputLine.Points?.Length > 0) pointsFoundCount++;
-        if (outputLine.LimitsCount > 0) limitsFoundCount++;
-        if (outputLine.AggregatesCount > 0) aggregatesFoundCount++;
-        if (!string.IsNullOrEmpty(outputLine.IssueDate)) issueDateFoundCount++;
-        if (!string.IsNullOrEmpty(outputLine.Issuer)) issuerFoundCount++;
-        if (outputLine.MeansFound) meansFoundCount++;
-        if (outputLine.LinkedLicences?.Length > 0) linkedLicenceNumbersFoundCount++;
-
         if (outputLine.LicenceNumber != null)
         {
             filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
@@ -334,7 +303,6 @@ async Task AllWork()
         });
 
         Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
-        fileCount += 1;
     }
 
     foreach (var outputLine in outputLines)
@@ -459,11 +427,11 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
 
         var internalJson = JsonHelper.GetAsString(matchesFull);
     
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
-        Directory.CreateDirectory($"{outputFolder}/{filenameOnlyNoExtension}");
+        var folderName = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
+        Directory.CreateDirectory($"{outputFolder}/{folderName}");
     
         File.WriteAllText(
-            $"{outputFolder}/{filenameOnlyNoExtension}/internal.jsonp",
+            $"{outputFolder}/{folderName}/internal.jsonp",
             $"var data = {internalJson}");
     
         Console.WriteLine($"Finished {fileNumberX} {fileName}...");
@@ -585,7 +553,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

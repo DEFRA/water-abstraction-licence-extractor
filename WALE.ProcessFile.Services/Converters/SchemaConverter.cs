@@ -1694,10 +1694,10 @@ public static class SchemaConverter
         return null;
     }
     
-    public static List<LicenceSet> GetDistinctLicenceSetsWithAddedRefs(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+    public static List<LicenceSet> AddGroupLicenceSetDetails(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
     {
         var distinctLicenceSets = GetDistinctLicenceSets(licenceSetGroups);
-        distinctLicenceSets.AddRange(SchemaConverter.AddMissingBackLinks(licenceSetGroups, true));
+        distinctLicenceSets.AddRange(AddMissingBackLinks(licenceSetGroups, true));
 
         foreach (var licenceSetGroup in licenceSetGroups)
         {

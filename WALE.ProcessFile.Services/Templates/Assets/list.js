@@ -497,6 +497,9 @@ function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
         let licenceSetType = licenceSet.licenceSetTypes[j];
         licenceSetTypesSb.push("<li class='ls-type " + licenceSetType + "'>" + licenceSetType + "</li>")
     }
+
+    let licenceInSetType = licenceInSet.licenceSets !== undefined ? licenceInSet.licenceSets.find(x => x.licenceSetId === licenceSet.licenceSetId) : null;
+    licenceInSetType = !!licenceInSetType ? licenceInSetType.licenceSetType : '';
     
     let html =
         "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
@@ -505,7 +508,7 @@ function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
             + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
             + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
             "<td rowspan='" + licencesInSet.length + "'><ul>" + licenceSetTypesSb.join('') + "</ul></td>" +
-            "<td>" + licenceInSet.licenceNumber + "</td>" +
+            "<td class='" + licenceInSetType + "'>" + licenceInSet.licenceNumber + "</td>" +
             "<td>" + linkHtml + "</td>" +
         "</tr>";
 
@@ -513,11 +516,14 @@ function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
 
     for (let j = 1; j < licencesInSet.length; j++) {
         let licenceInSet = licencesInSet[j];
+        licenceInSetType = licenceInSet.licenceSets !== undefined ? licenceInSet.licenceSets.find(x => x.licenceSetId === licenceSet.licenceSetId) : null;
+        licenceInSetType = !!licenceInSetType ? licenceInSetType.licenceSetType : '';
+        
         linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
 
         html =
             "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
-            "<td>" + licenceInSet.licenceNumber + "</td>" +
+            "<td class='" + licenceInSetType + "'>" + licenceInSet.licenceNumber + "</td>" +
             "<td>" + linkHtml + "</td>" +
             "</tr>";
 

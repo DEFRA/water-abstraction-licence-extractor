@@ -140,7 +140,7 @@ async Task AllWork()
         }
     }
 
-    var initialLicenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+    var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
     try
     {
@@ -158,7 +158,7 @@ async Task AllWork()
                 var licenceSets = await licenceSetsTask;
                 if (licenceSets.Count <= 0) continue;
 
-                initialLicenceSetGroups.Add(licenceSets);
+                licenceSetGroups.Add(licenceSets);
             }
         }
 
@@ -171,7 +171,7 @@ async Task AllWork()
                 var licenceSet = await processingTask;
                 if (licenceSet.Count <= 0) continue;
 
-                initialLicenceSetGroups.Add(licenceSet);
+                licenceSetGroups.Add(licenceSet);
             }
         }
 
@@ -186,22 +186,10 @@ async Task AllWork()
         throw;
     }
 
-    var distinctLicenceSets = GetDistinctLicenceSets(initialLicenceSetGroups);
-    distinctLicenceSets.AddRange(SchemaConverter.AddMissingBackLinks(initialLicenceSetGroups, true));
-
+    var distinctLicenceSets = GetDistinctLicenceSetsWithAddedRefs(licenceSetGroups);
     var fileNumber = 1;
-
-    foreach (var licenceSetGroup in initialLicenceSetGroups)
-    {
-        if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
-        {
-            continue;
-        }
-
-        AddImplicitExplicitAndEncompassingLicenceSets(initialLicenceSetGroups, distinctLicenceSets);
-    }
     
-    foreach (var licenceSetGroup in initialLicenceSetGroups)
+    foreach (var licenceSetGroup in licenceSetGroups)
     {
         var licence = licenceSetGroup.First().Licences.First();
 
@@ -647,6 +635,24 @@ void AddImplicitExplicitAndEncompassingLicenceSets(
 
         licence.LicenceSets = updatedLicenceSetIds.ToArray();
     }
+}
+
+List<LicenceSet> GetDistinctLicenceSetsWithAddedRefs(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+{
+    var distinctLicenceSets = GetDistinctLicenceSets(licenceSetGroups);
+    distinctLicenceSets.AddRange(SchemaConverter.AddMissingBackLinks(licenceSetGroups, true));
+
+    foreach (var licenceSetGroup in licenceSetGroups)
+    {
+        if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
+        {
+            continue;
+        }
+
+        AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
+    }
+
+    return distinctLicenceSets;
 }
 
 List<LicenceSet> GetDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)

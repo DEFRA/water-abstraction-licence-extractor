@@ -1693,4 +1693,204 @@ public static class SchemaConverter
     {
         return null;
     }
+    
+    public static List<LicenceSet> GetDistinctLicenceSetsWithAddedRefs(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+    {
+        var distinctLicenceSets = GetDistinctLicenceSets(licenceSetGroups);
+        distinctLicenceSets.AddRange(SchemaConverter.AddMissingBackLinks(licenceSetGroups, true));
+
+        foreach (var licenceSetGroup in licenceSetGroups)
+        {
+            if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
+            {
+                continue;
+            }
+
+            AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
+        }
+
+        return distinctLicenceSets;
+    }
+    
+    private static void AddImplicitExplicitAndEncompassingLicenceSets(
+        List<IReadOnlyList<LicenceSet>> initialLicenceSetGroups,
+        List<LicenceSet> distinctLicenceSets)
+    {
+        foreach (var licenceSetGroup in initialLicenceSetGroups)
+        {
+            if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
+            {
+                continue;
+            }
+
+            var licence = licenceSetGroup.First().Licences.First();
+            var licenceSetsForLicence = GetAllLicenceSetsForLicence(
+                licence.LicenceNumber!,
+                distinctLicenceSets);
+
+            var updatedLicenceSetIds = AddImplicitAndExplicitLicenceSets(licence, licenceSetsForLicence);
+            updatedLicenceSetIds = AddEncompassingLicenceSets(licence, distinctLicenceSets, updatedLicenceSetIds);
+
+            licence.LicenceSets = updatedLicenceSetIds.ToArray();
+        }
+    }
+    
+    private static List<LicenceSet> GetAllLicenceSetsForLicence(string licenceNumber, IReadOnlyList<LicenceSet> licenceSets)
+    {
+        var returnList = new List<LicenceSet>();
+
+        foreach (var licenceSet in licenceSets)
+        {
+            if (licenceSet.Licences.All(l => l.LicenceNumber != licenceNumber))
+            {
+                continue;
+            }
+        
+            returnList.Add(licenceSet);
+        }
+    
+        return returnList;
+    }
+    
+    private static List<LicenceSet> GetDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+    {
+        var returnList = new List<LicenceSet>();
+
+        foreach (var licenceSetGroup in licenceSetGroups)
+        {
+            foreach (var licenceSet in licenceSetGroup)
+            {
+                if (returnList.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
+                {
+                    continue;
+                }
+            
+                returnList.Add(licenceSet);
+            }
+        }
+
+        return returnList;
+    }
+
+    private static List<LicenceSetReference> AddEncompassingLicenceSets(
+        Licence licence1,
+        List<LicenceSet> distinctLicenceSets,
+        List<LicenceSetReference> newLicenceSetIds)
+    {
+        var returnList = new List<LicenceSetReference>(newLicenceSetIds);
+        
+        foreach (var distinctLicenceSet in distinctLicenceSets)
+        {
+            var setContainsLicence = distinctLicenceSet.Licences.Any(l => l.LicenceNumber == licence1.LicenceNumber);
+
+            if (setContainsLicence)
+            {
+                var licenceContainsSet = returnList.Any(ls => ls.LicenceSetId == distinctLicenceSet.LicenceSetId);
+
+                if (!licenceContainsSet)
+                {
+                    var fullyEncompassedIn = licence1.LinkedLicences
+                        .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
+
+                    var type = fullyEncompassedIn
+                        ? LicenceSetType.FullyEncompassedIn
+                        : LicenceSetType.PartiallyEncompassedIn;
+
+                    var toAdd = new LicenceSetReference
+                    {
+                        LicenceSetId = distinctLicenceSet.LicenceSetId,
+                        LicenceSetType = type
+                    };
+
+                    returnList.Add(toAdd);
+
+                    if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
+                    {
+                        var dls = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { type };
+                        distinctLicenceSet.LicenceSetTypes = dls.ToArray();
+                    }
+                }
+
+                var licencesLicenceSet =
+                    returnList.First(x =>
+                        x.LicenceSetId ==
+                        distinctLicenceSet
+                            .LicenceSetId); // TODO should be single, but that errors for some reaosn in some circumstances
+
+                var licencesLicenceSetType = licencesLicenceSet.LicenceSetType;
+                var licenceSetContainsType = distinctLicenceSet.LicenceSetTypes.Contains(licencesLicenceSetType);
+
+                if (!licenceSetContainsType)
+                {
+                    var ndlst = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { licencesLicenceSetType };
+                    distinctLicenceSet.LicenceSetTypes = ndlst.ToArray();
+                }
+            }
+        }
+
+        return returnList;
+    }
+
+    private static List<LicenceSetReference> AddImplicitAndExplicitLicenceSets(
+        Licence licence1,
+        List<LicenceSet> allLicenceSetsForLicence)
+    {
+        var returnList = new List<LicenceSetReference>(licence1.LicenceSets);
+
+        foreach (var licenceSetForLicence in allLicenceSetsForLicence)
+        {
+            if (returnList.Any(lsi => lsi.LicenceSetId == licenceSetForLicence.LicenceSetId))
+            {
+                continue;
+            }
+
+            var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
+                .All(l => licence1.LicenceNumber == l.LicenceNumber
+                    || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+
+            if (!allLinkedLicenceOfLicence)
+            {
+                continue;
+            }
+
+            var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
+                .All(l => licence1.LicenceNumber == l.LicenceNumber
+                      || licence1.LinkedLicences.Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
+                          .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+
+            var type = licenceSetForLicence.LicenceSetTypes[0];
+
+            if (!allLinkedLicenceOfLicenceExplicit)
+            {
+                if (type == LicenceSetType.AllLicencesExplicitlyReferencedInLimits)
+                {
+                    type = LicenceSetType.AllLicencesImplicitlyReferencedInLimits;
+
+                    if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+                    {
+                        var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                        licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+                    }
+                }
+                else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
+                {
+                    type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
+
+                    if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
+                    {
+                        var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
+                        licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
+                    }
+                }
+            }
+
+            returnList.Add(new()
+            {
+                LicenceSetId = licenceSetForLicence.LicenceSetId,
+                LicenceSetType = type
+            });
+        }
+
+        return returnList;
+    }
 }

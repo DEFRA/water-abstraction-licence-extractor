@@ -307,17 +307,24 @@ foreach (var licenceSetGroup in initialLicenceSetGroups)
         {
             var fullyEncompassedIn = licence.LinkedLicences
                 .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
+            var type = fullyEncompassedIn ? LicenceSetType.FullyEncompassedIn : LicenceSetType.PartiallyEncompassedIn;
             
             var newLicenceSets = new List<LicenceSetReference>(licence.LicenceSets)
             {
                 new()
                 {
                     LicenceSetId = distinctLicenceSet.LicenceSetId,
-                    LicenceSetType = fullyEncompassedIn ? LicenceSetType.FullyEncompassedIn : LicenceSetType.PartiallyEncompassedIn
+                    LicenceSetType = type
                 }
             };
 
             licence.LicenceSets = newLicenceSets.ToArray();
+
+            if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
+            {
+                var dls = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { type };
+                distinctLicenceSet.LicenceSetTypes = dls.ToArray();
+            }
         }
     }
     

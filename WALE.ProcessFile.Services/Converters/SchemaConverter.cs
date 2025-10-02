@@ -225,7 +225,7 @@ public static class SchemaConverter
         };
     }
     
-    public static async Task<IReadOnlyList<LicenceSet>> ToLicenceSetsAsync(
+    public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
         Dictionary<string, string> fileLicenceMapping,
         IPdfDataExtractorService  pdfDataExtractorService,
@@ -345,7 +345,7 @@ public static class SchemaConverter
         return returnList;
     }
     
-    public static List<LicenceSet> AddMissingBackLinks(
+    private static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet)
     {

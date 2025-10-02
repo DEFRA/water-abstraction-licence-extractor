@@ -13,7 +13,7 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 var pdfDataExtractors = new List<IPdfDataExtractorService>();
 var fileLicenceMapping = new Dictionary<string, string>();
 
-var concurrentCount = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
+var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
     ?? throw new NullReferenceException("ConcurrentCount"));
 var regenerateMappingJson = bool.Parse(Environment.GetEnvironmentVariable("REGENERATE_MAPPING_JSON")
     ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
@@ -58,7 +58,7 @@ async Task AllWork()
     Directory.CreateDirectory(outputFolder);
     Directory.CreateDirectory(cacheFolder);
 
-    for (var idx = 0; idx < concurrentCount; idx++)
+    for (var idx = 0; idx < maxConcurrentScrapers; idx++)
     {
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
@@ -96,7 +96,6 @@ async Task AllWork()
     Copy(reportTemplatePath, outputFolder);
 
     var indexPath = $"{outputFolder}index.html";
-
     var aiFiles = Directory.GetFiles("Data");
 
     foreach (var aiFile in aiFiles)
@@ -140,35 +139,36 @@ async Task AllWork()
     }
 
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+    List<LicenceSet> licenceSets;
 
     try
     {
-        var processingTasks = new List<Task<IReadOnlyList<LicenceSet>>>();
+        var scrapingTasks = new List<Task<List<LicenceSet>>>();
 
         foreach (var pdfFilePath in GetPdfPaths())
         {
-            processingTasks.Add(HandleFileAsync(pdfFilePath, processCount++, fileLicenceMapping));
+            scrapingTasks.Add(ScrapeDocumentAsync(pdfFilePath, processCount++, fileLicenceMapping));
 
-            if (processingTasks.Count == concurrentCount)
+            if (scrapingTasks.Count != maxConcurrentScrapers)
             {
-                var licenceSetsTask = await Task.WhenAny(processingTasks);
-                processingTasks.Remove(licenceSetsTask);
-
-                var licenceSets1 = await licenceSetsTask;
-                licenceSetGroups.Add(licenceSets1);
+                continue;
             }
+            
+            var licenceSetsTask = await Task.WhenAny(scrapingTasks);
+            scrapingTasks.Remove(licenceSetsTask);
+
+            licenceSets = await licenceSetsTask;
+            licenceSetGroups.Add(licenceSets);
         }
 
-        if (processingTasks.Count > 0)
+        if (scrapingTasks.Any())
         {
-            await Task.WhenAll(processingTasks);
+            await Task.WhenAll(scrapingTasks);
 
-            foreach (var processingTask in processingTasks)
+            foreach (var scrapingTask in scrapingTasks)
             {
-                var licenceSet = await processingTask;
-                if (licenceSet.Count <= 0) continue;
-
-                licenceSetGroups.Add(licenceSet);
+                licenceSets = await scrapingTask;
+                licenceSetGroups.Add(licenceSets);
             }
         }
 
@@ -183,7 +183,7 @@ async Task AllWork()
         throw;
     }
 
-    var licenceSets = SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
+    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
     var fileNumber = 1;
     
     foreach (var licenceSetGroup in licenceSetGroups)
@@ -210,8 +210,7 @@ async Task AllWork()
             DateTime.Now,
             completeNumber++,
             fileNumber++,
-            licenceSets,
-            jsonOptions);
+            licenceSets);
 
         outputLines.Add(outputLine);
     }
@@ -385,12 +384,11 @@ List<LicenceSet> GetLicenceSetsForLicenceSetIds(IReadOnlyList<LicenceSetReferenc
     return returnList;
 }
 
-async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
+async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumberX,
     Dictionary<string, string> licenceMapping)
 {
-    var dtStart = DateTime.Now;
     var fileName = pdfFilePath.Split('/').Last().Replace("–", "-");
 
     Console.WriteLine($"Attempting {fileNumberX} {fileName}...");
@@ -448,7 +446,7 @@ async Task<IReadOnlyList<LicenceSet>> HandleFileAsync(
     }
 }
 
-static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets, JsonSerializerOptions jsonOptions)
+static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart, int completeNumber, int fileNumber, List<LicenceSet> allLicenceSets)
 {
     var licenceHolder = licence.NoneSchemaData.TryGetValue("issuedTo", out var value4)
         ? (string)value4 : null;
@@ -457,7 +455,7 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
     var ocr = licence.NoneSchemaData.TryGetValue("ocr", out var value6)
         ? (string)value6 : "--";
     var serviceName = licence.NoneSchemaData.TryGetValue("servicesUsed", out var value7)
-        ? ((string[])value7!).FirstOrDefault() : "PdfPig";
+        ? ((string[])value7).FirstOrDefault() : "PdfPig";
 
     var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
 
@@ -553,7 +551,7 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

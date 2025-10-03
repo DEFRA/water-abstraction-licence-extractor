@@ -7,6 +7,12 @@
         <UserSecretsId>36a30afa-1c5b-40f0-bf53-adda14a53c4e</UserSecretsId>
     </PropertyGroup>
 
+      <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <Optimize>false</Optimize>
+        <DebugType>full</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+      </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.5.25277.114" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.5.25277.114" />

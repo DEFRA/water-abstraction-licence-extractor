@@ -3,6 +3,10 @@ namespace WALE.ProcessFile.Services.Enums.OutputSchema;
 public enum LicenceSetType
 {
     SingleLicenceOnly,
-    AllLicencesExplicitlyReferenced,
-    AllLicencesIncludingImplicitlyReferenced
+    AllLicencesExplicitlyReferencedAnywhere,
+    AllLicencesExplicitlyReferencedInLimits,
+    AllLicencesImplicitlyReferencedInLimits,
+    AllLicencesIncludingImplicitlyReferenced,
+    FullyEncompassedIn,
+    PartiallyEncompassedIn
 }

@@ -1,0 +1,119 @@
+body.dragging iframe {pointer-events: none;}
+
+table td { padding: 5px; }
+table thead tr td { font-weight: bold; }
+table thead tr a { text-decoration: none; color: #000; cursor: pointer; }
+table tbody tr { max-height: 40px; vertical-align: top; }
+.ai-line {
+  color: #88A;
+}
+td ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.default-hidden { display: none; }
+.show-all .default-hidden { display: table-cell; }
+
+select { width: 100%; }
+
+#list-page .iframe {
+  border: 0;
+  height: calc(100% - 25px);
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.97);
+}
+
+#list-page .iframeDiv {
+  position: fixed;
+  display: none;
+  top: 40px;
+  height: calc(100% - 60px);
+  left: 350px;
+  width: calc(100% - 370px);
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d3d3d3;
+  resize: both;
+  overflow: auto;
+}
+
+#list-page .iframeDivHeader {
+  padding: 3px;
+  /*cursor: move;*/
+  background-color: #F6F6F6;
+  text-align: left;
+}
+
+#list-page .iframeDivHeader a {
+  text-decoration: none;
+  font-size: 16px;
+  color: #AAA;
+  padding-right: 5px;
+}
+
+h1 a {
+  text-decoration: none;
+  color: #00A;
+  font-weight: normal;
+}
+
+h1 a.selected {
+  font-weight: bold;
+  color: #000;
+}
+
+#licenceSets {
+  display: none;
+}
+
+#licenceSets tbody tr td {
+  position: relative;
+}
+
+#licenceSets tbody tr td .indentDiv {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: #FFF;
+  font-size: 0;
+}
+
+.indent-level-1 td {
+  padding-left: 50px;
+}
+
+#licenceSets tbody tr.indent-level-1 div.indentDiv {
+  width: 40px;
+}
+
+.indent-level-2 td {
+  padding-left: 100px;
+}
+
+#licenceSets tbody tr.indent-level-2 div.indentDiv {
+  width: 90px;
+}
+
+.fullyEncompassedIn {
+  color: forestgreen;
+}
+
+.allLicencesExplicitlyReferencedAnywhere {
+  color: black;
+}
+
+.allLicencesExplicitlyReferencedInLimits {
+  color: lightseagreen;
+}
+
+.allLicencesIncludingImplicitlyReferenced, .allLicencesImplicitlyReferencedInLimits {
+  color: orange;
+}
+
+.partiallyEncompassedIn {
+  color: hotpink;
+}

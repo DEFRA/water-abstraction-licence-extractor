@@ -1,0 +1,34 @@
+<html lang="en">
+<head>
+    <title>Licence set validation report</title>
+    <link rel="stylesheet" href="Assets/licencesetstyles.css" />
+</head>
+<body>
+    <div id="cols" class="cols-1">
+        <div id="col0">
+            <h1 id="licence-set-id">Licence set id</h1>
+        
+            <pre id="dataSetOutput"></pre>
+        
+            <h1 id="backLink"><a href="index.html">Back to all licences</a></h1>
+        </div>
+    </div>
+        
+    <script src="Assets/settings.js"></script>
+    <script src="Assets/licencesetreport.js"></script>
+    <script src="Assets/jsonview.js"></script>
+
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        const filename = searchParams.get('filename');
+        const licenceSetId = searchParams.get('licenceSetId');
+        const hideBackLink = searchParams.get('hideBackLink');
+
+        if (!!hideBackLink) {
+            document.getElementById('backLink').style.display = 'none';
+        }
+
+        loadScript(filename + "/licence-sets.jsonp", function () { loadReport(filename, licenceSetId); });
+    </script>
+</body>
+</html>

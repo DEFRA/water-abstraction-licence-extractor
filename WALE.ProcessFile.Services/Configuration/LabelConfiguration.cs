@@ -1003,7 +1003,31 @@ public static class LabelConfiguration
                         ]
                     }
                 ]
-            }
+            },
+            new LabelToMatch
+            {
+                Name = "DuringTheMonthsXToYOnlyText",
+                TextStart = [
+                    new("During the months ") { LineMustStartWith = true }
+                ],
+                TextEnd = [
+                    new("only")
+                ],
+                NextLinesToFetch = 1,
+                PreviousLinesToFetch = 0,
+                Remove = [
+                    new("only")
+                ],
+                SubLabels = [
+                    new LabelToMatch
+                    {
+                        Name = "DuringTheMonthsXToYOnlyTextParts",
+                        Text = [new("to")],
+                        Position = LabelPosition.Split,
+                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                    }
+                ]
+            },
         ];
     }
 

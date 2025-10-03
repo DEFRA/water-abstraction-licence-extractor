@@ -63,8 +63,20 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(7, resultList.Count);
 
+        var period = resultList
+            .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
+        
+        Assert.NotNull(period);
+        Assert.Equal("April to September", period.Text!.First().Text);
+
+        var periods1 = period.SubResults[0];
+        Assert.Equal("April", periods1.Text!.First().Text);
+
+        var periods2 = period.SubResults[1];
+        Assert.Equal("September", periods2.Text!.First().Text);
+        
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
         Assert.Equal("Spray irrigation", purpose.Text!.First().Text);
@@ -152,6 +164,10 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("gallons", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[5].Units);
         Assert.Equal(84500, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[5].Value);
         Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[5].PeriodType);
+        
+        Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
+        Assert.Equal("April", agreedSchemaLicence.PeriodsOfAbstraction[0].StartDate);
+        Assert.Equal("September", agreedSchemaLicence.PeriodsOfAbstraction[0].EndDate);
     }
     
     [Fact]

@@ -9,7 +9,6 @@ public static class FileHelper
         const char compositeCharacter = '-';
         
         var filenameParts = pdfFilePath
-            .Replace("–", "-")
             .Split(pathSeparator)
             .Last()
             .Split(extensionSeperator);

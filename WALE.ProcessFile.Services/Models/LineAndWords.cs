@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Services.Models.TesseractOcr;
+namespace WALE.ProcessFile.Services.Models;
 
 public class LineAndWords
 {

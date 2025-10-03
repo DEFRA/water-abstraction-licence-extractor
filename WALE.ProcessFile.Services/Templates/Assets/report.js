@@ -163,7 +163,7 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
             } else if (linkedLicenceNumbers.length > 0) {
                 sb.push("In aggregation with other licences");
             } else {
-                sb.push("All Year");
+                sb.push("All specified period");
             }
 
             sb.push("</dt><dd><dl>");

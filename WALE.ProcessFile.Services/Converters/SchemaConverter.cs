@@ -1167,6 +1167,23 @@ public static class SchemaConverter
         {
             return returnList.ToArray();
         }
+
+        if (periodResults.MatchedLabel?.Name == "DuringTheMonthsXToYOnlyText")
+        {
+            if (periodResults.SubResults.Count != 2)
+            {
+                return returnList.ToArray();
+            }
+
+            returnList.Add(new PeriodOfAbstraction
+            {
+                PeriodType = AbstractionPeriodType.SetPeriod,
+                Description = periodResults.Text?.FirstOrDefault()?.Text,
+                Inclusive = true,
+                StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
+                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text
+            });
+        }
         
         foreach (var pointResult in periodResults.SubResults)
         {

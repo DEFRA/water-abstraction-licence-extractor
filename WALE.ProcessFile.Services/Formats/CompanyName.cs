@@ -53,14 +53,14 @@ public static class CompanyName
                     continue;
                 }
                 
+                var text = FormattingHelper.TrimFormatting(column.Text, true, true)!;
+                
                 var clonedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(column.Text, true, label.AutoCorrect)
+                    ? AutoCorrectHelper.AutoCorrectText(text, true, label.AutoCorrect)
                     : column.Text;
 
-                var text = FormattingHelper.TrimFormatting(clonedText, true, true)!;
-
-                if (DataHelper.IsCorruptedText(text)
-                    || !TryGetCompanyOrPersonalName(text, label, out var companyOrPersonalName))
+                if (DataHelper.IsCorruptedText(clonedText)
+                    || !TryGetCompanyOrPersonalName(clonedText, label, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -85,7 +85,6 @@ public static class CompanyName
                 }
 
                 var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
-                
                 newColumns.Add(clonedColumn);
 
                 anyLineMatch = true;

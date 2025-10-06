@@ -110,10 +110,12 @@ public static class AutoCorrectHelper
                     continue;
                 }
                 
-                var suggestions = DataHelper.Dictionary.Suggest(word, new QueryOptions
-                {
-                    MaxSuggestions = 20
-                }).ToList();
+                var suggestions = DataHelper.Dictionary.Suggest(
+                    word,
+                    new QueryOptions
+                    {
+                        MaxSuggestions = 20
+                    }).ToList();
                 
                 var topSuggestion = suggestions.FirstOrDefault(
                     suggestion => PreferredSuggestions.Contains(

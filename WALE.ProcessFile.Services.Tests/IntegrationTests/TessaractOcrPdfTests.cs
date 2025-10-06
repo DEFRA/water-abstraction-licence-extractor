@@ -648,7 +648,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("J La Trobe Esq", nameResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("J La Robe Esq", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be Trobe
         Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);

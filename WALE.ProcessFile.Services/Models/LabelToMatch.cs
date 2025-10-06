@@ -43,6 +43,7 @@ public class LabelToMatch
         
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
+    public bool AutoCorrect { get; init; }
     
     public LabelToMatch Clone()
     {
@@ -76,7 +77,8 @@ public class LabelToMatch
             MultipleBehaviour = MultipleBehaviour,
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
-            DoNotTrimLines = DoNotTrimLines
+            DoNotTrimLines = DoNotTrimLines,
+            AutoCorrect = AutoCorrect
         };
     }    
 }

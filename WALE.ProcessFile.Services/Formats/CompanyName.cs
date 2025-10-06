@@ -52,9 +52,9 @@ public static class CompanyName
                 
                     continue;
                 }
-
+                
                 var clonedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(column.Text, true)
+                    ? AutoCorrectHelper.AutoCorrectText(column.Text, true, label.AutoCorrect)
                     : column.Text;
 
                 var text = FormattingHelper.TrimFormatting(clonedText, true, true)!;
@@ -183,7 +183,8 @@ public static class CompanyName
             && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))
             && parts.Last().Length >= 3
             && parts.Last().All(char.IsLetter)
-            && !parts.All(word => DataHelper.Dictionary.Check(word) && word.Length > 1);
+            && !parts.All(word => word.Length > 1
+                && (!label.AutoCorrect || DataHelper.Dictionary.Check(word)));
 
         if (looksLikeNameWithInitials && !lineText.Contains('"'))
         {
@@ -245,7 +246,8 @@ public static class CompanyName
     
     public static bool MayBeInitials(string word)
     {
-        return word.Length == 2 && word.All(char.IsUpper);
+        return word.Length is 2
+               && word.All(char.IsUpper);
     }
     
     private static bool ContainsCompanyOrPersonalWord(string? text)

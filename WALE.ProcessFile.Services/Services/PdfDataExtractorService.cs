@@ -454,6 +454,8 @@ public class PdfDataExtractorService(
         {
             return labelGroupMatches;
         }
+
+        var lines = GetLines(documentLines);
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -468,9 +470,11 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
+
+                var tailoredLines = TailorLines(lines, label);
                 
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
-                    GetLines(documentLines, label),
+                    tailoredLines,
                     labels,
                     isOcr,
                     serviceName,
@@ -480,7 +484,7 @@ public class PdfDataExtractorService(
                     previouslyParsedPaths,
                     outputFolder,
                     cacheFolder);
-
+                
                 if (labelGroupMatch.Count == 0)
                 {
                     continue;
@@ -871,7 +875,7 @@ public class PdfDataExtractorService(
                             request,
                             partialLine!,
                             singleValueWanted);
-
+                        
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
                             && request.label.Position is not LabelPosition.Split
@@ -1253,7 +1257,8 @@ public class PdfDataExtractorService(
         string cacheFolder)
     {
         var subResults = new List<LabelGroupResult>();
-                    
+        var lines = GetLines(text);
+        
         if (label.SubLabels?.Count > 0)
         {
             foreach (var subLabel in label.SubLabels)
@@ -1264,7 +1269,7 @@ public class PdfDataExtractorService(
                 }
                             
                 var subLabelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
-                    GetLines(text, subLabel),
+                    TailorLines(lines, subLabel),
                     [subLabel],
                     isOcr,
                     serviceName,
@@ -1281,7 +1286,7 @@ public class PdfDataExtractorService(
                 }
             }
         }
-
+        
         var groups = subResults
             .GroupBy(x => x.MatchedLabel!.Name)
             .Where(x => x.Count() > 1)
@@ -1471,20 +1476,38 @@ public class PdfDataExtractorService(
             DocumentLine Line,
             IReadOnlyList<DocumentLine> PreviousNLines,
             IReadOnlyList<DocumentLine> NextNLines)>
-        GetLines(
-            IReadOnlyList<DocumentLine> lines,
-            LabelToMatch label)
+        GetLines(IReadOnlyList<DocumentLine> lines)
     {
         return lines.Select((line, index) =>
-            {
-                FormattingHelper.Standardise(line.Columns);
-                
-                return (
-                    line,
-                    GetPreviousLines(lines, index, label.PreviousLinesToFetch),
-                    GetNextLines(lines, index, label.NextLinesToFetch)
-                );
-            })
+        {
+            FormattingHelper.Standardise(line.Columns);
+            const int linesToFetch = 500;
+            
+            return (
+                line,
+                GetPreviousLines(lines, index, linesToFetch),
+                GetNextLines(lines, index, linesToFetch)
+            );
+        })
+        .ToList();
+    }
+    
+    private static IReadOnlyList<(
+            DocumentLine Line,
+            IReadOnlyList<DocumentLine> PreviousNLines,
+            IReadOnlyList<DocumentLine> NextNLines)>
+        TailorLines(
+            IReadOnlyList<(
+                DocumentLine Line,
+                IReadOnlyList<DocumentLine> PreviousNLines,
+                IReadOnlyList<DocumentLine> NextNLines)> lines,
+            LabelToMatch label)
+    {
+        return lines.Select((line, index) => (
+                line.Line,
+                line.PreviousNLines = line.PreviousNLines.Take(label.PreviousLinesToFetch).ToList(),
+                line.NextNLines = line.NextNLines.Take(label.NextLinesToFetch).ToList()
+            ))
             .ToList();
     }
     

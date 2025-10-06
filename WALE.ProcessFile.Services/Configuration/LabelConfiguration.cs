@@ -832,6 +832,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
+                AutoCorrect = true,
                 Name = "CompanyName",
                 IgnoreMatchIfContains = [
                     "source of supply",
@@ -855,6 +856,8 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
+                Name = "CompanyName2",
+                AutoCorrect = true,
                 PreviousLinesToFetch = 7,
                 IgnoreMatchIfContains = [
                     "source of supply",
@@ -873,6 +876,8 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",
+                Name = "CompanyName3",
+                AutoCorrect = true,
                 PreviousLinesToFetch = 2,
                 NextLinesToFetch = 4,
                 IgnoreMatchIfContains = [
@@ -1496,7 +1501,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerDayUnits",                                
+                                        Name = "PerDayUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per day")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
@@ -1519,7 +1524,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerMonthUnits",                                
+                                        Name = "PerMonthUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per month")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
@@ -1542,7 +1547,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerYearUnits",                                
+                                        Name = "PerYearUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [
                                             new("per year"),

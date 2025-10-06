@@ -439,7 +439,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(16, section1Sub1.SubResults!.Count);        
+        Assert.Equal(16, section1Sub1.SubResults.Count);
         
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
         Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
@@ -1345,8 +1345,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Through flow for Purveys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
-        Assert.Equal("Augmentation of Purveys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].Description);
+        Assert.Equal("Through flow for Pugneys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Augmentation of Pugneys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].Description);
     }
 
     [Fact]

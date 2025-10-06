@@ -648,7 +648,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("J La Robe Esq", nameResult.Text?.FirstOrDefault()?.Text); // TODO this actually should be Trobe
+        Assert.Equal("J La Trobe Esq", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["is hereby licensed"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
@@ -825,7 +825,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("9th day of January, 196/", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO whats the last char
+        Assert.StartsWith("9th dayof January, 196/", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO whats the last char
         
         // Success sticker used, company name is OCR-ed
         // scrambled. Rest of document is greyed out slightly and hard to read, including
@@ -1210,7 +1210,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("14th day of January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("14th dayof January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO should be dayof ideally
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

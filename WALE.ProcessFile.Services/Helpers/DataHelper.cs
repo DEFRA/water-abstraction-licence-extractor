@@ -310,9 +310,9 @@ public static partial class DataHelper
                     && ch != ':')
                 .ToArray());
 
-            return !Dictionary.Check(wordWithoutPunctuation)
-                   && !word.Contains('/')
-                   && !double.TryParse(PotentialNumber(word), out _);
+            return !word.Contains('/')
+                && !double.TryParse(PotentialNumber(word), out _)
+                && !Dictionary.Check(wordWithoutPunctuation);
         });
         
         var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;

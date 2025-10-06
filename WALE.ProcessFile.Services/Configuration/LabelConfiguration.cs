@@ -833,6 +833,8 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
                 AutoCorrect = true,
+                PreviousLinesToFetch = 1,
+                NextLinesToFetch = 6,
                 Name = "CompanyName",
                 IgnoreMatchIfContains = [
                     "source of supply",
@@ -858,6 +860,7 @@ public static class LabelConfiguration
                 Format = "CompanyName",
                 Name = "CompanyName2",
                 AutoCorrect = true,
+                NextLinesToFetch = 6,
                 PreviousLinesToFetch = 7,
                 IgnoreMatchIfContains = [
                     "source of supply",

@@ -121,7 +121,7 @@ public static class AutoCorrectHelper
         return string.Join(" ", newWords);
     }
     
-    private static IEnumerable<string> PreferredSuggestions =>
+    private static readonly IEnumerable<string> PreferredSuggestions =
     [
         "Mid",
         "Central",

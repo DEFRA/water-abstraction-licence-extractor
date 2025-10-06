@@ -12,7 +12,8 @@ public static class FormattingHelper
         var returnList = new List<DocumentLine>();
         var previousLineWasBlank = false;
         
-        foreach (var line in trimmedList.Where(line => !previousLineWasBlank || !string.IsNullOrEmpty(line.Text)))
+        foreach (var line in trimmedList.Where(line =>
+            !previousLineWasBlank || !string.IsNullOrEmpty(line.Text)))
         {
             previousLineWasBlank = string.IsNullOrEmpty(line.Text);
             returnList.Add(line);
@@ -102,7 +103,7 @@ public static class FormattingHelper
                 column.Text = column.Text.Replace("'\"", doubleQuoteChar);
             }
             
-            if (column.Text.Contains("\u00b0"))
+            if (column.Text.Contains('°'))
             {
                 column.Text =
                     column.Text.Replace("\u00b0",

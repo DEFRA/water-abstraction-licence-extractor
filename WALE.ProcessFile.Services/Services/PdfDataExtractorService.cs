@@ -464,7 +464,6 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                
                 if (!LabelIsInDocument(label, documentLines))
                 {
                     continue;
@@ -713,11 +712,6 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (label.Name == "Issuer")
-                {
-                    
-                }
-                
                 var partialLine = (DocumentLine?)lineOuter;
                 DocumentLine? previousPartialLine = null;
                 

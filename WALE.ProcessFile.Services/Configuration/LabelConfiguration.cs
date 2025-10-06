@@ -38,11 +38,13 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("8. Records[END_OF_LINE]"),
+                    new("9. Records[END_OF_LINE]"),                    
                     new("Records[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
                     new("9. Further conditions"),
+                    new("10. Further conditions"),
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
@@ -200,6 +202,7 @@ public static class LabelConfiguration
                     new("Northumbrian Water Authority"),
                     new("North West Water"),
                     new("Wessex Water Authority"),
+                    new("Wessex Water"),
                     new("Essex River Authority"),
                     new("Thames Water Authority"),
                     new("Mersey and Weaver River Authority"),
@@ -219,6 +222,7 @@ public static class LabelConfiguration
                     "Northumbrian Water Authority",
                     "North West Water",
                     "Wessex Water Authority",
+                    "Wessex Water",
                     "Essex River Authority",
                     "Thames Water Authority",
                     "Mersey and Weaver River Authority",

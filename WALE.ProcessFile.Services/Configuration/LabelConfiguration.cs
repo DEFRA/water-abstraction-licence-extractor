@@ -860,8 +860,8 @@ public static class LabelConfiguration
                 Format = "CompanyName",
                 Name = "CompanyName2",
                 AutoCorrect = true,
-                NextLinesToFetch = 6,
-                PreviousLinesToFetch = 7,
+                NextLinesToFetch = 4,
+                PreviousLinesToFetch = 5,
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
@@ -896,6 +896,8 @@ public static class LabelConfiguration
                     new("as amended by")
                 ],
                 Position = LabelPosition.ContractIsSuccession,
+                NextLinesToFetch = 10,
+                PreviousLinesToFetch = 0,
                 Format = "CompanyName",
                 MatchAllText = true,
                 Name = "IsSuccession"

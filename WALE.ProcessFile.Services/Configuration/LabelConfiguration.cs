@@ -356,6 +356,11 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("POINT OF ABSTRACTION")
+                    {
+                        ColumnMustStartWith = true,
+                        IfMultiplePreferLast = true
+                    },
                     new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },

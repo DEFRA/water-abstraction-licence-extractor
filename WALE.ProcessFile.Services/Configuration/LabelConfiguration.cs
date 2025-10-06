@@ -832,9 +832,13 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
+                Name = "CompanyName",
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
+                ],
+                Remove = [
+                    new("hereby grant a licence to")
                 ]
             },
             new LabelToMatch

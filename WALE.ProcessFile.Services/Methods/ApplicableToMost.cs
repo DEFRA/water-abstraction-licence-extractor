@@ -121,6 +121,7 @@ public static class ApplicableToMost
             }
             
             if (request.isCompanyType
+                && !string.IsNullOrEmpty(outputText)
                 && (char.IsLower(outputText[0])
                     || outputText.StartsWith("trading as", StringComparison.InvariantCultureIgnoreCase)))
             {

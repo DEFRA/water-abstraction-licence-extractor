@@ -464,16 +464,12 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
+                
                 if (!LabelIsInDocument(label, documentLines))
                 {
                     continue;
                 }
-
-                if (label.Name == "DocumentLicenceNumber")
-                {
-                    
-                }
-
+                
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
                     GetLines(documentLines, label),
                     labels,

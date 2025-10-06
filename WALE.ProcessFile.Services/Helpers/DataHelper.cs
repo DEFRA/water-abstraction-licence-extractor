@@ -217,6 +217,9 @@ public static partial class DataHelper
         }
         
         var containsSpecialChar = line
+            .Replace("—", "-")
+            .Replace("”", "\"")
+            .Replace("’", "'")
             .Replace(" ", string.Empty)
             .Replace("/", string.Empty)
             .Replace(".", string.Empty)

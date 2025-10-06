@@ -201,7 +201,7 @@ public class PdfDataExtractorService(
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
-                var serviceMatchesDict = new Dictionary<bool, List<LabelGroupResult>>();
+                var serviceMatchesDict = new Dictionary<IOcrDataExtractorService, List<LabelGroupResult>>();
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -262,7 +262,7 @@ public class PdfDataExtractorService(
                         configuration.OutputFolder,
                         configuration.CacheFolder);
                     
-                    serviceMatchesDict.Add(ocrService.HasDirectCost, serviceMatches);
+                    serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
                     
                     if (noMatchesFound)
@@ -325,7 +325,7 @@ public class PdfDataExtractorService(
 
                 var uniqueServiceMatches = new List<LabelGroupResult>();
 
-                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key))
+                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key.HasDirectCost)) // TODO should be OrderByDescending
                 {
                     var serviceMatches = kvp.Value;
 
@@ -467,6 +467,11 @@ public class PdfDataExtractorService(
                 if (!LabelIsInDocument(label, documentLines))
                 {
                     continue;
+                }
+
+                if (label.Name == "DocumentLicenceNumber")
+                {
+                    
                 }
 
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(

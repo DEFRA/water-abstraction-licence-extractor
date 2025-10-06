@@ -7,19 +7,20 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtractorService, IDisposable
+public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageSegMode)
+    : IOcrDataExtractorService, IDisposable
 {
     private readonly TesseractEngine _tesseractEngine = new(dataPath, "eng");
 
     public bool HasDirectCost => false;
-    public string Name => "TesseractOcr";
+    public string Name => $"TesseractOcr-{pageSegMode}";
     
     public Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {
-            var folder = $"{pdfDocument.CacheFolder}/TesseractOcr/Text";
+            var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
             Directory.CreateDirectory(folder);
         
             var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
@@ -62,7 +63,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
                 }
 
-                using var page = _tesseractEngine.Process(ocrImage, PageSegMode.SparseTextOsd);
+                using var page = _tesseractEngine.Process(ocrImage, pageSegMode);
 
                 using var iterator = page.GetIterator();
                 iterator.Begin();

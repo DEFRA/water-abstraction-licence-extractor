@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
@@ -62,20 +63,27 @@ async Task AllWork()
     {
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
-        var tesseractOcr = new TesseractOcrDataExtractorService(
+        var tesseractOcrSparse = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-            ?? throw new NullReferenceException("TESSDATA_PREFIX"));
+                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            PageSegMode.SparseTextOsd);
+        
+        var tesseractOcrDefault = new TesseractOcrDataExtractorService(
+            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            PageSegMode.Auto);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
-            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
+                ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
-            ?? throw new NullReferenceException("AzureAIVisionKey"));
+                ?? throw new NullReferenceException("AzureAIVisionKey"));
 
         var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
             pdfPigNoOcr,
             [
-                tesseractOcr,
+                tesseractOcrSparse,
+                tesseractOcrDefault,
                 azureAiServices
             ],
             pdfFolderPath);

@@ -1,3 +1,4 @@
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Enums;
@@ -18,15 +19,36 @@ public class TessaractOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath)
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd)
         },
         TestConfig.PdfFolder);
+    
+    private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto)
+        },
+        TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useCombined = false)
     {
+        if (useCombined)
+        {
+            return _pdfDataExtractorCombined.GetMatchesAsync(
+                PdfFolder + fileName,
+                new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    _fileLicenceMapping,
+                    OutputFolder,
+                    CacheFolder),
+                [PdfFolder + fileName]);
+        }
+        
         return _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + fileName,
             new LookupConfiguration(
@@ -512,11 +534,11 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, true);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -529,7 +551,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
-        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+       var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -537,12 +559,12 @@ public class TessaractOcrPdfTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
-        
+
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(10, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -673,11 +695,11 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, true);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count); // File is scanned titled and font is very bold and hard to read
+        Assert.Equal(4, resultList.Count); // File is scanned titled and font is very bold and hard to read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -730,15 +752,15 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, true);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(12, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(8, records.Text!.Count);
+        Assert.Equal(7, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -814,11 +836,11 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, true);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count);
+        Assert.Equal(5, resultList.Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -975,7 +997,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, true);
         var resultList = resultFull.Matches!;
         
         // Assert

@@ -1,3 +1,4 @@
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
@@ -14,10 +15,11 @@ public class MultipleOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey)
+                TestConfig.AiVisionKey),
         },
         TestConfig.PdfFolder);
 
@@ -211,7 +213,7 @@ public class MultipleOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(8, resultList.Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

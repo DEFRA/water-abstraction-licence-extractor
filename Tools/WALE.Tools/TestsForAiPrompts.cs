@@ -5,6 +5,7 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
+using Tesseract;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Models.OutputSchema;
@@ -526,7 +527,7 @@ public static class TestsForAiPrompts
     {
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
-            ?? throw new NullReferenceException(KeyConfig.TesseractPrefix));
+            ?? throw new NullReferenceException(KeyConfig.TesseractPrefix), PageSegMode.SparseTextOsd);
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",

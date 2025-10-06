@@ -58,6 +58,7 @@ public class MessageReceivedFunction(
             new PdfPigNoOcrDataExtractorService(),
             [
                 new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd),
+                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.Auto),
                 new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey)
             ],
             pdfFolderPath);

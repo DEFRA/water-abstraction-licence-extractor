@@ -666,6 +666,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
+                        NextLinesToFetch = 30,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
                         Remove = [

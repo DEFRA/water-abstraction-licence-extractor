@@ -319,7 +319,7 @@ public class PdfDataExtractorService(
                     // no point processing that with the other services
                     if (averageLineLength < 30)
                     {
-                        break;
+                        //break; // TODO commenting out as a tesseract file fails with this - Non-Application Licence Document (08.06.1987).PDF
                     }
                 }
 

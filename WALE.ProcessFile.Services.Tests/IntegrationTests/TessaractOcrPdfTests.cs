@@ -1103,7 +1103,7 @@ public class TessaractOcrPdfTests
 
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("hereby grant a licence to— WATER BOARD", nameResult.Text?[0]?.Text); // TODO wrong
+        Assert.Equal("grant a licence to— WATER BOARD", nameResult.Text?[0]?.Text); // TODO wrong
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         

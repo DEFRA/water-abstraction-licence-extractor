@@ -10,7 +10,7 @@ public static class LabelConfiguration
     {
         return
         [
-            ("Company", GetCompanyNameLabels())/*,
+            ("Company", GetCompanyNameLabels()),
             ("LicenceNumber", GetLicenceNumberLabels()),
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
@@ -24,7 +24,7 @@ public static class LabelConfiguration
             ("Issuer", GetIssuerLabels()),
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
-            ("Additional", GetAdditional())*/
+            ("Additional", GetAdditional())
         ];
     }
     

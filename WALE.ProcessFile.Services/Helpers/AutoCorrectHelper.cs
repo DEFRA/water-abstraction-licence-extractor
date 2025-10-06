@@ -160,6 +160,9 @@ public static class AutoCorrectHelper
         { "pallons", "gallons" },
         { "Pallons", "Gallons" },
         { "PALLONS", "GALLONS" },
+        { "ld", "ltd" },
+        { "Ld", "Ltd" },
+        { "LD", "LTD" },        
     };
     
     private static readonly IEnumerable<string> PreferredSuggestions =

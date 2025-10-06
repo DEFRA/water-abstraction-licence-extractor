@@ -54,13 +54,14 @@ public static class CompanyName
                 }
                 
                 var text = FormattingHelper.TrimFormatting(column.Text, true, true)!;
-                
-                var clonedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(text, true, label.AutoCorrect)
-                    : column.Text;
 
-                if (DataHelper.IsCorruptedText(clonedText)
-                    || !TryGetCompanyOrPersonalName(clonedText, label, out var companyOrPersonalName))
+                // For speed, first check without dictionary
+                var correctedText = isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(text, true, false)
+                    : text;
+                
+                if (DataHelper.IsCorruptedText(correctedText)
+                    || !TryGetCompanyOrPersonalName(correctedText, label, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -69,7 +70,21 @@ public static class CompanyName
 
                     continue;
                 }
+                
+                correctedText = isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(correctedText, true, label.AutoCorrect)
+                    : text;
             
+                if (!TryGetCompanyOrPersonalName(correctedText, label, out companyOrPersonalName))
+                {
+                    if (matched)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+                
                 // It's only the company suffix with nothing else
                 if (CompanySuffixes.Any(companySuffix =>
                         companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))

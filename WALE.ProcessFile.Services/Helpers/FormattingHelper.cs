@@ -65,18 +65,59 @@ public static class FormattingHelper
 
         foreach (var column in columns)
         {
-            column.Text = column.Text
-                .Trim()
-                .Replace("‘‘", doubleQuoteChar)
-                .Replace("’’", doubleQuoteChar)
-                .Replace("‘", singleQuoteChar)
-                .Replace("’", singleQuoteChar)
-                .Replace("“", doubleQuoteChar)
-                .Replace("”", doubleQuoteChar)
-                .Replace("'\"", doubleQuoteChar)
-                .Replace("\u00b0", asteriskString) // degree character, OCR thinks it sees it for some small text
-                .Replace("  ", PositionConstants.SpaceString)
-                .Replace("\"\"", doubleQuoteChar);
+            column.Text = column.Text.Trim();
+
+            if (column.Text.Contains("‘‘"))
+            {
+                column.Text = column.Text.Replace("‘‘", doubleQuoteChar);
+            }
+            
+            if (column.Text.Contains("’’"))
+            {
+                column.Text = column.Text.Replace("’’", doubleQuoteChar);
+            }
+            
+            if (column.Text.Contains('‘'))
+            {
+                column.Text = column.Text.Replace("‘", singleQuoteChar);
+            }
+                
+            if (column.Text.Contains('’'))
+            {
+                column.Text = column.Text.Replace("’", singleQuoteChar);
+            }
+            
+            if (column.Text.Contains('“'))
+            {
+                column.Text = column.Text.Replace("“", doubleQuoteChar);
+            }
+            
+            if (column.Text.Contains('”'))
+            {
+                column.Text = column.Text.Replace("”", doubleQuoteChar);
+            }
+            
+            if (column.Text.Contains("'\""))
+            {
+                column.Text = column.Text.Replace("'\"", doubleQuoteChar);
+            }
+            
+            if (column.Text.Contains("\u00b0"))
+            {
+                column.Text =
+                    column.Text.Replace("\u00b0",
+                        asteriskString); // degree character, OCR thinks it sees it for some small text
+            }
+            
+            if (column.Text.Contains("  "))
+            {
+                column.Text = column.Text.Replace("  ", PositionConstants.SpaceString);
+            }
+
+            if (column.Text.Contains("\"\""))
+            {
+                column.Text = column.Text.Replace("\"\"", doubleQuoteChar);
+            }
         }
     }
 

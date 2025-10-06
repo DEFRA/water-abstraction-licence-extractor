@@ -86,8 +86,16 @@ public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageS
         
         do
         {
-            var line = iterator!.GetText(PageIteratorLevel.TextLine)?
-                .Replace("\n", string.Empty);
+            var lineText = iterator!.GetText(PageIteratorLevel.TextLine);
+
+            if (lineText == null)
+            {
+                continue;
+            }
+
+            var line = new string(lineText
+                .Where(ch => ch != '\n')
+                .ToArray());
 
             var words = new List<DocumentLineWord?>();
 

@@ -110,10 +110,20 @@ public static class LabelMatchingHelper
             }
             
             var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
+
+            var labelTextWithoutMarkers = labelText;
+
+            if (labelTextWithoutMarkers.Contains(PositionConstants.EndOfColumnMarker))
+            {
+                labelTextWithoutMarkers = labelTextWithoutMarkers
+                    .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
+            }
             
-            var labelTextWithoutMarkers = labelText
-                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
-                .Replace(PositionConstants.EndOfLineMarker, string.Empty);
+            if (labelTextWithoutMarkers.Contains(PositionConstants.EndOfLineMarker))
+            {
+                labelTextWithoutMarkers = labelTextWithoutMarkers
+                    .Replace(PositionConstants.EndOfLineMarker, string.Empty);                
+            }
             
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,

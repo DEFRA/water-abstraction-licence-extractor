@@ -138,7 +138,9 @@ public static class RelatedCategoryPosition
                 {
                     var line = allLines.First(x => x.LineNumber == match.LineNumber);
 
-                    var lineText = line.Text.Replace(",", string.Empty);
+                    var lineText = line.Text;
+                    if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
+                    
                     var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                     
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
@@ -153,7 +155,9 @@ public static class RelatedCategoryPosition
                 {
                     var line = allLines.First(x => x.LineNumber == match.LineNumber);
 
-                    var lineText = line.Text.Replace(",", string.Empty);
+                    var lineText = line.Text;
+                    if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
+                    
                     var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                 
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;

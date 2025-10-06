@@ -7,7 +7,8 @@ public static class OcrHelper
 {
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
-        int pageNumber)
+        int pageNumber,
+        int lineHeight)
     {
         var lineNumber = 0;
         
@@ -27,8 +28,6 @@ public static class OcrHelper
                 var yDiff =
                     line.Words![0]!.Coordinates.Top
                     - (previousLine?.Words!)[0]!.Coordinates.Top;
-                
-                const int lineHeight = 15;
                 
                 if (yDiff >= lineHeight)
                 {

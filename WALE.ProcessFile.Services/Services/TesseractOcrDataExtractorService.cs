@@ -73,8 +73,9 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     outputFilename,
                     JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializerOptions()));
             }
-
-            return OcrHelper.Group(returnLines, pageNumber);
+            
+            const int lineHeight = 15;
+            return OcrHelper.Group(returnLines, pageNumber, lineHeight);
         });
     }
     
@@ -98,7 +99,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                 words.Add(new DocumentLineWord(
                     wordText,
                     wordConfidence,
-                    new(
+                    new DocumentLineWordCoordinates(
                         coordinates.Y1,
                         coordinates.X2,
                         coordinates.Y2,

@@ -120,7 +120,8 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             })
             .ToList();
         
-        return OcrHelper.Group(returnLinesInFormat, pageNumber);
+        const int lineHeight = 15;
+        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)

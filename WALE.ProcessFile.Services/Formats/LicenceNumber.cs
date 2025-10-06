@@ -149,6 +149,7 @@ public static partial class LicenceNumber
                         true);
                         
                     var clonedColumn = new DocumentLineColumn(colText!);
+                    newColumns.Clear();
                     newColumns.Add(clonedColumn);
 
                     var clonedLine = line.Clone(newColumns);

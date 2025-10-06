@@ -4034,7 +4034,7 @@ public class PdfPigNoOcrPdfTests
     public async Task When_BackLinkX_ThenNowGetsThem()
     {
         // Arrange
-        const string filename = "NE0260034018__Application Minor Variation Issued Licence 11-12-2019 11149535.pdf";
+        const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
 
         // Act
         var resultFull = await GetMatchesAsync(filename, false);

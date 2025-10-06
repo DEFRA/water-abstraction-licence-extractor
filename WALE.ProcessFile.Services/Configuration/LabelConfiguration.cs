@@ -38,11 +38,13 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("8. Records[END_OF_LINE]"),
+                    new("9. Records[END_OF_LINE]"),                    
                     new("Records[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
                     new("9. Further conditions"),
+                    new("10. Further conditions"),
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
@@ -200,6 +202,7 @@ public static class LabelConfiguration
                     new("Northumbrian Water Authority"),
                     new("North West Water"),
                     new("Wessex Water Authority"),
+                    new("Wessex Water"),
                     new("Essex River Authority"),
                     new("Thames Water Authority"),
                     new("Mersey and Weaver River Authority"),
@@ -219,6 +222,7 @@ public static class LabelConfiguration
                     "Northumbrian Water Authority",
                     "North West Water",
                     "Wessex Water Authority",
+                    "Wessex Water",
                     "Essex River Authority",
                     "Thames Water Authority",
                     "Mersey and Weaver River Authority",
@@ -352,6 +356,11 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("POINT OF ABSTRACTION")
+                    {
+                        ColumnMustStartWith = true,
+                        IfMultiplePreferLast = true
+                    },
                     new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
@@ -657,6 +666,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
+                        NextLinesToFetch = 30,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
                         Remove = [
@@ -823,9 +833,16 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
+                AutoCorrect = true,
+                PreviousLinesToFetch = 1,
+                NextLinesToFetch = 6,
+                Name = "CompanyName",
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
+                ],
+                Remove = [
+                    new("hereby grant a licence to")
                 ]
             },
             new LabelToMatch
@@ -842,7 +859,10 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
-                PreviousLinesToFetch = 7,
+                Name = "CompanyName2",
+                AutoCorrect = true,
+                NextLinesToFetch = 4,
+                PreviousLinesToFetch = 5,
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
@@ -860,6 +880,8 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",
+                Name = "CompanyName3",
+                AutoCorrect = true,
                 PreviousLinesToFetch = 2,
                 NextLinesToFetch = 4,
                 IgnoreMatchIfContains = [
@@ -875,6 +897,8 @@ public static class LabelConfiguration
                     new("as amended by")
                 ],
                 Position = LabelPosition.ContractIsSuccession,
+                NextLinesToFetch = 10,
+                PreviousLinesToFetch = 0,
                 Format = "CompanyName",
                 MatchAllText = true,
                 Name = "IsSuccession"
@@ -1483,7 +1507,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerDayUnits",                                
+                                        Name = "PerDayUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per day")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
@@ -1506,7 +1530,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerMonthUnits",                                
+                                        Name = "PerMonthUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per month")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
@@ -1529,7 +1553,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerYearUnits",                                
+                                        Name = "PerYearUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [
                                             new("per year"),

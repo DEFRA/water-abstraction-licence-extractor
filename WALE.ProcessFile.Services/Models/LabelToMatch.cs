@@ -35,14 +35,15 @@ public class LabelToMatch
     public string? Name { get; init; }
     public string? CategoryName { get; init; }
     public IReadOnlyList<string>? Possibilities { get; set; }
-    public int PreviousLinesToFetch { get; init; } = 10;
-    public int NextLinesToFetch { get; init; } = 10;
+    public int PreviousLinesToFetch { get; init; } = 2;
+    public int NextLinesToFetch { get; init; } = 4;
     public bool DoNotTrimLines { get; init; }
     public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
     public bool FindMultipleOnSingleLine { get; init; }
         
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
+    public bool AutoCorrect { get; init; }
     
     public LabelToMatch Clone()
     {
@@ -76,7 +77,8 @@ public class LabelToMatch
             MultipleBehaviour = MultipleBehaviour,
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
-            DoNotTrimLines = DoNotTrimLines
+            DoNotTrimLines = DoNotTrimLines,
+            AutoCorrect = AutoCorrect
         };
     }    
 }

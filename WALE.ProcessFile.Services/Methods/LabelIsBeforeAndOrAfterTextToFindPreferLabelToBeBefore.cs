@@ -17,8 +17,12 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             MatchType.NearNextLineIsMatch,
             LabelPosition.LabelIsBeforeTextToFind,
             request.label);
-        
-        var inputLines = request.previousLines!.ToList();
+
+        var inputLines = new List<DocumentLine>
+        {
+            request.line!
+        };
+        inputLines.AddRange(request.previousLines!);
         inputLines.AddRange(request.nextLines!);
         
         var modifiedLines = DataHelper.RemoveExcludesAndNotContains(

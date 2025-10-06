@@ -9,7 +9,7 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
-    public static List<string> CompanyWords => ["trading as"];
+    public static readonly List<string> CompanyWords = ["trading as"];
 
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
@@ -52,15 +52,16 @@ public static class CompanyName
                 
                     continue;
                 }
+                
+                var text = FormattingHelper.TrimFormatting(column.Text, true, true)!;
 
-                var clonedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(column.Text, true)
-                    : column.Text;
-
-                var text = FormattingHelper.TrimFormatting(clonedText, true, true)!;
-
-                if (DataHelper.IsCorruptedText(text)
-                    || !TryGetCompanyOrPersonalName(text, label, out var companyOrPersonalName))
+                // For speed, first check without dictionary
+                var correctedText = isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(text, true, false)
+                    : text;
+                
+                if (DataHelper.IsCorruptedText(correctedText)
+                    || !TryGetCompanyOrPersonalName(correctedText, label, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -69,7 +70,21 @@ public static class CompanyName
 
                     continue;
                 }
+                
+                correctedText = isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(correctedText, true, label.AutoCorrect)
+                    : text;
             
+                if (!TryGetCompanyOrPersonalName(correctedText, label, out companyOrPersonalName))
+                {
+                    if (matched)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+                
                 // It's only the company suffix with nothing else
                 if (CompanySuffixes.Any(companySuffix =>
                         companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
@@ -85,7 +100,6 @@ public static class CompanyName
                 }
 
                 var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
-                
                 newColumns.Add(clonedColumn);
 
                 anyLineMatch = true;
@@ -117,8 +131,10 @@ public static class CompanyName
         {
             if (initialMatchedLines.Count > 1)
             {
+                const string theEA = "The Environment Agency";
+                
                 var eaLinePos = initialMatchedLines
-                    .FindIndex(x => x.Text.Contains("The Environment Agency"));
+                    .FindIndex(x => x.Text.Contains(theEA));
 
                 if (eaLinePos > -1)
                 {
@@ -181,7 +197,8 @@ public static class CompanyName
             && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))
             && parts.Last().Length >= 3
             && parts.Last().All(char.IsLetter)
-            && !parts.All(word => DataHelper.Dictionary.Check(word) && word.Length > 1);
+            && !parts.All(word => word.Length > 1
+                && (!label.AutoCorrect || DataHelper.Dictionary.Check(word)));
 
         if (looksLikeNameWithInitials && !lineText.Contains('"'))
         {
@@ -223,24 +240,8 @@ public static class CompanyName
         {
             return false;
         }
-    
-        var prefixes = new List<string>
-        {
-            "department ",
-            "university ",
-            "mr ",
-            "mr. ",
-            "mrs ",
-            "mrs. ",
-            "miss ",
-            "miss. ",
-            "lord ",
-            "lord. ",
-            "lady ",
-            "lady. "            
-        };
         
-        return prefixes
+        return Prefixes
             .Any(prefix => text.StartsWith(prefix,
                 StringComparison.InvariantCultureIgnoreCase));
     }
@@ -259,10 +260,11 @@ public static class CompanyName
     
     public static bool MayBeInitials(string word)
     {
-        return word.Length == 2 && word.All(char.IsUpper);
+        return word.Length is 2
+               && word.All(char.IsUpper);
     }
     
-    public static bool ContainsCompanyOrPersonalWord(string? text)
+    private static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
         {
@@ -286,7 +288,7 @@ public static class CompanyName
                 StringComparison.InvariantCultureIgnoreCase));
     }
     
-    public static bool ContainsCompanyOrPersonalSuffixDelimitter(
+    private static bool ContainsCompanyOrPersonalSuffixDelimitter(
         string? text,
         out string? delimiter)
     {
@@ -323,9 +325,13 @@ public static class CompanyName
             return false;
         }
 
-        return text.Contains("hereinafter", StringComparison.InvariantCultureIgnoreCase)
-               || text.Contains("grants this", StringComparison.InvariantCultureIgnoreCase)
-               || text.Contains("a agency", StringComparison.InvariantCultureIgnoreCase);
+        const string hereinafter = "hereinafter";
+        const string grantsthis = "grants this";
+        const string aagency = "a agency";
+
+        return text.Contains(hereinafter, StringComparison.InvariantCultureIgnoreCase)
+               || text.Contains(grantsthis, StringComparison.InvariantCultureIgnoreCase)
+               || text.Contains(aagency, StringComparison.InvariantCultureIgnoreCase);
     }
     
     private static bool EndsWithNoneCompanyOrPersonalSuffix(string? text)
@@ -335,20 +341,53 @@ public static class CompanyName
             return false;
         }
         
-        var suffixes = new List<string>
-        {
-            " road",
-            " lane",
-            " avenue",
-            " street"            
-        };
-        
-        
-        return suffixes
+        return Suffixes
             .Any(suffix => text.EndsWith(suffix,
                 StringComparison.InvariantCultureIgnoreCase)
                 || char.IsDigit(text.Last()));
     }
+    
+    private static HashSet<string>? firstNamesCsv { get; set; }
+
+    private static HashSet<string> FirstNamesCsv
+    {
+        get
+        {
+            if (firstNamesCsv != null)
+            {
+                return firstNamesCsv;
+            }
+
+            var returnList = new HashSet<string>();
+
+            using var reader = new StreamReader("Data/first-names.csv");
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            
+            var records = csv.GetRecords<FirstNamesRow>().ToList();
+                
+            foreach (var name in records.Select(record => record.FirstForename))
+            {
+                if (FirstNameAvoidWords.Contains(name!.ToLower())
+                    || name.Length <= 2)
+                {
+                    continue;
+                }
+                
+                returnList.Add(name);
+            }
+
+            firstNamesCsv = returnList;
+            return firstNamesCsv;
+        }
+    }
+    
+    private static readonly List<string> Suffixes =
+    [
+        " road",
+        " lane",
+        " avenue",
+        " street"
+    ];
     
     private static readonly List<string> CompanySuffixes =
     [
@@ -373,59 +412,41 @@ public static class CompanyName
         " farms"
     ];
     
-    private static HashSet<string>? firstNamesCsv { get; set; }
-
-    private static HashSet<string> FirstNamesCsv
-    {
-        get
-        {
-            if (firstNamesCsv != null)
-            {
-                return firstNamesCsv;
-            }
-
-            var avoidWords = new List<string>
-            {
-                "the", // Too generic
-                "po", // PO box
-                "mersey", // Geography
-                "june", // Month
-                "charity", // Company word
-                "grant", // Legal word
-                "manor", // house name,
-                "red", // color, not common name
-                "south", // direction
-                "north", // direction
-                "west", // direction
-                "rho", // In postcodes
-                "rivers", // water
-                "see", // doing word,
-                "heh", // Is it a name?
-                "you", //  Is it a name?
-                "thames", // River
-                "fee" // A fee / price
-            };
-
-            var returnList = new HashSet<string>();
-
-            using var reader = new StreamReader("Data/first-names.csv");
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            
-            var records = csv.GetRecords<FirstNamesRow>().ToList();
-                
-            foreach (var name in records.Select(record => record.FirstForename))
-            {
-                if (avoidWords.Contains(name!.ToLower())
-                    || name.Length <= 2)
-                {
-                    continue;
-                }
-                
-                returnList.Add(name);
-            }
-
-            firstNamesCsv = returnList;
-            return firstNamesCsv;
-        }
-    }
+    private static readonly List<string> FirstNameAvoidWords =
+    [
+        "the", // Too generic
+        "po", // PO box
+        "mersey", // Geography
+        "june", // Month
+        "charity", // Company word
+        "grant", // Legal word
+        "manor", // house name,
+        "red", // color, not common name
+        "south", // direction
+        "north", // direction
+        "west", // direction
+        "rho", // In postcodes
+        "rivers", // water
+        "see", // doing word,
+        "heh", // Is it a name?
+        "you", //  Is it a name?
+        "thames", // River
+        "fee"
+    ];
+    
+    private static readonly List<string> Prefixes =
+    [
+        "department ",
+        "university ",
+        "mr ",
+        "mr. ",
+        "mrs ",
+        "mrs. ",
+        "miss ",
+        "miss. ",
+        "lord ",
+        "lord. ",
+        "lady ",
+        "lady. "
+    ];
 }

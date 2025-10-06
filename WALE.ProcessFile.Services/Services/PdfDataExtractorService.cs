@@ -201,7 +201,7 @@ public class PdfDataExtractorService(
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
-                var serviceMatchesDict = new Dictionary<bool, List<LabelGroupResult>>();
+                var serviceMatchesDict = new Dictionary<IOcrDataExtractorService, List<LabelGroupResult>>();
                 
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
@@ -262,7 +262,7 @@ public class PdfDataExtractorService(
                         configuration.OutputFolder,
                         configuration.CacheFolder);
                     
-                    serviceMatchesDict.Add(ocrService.HasDirectCost, serviceMatches);
+                    serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
                     
                     if (noMatchesFound)
@@ -319,13 +319,13 @@ public class PdfDataExtractorService(
                     // no point processing that with the other services
                     if (averageLineLength < 30)
                     {
-                        break;
+                        //break; // TODO commenting out as a tesseract file fails with this - Non-Application Licence Document (08.06.1987).PDF
                     }
                 }
 
                 var uniqueServiceMatches = new List<LabelGroupResult>();
 
-                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key))
+                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key.HasDirectCost)) // TODO should be OrderByDescending
                 {
                     var serviceMatches = kvp.Value;
 
@@ -454,6 +454,8 @@ public class PdfDataExtractorService(
         {
             return labelGroupMatches;
         }
+
+        var lines = GetLines(documentLines);
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -469,8 +471,10 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
+                var tailoredLines = TailorLines(lines, label);
+                
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
-                    GetLines(documentLines, label),
+                    tailoredLines,
                     labels,
                     isOcr,
                     serviceName,
@@ -480,7 +484,7 @@ public class PdfDataExtractorService(
                     previouslyParsedPaths,
                     outputFolder,
                     cacheFolder);
-
+                
                 if (labelGroupMatch.Count == 0)
                 {
                     continue;
@@ -871,7 +875,7 @@ public class PdfDataExtractorService(
                             request,
                             partialLine!,
                             singleValueWanted);
-
+                        
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
                             && request.label.Position is not LabelPosition.Split
@@ -1253,7 +1257,8 @@ public class PdfDataExtractorService(
         string cacheFolder)
     {
         var subResults = new List<LabelGroupResult>();
-                    
+        var lines = GetLines(text);
+        
         if (label.SubLabels?.Count > 0)
         {
             foreach (var subLabel in label.SubLabels)
@@ -1264,7 +1269,7 @@ public class PdfDataExtractorService(
                 }
                             
                 var subLabelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
-                    GetLines(text, subLabel),
+                    TailorLines(lines, subLabel),
                     [subLabel],
                     isOcr,
                     serviceName,
@@ -1281,7 +1286,7 @@ public class PdfDataExtractorService(
                 }
             }
         }
-
+        
         var groups = subResults
             .GroupBy(x => x.MatchedLabel!.Name)
             .Where(x => x.Count() > 1)
@@ -1471,20 +1476,38 @@ public class PdfDataExtractorService(
             DocumentLine Line,
             IReadOnlyList<DocumentLine> PreviousNLines,
             IReadOnlyList<DocumentLine> NextNLines)>
-        GetLines(
-            IReadOnlyList<DocumentLine> lines,
-            LabelToMatch label)
+        GetLines(IReadOnlyList<DocumentLine> lines)
     {
         return lines.Select((line, index) =>
-            {
-                FormattingHelper.Standardise(line.Columns);
-                
-                return (
-                    line,
-                    GetPreviousLines(lines, index, label.PreviousLinesToFetch),
-                    GetNextLines(lines, index, label.NextLinesToFetch)
-                );
-            })
+        {
+            FormattingHelper.Standardise(line.Columns);
+            const int linesToFetch = 500;
+            
+            return (
+                line,
+                GetPreviousLines(lines, index, linesToFetch),
+                GetNextLines(lines, index, linesToFetch)
+            );
+        })
+        .ToList();
+    }
+    
+    private static IReadOnlyList<(
+            DocumentLine Line,
+            IReadOnlyList<DocumentLine> PreviousNLines,
+            IReadOnlyList<DocumentLine> NextNLines)>
+        TailorLines(
+            IReadOnlyList<(
+                DocumentLine Line,
+                IReadOnlyList<DocumentLine> PreviousNLines,
+                IReadOnlyList<DocumentLine> NextNLines)> lines,
+            LabelToMatch label)
+    {
+        return lines.Select((line, index) => (
+                line.Line,
+                line.PreviousNLines = line.PreviousNLines.Take(label.PreviousLinesToFetch).ToList(),
+                line.NextNLines = line.NextNLines.Take(label.NextLinesToFetch).ToList()
+            ))
             .ToList();
     }
     
@@ -1527,9 +1550,26 @@ public class PdfDataExtractorService(
     private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(labelTextMatch => labelTextMatch.Text
-                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
-                .Replace(PositionConstants.EndOfLineMarker, string.Empty))
+            .Select(labelTextMatch =>
+            {
+                var text = labelTextMatch.Text;
+
+                if (text.Contains(PositionConstants.EndOfLineMarker))
+                {
+                    text = text
+                        .Replace(PositionConstants.EndOfLineMarker, string.Empty);
+                }
+                
+                if (text.Contains(PositionConstants.EndOfColumnMarker))
+                {
+                    text = text
+                        .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
+                }
+                
+                return text;
+                
+                
+            })
             .ToList();
         
         if (labelText.Any(text =>

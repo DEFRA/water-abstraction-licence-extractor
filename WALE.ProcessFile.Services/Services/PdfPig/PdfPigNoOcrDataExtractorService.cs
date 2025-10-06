@@ -316,13 +316,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     previousWord2 ??= word;
                     
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
-
+                    
                     if (xDiff >= 25)
                     {
-                        if (word?.Text == "From")
-                        {
-                            
-                        }
                         columns.Add(new DocumentLineColumn());
                     }
 

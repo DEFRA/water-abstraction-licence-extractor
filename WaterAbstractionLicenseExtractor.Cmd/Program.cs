@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
@@ -62,20 +63,27 @@ async Task AllWork()
     {
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
-        var tesseractOcr = new TesseractOcrDataExtractorService(
+        var tesseractOcrSparse = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-            ?? throw new NullReferenceException("TESSDATA_PREFIX"));
+                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            PageSegMode.SparseTextOsd);
+        
+        var tesseractOcrDefault = new TesseractOcrDataExtractorService(
+            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            PageSegMode.Auto);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
-            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
+                ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
-            ?? throw new NullReferenceException("AzureAIVisionKey"));
+                ?? throw new NullReferenceException("AzureAIVisionKey"));
 
         var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
             pdfPigNoOcr,
             [
-                tesseractOcr,
+                tesseractOcrSparse,
+                tesseractOcrDefault,
                 azureAiServices
             ],
             pdfFolderPath);
@@ -188,7 +196,14 @@ async Task AllWork()
     
     foreach (var licenceSetGroup in licenceSetGroups)
     {
-        var licence = licenceSetGroup.First().Licences.First();
+        if (licenceSetGroup.Count == 0)
+        {
+            // TODO log this - it shouldnt happen
+            continue;
+        }
+        
+        var licenceSet = licenceSetGroup.First();
+        var licence = licenceSet.Licences.First();
         var folderName = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
 
@@ -386,12 +401,12 @@ List<LicenceSet> GetLicenceSetsForLicenceSetIds(IReadOnlyList<LicenceSetReferenc
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
-    int fileNumberX,
+    int fileNumber,
     Dictionary<string, string> licenceMapping)
 {
-    var fileName = pdfFilePath.Split('/').Last().Replace("–", "-");
+    var fileName = pdfFilePath.Split('/').Last();
 
-    Console.WriteLine($"Attempting {fileNumberX} {fileName}...");
+    Console.WriteLine($"Attempting {fileNumber} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
     pdfDataExtractor.InUse = true;
     
@@ -432,7 +447,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             $"{outputFolder}/{folderName}/internal.jsonp",
             $"var data = {internalJson}");
     
-        Console.WriteLine($"Finished {fileNumberX} {fileName}...");
+        Console.WriteLine($"Finished {fileNumber} {fileName}...");
         return licenceSets;
     }
     catch (Exception ex)
@@ -481,7 +496,7 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
     {
         LineNumber = completeNumber,
         StartNumber = fileNumber,
-        Filename = licence.Filename?.Replace("–", "-"),
+        Filename = licence.Filename,
         LicenceHolder = licenceHolder,
         LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
         Ocr = ocr,
@@ -551,7 +566,16 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("11497061") || x.Contains("11149535") || x.Contains("11149440")).ToArray();
+    pdfFilePaths = pdfFilePaths.Where(x => 
+        x.Contains("11497061")
+        || x.Contains("11149535")
+        || x.Contains("11149440")
+        
+        || x.Contains("16022023")
+        || x.Contains("08072024")
+        || x.Contains("19122022")
+        || x.Contains("11761845")
+        ).ToArray();
     //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths;

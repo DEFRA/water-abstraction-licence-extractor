@@ -1,27 +1,26 @@
 using System.Text.Json;
 using Tesseract;
-using WALE.ProcessFile.Services.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.TesseractOcr;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtractorService, IDisposable
+public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageSegMode)
+    : IOcrDataExtractorService, IDisposable
 {
     private readonly TesseractEngine _tesseractEngine = new(dataPath, "eng");
 
     public bool HasDirectCost => false;
-    public string Name => "TesseractOcr";
+    public string Name => $"TesseractOcr-{pageSegMode}";
     
     public Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         return Task.Run(async () =>
         {
-            var folder = $"{pdfDocument.CacheFolder}/TesseractOcr/Text";
+            var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
             Directory.CreateDirectory(folder);
         
             var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
@@ -39,7 +38,6 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
             else
             {
                 //  TODO - check dimensions are more then X and Y or its pointless
-                
                 _tesseractEngine.SetVariable("tessedit_parallelize", "1");
 
                 Pix? ocrImage;
@@ -54,7 +52,7 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
                     {
                         throw;
                     }
-                    
+
                     var bytAry = await File.ReadAllBytesAsync(imageFilepath);
                     var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
 
@@ -64,68 +62,64 @@ public class TesseractOcrDataExtractorService(string dataPath) : IOcrDataExtract
 
                     ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
                 }
-                
-                using var page = _tesseractEngine.Process(ocrImage);
-                
+
+                using var page = _tesseractEngine.Process(ocrImage, pageSegMode);
+
                 using var iterator = page.GetIterator();
                 iterator.Begin();
 
-                do
-                {
-                    var line = iterator.GetText(PageIteratorLevel.TextLine);
-                    var words = new List<DocumentLineWord?>();
-
-                    do
-                    {
-                        var wordText = iterator.GetText(PageIteratorLevel.Word);
-                        var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
-                        iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
-
-                        words.Add(new DocumentLineWord(
-                            wordText,
-                            wordConfidence,
-                            new(
-                                coordinates.Y1,
-                                coordinates.X2,
-                                coordinates.Y2,
-                                coordinates.X1
-                            )));
-                    } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
-
-                    returnLines.Add(new LineAndWords { Text = line, Words = words });
-                } while (iterator.Next(PageIteratorLevel.TextLine));
+                returnLines = ToPageLines(iterator);
                 
                 await File.WriteAllTextAsync(
                     outputFilename,
-                    JsonSerializer.Serialize(returnLines,
-                        JsonHelper.GetSerializerOptions()));
+                    JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializerOptions()));
             }
             
-            var lineNumber = 0;
-            
-            // TODO probably need to standardise the line
-            
-            var results = returnLines!
-                .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-                .Select(line => (line.Text!, line.Words))
-                .Select(line =>
-                {
-                    var documentLine = new DocumentLine(
-                        lineNumber++,
-                        pageNumber,
-                        [new(line.Item1, line.Words!)],
-                        PositionConstants.UnknownCoordinate,
-                        PositionConstants.UnknownCoordinate,
-                        PositionConstants.UnknownCoordinate);
-                    
-                    return documentLine;
-                })
-                .ToList();
-
-            // TODO add grouping and ordering
-            
-            return (IReadOnlyList<DocumentLine>)results;
+            const int lineHeight = 15;
+            return OcrHelper.Group(returnLines, pageNumber, lineHeight);
         });
+    }
+    
+    private static List<LineAndWords> ToPageLines(ResultIterator? iterator)
+    {
+        var returnLines = new List<LineAndWords>();
+        
+        do
+        {
+            var lineText = iterator!.GetText(PageIteratorLevel.TextLine);
+
+            if (lineText == null)
+            {
+                continue;
+            }
+
+            var line = new string(lineText
+                .Where(ch => ch != '\n')
+                .ToArray());
+
+            var words = new List<DocumentLineWord?>();
+
+            do
+            {
+                var wordText = iterator.GetText(PageIteratorLevel.Word);
+                var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
+                iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
+
+                words.Add(new DocumentLineWord(
+                    wordText,
+                    wordConfidence,
+                    new DocumentLineWordCoordinates(
+                        coordinates.Y1,
+                        coordinates.X2,
+                        coordinates.Y2,
+                        coordinates.X1
+                    )));
+            } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
+
+            returnLines.Add(new LineAndWords { Text = line, Words = words });
+        } while (iterator.Next(PageIteratorLevel.TextLine));
+        
+        return returnLines;
     }
     
     public void Dispose()

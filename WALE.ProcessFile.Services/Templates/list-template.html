@@ -85,18 +85,19 @@
                     </select>
                 </td>
                 <td>
-                    <select id="linked-licences-filter" data-field="linkedLicences" data-type="EmptyOrNotArray">
-                        <option value="all">Any amount</option>
-                        <option value="populated">Not empty</option>
-                        <option value="empty">--</option>
+                    <select id="linked-licences-filter" data-field="linkedLicences" data-subfield="fromSection" data-type="ArrayValueArrayValueMapped">
+                        <option value="All">All</option>
+                        <option value="AbstractionLimits">In Limits</option>
+                        <option value="FurtherConditions">In Further Conditions</option>
+                        <option value="AdditionalInformation">In Additional</option>
+                        <option value="Records">In Records</option>
+                        <option value="ImplicitBackLink">Implicit back link</option>
+                        <option value="Populated">Not empty</option>
+                        <option value="Empty">--</option>
                     </select>
                 </td>
                 <td>
-                    <select id="licence-sets-filter" data-field="licenceSets" data-subfield="shortLicenceSetId" data-type="ArrayValueMapped">
-                        <option value="all">All</option>
-                        <option value="populated">Not empty</option>
-                        <option value="empty">--</option>
-                    </select>
+                    <select id="licence-sets-filter" data-field="licenceSets" data-subfield="shortLicenceSetId" data-type="ArrayValueMapped"></select>
                 </td>
             </tr>
             <tr>

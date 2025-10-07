@@ -14,7 +14,13 @@ public class AggregateSet
         
         foreach (var licence in groupedAggregates)
         {
-            if (licencesDict.ContainsKey(licence.LicenceNumber!))
+            if (licence.LicenceNumber == null)
+            {
+                // TODO log, shouldn't get here ideally
+                continue;
+            }
+            
+            if (licencesDict.ContainsKey(licence.LicenceNumber))
             {
                 continue;
             }

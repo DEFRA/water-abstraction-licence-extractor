@@ -10,76 +10,113 @@ namespace WALE.ProcessFile.Services.Services;
 public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageSegMode)
     : IOcrDataExtractorService, IDisposable
 {
-    private readonly TesseractEngine _tesseractEngine = new(dataPath, "eng");
-
     public bool HasDirectCost => false;
     public string Name => $"TesseractOcr-{pageSegMode}";
-    
-    public Task<IReadOnlyList<DocumentLine>>
+
+    public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        return Task.Run(async () =>
-        {
-            var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
-            Directory.CreateDirectory(folder);
-        
-            var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
-            var returnLines = new List<LineAndWords>();
-            
-            if (pdfDocument.FromCache && File.Exists(outputFilename))
-            {
-                var fileText = await File.ReadAllTextAsync(outputFilename);
-                var pageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
-                    fileText,
-                    JsonHelper.GetSerializerOptions());
-                
-                returnLines.AddRange(pageLines!);
-            }
-            else
-            {
-                //  TODO - check dimensions are more then X and Y or its pointless
-                _tesseractEngine.SetVariable("tessedit_parallelize", "1");
-
-                Pix? ocrImage;
-
-                try
-                {
-                    ocrImage = Pix.LoadFromFile(imageFilepath);
-                }
-                catch
-                {
-                    if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        throw;
-                    }
-
-                    var bytAry = await File.ReadAllBytesAsync(imageFilepath);
-                    var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
-
-                    var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
-                        StringComparison.InvariantCultureIgnoreCase);
-                    await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
-
-                    ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
-                }
-
-                using var page = _tesseractEngine.Process(ocrImage, pageSegMode);
-
-                using var iterator = page.GetIterator();
-                iterator.Begin();
-
-                returnLines = ToPageLines(iterator);
-                
-                await File.WriteAllTextAsync(
-                    outputFilename,
-                    JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializerOptions()));
-            }
-            
-            const int lineHeight = 15;
-            return OcrHelper.Group(returnLines, pageNumber, lineHeight);
-        });
-    }
+        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
+        Directory.CreateDirectory(folder);
     
+        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
+        var returnLines = new List<LineAndWords>();
+        
+        if (pdfDocument.FromCache && File.Exists(outputFilename))
+        {
+            var fileText = await File.ReadAllTextAsync(outputFilename);
+            var pageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
+                fileText,
+                JsonHelper.GetSerializerOptions());
+            
+            returnLines.AddRange(pageLines!);
+        }
+        else
+        {
+            Pix? ocrImage;
+
+            try
+            {
+                ocrImage = Pix.LoadFromFile(imageFilepath);
+            }
+            catch
+            {
+                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw;
+                }
+
+                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
+                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
+                    StringComparison.InvariantCultureIgnoreCase);
+                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+                ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
+            }
+
+            try
+            {
+                returnLines = await Task.Run(() => GetDataFromTesseract(ocrImage));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
+            await File.WriteAllTextAsync(
+                outputFilename,
+                JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializerOptions()));
+        }
+        
+        const int lineHeight = 15;
+        return OcrHelper.Group(returnLines, pageNumber, lineHeight);
+    }
+
+    private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)
+    {
+        try
+        {
+            //  TODO - check dimensions are more then X and Y or its pointless
+            TesseractEngine tesseractEngine = new(dataPath, "eng");
+            tesseractEngine.SetVariable("tessedit_parallelize", "1");
+                    
+            var page = tesseractEngine.Process(ocrImage, pageSegMode);
+
+            // ReSharper disable once AccessToDisposedClosure
+            var task = Task.Run(() => GetTextLinesFromPageAsync(page));
+                
+            const int maxExecutionTimeMs = 30_000;
+            var isCompletedSuccessfully = task.Wait(TimeSpan.FromMilliseconds(maxExecutionTimeMs));
+
+            return !isCompletedSuccessfully ? [] : task.Result;
+        }
+        catch (Exception e)
+        {
+            //Console.SetOut(TextWriter.Null);
+            
+            Console.WriteLine(e);
+            return [];
+        }
+    }
+
+    private List<LineAndWords> GetTextLinesFromPageAsync(Page page)
+    {
+        try
+        {
+            using var iterator = page.GetIterator();
+            iterator.Begin();
+
+            return ToPageLines(iterator);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return [];
+        }
+    }
+
     private static List<LineAndWords> ToPageLines(ResultIterator? iterator)
     {
         var returnLines = new List<LineAndWords>();
@@ -124,7 +161,6 @@ public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageS
     
     public void Dispose()
     {
-        _tesseractEngine.Dispose();
         GC.SuppressFinalize(this);
     }
 }

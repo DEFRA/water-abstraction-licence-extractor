@@ -103,11 +103,15 @@ public static class GenerateLicenceReaderExtract
                 var licenceNumber = ExtractLicenceNumber(internalJson);
                 var dateOfIssue = ExtractDateOfIssue(internalJson);
 
-                Console.WriteLine($"Extracted - Licence: {licenceNumber}, Date: {dateOfIssue}");
+                // Extract permit number from filename (everything before first underscore)
+                var permitNumber = ExtractPermitNumberFromFilename(pdfFilePath);
+
+                Console.WriteLine($"Extracted - Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
 
                 returnList.Add(new LicenceReaderCsvLine
                 {
                     LicenceNumber = licenceNumber,
+                    PermitNumber = permitNumber,
                     DateOfIssue = dateOfIssue
                 });
             }
@@ -128,6 +132,7 @@ public static class GenerateLicenceReaderExtract
                 returnList.Add(new LicenceReaderCsvLine
                 {
                     LicenceNumber = null,
+                    PermitNumber = ExtractPermitNumberFromFilename(pdfFilePath),
                     DateOfIssue = null
                 });
             }
@@ -146,7 +151,8 @@ public static class GenerateLicenceReaderExtract
             return string.Join(" ", licenceNumberMatch.Text
                 .SelectMany(line => line.Text)
                 .Select(element => element))
-                .Trim();
+                .Trim()
+                .Replace(" ", "");
         }
 
         return null;
@@ -162,9 +168,30 @@ public static class GenerateLicenceReaderExtract
             return string.Join(" ", dateOfIssueMatch.Text
                 .SelectMany(line => line.Text)
                 .Select(element => element))
-                .Trim();
+                .Trim()
+                .Replace(" ", "");
         }
 
         return null;
+    }
+
+    private static string? ExtractPermitNumberFromFilename(string filename)
+    {
+        if (string.IsNullOrEmpty(filename))
+            return null;
+
+        // Remove file extension first
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
+
+        // Find first underscore and extract everything before it
+        var underscoreIndex = nameWithoutExtension.IndexOf('_');
+
+        if (underscoreIndex > 0)
+        {
+            return nameWithoutExtension.Substring(0, underscoreIndex).Replace(" ", "");
+        }
+
+        // If no underscore found, return the whole filename without extension
+        return nameWithoutExtension.Replace(" ", "");
     }
 }

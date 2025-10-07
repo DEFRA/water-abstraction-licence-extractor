@@ -148,6 +148,18 @@ function filterData(dataSorted, filterType, filterField, filterValue, filterSubF
                 if (filterValue !== 'All' && value.map(x => x[filterSubField]).indexOf(filterValue) === -1) {
                     continue;
                 }
+            } else if (filterType === 'ArrayValueArrayValueMapped') {
+                if (filterValue === 'Populated') {
+                    if (value.length === 0) {
+                        continue;
+                    }
+                } else if (filterValue === 'Empty') {
+                    if (value.length > 0) {
+                        continue;
+                    }
+                } else if (filterValue !== 'All' && value.map(x => x[filterSubField].indexOf(filterValue) > -1).filter(x => x === true).length === 0) {
+                    continue;
+                } 
             } else if (value !== filterValue) {
                 continue;
             }
@@ -456,7 +468,8 @@ function populateLicenceSetTable(dataSorted) {
                 let children3 = getChildrenOf(licenceSets, child2);
                 
                 if (children3.length > 0) {
-                    alert('Licence set at a lower level not showing');
+                    console.log('Licence set at a lower level not showing');
+                    // TODO should sort this
                 }
             }
         }
@@ -717,13 +730,13 @@ function setTotals() {
     document.getElementById('licence-holder-total').innerHTML = getCount(window.dataFiltered, 'licenceHolder', '');
     document.getElementById('purposes-total').innerHTML = getCount(window.dataFiltered, 'purposes', []);
     document.getElementById('points-total').innerHTML = getCount(window.dataFiltered, 'points', []);
-    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsFound', false);
-    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesFound', false);
+    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsCount', 0);
+    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesCount', 0);
     document.getElementById('ocr-total').innerHTML = getCount(window.dataFiltered, 'ocr', false);
     document.getElementById('issue-date-total').innerHTML = getCount(window.dataFiltered, 'issueDate', '');
     document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
-    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
+    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', []);
     document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
 }
 
@@ -740,6 +753,12 @@ function getCount(dataFiltered, field, comparisonValue) {
     for (let i = 0; i < dataFiltered.length; i++) {
         let item = dataFiltered[i];
         let value = item[field];
+        
+        if (comparisonValue.length === 0) {
+            if (!value || value.length === 0) {
+                continue;
+            }
+        }
         
         if (value !== comparisonValue) {
             count++;
@@ -809,7 +828,8 @@ function populateDropdowns() {
     
     let licenceSetsSb = [];
     licenceSetsSb.push('<option value="All">All</option>');
-
+    licenceSetsSb.push('<option value="NoneSingle">None single</option>');
+    
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
         let ary = item.licenceSets;

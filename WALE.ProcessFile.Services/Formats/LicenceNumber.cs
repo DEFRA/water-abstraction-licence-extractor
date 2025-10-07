@@ -12,6 +12,14 @@ public static partial class LicenceNumber
     // AA/123, AA/123/123, AA/123/123/123, AA 123 123 123 or AA.123.123.123 (and some other variations of this)
     public const string RegexPatten =
         @"([A-Z0-9]{1,3}[\/ .][A-Z0-9]{1,5}([\/ .][0-9]{1,4})?([\/ .][0-9A-Z\*]{1,4})?([\/ .][0-9]{1,4})?([\/ .][0-9A-Z]{1,3})?[\/ .]?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
+
+    private static readonly string[] PrefixesToExclude =
+    [
+        "NT ",
+        "NU ",
+        "NY ",
+        "NGR "
+    ];
     
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
@@ -46,14 +54,39 @@ public static partial class LicenceNumber
 
                 const string splitChar = ",";
 
-                var subLines = column.Text
-                    .Replace(" and", splitChar)
-                    .Replace(" for", splitChar)
-                    .Replace(" shall", splitChar)
-                    .Replace(" under", splitChar)
-                    .Replace(" from", splitChar)
-                    .Replace(" (", splitChar)                
-                    .Split(splitChar);
+                var columnText = column.Text;
+
+                if (columnText.Contains(" and"))
+                {
+                    columnText = columnText.Replace(" and", splitChar);
+                }
+                
+                if (columnText.Contains(" for"))
+                {
+                    columnText = columnText.Replace(" for", splitChar);
+                }
+                
+                if (columnText.Contains(" shall"))
+                {
+                    columnText = columnText.Replace(" shall", splitChar);
+                }
+                
+                if (columnText.Contains(" under"))
+                {
+                    columnText = columnText.Replace(" under", splitChar);
+                }
+                
+                if (columnText.Contains(" from"))
+                {
+                    columnText = columnText.Replace(" from", splitChar);
+                }
+                
+                if (columnText.Contains(" ("))
+                {
+                    columnText = columnText.Replace(" (", splitChar);
+                }
+                
+                var subLines = columnText.Split(splitChar);
 
                 foreach (var subLine in subLines)
                 {
@@ -102,6 +135,13 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
+                    
+                    var totalDigits = value.Count(char.IsDigit);
+
+                    if (totalDigits < 4)
+                    {
+                        continue;
+                    }
 
                     var isPostcode = value.Length == 7 || value.Length == 8
                         && char.IsUpper(value[0])
@@ -139,6 +179,14 @@ public static partial class LicenceNumber
                         && !value.Any(char.IsLetter);
 
                     if (noCharSlashOrDot && value.Split(' ') .Length < 3)
+                    {
+                        continue;
+                    }
+
+                    var excludedPrefixFound = PrefixesToExclude.Any(prefixToExclude =>
+                        value.StartsWith(prefixToExclude));
+
+                    if (excludedPrefixFound)
                     {
                         continue;
                     }

@@ -20,6 +20,7 @@ public class PdfDataExtractorService(
     : IPdfDataExtractorService
 {
     public bool InUse { get; set; } = false;
+    public static string Name => "PdfPig";
 
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
     {
@@ -507,7 +508,7 @@ public class PdfDataExtractorService(
     {
         try
         {
-            var fileOutputFolder = Path.Combine(outputFolder, FileHelper.GetFilenameWithoutExtensions(pdfFilePath));
+            var fileOutputFolder = Path.Combine(outputFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath));
             if (fileOutputFolder.StartsWith('/'))
             {
                 fileOutputFolder = fileOutputFolder[1..];

@@ -20,3 +20,7 @@ local.settings.json
 licence-number-filename-map.csv
 /Tools/WALE.Tools/bin
 /Tools/WALE.Tools/obj
+WALE.ProcessFile.Database/bin
+WALE.ProcessFile.Database/obj
+WALE.ProcessFile.Models/bin
+WALE.ProcessFile.Models/obj

@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FileHelper
 {
-    public static string GetFilenameWithoutExtensions(string pdfFilePath)
+    public static string GetFilenameWithoutExtension(string pdfFilePath)
     {
         const char pathSeparator = '/';
         const char extensionSeperator = '.';

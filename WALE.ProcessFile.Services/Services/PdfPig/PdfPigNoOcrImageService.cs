@@ -60,7 +60,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
     public string GetImageFilepath(int imageNumber, int pageNumber, string cacheFolder, bool createDirectory, string extension)
     {
-        var outputFolderFull = $"{cacheFolder}/PdfPig/Images";
+        var outputFolderFull = $"{cacheFolder}/{PdfDataExtractorService.Name}/Images";
         
         if (createDirectory)
         {

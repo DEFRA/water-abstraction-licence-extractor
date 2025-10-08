@@ -74,7 +74,7 @@ public class MessageReceivedFunction(
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
+        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var jsonFileName = $"{filenameOnlyNoExtension}.json";
 
         var assetsClient = blobClient.GetBlobContainerClient("assets");

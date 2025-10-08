@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
@@ -45,18 +44,10 @@ async Task AllWork()
         // TODO clear out the Cache directory
     }
 
-    var jsonOptions = new JsonSerializerOptions
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters =
-        {
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        }
-    };
+    var jsonOptions = JsonHelper.GetSerializerOptions();
+    var outputService = (IOutputService)new FileSystemOutputService(outputFolder);
 
-    Directory.CreateDirectory(outputFolder);
+    await outputService.SetupAsync();
     Directory.CreateDirectory(cacheFolder);
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -125,7 +116,6 @@ async Task AllWork()
 
     var indexHtml = await File.ReadAllTextAsync(indexPath);
     indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
-
     await File.WriteAllTextAsync(indexPath, indexHtml);
 
     var count = 0;
@@ -155,7 +145,11 @@ async Task AllWork()
 
         foreach (var pdfFilePath in GetPdfPaths())
         {
-            scrapingTasks.Add(ScrapeDocumentAsync(pdfFilePath, processCount++, fileLicenceMapping));
+            scrapingTasks.Add(ScrapeDocumentAsync(
+                pdfFilePath,
+                processCount++,
+                fileLicenceMapping,
+                outputService));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -204,22 +198,11 @@ async Task AllWork()
         
         var licenceSet = licenceSetGroup.First();
         var licence = licenceSet.Licences.First();
-        var folderName = FileHelper.GetFilenameWithoutExtensions(licence.Filename!);
-        Directory.CreateDirectory($"{outputFolder}/{folderName}");
-
-        var licenceJson = JsonHelper.GetAsString(licence);
-
-        File.WriteAllText(
-            $"{outputFolder}/{folderName}/licence.jsonp",
-            $"var data2 = {licenceJson}");
+        await outputService.SaveLicenceAsync(licence, licence.Filename!);
 
         var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, licenceSets);
-        var licenceSetsJson = JsonHelper.GetAsString(licenceSetsFull);
-
-        File.WriteAllText(
-            $"{outputFolder}/{folderName}/licence-sets.jsonp",
-            $"var licenceSets = {licenceSetsJson}");
-
+        await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!);
+        
         var outputLine = ToOutputLine(
             licence,
             DateTime.Now,
@@ -244,7 +227,7 @@ async Task AllWork()
     var nodesDictionaries = new List<Dictionary<string, object>>();
     var linksDictionaries = new List<Dictionary<string, object>>();
 
-    var listJs = new List<OutputListDataItem>();
+    var listData = new List<OutputListDataItem>();
 
     foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
     {
@@ -259,11 +242,11 @@ async Task AllWork()
             $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
             resultFileStringBuilder);
 
-        var filename = FileHelper.GetFilenameWithoutExtensions(outputLine.Filename!);
+        var filename = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
         var listRow = new OutputListDataItem
         {
-            imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
+            imagePath = $"{filename}/{PdfDataExtractorService.Name}/Images/page-1.jpg",
             filename = filename,
             licenceNumber =
                 $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
@@ -294,7 +277,7 @@ async Task AllWork()
             }).ToArray() ?? []
         };
 
-        listJs.Add(listRow);
+        listData.Add(listRow);
 
         if (outputLine.LicenceNumber != null)
         {
@@ -362,8 +345,7 @@ async Task AllWork()
     }
 #pragma warning restore CS0162 // Unreachable code detected
 
-    var jsListFilePath = $"{outputFolder}list-data.js";
-    File.WriteAllText(jsListFilePath, "var data = " + JsonSerializer.Serialize(listJs, jsonOptions) + ";");
+    await outputService.SaveListDataAsync(listData);
 
     var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
     {
@@ -402,7 +384,8 @@ List<LicenceSet> GetLicenceSetsForLicenceSetIds(IReadOnlyList<LicenceSetReferenc
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
-    Dictionary<string, string> licenceMapping)
+    Dictionary<string, string> licenceMapping,
+    IOutputService outputService)
 {
     var fileName = pdfFilePath.Split('/').Last();
 
@@ -438,14 +421,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             cacheFolder,
             pdfFolder);
 
-        var internalJson = JsonHelper.GetAsString(matchesFull);
-    
-        var folderName = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
-        Directory.CreateDirectory($"{outputFolder}/{folderName}");
-    
-        File.WriteAllText(
-            $"{outputFolder}/{folderName}/internal.jsonp",
-            $"var data = {internalJson}");
+        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath);
     
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
         return licenceSets;
@@ -470,7 +446,7 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
     var ocr = licence.NoneSchemaData.TryGetValue("ocr", out var value6)
         ? (string)value6 : "--";
     var serviceName = licence.NoneSchemaData.TryGetValue("servicesUsed", out var value7)
-        ? ((string[])value7).FirstOrDefault() : "PdfPig";
+        ? ((string[])value7).FirstOrDefault() : PdfDataExtractorService.Name;
 
     var durationInMSeconds = (int) (DateTime.Now - dtStart).TotalMilliseconds;
 
@@ -542,16 +518,16 @@ IEnumerable<string> GetPdfPaths()
         .GetFiles(pdfFolderPath)
         .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
 
-    var yorkshire = Yorkshire200Files();
+    //var yorkshire = Yorkshire200Files();
 
     // YORKSHIRE 200 - From new files
     
-    pdfFilePaths = pdfFilePaths.Where(filePath =>
+    /*pdfFilePaths = pdfFilePaths.Where(filePath =>
     {
         var filename = filePath.Split('/').Last();
         
         return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(filename => filename).Skip(0).Take(200).ToList();
+    }).OrderBy(filename => filename).Skip(0).Take(200).ToList();*/
     
     // YORKSHIRE 6 - From original files
 
@@ -566,17 +542,21 @@ IEnumerable<string> GetPdfPaths()
     
     // Any additional filtering
     
-    pdfFilePaths = pdfFilePaths.Where(x => 
+    /*pdfFilePaths = pdfFilePaths.Where(x =>
+        // Orig 3
         x.Contains("11497061")
         || x.Contains("11149535")
         || x.Contains("11149440")
         
+        // Some more
         || x.Contains("16022023")
         || x.Contains("08072024")
         || x.Contains("19122022")
         || x.Contains("11761845")
-        ).ToArray();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
+        ).ToArray();*/
+    
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(5).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths;
 }

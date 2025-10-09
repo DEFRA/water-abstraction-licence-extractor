@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Models.Database;
+using WALE.ProcessFile.Models;
 
 namespace WALE.ProcessFile.Database.Interfaces;
 

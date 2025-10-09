@@ -1,19 +1,19 @@
 using Tesseract;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class TessaractOcrPdfTests
 {
-    private static readonly string CacheFolder = "Cache/";
-    private static readonly string OutputFolder = "Output/";
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -34,8 +34,8 @@ public class TessaractOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                OutputFolder,
-                CacheFolder),
+                OutputService,
+                CacheService),
             [PdfFolder + fileName]);
     }
     
@@ -496,8 +496,8 @@ public class TessaractOcrPdfTests
             resultFull,
             _fileLicenceMapping,
             _pdfDataExtractorCombined,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder);
         
         Assert.Single(agreedSchemaLicenceGroup);

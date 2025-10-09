@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Helpers;
 

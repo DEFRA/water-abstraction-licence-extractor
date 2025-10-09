@@ -1,5 +1,5 @@
 using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Models.Database;
+using WALE.ProcessFile.Models;
 
 namespace WALE.ProcessFile.Database.Services;
 

@@ -1,11 +1,11 @@
 using Tesseract;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -33,8 +33,8 @@ public class MultipleOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                "Output/",
-                "Cache/"),
+                new FileSystemOutputService("Output/"),
+                new FileSystemCacheService("Cache/")),
             [PdfFolder + fileName]);
     }
     

@@ -1,8 +1,9 @@
-using WALE.ProcessFile.Services.Constants;
-using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;

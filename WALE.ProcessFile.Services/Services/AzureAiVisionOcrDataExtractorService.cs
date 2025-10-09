@@ -1,7 +1,8 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -20,8 +21,9 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         var returnLines = new List<(string Text, IList<Word> Words)>();
-
-        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
+        var cacheFolder = ""; // TODO
+        
+        var folder = $"{cacheFolder}/{Name}/Text";
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         
         if (pdfDocument.FromCache && File.Exists(outputFilename))

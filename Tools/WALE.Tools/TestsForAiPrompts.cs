@@ -6,9 +6,9 @@ using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
 using Tesseract;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Services;
 
@@ -531,8 +531,6 @@ public static class TestsForAiPrompts
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
-            KeyConfig.OutputFolder,
-            KeyConfig.CacheFolder,
             true);
         
         var imagePrompts = new List<ChatMessageContentPart>();

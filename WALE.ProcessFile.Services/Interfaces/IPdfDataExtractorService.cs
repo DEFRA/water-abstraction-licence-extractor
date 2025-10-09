@@ -1,5 +1,5 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Interfaces;
 
@@ -20,8 +20,8 @@ public interface IPdfDataExtractorService
         string labelGroupName,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder);
+        IOutputService outputService,
+        ICacheService cacheService);
 
     public void Dispose();
 }

@@ -1,19 +1,19 @@
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Enums;
-using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class PdfPigNoOcrPdfTests
 {
-    private static readonly string CacheFolder = "Cache/";
-    private static readonly string OutputFolder = "Output/";
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -56,8 +56,8 @@ public class PdfPigNoOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
               FileLicenceMapping,
-                OutputFolder,
-                CacheFolder),
+                OutputService,
+                CacheService),
             [pdfFolder + fileName]);
     }
     
@@ -186,8 +186,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
@@ -373,8 +373,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.LicenceSetId);
@@ -1780,8 +1780,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
@@ -2371,8 +2371,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
@@ -3142,8 +3142,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
@@ -3179,8 +3179,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder);
         
         Assert.Equal(3, licenceSets.Count);
@@ -3297,8 +3297,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3396,8 +3396,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3507,8 +3507,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3598,8 +3598,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3668,8 +3668,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
@@ -3799,8 +3799,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder2);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
@@ -3834,8 +3834,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder2);
         
         Assert.Equal(3, licenceGroups.Count);
@@ -3885,8 +3885,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder2);
         
         Assert.Equal(3, licenceSets.Count);
@@ -4000,8 +4000,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder2)).Last();
         
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
@@ -4044,8 +4044,8 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
+            OutputService,
+            CacheService,
             TestConfig.PdfFolder2);
         
         Assert.Equal(2, licenceSets.Count);

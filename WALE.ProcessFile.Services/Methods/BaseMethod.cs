@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -193,8 +194,8 @@ public static class BaseMethod
                 request.labelGroupName!,
                 request.licenceMapping!,
                 request.previouslyParsedPaths!,
-                request.outputFolder!,
-                request.cacheFolder!);
+                request.outputService!,
+                request.cacheService!);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

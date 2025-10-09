@@ -2,7 +2,8 @@ using System.ClientModel;
 using Azure.AI.OpenAI;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
-using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
@@ -17,7 +18,9 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
+        var cacheFolder = ""; // TODO
+        
+        var folder = $"{cacheFolder}/{Name}/Text";
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
 
         string? response;

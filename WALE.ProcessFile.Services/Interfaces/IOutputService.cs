@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Models.Database;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Interfaces;
 
@@ -8,7 +8,7 @@ public interface IOutputService
 {
     public Task SetupAsync();
     
-    public Task<ProcessRun> RecordProcessRunStartAsync();
+    public Task<ProcessRun> RecordProcessRunStartAsync(ProcessRun processRun);
 
     public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath);
     
@@ -17,4 +17,7 @@ public interface IOutputService
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData);
+    public string GetImageFilepath();
+    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(int pageNumber, string pdfServiceName);
+    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName);
 }

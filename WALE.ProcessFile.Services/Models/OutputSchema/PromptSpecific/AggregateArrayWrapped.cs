@@ -1,4 +1,5 @@
 using System.Text.Json;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;

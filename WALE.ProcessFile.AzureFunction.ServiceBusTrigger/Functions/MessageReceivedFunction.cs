@@ -9,12 +9,15 @@ using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.AzureFunction.ServiceBusTrigger.Functions;
 
 public class MessageReceivedFunction(
+    IOutputService outputService,
+    ICacheService cacheService,
     IConfiguration configuration/*,
     ILogger<MessageReceivedFunction> logger*/)
 {
@@ -65,10 +68,10 @@ public class MessageReceivedFunction(
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
-            fileLicenceMapping,
-            outputFolder,
-            cacheFolder),
+                LabelConfiguration.GetLabels(),
+                fileLicenceMapping,
+                outputService,
+                cacheService),
             previouslyParsedPaths);
         
         var json = JsonHelper.GetAsString(matches);

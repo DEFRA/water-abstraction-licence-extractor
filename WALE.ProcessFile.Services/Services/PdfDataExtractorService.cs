@@ -1,15 +1,16 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Constants;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -22,6 +23,9 @@ public class PdfDataExtractorService(
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
 
+    private string cacheFolder = ""; // TODO
+    private string outputFolder = ""; // TODO
+    
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
     {
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
@@ -34,24 +38,24 @@ public class PdfDataExtractorService(
 
     private string GetImageMetadataFilename(PdfDocument pdfDocument)
     {
-        var imagesMetadataFolder = $"{pdfDocument.CacheFolder}/{noOcrDataExtractorService.Name}/Images";
+        var imagesMetadataFolder = $"{cacheFolder}/{noOcrDataExtractorService.Name}/Images";
         Directory.CreateDirectory(imagesMetadataFolder); // This checks if exists, and creates the whole path too
         return $"{imagesMetadataFolder}/{PositionConstants.CacheMetadataFilename}";
     }
     
     private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument)
+        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService)
     {
         foreach (var page in pdfDocument.Pages)
         {
             var path =
-                noOcrDataExtractorService.GetPageScreenshotPath(pdfDocument, page.Number);
+                noOcrDataExtractorService.GetPageScreenshotPath(outputService, page.Number, Name);
 
             var screenshotPath = path.imgFolder + path.imgOutputFilename;
             
             if (!File.Exists(screenshotPath))
             {
-                await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
+                await noOcrDataExtractorService.SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name);
             }
         }
 
@@ -64,11 +68,11 @@ public class PdfDataExtractorService(
             
         foreach (var page in pdfDocument.Pages)
         {
-            var pageImageService = new PdfPigNoOcrPageService(page.PdfPigPage!); // TODO should use the interface (via a factory)
+            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!); // TODO should use the interface (via a factory)
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
-                ImageFilename = $"{pdfDocument.CacheFolder}/{page.GetImageFilepath(noOcrDataExtractorService.Name)}"
+                ImageFilename = $"{cacheFolder}/{page.GetImageFilepath(noOcrDataExtractorService.Name)}"
             };
             
             imagesMetadata.Pages.Add(metadataPage);
@@ -79,14 +83,14 @@ public class PdfDataExtractorService(
                 var extension = await image.SaveImageBytesAsync(
                     imageNumber,
                     page.Number,
-                    pdfDocument.CacheFolder);
+                    cacheFolder);
 
                 if (extension == null)
                 {
                     continue;
                 }
                 
-                var filepath = image.GetImageFilepath(imageNumber++, page.Number, pdfDocument.CacheFolder, false, extension);
+                var filepath = image.GetImageFilepath(imageNumber++, page.Number, cacheFolder, false, extension);
                 metadataPage.ImageFiles.Add(filepath);
             }
         }
@@ -101,8 +105,8 @@ public class PdfDataExtractorService(
     {
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
-            GetFolderPath(configuration.OutputFolder, pdfFilePath),
-            GetFolderPath(configuration.CacheFolder, pdfFilePath));
+            configuration.OutputService,
+            configuration.CacheService);
 
         var returnResult = new MatchesResult
         {
@@ -114,12 +118,14 @@ public class PdfDataExtractorService(
         returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
         
         var (imagesMetadata, imageMetadataChanged) =
-            await GetImageMetadataAsync(pdfDocument);
+            await GetImageMetadataAsync(pdfDocument, configuration.OutputService);
         
         var documentLines =
-            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(pdfDocument);
+            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(
+                pdfDocument,
+                configuration.CacheService);
 
-        var outputFolderFull = $"{pdfDocument.OutputFolder}/{noOcrDataExtractorService.Name}";
+        var outputFolderFull = $"{outputFolder}/{noOcrDataExtractorService.Name}";
         var folder = $"{outputFolderFull}/Text";
         var pageAllPath = $"{folder}/pages-all.txt";
 
@@ -162,8 +168,8 @@ public class PdfDataExtractorService(
             noOcrDataExtractorService.Name,
             configuration.LicenceMapping,
             previouslyParsedPaths,
-            configuration.OutputFolder,
-            configuration.CacheFolder);
+            configuration.OutputService,
+            configuration.CacheService);
 
         var isTextFile = documentLines.Count >= 100;
 
@@ -260,8 +266,8 @@ public class PdfDataExtractorService(
                         ocrService.Name,
                         configuration.LicenceMapping,
                         previouslyParsedPaths,
-                        configuration.OutputFolder,
-                        configuration.CacheFolder);
+                        configuration.OutputService,
+                        configuration.CacheService);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -446,8 +452,8 @@ public class PdfDataExtractorService(
         string serviceName,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder)
+        IOutputService outputService,
+        ICacheService cacheService)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -483,8 +489,8 @@ public class PdfDataExtractorService(
                     labelGroupMatches,
                     licenceMapping,
                     previouslyParsedPaths,
-                    outputFolder,
-                    cacheFolder);
+                    outputService,
+                    cacheService);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -503,25 +509,6 @@ public class PdfDataExtractorService(
 
         return labelGroupMatches;
     }
-    
-    private static string GetFolderPath(string outputFolder, string pdfFilePath)
-    {
-        try
-        {
-            var fileOutputFolder = Path.Combine(outputFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath));
-            if (fileOutputFolder.StartsWith('/'))
-            {
-                fileOutputFolder = fileOutputFolder[1..];
-            }
-
-            return fileOutputFolder;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
 
     private static bool AlreadyMatchedLabelGroup(
         IEnumerable<LabelGroupResult> returnList,
@@ -536,8 +523,8 @@ public class PdfDataExtractorService(
         LabelToMatch label,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder)
+        IOutputService outputService,
+        ICacheService cacheService)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -574,7 +561,7 @@ public class PdfDataExtractorService(
         {
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputService, cacheService),
                 previouslyParsedPaths);
 
             var labelResult = new LabelGroupResult
@@ -703,8 +690,8 @@ public class PdfDataExtractorService(
         IReadOnlyList<LabelGroupResult> siblingMatches,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder)
+        IOutputService outputService,
+        ICacheService cacheService)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -743,8 +730,8 @@ public class PdfDataExtractorService(
                             label,
                             licenceMapping,
                             previouslyParsedPaths,
-                            outputFolder,
-                            cacheFolder);
+                            outputService,
+                            cacheService);
 
                         returnList.AddRange(linkedLicences);
 
@@ -856,8 +843,8 @@ public class PdfDataExtractorService(
                         nextLines = nextLines,
                         serviceName = serviceName,
                         siblingMatches = siblingMatches,
-                        outputFolder = outputFolder,
-                        cacheFolder = cacheFolder,
+                        outputService = outputService,
+                        cacheService = cacheService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
@@ -1254,8 +1241,8 @@ public class PdfDataExtractorService(
         string labelGroupName,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder)
+        IOutputService outputService,
+        ICacheService cacheService)
     {
         var subResults = new List<LabelGroupResult>();
         var lines = GetLines(text);
@@ -1278,8 +1265,8 @@ public class PdfDataExtractorService(
                     subResults,
                     licenceMapping,
                     previouslyParsedPaths,
-                    outputFolder,
-                    cacheFolder);
+                    outputService,
+                    cacheService);
 
                 if (subLabelGroupMatch.Count > 0)
                 {

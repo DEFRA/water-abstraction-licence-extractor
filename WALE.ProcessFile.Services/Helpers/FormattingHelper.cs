@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Services.Constants;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 
 namespace WALE.ProcessFile.Services.Helpers;
 

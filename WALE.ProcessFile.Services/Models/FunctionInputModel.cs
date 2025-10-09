@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Interfaces;
 
 namespace WALE.ProcessFile.Services.Models;
@@ -27,8 +28,8 @@ public class FunctionInputModel
     public string? labelGroupName { get; set; }
     public Dictionary<string, string>? licenceMapping { get; set; }
     public List<string>? previouslyParsedPaths { get; set; }
-    public string? outputFolder { get; set; }
-    public string? cacheFolder { get; set; }
+    public IOutputService? outputService { get; set; }
+    public ICacheService? cacheService { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
     
     public FunctionInputModel Clone()
@@ -57,8 +58,8 @@ public class FunctionInputModel
             labelGroupName = labelGroupName,
             licenceMapping = licenceMapping,
             previouslyParsedPaths = previouslyParsedPaths,
-            outputFolder = outputFolder,
-            cacheFolder = cacheFolder,
+            outputService = outputService,
+            cacheService = cacheService,
             pdfDataExtractorService = pdfDataExtractorService,
             autoCorrect = autoCorrect
         };

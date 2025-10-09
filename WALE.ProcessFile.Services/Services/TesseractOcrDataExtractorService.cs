@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
@@ -16,7 +17,9 @@ public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageS
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
+        var cacheFolder = ""; // TODO
+        
+        var folder = $"{cacheFolder}/{Name}/Text";
         Directory.CreateDirectory(folder);
     
         var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";

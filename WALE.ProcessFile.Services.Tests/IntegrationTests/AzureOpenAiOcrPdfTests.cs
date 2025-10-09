@@ -1,10 +1,8 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -33,8 +31,8 @@ public class AzureOpenAiOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                "Output/",
-                "Cache/"),
+                 new FileSystemOutputService("Output/"),
+                new FileSystemCacheService("Cache/")),
             [PdfFolder + fileName]);
     }
 

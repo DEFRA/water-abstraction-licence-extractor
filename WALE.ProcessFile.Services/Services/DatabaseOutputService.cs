@@ -1,38 +1,55 @@
-using WALE.ProcessFile.Models.Database;
+using WALE.ProcessFile.Database.Interfaces;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class DatabaseOutputService : IOutputService
+public class DatabaseOutputService(IDatabaseAddService databaseAddService) : IOutputService
 {
     public Task SetupAsync()
     {
-        throw new NotImplementedException();
+        // Nothing to do in this case
+        return Task.CompletedTask;
     }
 
-    public Task<ProcessRun> RecordProcessRunStartAsync()
+    public Task<ProcessRun> RecordProcessRunStartAsync(ProcessRun processRun)
     {
-        throw new NotImplementedException();
+        return databaseAddService.AddProcessRunAsync(processRun);
     }
 
     public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)
     {
-        throw new NotImplementedException();
+        return databaseAddService.SaveLicenceSetsAsync(licenceSets, pdfFilePath);
     }
 
     public Task SaveLicenceAsync(Licence licence, string pdfFilePath)
     {
-        throw new NotImplementedException();
+        return databaseAddService.SaveLicenceAsync(licence, pdfFilePath);
     }
 
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath)
     {
-        throw new NotImplementedException();
+        return databaseAddService.SaveMatchResultAsync(matchesResult, pdfFilePath);
     }
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData)
+    {
+        return databaseAddService.SaveListDataAsync(listData);
+    }
+
+    public string GetImageFilepath()
+    {
+        throw new NotImplementedException();
+    }
+
+    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(int pageNumber, string pdfServiceName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
     {
         throw new NotImplementedException();
     }

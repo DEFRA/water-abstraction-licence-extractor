@@ -13,6 +13,7 @@ public static class FileHelper
             .Last()
             .Split(extensionSeperator);
         
-        return string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
+        var returnString  = string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
+        return returnString.Trim();
     }
 }

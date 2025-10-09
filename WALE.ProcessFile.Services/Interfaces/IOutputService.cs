@@ -17,7 +17,17 @@ public interface IOutputService
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData);
-    public string GetImageFilepath();
-    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(int pageNumber, string pdfServiceName);
-    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName);
+
+    public Task<string> GetPageScreenshotReferenceAsync(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath);
+    
+    public Task SavePageScreenshotIfDoesntExistAsync(
+        PdfDocument pdfDocument,
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath);
+
+    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath);
 }

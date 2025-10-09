@@ -39,17 +39,24 @@ public class DatabaseOutputService(IDatabaseAddService databaseAddService) : IOu
         return databaseAddService.SaveListDataAsync(listData);
     }
 
-    public string GetImageFilepath()
+    public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
+        string pdfFilePath)
     {
         throw new NotImplementedException();
     }
 
-    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(int pageNumber, string pdfServiceName)
+    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName,
+        string pdfFilePath)
     {
         throw new NotImplementedException();
     }
 
-    public Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
+    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath)
     {
         throw new NotImplementedException();
     }

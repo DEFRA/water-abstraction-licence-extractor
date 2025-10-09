@@ -6,7 +6,6 @@ using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -68,29 +67,42 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public string GetImageFilepath()
+    public Task<string> GetPageScreenshotReferenceAsync(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath)
     {
-        return $"{outputFolder}/{new PdfPage().GetImageFilepath(new PdfPigNoOcrDataExtractorService().Name)}";
+        return Task.FromResult(GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath));
     }
 
-    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(
+    public async Task SavePageScreenshotIfDoesntExistAsync(
+        PdfDocument pdfDocument,
         int pageNumber,
-        string pdfServiceName)
+        string pdfServiceName,
+        string pdfFilePath)
     {
-        var imgFolder = outputFolder.Replace("//", "/");
-        var imgOutputPath = $"/{pdfServiceName}/Images/";
-
-        Directory.CreateDirectory($"{imgFolder}{imgOutputPath}"); // This checks if exists, and creates the whole path too
+        var imgOutputFilename = GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath);
         
-        return (imgFolder, $"{imgOutputPath}page-{pageNumber}.jpg");
+        if (File.Exists(imgOutputFilename))
+        {
+            return;
+        }
+        
+        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
+        await SaveAsJpegAsync(memoryStream, imgOutputFilename);
     }
     
-    public async Task SavePageScreenshotAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
+    private string GetPageScreenshotPath(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath)
     {
-        var (imgFolder, imgOutputFilename) = GetPageScreenshotPath(pageNumber, pdfServiceName);
+        var folderName = (outputFolder + "/" + FileHelper.GetFilenameWithoutExtension(pdfFilePath)).Replace("//", "/");
+        var imgOutputPath = $"{folderName}/{pdfServiceName}/Images/";
 
-        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
-        await SaveAsJpegAsync(memoryStream, $"{imgFolder}{imgOutputFilename}");
+        Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
+        
+        return $"{imgOutputPath}page-{pageNumber}.jpg";
     }
     
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)
@@ -107,5 +119,38 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         
         await stream.FlushAsync();
         stream.Close();
+    }
+
+    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath)
+    {
+        var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        Directory.CreateDirectory($"{outputFolder}/{folderName}");
+        
+        var folder = $"{folderName}/Text";
+        Directory.CreateDirectory(folder);
+        
+        var pageAllPath = $"{folder}/pages-all.txt";
+        
+        if (!File.Exists(pageAllPath))
+        {
+            await File.WriteAllTextAsync(
+                pageAllPath,
+                string.Join("\r\n", documentLines
+                    .Select(line => $"{line.LineNumber} {line.Text}")
+                    .ToArray()));
+        }
+        
+        var pageAllJsPath = $"{folder}/pages-all.js";
+
+        if (!File.Exists(pageAllJsPath))
+        {
+            var body = string.Join("\r\n", documentLines
+                .Select(line => $"{line.LineNumber} {line.Text}")
+                .ToArray());
+            
+            await File.WriteAllTextAsync(
+                pageAllJsPath,
+                "var textData = `" + body + "`;");
+        }
     }
 }

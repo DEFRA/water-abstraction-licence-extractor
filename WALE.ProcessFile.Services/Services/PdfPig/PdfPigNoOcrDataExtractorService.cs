@@ -26,7 +26,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             OcrServiceName = Name
         };
         
-        var metadataFilename = await cacheService.GetNoOcrMetadataAsync(request);
+        var metadataFilename = await cacheService.GetNoOcrPagesMetadataAsync(request);
         var pdfDocument = new PdfDocument(pdfFilePath, !string.IsNullOrEmpty(metadataFilename));
         
         if (!pdfDocument.FromCache)
@@ -66,18 +66,18 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         pdfDocument.Pages = pagesList;
         return pdfDocument;
     }
-
-    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(
+    
+    public Task SavePageScreenshotIfDoesntExistAsync(
         IOutputService outputService,
+        PdfDocument pdfDocument,
         int pageNumber,
         string pdfServiceName)
     {
-        return outputService.GetPageScreenshotPath(pageNumber, pdfServiceName);
-    }
-    
-    public Task SavePageScreenshotAsync(IOutputService outputService, PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
-    {
-        return outputService.SavePageScreenshotAsync(pdfDocument, pageNumber, pdfServiceName);
+        return outputService.SavePageScreenshotIfDoesntExistAsync(
+            pdfDocument,
+            pageNumber,
+            pdfServiceName,
+            pdfDocument.PdfFilePath);
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
@@ -95,7 +95,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (pdfDocument.FromCache)
         {
-            var metaDataFileText = await cacheService.GetNoOcrMetadataAsync(metadataRequest);
+            var metaDataFileText = await cacheService.GetNoOcrPagesMetadataAsync(metadataRequest);
             
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText!,
@@ -217,7 +217,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 documentLines.AddRange(pageLinesFormatted);
             }
             
-            await cacheService.SaveNoOcrMetadata(metadataRequest, pagesMetadata);
+            await cacheService.SaveNoOcrPagesMetadata(metadataRequest, pagesMetadata);
         }
 
         // Update line numbers, now in one big list

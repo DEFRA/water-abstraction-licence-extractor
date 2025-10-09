@@ -22,57 +22,48 @@ public class PdfDataExtractorService(
 {
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
-
-    private string cacheFolder = ""; // TODO
-    private string outputFolder = ""; // TODO
     
-    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
+    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, ICacheService cacheService)
     {
-        var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
-        var metadata = JsonSerializer.Deserialize<ImageMetadata>(
-            metaDataFileText,
-            JsonHelper.GetSerializerOptions());
+        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
+        {
+            Filepath = pdfDocument.PdfFilePath,
+            OcrServiceName = Name
+        });
 
-        return metadata!;
-    }
-
-    private string GetImageMetadataFilename(PdfDocument pdfDocument)
-    {
-        var imagesMetadataFolder = $"{cacheFolder}/{noOcrDataExtractorService.Name}/Images";
-        Directory.CreateDirectory(imagesMetadataFolder); // This checks if exists, and creates the whole path too
-        return $"{imagesMetadataFolder}/{PositionConstants.CacheMetadataFilename}";
+        return JsonSerializer.Deserialize<ImageMetadata>(
+            metaDataFileText!,
+            JsonHelper.GetSerializerOptions())!;
     }
     
     private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService)
+        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService, ICacheService cacheService)
     {
         foreach (var page in pdfDocument.Pages)
         {
-            var path =
-                noOcrDataExtractorService.GetPageScreenshotPath(outputService, page.Number, Name);
-
-            var screenshotPath = path.imgFolder + path.imgOutputFilename;
-            
-            if (!File.Exists(screenshotPath))
-            {
-                await noOcrDataExtractorService.SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name);
-            }
+            await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
+                outputService,
+                pdfDocument,
+                page.Number,
+                Name);
         }
 
         if (pdfDocument.FromCache)
         {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument), false);
+            return (await LoadImageMetadataFromCacheAsync(pdfDocument, cacheService), false);
         }
 
         var imagesMetadata = new ImageMetadata();
             
         foreach (var page in pdfDocument.Pages)
         {
-            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!); // TODO should use the interface (via a factory)
+            // TODO should use the interface (via a factory)
+            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!);
+
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
-                ImageFilename = $"{cacheFolder}/{page.GetImageFilepath(noOcrDataExtractorService.Name)}"
+                ImageReference = await outputService.GetPageScreenshotReferenceAsync(page.Number, Name, pdfDocument.PdfFilePath)
             };
             
             imagesMetadata.Pages.Add(metadataPage);
@@ -81,17 +72,23 @@ public class PdfDataExtractorService(
             foreach (var image in await pageImageService.GetImagesAsync())
             {
                 var extension = await image.SaveImageBytesAsync(
+                    pdfDocument.PdfFilePath,
                     imageNumber,
                     page.Number,
-                    cacheFolder);
+                    cacheService);
 
                 if (extension == null)
                 {
                     continue;
                 }
                 
-                var filepath = image.GetImageFilepath(imageNumber++, page.Number, cacheFolder, false, extension);
-                metadataPage.ImageFiles.Add(filepath);
+                var imageReference = await cacheService.GetImageReferenceAsync(
+                    page.Number,
+                    imageNumber++,
+                    pdfDocument.PdfFilePath,
+                    extension);
+                
+                metadataPage.Images.Add(imageReference);
             }
         }
 
@@ -118,45 +115,19 @@ public class PdfDataExtractorService(
         returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
         
         var (imagesMetadata, imageMetadataChanged) =
-            await GetImageMetadataAsync(pdfDocument, configuration.OutputService);
+            await GetImageMetadataAsync(pdfDocument, configuration.OutputService, configuration.CacheService);
         
         var documentLines =
             await noOcrDataExtractorService.GetTextLinesFromPdfAsync(
                 pdfDocument,
                 configuration.CacheService);
 
-        var outputFolderFull = $"{outputFolder}/{noOcrDataExtractorService.Name}";
-        var folder = $"{outputFolderFull}/Text";
-        var pageAllPath = $"{folder}/pages-all.txt";
-
-        if (!File.Exists(pageAllPath))
-        {
-            Directory.CreateDirectory(folder);
-            
-            await File.WriteAllTextAsync(
-                pageAllPath,
-                string.Join("\r\n", documentLines
-                    .Select(line => $"{line.LineNumber} {line.Text}")
-                    .ToArray()));
-        }
-        
-        var pageAllJsPath = $"{folder}/pages-all.js";
-
-        if (!File.Exists(pageAllJsPath))
-        {
-            var body = string.Join("\r\n", documentLines
-                .Select(line => $"{line.LineNumber} {line.Text}")
-                .ToArray());
-            
-            await File.WriteAllTextAsync(
-                pageAllJsPath,
-                "var textData = `" + body + "`;");
-        }
+        await configuration.OutputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath);
         
         // Save all text
         if (!pdfDocument.FromCache)
         {
-            await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);            
+            await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, configuration.CacheService);            
         }
 
         const bool notOcr = false;
@@ -201,7 +172,7 @@ public class PdfDataExtractorService(
             var pageImageNumber = 1;
             var breakPageLoop = false;
             
-            foreach (var imageFilename in page.ImageFiles)
+            foreach (var imageFilename in page.Images)
             {
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 
@@ -396,7 +367,7 @@ public class PdfDataExtractorService(
             }
         }
 
-        await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);
+        await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, configuration.CacheService);
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;
@@ -433,16 +404,18 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private async Task SaveImageMetadataAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata)
+    private async Task SaveImageMetadataIfChangedAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata, ICacheService cacheService)
     {
         if (!anyChanges)
         {
             return;
         }
-        
-        await File.WriteAllTextAsync(
-            GetImageMetadataFilename(pdfDocument),
-            JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
+
+        await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
+        {
+            Filepath = pdfDocument.PdfFilePath,
+            OcrServiceName = Name
+        }, imagesMetadata);
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(

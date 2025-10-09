@@ -16,12 +16,7 @@ public interface INoOcrDataExtractorService
             PdfDocument pdfDocument,
             ICacheService cacheService);
 
-    public (string imgFolder, string imgOutputFilename) GetPageScreenshotPath(
-        IOutputService outputService,
-        int pageNumber,
-        string pdfServiceName);
-
-    public Task SavePageScreenshotAsync(
+    public Task SavePageScreenshotIfDoesntExistAsync(
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,

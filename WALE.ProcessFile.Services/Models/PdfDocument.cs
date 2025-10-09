@@ -73,8 +73,8 @@ public class PdfDocument
                         Text = page.Text
                     };
 
-                    var OutputFolder = ""; // TODO
-                    pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
+                    //var OutputFolder = ""; // TODO
+                    //dfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
                     
                     pdfPage.Providers.Add(new PdfPageProvider
                     {

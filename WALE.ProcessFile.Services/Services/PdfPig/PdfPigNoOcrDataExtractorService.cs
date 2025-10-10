@@ -48,11 +48,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             {
                 Number = pageNumber,
                 NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
-                Text = pageElement.GetProperty("text").GetString()
+                Text = pageElement.GetProperty("text").GetString(),
+                ImageFilepath = await outputService.GetPageScreenshotReferenceAsync(pageNumber, Name, pdfFilePath)
             };
 
-            var outputFolder = ""; // TODO IMPORTANT!
-            pdfPage.ImageFilepath = $"{outputFolder}/{pdfPage.GetImageFilepath(Name)}";
             pdfPage.Providers.Add(new PdfPageProvider
             {
                 Provider = Name,

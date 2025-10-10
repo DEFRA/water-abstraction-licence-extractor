@@ -39,6 +39,10 @@ public interface ICacheService
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines);
+
+    public Task SaveOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        string pageLines);    
     
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,

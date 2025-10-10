@@ -56,8 +56,10 @@ public class TesseractOcrDataExtractorService(
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }
-            catch (Exception ex)
+            catch
             {
+                // TODO sort all this bit below
+                
                 if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;

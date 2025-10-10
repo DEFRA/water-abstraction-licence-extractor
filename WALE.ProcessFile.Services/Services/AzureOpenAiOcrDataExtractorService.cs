@@ -23,16 +23,20 @@ public class AzureOpenAiOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var cacheFolder = ""; // TODO
-        
-        var folder = $"{cacheFolder}/{Name}/Text";
-        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
-
         string? response;
-        
-        if (pdfDocument.FromCache && File.Exists(outputFilename))
+        var request = new OcrServiceImageTextCacheRequest
         {
-            response = await File.ReadAllTextAsync(outputFilename);
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            OcrServiceName = Name
+        };
+        
+        var cacheFileText = await cacheService.GetOcrImageTextAsync(request);
+        
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        {
+            response = cacheFileText;
         }
         else
         {
@@ -60,9 +64,7 @@ public class AzureOpenAiOcrDataExtractorService(
                     + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
                 userPrompts);
             
-            Directory.CreateDirectory(folder);
-            
-            await File.WriteAllTextAsync(outputFilename, response);
+            await cacheService.SaveOcrImageTextAsync(request, response!);
         }
 
         if (string.IsNullOrEmpty(response)

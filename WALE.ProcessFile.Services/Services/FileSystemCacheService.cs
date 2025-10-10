@@ -174,6 +174,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             outputFilename,
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
+    
+    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    {
+        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
+        Directory.CreateDirectory(folder);
+    
+        var outputFilename = $"{folder}/ocr-page-{request.PageNumber}-image-{request.ImageNumber}.json";
+        return File.WriteAllTextAsync(outputFilename, pageLines);
+    }
 
     private string GetFolderPath(string pdfFilePath)
     {

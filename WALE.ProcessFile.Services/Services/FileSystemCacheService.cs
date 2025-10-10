@@ -50,14 +50,37 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
 
-    public async Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request)
+    public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
-        var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";
+        return Task.FromResult($"{txtCacheFolder}/page-{request.PageNumber}.json");
+    }
+    
+    public async Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request)
+    {
+        var outputFilename = await GetNoOcrPageReferenceAsync(request);
+        var existsInCache = File.Exists(outputFilename);
+
+        if (!existsInCache)
+        {
+            return null;
+        }
+        
         return await File.ReadAllTextAsync(outputFilename);
+    }
+    
+    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
+    {
+        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var outputFolderFull = $"{fileCacheFolder}/{PdfDataExtractorService.Name}/Images";
+        Directory.CreateDirectory(outputFolderFull);
+
+        var outputFilename = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
+        
+        return Task.FromResult(outputFilename);
     }
     
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
@@ -90,19 +113,10 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
-    {
-        var fileCacheFolder= GetFolderPath(pdfFilePath);
-        var outputFolderFull = $"{fileCacheFolder}/{PdfDataExtractorService.Name}/Images";
-        Directory.CreateDirectory(outputFolderFull);
-        
-        return Task.FromResult($"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}");
-    }
-
     public async Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await File.WriteAllBytesAsync(filePath!, bytes);
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(

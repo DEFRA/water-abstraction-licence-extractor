@@ -16,6 +16,27 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         Directory.CreateDirectory(outputFolder);
         return Task.CompletedTask;
     }
+
+    public Task<string> GetPageScreenshotReferenceAsync(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath)
+    {
+        return Task.FromResult(GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath));
+    }
+    
+    private string GetPageScreenshotPath(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath)
+    {
+        var folderName = (outputFolder + "/" + FileHelper.GetFilenameWithoutExtension(pdfFilePath)).Replace("//", "/");
+        var imgOutputPath = $"{folderName}/{pdfServiceName}/Images/";
+
+        Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
+        
+        return $"{imgOutputPath}page-{pageNumber}.jpg";
+    }
     
     public Task<ProcessRun> RecordProcessRunStartAsync(ProcessRun processRun)
     {
@@ -67,14 +88,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public Task<string> GetPageScreenshotReferenceAsync(
-        int pageNumber,
-        string pdfServiceName,
-        string pdfFilePath)
-    {
-        return Task.FromResult(GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath));
-    }
-
     public async Task SavePageScreenshotIfDoesntExistAsync(
         PdfDocument pdfDocument,
         int pageNumber,
@@ -90,19 +103,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         
         using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
         await SaveAsJpegAsync(memoryStream, imgOutputFilename);
-    }
-    
-    private string GetPageScreenshotPath(
-        int pageNumber,
-        string pdfServiceName,
-        string pdfFilePath)
-    {
-        var folderName = (outputFolder + "/" + FileHelper.GetFilenameWithoutExtension(pdfFilePath)).Replace("//", "/");
-        var imgOutputPath = $"{folderName}/{pdfServiceName}/Images/";
-
-        Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
-        
-        return $"{imgOutputPath}page-{pageNumber}.jpg";
     }
     
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)

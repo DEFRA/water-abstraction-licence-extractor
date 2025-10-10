@@ -602,7 +602,7 @@ IEnumerable<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
     
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(5).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths;

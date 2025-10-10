@@ -23,78 +23,6 @@ public class PdfDataExtractorService(
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
     
-    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, ICacheService cacheService)
-    {
-        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            OcrServiceName = Name
-        });
-
-        return JsonSerializer.Deserialize<ImageMetadata>(
-            metaDataFileText!,
-            JsonHelper.GetSerializerOptions())!;
-    }
-    
-    private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService, ICacheService cacheService)
-    {
-        foreach (var page in pdfDocument.Pages)
-        {
-            await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
-                outputService,
-                pdfDocument,
-                page.Number,
-                Name);
-        }
-
-        if (pdfDocument.FromCache)
-        {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument, cacheService), false);
-        }
-
-        var imagesMetadata = new ImageMetadata();
-            
-        foreach (var page in pdfDocument.Pages)
-        {
-            // TODO should use the interface (via a factory)
-            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!);
-
-            var metadataPage = new ImageMetadataPage
-            {
-                Number = page.Number,
-                ImageReference = await outputService.GetPageScreenshotReferenceAsync(page.Number, Name, pdfDocument.PdfFilePath)
-            };
-            
-            imagesMetadata.Pages.Add(metadataPage);
-            var imageNumber = 1;
-            
-            foreach (var image in await pageImageService.GetImagesAsync())
-            {
-                var extension = await image.SaveImageBytesAsync(
-                    pdfDocument.PdfFilePath,
-                    imageNumber,
-                    page.Number,
-                    cacheService);
-
-                if (extension == null)
-                {
-                    continue;
-                }
-                
-                var imageReference = await cacheService.GetImageReferenceAsync(
-                    page.Number,
-                    imageNumber++,
-                    pdfDocument.PdfFilePath,
-                    extension);
-                
-                metadataPage.Images.Add(imageReference);
-            }
-        }
-
-        return (imagesMetadata, true);
-    }
-    
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         LookupConfiguration configuration,
@@ -372,6 +300,78 @@ public class PdfDataExtractorService(
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
+    }
+    
+    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, ICacheService cacheService)
+    {
+        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
+        {
+            Filepath = pdfDocument.PdfFilePath,
+            OcrServiceName = Name
+        });
+
+        return JsonSerializer.Deserialize<ImageMetadata>(
+            metaDataFileText!,
+            JsonHelper.GetSerializerOptions())!;
+    }
+    
+    private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
+        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService, ICacheService cacheService)
+    {
+        foreach (var page in pdfDocument.Pages)
+        {
+            await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
+                outputService,
+                pdfDocument,
+                page.Number,
+                Name);
+        }
+
+        if (pdfDocument.FromCache)
+        {
+            return (await LoadImageMetadataFromCacheAsync(pdfDocument, cacheService), false);
+        }
+
+        var imagesMetadata = new ImageMetadata();
+            
+        foreach (var page in pdfDocument.Pages)
+        {
+            // TODO should use the interface (via a factory)
+            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!);
+
+            var metadataPage = new ImageMetadataPage
+            {
+                Number = page.Number,
+                ImageReference = await outputService.GetPageScreenshotReferenceAsync(page.Number, Name, pdfDocument.PdfFilePath)
+            };
+            
+            imagesMetadata.Pages.Add(metadataPage);
+            var imageNumber = 1;
+            
+            foreach (var image in await pageImageService.GetImagesAsync())
+            {
+                var extension = await image.SaveImageBytesAsync(
+                    pdfDocument.PdfFilePath,
+                    imageNumber,
+                    page.Number,
+                    cacheService);
+
+                if (extension == null)
+                {
+                    continue;
+                }
+                
+                var imageReference = await cacheService.GetImageReferenceAsync(
+                    page.Number,
+                    imageNumber++,
+                    pdfDocument.PdfFilePath,
+                    extension);
+                
+                metadataPage.Images.Add(imageReference!);
+            }
+        }
+
+        return (imagesMetadata, true);
     }
     
     private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedLabels(

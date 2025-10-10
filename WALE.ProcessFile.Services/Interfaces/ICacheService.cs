@@ -12,7 +12,15 @@ public interface ICacheService
     
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
 
+    public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
+    
     public Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request);
+
+    public Task<string> GetImageReferenceAsync(
+        int pageNumber,
+        int imageNumber,
+        string pdfFilePath,
+        string extension);
 
     public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
@@ -21,12 +29,6 @@ public interface ICacheService
     public Task SaveNoOcrImagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
-
-    public Task<string> GetImageReferenceAsync(
-        int pageNumber,
-        int imageNumber,
-        string pdfFilePath,
-        string extension);
     
     public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension);
     

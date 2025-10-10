@@ -26,17 +26,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             OcrServiceName = Name
         };
         
-        var metadataFilename = await cacheService.GetNoOcrPagesMetadataAsync(request);
-        var pdfDocument = new PdfDocument(pdfFilePath, !string.IsNullOrEmpty(metadataFilename));
+        var metadataFileText = await cacheService.GetNoOcrPagesMetadataAsync(request);
+        var pdfDocument = new PdfDocument(pdfFilePath, !string.IsNullOrEmpty(metadataFileText));
         
         if (!pdfDocument.FromCache)
         {
             return pdfDocument;
         }
         
-        var metaDataFileText = await File.ReadAllTextAsync(metadataFilename!);
         var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
-            metaDataFileText,
+            metadataFileText!,
             JsonHelper.GetSerializerOptions())!;
 
         var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
@@ -164,7 +163,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     { "number", page.Number },
                     { "numberOfImages", page.NumberOfImages },
                     { "text", page.Text! },
-                    // TODO - only do this if its a text one { "detailFilename", txtOutputFilename },
+                    { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) },
                 });
 
                 List<TextBlock> pageLines = [];

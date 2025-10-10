@@ -21,8 +21,11 @@ public class AzureAiVisionOcrPdfTests
         {
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey)
+                TestConfig.AiVisionKey,
+                CacheService)
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
@@ -31,8 +34,11 @@ public class AzureAiVisionOcrPdfTests
         {
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey)
+                TestConfig.AiVisionKey,
+                CacheService)
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder2);
     
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
@@ -46,9 +52,7 @@ public class AzureAiVisionOcrPdfTests
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                OutputService,
-                CacheService),
+                _fileLicenceMapping),
             [pdfFolder + fileName]);
     }
     

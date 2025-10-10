@@ -315,6 +315,9 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("OutputFolder");
     var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
         ?? throw new NullReferenceException("CacheFolder");
+
+    var cacheService = new FileSystemCacheService(cacheFolder);
+    var outputService = new FileSystemOutputService(outputFolder);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
     
@@ -325,18 +328,21 @@ ConfiguredServices ConfigureServices()
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
-            PageSegMode.SparseTextOsd);
+            PageSegMode.SparseTextOsd,
+            cacheService);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
-            PageSegMode.Auto);
+            PageSegMode.Auto,
+            cacheService);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
             ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
-            ?? throw new NullReferenceException("AzureAIVisionKey"));
+            ?? throw new NullReferenceException("AzureAIVisionKey"),
+            cacheService);
 
         var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
             pdfPigNoOcr,
@@ -345,6 +351,8 @@ ConfiguredServices ConfigureServices()
                 tesseractOcrDefault,
                 azureAiServices
             ],
+            cacheService,
+            outputService,
             pdfFolderPath);
 
         pdfDataExtractors.Add(pdfDataExtractor);
@@ -391,9 +399,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
-            licenceMapping,
-            outputService,
-            cacheService);
+            licenceMapping);
         
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
@@ -601,7 +607,8 @@ IEnumerable<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("19122022")
         || x.Contains("11761845")
         ).ToArray();*/
-    
+
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
     pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     

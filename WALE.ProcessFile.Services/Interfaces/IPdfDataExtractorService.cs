@@ -19,9 +19,7 @@ public interface IPdfDataExtractorService
         string? serviceName,
         string labelGroupName,
         Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        IOutputService outputService,
-        ICacheService cacheService);
+        List<string> previouslyParsedPaths);
 
     public void Dispose();
 }

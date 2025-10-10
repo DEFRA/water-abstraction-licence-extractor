@@ -10,7 +10,10 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) : IOcrDataExtractorService
+public class AzureAiVisionOcrDataExtractorService(
+    string endpoint,
+    string key,
+    ICacheService cacheService) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
     public string Name => "AzureAiVisionOcr";
@@ -18,7 +21,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         var returnLines = new List<(string Text, IList<Word> Words)>();
         var cacheFolder = ""; // TODO
@@ -43,7 +46,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
 
             try
             {
-                await using var stream = new FileStream(imageFilepath, FileMode.Open);
+                await using var stream = new FileStream(pdfFilepath, FileMode.Open);
                 textHeaders = await _client.ReadInStreamAsync(stream);
             }
             catch (Exception ex)
@@ -63,15 +66,15 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
                     }
                 }
                 
-                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;
                 }
                 
-                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
+                var bytAry = await File.ReadAllBytesAsync(pdfFilepath);
                 var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
 
-                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
+                var imageFilenameDeflated = pdfFilepath.Replace(".jpg", "-deflated.jpg",
                     StringComparison.InvariantCultureIgnoreCase);
                 await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
 

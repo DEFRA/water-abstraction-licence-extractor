@@ -60,18 +60,18 @@ public class MessageReceivedFunction(
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd),
-                new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey)
+                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService),
+                new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey, cacheService)
             ],
+            cacheService,
+            outputService,
             pdfFolderPath);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                fileLicenceMapping,
-                outputService,
-                cacheService),
+                fileLicenceMapping),
             previouslyParsedPaths);
         
         var json = JsonHelper.GetAsString(matches);

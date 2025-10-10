@@ -17,8 +17,9 @@ namespace WALE.ProcessFile.Services.Services;
 public class PdfDataExtractorService(
     INoOcrDataExtractorService noOcrDataExtractorService,
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
-    string pdfFolderPath)
-    : IPdfDataExtractorService
+    ICacheService cacheService,
+    IOutputService outputService,
+    string pdfFolderPath) : IPdfDataExtractorService
 {
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
@@ -28,10 +29,7 @@ public class PdfDataExtractorService(
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths)
     {
-        var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
-            pdfFilePath,
-            configuration.OutputService,
-            configuration.CacheService);
+        var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(pdfFilePath, outputService, cacheService);
 
         var returnResult = new MatchesResult
         {
@@ -43,32 +41,30 @@ public class PdfDataExtractorService(
         returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
         
         var (imagesMetadata, imageMetadataChanged) =
-            await GetImageMetadataAsync(pdfDocument, configuration.OutputService, configuration.CacheService);
+            await GetImageMetadataAsync(pdfDocument);
         
         var documentLines =
             await noOcrDataExtractorService.GetTextLinesFromPdfAsync(
                 pdfDocument,
-                configuration.CacheService);
+                cacheService);
 
-        await configuration.OutputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath);
+        await outputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath);
         
         // Save all text
         if (!pdfDocument.FromCache)
         {
-            await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, configuration.CacheService);            
+            await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata);            
         }
 
         const bool notOcr = false;
-        
+
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
             configuration.Labels,
             notOcr,
             noOcrDataExtractorService.Name,
             configuration.LicenceMapping,
-            previouslyParsedPaths,
-            configuration.OutputService,
-            configuration.CacheService);
+            previouslyParsedPaths);
 
         var isTextFile = documentLines.Count >= 100;
 
@@ -100,7 +96,7 @@ public class PdfDataExtractorService(
             var pageImageNumber = 1;
             var breakPageLoop = false;
             
-            foreach (var imageFilename in page.Images)
+            foreach (var imageReference in page.Images)
             {
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 
@@ -121,7 +117,8 @@ public class PdfDataExtractorService(
                     {
                         serviceImageLines =
                             (await ocrService.GetTextLinesFromImageAsync(
-                                imageFilename,
+                                imageReference,
+                                pdfFilePath,
                                 pageNumber,
                                 pageImageNumber++,
                                 pdfDocument)).ToList();
@@ -164,9 +161,7 @@ public class PdfDataExtractorService(
                         isOcr,
                         ocrService.Name,
                         configuration.LicenceMapping,
-                        previouslyParsedPaths,
-                        configuration.OutputService,
-                        configuration.CacheService);
+                        previouslyParsedPaths);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -295,14 +290,14 @@ public class PdfDataExtractorService(
             }
         }
 
-        await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, configuration.CacheService);
+        await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata);
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
     }
     
-    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, ICacheService cacheService)
+    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
     {
         var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
         {
@@ -316,7 +311,7 @@ public class PdfDataExtractorService(
     }
     
     private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument, IOutputService outputService, ICacheService cacheService)
+        GetImageMetadataAsync(PdfDocument pdfDocument)
     {
         foreach (var page in pdfDocument.Pages)
         {
@@ -329,7 +324,7 @@ public class PdfDataExtractorService(
 
         if (pdfDocument.FromCache)
         {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument, cacheService), false);
+            return (await LoadImageMetadataFromCacheAsync(pdfDocument), false);
         }
 
         var imagesMetadata = new ImageMetadata();
@@ -404,7 +399,7 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private async Task SaveImageMetadataIfChangedAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata, ICacheService cacheService)
+    private async Task SaveImageMetadataIfChangedAsync(bool anyChanges, PdfDocument pdfDocument, ImageMetadata imagesMetadata)
     {
         if (!anyChanges)
         {
@@ -424,9 +419,7 @@ public class PdfDataExtractorService(
         bool isOcr,
         string serviceName,
         Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        IOutputService outputService,
-        ICacheService cacheService)
+        List<string> previouslyParsedPaths)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -452,7 +445,7 @@ public class PdfDataExtractorService(
                 }
 
                 var tailoredLines = TailorLines(lines, label);
-                
+
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
                     tailoredLines,
                     labels,
@@ -461,9 +454,7 @@ public class PdfDataExtractorService(
                     labelGroupName,
                     labelGroupMatches,
                     licenceMapping,
-                    previouslyParsedPaths,
-                    outputService,
-                    cacheService);
+                    previouslyParsedPaths);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -495,9 +486,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
         Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        IOutputService outputService,
-        ICacheService cacheService)
+        List<string> previouslyParsedPaths)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -534,7 +523,7 @@ public class PdfDataExtractorService(
         {
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputService, cacheService),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
                 previouslyParsedPaths);
 
             var labelResult = new LabelGroupResult
@@ -662,9 +651,7 @@ public class PdfDataExtractorService(
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        IOutputService outputService,
-        ICacheService cacheService)
+        List<string> previouslyParsedPaths)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -702,9 +689,7 @@ public class PdfDataExtractorService(
                             siblingMatches,
                             label,
                             licenceMapping,
-                            previouslyParsedPaths,
-                            outputService,
-                            cacheService);
+                            previouslyParsedPaths);
 
                         returnList.AddRange(linkedLicences);
 
@@ -1213,9 +1198,7 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         Dictionary<string, string> licenceMapping,
-        List<string> previouslyParsedPaths,
-        IOutputService outputService,
-        ICacheService cacheService)
+        List<string> previouslyParsedPaths)
     {
         var subResults = new List<LabelGroupResult>();
         var lines = GetLines(text);
@@ -1237,9 +1220,7 @@ public class PdfDataExtractorService(
                     labelGroupName,
                     subResults,
                     licenceMapping,
-                    previouslyParsedPaths,
-                    outputService,
-                    cacheService);
+                    previouslyParsedPaths);
 
                 if (subLabelGroupMatch.Count > 0)
                 {

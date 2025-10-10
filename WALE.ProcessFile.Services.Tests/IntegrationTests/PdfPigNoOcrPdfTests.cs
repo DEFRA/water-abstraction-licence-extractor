@@ -18,11 +18,15 @@ public class PdfPigNoOcrPdfTests
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder2);
     
     private static Dictionary<string, string> FileLicenceMapping =>
@@ -55,9 +59,7 @@ public class PdfPigNoOcrPdfTests
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-              FileLicenceMapping,
-                OutputService,
-                CacheService),
+              FileLicenceMapping),
             [pdfFolder + fileName]);
     }
     

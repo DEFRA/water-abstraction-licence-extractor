@@ -79,10 +79,36 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         Directory.CreateDirectory(outputFolderFull);
 
         var outputFilename = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
-        
         return Task.FromResult(outputFilename);
     }
+
+    public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
+        Directory.CreateDirectory(folder);
     
+        var outputFilename = $"{folder}/ocr-page-{request.PageNumber}-image-{request.ImageNumber}.json";
+
+        if (!File.Exists(outputFilename))
+        {
+            return null;
+        }
+        
+        return await File.ReadAllTextAsync(outputFilename);
+    }
+
+    public async Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    {
+        var filePath = await GetImageReferenceAsync(
+            request.PageNumber,
+            request.ImageNumber,
+            request.Filepath!,
+            request.Extension!);
+        
+        return await File.ReadAllBytesAsync(filePath);
+    }
+
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
@@ -116,7 +142,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public async Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
-        await File.WriteAllBytesAsync(filePath!, bytes);
+        await File.WriteAllBytesAsync(filePath, bytes);
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
@@ -135,7 +161,20 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         return request;
     }
+
+    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    {
+        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
+        Directory.CreateDirectory(folder);
     
+        var outputFilename = $"{folder}/ocr-page-{request.PageNumber}-image-{request.ImageNumber}.json";
+        
+        return File.WriteAllTextAsync(
+            outputFilename,
+            JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
+    }
+
     private string GetFolderPath(string pdfFilePath)
     {
         var fileOutputFolder = Path.Combine(cacheFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath));

@@ -19,9 +19,11 @@ public class TessaractOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto)
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService)
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
@@ -33,9 +35,7 @@ public class TessaractOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                OutputService,
-                CacheService),
+                _fileLicenceMapping),
             [PdfFolder + fileName]);
     }
     

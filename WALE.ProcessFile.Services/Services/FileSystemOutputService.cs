@@ -126,7 +126,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
         
-        var folder = $"{folderName}/Text";
+        var folder = $"{outputFolder}/{folderName}/Text";
         Directory.CreateDirectory(folder);
         
         var pageAllPath = $"{folder}/pages-all.txt";

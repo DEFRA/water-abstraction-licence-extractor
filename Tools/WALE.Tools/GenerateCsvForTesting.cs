@@ -28,8 +28,11 @@ public static class GenerateCsvForTesting
             {
                 new AzureAiVisionOcrDataExtractorService(
                     KeyConfig.AiVisionEndpoint,
-                    KeyConfig.AiVisionKey)
+                    KeyConfig.AiVisionKey,
+                    CacheService)
             },
+            CacheService,
+            OutputService,
             KeyConfig.PdfFolder);
 
         var data = await GetYorkshire70DataAsync(pdfDataExtractor);
@@ -49,9 +52,7 @@ public static class GenerateCsvForTesting
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                FileLicenceMapping,
-                OutputService,
-                CacheService),
+                FileLicenceMapping),
             [pdfFolder + fileName]);
     }
 

@@ -627,7 +627,7 @@ public static class SchemaConverter
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
-                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputService, cacheService),
+                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
                         previouslyParsedPaths);
                     
                     returnLicences.Add(ToLicence(relatedFileMatches));
@@ -661,7 +661,7 @@ public static class SchemaConverter
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputService, cacheService),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
                 previouslyParsedPaths);
                     
             returnLicences.Add(ToLicence(relatedFileMatches));

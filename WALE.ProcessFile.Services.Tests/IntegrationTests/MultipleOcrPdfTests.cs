@@ -11,16 +11,22 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class MultipleOcrPdfTests
 {
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey),
+                TestConfig.AiVisionKey,
+                CacheService),
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
@@ -32,9 +38,7 @@ public class MultipleOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                new FileSystemOutputService("Output/"),
-                new FileSystemCacheService("Cache/")),
+                _fileLicenceMapping),
             [PdfFolder + fileName]);
     }
     

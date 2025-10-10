@@ -527,7 +527,9 @@ public static class TestsForAiPrompts
     {
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
-            ?? throw new NullReferenceException(KeyConfig.TesseractPrefix), PageSegMode.SparseTextOsd);
+                ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
+            PageSegMode.SparseTextOsd,
+            new FileSystemCacheService("Cache/"));
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
@@ -566,6 +568,7 @@ public static class TestsForAiPrompts
             var lines =
                 (await tesseractOcr.GetTextLinesFromImageAsync(
                     pdfImageName,
+                    pdfFilename,
                     pageNumber,
                     1,
                     mockPdfDocument)).ToList();

@@ -8,28 +8,33 @@ using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageSegMode)
+public class TesseractOcrDataExtractorService(
+    string dataPath,
+    PageSegMode pageSegMode,
+    ICacheService cacheService)
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => false;
     public string Name => $"TesseractOcr-{pageSegMode}";
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
-        var cacheFolder = ""; // TODO
-        
-        var folder = $"{cacheFolder}/{Name}/Text";
-        Directory.CreateDirectory(folder);
-    
-        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
         var returnLines = new List<LineAndWords>();
-        
-        if (pdfDocument.FromCache && File.Exists(outputFilename))
+        var request = new OcrServiceImageTextCacheRequest
         {
-            var fileText = await File.ReadAllTextAsync(outputFilename);
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            OcrServiceName = Name
+        };
+        
+        var cacheFileText = await cacheService.GetOcrImageTextAsync(request);
+        
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        {
             var pageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
-                fileText,
+                cacheFileText,
                 JsonHelper.GetSerializerOptions());
             
             returnLines.AddRange(pageLines!);
@@ -40,19 +45,28 @@ public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageS
 
             try
             {
-                ocrImage = Pix.LoadFromFile(imageFilepath);
+                var bytes = await cacheService.GetImageBytesAsync(new  OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    Filepath = pdfFilepath,
+                    OcrServiceName = Name,
+                    Extension = imageReference.Split('.').Last()
+                });
+                
+                ocrImage = Pix.LoadFromMemory(bytes);
             }
             catch
             {
-                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;
                 }
 
-                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
+                var bytAry = await File.ReadAllBytesAsync(pdfFilepath);
                 var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
 
-                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
+                var imageFilenameDeflated = pdfFilepath.Replace(".jpg", "-deflated.jpg",
                     StringComparison.InvariantCultureIgnoreCase);
                 await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
 
@@ -67,10 +81,8 @@ public class TesseractOcrDataExtractorService(string dataPath, PageSegMode pageS
             {
                 Console.WriteLine(e);
             }
-            
-            await File.WriteAllTextAsync(
-                outputFilename,
-                JsonSerializer.Serialize(returnLines, JsonHelper.GetSerializerOptions()));
+
+            await cacheService.SaveOcrImageTextAsync(request, returnLines);
         }
         
         const int lineHeight = 15;

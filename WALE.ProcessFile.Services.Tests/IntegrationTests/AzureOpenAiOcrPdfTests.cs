@@ -8,6 +8,9 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureOpenAiOcrPdfTests
 {
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -16,8 +19,11 @@ public class AzureOpenAiOcrPdfTests
                 TestConfig.OpenAiEndpoint,
                 TestConfig.OpenAiKey,
                 TestConfig.OpenAiModelName,
-                TestConfig.OpenAiDeploymentName)
+                TestConfig.OpenAiDeploymentName,
+                CacheService)
         },
+        CacheService,        
+        OutputService,
         TestConfig.PdfFolder);
     
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
@@ -30,9 +36,7 @@ public class AzureOpenAiOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                 new FileSystemOutputService("Output/"),
-                new FileSystemCacheService("Cache/")),
+                _fileLicenceMapping),
             [PdfFolder + fileName]);
     }
 

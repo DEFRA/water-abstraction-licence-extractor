@@ -9,14 +9,19 @@ using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, string modelName, string deploymentName)
+public class AzureOpenAiOcrDataExtractorService(
+    string endpoint,
+    string key,
+    string modelName,
+    string deploymentName,
+    ICacheService cacheService)
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => true;
     public string Name => "AzureOpenAiOcr";
     
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
     {
         var cacheFolder = ""; // TODO
         
@@ -45,7 +50,7 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
                 )
             };
         
-            var imagePrompt = await GetImagePromptAsync(imageFilepath);
+            var imagePrompt = await GetImagePromptAsync(pdfFilepath);
             userPrompts.Add(imagePrompt);
             
             response = await GetTextResponseAsync(

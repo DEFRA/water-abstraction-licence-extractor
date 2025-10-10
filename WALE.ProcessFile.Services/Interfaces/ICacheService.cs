@@ -22,6 +22,10 @@ public interface ICacheService
         string pdfFilePath,
         string extension);
 
+    public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+    
+    public Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
+    
     public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
@@ -35,4 +39,8 @@ public interface ICacheService
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines);
+    
+    public Task SaveOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines);
 }

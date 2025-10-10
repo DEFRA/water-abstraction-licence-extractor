@@ -45,18 +45,18 @@ public class TesseractOcrDataExtractorService(
 
             try
             {
-                var bytes = await cacheService.GetImageBytesAsync(new  OcrServiceImageDataCacheRequest
+                var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
                     Filepath = pdfFilepath,
-                    OcrServiceName = Name,
+                    NoOcrServiceName = PdfDataExtractorService.Name,
                     Extension = imageReference.Split('.').Last()
                 });
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }
-            catch
+            catch (Exception ex)
             {
                 if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {

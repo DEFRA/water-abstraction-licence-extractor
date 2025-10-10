@@ -93,7 +93,7 @@ public class PdfDataExtractorService(
         {
             pageNumber += 1;
             
-            var pageImageNumber = 1;
+            var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
             
             foreach (var imageReference in page.Images)
@@ -113,6 +113,10 @@ public class PdfDataExtractorService(
                         returnResult.ServicesUsed.Add(ocrService.Name);
                     }
 
+                    pageImageNumberDict.TryAdd(ocrService.Name, 1);
+                    var pageImageNumber = pageImageNumberDict[ocrService.Name];
+                    pageImageNumberDict[ocrService.Name] = pageImageNumber + 1;
+                    
                     try
                     {
                         serviceImageLines =
@@ -120,7 +124,7 @@ public class PdfDataExtractorService(
                                 imageReference,
                                 pdfFilePath,
                                 pageNumber,
-                                pageImageNumber++,
+                                pageImageNumber,
                                 pdfDocument)).ToList();
                     }
                     catch (Exception ex)
@@ -302,7 +306,7 @@ public class PdfDataExtractorService(
         var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfDocument.PdfFilePath,
-            OcrServiceName = Name
+            NoOcrServiceName = Name
         });
 
         return JsonSerializer.Deserialize<ImageMetadata>(
@@ -409,7 +413,7 @@ public class PdfDataExtractorService(
         await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfDocument.PdfFilePath,
-            OcrServiceName = Name
+            NoOcrServiceName = Name
         }, imagesMetadata);
     }
     

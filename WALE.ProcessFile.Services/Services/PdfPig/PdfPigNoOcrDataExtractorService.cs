@@ -23,7 +23,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var request = new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfFilePath,
-            OcrServiceName = Name
+            NoOcrServiceName = Name
         };
         
         var metadataFileText = await cacheService.GetNoOcrPagesMetadataAsync(request);
@@ -88,7 +88,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var metadataRequest = new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfDocument.PdfFilePath,
-            OcrServiceName = Name
+            NoOcrServiceName = Name
         };
         
         if (pdfDocument.FromCache)
@@ -108,7 +108,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 var pageRequest = new NoOcrServicePageCacheRequest
                 {
                     Filepath = pdfDocument.PdfFilePath,
-                    OcrServiceName = Name,
+                    NoOcrServiceName = Name,
                     PageNumber = pageNumber
                 };
 
@@ -151,7 +151,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 var pageRequest = new NoOcrServicePageCacheRequest
                 {
                     Filepath = pdfDocument.PdfFilePath,
-                    OcrServiceName = Name,
+                    NoOcrServiceName = Name,
                     PageNumber = page.Number
                 };
                 

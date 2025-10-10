@@ -19,7 +19,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
-        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Text";
+        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
         var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
@@ -36,7 +36,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public async Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
-        var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Images";
+        var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
         Directory.CreateDirectory(imgCacheFolder); // This checks if exists, and creates the whole path too
 
         var metadataFilename = $"{imgCacheFolder}/{PositionConstants.CacheMetadataFilename}";
@@ -53,7 +53,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
-        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Text";
+        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
         return Task.FromResult($"{txtCacheFolder}/page-{request.PageNumber}.json");
@@ -114,7 +114,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         List<Dictionary<string, object>> pagesMetadata)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
-        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Text";
+        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
         var metadataFilename = $"{txtCacheFolder}/{PositionConstants.CacheMetadataFilename}";
@@ -135,7 +135,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         return File.WriteAllTextAsync(
-            GetImageMetadataFilename(request.OcrServiceName!, GetFolderPath(request.Filepath!)),
+            GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filepath!)),
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
@@ -150,7 +150,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         List<TextBlock> pageLines)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
-        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.OcrServiceName}/Text";
+        var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
         var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";

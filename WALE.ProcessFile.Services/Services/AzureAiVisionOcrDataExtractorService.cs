@@ -50,7 +50,16 @@ public class AzureAiVisionOcrDataExtractorService(
 
             try
             {
-                await using var stream = new FileStream(pdfFilepath, FileMode.Open);
+                var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    Filepath = pdfFilepath,
+                    NoOcrServiceName = PdfDataExtractorService.Name,
+                    Extension = imageReference.Split('.').Last()
+                });
+                
+                await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);
             }
             catch (Exception ex)
@@ -69,21 +78,17 @@ public class AzureAiVisionOcrDataExtractorService(
                     }
                 }
                 
-                // TODO sort all this bit below
-                
-                if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;
                 }
                 
-                var bytAry = await File.ReadAllBytesAsync(pdfFilepath);
-                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+                var bytes = await cacheService.SaveDeflatedImageAsync(
+                    request.Filepath,
+                    request.ImageNumber,
+                    request.PageNumber);
 
-                var imageFilenameDeflated = pdfFilepath.Replace(".jpg", "-deflated.jpg",
-                    StringComparison.InvariantCultureIgnoreCase);
-                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
-
-                await using var stream = new FileStream(imageFilenameDeflated, FileMode.Open);
+                await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);
             }
             
@@ -108,7 +113,7 @@ public class AzureAiVisionOcrDataExtractorService(
             
             if (results.AnalyzeResult.ReadResults.Count > 1)
             {
-                throw new Exception("Cache is broken with more then one result");
+                throw new Exception("Cache is broken with more then one result - generally the result of passing in a PDF rather then an image");
             }
             
             foreach (var page in results.AnalyzeResult.ReadResults)

@@ -1,10 +1,12 @@
 using System.Text.Json;
+using Tesseract;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -143,6 +145,28 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
         await File.WriteAllBytesAsync(filePath, bytes);
+    }
+    
+    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
+    {
+        var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+        {
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilePath
+        });
+        
+        var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+
+        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var outputFolderFull = $"{fileCacheFolder}/{PdfDataExtractorService.Name}/Images";
+        var imagePath = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
+        
+        var imageFilenameDeflated = imagePath.Replace(".jpg", "-deflated.jpg",
+            StringComparison.InvariantCultureIgnoreCase);
+        await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
+
+        return deflated;
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(

@@ -4,7 +4,6 @@ using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -58,21 +57,17 @@ public class TesseractOcrDataExtractorService(
             }
             catch
             {
-                // TODO sort all this bit below
-                
-                if (!pdfFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;
                 }
 
-                var bytAry = await File.ReadAllBytesAsync(pdfFilepath);
-                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
-
-                var imageFilenameDeflated = pdfFilepath.Replace(".jpg", "-deflated.jpg",
-                    StringComparison.InvariantCultureIgnoreCase);
-                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
-
-                ocrImage = Pix.LoadFromFile(imageFilenameDeflated);
+                var bytes = await cacheService.SaveDeflatedImageAsync(
+                    request.Filepath,
+                    request.ImageNumber,
+                    request.PageNumber);
+                
+                ocrImage = Pix.LoadFromMemory(bytes);
             }
 
             try

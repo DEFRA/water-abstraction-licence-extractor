@@ -1,3 +1,4 @@
+using Tesseract;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Models;
@@ -35,6 +36,8 @@ public interface ICacheService
         ImageMetadata imagesMetadata);
     
     public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension);
+
+    public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber);
     
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
         NoOcrServicePageCacheRequest request,

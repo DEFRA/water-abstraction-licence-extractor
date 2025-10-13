@@ -14,4 +14,15 @@ public interface IDatabaseAddService
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData);
+
+    public Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
+        byte[] data);
+
+    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines);
+    
+    Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr);
+    
+    Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr);
+   
+    Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName);
 }

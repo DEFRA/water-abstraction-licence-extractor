@@ -26,8 +26,8 @@ public interface IOutputService
     public Task SavePageScreenshotIfDoesntExistAsync(
         PdfDocument pdfDocument,
         int pageNumber,
-        string pdfServiceName,
+        string noOcrServiceName,
         string pdfFilePath);
 
-    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath);
+    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName);
 }

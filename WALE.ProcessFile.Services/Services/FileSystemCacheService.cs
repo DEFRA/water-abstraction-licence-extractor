@@ -60,7 +60,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return Task.FromResult($"{txtCacheFolder}/page-{request.PageNumber}.json");
     }
     
-    public async Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request)
+    public async Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request)
     {
         var outputFilename = await GetNoOcrPageReferenceAsync(request);
         var existsInCache = File.Exists(outputFilename);

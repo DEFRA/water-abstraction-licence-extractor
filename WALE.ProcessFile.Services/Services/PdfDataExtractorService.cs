@@ -48,7 +48,7 @@ public class PdfDataExtractorService(
                 pdfDocument,
                 cacheService);
 
-        await outputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath);
+        await outputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath, Name);
         
         // Save all text
         if (!pdfDocument.FromCache)

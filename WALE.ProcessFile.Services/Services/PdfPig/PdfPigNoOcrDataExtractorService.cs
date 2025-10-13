@@ -112,7 +112,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     PageNumber = pageNumber
                 };
 
-                var fileText = await cacheService.GetNoOcrPageAsync(pageRequest);
+                var fileText = await cacheService.GetNoOcrPageTextAsync(pageRequest);
 
                 if (string.IsNullOrEmpty(fileText))
                 {
@@ -155,7 +155,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     PageNumber = page.Number
                 };
                 
-                var fileText = await cacheService.GetNoOcrPageAsync(pageRequest);
+                var fileText = await cacheService.GetNoOcrPageTextAsync(pageRequest);
                 
                 pagesMetadata.Add(new Dictionary<string, object>
                 {

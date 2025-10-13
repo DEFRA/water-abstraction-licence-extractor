@@ -1,6 +1,8 @@
+using System.Text.Json;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
@@ -28,12 +30,13 @@ public class DatabaseCacheService(
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        throw new NotImplementedException();
+        var pdfFilename = request.Filepath!.Split('/').Last();
+        return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
     }
     
-    public Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request)
+    public Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request)
     {
-        throw new NotImplementedException();
+        return databaseReadService.GetNoOcrPageTextAsync(request);
     }
     
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
@@ -55,12 +58,24 @@ public class DatabaseCacheService(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        
+        var data = new Dictionary<string, object>
+        {
+            { "pages", pagesMetadata },
+            { "allTextFilename", "pages-all.txt" }
+        };
+
+        var dataStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
+        return databaseAddService.SaveNoOcrPagesMetadata(request, dataStr);
     }
 
     public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        var imagesMetadataStr = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions());
+        
+        return databaseAddService.SaveNoOcrImagesMetadata(request, imagesMetadataStr);
     }
 
     public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
@@ -77,7 +92,10 @@ public class DatabaseCacheService(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines)
     {
-        throw new NotImplementedException();
+        var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
+        request.Filepath = request.Filepath!.Split('/').Last();
+        
+        return databaseAddService.SaveNoOcrPageAsync(request, pageLinesStr);
     }
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)

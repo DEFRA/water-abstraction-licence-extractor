@@ -91,10 +91,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public async Task SavePageScreenshotIfDoesntExistAsync(
         PdfDocument pdfDocument,
         int pageNumber,
-        string pdfServiceName,
+        string noOcrServiceName,
         string pdfFilePath)
     {
-        var imgOutputFilename = GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath);
+        var imgOutputFilename = GetPageScreenshotPath(pageNumber, noOcrServiceName, pdfFilePath);
         
         if (File.Exists(imgOutputFilename))
         {
@@ -121,7 +121,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         stream.Close();
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath)
+    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");

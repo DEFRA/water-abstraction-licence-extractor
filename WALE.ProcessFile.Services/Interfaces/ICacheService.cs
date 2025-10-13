@@ -15,7 +15,7 @@ public interface ICacheService
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
     
-    public Task<string?> GetNoOcrPageAsync(NoOcrServicePageCacheRequest request);
+    public Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,

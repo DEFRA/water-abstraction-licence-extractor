@@ -1,6 +1,10 @@
+using System.Text.Json;
+using SkiaSharp;
+using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
@@ -19,7 +23,8 @@ public class DatabaseOutputService(
     public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
         string pdfFilePath)
     {
-        throw new NotImplementedException();
+        var pdfFilename = pdfFilePath.Split('/').Last();
+        return Task.FromResult($"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}");
     }
     
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
@@ -47,19 +52,49 @@ public class DatabaseOutputService(
         return databaseAddService.SaveListDataAsync(listData);
     }
 
-    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName,
+    public async Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
         string pdfFilePath)
     {
-        throw new NotImplementedException();
+        var pdfFilename = pdfFilePath.Split('/').Last();
+        var screenshot = await databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, noOcrServiceName);
+
+        if (screenshot != null)
+        {
+            return;
+        }
+        
+        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
+        var bytes = await GetAsJpegAsync(memoryStream);
+        
+        await databaseAddService.SavePageScreenshotIfDoesntExistAsync(
+            pageNumber,
+            noOcrServiceName,
+            pdfFilename,
+            bytes);
     }
 
-    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName)
+    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
     {
-        throw new NotImplementedException();
+        var pdfFilename = pdfFilePath.Split('/').Last();
+        var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()); ;
+        
+        return databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
     }
-
-    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath)
+    
+    private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
-        throw new NotImplementedException();
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+        
+        await using var stream = new MemoryStream();
+        data.SaveTo(stream);
+        
+        await stream.FlushAsync();
+
+        stream.Position = 0;
+        var bytes = stream.ToArray();
+        stream.Close();
+
+        return bytes;
     }
 }

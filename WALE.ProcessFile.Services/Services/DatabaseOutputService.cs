@@ -6,7 +6,9 @@ using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class DatabaseOutputService(IDatabaseAddService databaseAddService) : IOutputService
+public class DatabaseOutputService(
+    IDatabaseReadService databaseReadService,
+    IDatabaseAddService databaseAddService) : IOutputService
 {
     public Task SetupAsync()
     {

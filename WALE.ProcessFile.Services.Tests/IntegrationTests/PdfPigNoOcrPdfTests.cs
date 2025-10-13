@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Database.Interfaces;
+using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
@@ -12,8 +14,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class PdfPigNoOcrPdfTests
 {
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    //private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    //private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+
+    private static readonly IDatabaseReadService readService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
+    private static readonly IDatabaseAddService addService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
+    
+    private static readonly ICacheService CacheService = new DatabaseCacheService(readService, addService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(readService, addService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

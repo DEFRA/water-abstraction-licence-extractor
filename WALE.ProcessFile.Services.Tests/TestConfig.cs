@@ -167,4 +167,19 @@ public static class TestConfig
             return _tesseractPath;
         }
     }
+
+    private static string? _sqlConnectionString;
+    public static string SqlConnectionString
+    {
+        get
+        {
+            if (_sqlConnectionString != null)
+            {
+                return _sqlConnectionString;
+            }
+            
+            _sqlConnectionString = Config["SqlConnectionString"]!;
+            return _sqlConnectionString;
+        }
+    }
 }

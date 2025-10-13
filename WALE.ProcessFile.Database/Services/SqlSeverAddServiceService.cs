@@ -4,7 +4,7 @@ using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.Services;
 
-public class SqlSeverAddServiceService : IDatabaseAddService
+public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddService
 {
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {

@@ -10,4 +10,8 @@
       <ProjectReference Include="..\WALE.ProcessFile.Models\WALE.ProcessFile.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+    </ItemGroup>
+
 </Project>

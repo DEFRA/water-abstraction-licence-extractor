@@ -6,7 +6,9 @@ using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class DatabaseCacheService(IDatabaseAddService databaseAddService) : ICacheService
+public class DatabaseCacheService(
+    IDatabaseReadService databaseReadService,
+    IDatabaseAddService databaseAddService) : ICacheService
 {
     public Task SetupAsync()
     {
@@ -16,7 +18,7 @@ public class DatabaseCacheService(IDatabaseAddService databaseAddService) : ICac
     
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        throw new NotImplementedException();
+        return databaseReadService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)

@@ -43,7 +43,7 @@ async Task ProgramAsync()
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
 
     var processRun = new ProcessRun();
-    await outputService.RecordProcessRunStartAsync(processRun);
+    await outputService.SaveProcessRunAsync(processRun);
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     List<LicenceSet> licenceSets;

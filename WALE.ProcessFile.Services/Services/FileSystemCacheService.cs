@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Tesseract;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;

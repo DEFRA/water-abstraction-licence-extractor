@@ -14,7 +14,13 @@ public class DatabaseOutputService(IDatabaseAddService databaseAddService) : IOu
         return Task.CompletedTask;
     }
 
-    public Task<ProcessRun> RecordProcessRunStartAsync(ProcessRun processRun)
+    public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
+        string pdfFilePath)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
     {
         return databaseAddService.AddProcessRunAsync(processRun);
     }
@@ -37,12 +43,6 @@ public class DatabaseOutputService(IDatabaseAddService databaseAddService) : IOu
     public Task SaveListDataAsync(List<OutputListDataItem> listData)
     {
         return databaseAddService.SaveListDataAsync(listData);
-    }
-
-    public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
-        string pdfFilePath)
-    {
-        throw new NotImplementedException();
     }
 
     public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string pdfServiceName,

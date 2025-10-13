@@ -38,7 +38,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return $"{imgOutputPath}page-{pageNumber}.jpg";
     }
     
-    public Task<ProcessRun> RecordProcessRunStartAsync(ProcessRun processRun)
+    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
     {
         // This mode doesn't need to do anything here
         return Task.FromResult(processRun);

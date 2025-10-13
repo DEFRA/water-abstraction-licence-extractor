@@ -15,7 +15,7 @@ public interface ICacheService
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
     
-    public Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request);
+    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
@@ -39,7 +39,7 @@ public interface ICacheService
 
     public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber);
     
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
+    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines);
 

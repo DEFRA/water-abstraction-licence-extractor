@@ -60,7 +60,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return Task.FromResult($"{txtCacheFolder}/page-{request.PageNumber}.json");
     }
     
-    public async Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request)
+    public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         var outputFilename = await GetNoOcrPageReferenceAsync(request);
         var existsInCache = File.Exists(outputFilename);
@@ -168,7 +168,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return deflated;
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines)
     {

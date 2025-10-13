@@ -73,12 +73,18 @@ public class DatabaseOutputService(
             bytes);
     }
 
-    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
+    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
     {
         var pdfFilename = pdfFilePath.Split('/').Last();
-        var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()); ;
+        var data = await databaseReadService.GetAllPagesTextAsync(pdfFilename, noOcrServiceName);
+
+        if (data != null)
+        {
+            return;
+        }
         
-        return databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
+        var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()); ;
+        await databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
     }
     
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)

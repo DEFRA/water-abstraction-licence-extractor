@@ -112,7 +112,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     PageNumber = pageNumber
                 };
 
-                var fileText = await cacheService.GetNoOcrPageTextAsync(pageRequest);
+                var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
 
                 if (string.IsNullOrEmpty(fileText))
                 {
@@ -155,7 +155,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     PageNumber = page.Number
                 };
                 
-                var fileText = await cacheService.GetNoOcrPageTextAsync(pageRequest);
+                var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
                 
                 pagesMetadata.Add(new Dictionary<string, object>
                 {
@@ -194,7 +194,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 if (FormattingHelper.IsPageEmpty(page.Text))
                 {
-                    await cacheService.SaveNoOcrPage(pageRequest, []);
+                    await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
                     continue;
                 }
 
@@ -202,11 +202,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 if (pageLines.Count == 0)
                 {
-                    await cacheService.SaveNoOcrPage(pageRequest, []);
+                    await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
                     continue;
                 }
 
-                await cacheService.SaveNoOcrPage(pageRequest, pageLines);
+                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
                 
                 var pageLinesFormatted = FormatPageLines(
                     pageLines,

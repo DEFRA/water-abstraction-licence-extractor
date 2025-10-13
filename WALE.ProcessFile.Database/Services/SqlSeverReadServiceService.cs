@@ -30,13 +30,33 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
 
         return null;
     }
+    
+    public async Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 [Response] FROM NoOcrImagesMetadataCache WHERE Filename = @Filename AND NoOcrServiceName = @NoOcrServiceName";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", request.Filepath);
+        command.Parameters.AddWithValue("@NoOcrServiceName", request.NoOcrServiceName);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            return reader.GetString(0);
+        }
+
+        return null;
+    }
 
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, string fileName, string noOcrServiceName)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT TOP 1 [Data] FROM PageScreenshot WHERE Filename = @Filename AND NoOcrServiceName = @NoOcrServiceName";
+        const string sql = "SELECT TOP 1 [Data] FROM PageScreenshot WHERE Filename = @Filename AND NoOcrServiceName = @NoOcrServiceName AND PageNumber = @PageNumber";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", fileName);
         command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
@@ -52,7 +72,7 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return null;
     }
 
-    public async Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request)
+    public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
@@ -62,6 +82,26 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         command.Parameters.AddWithValue("@Filename", request.Filepath);
         command.Parameters.AddWithValue("@PageNumber", request.PageNumber);
         command.Parameters.AddWithValue("@NoOcrServiceName", request.NoOcrServiceName);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            return reader.GetString(0);
+        }
+
+        return null;
+    }
+    
+    public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 [Data] FROM AllPagesText WHERE Filename = @Filename AND NoOcrServiceName = @NoOcrServiceName";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", pdfFilename);
+        command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
         
         await using var reader = await command.ExecuteReaderAsync();
 

@@ -34,9 +34,9 @@ public class DatabaseCacheService(
         return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
     }
     
-    public Task<string?> GetNoOcrPageTextAsync(NoOcrServicePageCacheRequest request)
+    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
-        return databaseReadService.GetNoOcrPageTextAsync(request);
+        return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
     
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
@@ -54,11 +54,18 @@ public class DatabaseCacheService(
         throw new NotImplementedException();
     }
 
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
         request.Filepath = request.Filepath!.Split('/').Last();
+
+        var existing = await databaseReadService.GetNoOcrPagesMetadataAsync(request);
+
+        if (!string.IsNullOrEmpty(existing))
+        {
+            return request;
+        }
         
         var data = new Dictionary<string, object>
         {
@@ -67,35 +74,39 @@ public class DatabaseCacheService(
         };
 
         var dataStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
-        return databaseAddService.SaveNoOcrPagesMetadata(request, dataStr);
+        return await databaseAddService.SaveNoOcrPagesMetadata(request, dataStr);
     }
 
-    public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         request.Filepath = request.Filepath!.Split('/').Last();
-        var imagesMetadataStr = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions());
+     
+        var existing = await databaseReadService.GetNoOcrImagesMetadata(request);
+
+        if (!string.IsNullOrEmpty(existing))
+        {
+            return;
+        }
         
-        return databaseAddService.SaveNoOcrImagesMetadata(request, imagesMetadataStr);
+        var imagesMetadataStr = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions());
+        await databaseAddService.SaveNoOcrImagesMetadata(request, imagesMetadataStr);
     }
 
-    public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
-    {
-        throw new NotImplementedException();
-    }
-    
-    public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPage(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines)
     {
-        var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         request.Filepath = request.Filepath!.Split('/').Last();
+
+        var existing = await databaseReadService.GetNoOcrPageTextLinesAsync(request);
+
+        if (!string.IsNullOrEmpty(existing))
+        {
+            return request;
+        }
         
-        return databaseAddService.SaveNoOcrPageAsync(request, pageLinesStr);
+        var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
+        return await databaseAddService.SaveNoOcrPageAsync(request, pageLinesStr);
     }
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
@@ -104,6 +115,16 @@ public class DatabaseCacheService(
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
     {
         throw new NotImplementedException();
     }

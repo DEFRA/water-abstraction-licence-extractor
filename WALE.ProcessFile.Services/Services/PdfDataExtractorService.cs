@@ -525,6 +525,11 @@ public class PdfDataExtractorService(
 
         foreach (var relatedFileName in pathsToFetch)
         {
+            if (!File.Exists(relatedFileName))
+            {
+                continue;
+            }
+            
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
                 new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),

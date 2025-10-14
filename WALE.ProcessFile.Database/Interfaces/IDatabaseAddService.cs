@@ -28,4 +28,6 @@ public interface IDatabaseAddService
 
     Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
         int pageNumber, string extension);
+
+    Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string serialize);
 }

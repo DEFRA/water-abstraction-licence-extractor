@@ -58,6 +58,11 @@ public class AzureAiVisionOcrDataExtractorService(
                     NoOcrServiceName = PdfDataExtractorService.Name,
                     Extension = imageReference.Split('.').Last()
                 });
+
+                if (bytes == null)
+                {
+                    throw new Exception("Image was not found");
+                }
                 
                 await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);

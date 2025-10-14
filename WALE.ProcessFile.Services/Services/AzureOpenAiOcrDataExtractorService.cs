@@ -128,6 +128,11 @@ public class AzureOpenAiOcrDataExtractorService(
             Extension = imageReference.Split('.').Last()
         });
         
+        if (imageBytes == null)
+        {
+            throw new Exception("Image was not found");
+        }
+        
         return ChatMessageContentPart.CreateImagePart(
             BinaryData.FromBytes(imageBytes),
             "image/jpeg",

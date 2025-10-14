@@ -52,6 +52,11 @@ public class TesseractOcrDataExtractorService(
                     NoOcrServiceName = PdfDataExtractorService.Name,
                     Extension = imageReference.Split('.').Last()
                 });
+
+                if (bytes == null)
+                {
+                    throw new Exception("Image was not found");
+                }
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }

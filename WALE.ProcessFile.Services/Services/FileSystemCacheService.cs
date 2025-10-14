@@ -99,7 +99,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return await File.ReadAllTextAsync(outputFilename);
     }
 
-    public async Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
         var filePath = await GetImageReferenceAsync(
             request.PageNumber,

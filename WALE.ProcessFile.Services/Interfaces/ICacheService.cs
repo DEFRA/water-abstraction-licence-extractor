@@ -25,7 +25,7 @@ public interface ICacheService
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
-    public Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
+    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
         NoOcrServiceMetadataCacheRequest request,

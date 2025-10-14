@@ -50,9 +50,10 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrImageTextAsync(request);
     }
 
-    public Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        return databaseReadService.GetImageBytesAsync(request);
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
@@ -112,12 +113,14 @@ public class DatabaseCacheService(
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        return databaseAddService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        return databaseAddService.SaveOcrImageTextAsync(request, pageLines);
     }
     
     public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)

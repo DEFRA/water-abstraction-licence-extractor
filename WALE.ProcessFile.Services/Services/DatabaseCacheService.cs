@@ -20,12 +20,14 @@ public class DatabaseCacheService(
     
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
+        request.Filepath = request.Filepath!.Split('/').Last();
         return databaseReadService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        throw new NotImplementedException();
+        request.Filepath = request.Filepath!.Split('/').Last();
+        return databaseReadService.GetNoOcrImagesMetadata(request);
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
@@ -36,6 +38,7 @@ public class DatabaseCacheService(
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
+        request.Filepath = request.Filepath!.Split('/').Last();
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
     
@@ -47,6 +50,7 @@ public class DatabaseCacheService(
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
+        request.Filepath = request.Filepath!.Split('/').Last();
         return databaseReadService.GetOcrImageTextAsync(request);
     }
 
@@ -131,6 +135,7 @@ public class DatabaseCacheService(
     
     public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
     {
+        var filename = pdfFilePath.Split('/').Last();
         throw new NotImplementedException();
     }
 }

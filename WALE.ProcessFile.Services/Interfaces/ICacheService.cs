@@ -1,4 +1,3 @@
-using Tesseract;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Models;

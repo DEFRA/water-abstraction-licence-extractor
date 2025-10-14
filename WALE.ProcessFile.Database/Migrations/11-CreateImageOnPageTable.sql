@@ -1,5 +1,6 @@
 CREATE TABLE ImageOnPage (
     ImageOnPageId int IDENTITY(1,1) NOT NULL,
+    ProcessRunId int NOT NULL,
     [Filename] NVARCHAR(MAX) NOT NULL,
     NoOcrServiceName NVARCHAR(MAX) NOT NULL,
     Data varbinary(max) NOT NULL,

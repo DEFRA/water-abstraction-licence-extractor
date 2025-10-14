@@ -32,39 +32,50 @@ public class DatabaseOutputService(
         return databaseAddService.AddProcessRunAsync(processRun);
     }
 
-    public async Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)
+    public async Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId)
     {
         foreach (var licenceSet in licenceSets)
         {
-            var licenceSetStr = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions());
-            await databaseAddService.SaveLicenceSetAsync(licenceSetStr, licenceSet.LicenceSetId, licenceSet.ShortLicenceSetId);   
+            var licenceSetId = await databaseAddService.SaveLicenceSetAsync(
+                licenceSet.LicenceSetId,
+                licenceSet.ShortLicenceSetId,
+                processRunId);   
+            
+            foreach (var licence in licenceSet.Licences)
+            {
+                await databaseAddService.SaveLicenceSetLicenceAsync(
+                    licenceSetId,
+                    licence.LicenceNumber,
+                    licence.LicenceVersion.LicenceVersionId,
+                    processRunId);   
+            }
         }
     }
 
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath)
+    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
     {
         var pdfFilename = pdfFilePath.Split('/').Last();
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
-        return databaseAddService.SaveLicenceAsync(licenceStr, pdfFilename);
+        return databaseAddService.SaveLicenceAsync(licenceStr, pdfFilename, processRunId);
     }
 
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath)
+    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
         var pdfFilename = pdfFilePath.Split('/').Last();
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
         
-        return databaseAddService.SaveMatchResultAsync(matchesResultStr, pdfFilename);
+        return databaseAddService.SaveMatchResultAsync(matchesResultStr, pdfFilename, processRunId);
     }
     
-    public Task SaveListDataAsync(List<OutputListDataItem> listData)
+    public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
     {
         // Don't need to, as it can just get it on the fly
         return Task.CompletedTask;
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
-        string pdfFilePath)
+        string pdfFilePath, int processRunId)
     {
         var pdfFilename = pdfFilePath.Split('/').Last();
         var screenshot = await databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, noOcrServiceName);
@@ -81,10 +92,11 @@ public class DatabaseOutputService(
             pageNumber,
             noOcrServiceName,
             pdfFilename,
-            bytes);
+            bytes,
+            processRunId);
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
+    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
         var pdfFilename = pdfFilePath.Split('/').Last();
         var data = await databaseReadService.GetAllPagesTextAsync(pdfFilename, noOcrServiceName);
@@ -95,7 +107,7 @@ public class DatabaseOutputService(
         }
         
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
-        await databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
+        await databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
     }
 
     public Task FinishProcessRunAsync(ProcessRun processRun)

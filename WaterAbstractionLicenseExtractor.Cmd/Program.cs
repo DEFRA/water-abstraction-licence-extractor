@@ -66,7 +66,8 @@ async Task ProgramAsync()
                 outputService,
                 cacheService,
                 pdfDataExtractors,
-                fileLicenceMapping));
+                fileLicenceMapping,
+                processRun));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -118,10 +119,10 @@ async Task ProgramAsync()
         
         var licenceSet = licenceSetGroup.First();
         var licence = licenceSet.Licences.First();
-        await outputService.SaveLicenceAsync(licence, licence.Filename!);
+        await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
 
         var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, licenceSets);
-        await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!);
+        await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!, processRun.ProcessRunId);
         
         var outputLine = ToOutputLine(
             licence,
@@ -133,7 +134,7 @@ async Task ProgramAsync()
         outputLines.Add(outputLine);
     }
 
-    await SaveListDataAsync(outputLines, outputFolder, outputService, services.RegenerateMappingJson);
+    await SaveListDataAsync(outputLines, outputFolder, outputService, services.RegenerateMappingJson, processRun);
     
     processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun);
@@ -143,7 +144,8 @@ async Task SaveListDataAsync(
     List<IntermediateOutputLicence> outputLines,
     string outputFolder,
     IOutputService outputService,
-    bool regenerateMappingJson)
+    bool regenerateMappingJson,
+    ProcessRun processRun)
 {
     var resultFileStringBuilder = new StringBuilder(
         "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
@@ -277,7 +279,7 @@ async Task SaveListDataAsync(
             $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, JsonHelper.GetSerializerOptions())};");
     }
 
-    await outputService.SaveListDataAsync(listData);
+    await outputService.SaveListDataAsync(listData, processRun.ProcessRunId);
 
     var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
     {
@@ -404,7 +406,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     IOutputService outputService,
     ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
-    Dictionary<string, string> fileLicenceMapping)
+    Dictionary<string, string> fileLicenceMapping,
+    ProcessRun processRun)
 {
     var fileName = pdfFilePath.Split('/').Last();
 
@@ -428,7 +431,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             lookupConfig,
-            previouslyParsedPaths);
+            previouslyParsedPaths,
+            processRun.ProcessRunId);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
@@ -436,9 +440,10 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfDataExtractor,
             outputService,
             cacheService,
-            pdfFolder);
+            pdfFolder,
+            processRun.ProcessRunId);
 
-        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath);
+        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
     
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
         return licenceSets;

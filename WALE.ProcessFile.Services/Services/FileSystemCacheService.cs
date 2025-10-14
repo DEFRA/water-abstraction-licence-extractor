@@ -150,7 +150,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)
+    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
         await File.WriteAllBytesAsync(filePath, bytes);

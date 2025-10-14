@@ -21,130 +21,141 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         return processRun;
     }
 
-    public async Task SaveLicenceSetAsync(string licenceSet, string licenceSetId, string shortLicenceSetId)
+    public async Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO LicenceSet (SchemaLicenceSetId, ShortLicenceSetId, Data) VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @Data)";
+        const string sql = "INSERT INTO LicenceSet (SchemaLicenceSetId, ShortLicenceSetId, ProcessRunId, DateTimeUtc) VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@SchemaLicenceSetId", licenceSetId);
         command.Parameters.AddWithValue("@ShortLicenceSetId", shortLicenceSetId);
-        command.Parameters.AddWithValue("@Data", licenceSet);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
-        await command.ExecuteNonQueryAsync();
+        return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
-    public async Task SaveLicenceAsync(string licence, string pdfFilePath)
+    public async Task SaveLicenceAsync(string licence, string pdfFilePath, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO Licence (Filename, Data) VALUES (@Filename, @Data)";
+        const string sql = "INSERT INTO Licence (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);
         command.Parameters.AddWithValue("@Data", licence);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task SaveMatchResultAsync(string matchesResult, string pdfFilePath)
+    public async Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO MatchesResult (Filename, Data) VALUES (@Filename, @Data)";
+        const string sql = "INSERT INTO MatchesResult (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);
         command.Parameters.AddWithValue("@Data", matchesResult);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data)
+    public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO PageScreenshot (Filename, PageNumber, NoOcrServiceName, Data, DateTimeUtc) VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc)";
+        const string sql = "INSERT INTO PageScreenshot (Filename, PageNumber, NoOcrServiceName, Data, DateTimeUtc, ProcessRunId) VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilename);
         command.Parameters.AddWithValue("@PageNumber", pageNumber);
         command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
         command.Parameters.AddWithValue("@Data", data);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines)
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO NoOcrPageTextCache (Filename, PageNumber, NoOcrServiceName, Data) VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data)";
+        const string sql = "INSERT INTO NoOcrPageTextCache (Filename, PageNumber, NoOcrServiceName, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", request.Filepath);
         command.Parameters.AddWithValue("@PageNumber", request.PageNumber);
         command.Parameters.AddWithValue("@NoOcrServiceName", request.NoOcrServiceName);
         command.Parameters.AddWithValue("@Data", pageLines);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
         await command.ExecuteNonQueryAsync();
         return request;
     }
 
-    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr)
+    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO NoOcrImagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc) VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc)";
+        const string sql = "INSERT INTO NoOcrImagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc, ProcessRunId) VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", request.Filepath);
         command.Parameters.AddWithValue("@NoOcrServiceName", request.NoOcrServiceName);
         command.Parameters.AddWithValue("@Response", imagesMetadataStr);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr)
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO NoOcrPagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc) VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc)";
+        const string sql = "INSERT INTO NoOcrPagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc, ProcessRunId) VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", request.Filepath);
         command.Parameters.AddWithValue("@NoOcrServiceName", request.NoOcrServiceName);
         command.Parameters.AddWithValue("@Response", dataStr);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await command.ExecuteNonQueryAsync();
         return request;
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName)
+    public async Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO AllPagesText (Filename, NoOcrServiceName, Data, DateTimeUtc) VALUES (@Filename, @NoOcrServiceName, @Data, @DateTimeUtc)";
+        const string sql = "INSERT INTO AllPagesText (Filename, NoOcrServiceName, Data, DateTimeUtc, ProcessRunId) VALUES (@Filename, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilename);
         command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
         command.Parameters.AddWithValue("@Data", documentLinesStr);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)
+    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO ImageOnPage (Filename, NoOcrServiceName, ImageNumber, PageNumber, Data, Extension, DateTimeUtc) VALUES (@Filename, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Extension, @DateTimeUtc)";
+        const string sql = "INSERT INTO ImageOnPage (Filename, NoOcrServiceName, ImageNumber, PageNumber, Data, Extension, DateTimeUtc, ProcessRunId) VALUES (@Filename, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Extension, @DateTimeUtc, @ProcessRunId)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);
         command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
@@ -153,22 +164,25 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         command.Parameters.AddWithValue("@PageNumber", pageNumber);        
         command.Parameters.AddWithValue("@Extension", extension);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data)
+    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO OcrImageTextCache (Filename, OcrServiceName, ImageNumber, PageNumber, Data) VALUES (@Filename, @OcrServiceName, @ImageNumber, @PageNumber, @Data)";
+        const string sql = "INSERT INTO OcrImageTextCache (Filename, OcrServiceName, ImageNumber, PageNumber, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @OcrServiceName, @ImageNumber, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", request.Filepath);
         command.Parameters.AddWithValue("@OcrServiceName", request.OcrServiceName);
         command.Parameters.AddWithValue("@Data", data);
         command.Parameters.AddWithValue("@ImageNumber", request.ImageNumber);
-        command.Parameters.AddWithValue("@PageNumber", request.PageNumber); 
+        command.Parameters.AddWithValue("@PageNumber", request.PageNumber);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
         await command.ExecuteNonQueryAsync();
     }
@@ -179,8 +193,7 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         await connection.OpenAsync();
 
         var sql =
-            @"delete [dbo].[AllPagesText]
-            delete [dbo].[ImageOnPage]
+            @"delete [dbo].[ImageOnPage]
             delete [dbo].[NoOcrImagesMetadataCache]
             delete [dbo].[NoOcrPagesMetadataCache]
             delete [dbo].[NoOcrPageTextCache]
@@ -220,6 +233,26 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         command.Parameters.AddWithValue("@ProcessRunId", processRun.ProcessRunId);
         command.Parameters.AddWithValue("@EndDateTimeUtc", DateTime.UtcNow);
 
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task SaveLicenceSetLicenceAsync(
+        int licenceSetId,
+        string? licenceNumber,
+        string licenceVersionId,
+        int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO LicenceSetLicence (LicenceSetId, LicenceNumber, LicenceVersionId, ProcessRunId, DateTimeUtc) VALUES (@LicenceSetId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber);
+        command.Parameters.AddWithValue("@LicenceVersionId", licenceVersionId);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        
         await command.ExecuteNonQueryAsync();
     }
 }

@@ -46,7 +46,8 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task SaveLicenceSetsAsync(
         IReadOnlyList<LicenceSet> licenceSets,
-        string pdfFilePath)
+        string pdfFilePath,
+        int processRunId)
     {
         var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
@@ -56,7 +57,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath)
+    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
@@ -68,7 +69,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var data2 = {licenceJson}");
     }
     
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath)
+    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
@@ -80,7 +81,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var data = {internalJson}");
     }
 
-    public Task SaveListDataAsync(List<OutputListDataItem> listData)
+    public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
     {
         var jsListFilePath = $"{outputFolder}list-data.js";
 
@@ -92,7 +93,8 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath)
+        string pdfFilePath,
+        int processRunId)
     {
         var imgOutputFilename = GetPageScreenshotPath(pageNumber, noOcrServiceName, pdfFilePath);
         
@@ -121,7 +123,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         stream.Close();
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName)
+    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");

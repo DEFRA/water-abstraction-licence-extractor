@@ -90,7 +90,7 @@ public class DatabaseCacheService(
         };
 
         var dataStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
-        return await databaseAddService.SaveNoOcrPagesMetadata(request, dataStr);
+        return await databaseAddService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
     }
 
     public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
@@ -105,7 +105,7 @@ public class DatabaseCacheService(
         }
         
         var imagesMetadataStr = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions());
-        await databaseAddService.SaveNoOcrImagesMetadata(request, imagesMetadataStr);
+        await databaseAddService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
@@ -122,30 +122,29 @@ public class DatabaseCacheService(
         }
         
         var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
-        return await databaseAddService.SaveNoOcrPageAsync(request, pageLinesStr);
+        return await databaseAddService.SaveNoOcrPageAsync(request, pageLinesStr, request.ProcessRunId);
     }
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
         request.Filepath = request.Filepath!.Split('/').Last();
-        return databaseAddService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
+        return databaseAddService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
         request.Filepath = request.Filepath!.Split('/').Last();
-        return databaseAddService.SaveOcrImageTextAsync(request, pageLines);
+        return databaseAddService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
-    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)
+    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filename = pdfFilePath.Split('/').Last();
-        return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension);
+        return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     
     public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
     {
-        var filename = pdfFilePath.Split('/').Last();
         throw new NotImplementedException();
     }
 }

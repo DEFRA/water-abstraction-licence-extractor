@@ -7,4 +7,5 @@ public class OcrServiceImageDataCacheRequest
     public int ImageNumber { get; set; }
     public string? NoOcrServiceName  { get; set; }
     public string? Extension { get; set; }
+    public int ProcessRunId { get; set; }
 }

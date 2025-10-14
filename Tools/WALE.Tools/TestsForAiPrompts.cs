@@ -571,7 +571,8 @@ public static class TestsForAiPrompts
                     pdfFilename,
                     pageNumber,
                     1,
-                    mockPdfDocument)).ToList();
+                    mockPdfDocument,
+                    -1)).ToList();
 
             var averageLineLength = lines.Average(line
                 => line.Text.Length);

@@ -38,7 +38,8 @@ public class TessaractOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [PdfFolder + fileName]);
+            [PdfFolder + fileName],
+            0);
     }
     
     [Fact]
@@ -500,7 +501,8 @@ public class TessaractOcrPdfTests
             _pdfDataExtractorCombined,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder);
+            TestConfig.PdfFolder,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);

@@ -37,7 +37,8 @@ public class AzureOpenAiOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [PdfFolder + fileName]);
+            [PdfFolder + fileName],
+            0);
     }
 
     [Fact]

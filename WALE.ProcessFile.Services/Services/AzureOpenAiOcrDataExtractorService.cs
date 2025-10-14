@@ -21,7 +21,7 @@ public class AzureOpenAiOcrDataExtractorService(
     public string Name => "AzureOpenAiOcr";
     
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
     {
         string? response;
         var request = new OcrServiceImageTextCacheRequest
@@ -29,7 +29,8 @@ public class AzureOpenAiOcrDataExtractorService(
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
             Filepath = pdfFilepath,
-            OcrServiceName = Name
+            OcrServiceName = Name,
+            ProcessRunId = processRunId
         };
         
         var cacheFileText = await cacheService.GetOcrImageTextAsync(request);

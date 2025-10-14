@@ -15,21 +15,22 @@ public interface IOutputService
     
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
 
-    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath);
+    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath);
+    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId);
     
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath);
+    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId);
     
-    public Task SaveListDataAsync(List<OutputListDataItem> listData);
+    public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
     
     public Task SavePageScreenshotIfDoesntExistAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath);
+        string pdfFilePath,
+        int processRunId);
 
-    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName);
+    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun);
 }

@@ -72,7 +72,8 @@ public class MessageReceivedFunction(
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 fileLicenceMapping),
-            previouslyParsedPaths);
+            previouslyParsedPaths,
+            0);
         
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);

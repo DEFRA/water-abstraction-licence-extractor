@@ -31,6 +31,7 @@ public class FunctionInputModel
     public IOutputService? outputService { get; set; }
     public ICacheService? cacheService { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
+    public int processRunId { get; set; }
     
     public FunctionInputModel Clone()
     {

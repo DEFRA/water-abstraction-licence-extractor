@@ -18,12 +18,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     public async Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFilePath,
         IOutputService outputService,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        int processRunId)
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfFilePath,
-            NoOcrServiceName = Name
+            NoOcrServiceName = Name,
+            ProcessRunId = processRunId
         };
         
         var metadataFileText = await cacheService.GetNoOcrPagesMetadataAsync(request);
@@ -69,18 +71,21 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,
-        string pdfServiceName)
+        string pdfServiceName,
+        int processRunId)
     {
         return outputService.SavePageScreenshotIfDoesntExistAsync(
             pdfDocument,
             pageNumber,
             pdfServiceName,
-            pdfDocument.PdfFilePath);
+            pdfDocument.PdfFilePath,
+            processRunId);
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
         PdfDocument pdfDocument,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        int processRunId)
     {
         var dtStart = DateTime.Now;
         var documentLines = new List<DocumentLine>();
@@ -88,7 +93,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var metadataRequest = new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name
+            NoOcrServiceName = Name,
+            ProcessRunId = processRunId
         };
         
         if (pdfDocument.FromCache)
@@ -109,7 +115,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 {
                     Filepath = pdfDocument.PdfFilePath,
                     NoOcrServiceName = Name,
-                    PageNumber = pageNumber
+                    PageNumber = pageNumber,
+                    ProcessRunId = processRunId
                 };
 
                 var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
@@ -152,7 +159,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 {
                     Filepath = pdfDocument.PdfFilePath,
                     NoOcrServiceName = Name,
-                    PageNumber = page.Number
+                    PageNumber = page.Number,
+                    ProcessRunId = processRunId
                 };
                 
                 var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);

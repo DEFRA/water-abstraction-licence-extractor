@@ -6,4 +6,5 @@ public class OcrServiceImageTextCacheRequest
     public int PageNumber { get; set; }
     public int ImageNumber { get; set; }
     public string? OcrServiceName  { get; set; }
+    public int ProcessRunId { get; set; }
 }

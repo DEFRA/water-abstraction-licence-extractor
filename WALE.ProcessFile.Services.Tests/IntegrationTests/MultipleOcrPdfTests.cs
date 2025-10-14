@@ -39,7 +39,8 @@ public class MultipleOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [PdfFolder + fileName]);
+            [PdfFolder + fileName],
+            0);
     }
     
     [Fact]

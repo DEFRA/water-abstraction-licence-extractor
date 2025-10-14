@@ -53,7 +53,8 @@ public class AzureAiVisionOcrPdfTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [pdfFolder + fileName]);
+            [pdfFolder + fileName],
+            0);
     }
     
     [Fact]
@@ -136,7 +137,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor2,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder2);
+            TestConfig.PdfFolder2,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -589,7 +591,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder);
+            TestConfig.PdfFolder,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1051,7 +1054,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder);
+            TestConfig.PdfFolder,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1278,7 +1282,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder);
+            TestConfig.PdfFolder,
+            0);
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1343,7 +1348,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor2,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder2);
+            TestConfig.PdfFolder2,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1369,7 +1375,8 @@ public class AzureAiVisionOcrPdfTests
             _pdfDataExtractor2,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder2);
+            TestConfig.PdfFolder2,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string?> SaveImageBytesAsync(string folderPath, int imageNumber, int pageNumber, ICacheService cacheService)
+    public async Task<string?> SaveImageBytesAsync(string folderPath, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
     {
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
@@ -16,13 +16,13 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         {
             if (imageData.TryGetPng(out var bytes))
             {
-                await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, pngExtension);
+                await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, pngExtension, processRunId);
                 return pngExtension;
             }
 
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
-                await cacheService.SaveImageOnPageAsync(bytesMemory.ToArray(), folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, bmpExtension);
+                await cacheService.SaveImageOnPageAsync(bytesMemory.ToArray(), folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, bmpExtension, processRunId);
                 return bmpExtension;
             }
 
@@ -32,7 +32,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 throw new Exception("Cannot get bytes via either method");
             }
 
-            await cacheService.SaveImageOnPageAsync(bytesSpanAry, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, jpgExtension);
+            await cacheService.SaveImageOnPageAsync(bytesSpanAry, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, jpgExtension, processRunId);
             return jpgExtension;
         }
         catch (Exception exception)

@@ -58,7 +58,8 @@ public class NoOcrDatabaseTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 FileLicenceMapping),
-            [TestConfig.PdfFolder + fileName]);
+            [TestConfig.PdfFolder + fileName],
+            0);
     }
 
     [Fact]
@@ -216,7 +217,8 @@ public class NoOcrDatabaseTests
             _pdfDataExtractor,
             OutputService,
             CacheService,
-            TestConfig.PdfFolder);
+            TestConfig.PdfFolder,
+            0);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

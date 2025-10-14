@@ -40,10 +40,12 @@ public class OcrDatabaseTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [PdfFolder + fileName]);
+            [PdfFolder + fileName],
+            0);
     }
 
     [Fact(Skip = "UsedAsAUtilityOnly")]
+    //[Fact]
     public async Task ClearCacheAll()
     {
         await CacheService.ClearCacheAsync();

@@ -9,18 +9,21 @@ public interface INoOcrDataExtractorService
     public Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFilePath,
         IOutputService outputService,
-        ICacheService cacheService);
+        ICacheService cacheService,
+        int processRunId);
     
     public Task<List<DocumentLine>>
         GetTextLinesFromPdfAsync(
             PdfDocument pdfDocument,
-            ICacheService cacheService);
+            ICacheService cacheService,
+            int processRunId);
 
     public Task SavePageScreenshotIfDoesntExistAsync(
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,
-        string pdfServiceName);
+        string pdfServiceName,
+        int processRunId);
     
     public void Release(PdfDocument pdfDocument);
     

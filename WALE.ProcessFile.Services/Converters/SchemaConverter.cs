@@ -232,7 +232,8 @@ public static class SchemaConverter
         IPdfDataExtractorService  pdfDataExtractorService,
         IOutputService outputService,
         ICacheService cacheService,
-        string pdfFolder)
+        string pdfFolder,
+        int processRunId)
     {
         var returnList = new List<LicenceSet>();
         var primaryLicence = ToLicence(matchesResult);
@@ -247,7 +248,8 @@ public static class SchemaConverter
             outputService,
             cacheService,
             pdfFolder,
-            previouslyParsedPaths);
+            previouslyParsedPaths,
+            processRunId);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -561,7 +563,8 @@ public static class SchemaConverter
         IOutputService outputService,
         ICacheService cacheService,
         string pdfFolder,
-        List<string> previouslyParsedPaths)
+        List<string> previouslyParsedPaths,
+        int processRunId)
     {
         var returnLicences = new List<Licence>();
         
@@ -628,7 +631,8 @@ public static class SchemaConverter
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
                         new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
-                        previouslyParsedPaths);
+                        previouslyParsedPaths,
+                        processRunId);
                     
                     returnLicences.Add(ToLicence(relatedFileMatches));
                 }
@@ -662,7 +666,8 @@ public static class SchemaConverter
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 relatedFileName,
                 new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
-                previouslyParsedPaths);
+                previouslyParsedPaths,
+                processRunId);
                     
             returnLicences.Add(ToLicence(relatedFileMatches));
         }

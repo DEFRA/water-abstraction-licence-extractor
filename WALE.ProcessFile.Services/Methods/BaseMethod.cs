@@ -193,7 +193,8 @@ public static class BaseMethod
                 request.serviceName,
                 request.labelGroupName!,
                 request.licenceMapping!,
-                request.previouslyParsedPaths!);
+                request.previouslyParsedPaths!,
+                request.processRunId);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

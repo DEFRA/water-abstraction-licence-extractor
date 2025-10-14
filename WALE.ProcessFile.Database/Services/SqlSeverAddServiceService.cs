@@ -11,13 +11,13 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO ProcessRun (Description, StartDateTimeUtc, NumberOfFiles) VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles)";
+        const string sql = "INSERT INTO ProcessRun (Description, StartDateTimeUtc, NumberOfFiles) VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Description", processRun.Description);
         command.Parameters.AddWithValue("@StartDateTimeUtc", processRun.StartDateTimeUtc);
         command.Parameters.AddWithValue("@NumberOfFiles", processRun.NumberOfFiles);
         
-        await command.ExecuteNonQueryAsync();
+        processRun.ProcessRunId = (int)(decimal)(await command.ExecuteScalarAsync())!;
         return processRun;
     }
 
@@ -184,8 +184,7 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
             delete [dbo].[NoOcrImagesMetadataCache]
             delete [dbo].[NoOcrPagesMetadataCache]
             delete [dbo].[NoOcrPageTextCache]
-            delete [dbo].[OcrImageTextCache]
-            delete [dbo].[PageScreenshot]";
+            delete [dbo].[OcrImageTextCache]";
 
         await using var command = new SqlCommand(sql, connection);
         await command.ExecuteNonQueryAsync();
@@ -208,6 +207,19 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilename);
         
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task UpdateProcessRunAsync(ProcessRun processRun)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "UPDATE ProcessRun SET EndDateTimeUtc = @EndDateTimeUtc WHERE ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRun.ProcessRunId);
+        command.Parameters.AddWithValue("@EndDateTimeUtc", DateTime.UtcNow);
+
         await command.ExecuteNonQueryAsync();
     }
 }

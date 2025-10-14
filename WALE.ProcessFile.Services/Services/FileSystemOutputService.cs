@@ -153,4 +153,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
                 "var textData = `" + body + "`;");
         }
     }
+
+    public Task FinishProcessRunAsync(ProcessRun processRun)
+    {
+        return Task.CompletedTask;
+    }
 }

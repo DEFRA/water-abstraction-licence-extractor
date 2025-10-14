@@ -43,6 +43,12 @@ public class OcrDatabaseTests
             [PdfFolder + fileName]);
     }
 
+    [Fact(Skip = "UsedAsAUtilityOnly")]
+    public async Task ClearCacheAll()
+    {
+        await CacheService.ClearCacheAsync();
+    }
+    
     [Fact]
     public async Task Uncached_Then_Changed()
     {

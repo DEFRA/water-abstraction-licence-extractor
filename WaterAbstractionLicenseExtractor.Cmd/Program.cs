@@ -40,14 +40,14 @@ async Task ProgramAsync()
 
     await MoveReportHtmlFilesAsync(services.ReportTemplatePath!, outputFolder, services.LoadAiJs);
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
-
-    var processRun = new ProcessRun
+    var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
+    
+    var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
-        StartDateTimeUtc = DateTime.UtcNow
-    };
-    
-    await outputService.SaveProcessRunAsync(processRun);
+        StartDateTimeUtc = DateTime.UtcNow,
+        NumberOfFiles = pdfPaths.Count
+    });
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     List<LicenceSet> licenceSets;
@@ -57,7 +57,7 @@ async Task ProgramAsync()
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
         
-        foreach (var pdfFilePath in GetPdfPaths(services.PdfFolderPath!))
+        foreach (var pdfFilePath in pdfPaths)
         {
             scrapingTasks.Add(ScrapeDocumentAsync(
                 pdfFilePath,
@@ -134,6 +134,9 @@ async Task ProgramAsync()
     }
 
     await SaveListDataAsync(outputLines, outputFolder, outputService, services.RegenerateMappingJson);
+    
+    processRun.EndDateTimeUtc = DateTime.UtcNow;
+    await outputService.FinishProcessRunAsync(processRun);
 }
 
 async Task SaveListDataAsync(
@@ -586,7 +589,7 @@ static string ToPercent(double? value, string? ocr)
     return " (" + Math.Round(value.Value, 1) + "%)";
 }
 
-IEnumerable<string> GetPdfPaths(string pdfFolderPath)
+IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
 {
     var pdfFilePaths = Directory
         .GetFiles(pdfFolderPath)
@@ -633,7 +636,7 @@ IEnumerable<string> GetPdfPaths(string pdfFolderPath)
     pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
-    return pdfFilePaths;
+    return pdfFilePaths.ToList();
 }
 
 void Log(string message, StringBuilder outputStringBuilder)

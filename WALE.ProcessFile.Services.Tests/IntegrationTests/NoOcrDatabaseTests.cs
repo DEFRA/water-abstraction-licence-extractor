@@ -65,10 +65,15 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
-        await OutputService.SaveProcessRunAsync(new ProcessRun
+        var processRun = await OutputService.SaveProcessRunAsync(new ProcessRun
         {
-
+            Description = "Test run",
+            StartDateTimeUtc = DateTime.UtcNow,
+            EndDateTimeUtc = DateTime.UtcNow.AddHours(2),
+            NumberOfFiles = 19
         });
+        
+        Assert.NotEqual(0, processRun.ProcessRunId);
     }
     
     [Fact]

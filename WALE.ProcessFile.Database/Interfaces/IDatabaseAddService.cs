@@ -31,4 +31,6 @@ public interface IDatabaseAddService
     Task ClearCacheAsync();
     
     Task ClearCacheAsync(string pdfFilename);
+    
+    Task UpdateProcessRunAsync(ProcessRun processRun);
 }

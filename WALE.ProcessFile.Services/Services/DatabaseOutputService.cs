@@ -97,7 +97,12 @@ public class DatabaseOutputService(
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
         await databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
     }
-    
+
+    public Task FinishProcessRunAsync(ProcessRun processRun)
+    {
+        return databaseAddService.UpdateProcessRunAsync(processRun);
+    }
+
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);

@@ -30,4 +30,6 @@ public interface IOutputService
         string pdfFilePath);
 
     public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName);
+    
+    Task FinishProcessRunAsync(ProcessRun processRun);
 }

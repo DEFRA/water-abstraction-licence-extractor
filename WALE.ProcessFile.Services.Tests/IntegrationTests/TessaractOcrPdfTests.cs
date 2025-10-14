@@ -14,15 +14,9 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class TessaractOcrPdfTests
 {
-    //private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    //private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
  
-    private static readonly IDatabaseReadService ReadService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
-    private static readonly IDatabaseAddService AddService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
-    
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, AddService);
-    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, AddService);
-    
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>

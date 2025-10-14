@@ -62,6 +62,16 @@ public class NoOcrDatabaseTests
     }
 
     [Fact]
+    public async Task AddProcessRun()
+    {
+        // Arrange
+        await OutputService.SaveProcessRunAsync(new ProcessRun
+        {
+
+        });
+    }
+    
+    [Fact]
     public async Task Uncached_Then_Changed()
     {
         // Arrange

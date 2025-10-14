@@ -41,7 +41,12 @@ async Task ProgramAsync()
     await MoveReportHtmlFilesAsync(services.ReportTemplatePath!, outputFolder, services.LoadAiJs);
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
 
-    var processRun = new ProcessRun();
+    var processRun = new ProcessRun
+    {
+        Description = $"Run using {services.PdfFolderPath}",
+        StartDateTimeUtc = DateTime.UtcNow
+    };
+    
     await outputService.SaveProcessRunAsync(processRun);
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();

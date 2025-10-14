@@ -7,9 +7,19 @@ namespace WALE.ProcessFile.Database.Services;
 
 public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddService
 {
-    public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
+    public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
-        throw new NotImplementedException();
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO ProcessRun (Description, StartDateTimeUtc, NumberOfFiles) VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Description", processRun.Description);
+        command.Parameters.AddWithValue("@StartDateTimeUtc", processRun.StartDateTimeUtc);
+        command.Parameters.AddWithValue("@NumberOfFiles", processRun.NumberOfFiles);
+        
+        await command.ExecuteNonQueryAsync();
+        return processRun;
     }
 
     public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)

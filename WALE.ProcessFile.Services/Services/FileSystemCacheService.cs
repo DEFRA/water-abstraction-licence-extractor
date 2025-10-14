@@ -164,6 +164,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             ImageNumber = imageNumber,
             Filepath = pdfFilePath
         });
+
+        if (bytAry == null)
+        {
+            throw new Exception("Image could not be found");
+        }
         
         var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
 

@@ -23,4 +23,6 @@ public class ConfiguredServices
     public string? ReportTemplatePath { get; set; }
     
     public bool LoadAiJs { get; set; }
+    
+    public bool RefreshCache{ get; set; }
 }

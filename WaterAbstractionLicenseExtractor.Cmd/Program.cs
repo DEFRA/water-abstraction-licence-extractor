@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
@@ -19,13 +20,6 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    const bool refreshCache = false;
-
-    if (refreshCache)
-    {
-        // TODO clear out the Cache directory
-    }
-
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
@@ -35,6 +29,11 @@ async Task ProgramAsync()
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
     var fileMappingPath = services.FileMappingPath!;
+    
+    if (services.RefreshCache)
+    {
+        await cacheService.ClearCacheAsync();
+    }
     
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
@@ -305,6 +304,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
     var loadAiJs = bool.Parse(Environment.GetEnvironmentVariable("LOAD_AI_JS")
         ?? throw new NullReferenceException("LOAD_AI_JS"));
+    var refreshCache = bool.Parse(Environment.GetEnvironmentVariable("RefreshCache")
+        ?? throw new NullReferenceException("RefreshCache"));
     var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
         ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
@@ -315,9 +316,14 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("OutputFolder");
     var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
         ?? throw new NullReferenceException("CacheFolder");
-
-    var cacheService = new FileSystemCacheService(cacheFolder);
-    var outputService = new FileSystemOutputService(outputFolder);
+    var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
+        ?? throw new NullReferenceException("SqlConnectionString");
+    
+    var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    
+    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+    var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
     
@@ -360,8 +366,8 @@ ConfiguredServices ConfigureServices()
     
     return new ConfiguredServices
     {
-        CacheService = new FileSystemCacheService(cacheFolder),
-        OutputService = new FileSystemOutputService(outputFolder),
+        CacheService = cacheService,
+        OutputService = outputService,
         PdfDataExtractorServices = pdfDataExtractors,
         FileMappingPath = fileMappingPath,
         MaxConcurrentScrapers = maxConcurrentScrapers,
@@ -369,7 +375,8 @@ ConfiguredServices ConfigureServices()
         RegenerateMappingJson = regenerateMappingJson,
         PdfFolderPath = pdfFolderPath,
         ReportTemplatePath = reportTemplatePath,
-        LoadAiJs = loadAiJs
+        LoadAiJs = loadAiJs,
+        RefreshCache = refreshCache
     };
 }
 

@@ -7,6 +7,10 @@ namespace WALE.ProcessFile.Services.Interfaces;
 public interface ICacheService
 {
     public Task SetupAsync();
+
+    public Task ClearCacheAsync(string pdfFilename);
+    
+    public Task ClearCacheAsync();
     
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     

@@ -17,7 +17,17 @@ public class DatabaseCacheService(
         // Nothing to do in this case
         return Task.CompletedTask;
     }
+
+    public Task ClearCacheAsync()
+    {
+        return databaseAddService.ClearCacheAsync();
+    }
     
+    public Task ClearCacheAsync(string pdfFilename)
+    {
+        return databaseAddService.ClearCacheAsync(pdfFilename);
+    }
+
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         request.Filepath = request.Filepath!.Split('/').Last();

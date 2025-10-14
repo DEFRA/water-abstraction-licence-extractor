@@ -13,7 +13,10 @@
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",
         "ConcurrentCount": "10",
-        "REGENERATE_MAPPING_JSON": "true"
+        "REGENERATE_MAPPING_JSON": "true",
+        "LOAD_AI_JS": "false",
+        "RefreshCache": "false",
+        "SqlConnectionString": ""
       }
     }
   }

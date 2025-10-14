@@ -4,7 +4,6 @@ using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -43,13 +42,19 @@ public class OcrDatabaseTests
                 _fileLicenceMapping),
             [PdfFolder + fileName]);
     }
-    
-    [Fact]
-    public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
-    {
-        // Arrange
-        const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
+    [Fact]
+    public async Task Uncached_Then_Changed()
+    {
+        const string filename = "14460030853 licence effective 24.07.2005.PDF";
+        await CacheService.ClearCacheAsync(filename);
+        
+        await ProcessAsync(filename); // Uncached
+        await ProcessAsync(filename); // Cached
+    }
+    
+    private async Task ProcessAsync(string filename)
+    {
         // Act
         var resultFull = await GetMatchesAsync(filename);
         var resultList = resultFull.Matches!;

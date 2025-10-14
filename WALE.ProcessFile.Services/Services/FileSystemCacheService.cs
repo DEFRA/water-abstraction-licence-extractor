@@ -16,7 +16,17 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         Directory.CreateDirectory(cacheFolder);
         return Task.CompletedTask;
     }
-    
+
+    public Task ClearCacheAsync(string pdfFilename)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ClearCacheAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);

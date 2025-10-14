@@ -143,4 +143,42 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         
         await command.ExecuteNonQueryAsync();
     }
+    
+    public async Task ClearCacheAsync()
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        var sql =
+            @"delete [dbo].[AllPagesText]
+            delete [dbo].[ImageOnPage]
+            delete [dbo].[NoOcrImagesMetadataCache]
+            delete [dbo].[NoOcrPagesMetadataCache]
+            delete [dbo].[NoOcrPageTextCache]
+            delete [dbo].[OcrImageTextCache]
+            delete [dbo].[PageScreenshot]";
+
+        await using var command = new SqlCommand(sql, connection);
+        await command.ExecuteNonQueryAsync();
+    }
+    
+    public async Task ClearCacheAsync(string pdfFilename)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        var sql =
+            @"delete [dbo].[AllPagesText] WHERE Filename = @Filename
+            delete [dbo].[ImageOnPage] WHERE Filename = @Filename
+            delete [dbo].[NoOcrImagesMetadataCache] WHERE Filename = @Filename
+            delete [dbo].[NoOcrPagesMetadataCache] WHERE Filename = @Filename
+            delete [dbo].[NoOcrPageTextCache] WHERE Filename = @Filename
+            delete [dbo].[OcrImageTextCache] WHERE Filename = @Filename
+            delete [dbo].[PageScreenshot] WHERE Filename = @Filename";
+
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", pdfFilename);
+        
+        await command.ExecuteNonQueryAsync();
+    }
 }

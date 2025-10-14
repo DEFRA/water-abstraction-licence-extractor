@@ -30,4 +30,8 @@ public interface IDatabaseAddService
         int pageNumber, string extension);
 
     Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string serialize);
+    
+    Task ClearCacheAsync();
+    
+    Task ClearCacheAsync(string pdfFilename);
 }

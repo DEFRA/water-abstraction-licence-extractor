@@ -32,24 +32,35 @@ public class DatabaseOutputService(
         return databaseAddService.AddProcessRunAsync(processRun);
     }
 
-    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)
+    public async Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)
     {
-        return databaseAddService.SaveLicenceSetsAsync(licenceSets, pdfFilePath);
+        foreach (var licenceSet in licenceSets)
+        {
+            var licenceSetStr = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions());
+            await databaseAddService.SaveLicenceSetAsync(licenceSetStr, licenceSet.LicenceSetId, licenceSet.ShortLicenceSetId);   
+        }
     }
 
     public Task SaveLicenceAsync(Licence licence, string pdfFilePath)
     {
-        return databaseAddService.SaveLicenceAsync(licence, pdfFilePath);
+        var pdfFilename = pdfFilePath.Split('/').Last();
+        var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
+        
+        return databaseAddService.SaveLicenceAsync(licenceStr, pdfFilename);
     }
 
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath)
     {
-        return databaseAddService.SaveMatchResultAsync(matchesResult, pdfFilePath);
+        var pdfFilename = pdfFilePath.Split('/').Last();
+        var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
+        
+        return databaseAddService.SaveMatchResultAsync(matchesResultStr, pdfFilename);
     }
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData)
     {
-        return databaseAddService.SaveListDataAsync(listData);
+        // Don't need to, as it can just get it on the fly
+        return Task.CompletedTask;
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
@@ -83,7 +94,7 @@ public class DatabaseOutputService(
             return;
         }
         
-        var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()); ;
+        var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
         await databaseAddService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName);
     }
     

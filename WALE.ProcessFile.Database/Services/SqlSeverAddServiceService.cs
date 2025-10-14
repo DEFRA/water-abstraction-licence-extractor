@@ -1,7 +1,6 @@
 using Microsoft.Data.SqlClient;
 using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.Services;
 
@@ -22,24 +21,44 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         return processRun;
     }
 
-    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath)
+    public async Task SaveLicenceSetAsync(string licenceSet, string licenceSetId, string shortLicenceSetId)
     {
-        throw new NotImplementedException();
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO LicenceSet (SchemaLicenceSetId, ShortLicenceSetId, Data) VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @Data)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@SchemaLicenceSetId", licenceSetId);
+        command.Parameters.AddWithValue("@ShortLicenceSetId", shortLicenceSetId);
+        command.Parameters.AddWithValue("@Data", licenceSet);
+        
+        await command.ExecuteNonQueryAsync();
     }
 
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath)
+    public async Task SaveLicenceAsync(string licence, string pdfFilePath)
     {
-        throw new NotImplementedException();
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO Licence (Filename, Data) VALUES (@Filename, @Data)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", pdfFilePath);
+        command.Parameters.AddWithValue("@Data", licence);
+        
+        await command.ExecuteNonQueryAsync();
     }
 
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath)
+    public async Task SaveMatchResultAsync(string matchesResult, string pdfFilePath)
     {
-        throw new NotImplementedException();
-    }
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
 
-    public Task SaveListDataAsync(List<OutputListDataItem> listData)
-    {
-        throw new NotImplementedException();
+        const string sql = "INSERT INTO MatchesResult (Filename, Data) VALUES (@Filename, @Data)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", pdfFilePath);
+        command.Parameters.AddWithValue("@Data", matchesResult);
+        
+        await command.ExecuteNonQueryAsync();
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data)

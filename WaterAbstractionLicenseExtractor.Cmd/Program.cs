@@ -112,7 +112,7 @@ async Task ProgramAsync()
     {
         if (licenceSetGroup.Count == 0)
         {
-            // TODO log this - it shouldnt happen
+            // TODO log this - it shouldn't happen
             continue;
         }
         
@@ -133,6 +133,15 @@ async Task ProgramAsync()
         outputLines.Add(outputLine);
     }
 
+    await SaveListDataAsync(outputLines, outputFolder, outputService, services.RegenerateMappingJson);
+}
+
+async Task SaveListDataAsync(
+    List<IntermediateOutputLicence> outputLines,
+    string outputFolder,
+    IOutputService outputService,
+    bool regenerateMappingJson)
+{
     var resultFileStringBuilder = new StringBuilder(
         "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
         "MatchedLabelPosition,LicenceNumber,LimitsFound,LinkedLicenceNumbers,LinkedLicenceNumbersExistInDataset");
@@ -224,20 +233,22 @@ async Task ProgramAsync()
 
     foreach (var outputLine in outputLines)
     {
-        if (outputLine.LinkedLicences != null)
+        if (outputLine.LinkedLicences == null)
         {
-            foreach (var linkedLicence in outputLine.LinkedLicences)
-            {
-                var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
+            continue;
+        }
+        
+        foreach (var linkedLicence in outputLine.LinkedLicences)
+        {
+            var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
 
-                if (linkedOutputLine != null)
+            if (linkedOutputLine != null)
+            {
+                linksDictionaries.Add(new Dictionary<string, object>
                 {
-                    linksDictionaries.Add(new Dictionary<string, object>
-                    {
-                        { "source", outputLine.NodeId },
-                        { "target", linkedOutputLine.NodeId }
-                    });
-                }
+                    { "source", outputLine.NodeId },
+                    { "target", linkedOutputLine.NodeId }
+                });
             }
         }
     }
@@ -247,8 +258,7 @@ async Task ProgramAsync()
     var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
     File.WriteAllText(resultFile, resultFileStringBuilder.ToString());
 
-#pragma warning disable CS0162 // Unreachable code detected
-    if (services.RegenerateMappingJson)
+    if (regenerateMappingJson)
     {
         var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
         File.WriteAllText(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
@@ -263,7 +273,6 @@ async Task ProgramAsync()
         File.WriteAllText(licenceFilenameMapJsonFile,
             $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, JsonHelper.GetSerializerOptions())};");
     }
-#pragma warning restore CS0162 // Unreachable code detected
 
     await outputService.SaveListDataAsync(listData);
 

@@ -6,11 +6,6 @@ namespace WALE.ProcessFile.Database.Services;
 
 public class SqlSeverReadServiceService(string connectionString) : IDatabaseReadService
 {
-    public List<ProcessRun> GetProcessRuns()
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = new SqlConnection(connectionString);

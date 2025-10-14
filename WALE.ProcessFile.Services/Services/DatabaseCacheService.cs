@@ -41,12 +41,13 @@ public class DatabaseCacheService(
     
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
     {
-        throw new NotImplementedException();
+        var pdfFilename = pdfFilePath.Split('/').Last().Split('.').First();
+        return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
     }
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        return databaseReadService.GetOcrImageTextAsync(request);
     }
 
     public Task<byte[]> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
@@ -119,9 +120,10 @@ public class DatabaseCacheService(
         throw new NotImplementedException();
     }
     
-    public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension)
+    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)
     {
-        throw new NotImplementedException();
+        var filename = pdfFilePath.Split('/').Last();
+        return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension);
     }
     
     public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)

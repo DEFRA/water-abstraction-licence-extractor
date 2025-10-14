@@ -109,4 +109,22 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         
         await command.ExecuteNonQueryAsync();
     }
+
+    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO ImageOnPage (Filename, NoOcrServiceName, ImageNumber, PageNumber, Data, Extension, DateTimeUtc) VALUES (@Filename, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Extension, @DateTimeUtc)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", pdfFilePath);
+        command.Parameters.AddWithValue("@NoOcrServiceName", noOcrServiceName);
+        command.Parameters.AddWithValue("@Data", bytes);
+        command.Parameters.AddWithValue("@ImageNumber", imageNumber);
+        command.Parameters.AddWithValue("@PageNumber", pageNumber);        
+        command.Parameters.AddWithValue("@Extension", extension);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        
+        await command.ExecuteNonQueryAsync();
+    }
 }

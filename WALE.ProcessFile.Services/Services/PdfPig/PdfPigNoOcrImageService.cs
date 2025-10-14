@@ -16,13 +16,13 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         {
             if (imageData.TryGetPng(out var bytes))
             {
-                await cacheService.SaveImageAsync(bytes, folderPath, imageNumber, pageNumber, pngExtension);
+                await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, pngExtension);
                 return pngExtension;
             }
 
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
-                await cacheService.SaveImageAsync(bytesMemory.ToArray(), folderPath, imageNumber, pageNumber, bmpExtension);
+                await cacheService.SaveImageOnPageAsync(bytesMemory.ToArray(), folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, bmpExtension);
                 return bmpExtension;
             }
 
@@ -32,7 +32,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 throw new Exception("Cannot get bytes via either method");
             }
 
-            await cacheService.SaveImageAsync(bytesSpanAry, folderPath, imageNumber, pageNumber, jpgExtension);
+            await cacheService.SaveImageOnPageAsync(bytesSpanAry, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, jpgExtension);
             return jpgExtension;
         }
         catch (Exception exception)

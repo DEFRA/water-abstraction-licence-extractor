@@ -17,11 +17,11 @@ public class PdfPigNoOcrPdfTests
     //private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     //private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
 
-    private static readonly IDatabaseReadService readService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
-    private static readonly IDatabaseAddService addService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
+    private static readonly IDatabaseReadService ReadService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
+    private static readonly IDatabaseAddService AddService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
     
-    private static readonly ICacheService CacheService = new DatabaseCacheService(readService, addService);
-    private static readonly IOutputService OutputService = new DatabaseOutputService(readService, addService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, AddService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, AddService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

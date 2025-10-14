@@ -34,8 +34,9 @@ public interface ICacheService
     public Task SaveNoOcrImagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
-    
-    public Task SaveImageAsync(byte[] bytes, string pdfFilePath, int imageNumber, int pageNumber, string extension);
+
+    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
+        int pageNumber, string extension);
 
     public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber);
     

@@ -1,4 +1,6 @@
 using Tesseract;
+using WALE.ProcessFile.Database.Interfaces;
+using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
@@ -12,8 +14,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class TessaractOcrPdfTests
 {
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    //private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    //private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+ 
+    private static readonly IDatabaseReadService ReadService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
+    private static readonly IDatabaseAddService AddService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
+    
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, AddService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, AddService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

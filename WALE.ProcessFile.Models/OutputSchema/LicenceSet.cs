@@ -70,7 +70,7 @@ public class LicenceSet
 
     public LicenceSetType[] LicenceSetTypes { get; set; } = [];
     
-    public AggregateSet[]? AggregateSets { get; init; } = [];
+    public AggregateSet[]? AggregateSets { get; set; } = [];
     
     public Licence[] Licences { get; set; } = [];
 }

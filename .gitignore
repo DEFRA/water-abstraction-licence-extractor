@@ -24,3 +24,5 @@ WALE.ProcessFile.Database/bin
 WALE.ProcessFile.Database/obj
 WALE.ProcessFile.Models/bin
 WALE.ProcessFile.Models/obj
+WALE.ProcessFile.Web/bin
+WALE.ProcessFile.Web/obj

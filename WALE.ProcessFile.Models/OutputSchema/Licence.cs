@@ -18,7 +18,7 @@ public class Licence
     
     public LicenceStatus Status { get; init; }
     
-    public string? LicenceNumber { get; init; }
+    public string? LicenceNumber { get; set; }
     
     public string? Filename { get; set; }
 

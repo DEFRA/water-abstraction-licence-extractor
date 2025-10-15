@@ -49,6 +49,28 @@ public class DatabaseOutputService(
                     licence.LicenceVersion.LicenceVersionId,
                     processRunId);   
             }
+
+            foreach (var licenceSetType in licenceSet.LicenceSetTypes)
+            {
+                await databaseAddService.SaveLicenceSetTypeAsync(
+                    licenceSetId,
+                    (int)licenceSetType,
+                    processRunId);   
+            }
+
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregateSet in licenceSet.AggregateSets)
+            {
+                await databaseAddService.SaveAggregateSetAsync(
+                    licenceSetId,
+                    aggregateSet.AggregateSetId,
+                    JsonSerializer.Serialize(aggregateSet.Aggregates, JsonHelper.GetSerializerOptions()),
+                    processRunId);
+            }
         }
     }
 
@@ -113,6 +135,51 @@ public class DatabaseOutputService(
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return databaseAddService.UpdateProcessRunAsync(processRun);
+    }
+
+    public Task<List<ProcessRun>> GetProcessRunsAsync()
+    {
+        return databaseReadService.GetProcessRunsAsync();
+    }
+
+    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    {
+        return databaseReadService.GetLicencesAsync(processRunId);
+    }
+
+    public async Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
+    {
+        var licenceSetIds = await databaseReadService.GetLicenceSetIdsAsync(processRunId);
+        var returnList = new List<LicenceSet>();
+        
+        foreach (var licenceSetId in licenceSetIds)
+        {
+            var licenceSet = new LicenceSet();
+            
+            var licenceSetLicenceIds =
+                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetId, processRunId);
+
+            var licences = new List<Licence>();
+
+            foreach (var licenceSetLicence in licenceSetLicenceIds)
+            {
+                var licence = new Licence
+                {
+                    LicenceNumber = licenceSetLicence.LicenceNumber
+                };
+                
+                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                licences.Add(licence);
+            }
+
+            licenceSet.Licences = licences.ToArray();
+            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetId);
+            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetId);;
+            
+            returnList.Add(licenceSet);
+        }
+
+        return returnList;
     }
 
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)

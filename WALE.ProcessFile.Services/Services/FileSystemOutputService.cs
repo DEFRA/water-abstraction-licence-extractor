@@ -160,4 +160,19 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         return Task.CompletedTask;
     }
+
+    public Task<List<ProcessRun>> GetProcessRunsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 }

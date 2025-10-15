@@ -6,11 +6,23 @@ namespace WALE.ProcessFile.Models.OutputSchema;
 public class LicenceVersion
 {
     public static string UnknownVersion = "LVUNKNOWN";
-    
+
+    private string? _explicitLicenceVersionId;
+
+    public void SetExplicitLicenceVersionId(string licenceVersionId)
+    {
+        _explicitLicenceVersionId = licenceVersionId;
+    }
+
     public string LicenceVersionId
     {
         get
         {
+            if (!string.IsNullOrEmpty(_explicitLicenceVersionId))
+            {
+                return _explicitLicenceVersionId;
+            }
+            
             if (EffectiveDate == null && ExpiryDate == null)
             {
                 return UnknownVersion;

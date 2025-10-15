@@ -255,4 +255,35 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         
         await command.ExecuteNonQueryAsync();
     }
+
+    public async Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO LicenceSetType (LicenceSetId, LicenceSetType) VALUES (@LicenceSetId, @LicenceSetType)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
+        command.Parameters.AddWithValue("@LicenceSetType", licenceSetType);
+        //command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        //command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO AggregateSet (LicenceSetId, LicenceSetType) VALUES (@LicenceSetId, @LicenceSetType)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
+        command.Parameters.AddWithValue("@AggregateSetId", aggregateSetId);
+        command.Parameters.AddWithValue("@Data", data);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        
+        await command.ExecuteNonQueryAsync();
+    }
 }

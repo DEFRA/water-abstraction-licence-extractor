@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Database",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Models", "WALE.ProcessFile.Models\WALE.ProcessFile.Models.csproj", "{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Web", "WALE.ProcessFile.Web\WALE.ProcessFile.Web.csproj", "{D6610C71-EFBD-4529-8503-321A05692319}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6610C71-EFBD-4529-8503-321A05692319}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6610C71-EFBD-4529-8503-321A05692319}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6610C71-EFBD-4529-8503-321A05692319}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6610C71-EFBD-4529-8503-321A05692319}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A438B272-8652-4721-8951-906B4142FD5B} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}

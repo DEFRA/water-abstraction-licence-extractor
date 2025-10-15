@@ -35,4 +35,8 @@ public interface IDatabaseAddService
     Task UpdateProcessRunAsync(ProcessRun processRun);
     
     Task SaveLicenceSetLicenceAsync(int licenceSetId, string? licenceNumber, string licenceVersionId, int processRunId);
+
+    Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId);
+    
+    Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
 }

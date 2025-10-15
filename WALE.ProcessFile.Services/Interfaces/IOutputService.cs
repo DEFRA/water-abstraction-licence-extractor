@@ -33,4 +33,9 @@ public interface IOutputService
     public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun);
+    
+    Task<List<ProcessRun>> GetProcessRunsAsync();
+    
+    Task<List<Licence>> GetLicencesAsync(int processRunId);
+    Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId);
 }

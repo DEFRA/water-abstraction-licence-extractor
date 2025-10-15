@@ -40,7 +40,8 @@ window.onload = function () {
 function setup() {
     populateTable();
     populateDropdowns();
-
+    showDashesInLicenceSetsWhereNeeded();
+    
     window.sortedAsc = true;
     window.sortedBy = "filename";
     
@@ -49,6 +50,43 @@ function setup() {
     for (let i = 0; i < selects.length; i++) {
         let select = selects[i];
         addChangeEvent(select);
+    }
+    
+    let singlesEle = document.getElementById("showSingles");
+    singlesEle.addEventListener("change", function (event) {
+        let bodyEle = document.getElementsByTagName("body")[0]; 
+
+        if (singlesEle.checked) {
+            bodyEle.classList.add("singles");
+            hideDashesInLicenceSetsWhereNeeded();
+            
+            return;
+        }
+
+        bodyEle.classList.remove("singles");
+        showDashesInLicenceSetsWhereNeeded();
+    });
+}
+
+function hideDashesInLicenceSetsWhereNeeded() {
+    const trs = document.querySelectorAll("#licencesTable tbody tr td.licenceSetTd");
+
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        tr.querySelector(".noLicenceSetsShowing").style.display = "none";
+    }
+}
+
+function showDashesInLicenceSetsWhereNeeded() {
+    const trs = document.querySelectorAll("#licencesTable tbody tr td.licenceSetTd");
+
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        let lis = tr.querySelectorAll("ul li");
+
+        if (lis.length === 1) {
+            tr.querySelector(".noLicenceSetsShowing").style.display = "inline";
+        }
     }
 }
 
@@ -145,7 +183,11 @@ function filterData(dataSorted, filterType, filterField, filterValue, filterSubF
                     continue;
                 }
             } else if (filterType === 'ArrayValueMapped') {
-                if (filterValue !== 'All' && value.map(x => x[filterSubField]).indexOf(filterValue) === -1) {
+                if (filterValue === 'NoneSingle') {
+                    if (value.length < 2) {
+                        continue;
+                    }
+                } else if (filterValue !== 'All' && value.map(x => x[filterSubField]).indexOf(filterValue) === -1) {
                     continue;
                 }
             } else if (filterType === 'ArrayValueArrayValueMapped') {
@@ -324,11 +366,11 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                     color = "hotpink"
                 }
                 
-                let html1 = "<span class='lsId' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
+                let html1 = "<span class='lsId ' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
                     + item.filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
                     + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
                 
-                licenceSetsSb.push('<li>' + html1 + '</li>');
+                licenceSetsSb.push('<li class="' + licenceSet.licenceSetType + '">' + html1 + '</li>');
             }
 
             licenceSetsSb.push('</ul>');
@@ -417,7 +459,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
             "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
-            "<td>" + (item.licenceSets.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
+            "<td class='licenceSetTd'>" + (item.licenceSets.length > 0 ? licenceSetsSb.join('') : "--") + "<span class='noLicenceSetsShowing'>--</span></td>" +
             "</tr>";
 
         htmlSb.push(html);
@@ -828,7 +870,7 @@ function populateDropdowns() {
     
     let licenceSetsSb = [];
     licenceSetsSb.push('<option value="All">All</option>');
-    licenceSetsSb.push('<option value="NoneSingle">None single</option>');
+    licenceSetsSb.push('<option value="NoneSingle">All except single</option>');
     
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
@@ -836,6 +878,7 @@ function populateDropdowns() {
 
         for (let j = 1; j < ary.length; j++) {
             let value = ary[j].shortLicenceSetId;
+            if (!value) value = '--';
             
             if (uniqueValues.indexOf(value) === -1) {
                 uniqueValues.push(value);

@@ -280,7 +280,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
 {
-    var fileName = pdfFilePath.Split('/').Last();
+    var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
     Console.WriteLine($"Attempting {fileNumber} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
@@ -350,7 +350,7 @@ Dictionary<string, string> PopulateFileMapping(string fileMappingPath)
 
         var parts = line.Split(',');
         var licenceNumber = parts[1];
-        var filename = parts[0].Split('/').Last();
+        var filename = FileHelper.GetFilenameWithoutExtension(parts[0]);
 
         if (!fileLicenceMapping.TryAdd(licenceNumber, filename))
         {
@@ -451,7 +451,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

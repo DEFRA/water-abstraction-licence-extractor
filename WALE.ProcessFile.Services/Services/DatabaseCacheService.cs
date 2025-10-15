@@ -30,43 +30,43 @@ public class DatabaseCacheService(
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetNoOcrImagesMetadata(request);
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var pdfFilename = request.Filepath!.Split('/').Last();
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
     }
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
     
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
     {
-        var pdfFilename = pdfFilePath.Split('/').Last().Split('.').First();
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
     }
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetOcrImageTextAsync(request);
     }
 
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetImageBytesAsync(request);
     }
 
@@ -74,7 +74,7 @@ public class DatabaseCacheService(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
 
         var existing = await databaseReadService.GetNoOcrPagesMetadataAsync(request);
 
@@ -95,7 +95,7 @@ public class DatabaseCacheService(
 
     public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
      
         var existing = await databaseReadService.GetNoOcrImagesMetadata(request);
 
@@ -112,7 +112,7 @@ public class DatabaseCacheService(
         NoOcrServicePageCacheRequest request,
         List<TextBlock> pageLines)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
 
         var existing = await databaseReadService.GetNoOcrPageTextLinesAsync(request);
 
@@ -127,19 +127,19 @@ public class DatabaseCacheService(
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseAddService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        request.Filepath = request.Filepath!.Split('/').Last();
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseAddService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
     public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filename = pdfFilePath.Split('/').Last();
+        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     

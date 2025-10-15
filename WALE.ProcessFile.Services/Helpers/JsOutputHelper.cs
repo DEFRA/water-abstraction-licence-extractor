@@ -10,52 +10,6 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class JsOutputHelper
 {
-    private static T2? GetValueOrDefault<T, T2>(
-        Dictionary<string, object> data,
-        string fieldName,
-        T2? defaultValue)
-    {
-        data.TryGetValue(fieldName, out var value);
-
-        if (value == null)
-        {
-            return defaultValue;
-        }
-
-        if (value is not JsonElement element)
-        {
-            if (value.GetType() == typeof(string[]))
-            {
-                var ary = (string[])value;
-                return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
-            }
-            
-            return (T2)value;
-        }
-        
-        if (typeof(T) == typeof(string))
-        {
-            return (T2)(object)element.GetString()!;
-        }
-        if (typeof(T) == typeof(double))
-        {
-            return (T2)(object)element.GetDouble();
-        }
-        if (typeof(T) == typeof(int))
-        {
-            return (T2)(object)element.GetInt32();
-        }
-        if (typeof(T) == typeof(string[]))
-        {
-            var v = element.GetRawText();
-            var ary = JsonSerializer.Deserialize<string[]>(v)!;
-
-            return (T2)(object)ary.FirstOrDefault()!;
-        }
-        
-        throw new NotSupportedException($"{typeof(T).Name} is not supported");
-    }
-    
     public static IntermediateOutputLicence ToOutputLine(
         Licence licence,
         DateTime dtStart,
@@ -301,5 +255,51 @@ public static class JsOutputHelper
     {
         //Console.WriteLine(message);
         outputStringBuilder.Append(message);
+    }
+    
+    private static T2? GetValueOrDefault<T, T2>(
+        Dictionary<string, object> data,
+        string fieldName,
+        T2? defaultValue)
+    {
+        data.TryGetValue(fieldName, out var value);
+
+        if (value == null)
+        {
+            return defaultValue;
+        }
+
+        if (value is not JsonElement element)
+        {
+            if (value.GetType() == typeof(string[]))
+            {
+                var ary = (string[])value;
+                return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
+            }
+            
+            return (T2)value;
+        }
+        
+        if (typeof(T) == typeof(string))
+        {
+            return (T2)(object)element.GetString()!;
+        }
+        if (typeof(T) == typeof(double))
+        {
+            return (T2)(object)element.GetDouble();
+        }
+        if (typeof(T) == typeof(int))
+        {
+            return (T2)(object)element.GetInt32();
+        }
+        if (typeof(T) == typeof(string[]))
+        {
+            var v = element.GetRawText();
+            var ary = JsonSerializer.Deserialize<string[]>(v)!;
+
+            return (T2)(object)ary.FirstOrDefault()!;
+        }
+        
+        throw new NotSupportedException($"{typeof(T).Name} is not supported");
     }
 }

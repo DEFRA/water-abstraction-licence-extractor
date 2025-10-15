@@ -38,7 +38,7 @@ public class PdfDataExtractorService(
 
         var returnResult = new MatchesResult
         {
-            Filename = pdfFilePath.Split('/').Last(),
+            Filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath),
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages
         };

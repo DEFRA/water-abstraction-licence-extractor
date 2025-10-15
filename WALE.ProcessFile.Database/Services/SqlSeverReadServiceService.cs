@@ -183,6 +183,32 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList;
     }
 
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(string filename)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 Licence.ProcessRunId, ProcessRun.Description, ProcessRun.StartDateTimeUtc, ProcessRun.EndDateTimeUtc, ProcessRun.NumberOfFiles FROM Licence JOIN ProcessRun ON Licence.ProcessRunId = ProcessRun.ProcessRunId WHERE Filename = @Filename ORDER BY Licence.ProcessRunId DESC";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", filename);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            return new ProcessRun
+            {
+                ProcessRunId = reader.GetInt32(0),
+                Description = reader.GetString(1),
+                StartDateTimeUtc = reader.GetDateTime(2),
+                EndDateTimeUtc =  reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                NumberOfFiles = reader.GetInt32(4)
+            };
+        }
+
+        return null;
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
@@ -295,6 +321,50 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         }
 
         return returnList.ToArray();
+    }
+
+    public async Task<Licence?> GetLicenceAsync(string filename)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 Data FROM Licence WHERE Filename = @Filename ORDER BY ProcessRunId DESC";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", filename);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        
+        while (await reader.ReadAsync())
+        {
+            var dataStr = reader.GetString(0);
+            var data = JsonSerializer.Deserialize<Licence>(dataStr, GetSerializerOptions())!;
+            
+            return data;
+        }
+
+        return null;
+    }
+
+    public async Task<MatchesResult?> GetMatchesResult(string filename)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 Data FROM MatchesResult WHERE Filename = @Filename ORDER BY ProcessRunId DESC";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", filename);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        
+        while (await reader.ReadAsync())
+        {
+            var dataStr = reader.GetString(0);
+            var data = JsonSerializer.Deserialize<MatchesResult>(dataStr, GetSerializerOptions())!;
+            
+            return data;
+        }
+
+        return null;
     }
 
     // TODO move to a 'Core' layer

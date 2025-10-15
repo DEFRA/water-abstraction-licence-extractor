@@ -21,45 +21,71 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+var outputService = GetOutputService();
+
 app.MapGet("/list", async () =>
-    {
-        var outputService = GetOutputService();
-        
-        var processRuns = await outputService.GetProcessRunsAsync();
-        var processRunId = processRuns
-            .OrderByDescending(processRun => processRun.ProcessRunId)
-            .FirstOrDefault()?.ProcessRunId ?? -1;
+{
+    var processRuns = await outputService.GetProcessRunsAsync();
+    var processRunId = processRuns
+        .OrderByDescending(processRun => processRun.ProcessRunId)
+        .FirstOrDefault()?.ProcessRunId ?? -1;
 
-        var completeNumber = 1;
-        var fileNumber = 1;
-        
-        var licences = await outputService.GetLicencesAsync(processRunId);
-        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
-        
-        var outputLines = licences
-            .Select(licence => JsOutputHelper.ToOutputLine(
-                licence,
-                DateTime.Now,
-                completeNumber++,
-                fileNumber++,
-                licenceSets))
-            .ToList();
+    var completeNumber = 1;
+    var fileNumber = 1;
+    
+    var licences = await outputService.GetLicencesAsync(processRunId);
+    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
+    
+    var outputLines = licences
+        .Select(licence => JsOutputHelper.ToOutputLine(
+            licence,
+            DateTime.Now,
+            completeNumber++,
+            fileNumber++,
+            licenceSets))
+        .ToList();
 
-        var listData = await JsOutputHelper.SaveListDataAsync(
-            outputLines,
-            string.Empty,// Not used
-            outputService,// Not used
-            false, // Not used
-            new ProcessRun(), // Not used
-            false);
+    var listData = await JsOutputHelper.SaveListDataAsync(
+        outputLines,
+        string.Empty,// Not used
+        outputService,// Not used
+        false, // Not used
+        new ProcessRun(), // Not used
+        false);
 
-        var serializedData = JsonSerializer.Serialize(
-            listData,
-            JsonHelper.GetSerializerOptions());
-        
-        return $"var data = {serializedData};";
-    })
-    .WithName("GetLicences");
+    var serializedData = JsonSerializer.Serialize(
+        listData,
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var data = {serializedData};";
+}).WithName("GetLicences");
+
+app.MapGet("/internal", async (string filename) =>
+{
+    var serializedData = JsonSerializer.Serialize(
+        await outputService.GetMatchesResult(filename),
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var data = {serializedData};";
+}).WithName("GetInternal");
+
+app.MapGet("/licence", async (string filename) =>
+{
+    var serializedData = JsonSerializer.Serialize(
+        await outputService.GetLicenceAsync(filename),
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var data2 = {serializedData};";
+}).WithName("GetLicence");
+
+app.MapGet("/licenceSets", async (string filename) =>
+{
+    var serializedData = JsonSerializer.Serialize(
+        await outputService.GetLicenceSetsAsync(filename),
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var licenceSets = {serializedData};";
+}).WithName("GetLicenceSets");
 
 app.Run();
 return;

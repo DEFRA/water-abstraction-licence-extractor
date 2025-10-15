@@ -64,14 +64,14 @@ public static class GenerateCsvForTesting
         var pdfFilePaths = Directory
             .GetFiles(KeyConfig.PdfFolder)
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            .Where(x =>
+            .Where(fileName =>
             {
-                var filename = x.Split('/').Last();
-                return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
+                var filenameToUse = FileHelper.GetFilenameWithoutExtension(fileName);
+                return yorkshire.Contains(filenameToUse, StringComparer.InvariantCultureIgnoreCase);
                 
             })
-            .Select(x => x.Split('/').Last())
-            .OrderBy(x => x).ToList();
+            .Select(FileHelper.GetFilenameWithoutExtension)
+            .OrderBy(fileName => fileName).ToList();
 
         var returnList = new List<CsvLine>();
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();

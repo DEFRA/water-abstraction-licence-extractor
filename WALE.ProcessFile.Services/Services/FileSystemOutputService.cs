@@ -175,4 +175,19 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Licence?> GetLicenceAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<MatchesResult> GetMatchesResult(string filename)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -22,11 +22,19 @@ public interface IDatabaseReadService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
+    Task<ProcessRun?> GetMostRecentProcessRunAsync(string filename);
+    
     Task<List<Licence>> GetLicencesAsync(int processRunId);
     
     Task<List<int>> GetLicenceSetIdsAsync(int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId);
+    
     Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId);
+    
     Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
+    
+    Task<Licence?> GetLicenceAsync(string filename);
+    
+    Task<MatchesResult?> GetMatchesResult(string filename);
 }

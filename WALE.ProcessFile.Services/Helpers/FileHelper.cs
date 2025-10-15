@@ -12,6 +12,11 @@ public static class FileHelper
             .Split(pathSeparator)
             .Last()
             .Split(extensionSeperator);
+
+        if (filenameParts.Length == 1)
+        {
+            return filenameParts[0].Trim();
+        }
         
         var returnString  = string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
         return returnString.Trim();

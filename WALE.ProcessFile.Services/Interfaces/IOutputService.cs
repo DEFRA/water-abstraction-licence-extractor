@@ -37,5 +37,12 @@ public interface IOutputService
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
     Task<List<Licence>> GetLicencesAsync(int processRunId);
+
     Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId);
+    
+    Task<List<LicenceSet>> GetLicenceSetsAsync(string filename);
+    
+    Task<Licence?> GetLicenceAsync(string filename);
+    
+    Task<MatchesResult> GetMatchesResult(string filename);
 }

@@ -319,7 +319,13 @@ public class PdfDataExtractorService(
                     // no point processing that with the other services
                     if (averageLineLength < 30)
                     {
-                        //break; // TODO commenting out as a tesseract file fails with this - Non-Application Licence Document (08.06.1987).PDF
+                        var containsTheWordMap = serviceImageLines
+                            .Any(l => l.Text.Contains("Map ", StringComparison.InvariantCultureIgnoreCase));
+
+                        if (containsTheWordMap)
+                        {
+                            break;
+                        }
                     }
                 }
 

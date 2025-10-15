@@ -24,6 +24,12 @@ public static class JsOutputHelper
 
         if (value is not JsonElement element)
         {
+            if (value.GetType() == typeof(string[]))
+            {
+                var ary = (string[])value;
+                return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
+            }
+            
             return (T2)value;
         }
         

@@ -24,5 +24,7 @@ public class ConfiguredServices
     
     public bool LoadAiJs { get; set; }
     
+    public string ListDataPath { get; set; }
+    
     public bool RefreshCache{ get; set; }
 }

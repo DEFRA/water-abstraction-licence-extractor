@@ -38,7 +38,12 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    await MoveReportHtmlFilesAsync(services.ReportTemplatePath!, outputFolder, services.LoadAiJs);
+    await MoveReportHtmlFilesAsync(
+        services.ReportTemplatePath!,
+        outputFolder,
+        services.LoadAiJs,
+        services.ListDataPath);
+    
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -186,6 +191,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("OutputFolder");
     var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
         ?? throw new NullReferenceException("CacheFolder");
+    var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
+        ?? throw new NullReferenceException("ListDataPath");
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
@@ -246,6 +253,7 @@ ConfiguredServices ConfigureServices()
         PdfFolderPath = pdfFolderPath,
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
+        ListDataPath = listDataPath,
         RefreshCache = refreshCache
     };
 }
@@ -341,7 +349,7 @@ Dictionary<string, string> PopulateFileMapping(string fileMappingPath)
     return fileLicenceMapping;
 }
 
-async Task MoveReportHtmlFilesAsync(string reportTemplatePath, string outputFolder, bool loadAiJs)
+async Task MoveReportHtmlFilesAsync(string reportTemplatePath, string outputFolder, bool loadAiJs, string listDataPath)
 {
     Copy(reportTemplatePath, outputFolder);
 
@@ -367,6 +375,7 @@ async Task MoveReportHtmlFilesAsync(string reportTemplatePath, string outputFold
 
     var indexHtml = await File.ReadAllTextAsync(indexPath);
     indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
+    indexHtml = indexHtml.Replace("[LIST_DATA_PATH]", listDataPath);
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
@@ -413,8 +422,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

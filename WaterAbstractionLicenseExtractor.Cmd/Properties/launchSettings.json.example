@@ -16,7 +16,8 @@
         "REGENERATE_MAPPING_JSON": "true",
         "LOAD_AI_JS": "false",
         "RefreshCache": "false",
-        "SqlConnectionString": ""
+        "SqlConnectionString": "",
+        "ListDataPath": "list-data.js"
       }
     }
   }

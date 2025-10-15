@@ -276,10 +276,10 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO AggregateSet (LicenceSetId, LicenceSetType) VALUES (@LicenceSetId, @LicenceSetType)";
+        const string sql = "INSERT INTO AggregateSet (LicenceSetId, SchemaAggregateSetId, Data, ProcessRunId, DateTimeUtc) VALUES (@LicenceSetId, @SchemaAggregateSetId, @Data, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
-        command.Parameters.AddWithValue("@AggregateSetId", aggregateSetId);
+        command.Parameters.AddWithValue("@SchemaAggregateSetId", aggregateSetId);
         command.Parameters.AddWithValue("@Data", data);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);

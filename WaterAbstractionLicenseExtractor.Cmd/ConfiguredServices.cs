@@ -24,7 +24,13 @@ public class ConfiguredServices
     
     public bool LoadAiJs { get; set; }
     
-    public string ListDataPath { get; set; }
+    public string? ListDataPath { get; set; }
+    
+    public string? InternalDataPath { get; set; }
+    
+    public string? LicenceDataPath { get; set; }
+    
+    public string? LicenceSetsDataPath { get; set; }
     
     public bool RefreshCache{ get; set; }
 }

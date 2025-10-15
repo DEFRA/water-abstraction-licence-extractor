@@ -42,7 +42,10 @@ async Task ProgramAsync()
         services.ReportTemplatePath!,
         outputFolder,
         services.LoadAiJs,
-        services.ListDataPath);
+        services.ListDataPath!,
+        services.InternalDataPath!,
+        services.LicenceDataPath!,
+        services.LicenceSetsDataPath!);
     
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
@@ -193,6 +196,12 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("CacheFolder");
     var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
         ?? throw new NullReferenceException("ListDataPath");
+    var internalDataPath = Environment.GetEnvironmentVariable("InternalDataPath")
+        ?? throw new NullReferenceException("InternalDataPath");
+    var licenceDataPath = Environment.GetEnvironmentVariable("LicenceDataPath")
+        ?? throw new NullReferenceException("LicenceDataPath");
+    var licenceSetsDataPath = Environment.GetEnvironmentVariable("LicenceSetsDataPath")
+        ?? throw new NullReferenceException("LicenceSetsDataPath");
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
@@ -254,6 +263,9 @@ ConfiguredServices ConfigureServices()
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
         ListDataPath = listDataPath,
+        InternalDataPath = internalDataPath,
+        LicenceDataPath = licenceDataPath,
+        LicenceSetsDataPath = licenceSetsDataPath,        
         RefreshCache = refreshCache
     };
 }
@@ -349,11 +361,17 @@ Dictionary<string, string> PopulateFileMapping(string fileMappingPath)
     return fileLicenceMapping;
 }
 
-async Task MoveReportHtmlFilesAsync(string reportTemplatePath, string outputFolder, bool loadAiJs, string listDataPath)
+async Task MoveReportHtmlFilesAsync(
+    string reportTemplatePath,
+    string outputFolder,
+    bool loadAiJs,
+    string listDataPath,
+    string internalDataPath,
+    string licenceDataPath,
+    string licenceSetsDataPath)
 {
     Copy(reportTemplatePath, outputFolder);
 
-    var indexPath = $"{outputFolder}index.html";
     var aiFiles = Directory.GetFiles("Data");
 
     foreach (var aiFile in aiFiles)
@@ -369,8 +387,18 @@ async Task MoveReportHtmlFilesAsync(string reportTemplatePath, string outputFold
         File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
     }
 
-    File.Move($"{outputFolder}report-template.html", $"{outputFolder}report.html", true);
+    var reportPath = $"{outputFolder}report.html";
+    File.Move($"{outputFolder}report-template.html", reportPath, true);
+
+    var reportHtml = await File.ReadAllTextAsync(reportPath);
+    reportHtml = reportHtml.Replace("[INTERNAL_DATA_PATH]", internalDataPath);
+    reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
+    reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
+    await File.WriteAllTextAsync(reportPath, reportHtml);
+    
     File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
+
+    var indexPath = $"{outputFolder}index.html";
     File.Move($"{outputFolder}list-template.html", indexPath, true);
 
     var indexHtml = await File.ReadAllTextAsync(indexPath);

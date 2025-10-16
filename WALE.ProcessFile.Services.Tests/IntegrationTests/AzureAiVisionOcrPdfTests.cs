@@ -1006,7 +1006,7 @@ public class AzureAiVisionOcrPdfTests
         var units2 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
-        Assert.Equal(32, units2.LineNumber);
+        Assert.Equal(33, units2.LineNumber);
         
         var value1 = section1Sub1.SubResults[3];
         Assert.Equal("45460.92", value1.Text![0].Text);

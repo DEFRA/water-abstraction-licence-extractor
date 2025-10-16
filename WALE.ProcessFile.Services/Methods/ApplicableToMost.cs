@@ -224,7 +224,7 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = request.isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(documentLine.Text, false, request.label.AutoCorrect)
+                    ? AutoCorrectHelper.AutoCorrectText(documentLine.Text, false, request.label?.AutoCorrect ?? false)
                     : documentLine.Text;
 
                 //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;

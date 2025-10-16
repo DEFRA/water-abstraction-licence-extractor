@@ -446,7 +446,7 @@ public class PdfDataExtractorService(
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
         IReadOnlyList<DocumentLine> documentLines,
-        IEnumerable<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
         Dictionary<string, string> licenceMapping,

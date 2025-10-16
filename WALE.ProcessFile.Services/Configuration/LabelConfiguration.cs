@@ -1392,7 +1392,8 @@ public static class LabelConfiguration
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
                                         Format = "Text",
                                         Remove = [
-                                            new("(above)")
+                                            new("(above)"),
+                                            new("numbers")
                                         ],
                                         MustContain = [
                                             "4.1",
@@ -1550,6 +1551,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",                                            
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1575,6 +1578,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1600,6 +1605,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",                                            
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1628,6 +1635,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1653,6 +1662,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1678,6 +1689,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",

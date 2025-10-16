@@ -168,7 +168,7 @@ public static class FormattingHelper
         }
     }
     
-    private static IEnumerable<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
+    private static IReadOnlyList<DocumentLine> TrimList(IEnumerable<DocumentLine> sourceList)
     {
         return sourceList
             .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))

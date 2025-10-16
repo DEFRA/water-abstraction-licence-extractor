@@ -1382,7 +1382,8 @@ public static class LabelConfiguration
                                         Name = "PurposeCondition",
                                         Text = [
                                             new("condition "),
-                                            new("conditions ")
+                                            new("conditions "),
+                                            new("purposes specified in "),
                                         ],
                                         TextEnd = [
                                             new("shall not exceed"),
@@ -1390,6 +1391,9 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
                                         Format = "Text",
+                                        Remove = [
+                                            new("(above)")
+                                        ],
                                         MustContain = [
                                             "4.1",
                                             "4.2",

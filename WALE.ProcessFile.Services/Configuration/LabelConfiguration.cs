@@ -708,6 +708,8 @@ public static class LabelConfiguration
                                     "2.9",
                                     "2.10"                                    
                                 ],
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0,
                                 SubLabels =
                                 [
                                     new()
@@ -755,7 +757,9 @@ public static class LabelConfiguration
                                             "4.3"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number"                                
+                                        Format = "Number",
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0
                                     },
                                     new()
                                     {
@@ -813,7 +817,9 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Format = LicenceNumber.Constant,
-                Name = "DocumentLicenceNumber"
+                Name = "DocumentLicenceNumber",
+                PreviousLinesToFetch = 2,
+                NextLinesToFetch = 0
             }
         ];
     }
@@ -979,7 +985,9 @@ public static class LabelConfiguration
                                     "5.3"
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Number"                                
+                                Format = "Number",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0                              
                             },
                             new()
                             {
@@ -1114,7 +1122,9 @@ public static class LabelConfiguration
                                     "3.3"
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Number"                                
+                                Format = "Number",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0
                             },
                             new()
                             {
@@ -1123,6 +1133,8 @@ public static class LabelConfiguration
                                 Text = [new("per second")],
                                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                 Format = "Units",
+                                PreviousLinesToFetch = 1,
+                                NextLinesToFetch = 1,
                                 Possibilities = new List<string>
                                 {
                                     "megalitres",
@@ -1144,6 +1156,8 @@ public static class LabelConfiguration
                                 RelatedCategoryName = "PerUnits",
                                 RelatedName = "PerSecondUnits",                                
                                 Format = "Number",
+                                PreviousLinesToFetch = 1,
+                                NextLinesToFetch = 1,
                                 Remove =
                                 [
                                     new("3.1"),
@@ -1163,7 +1177,9 @@ public static class LabelConfiguration
                                 ],
                                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Text"
+                                Format = "Text",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0
                             }
                         ]
                     }

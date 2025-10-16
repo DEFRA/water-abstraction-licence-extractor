@@ -57,6 +57,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
@@ -72,6 +73,8 @@ public static class LabelConfiguration
                         ],
                         Format = LicenceNumber.Constant,
                         Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
@@ -110,6 +113,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
@@ -125,6 +129,8 @@ public static class LabelConfiguration
                         ],
                         Format = LicenceNumber.Constant,
                         Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
@@ -159,6 +165,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 60,
                 SubLabels = 
                 [
@@ -178,7 +185,9 @@ public static class LabelConfiguration
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
-                        ]
+                        ],
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
                     }
                 ]
             }
@@ -302,6 +311,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -325,6 +335,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -347,6 +358,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -387,6 +399,7 @@ public static class LabelConfiguration
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = new List<LabelToMatch>
                 {
@@ -405,6 +418,7 @@ public static class LabelConfiguration
                         Format = "Text",
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
+                        PreviousLinesToFetch = 0,
                         NextLinesToFetch = 100,
                         Remove = [
                             new("2. POINT OF ABSTRACTION"),
@@ -525,6 +539,7 @@ public static class LabelConfiguration
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 Format = "Text",
+                                PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 100,
                                 IncludeStartLabelText = true,
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
@@ -550,7 +565,9 @@ public static class LabelConfiguration
                                             "(4)"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number"                                
+                                        Format = "Number",
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,                        
                                     },
                                     new()
                                     {
@@ -603,7 +620,7 @@ public static class LabelConfiguration
                                         Position = LabelPosition.Split,
                                         Format = "Text",
                                         PreviousLinesToFetch = 100,
-                                        NextLinesToFetch = 100,
+                                        NextLinesToFetch = 10,
                                         DoNotTrimLines = true
                                     }
                                 }

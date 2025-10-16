@@ -1504,6 +1504,8 @@ public static class LabelConfiguration
                                         Text = [new("per hour")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1527,6 +1529,8 @@ public static class LabelConfiguration
                                         Text = [new("per day")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1550,6 +1554,8 @@ public static class LabelConfiguration
                                         Text = [new("per month")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1576,6 +1582,8 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1599,6 +1607,8 @@ public static class LabelConfiguration
                                         Text = [new("per second")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1622,6 +1632,8 @@ public static class LabelConfiguration
                                         Text = [new("in total")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",

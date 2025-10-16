@@ -4164,5 +4164,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits);
+        Assert.Equal(16005, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Units);
     }
 }

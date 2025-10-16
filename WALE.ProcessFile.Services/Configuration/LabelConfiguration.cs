@@ -1387,6 +1387,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PointCondition",
                                         Text = [
+                                            new("Abstraction Point A"),
+                                            new("Abstraction Point B"),
                                             new("condition "),
                                             new("conditions "),
                                             new("(1)"),
@@ -1395,6 +1397,8 @@ public static class LabelConfiguration
                                             new("(4)")
                                         ],
                                         TextEnd = [
+                                            new("Abstraction Point B"),
+                                            new("Abstraction Point C"),
                                             new("shall not exceed"),
                                             new(":"),
                                             new("(2)"),
@@ -1406,6 +1410,8 @@ public static class LabelConfiguration
                                         IncludeStartLabelText = true,
                                         Format = "Text",
                                         Possibilities = [
+                                            "Abstraction Point A",
+                                            "Abstraction Point B",
                                             "2.1",
                                             "2.2",
                                             "2.3",
@@ -1421,6 +1427,8 @@ public static class LabelConfiguration
                                             "(4)"
                                         ],
                                         MustContain = [
+                                            "Abstraction Point A",
+                                            "Abstraction Point B",
                                             "2.1",
                                             "2.2",
                                             "2.3",

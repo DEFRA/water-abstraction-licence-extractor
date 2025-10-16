@@ -146,6 +146,11 @@ public static class RelatedCategoryPosition
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
                     var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
 
+                    if (labelIndexStart == -1)
+                    {
+                        return matchIndexEnd;
+                    }
+                    
                     var diff = matchIndexEnd - labelIndexStart;
                     if (diff > 0) diff = -diff - 100;
                     
@@ -166,13 +171,6 @@ public static class RelatedCategoryPosition
                     var diff = matchIndexEnd - labelIndexStart;
                     return Math.Abs(diff);
                 }).ToList();
-
-        if ((request.label.Name == "PerDayValue" || request.label.Name == "PerYearValue")
-            && request.line?.PageNumber >= 3
-            && request.line.LineNumber >= 9)
-        {
-            
-        }
         
         var returnList = new List<LabelGroupResult>();
         

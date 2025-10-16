@@ -17,7 +17,9 @@ public static class Units
             return [];
         }
 
-        var newLines = lineNumbersAreDescending ? lines.Reverse().ToList() : lines.ToList();
+        var newLines = lineNumbersAreDescending ?
+            lines.OrderByDescending(x => x.LineNumber).ToList()
+            : lines.OrderBy(x => x.LineNumber).ToList();
         
         foreach (var line in newLines)
         {
@@ -52,10 +54,33 @@ public static class Units
                 newColumns.Add(column);
                 break;
             }
-
+            
             if (string.IsNullOrEmpty(matchedPossibilityForLine))
             {
-                continue;
+                var previousLine = newLines.FirstOrDefault(l => l.LineNumber == line.LineNumber - 1);
+                
+                // Look at this and the last line together for a match
+                var multipleLineText = $"{previousLine?.Text} {line.Text}";
+                
+                foreach (var possibility in label.Possibilities!)
+                {
+                    if (!multipleLineText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var clonedColumn = new DocumentLineColumn(possibility);
+                    newColumns.Clear();
+                    newColumns.Add(clonedColumn);
+
+                    matchedPossibilityForLine = possibility;
+                    break;
+                }
+
+                if (string.IsNullOrWhiteSpace(matchedPossibilityForLine))
+                {
+                    continue;
+                }
             }
             
             var clonedLine = line.Clone(newColumns);

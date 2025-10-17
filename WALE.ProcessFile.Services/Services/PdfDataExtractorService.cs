@@ -20,7 +20,7 @@ public class PdfDataExtractorService(
     : IPdfDataExtractorService
 {
     public bool InUse { get; set; } = false;
-
+    
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument)
     {
         var metaDataFileText = await File.ReadAllTextAsync(GetImageMetadataFilename(pdfDocument));
@@ -1307,6 +1307,12 @@ public class PdfDataExtractorService(
         }
 
         return subResults;
+    }
+
+    public Task<string> ExtractTextWithOcrAsync(string pdfPath, string outputFolder, string cacheFolder,
+        IOcrDataExtractorService? ocrService = null)
+    {
+        throw new NotImplementedException();
     }
 
     private static IEnumerable<TextAndLabel> GetLineBeforeAtAndAfterText(

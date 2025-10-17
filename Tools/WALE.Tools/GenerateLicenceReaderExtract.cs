@@ -2,6 +2,7 @@ using System.Collections;
 using System.Globalization;
 using CsvHelper;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -112,7 +113,7 @@ public static class GenerateLicenceReaderExtract
                 {
                     LicenceNumber = licenceNumber,
                     PermitNumber = permitNumber,
-                    DateOfIssue = dateOfIssue
+                    DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue)
                 });
             }
             catch (Exception ex)

@@ -832,11 +832,6 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
-
-                    if (matchedLabel.Name == "DocumentAbstractionLimitsSection")
-                    {
-                        
-                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
@@ -855,6 +850,11 @@ public class PdfDataExtractorService(
 
                     previousLines ??= fastLineOuter.PreviousLines(lines, label);
                     nextLines ??= fastLineOuter.NextLines(lines, label);
+                    
+                    /*if (matchedLabel.Name == "ThisIsWhereYouCanPutABreakpointWhereALabelHasBeenFound")
+                    {
+                        
+                    }*/
                     
                     var request = new FunctionInputModel
                     {
@@ -1420,7 +1420,7 @@ public class PdfDataExtractorService(
         }
         
         var textBeforeLabel = FormattingHelper.TrimFormatting(
-            line.Text[..labelTextPositionIndex], true, true);
+            line.Text[..labelTextPositionIndex], true, false);
 
         var textAtLabel = matchedLabelText;
         

@@ -65,6 +65,7 @@ public static class TextToFindIsBetweenLabels
             request.lineNumber,
             request.line!,
             labelLineAlreadyIncluded,
+            request.label.DoNotTrimLines,
             out var foundEndTag,
             out var matchedEndText);
         
@@ -197,6 +198,7 @@ public static class TextToFindIsBetweenLabels
         int startLineNumber,
         DocumentLine lineInput,
         bool labelLineAlreadyIncluded,
+        bool doNotTrimLines,
         out bool foundEndTag,
         out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
@@ -285,7 +287,7 @@ public static class TextToFindIsBetweenLabels
                         if (i > -1)
                         {
                             var t = line.Text[..i];
-                            var ct = FormattingHelper.TrimFormatting(t, true, true);
+                            var ct = FormattingHelper.TrimFormatting(t, !doNotTrimLines, !doNotTrimLines);
 
                             var isOneDigitNumber = ct?.Length == 1 && int.TryParse(ct, out _);
                             var isOneDigitNumberAndWeDontWantNumber = isOneDigitNumber && label.Format != "Number";

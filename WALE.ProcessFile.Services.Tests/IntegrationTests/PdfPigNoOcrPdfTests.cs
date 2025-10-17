@@ -4170,4 +4170,34 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Purposes);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Purposes!.Length);
     }
+    
+    [Fact]
+    public async Task When_LookingForCorrectDefinitionOfYear()
+    {
+        // Arrange
+        const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, false);
+        Assert.Equal(15, resultFull.Matches?.Count);
+        
+        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            FileLicenceMapping,
+            _pdfDataExtractor2,
+            OutputFolder,
+            CacheFolder,
+            TestConfig.PdfFolder2);
+        
+        Assert.Equal(2, licenceSets.Count);
+        
+        Assert.Equal("NE0260034018-LV2019121120250331", licenceSets[0].LicenceSetId);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+
+        var agreedSchemaLicenceGroup = licenceSets[0];
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Equal("1 April", agreedSchemaLicence.DefinitionOfYear!.StartDate);
+        Assert.Equal("31 March", agreedSchemaLicence.DefinitionOfYear.EndDate);
+    }
 }

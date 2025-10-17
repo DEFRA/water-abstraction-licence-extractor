@@ -1322,6 +1322,7 @@ public static class LabelConfiguration
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
                                 IncludeStartLabelText = true,
+                                DoNotTrimLines = true,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -1881,8 +1882,9 @@ public static class LabelConfiguration
                                     new()
                                     {
                                         Name = "AYearDefinitionLine",
-                                        Text = [new("beginning on")],
-                                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                                        TextStart = [new("beginning on")],
+                                        TextEnd = [new(".")],
+                                        Position = LabelPosition.TextToFindIsBetweenLabels,
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 1,
                                         Format = "Text",

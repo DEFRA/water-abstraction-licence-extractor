@@ -15,8 +15,6 @@ public class Licence
             return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
         }
     }
-
-    public string[] LicenceSetIds { get; set; } = [];
     
     public LicenceStatus Status { get; init; }
     
@@ -39,6 +37,8 @@ public class Licence
     public TimePeriod? DefinitionOfYear { get; init; }
     
     public LinkedLicence[] LinkedLicences { get; set; } = [];
+    
+    public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object> NoneSchemaData { get; set; } = [];
 }

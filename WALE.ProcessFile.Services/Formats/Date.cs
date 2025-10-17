@@ -12,12 +12,6 @@ public static partial class Date
         out List<DocumentLine> matchedLines)
     {
         matchedLines = lines.Where(line => IsDate(line?.Text)).ToList()!;
-
-        if (matchedLines.Count > 0)
-        {
-            
-        }
-        
         return matchedLines.Count > 0;
     }
     

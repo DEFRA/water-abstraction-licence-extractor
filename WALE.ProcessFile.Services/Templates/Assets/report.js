@@ -163,7 +163,7 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
             } else if (linkedLicenceNumbers.length > 0) {
                 sb.push("In aggregation with other licences");
             } else {
-                sb.push("All Year");
+                sb.push("All specified period");
             }
 
             sb.push("</dt><dd><dl>");
@@ -259,10 +259,11 @@ function processAbstractionLimits(abstractionLimitsConditionBlocks, level) {
                 let linkedLicenceFilename = toText(linkedLicenceFilenames[kdx]);
                 if (!linkedLicenceFilename) linkedLicenceFilename = "[NOT_FOUND]";
                 
+                var lFilenameLink = linkedLicenceFilename.replace(".pdf", "").replace(".PDF", "").replaceAll(".", "-");
+                
                 sb.push("<dt><strong>Linked licence</strong></dt><dd><dl>");
                 sb.push("<dt><strong>Licence number</strong></dt><dd>"
-                    + "<a href='?filename=" + linkedLicenceFilename.replace(".pdf", "").replace(".PDF", "").replaceAll(".", "-")
-                    + "'>" + linkedLicenceNumber + "</a></dd>");
+                    + "<a href='?filename=" + lFilenameLink + "' onclick='openIframe(\"" + lFilenameLink + "\"); return false;'>" + linkedLicenceNumber + "</a></dd>");
 
                 let linkedLicence = linkedLicences.length > kdx ? linkedLicences[kdx] : null;
 
@@ -521,4 +522,15 @@ function loadScript(file, callback) {
     newScript.onerror = () => console.error(`Error loading script: ${file}`);
 
     document.head.appendChild(newScript);
+}
+
+function splitIntoHalf() {
+    document.getElementById('leftCol').classList.add('half');
+    document.getElementById('rightCol').classList.add('half');
+}
+
+function openIframe(filename) {
+    splitIntoHalf();
+    
+    document.getElementById('iframe').src = 'report.html?filename=' + filename + '&hideBackLink=true';
 }

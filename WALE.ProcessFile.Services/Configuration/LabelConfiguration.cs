@@ -38,11 +38,13 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("8. Records[END_OF_LINE]"),
+                    new("9. Records[END_OF_LINE]"),                    
                     new("Records[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
                     new("9. Further conditions"),
+                    new("10. Further conditions"),
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
@@ -55,6 +57,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
@@ -70,6 +73,8 @@ public static class LabelConfiguration
                         ],
                         Format = LicenceNumber.Constant,
                         Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
@@ -108,6 +113,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
@@ -123,6 +129,8 @@ public static class LabelConfiguration
                         ],
                         Format = LicenceNumber.Constant,
                         Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
@@ -157,6 +165,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 60,
                 SubLabels = 
                 [
@@ -176,7 +185,9 @@ public static class LabelConfiguration
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
-                        ]
+                        ],
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
                     }
                 ]
             }
@@ -198,18 +209,22 @@ public static class LabelConfiguration
                     new("National Rivers Authority"),
                     new("South Water Authority"),
                     new("Northumbrian Water Authority"),
+                    new("Northumbrian River Authority"),
                     new("North West Water"),
                     new("Wessex Water Authority"),
+                    new("Wessex Water"),
                     new("Essex River Authority"),
                     new("Thames Water Authority"),
                     new("Mersey and Weaver River Authority"),
                     new("Conservators of the The River Thames"),
                     new("Yorkshire Ouse and Hull River Authority"),
+                    new("Yorkshire River Authority"),
                     new("Avon and Dorset River authority"),
                     new("The Somerset River Authority"),
                     new("Southern Water Authority"),
                     new("Sussex River Authority"),
-                    new("Yorkshire Water Authority")
+                    new("Yorkshire Water Authority"),
+                    new("Yorkshire River Authority"),                    
                 ],
                 Possibilities = [
                     "Environment Agency",
@@ -217,18 +232,22 @@ public static class LabelConfiguration
                     "National Rivers Authority",
                     "South Water Authority",
                     "Northumbrian Water Authority",
+                    "Northumbrian River Authority",
                     "North West Water",
                     "Wessex Water Authority",
+                    "Wessex Water",
                     "Essex River Authority",
                     "Thames Water Authority",
                     "Mersey and Weaver River Authority",
                     "Conservators of the The River Thames",
                     "Yorkshire Ouse and Hull River Authority",
+                    "Yorkshire River Authority",
                     "Avon and Dorset River authority",
                     "The Somerset River Authority",
                     "Southern Water Authority",
                     "Sussex River Authority",
-                    "Yorkshire Water Authority"
+                    "Yorkshire Water Authority",
+                    "Yorkshire River Authority"
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -292,6 +311,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -315,6 +335,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -337,6 +358,7 @@ public static class LabelConfiguration
                 Remove = [
                     new("...")
                 ],
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1
             }
         ];
@@ -352,6 +374,11 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
+                    new("POINT OF ABSTRACTION")
+                    {
+                        ColumnMustStartWith = true,
+                        IfMultiplePreferLast = true
+                    },
                     new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
@@ -372,6 +399,7 @@ public static class LabelConfiguration
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = new List<LabelToMatch>
                 {
@@ -390,6 +418,7 @@ public static class LabelConfiguration
                         Format = "Text",
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
+                        PreviousLinesToFetch = 0,
                         NextLinesToFetch = 100,
                         Remove = [
                             new("2. POINT OF ABSTRACTION"),
@@ -510,6 +539,7 @@ public static class LabelConfiguration
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 Format = "Text",
+                                PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 100,
                                 IncludeStartLabelText = true,
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
@@ -535,7 +565,9 @@ public static class LabelConfiguration
                                             "(4)"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number"                                
+                                        Format = "Number",
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,                        
                                     },
                                     new()
                                     {
@@ -588,7 +620,7 @@ public static class LabelConfiguration
                                         Position = LabelPosition.Split,
                                         Format = "Text",
                                         PreviousLinesToFetch = 100,
-                                        NextLinesToFetch = 100,
+                                        NextLinesToFetch = 10,
                                         DoNotTrimLines = true
                                     }
                                 }
@@ -657,6 +689,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
+                        NextLinesToFetch = 30,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
                         Remove = [
@@ -692,6 +725,8 @@ public static class LabelConfiguration
                                     "2.9",
                                     "2.10"                                    
                                 ],
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0,
                                 SubLabels =
                                 [
                                     new()
@@ -739,7 +774,9 @@ public static class LabelConfiguration
                                             "4.3"
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number"                                
+                                        Format = "Number",
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0
                                     },
                                     new()
                                     {
@@ -797,7 +834,9 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Format = LicenceNumber.Constant,
-                Name = "DocumentLicenceNumber"
+                Name = "DocumentLicenceNumber",
+                PreviousLinesToFetch = 2,
+                NextLinesToFetch = 0
             }
         ];
     }
@@ -823,9 +862,16 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 Format = "CompanyName",
+                AutoCorrect = true,
+                PreviousLinesToFetch = 1,
+                NextLinesToFetch = 6,
+                Name = "CompanyName",
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
+                ],
+                Remove = [
+                    new("hereby grant a licence to")
                 ]
             },
             new LabelToMatch
@@ -842,7 +888,10 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsAfterTextToFind,
                 Format = "CompanyName",
-                PreviousLinesToFetch = 7,
+                Name = "CompanyName2",
+                AutoCorrect = true,
+                NextLinesToFetch = 4,
+                PreviousLinesToFetch = 5,
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
@@ -860,6 +909,8 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.LabelIsInMiddleOfTextToFind,
                 Format = "CompanyName",
+                Name = "CompanyName3",
+                AutoCorrect = true,
                 PreviousLinesToFetch = 2,
                 NextLinesToFetch = 4,
                 IgnoreMatchIfContains = [
@@ -875,6 +926,8 @@ public static class LabelConfiguration
                     new("as amended by")
                 ],
                 Position = LabelPosition.ContractIsSuccession,
+                NextLinesToFetch = 10,
+                PreviousLinesToFetch = 2,
                 Format = "CompanyName",
                 MatchAllText = true,
                 Name = "IsSuccession"
@@ -949,7 +1002,9 @@ public static class LabelConfiguration
                                     "5.3"
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Number"                                
+                                Format = "Number",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0                              
                             },
                             new()
                             {
@@ -1003,7 +1058,31 @@ public static class LabelConfiguration
                         ]
                     }
                 ]
-            }
+            },
+            new LabelToMatch
+            {
+                Name = "DuringTheMonthsXToYOnlyText",
+                TextStart = [
+                    new("During the months ") { LineMustStartWith = true }
+                ],
+                TextEnd = [
+                    new("only")
+                ],
+                NextLinesToFetch = 1,
+                PreviousLinesToFetch = 0,
+                Remove = [
+                    new("only")
+                ],
+                SubLabels = [
+                    new LabelToMatch
+                    {
+                        Name = "DuringTheMonthsXToYOnlyTextParts",
+                        Text = [new("to")],
+                        Position = LabelPosition.Split,
+                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                    }
+                ]
+            },
         ];
     }
 
@@ -1060,7 +1139,9 @@ public static class LabelConfiguration
                                     "3.3"
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Number"                                
+                                Format = "Number",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0
                             },
                             new()
                             {
@@ -1069,6 +1150,8 @@ public static class LabelConfiguration
                                 Text = [new("per second")],
                                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                 Format = "Units",
+                                PreviousLinesToFetch = 1,
+                                NextLinesToFetch = 1,
                                 Possibilities = new List<string>
                                 {
                                     "megalitres",
@@ -1090,6 +1173,8 @@ public static class LabelConfiguration
                                 RelatedCategoryName = "PerUnits",
                                 RelatedName = "PerSecondUnits",                                
                                 Format = "Number",
+                                PreviousLinesToFetch = 1,
+                                NextLinesToFetch = 1,
                                 Remove =
                                 [
                                     new("3.1"),
@@ -1109,7 +1194,9 @@ public static class LabelConfiguration
                                 ],
                                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
-                                Format = "Text"
+                                Format = "Text",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 0
                             }
                         ]
                     }
@@ -1135,6 +1222,7 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
+                    new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("The quantity of water authorised to be abstracted shall be") { IfMultiplePreferLast = true }
                 ],
@@ -1234,6 +1322,7 @@ public static class LabelConfiguration
                                 PreviousLinesToFetch = 20,
                                 MinimumSubMatches = 2,
                                 IncludeStartLabelText = true,
+                                DoNotTrimLines = true,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -1294,7 +1383,8 @@ public static class LabelConfiguration
                                         Name = "PurposeCondition",
                                         Text = [
                                             new("condition "),
-                                            new("conditions ")
+                                            new("conditions "),
+                                            new("purposes specified in "),
                                         ],
                                         TextEnd = [
                                             new("shall not exceed"),
@@ -1302,6 +1392,10 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.TextToFindIsBetweenLabels,
                                         Format = "Text",
+                                        Remove = [
+                                            new("(above)"),
+                                            new("numbers")
+                                        ],
                                         MustContain = [
                                             "4.1",
                                             "4.2",
@@ -1332,6 +1426,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PointCondition",
                                         Text = [
+                                            new("Abstraction Point A"),
+                                            new("Abstraction Point B"),
                                             new("condition "),
                                             new("conditions "),
                                             new("(1)"),
@@ -1340,6 +1436,8 @@ public static class LabelConfiguration
                                             new("(4)")
                                         ],
                                         TextEnd = [
+                                            new("Abstraction Point B"),
+                                            new("Abstraction Point C"),
                                             new("shall not exceed"),
                                             new(":"),
                                             new("(2)"),
@@ -1351,6 +1449,8 @@ public static class LabelConfiguration
                                         IncludeStartLabelText = true,
                                         Format = "Text",
                                         Possibilities = [
+                                            "Abstraction Point A",
+                                            "Abstraction Point B",
                                             "2.1",
                                             "2.2",
                                             "2.3",
@@ -1366,6 +1466,8 @@ public static class LabelConfiguration
                                             "(4)"
                                         ],
                                         MustContain = [
+                                            "Abstraction Point A",
+                                            "Abstraction Point B",
                                             "2.1",
                                             "2.2",
                                             "2.3",
@@ -1441,6 +1543,8 @@ public static class LabelConfiguration
                                         Text = [new("per hour")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1448,6 +1552,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",                                            
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1459,11 +1565,13 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerDayUnits",                                
+                                        Name = "PerDayUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per day")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1471,6 +1579,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1482,11 +1592,13 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerMonthUnits",                                
+                                        Name = "PerMonthUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [new("per month")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1494,6 +1606,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",                                            
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1505,7 +1619,7 @@ public static class LabelConfiguration
                                     },
                                     new()
                                     {
-                                        Name = "PerYearUnits",                                
+                                        Name = "PerYearUnits",
                                         CategoryName = "PerUnits",                                
                                         Text = [
                                             new("per year"),
@@ -1513,6 +1627,8 @@ public static class LabelConfiguration
                                         ],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1520,6 +1636,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1536,6 +1654,8 @@ public static class LabelConfiguration
                                         Text = [new("per second")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1543,6 +1663,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1559,6 +1681,8 @@ public static class LabelConfiguration
                                         Text = [new("in total")],
                                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                                         Format = "Units",
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         Possibilities = new List<string>
                                         {
                                             "megalitres",
@@ -1566,6 +1690,8 @@ public static class LabelConfiguration
                                             "thousand cubic metres",
                                             "cubic metres",
                                             "cubic meters",
+                                            "cubic metre",
+                                            "cubic meter",
                                             "m\u00b3", // m3
                                             "megagallons",
                                             "thousand gallons",
@@ -1611,6 +1737,8 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         FindMultipleOnSingleLine = true
                                     },
@@ -1637,6 +1765,8 @@ public static class LabelConfiguration
                                             new("(3)"),
                                             new("(4)")
                                         ],
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         FindMultipleOnSingleLine = true
                                     },
@@ -1663,6 +1793,8 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         FindMultipleOnSingleLine = true
                                     },
@@ -1692,6 +1824,8 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         FindMultipleOnSingleLine = true
                                     },
@@ -1719,7 +1853,9 @@ public static class LabelConfiguration
                                             "(111)"
                                         ],
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
+                                        FindMultipleOnSingleLine = true,
+                                        PreviousLinesToFetch = 1
+                                        // Not setting NextLinesToFetch to 1 as it breaks some existing tests
                                     },
                                     new()
                                     {
@@ -1738,14 +1874,17 @@ public static class LabelConfiguration
                                             "(11)",
                                             "(111)"
                                         ],
+                                        PreviousLinesToFetch = 1,
+                                        NextLinesToFetch = 1,
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         FindMultipleOnSingleLine = true
                                     },
                                     new()
                                     {
                                         Name = "AYearDefinitionLine",
-                                        Text = [new("beginning on")],
-                                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                                        TextStart = [new("beginning on")],
+                                        TextEnd = [new(".")],
+                                        Position = LabelPosition.TextToFindIsBetweenLabels,
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 1,
                                         Format = "Text",

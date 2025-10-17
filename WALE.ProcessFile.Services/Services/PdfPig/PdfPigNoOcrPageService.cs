@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrPageService(Page page) : INoOcrPdfPageService
 {
-    public async Task<IEnumerable<INoOcrPdfImageService>> GetImagesAsync()
+    public async Task<IReadOnlyList<INoOcrPdfImageService>> GetImagesAsync()
     {
         ArgumentNullException.ThrowIfNull(page);
 

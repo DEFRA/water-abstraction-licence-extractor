@@ -165,21 +165,27 @@ public static partial class DataHelper
 
                         if (countOfNumbers >= 2)
                         {
-                            returnStr = returnStr.Replace(
-                                textToMatch.Text,
-                                string.Empty,
-                                StringComparison.InvariantCultureIgnoreCase);
+                            if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                returnStr = returnStr.Replace(
+                                    textToMatch.Text,
+                                    string.Empty,
+                                    StringComparison.InvariantCultureIgnoreCase);
+                            }
 
                             removesUsedList.Add(textToMatch.Text);
                         }
                         
                         continue;
                     }
-                    
-                    returnStr = returnStr.Replace(
-                        textToMatch.Text,
-                        string.Empty,
-                        StringComparison.InvariantCultureIgnoreCase);
+
+                    if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        returnStr = returnStr.Replace(
+                            textToMatch.Text,
+                            string.Empty,
+                            StringComparison.InvariantCultureIgnoreCase);
+                    }
 
                     removesUsedList.Add(textToMatch.Text);
                     continue;
@@ -193,10 +199,13 @@ public static partial class DataHelper
                     continue;
                 }
 
-                returnStr = returnStr.Replace(
-                    textToMatch.Text,
-                    string.Empty,
-                    StringComparison.InvariantCultureIgnoreCase);
+                if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    returnStr = returnStr.Replace(
+                        textToMatch.Text,
+                        string.Empty,
+                        StringComparison.InvariantCultureIgnoreCase);
+                }
 
                 removesUsedList.Add(textToMatch.Text);
             }
@@ -215,22 +224,38 @@ public static partial class DataHelper
         {
             return false;
         }
+
+        if (line.Contains('—'))
+        {
+            line = line.Replace("—", "-");
+        }
+        
+        if (line.Contains('”'))
+        {
+            line = line.Replace("”", "\"");
+        }
+        
+        if (line.Contains('’'))
+        {
+            line = line.Replace("’", "'");
+        }
         
         var containsSpecialChar = line
-            .Replace(" ", string.Empty)
-            .Replace("/", string.Empty)
-            .Replace(".", string.Empty)
-            .Replace("%", string.Empty)
-            .Replace("(", string.Empty)
-            .Replace(")", string.Empty)            
-            .Replace(",", string.Empty)
-            .Replace("\"", string.Empty)
-            .Replace("'", string.Empty)
-            .Replace("-", string.Empty)
-            .Replace(":", string.Empty)
-            .Replace(";", string.Empty)
-            .Replace("£", string.Empty)
-            .Replace("*", string.Empty)            
+            .Where(ch =>
+                ch != ' '
+                && ch != '/'
+                && ch != '.'
+                && ch != '%'
+                && ch != '('
+                && ch != ')'
+                && ch != ','
+                && ch != '"'
+                && ch != '\''
+                && ch != '-'
+                && ch != ':'
+                && ch != ';'
+                && ch != '£'
+                && ch != '*')
             .Count(ch => !char.IsLetterOrDigit(ch) || !char.IsAscii(ch));
 
         if (line.Length < 8 && CharDigitCharRegex().IsMatch(line))
@@ -275,17 +300,19 @@ public static partial class DataHelper
         
         var countOfSuspectedIncorrectWords = wordsSplit.Count(word =>
         {
-            var wordWithoutPunctuation = word
-                .Replace("\"", string.Empty)
-                .Replace("'", string.Empty)
-                .Replace("(", string.Empty)
-                .Replace(")", string.Empty)
-                .Replace(",", string.Empty)
-                .Replace(":", string.Empty);
+            var wordWithoutPunctuation = new string(word
+                .Where(ch =>
+                    ch != '"'
+                    && ch != '\''
+                    && ch != '('
+                    && ch != ')'
+                    && ch != ','
+                    && ch != ':')
+                .ToArray());
 
-            return !Dictionary.Check(wordWithoutPunctuation)
-                   && !word.Contains('/')
-                   && !double.TryParse(word.Replace("TL", string.Empty).Replace(",", string.Empty), out _);
+            return !word.Contains('/')
+                && !double.TryParse(PotentialNumber(word), out _)
+                && !Dictionary.Check(wordWithoutPunctuation);
         });
         
         var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
@@ -294,6 +321,21 @@ public static partial class DataHelper
             && percentageOfSuspectedIncorrectWords >= unacceptableIncorrectValue;
         
         return mostWordsIncorrectlySpelt;
+    }
+
+    private static string PotentialNumber(string word)
+    {
+        if (word.Contains("TL"))
+        {
+            word = word.Replace("TL", string.Empty);
+        }
+        
+        if (word.Contains(','))
+        {
+            word = word.Replace(",", string.Empty);
+        }
+
+        return word;
     }
 
     private static List<string> GetNoneDigitWords(IEnumerable<string> words)

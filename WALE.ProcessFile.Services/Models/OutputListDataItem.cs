@@ -1,6 +1,8 @@
+using WALE.ProcessFile.Services.Models.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models;
 
-public class ListRow
+public class OutputListDataItem
 {
     public string? imagePath { get; set; }
     public string? filename{ get; set; }
@@ -14,7 +16,6 @@ public class ListRow
     public string? issueDate { get; set; }
     public string? issuer { get; set; }
     public bool meansFound { get; set; }
-    public string?[]? linkedLicences { get; set; }
-    public string?[]? licenceSetIds { get; set; }
-    public string?[]? shortLicenceSetIds { get; set; }
+    public LinkedLicence[]? linkedLicences { get; set; }
+    public OutputListDataItemLicenceSet[]? licenceSets { get; set; }
 }

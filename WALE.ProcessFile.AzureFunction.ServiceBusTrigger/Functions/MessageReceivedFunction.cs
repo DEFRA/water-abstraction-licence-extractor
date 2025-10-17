@@ -5,6 +5,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
@@ -56,7 +57,7 @@ public class MessageReceivedFunction(
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath),
+                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd),
                 new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey)
             ],
             pdfFolderPath);

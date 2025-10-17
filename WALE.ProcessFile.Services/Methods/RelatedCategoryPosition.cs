@@ -138,12 +138,19 @@ public static class RelatedCategoryPosition
                 {
                     var line = allLines.First(x => x.LineNumber == match.LineNumber);
 
-                    var lineText = line.Text.Replace(",", string.Empty);
+                    var lineText = line.Text;
+                    if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
+                    
                     var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                     
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
                     var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
 
+                    if (labelIndexStart == -1)
+                    {
+                        return matchIndexEnd;
+                    }
+                    
                     var diff = matchIndexEnd - labelIndexStart;
                     if (diff > 0) diff = -diff - 100;
                     
@@ -153,7 +160,9 @@ public static class RelatedCategoryPosition
                 {
                     var line = allLines.First(x => x.LineNumber == match.LineNumber);
 
-                    var lineText = line.Text.Replace(",", string.Empty);
+                    var lineText = line.Text;
+                    if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
+                    
                     var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                 
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
@@ -162,13 +171,6 @@ public static class RelatedCategoryPosition
                     var diff = matchIndexEnd - labelIndexStart;
                     return Math.Abs(diff);
                 }).ToList();
-
-        if ((request.label.Name == "PerDayValue" || request.label.Name == "PerYearValue")
-            && request.line?.PageNumber >= 3
-            && request.line.LineNumber >= 9)
-        {
-            
-        }
         
         var returnList = new List<LabelGroupResult>();
         

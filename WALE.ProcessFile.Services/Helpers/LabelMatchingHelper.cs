@@ -41,9 +41,11 @@ public static class LabelMatchingHelper
         
         foreach (var item in textBeforeAndAfterLabel)
         {
-            if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(item.Text)
-                && item.Text!.Trim() != shortHyphen
-                && item.Text.Trim() != longHyphen)
+            var text = item.Text!.Trim();
+            
+            if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(text)
+                && text != shortHyphen
+                && text != longHyphen)
             {
                 return true;
             }
@@ -110,10 +112,19 @@ public static class LabelMatchingHelper
             }
             
             var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
+            var labelTextWithoutMarkers = labelText;
+
+            if (labelTextWithoutMarkers.Contains(PositionConstants.EndOfColumnMarker))
+            {
+                labelTextWithoutMarkers = labelTextWithoutMarkers
+                    .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
+            }
             
-            var labelTextWithoutMarkers = labelText
-                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
-                .Replace(PositionConstants.EndOfLineMarker, string.Empty);
+            if (labelTextWithoutMarkers.Contains(PositionConstants.EndOfLineMarker))
+            {
+                labelTextWithoutMarkers = labelTextWithoutMarkers
+                    .Replace(PositionConstants.EndOfLineMarker, string.Empty);                
+            }
             
             var firstLine = lineCount == 0;
             var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker,
@@ -203,13 +214,15 @@ public static class LabelMatchingHelper
                 }
                 else
                 {
+                    var labelTextWithSpaceBefore = $" {labelText}";
+                    
                     var columnStartsWithLabelWithSpaceBefore =
-                        column.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                        column.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase);
                     var columnEndsWithLabel =
                         column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
                     
                     var lineStartsWithLabelWithSpaceBefore =
-                        lineToCheck.Text.Contains($" {labelText}", StringComparison.InvariantCultureIgnoreCase);
+                        lineToCheck.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase);
                     var lineEndsWithLabel =
                         lineToCheck.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
 

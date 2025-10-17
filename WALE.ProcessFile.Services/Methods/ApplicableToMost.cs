@@ -121,6 +121,7 @@ public static class ApplicableToMost
             }
             
             if (request.isCompanyType
+                && !string.IsNullOrEmpty(outputText)
                 && (char.IsLower(outputText[0])
                     || outputText.StartsWith("trading as", StringComparison.InvariantCultureIgnoreCase)))
             {
@@ -222,8 +223,9 @@ public static class ApplicableToMost
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
-                var autoCorrectedOutputText = AutoCorrectHelper.AutoCorrectText(
-                    documentLine.Text,false);
+                var autoCorrectedOutputText = request.isOcr
+                    ? AutoCorrectHelper.AutoCorrectText(documentLine.Text, false, request.label?.AutoCorrect ?? false)
+                    : documentLine.Text;
 
                 //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;
                 
@@ -275,16 +277,16 @@ public static class ApplicableToMost
                 labelGroupResult = labelGroupResult.Clone([documentLine]);
                 return r;
             }
-
+            
             if (!request.label!.DoNotTrimLines)
             {
                 outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
             }
             
             outputText = request.isOcr
-                ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType)
+                ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType, request.label.AutoCorrect)
                 : outputText;
-
+            
             if (request.isCompanyType
                 && CompanyName.TryGetCompanyOrPersonalName(outputText, matchedLabel, out _))
             {

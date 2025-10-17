@@ -1,6 +1,8 @@
+using WALE.ProcessFile.Services.Models.OutputSchema;
+
 namespace WALE.ProcessFile.Services.Models;
 
-public class OutputLine
+public class IntermediateOutputLicence
 {
     public int LineNumber;
     public int StartNumber;
@@ -23,8 +25,8 @@ public class OutputLine
     public string? IssueDate;
     public string? Issuer;
     public bool MeansFound;
-    public string? LinkedLicenceNumbers;
-    public string? LicenceSetIds;
-    public string? ShortLicenceSetIds;
+    public LinkedLicence[]? LinkedLicences;
+    public List<LicenceSet>? LicenceSets;
+    public LicenceSetReference[] ? LicenceSetReferences;
     public int NodeId;
 }

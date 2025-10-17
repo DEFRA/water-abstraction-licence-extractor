@@ -12,6 +12,7 @@ public class FunctionInputModel
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }
     public List<TextAndLabel>? textBeforeAtAndAfterLabel { get; set; }
+    public bool autoCorrect { get; set; }
     public bool isDateLookup { get; set; }
     public bool isDateOrPurposeLookup { get; set; }
     public bool isCompanyType { get; set; }
@@ -58,7 +59,8 @@ public class FunctionInputModel
             previouslyParsedPaths = previouslyParsedPaths,
             outputFolder = outputFolder,
             cacheFolder = cacheFolder,
-            pdfDataExtractorService = pdfDataExtractorService
+            pdfDataExtractorService = pdfDataExtractorService,
+            autoCorrect = autoCorrect
         };
     }
 }

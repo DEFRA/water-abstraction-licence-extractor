@@ -7,6 +7,7 @@ window.onload = function () {
         bodyEle.className += " show-all";
     }
 
+    window.iframeCounter = 0;
     window.aiData = {};
     
     if (LOAD_AI) {
@@ -39,7 +40,8 @@ window.onload = function () {
 function setup() {
     populateTable();
     populateDropdowns();
-
+    showDashesInLicenceSetsWhereNeeded();
+    
     window.sortedAsc = true;
     window.sortedBy = "filename";
     
@@ -48,6 +50,43 @@ function setup() {
     for (let i = 0; i < selects.length; i++) {
         let select = selects[i];
         addChangeEvent(select);
+    }
+    
+    let singlesEle = document.getElementById("showSingles");
+    singlesEle.addEventListener("change", function (event) {
+        let bodyEle = document.getElementsByTagName("body")[0]; 
+
+        if (singlesEle.checked) {
+            bodyEle.classList.add("singles");
+            hideDashesInLicenceSetsWhereNeeded();
+            
+            return;
+        }
+
+        bodyEle.classList.remove("singles");
+        showDashesInLicenceSetsWhereNeeded();
+    });
+}
+
+function hideDashesInLicenceSetsWhereNeeded() {
+    const trs = document.querySelectorAll("#licencesTable tbody tr td.licenceSetTd");
+
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        tr.querySelector(".noLicenceSetsShowing").style.display = "none";
+    }
+}
+
+function showDashesInLicenceSetsWhereNeeded() {
+    const trs = document.querySelectorAll("#licencesTable tbody tr td.licenceSetTd");
+
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        let lis = tr.querySelectorAll("ul li");
+
+        if (lis.length === 1) {
+            tr.querySelector(".noLicenceSetsShowing").style.display = "inline";
+        }
     }
 }
 
@@ -89,10 +128,10 @@ function sortBy(filterField) {
     
     window.sortedBy = filterField;
     
-    populateTable(undefined, undefined, undefined, filterField, sortedAsc);
+    populateTable(undefined, undefined, undefined, filterField, sortedAsc, undefined);
 }
 
-function filterData(dataSorted, filterType, filterField, filterValue) {
+function filterData(dataSorted, filterType, filterField, filterValue, filterSubField) {
     let returnData = [];
     
     for (let i = 0; i < dataSorted.length; i++) {
@@ -143,6 +182,26 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
                 if (filterValue !== 'All' && value.indexOf(filterValue) === -1) {
                     continue;
                 }
+            } else if (filterType === 'ArrayValueMapped') {
+                if (filterValue === 'NoneSingle') {
+                    if (value.length < 2) {
+                        continue;
+                    }
+                } else if (filterValue !== 'All' && value.map(x => x[filterSubField]).indexOf(filterValue) === -1) {
+                    continue;
+                }
+            } else if (filterType === 'ArrayValueArrayValueMapped') {
+                if (filterValue === 'Populated') {
+                    if (value.length === 0) {
+                        continue;
+                    }
+                } else if (filterValue === 'Empty') {
+                    if (value.length > 0) {
+                        continue;
+                    }
+                } else if (filterValue !== 'All' && value.map(x => x[filterSubField].indexOf(filterValue) > -1).filter(x => x === true).length === 0) {
+                    continue;
+                } 
             } else if (value !== filterValue) {
                 continue;
             }
@@ -152,6 +211,30 @@ function filterData(dataSorted, filterType, filterField, filterValue) {
     }
     
     return returnData;
+}
+
+function getLicence(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+
+        if (item.licenceNumber === licenceNumber) {
+            return item;
+        }
+    }
+
+    return null;
+}
+
+function getFilename(licenceNumber) {
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+
+        if (item.licenceNumber === licenceNumber) {
+            return item.filename;
+        }
+    }
+
+    return false;
 }
 
 function licenceInList(licenceNumber) {
@@ -166,8 +249,8 @@ function licenceInList(licenceNumber) {
     return false;
 }
 
-function populateTable(filterField, filterValue, filterType, sortByField, sortAsc) {
-    const tbody1 = document.getElementsByTagName("tbody")[0];
+function populateTable(filterField, filterValue, filterType, sortByField, sortAsc, filterSubField) {
+    const tbody1 = document.querySelector("#licencesTable tbody");
     let htmlSb = [];
 
     let dataSorted = data.slice(0);
@@ -186,7 +269,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         }
     }
     
-    dataSorted = filterData(dataSorted, filterType, filterField, filterValue);
+    dataSorted = filterData(dataSorted, filterType, filterField, filterValue, filterSubField);
     window.dataFiltered = dataSorted;
     setTotals();
     
@@ -224,11 +307,24 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         
         for (let j = 0; j < item.linkedLicences.length; j++) {
             let linkedLicence = item.linkedLicences[j];
+            let licenceNumber = linkedLicence.licenceNumber;
+            let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
+            let abstractionLimits = linkedLicence.fromSection.length >= 1 && linkedLicence.fromSection.indexOf("AbstractionLimits") > -1;
             
-            if (licenceInList(linkedLicence)) {
-                linkedLicencesSb.push('<li><a href="#' + linkedLicence + '">' + linkedLicence + '</a></li>');
+            let styledLicenceNumber = backLink && false ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
+            let text = backLink ? 'Implicit back link' : linkedLicence.fromSection[0];
+            let color = backLink ? "#888" : "black";
+            
+            if (abstractionLimits) {
+                color = "lightseagreen";
+            }
+            
+            if (licenceInList(licenceNumber)) {
+                let linkedFilename = getFilename(licenceNumber);
+                linkedLicencesSb.push('<li title="' + text + '"><a style="color: ' + color + '" href="report.html?filename=' + linkedFilename
+                    + '" onclick="openIframe(\'' + linkedFilename + '\'); return false;">' + styledLicenceNumber + '</a></li>');
             } else {
-                linkedLicencesSb.push('<li>' + linkedLicence + '</li>');                
+                linkedLicencesSb.push('<li style="color: ' + color + '" title="' + text + '">' + styledLicenceNumber + '</li>');                
             }
         }
 
@@ -238,14 +334,43 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
 
         let licenceSetsSb = [];
 
-        if (item.shortLicenceSetIds.length > 0 && item.shortLicenceSetIds[0] !== '') {
+        if (item.licenceSets.length > 0) {
             licenceSetsSb.push('<ul>');
 
-            for (let j = 0; j < item.licenceSetIds.length; j++) {
-                let licenceSetId = item.licenceSetIds[j];
-                let shortLicenceSetId = item.shortLicenceSetIds[j] ?? '';
+            for (let j = 0; j < item.licenceSets.length; j++) {
+                let licenceSet = item.licenceSets[j];
+                let licenceSetId = licenceSet.licenceSetId;
+                let shortLicenceSetId = licenceSet.shortLicenceSetId;
+
+                let backLink = licenceSet.licenceSetType === "allLicencesImplicitlyReferencedInLimits";
+                let abstractionLimits = licenceSet.licenceSetType === "allLicencesExplicitlyReferencedInLimits";
+                let mixed = licenceSet.licenceSetType === "allLicencesIncludingImplicitlyReferenced";
+                let fullyEncompassedIn = licenceSet.licenceSetType === "fullyEncompassedIn";
+                let partiallyEncompassedIn = licenceSet.licenceSetType === "partiallyEncompassedIn";
                 
-                licenceSetsSb.push('<li title="' + licenceSetId + '">' + shortLicenceSetId + '</li>');
+                let color = backLink ? "#AAA" : "black";
+
+                if (abstractionLimits) {
+                    color = "lightseagreen";
+                }
+                
+                if (mixed) {
+                    color = "orange";
+                }
+                
+                if (fullyEncompassedIn) {
+                    color = "forestgreen"
+                }
+
+                if (partiallyEncompassedIn) {
+                    color = "hotpink"
+                }
+                
+                let html1 = "<span class='lsId ' title='" + licenceSetId + " " + licenceSet.licenceSetType + "'><a style='color: " + color + "' href='licencesetreport.html?filename="
+                    + item.filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('" + item.filename
+                    + "', '" + licenceSetId + "'); return false;\">" + shortLicenceSetId + "</a></span>";
+                
+                licenceSetsSb.push('<li class="' + licenceSet.licenceSetType + '">' + html1 + '</li>');
             }
 
             licenceSetsSb.push('</ul>');
@@ -322,7 +447,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         let html =
             "<tr style='" + backgroundCss + "'>" +
             "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
-            "<td><a href='report.html?filename=" + item.filename + "'>" + item.filename + "</a></td>" +
+            "<td><a href='report.html?filename=" + item.filename + "' onclick=\"openIframe('" + item.filename + "'); return false;\">" + item.filename + "</a></td>" +
             "<td id='" + dashesIfNullOrEmpty(item.licenceNumber) + "'>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +
             "<td>" + (item.purposes.length > 0 ? purposesSb.join('') : '--') + aiPurposesLine + "</td>" +
@@ -334,13 +459,288 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + dashesIfNullOrEmpty(item.issuer) + aiIssuerLine + "</td>" +
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
             "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
-            "<td>" + (item.licenceSetIds.length > 0 ? licenceSetsSb.join('') : "--") + "</td>" +
+            "<td class='licenceSetTd'>" + (item.licenceSets.length > 0 ? licenceSetsSb.join('') : "--") + "<span class='noLicenceSetsShowing'>--</span></td>" +
             "</tr>";
 
         htmlSb.push(html);
     }
 
     tbody1.innerHTML = htmlSb.join('');
+    
+    populateLicenceSetTable(dataSorted);
+}
+
+function populateLicenceSetTable(dataSorted) {
+    let licenceSets = [];
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let ary = item.licenceSets;
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+
+            if (licenceSets.find(uv => uv.licenceSetId === value.licenceSetId) === undefined) {
+                licenceSets.push(value);
+            }
+        }
+    }
+
+    setHierarchy(licenceSets);
+    
+    let topLevel = getChildrenOf(licenceSets, null);
+    let htmlSb = [];
+    
+    for (let i = 0; i < topLevel.length; i++) {
+        let licenceSet = licenceSets[i];
+        htmlSb = renderListRow(licenceSet, i, htmlSb, dataSorted, 0);
+
+        let children = getChildrenOf(licenceSets, licenceSet);
+        
+        for (let j = 0; j < children.length; j++) {
+            let child = children[j];
+            htmlSb = renderListRow(child, j, htmlSb, dataSorted, 1);
+
+            let children2 = getChildrenOf(licenceSets, child);
+
+            for (let k = 0; k < children2.length; k++) {
+                let child2 = children2[k];
+                htmlSb = renderListRow(child2, k, htmlSb, dataSorted, 2);
+
+                let children3 = getChildrenOf(licenceSets, child2);
+                
+                if (children3.length > 0) {
+                    console.log('Licence set at a lower level not showing');
+                    // TODO should sort this
+                }
+            }
+        }
+    }
+
+    const tbody2 = document.querySelector("#licenceSets tbody");
+    tbody2.innerHTML = htmlSb.join('');
+
+    setLicenceSetTotals();
+}
+
+function renderListRow(licenceSet, i, htmlSb, dataSorted, indentLevel) {
+    let color = i % 2 === 0 ? "#F6F6F6" : "#FAFAFA";
+    let backgroundCss = "background-color: " + color;
+    let licenceSetId = licenceSet.licenceSetId;
+
+    let licencesInSet = getLicencesInSet(dataSorted, licenceSetId);
+    let licenceInSet = licencesInSet[0];
+
+    let linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
+
+    let imgsSb = [];
+
+    for (let j = 0; j < licencesInSet.length; j++) {
+        let item = licencesInSet[j];
+
+        if (item.imagePath === undefined) {
+            imgsSb.push("<div style='display: inline-block; width: 57px; text-align: center; font-size: 80px; line-height: 60px; vertical-align: top; color: #EEE'>--</div>");
+        } else {
+            imgsSb.push("<img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' />");
+        }
+    }
+
+    let imgs = imgsSb.join('');
+    let licenceSetTypesSb = [];
+
+    for (let j = 0; j < licenceSet.licenceSetTypes.length; j++) {
+        let licenceSetType = licenceSet.licenceSetTypes[j];
+        licenceSetTypesSb.push("<li class='ls-type " + licenceSetType + "'>" + licenceSetType + "</li>")
+    }
+
+    let licenceInSetType = licenceInSet.licenceSets !== undefined ? licenceInSet.licenceSets.find(x => x.licenceSetId === licenceSet.licenceSetId) : null;
+    licenceInSetType = !!licenceInSetType ? licenceInSetType.licenceSetType : '';
+    
+    let html =
+        "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
+            "<td rowspan='" + licencesInSet.length + "'><div class='indentDiv'></div>" + imgs + "</td>" +
+            "<td rowspan='" + licencesInSet.length + "'><span class='lsId' title='" + licenceSetId + "'><a href='licencesetreport.html?filename="
+            + licencesInSet[0].filename + "&licenceSetId=" + licenceSetId + "' onclick=\"openIframeSet('"
+            + licencesInSet[0].filename + "', '" + licenceSetId + "'); return false;\">" + licenceSet.shortLicenceSetId + "</a></span></td>" +
+            "<td rowspan='" + licencesInSet.length + "'><ul>" + licenceSetTypesSb.join('') + "</ul></td>" +
+            "<td class='" + licenceInSetType + "'>" + licenceInSet.licenceNumber + "</td>" +
+            "<td>" + linkHtml + "</td>" +
+        "</tr>";
+
+    htmlSb.push(html);
+
+    for (let j = 1; j < licencesInSet.length; j++) {
+        let licenceInSet = licencesInSet[j];
+        licenceInSetType = licenceInSet.licenceSets !== undefined ? licenceInSet.licenceSets.find(x => x.licenceSetId === licenceSet.licenceSetId) : null;
+        licenceInSetType = !!licenceInSetType ? licenceInSetType.licenceSetType : '';
+        
+        linkHtml = licenceInSet.filename !== '--' ? "<a href='report.html?filename=" + licenceInSet.filename + "' onclick=\"openIframe('" + licenceInSet.filename + "'); return false;\" class='filenameSet'>" + licenceInSet.filename + "</a>" : "--";
+
+        html =
+            "<tr style='" + backgroundCss + "' class='indent-level-" + indentLevel + "'>" +
+            "<td class='" + licenceInSetType + "'>" + licenceInSet.licenceNumber + "</td>" +
+            "<td>" + linkHtml + "</td>" +
+            "</tr>";
+
+        htmlSb.push(html);
+    }
+    
+    return htmlSb;
+}
+
+function getChildrenOf(licenceSets, licenceSet) {
+    return licenceSets.filter(x => {
+        if (!licenceSet) {
+            return x.ancestors.length === 0;            
+        }
+
+        if (x.ancestors.length === 0) {
+            return false;
+        }
+        
+        x.ancestors.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+        let shortestId = x.ancestors[x.ancestors.length - 1];
+        
+        return shortestId.shortLicenceSetId === licenceSet.shortLicenceSetId;
+    });
+}
+
+function setHierarchy(licenceSets) {
+    licenceSets.sort((a, b) => b.shortLicenceSetId.length - a.shortLicenceSetId.length);
+
+    for (let i = 0; i < licenceSets.length; i++) {
+        let licenceSet = licenceSets[i];
+
+        if (licenceSet.descendants === undefined) {
+            licenceSet.descendants = [];
+        }
+
+        if (licenceSet.ancestors === undefined) {
+            licenceSet.ancestors = [];
+        }
+    }
+    
+    for (let i = 0; i < licenceSets.length; i++) {
+        let licenceSetA = licenceSets[i];
+        let shortLicenceIdsA = licenceSetA.shortLicenceSetId.split('-');
+        
+        for (let j = 0; j < licenceSets.length; j++) {
+            if (i === j) {
+                continue;
+            }
+
+            let licenceSetB = licenceSets[j];
+            let shortLicenceIdsB = licenceSetB.shortLicenceSetId.split('-');
+            
+            if (shortLicenceIdsA.length <= shortLicenceIdsB.length) {
+                continue;
+            }
+
+            let bContainsLicenceNotInA = false;
+            
+            for (let k = 0; k < shortLicenceIdsB.length; k++) {
+                let shortLicenceIdB = shortLicenceIdsB[k]
+
+                if (shortLicenceIdsA.indexOf(shortLicenceIdB) === -1) {
+                    bContainsLicenceNotInA = true;
+                    break;
+                }
+            }
+            
+            if (!bContainsLicenceNotInA) {
+                // A is a parent of B
+                
+                if (licenceSetA.descendants.find(cl => cl.shortLicenceSetId === licenceSetB.shortLicenceSetId) === undefined) {
+                    licenceSetA.descendants.push(licenceSetB);
+                }
+
+                if (licenceSetB.ancestors.find(cl => cl.shortLicenceSetId === licenceSetA.shortLicenceSetId) === undefined) {
+                    licenceSetB.ancestors.push(licenceSetA);
+                }
+            }
+        }
+    }
+}
+
+function getLicencesInSet(dataSorted, licenceSetId) {
+    let returnList = [];
+    let licenceNumbers = [];
+    
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let ary = item.licenceSets;
+
+        for (let j = 1; j < ary.length; j++) {
+            let value = ary[j];
+
+            if (value === licenceSetId && licenceNumbers.indexOf(item.licenceNumber) === -1) {
+                returnList.push(item);
+                licenceNumbers.push(item.licenceNumber);
+            }
+        }
+    }
+    let parts = licenceSetId.split('-');
+    
+    for (let i = 0; i < parts.length; i += 2) {
+        let licenceNumber = parts[i];
+        let fullLicenceNumber = getFullLicenceNumber(dataSorted, licenceNumber);
+
+        if (licenceNumbers.indexOf(fullLicenceNumber) === -1) {
+            let licence = getLicence(fullLicenceNumber) ?? {
+                filename: '--',
+                licenceNumber: fullLicenceNumber,
+            };
+            
+            licenceNumbers.push(fullLicenceNumber);
+            returnList.push(licence);
+        }
+    }
+
+    returnList.sort(compareItems);
+    return returnList;
+}
+
+function compareItems(a, b) {
+    if (a.licenceNumber < b.licenceNumber) {
+        return -1;
+    }
+    
+    if (a.licenceNumber > b.licenceNumber) {
+        return 1;
+    }
+    
+    return 0;
+}
+
+function getFullLicenceNumber(dataSorted, shortLicenceNumber) {
+    for (let i = 0; i < dataSorted.length; i++) {
+        let item = dataSorted[i];
+        let licenceNumberStripped = item.licenceNumber
+            .replaceAll("/", "")
+            .replaceAll(" ", "")
+            .replaceAll(".", "");
+        
+        if (licenceNumberStripped === shortLicenceNumber) {
+            return item.licenceNumber;
+        }
+        
+        let ary = item.linkedLicences ?? [];
+
+        for (let j = 0; j < ary.length; j++) {
+            let value = ary[j].licenceNumber;
+            
+            licenceNumberStripped = value
+                .replaceAll("/", "")
+                .replaceAll(" ", "")
+                .replaceAll(".", "");
+
+            if (licenceNumberStripped === shortLicenceNumber) {
+                return value;
+            }
+        }
+    }
+    
+    return shortLicenceNumber;
 }
 
 function dashesIfNullOrEmpty(str) {
@@ -354,6 +754,7 @@ function dashesIfNullOrEmpty(str) {
 function addChangeEvent(select) {
     let dataField = select.getAttribute("data-field");
     let dataType = select.getAttribute("data-type");
+    let dataSubField = select.getAttribute("data-subfield");
     
     select.addEventListener("change", function (event) {
         if (window.resetting) {
@@ -361,7 +762,7 @@ function addChangeEvent(select) {
         }
 
         resetFilters(select);
-        populateTable(dataField, event.target.value, dataType, null);
+        populateTable(dataField, event.target.value, dataType, null, null, dataSubField);
     });
 }
 
@@ -371,14 +772,21 @@ function setTotals() {
     document.getElementById('licence-holder-total').innerHTML = getCount(window.dataFiltered, 'licenceHolder', '');
     document.getElementById('purposes-total').innerHTML = getCount(window.dataFiltered, 'purposes', []);
     document.getElementById('points-total').innerHTML = getCount(window.dataFiltered, 'points', []);
-    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsFound', false);
-    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesFound', false);
+    document.getElementById('limits-total').innerHTML = getCount(window.dataFiltered, 'limitsCount', 0);
+    document.getElementById('aggregates-total').innerHTML = getCount(window.dataFiltered, 'aggregatesCount', 0);
     document.getElementById('ocr-total').innerHTML = getCount(window.dataFiltered, 'ocr', false);
     document.getElementById('issue-date-total').innerHTML = getCount(window.dataFiltered, 'issueDate', '');
     document.getElementById('issuer-total').innerHTML = getCount(window.dataFiltered, 'issuer', '');
     document.getElementById('means-total').innerHTML = getCount(window.dataFiltered, 'meansFound', false);
-    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', false);
-    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSetIds', false);
+    document.getElementById('linked-licences-total').innerHTML = getCount(window.dataFiltered, 'linkedLicences', []);
+    document.getElementById('licence-sets-total').innerHTML = getCount(window.dataFiltered, 'licenceSets', false);
+}
+
+function setLicenceSetTotals() {
+    document.getElementById('ls-licence-set-total').innerHTML = document.querySelectorAll('#licenceSets .lsId').length;
+    document.getElementById('ls-types-total').innerHTML = document.querySelectorAll('.ls-type').length;
+    document.getElementById('ls-licence-number-total').innerHTML = document.querySelectorAll("#licenceSets tbody tr").length;
+    document.getElementById('ls-filename-total').innerHTML = document.getElementsByClassName('filenameSet').length;
 }
 
 function getCount(dataFiltered, field, comparisonValue) {
@@ -387,6 +795,12 @@ function getCount(dataFiltered, field, comparisonValue) {
     for (let i = 0; i < dataFiltered.length; i++) {
         let item = dataFiltered[i];
         let value = item[field];
+        
+        if (comparisonValue.length === 0) {
+            if (!value || value.length === 0) {
+                continue;
+            }
+        }
         
         if (value !== comparisonValue) {
             count++;
@@ -456,13 +870,15 @@ function populateDropdowns() {
     
     let licenceSetsSb = [];
     licenceSetsSb.push('<option value="All">All</option>');
-
+    licenceSetsSb.push('<option value="NoneSingle">All except single</option>');
+    
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
-        let ary = item["shortLicenceSetIds"];
+        let ary = item.licenceSets;
 
         for (let j = 1; j < ary.length; j++) {
-            let value = ary[j];
+            let value = ary[j].shortLicenceSetId;
+            if (!value) value = '--';
             
             if (uniqueValues.indexOf(value) === -1) {
                 uniqueValues.push(value);
@@ -478,4 +894,164 @@ function populateDropdowns() {
     }
 
     licenceSetsFilter.innerHTML = licenceSetsSb.join('');
+}
+
+function openIframe(filename) {
+    let iframeOpen = document.getElementById('iframeDiv' + window.iframeCounter)?.style.display === 'block';
+    if (iframeOpen) window.iframeCounter += 1;
+
+    setupIframe(window.iframeCounter);
+    
+    document.getElementById('iframeDiv' + window.iframeCounter).style.display = 'block';
+    document.getElementById('iframe' + window.iframeCounter).src = 'report.html?filename=' + filename + '&hideBackLink=true';
+}
+
+function openIframeSet(filename, licenceSetId) {
+    let iframeOpen = document.getElementById('iframeDiv' + window.iframeCounter)?.style.display === 'block';
+    if (iframeOpen) window.iframeCounter += 1;
+    
+    setupIframe(window.iframeCounter);
+
+    document.getElementById('iframeDiv' + window.iframeCounter).style.display = 'block';
+    document.getElementById('iframe' + window.iframeCounter).src = 'licencesetreport.html?filename=' + filename + '&licenceSetId=' + licenceSetId + '&hideBackLink=true';
+}
+
+let licencesLinkEle = document.getElementById('licencesLink');
+licencesLinkEle.onclick = function () {
+    if (licencesLinkEle.classList.contains('selected')) {
+        return false;
+    }
+
+    licencesLinkEle.classList.add('selected');
+    licenceSetsLinkEle.classList.remove('selected');
+
+    document.getElementById('licences').style.display = 'block';
+    document.getElementById('licenceSets').style.display = 'none';
+    
+    return false;
+}
+
+let licenceSetsLinkEle = document.getElementById('licenceSetsLink');
+licenceSetsLinkEle.onclick = function () {
+    if (licenceSetsLinkEle.classList.contains('selected')) {
+        return false;
+    }
+
+    licencesLinkEle.classList.remove('selected');
+    licenceSetsLinkEle.classList.add('selected');
+
+    document.getElementById('licences').style.display = 'none';
+    document.getElementById('licenceSets').style.display = 'block';
+
+    return false;
+}
+
+function setupIframe(number) {
+    let ele = document.getElementById('iframeDiv' + number);
+    if (!!ele) {
+        document.getElementById('iframe' + number).src = "about:blank";
+        return;
+    }
+    
+    let template = document.getElementsByClassName('iframeDivTemplate')[0];
+    ele = template.cloneNode(true);
+    
+    ele.classList.remove('iframeDivTemplate');
+    ele.id = 'iframeDiv' + number;
+
+    for (let i = 0; i < ele.childNodes.length; i++) {
+        let childNode = ele.childNodes[i];
+        
+        if (!!childNode.id) {
+            childNode.id = childNode.id.replace('NUMBER', number);
+        } else {
+            continue;
+        }
+
+        for (let j = 0; j < childNode.childNodes.length; j++) {
+            let childNode2 = childNode.childNodes[j];
+
+            if (!!childNode2.id) {
+                childNode2.id = childNode2.id.replace('NUMBER', number);
+            }
+        }
+    }
+    
+    document.getElementsByTagName('body')[0].appendChild(ele);
+    
+    document.getElementById('closeLink' + number).onclick = function () {
+        document.getElementById('iframeDiv' + number).style.display = 'none';
+        return false;
+    }
+
+    document.getElementById('maximiseLink' + number).onclick = function () {
+        let iframeDiv = document.getElementById('iframeDiv' + number);
+        iframeDiv.style.top = '0';
+        iframeDiv.style.width = '100%';
+        iframeDiv.style.left = '0';
+        iframeDiv.style.height = '100%';
+
+        return false;
+    }
+
+    document.getElementById('minimiseLink' + number).onclick = function () {
+        let iframeDiv = document.getElementById('iframeDiv' + number);
+        iframeDiv.style.top = "40px";
+        iframeDiv.style.height = "calc(100% - 60px)";
+        iframeDiv.style.left = "350px";
+        iframeDiv.style.width = "calc(100% - 370px)";
+
+        return false;
+    }
+
+    dragElement(document.getElementById("iframeDiv" + number));
+}
+
+function dragElement(elmnt) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    document.getElementById(elmnt.id + "Header").onmousedown = startDrag;
+
+    function startDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = stopDrag;
+
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+        document.getElementsByTagName('body')[0].classList.add('dragging');
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        // set the element's new position:
+        
+        let top = elmnt.offsetTop - pos2;
+        if (0 > top) top = 0;
+
+        let left = elmnt.offsetLeft - pos1;
+        if (0 > left) left = 0;
+        
+        elmnt.style.top = top + "px";
+        elmnt.style.left = left + "px";
+    }
+
+    function stopDrag() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+        
+        document.getElementsByTagName('body')[0].classList.remove('dragging');
+    }
 }

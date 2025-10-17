@@ -461,7 +461,7 @@ public class PdfDataExtractorService(
             return labelGroupMatches;
         }
 
-        var lines = GetLines(documentLines);
+        var lines = StandardiseLines(documentLines);
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -472,7 +472,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (!LabelIsInDocument(label, documentLines))
+                if (!LabelIsInDocument(label, documentLines, out var lineIndexs))
                 {
                     continue;
                 }
@@ -481,7 +481,7 @@ public class PdfDataExtractorService(
                 
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
                     tailoredLines,
-                    labels,
+                    labels, // TODO should be [label]
                     isOcr,
                     serviceName,
                     labelGroupName,
@@ -700,7 +700,7 @@ public class PdfDataExtractorService(
     }
     
     private async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInLinesAsync(
-        IReadOnlyList<(DocumentLine Line, IReadOnlyList<DocumentLine> PreviousNLines, IReadOnlyList<DocumentLine> NextNLines)> lines,
+        IReadOnlyList<FastLine> lines,
         IReadOnlyList<LabelToMatch> labels,
         bool isOcr,
         string? serviceName,
@@ -716,14 +716,23 @@ public class PdfDataExtractorService(
         var lineCount = -1;
         var totalLineCount = lines.Count;
 
-        foreach (var (lineOuter, previousLines, nextLines) in lines)
+        foreach (var fastLineOuter in lines)
         {
+            var lineOuter = fastLineOuter.Line;
             var breakLineLoop = false;
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                var partialLine = (DocumentLine?)lineOuter;
+                if (lineOuter?.LineNumber == 7)
+                {
+                    
+                }
+                
+                var partialLine = lineOuter;
                 DocumentLine? previousPartialLine = null;
+
+                var previousLines = fastLineOuter.PreviousLines(lines, label);
+                var nextLines = fastLineOuter.NextLines(lines, label);
                 
                 lineCount += 1;
 
@@ -810,7 +819,7 @@ public class PdfDataExtractorService(
 
                     if (label.MatchAllText)
                     {
-                        if (ProcessMatchAll(partialLine, lineOuter, label, lineCount, previousLines, nextLines))
+                        if (ProcessMatchAll(partialLine, lineOuter!, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -824,6 +833,11 @@ public class PdfDataExtractorService(
                         {
                             matchedLabel.Text = [matchedStartText];
                         }
+                    }
+
+                    if (matchedLabel.Name == "DocumentAbstractionLimitsSection")
+                    {
+                        
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(
@@ -1253,7 +1267,7 @@ public class PdfDataExtractorService(
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> text,
+        IReadOnlyList<DocumentLine> lines,
         bool isOcr,
         string? serviceName,
         string labelGroupName,
@@ -1263,7 +1277,6 @@ public class PdfDataExtractorService(
         string cacheFolder)
     {
         var subResults = new List<LabelGroupResult>();
-        var lines = GetLines(text);
         
         if (label.SubLabels?.Count > 0)
         {
@@ -1478,64 +1491,66 @@ public class PdfDataExtractorService(
         return returnItems;
     }
     
-    private static IReadOnlyList<(
-            DocumentLine Line,
-            IReadOnlyList<DocumentLine> PreviousNLines,
-            IReadOnlyList<DocumentLine> NextNLines)>
-        GetLines(IReadOnlyList<DocumentLine> lines)
+    private static IReadOnlyList<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
     {
-        return lines.Select((line, index) =>
+        var newLines = lines.ToList();
+
+        foreach (var line in newLines)
         {
-            FormattingHelper.Standardise(line.Columns);
-            const int linesToFetch = 500;
-            
-            return (
-                line,
-                GetPreviousLines(lines, index, linesToFetch),
-                GetNextLines(lines, index, linesToFetch)
-            );
-        })
-        .ToList();
+            FormattingHelper.Standardise(line.Columns);   
+        }
+
+        return newLines;
     }
     
-    private static IReadOnlyList<(
-            DocumentLine Line,
-            IReadOnlyList<DocumentLine> PreviousNLines,
-            IReadOnlyList<DocumentLine> NextNLines)>
+    private static IReadOnlyList<FastLine>
         TailorLines(
-            IReadOnlyList<(
-                DocumentLine Line,
-                IReadOnlyList<DocumentLine> PreviousNLines,
-                IReadOnlyList<DocumentLine> NextNLines)> lines,
+            IReadOnlyList<DocumentLine> lines,
             LabelToMatch label)
     {
-        return lines.Select((line, index) => (
-                line.Line,
-                line.PreviousNLines = line.PreviousNLines.Take(label.PreviousLinesToFetch).ToList(),
-                line.NextNLines = line.NextNLines.Take(label.NextLinesToFetch).ToList()
-            ))
+        return lines
+            .Select((line, index) => new FastLine
+            {
+                Line = line,
+                Index = index
+            })
             .ToList();
     }
     
-    private static IReadOnlyList<DocumentLine> GetPreviousLines(IReadOnlyList<DocumentLine> lines, int index, int n)
+    private class FastLine
     {
-        var newIndex = index - 1;
+        public DocumentLine? Line { get; set; }
+        public int Index { get; set; }
+
+        public IReadOnlyList<DocumentLine> PreviousLines(IReadOnlyList<FastLine> lines, LabelToMatch label)
+        {
+            return GetPreviousLines(lines, Index, label.PreviousLinesToFetch);
+        }
+
+        public IReadOnlyList<DocumentLine> NextLines(IReadOnlyList<FastLine> lines, LabelToMatch label)
+        {
+            return GetNextLines(lines, Index, label.NextLinesToFetch);
+        }
+    }
+    
+    private static IReadOnlyList<DocumentLine> GetPreviousLines(IReadOnlyList<FastLine> lines, int startIndex, int numberToTake)
+    {
+        var newIndex = startIndex - 1;
         var returnList = new List<DocumentLine>();
         var count = 0;
 
-        while (newIndex >= 0 && count++ < n)
+        while (newIndex >= 0 && count++ < numberToTake)
         {
             var line = lines[newIndex];
-            FormattingHelper.Standardise(line.Columns);
 
-            returnList.Add(line);
+            returnList.Add(line.Line!);
             newIndex -= 1;
         }
 
         return returnList;
     }
     
-    private static IReadOnlyList<DocumentLine> GetNextLines(IReadOnlyList<DocumentLine> lines, int index, int n)
+    private static IReadOnlyList<DocumentLine> GetNextLines(IReadOnlyList<FastLine> lines, int index, int n)
     {
         var newIndex = index + 1;
         var returnList = new List<DocumentLine>();
@@ -1544,17 +1559,18 @@ public class PdfDataExtractorService(
         while (newIndex < lines.Count && count++ < n)
         {
             var line = lines[newIndex];
-            FormattingHelper.Standardise(line.Columns);
             
-            returnList.Add(line);
+            returnList.Add(line.Line!);
             newIndex += 1;
         }
 
         return returnList;
     }
     
-    private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines)
+    private static bool LabelIsInDocument(LabelToMatch label, IReadOnlyList<DocumentLine> lines, out List<int> lineNumbers)
     {
+        lineNumbers = [];
+        
         var labelText = label.Text!
             .Select(labelTextMatch =>
             {
@@ -1584,13 +1600,24 @@ public class PdfDataExtractorService(
             return true;
         }
 
-        foreach (var line in lines)
+        foreach (var text in labelText)
         {
-            FormattingHelper.Standardise(line.Columns);
+            foreach (var line in lines)
+            {
+                if (!line.Text.Contains(text, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    continue;
+                }
+                
+                lineNumbers.Add(line.LineNumber);
+            }
         }
         
-        return labelText.Any(text => string.Join(',', lines.Select(line => line.Text)).Contains(text,
-            StringComparison.InvariantCultureIgnoreCase));
+        return labelText.Any(text =>
+        {
+            return string.Join(',', lines.Select(line => line.Text)).Contains(text,
+                StringComparison.InvariantCultureIgnoreCase);
+        });
     }
     
     public void Dispose()

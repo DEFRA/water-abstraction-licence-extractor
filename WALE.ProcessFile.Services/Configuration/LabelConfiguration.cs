@@ -927,7 +927,7 @@ public static class LabelConfiguration
                 ],
                 Position = LabelPosition.ContractIsSuccession,
                 NextLinesToFetch = 10,
-                PreviousLinesToFetch = 0,
+                PreviousLinesToFetch = 2,
                 Format = "CompanyName",
                 MatchAllText = true,
                 Name = "IsSuccession"

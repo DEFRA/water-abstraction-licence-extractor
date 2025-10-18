@@ -150,4 +150,20 @@ public static class KeyConfig
             return _cacheFolder;
         }
     }
+  
+    
+    private static string? _pdfFolderForDuplicates;
+    public static string PdfFolderForDuplicates
+    {
+        get
+        {
+            if (_pdfFolderForDuplicates != null)
+            {
+                return _pdfFolderForDuplicates;
+            }
+            
+            _pdfFolderForDuplicates = Config["PdfFolderForDuplicates"]!;
+            return _pdfFolderForDuplicates;
+        }
+    }
 }

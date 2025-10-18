@@ -42,15 +42,12 @@ public static class DuplicateLicenceIdentificationExtract
                 Console.WriteLine($"Main file: {mainFile.Value.FileName}");
 
             // Step 6 - Process the main file and compare with other files for duplicate analysis
-        }
-        
-        var pdfDataExtractor = new PdfDataExtractorService(
-            new PdfPigNoOcrDataExtractorService(),
-            new List<IOcrDataExtractorService>
+            if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
             {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
-            },
-            KeyConfig.PdfFolderForDuplicates);
+                var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key);
+                csvResults.AddRange(duplicateResults);
+            }
+        }
 
         var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.csv";
         var fullPath = Path.Combine(OutputFolder, fileName);
@@ -102,10 +99,10 @@ public static class DuplicateLicenceIdentificationExtract
         return duplicateInputs;
     }
 
-    private static List<(string FileName, string FilePath, bool FileExists)> ReadPdfFilesForPermit(
+    private static List<(string FileName, string FilePath, bool FileExists, string FileUrl)> ReadPdfFilesForPermit(
         List<LicenceDuplicateFinderInput> filesForPermit)
     {
-        var pdfFilesData = new List<(string FileName, string FilePath, bool FileExists)>();
+        var pdfFilesData = new List<(string FileName, string FilePath, bool FileExists, string FileUrl)>();
 
         foreach (var file in filesForPermit)
         {
@@ -121,7 +118,7 @@ public static class DuplicateLicenceIdentificationExtract
                     foreach (var matchingFile in matchingFiles)
                     {
                         var actualFileName = Path.GetFileName(matchingFile);
-                        pdfFilesData.Add((actualFileName, matchingFile, true));
+                        pdfFilesData.Add((actualFileName, matchingFile, true, file.FileUrl ?? ""));
                     }
                 }
                 else
@@ -130,7 +127,7 @@ public static class DuplicateLicenceIdentificationExtract
                     var directPath = Path.Combine(KeyConfig.PdfFolderForDuplicates, file.FileName);
                     var directExists = File.Exists(directPath);
 
-                    pdfFilesData.Add((file.FileName, directPath, directExists));
+                    pdfFilesData.Add((file.FileName, directPath, directExists, file.FileUrl ?? ""));
 
                     if (!directExists)
                     {
@@ -143,8 +140,8 @@ public static class DuplicateLicenceIdentificationExtract
         return pdfFilesData;
     }
 
-    private static (string FileName, string FilePath, bool FileExists)? IdentifyMainFile(
-        List<(string FileName, string FilePath, bool FileExists)> pdfFilesData)
+    private static (string FileName, string FilePath, bool FileExists, string FileUrl)? IdentifyMainFile(
+        List<(string FileName, string FilePath, bool FileExists, string FileUrl)> pdfFilesData)
     {
         if (pdfFilesData.Count <= 1)
             return pdfFilesData.FirstOrDefault();
@@ -156,5 +153,121 @@ public static class DuplicateLicenceIdentificationExtract
             .FirstOrDefault();
 
         return mainFile.FileName != null ? mainFile : pdfFilesData.FirstOrDefault(f => f.FileExists);
+    }
+
+    private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
+        (string FileName, string FilePath, bool FileExists, string FileUrl) mainFile,
+        List<(string FileName, string FilePath, bool FileExists, string FileUrl)> allFiles,
+        string permitNumber)
+    {
+        var results = new List<LicenceDuplicateCsvLine>();
+
+        Console.WriteLine($"Comparing files for permit {permitNumber}");
+        Console.WriteLine($"Main file: {mainFile.FileName}");
+
+        try
+        {
+            // Extract text from main file
+            var mainFileText = await ExtractPdfTextAsync(mainFile.FilePath);
+
+            if (string.IsNullOrWhiteSpace(mainFileText))
+            {
+                Console.WriteLine($"Warning: No text extracted from main file {mainFile.FileName}");
+                return results;
+            }
+
+            // Compare with other files
+            var otherFiles = allFiles.Where(f => f.FileName != mainFile.FileName && f.FileExists).ToList();
+            Console.WriteLine($"Comparing with {otherFiles.Count} other files");
+
+            foreach (var otherFile in otherFiles)
+            {
+                try
+                {
+                    Console.WriteLine($"Comparing with: {otherFile.FileName}");
+                    var otherFileText = await ExtractPdfTextAsync(otherFile.FilePath);
+
+                    if (string.IsNullOrWhiteSpace(otherFileText))
+                    {
+                        Console.WriteLine($"Warning: No text extracted from {otherFile.FileName}");
+                        continue;
+                    }
+
+                    // Simple content comparison - normalize whitespace and compare
+                    var mainTextNormalized = NormalizeText(mainFileText);
+                    var otherTextNormalized = NormalizeText(otherFileText);
+
+                    Console.WriteLine($"Main text length: {mainTextNormalized.Length}, Other text length: {otherTextNormalized.Length}");
+
+                    var isDuplicate = string.Equals(mainTextNormalized, otherTextNormalized, StringComparison.OrdinalIgnoreCase);
+
+                    if (isDuplicate)
+                    {
+                        results.Add(new LicenceDuplicateCsvLine
+                        {
+                            PermitNumber = permitNumber,
+                            FileName = mainFile.FileName,
+                            FileUrl = mainFile.FileUrl,
+                            DuplicateFileName = otherFile.FileName,
+                            DuplicateFileUrl = otherFile.FileUrl
+                        });
+
+                        Console.WriteLine($"✓ Duplicate found: {mainFile.FileName} == {otherFile.FileName}");
+                    }
+                    else
+                    {
+                        results.Add(new LicenceDuplicateCsvLine
+                        {
+                            PermitNumber = permitNumber,
+                            FileName = mainFile.FileName,
+                            FileUrl = mainFile.FileUrl,
+                            DuplicateFileName = string.Empty,
+                            DuplicateFileUrl = string.Empty,
+                        });
+                        Console.WriteLine($"✗ Not duplicate: {mainFile.FileName} != {otherFile.FileName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing main file {mainFile.FileName}: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    private static async Task<string> ExtractPdfTextAsync(string pdfFilePath)
+    {
+        try
+        {
+            Console.WriteLine($"Extracting text from: {pdfFilePath}");
+
+            // Use PdfPig directly for simple text extraction
+            using var document = UglyToad.PdfPig.PdfDocument.Open(pdfFilePath);
+            var allText = string.Join("\n", document.GetPages().Select(page => page.Text));
+
+            Console.WriteLine($"Extracted {allText.Length} characters from {Path.GetFileName(pdfFilePath)}");
+
+            return await Task.FromResult(allText);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error extracting text from {pdfFilePath}: {ex.Message}");
+            return string.Empty;
+        }
+    }
+
+    private static string NormalizeText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        // Remove extra whitespace, normalize line endings
+        return System.Text.RegularExpressions.Regex.Replace(text.Trim(), @"\s+", " ");
     }
 }

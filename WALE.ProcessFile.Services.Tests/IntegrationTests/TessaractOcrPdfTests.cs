@@ -41,7 +41,7 @@ public class TessaractOcrPdfTests
     
     private Task<MatchesResult> GetMatchesForLicenceReaderAsync(string fileName)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
+        return _pdfDataExtractorCombined.GetMatchesAsync(
             PdfFolder + fileName,
             new LookupConfiguration(
                 LicenceReaderConfiguration.GetLabels(),

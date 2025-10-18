@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Globalization;
 using CsvHelper;
+using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
@@ -23,7 +24,7 @@ public static class GenerateLicenceReaderExtract
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix)
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
             },
             KeyConfig.PdfFolder);
 

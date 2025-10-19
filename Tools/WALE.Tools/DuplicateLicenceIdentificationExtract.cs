@@ -1,19 +1,29 @@
 using System.Globalization;
+using System.Text;
+using System.Security.Cryptography;
 using ClosedXML.Excel;
 using CsvHelper;
 using Tesseract;
+using WALE.Tools.Models;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using WALE.Tools.Models;
 
 namespace WALE.Tools;
 
 public static class DuplicateLicenceIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly string CacheFolder = KeyConfig.CacheFolder;
     private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
+    private static readonly IPdfDataExtractorService PdfExtractorService = new PdfDataExtractorService(
+    new PdfPigNoOcrDataExtractorService(),
+    new List<IOcrDataExtractorService>
+    {
+        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
+    },
+    KeyConfig.PdfFolder);
+    private static readonly string CacheFolder = KeyConfig.CacheFolder;
 
     public static async Task GenerateDuplicateLicenceIdentificationExtractAsync()
     {
@@ -38,8 +48,6 @@ public static class DuplicateLicenceIdentificationExtract
             // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other files are sub strings of
             // for example 0-034 5665255.PDF is main file in a group with that and -034 5665255.PDF
             var mainFile = IdentifyMainFile(pdfFilesData);
-            if(mainFile.HasValue && mainFile.Value.FileExists)
-                Console.WriteLine($"Main file: {mainFile.Value.FileName}");
 
             // Step 6 - Process the main file and compare with other files for duplicate analysis
             if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
@@ -167,12 +175,12 @@ public static class DuplicateLicenceIdentificationExtract
 
         try
         {
-            // Extract text from main file
-            var mainFileText = await ExtractPdfTextAsync(mainFile.FilePath);
+            // Extract images from main file
+            var mainFileImages = await ExtractPdfImagesAsync(mainFile.FilePath);
 
-            if (string.IsNullOrWhiteSpace(mainFileText))
+            if (mainFileImages.Count == 0)
             {
-                Console.WriteLine($"Warning: No text extracted from main file {mainFile.FileName}");
+                Console.WriteLine($"Warning: No images extracted from main file {mainFile.FileName}");
                 return results;
             }
 
@@ -185,21 +193,18 @@ public static class DuplicateLicenceIdentificationExtract
                 try
                 {
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
-                    var otherFileText = await ExtractPdfTextAsync(otherFile.FilePath);
+                    var otherFileImages = await ExtractPdfImagesAsync(otherFile.FilePath);
 
-                    if (string.IsNullOrWhiteSpace(otherFileText))
+                    if (otherFileImages.Count == 0)
                     {
-                        Console.WriteLine($"Warning: No text extracted from {otherFile.FileName}");
+                        Console.WriteLine($"Warning: No images extracted from {otherFile.FileName}");
                         continue;
                     }
 
-                    // Simple content comparison - normalize whitespace and compare
-                    var mainTextNormalized = NormalizeText(mainFileText);
-                    var otherTextNormalized = NormalizeText(otherFileText);
+                    // Compare images using hash comparison
+                    var isDuplicate = await CompareImagesAsync(mainFileImages, otherFileImages);
 
-                    Console.WriteLine($"Main text length: {mainTextNormalized.Length}, Other text length: {otherTextNormalized.Length}");
-
-                    var isDuplicate = string.Equals(mainTextNormalized, otherTextNormalized, StringComparison.OrdinalIgnoreCase);
+                    Console.WriteLine($"Main file images: {mainFileImages.Count}, Other file images: {otherFileImages.Count}");
 
                     if (isDuplicate)
                     {
@@ -241,33 +246,118 @@ public static class DuplicateLicenceIdentificationExtract
         return results;
     }
 
-    private static async Task<string> ExtractPdfTextAsync(string pdfFilePath)
+    private static async Task<List<string>> ExtractPdfImagesAsync(string pdfFilePath)
     {
         try
         {
-            Console.WriteLine($"Extracting text from: {pdfFilePath}");
+            Console.WriteLine($"Extracting images from: {pdfFilePath}");
+            var labels = LabelConfiguration.GetLabels();
 
-            // Use PdfPig directly for simple text extraction
-            using var document = UglyToad.PdfPig.PdfDocument.Open(pdfFilePath);
-            var allText = string.Join("\n", document.GetPages().Select(page => page.Text));
+            // Create minimal configuration for image extraction
+            var configuration = new LookupConfiguration(
+                labels,
+                FileLicenceMapping,
+                OutputFolder,
+                CacheFolder);
 
-            Console.WriteLine($"Extracted {allText.Length} characters from {Path.GetFileName(pdfFilePath)}");
+            var result = await PdfExtractorService.GetPagesAsync(pdfFilePath, configuration);
 
-            return await Task.FromResult(allText);
+            if (result?.Pages != null && result.Pages.Any())
+            {
+                var imagePaths = new List<string>();
+                foreach (var page in result.Pages)
+                {
+                    if (!string.IsNullOrEmpty(page.ImageFilepath))
+                    {
+                        // Replace .png with .jpg before processing
+                        var adjustedPath = page.ImageFilepath.Replace(".png", ".jpg");
+                        imagePaths.Add(adjustedPath);
+                    }
+                }
+                
+                Console.WriteLine($"Extracted {imagePaths.Count} images from {Path.GetFileName(pdfFilePath)}");
+                return imagePaths;
+            }
+
+            Console.WriteLine($"No images could be extracted from {Path.GetFileName(pdfFilePath)}");
+            return new List<string>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error extracting text from {pdfFilePath}: {ex.Message}");
-            return string.Empty;
+            Console.WriteLine($"Error extracting images from {pdfFilePath}: {ex.Message}");
+            return new List<string>();
         }
     }
 
-    private static string NormalizeText(string text)
+    private static async Task<bool> CompareImagesAsync(List<string> mainFileImages, List<string> otherFileImages)
     {
-        if (string.IsNullOrEmpty(text))
-            return string.Empty;
+        if (mainFileImages.Count != otherFileImages.Count)
+            return false;
 
-        // Remove extra whitespace, normalize line endings
-        return System.Text.RegularExpressions.Regex.Replace(text.Trim(), @"\s+", " ");
+        // Calculate hashes for all images in both sets
+        var mainHashes = new List<string>();
+        var otherHashes = new List<string>();
+
+        foreach (var imagePath in mainFileImages)
+        {
+            var hash = await CalculateImageHashAsync(imagePath);
+            if (!string.IsNullOrEmpty(hash))
+                mainHashes.Add(hash);
+        }
+
+        foreach (var imagePath in otherFileImages)
+        {
+            var hash = await CalculateImageHashAsync(imagePath);
+            if (!string.IsNullOrEmpty(hash))
+                otherHashes.Add(hash);
+        }
+
+        if (mainHashes.Count != otherHashes.Count)
+            return false;
+
+        // Sort both hash lists and compare
+        mainHashes.Sort();
+        otherHashes.Sort();
+
+        return mainHashes.SequenceEqual(otherHashes);
+    }
+
+    private static async Task<string> CalculateImageHashAsync(string imagePath)
+    {
+        try
+        {
+            Console.WriteLine($"Checking image path: {imagePath}");
+
+            // Try to resolve relative paths to absolute paths
+            var resolvedPath = imagePath;
+            if (!Path.IsPathRooted(imagePath))
+            {
+                resolvedPath = Path.GetFullPath(imagePath);
+                Console.WriteLine($"Resolved to absolute path: {resolvedPath}");
+            }
+
+            Console.WriteLine($"File exists check for: {resolvedPath} = {File.Exists(resolvedPath)}");
+
+            if (!File.Exists(resolvedPath))
+            {
+                Console.WriteLine($"File not found at resolved path, trying original path: {imagePath}");
+                if (!File.Exists(imagePath))
+                {
+                    Console.WriteLine($"File not found at original path either: {imagePath}");
+                    return string.Empty;
+                }
+                resolvedPath = imagePath;
+            }
+
+            using var stream = File.OpenRead(resolvedPath);
+            using var sha256 = SHA256.Create();
+            var hashBytes = await sha256.ComputeHashAsync(stream);
+            return Convert.ToHexString(hashBytes);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error calculating hash for image {imagePath}: {ex.Message}");
+            return string.Empty;
+        }
     }
 }

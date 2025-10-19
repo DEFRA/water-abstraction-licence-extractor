@@ -92,7 +92,38 @@ public class PdfDataExtractorService(
 
         return (imagesMetadata, true);
     }
-    
+
+    public async Task<MatchesResult> GetPagesAsync(
+        string pdfFilePath,
+        LookupConfiguration configuration)
+    {
+        var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFilePath,
+            GetFolderPath(configuration.OutputFolder, pdfFilePath),
+            GetFolderPath(configuration.CacheFolder, pdfFilePath));
+        var returnResult = new MatchesResult
+        {
+            Filename = pdfFilePath.Split('/').Last(),
+            NumberOfPages = pdfDocument.Pages.Count,
+            Pages = pdfDocument.Pages
+        };
+        
+        returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
+
+        // Ensure all page screenshots are created before returning results
+        foreach (var page in pdfDocument.Pages)
+        {
+            var path = noOcrDataExtractorService.GetPageScreenshotPath(pdfDocument, page.Number);
+            var screenshotPath = path.imgFolder + path.imgOutputFilename;
+
+            if (!File.Exists(screenshotPath))
+            {
+                await noOcrDataExtractorService.SavePageScreenshotAsync(pdfDocument, page.Number);
+            }
+        }
+        return returnResult;
+    }
+
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         LookupConfiguration configuration,
@@ -396,6 +427,8 @@ public class PdfDataExtractorService(
         }
 
         await SaveImageMetadataAsync(imageMetadataChanged, pdfDocument, imagesMetadata);
+        
+
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;

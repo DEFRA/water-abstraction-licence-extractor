@@ -834,6 +834,64 @@ public static class SchemaConverter
         {
             var individualGroups = new List<AbstractionLimitGroup>();
             
+            var limitPointTable = abstractionLimitPointSub.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
+
+            if (limitPointTable != null)
+            {
+                var tableLines = limitPointTable.Text!;
+
+                foreach (var tableLine in tableLines)
+                {
+                    var words = tableLine.Text.Split(' ');
+                    var abstractionPoint = words[0];
+                    var hourlyQuantity = double.Parse(words[1]);
+                    var dailyQuantity = double.Parse(words[2]);
+                    var yearlyQuantity = double.Parse(words[3]);
+                    var instantRate = double.Parse(words[4]);
+
+                    var lineAbstractionLimitGroup = new AbstractionLimitGroup
+                    {
+                        Limits =
+                        [
+                            new()
+                            {
+                                Value = hourlyQuantity,
+                                PeriodType = LimitPeriodType.PerHour,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = dailyQuantity,
+                                PeriodType = LimitPeriodType.PerDay,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = yearlyQuantity,
+                                PeriodType = LimitPeriodType.PerYear,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = instantRate,
+                                PeriodType = LimitPeriodType.PerSecond,
+                                Units = "litres",
+                                Points = [new() { Id = abstractionPoint }]
+                            }
+                        ]
+                    };
+                    
+                    individualGroups.Add(lineAbstractionLimitGroup);
+                }
+                
+                allIndividualGroups.AddRange(individualGroups);
+                continue;
+            }
+
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")) == true;
                 

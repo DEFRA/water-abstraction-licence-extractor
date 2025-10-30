@@ -3864,6 +3864,21 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        
+        Assert.Equal(4, agreedSchemaLicence.Points.Length);
+        Assert.Equal("2.1 A", agreedSchemaLicence.Points[0].Id);
+        Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
+        Assert.Equal("2.1 B", agreedSchemaLicence.Points[1].Id);
+        Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
+        Assert.Equal("2.1 D", agreedSchemaLicence.Points[2].Id);
+        Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].Id);
+        Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
+        
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
     }
     
     [Fact]
@@ -3957,8 +3972,8 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
         

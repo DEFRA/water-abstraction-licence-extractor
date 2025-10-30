@@ -834,6 +834,64 @@ public static class SchemaConverter
         {
             var individualGroups = new List<AbstractionLimitGroup>();
             
+            var limitPointTable = abstractionLimitPointSub.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
+
+            if (limitPointTable != null)
+            {
+                var tableLines = limitPointTable.Text!;
+
+                foreach (var tableLine in tableLines)
+                {
+                    var words = tableLine.Text.Split(' ');
+                    var abstractionPoint = words[0];
+                    var hourlyQuantity = double.Parse(words[1]);
+                    var dailyQuantity = double.Parse(words[2]);
+                    var yearlyQuantity = double.Parse(words[3]);
+                    var instantRate = double.Parse(words[4]);
+
+                    var lineAbstractionLimitGroup = new AbstractionLimitGroup
+                    {
+                        Limits =
+                        [
+                            new()
+                            {
+                                Value = hourlyQuantity,
+                                PeriodType = LimitPeriodType.PerHour,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = dailyQuantity,
+                                PeriodType = LimitPeriodType.PerDay,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = yearlyQuantity,
+                                PeriodType = LimitPeriodType.PerYear,
+                                Units = "cubic metres",
+                                Points = [new() { Id = abstractionPoint }]
+                            },
+                            new()
+                            {
+                                Value = instantRate,
+                                PeriodType = LimitPeriodType.PerSecond,
+                                Units = "litres",
+                                Points = [new() { Id = abstractionPoint }]
+                            }
+                        ]
+                    };
+                    
+                    individualGroups.Add(lineAbstractionLimitGroup);
+                }
+                
+                allIndividualGroups.AddRange(individualGroups);
+                continue;
+            }
+
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")) == true;
                 
@@ -1359,25 +1417,18 @@ public static class SchemaConverter
                 var pointNumber = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
 
+                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
+
                 var tLines = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint")?
                     .Text?
                     .Select(t => t.Text)
                     .ToList();
                 
-                var tKey = "Up to and Including ";
-                
-                var allTextWithoutNumber = tLines?
-                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
-                    .ToArray();
-                
-                if (allTextWithoutNumber == null)
-                {
-                    continue;
-                }
-                
+                const string tKey = "Up to and Including ";
                 var upToAndIncludeLine = tLines?
                     .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                
                 TimeCutoff? timeCutoff = null;
 
                 if (upToAndIncludeLine != null)
@@ -1391,8 +1442,41 @@ public static class SchemaConverter
                     };
                 }
                 
+                var pointTable = point.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
+
+                if (pointTable != null)
+                {
+                    var tableLines = pointTable.Text!;
+
+                    foreach (var tableLine in tableLines)
+                    {
+                        var words = tableLine.Text.Split(' ');
+                        var subId = words[0]; // e.g. A, D, E
+                        
+                        returnList.Add(new PointOfAbstraction
+                        {
+                            Description = tableLine.Text,
+                            Id = $"{number} {subId}", // e.g 2.1 - A
+                            PurposeIds = purposeIds,
+                            TimeCutoff = timeCutoff
+                        });
+                        // Format is 'Abstraction National Grid Location Description Map'
+                    }
+                    
+                    continue;
+                }
+                
+                var allTextWithoutNumber = tLines?
+                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                    .ToArray();
+                
+                if (allTextWithoutNumber == null)
+                {
+                    continue;
+                }
+                
                 var description = string.Join(' ', allTextWithoutNumber);
-                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
 
                 // If its like 'A SE' or 'B NE' get rid of the A and B
                 if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')

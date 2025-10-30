@@ -1359,25 +1359,18 @@ public static class SchemaConverter
                 var pointNumber = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
 
+                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
+
                 var tLines = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint")?
                     .Text?
                     .Select(t => t.Text)
                     .ToList();
                 
-                var tKey = "Up to and Including ";
-                
-                var allTextWithoutNumber = tLines?
-                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
-                    .ToArray();
-                
-                if (allTextWithoutNumber == null)
-                {
-                    continue;
-                }
-                
+                const string tKey = "Up to and Including ";
                 var upToAndIncludeLine = tLines?
                     .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                
                 TimeCutoff? timeCutoff = null;
 
                 if (upToAndIncludeLine != null)
@@ -1391,8 +1384,41 @@ public static class SchemaConverter
                     };
                 }
                 
+                var pointTable = point.SubResults
+                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
+
+                if (pointTable != null)
+                {
+                    var tableLines = pointTable.Text!;
+
+                    foreach (var tableLine in tableLines)
+                    {
+                        var words = tableLine.Text.Split(' ');
+                        var subId = words[0]; // e.g. A, D, E
+                        
+                        returnList.Add(new PointOfAbstraction
+                        {
+                            Description = tableLine.Text,
+                            Id = $"{number} {subId}", // e.g 2.1 - A
+                            PurposeIds = purposeIds,
+                            TimeCutoff = timeCutoff
+                        });
+                        // Format is 'Abstraction National Grid Location Description Map'
+                    }
+                    
+                    continue;
+                }
+                
+                var allTextWithoutNumber = tLines?
+                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                    .ToArray();
+                
+                if (allTextWithoutNumber == null)
+                {
+                    continue;
+                }
+                
                 var description = string.Join(' ', allTextWithoutNumber);
-                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
 
                 // If its like 'A SE' or 'B NE' get rid of the A and B
                 if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')

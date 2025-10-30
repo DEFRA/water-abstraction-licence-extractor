@@ -547,7 +547,23 @@ public static class LabelConfiguration
                                 {
                                     new()
                                     {
-                                        Name  = "PointPointNumber",
+                                        Name = "PointTable",
+                                        Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                        TextStart = [
+                                            new("Abstraction National Grid Location Description Map"),
+                                        ],
+                                        TextEnd = [
+                                            new("[END_OF_BLOCK]")
+                                        ],
+                                        Remove = [
+                                            new("Point Reference")
+                                        ],
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 5
+                                    },
+                                    new()
+                                    {
+                                        Name = "PointPointNumber",
                                         Possibilities = [
                                             "2.1",
                                             "2.2",
@@ -767,7 +783,7 @@ public static class LabelConfiguration
                                 [
                                     new()
                                     {
-                                        Name  = "PurposeNumber",
+                                        Name = "PurposeNumber",
                                         Possibilities = [
                                             "4.1",
                                             "4.2",
@@ -995,7 +1011,7 @@ public static class LabelConfiguration
                         [
                             new()
                             {
-                                Name  = "PeriodPeriodNumber",
+                                Name = "PeriodPeriodNumber",
                                 Possibilities = [
                                     "5.1",
                                     "5.2",
@@ -1132,7 +1148,7 @@ public static class LabelConfiguration
                         [
                             new()
                             {
-                                Name  = "MeanId",
+                                Name = "MeanId",
                                 Possibilities = [
                                     "3.1",
                                     "3.2",

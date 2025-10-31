@@ -98,6 +98,8 @@ public static class SchemaConverter
         linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
+        //linkedLicences.AddRange(GetLicenceHistoryLinkedLicences(matches));
         
         linkedLicences = linkedLicences
             .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
@@ -756,6 +758,63 @@ public static class SchemaConverter
             {
                 LicenceNumber = linkedLicenceNumber,
                 FromSection = ["AdditionalInformation"]
+            })
+            .ToList();
+    }
+
+    private static List<LinkedLicence> GetPurposesLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var purposeSection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Purpose");
+
+        if (purposeSection == null)
+        {
+            return [];
+        }
+
+        var returnList = new List<LinkedLicence>();
+
+        foreach (var purposePointGroup in purposeSection.SubResults)
+        {
+            var purposes = purposePointGroup.SubResults
+                .Where(x => x.MatchedLabel!.Name == "Purpose")
+                .ToList();
+
+            foreach (var purpose in purposes)
+            {
+                returnList.AddRange(purpose.SubResults
+                    .Where(linkedLicenceNumber =>
+                        linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
+                    .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+                    .Select(linkedLicenceNumber => new LinkedLicence
+                    {
+                        LicenceNumber = linkedLicenceNumber,
+                        FromSection = ["Purposes"]
+                    })
+                    .ToList());
+            }
+        }
+        
+        return returnList;
+    }
+
+    private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var licenceHistory = matches
+            .FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
+
+        if (licenceHistory == null)
+        {
+            return [];
+        }
+
+        return licenceHistory.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "LicenceHistoryLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                FromSection = ["LicenceHistory"]
             })
             .ToList();
     }

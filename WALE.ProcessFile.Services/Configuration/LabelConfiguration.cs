@@ -24,7 +24,8 @@ public static class LabelConfiguration
             ("Issuer", GetIssuerLabels()),
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
-            ("Additional", GetAdditional())
+            ("Additional", GetAdditional()),
+            ("LicenceHistory", GetLicenceHistory())
         ];
     }
     
@@ -66,7 +67,7 @@ public static class LabelConfiguration
                         Name = "RecordsLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -122,7 +123,61 @@ public static class LabelConfiguration
                         Name = "AdditionalLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetLicenceHistory()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "LicenceHistoryAll",
+                TextStart =
+                [
+                    new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                ],
+                TextEnd =
+                [
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("Map accompanying licence number"),
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    new(@"/Page \d* of \d*/"),
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "LicenceHistoryLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -174,7 +229,7 @@ public static class LabelConfiguration
                         Name = "FCLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -816,7 +871,27 @@ public static class LabelConfiguration
                                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
-                                    }                            
+                                    },
+                                    new()
+                                    {
+                                        Name = "PurposeLinkedLicenceNumber",
+                                        Text =
+                                        [
+                                            new(LicenceNumber.YorkshireRegexPatten)
+                                            {
+                                                IsRegularExpression = true
+                                            }
+                                        ],
+                                        Format = LicenceNumber.Constant,
+                                        Position = LabelPosition.ActuallyLabel,
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        SkipLineWhenContains =
+                                        [
+                                            new("Licence Serial No: ")
+                                        ]
+                                    }
                                 ]
                             }
                         ]

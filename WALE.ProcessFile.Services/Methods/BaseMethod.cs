@@ -80,7 +80,7 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumber.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     
@@ -98,7 +98,7 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumberFilename.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines2))
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines2))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
                     

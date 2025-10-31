@@ -25,7 +25,10 @@ public class TessaractOcrPdfTests
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
+
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly HashSet<string> _deadLicenceNumbers = [];
+    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {
@@ -495,6 +498,8 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractorCombined,
             OutputFolder,
             CacheFolder,

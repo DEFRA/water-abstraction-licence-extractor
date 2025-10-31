@@ -104,7 +104,7 @@ public static class BaseMethod
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
                         {
                             continue;
                         }
@@ -191,7 +191,7 @@ public static class BaseMethod
                 request.isOcr,
                 request.serviceName,
                 request.labelGroupName!,
-                request.licenceMapping!,
+                request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
                 request.outputFolder!,
                 request.cacheFolder!);

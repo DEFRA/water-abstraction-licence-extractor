@@ -24,6 +24,9 @@ public class MultipleOcrPdfTests
         TestConfig.PdfFolder);
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
+    private readonly HashSet<string> _deadLicenceNumbers = [];
+    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    
     private static string PdfFolder => TestConfig.PdfFolder;
     
     private Task<MatchesResult> GetMatchesAsync(string fileName)

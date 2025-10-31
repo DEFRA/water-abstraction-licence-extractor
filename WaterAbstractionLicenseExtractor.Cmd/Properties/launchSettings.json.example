@@ -10,6 +10,8 @@
         "PdfFolderPath": "../../../../../WaterPdfs/",
         "ReportTemplatePath": "../../../../WALE.ProcessFile.Services/Templates/",
         "FileMappingPath": "../../../../licence-number-filename-map.csv",
+        "ImpoundmentLicencesPath": "",
+        "DeadLicencesPath": "",        
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",
         "ConcurrentCount": "10",

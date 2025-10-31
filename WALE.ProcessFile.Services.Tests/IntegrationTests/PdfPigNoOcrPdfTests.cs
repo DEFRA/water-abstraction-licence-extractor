@@ -45,6 +45,8 @@ public class PdfPigNoOcrPdfTests
                 "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"
             }
         };
+    private static readonly HashSet<string> DeadLicenceNumbers = [];
+    private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
@@ -189,6 +191,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -380,6 +384,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1797,6 +1803,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -2388,6 +2396,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3159,6 +3169,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3196,6 +3208,8 @@ public class PdfPigNoOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3314,6 +3328,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3413,6 +3429,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3524,6 +3542,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3615,6 +3635,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3685,6 +3707,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -3816,6 +3840,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -3851,6 +3877,8 @@ public class PdfPigNoOcrPdfTests
         var licenceGroups = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -3920,6 +3948,8 @@ public class PdfPigNoOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -4035,6 +4065,8 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -4079,6 +4111,8 @@ public class PdfPigNoOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -4173,6 +4207,8 @@ public class PdfPigNoOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -4210,6 +4246,8 @@ public class PdfPigNoOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,

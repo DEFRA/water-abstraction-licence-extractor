@@ -41,4 +41,14 @@ public class Licence
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object> NoneSchemaData { get; set; } = [];
+    
+    public bool? IsLiveLicence { get; set; }
+    
+    public bool? IsDeadLicence { get; set; }
+    
+    public bool? IsImpoundmentLicence { get; set; }
+    
+    public bool LicenceFoundInList { get; set; }
+    
+    public string? DmsPath { get; set; }
 }

@@ -193,7 +193,7 @@ public static class ApplicableToMost
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
                         {
                             continue;
                         }

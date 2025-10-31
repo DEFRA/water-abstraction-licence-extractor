@@ -25,7 +25,7 @@ public class FunctionInputModel
     public bool isOcr { get; set; }
     public string? serviceName { get; set; }
     public string? labelGroupName { get; set; }
-    public Dictionary<string, string>? licenceMapping { get; set; }
+    public Dictionary<string, string>? licenceNumberMapping { get; set; }
     public List<string>? previouslyParsedPaths { get; set; }
     public string? outputFolder { get; set; }
     public string? cacheFolder { get; set; }
@@ -55,7 +55,7 @@ public class FunctionInputModel
             isOcr = isOcr,
             serviceName = serviceName,
             labelGroupName = labelGroupName,
-            licenceMapping = licenceMapping,
+            licenceNumberMapping = licenceNumberMapping,
             previouslyParsedPaths = previouslyParsedPaths,
             outputFolder = outputFolder,
             cacheFolder = cacheFolder,

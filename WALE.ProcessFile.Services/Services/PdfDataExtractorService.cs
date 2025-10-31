@@ -159,7 +159,7 @@ public class PdfDataExtractorService(
             configuration.Labels,
             notOcr,
             noOcrDataExtractorService.Name,
-            configuration.LicenceMapping,
+            configuration.LicenceNumberMapping,
             previouslyParsedPaths,
             configuration.OutputFolder,
             configuration.CacheFolder);
@@ -257,7 +257,7 @@ public class PdfDataExtractorService(
                         unmatchedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        configuration.LicenceMapping,
+                        configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
                         configuration.OutputFolder,
                         configuration.CacheFolder);
@@ -449,7 +449,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
         string cacheFolder)
@@ -485,7 +485,7 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     labelGroupMatches,
-                    licenceMapping,
+                    licenceNumberMapping,
                     previouslyParsedPaths,
                     outputFolder,
                     cacheFolder);
@@ -538,7 +538,7 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
         string cacheFolder)
@@ -556,7 +556,7 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
+                if (!licenceNumberMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
                 {
                     // TODO this should log a warning
                     continue;
@@ -578,7 +578,7 @@ public class PdfDataExtractorService(
         {
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping, outputFolder, cacheFolder),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
                 previouslyParsedPaths);
 
             var labelResult = new LabelGroupResult
@@ -705,7 +705,7 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         string outputFolder,
         string cacheFolder)
@@ -749,7 +749,7 @@ public class PdfDataExtractorService(
                             partialLine,
                             siblingMatches,
                             label,
-                            licenceMapping,
+                            licenceNumberMapping,
                             previouslyParsedPaths,
                             outputFolder,
                             cacheFolder);
@@ -869,7 +869,7 @@ public class PdfDataExtractorService(
                         label = matchedLabel,
                         labelGroupName = labelGroupName,
                         labelGroupResult = labelGroupResult,
-                        licenceMapping = licenceMapping,
+                        licenceNumberMapping = licenceNumberMapping,
                         pdfDataExtractorService = this,
                         previouslyParsedPaths = previouslyParsedPaths,
                         previousLines = previousLines,

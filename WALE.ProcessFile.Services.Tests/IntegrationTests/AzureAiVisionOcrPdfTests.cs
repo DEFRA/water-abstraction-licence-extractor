@@ -36,6 +36,8 @@ public class AzureAiVisionOcrPdfTests
         TestConfig.PdfFolder2);
     
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly HashSet<string> _deadLicenceNumbers = [];
+    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
@@ -129,6 +131,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -582,6 +586,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1044,6 +1050,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1271,6 +1279,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1336,6 +1346,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -1362,6 +1374,8 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,

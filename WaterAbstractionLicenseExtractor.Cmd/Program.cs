@@ -727,8 +727,8 @@ IEnumerable<string> GetPdfPaths()
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12502133__Non-Application Licence Document [Licence] (06051998)")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(400).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22634066A")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(800).ToList();
     
     return pdfFilePaths;
 }

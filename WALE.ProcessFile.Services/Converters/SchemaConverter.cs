@@ -301,42 +301,41 @@ public static class SchemaConverter
             return licenceNumber;
         }
 
+        // Replace dots with slashes IF its all dots
         if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
         {
             licenceNumber = licenceNumber.Replace(".", "/");
         }
         
         var parts = licenceNumber.Split('/');
-
+        
         if (parts.Length < 4)
         {
             return licenceNumber;
         }
-
-        var part2 = parts[2];
-
-        if (part2.Length == 1)
-        {
-            part2 = $"0{part2}";
-        }
         
-        var part3 = parts[3];
-
+        var part1 = parts[0];
+        var part2 = parts[1];
+        var part3 = parts[2];
+        var part4 = parts[3];
+        var part5 = parts.Length >= 5 ? parts[4] : null;
+        
         if (part3.Length == 1)
-        {
-            part3 = $"00{part3}";
-        }
-        else if (part3.Length == 2)
         {
             part3 = $"0{part3}";
         }
 
-        if (parts.Length == 4)
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        part4 = part4.Where(char.IsDigit).Count() switch
         {
-            return $"{parts[0]}/{parts[1]}/{part2}/{part3}";            
-        }
-        
-        return $"{parts[0]}/{parts[1]}/{part2}/{part3}/{parts[4]}";
+            1 => $"00{part4}",
+            2 => $"0{part4}",
+            _ => part4
+        };
+
+        return parts.Length == 4 ?
+            $"{part1}/{part2}/{part3}/{part4}"
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(

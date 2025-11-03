@@ -177,7 +177,12 @@ async Task AllWork()
         throw;
     }
 
-    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
+    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+        licenceSetGroups,
+        impoundmentLicenceNumbers,
+        deadLicenceNumbers,
+        liveLicenceNumbers);
+    
     var fileNumber = 1;
     
     foreach (var licenceSetGroup in licenceSetGroups)
@@ -728,7 +733,7 @@ IEnumerable<string> GetPdfPaths()
         ).ToArray();*/
 
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22634066A")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(800).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
     
     return pdfFilePaths;
 }

@@ -95,7 +95,11 @@ public static class GenerateCsvForTesting
             licenceSetGroups.Add(licenceSets);
         }
 
-        SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
+        SchemaConverter.AddGroupLicenceSetDetails(
+            licenceSetGroups,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
+            LiveLicenceNumbers);
 
         foreach (var licenceSets in licenceSetGroups)
         {
@@ -210,7 +214,11 @@ public static class GenerateCsvForTesting
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];
         
-        SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
+        SchemaConverter.AddGroupLicenceSetDetails(
+            licenceSetGroups,
+            ImpoundmentLicenceNumbers,
+            DeadLicenceNumbers,
+            LiveLicenceNumbers);
         
         return
         [

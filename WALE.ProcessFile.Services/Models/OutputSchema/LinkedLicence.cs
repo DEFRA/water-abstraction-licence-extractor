@@ -4,6 +4,8 @@ public class LinkedLicence
 {
     public string? LicenceNumber { get; init; }
     
+    public string? NaldLicenceNumber { get; init; }
+    
     public string? Filename { get; set; }
     
     public Condition? Condition { get; set; }

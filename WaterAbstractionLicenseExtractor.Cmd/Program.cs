@@ -122,7 +122,8 @@ async Task AllWork()
     var licenceNumberMapping = GetLicenceNumberMapping();
     var impoundmentLicenceNumbers = GetImpoundmentLicenceNumbers();
     var deadLicenceNumbers = GetDeadLicenceNumbers();
-
+    var liveLicenceNumbers = GetLiveLicenceNumbers();
+    
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     List<LicenceSet> licenceSets;
 
@@ -137,7 +138,8 @@ async Task AllWork()
                 processCount++,
                 licenceNumberMapping,
                 impoundmentLicenceNumbers,
-                deadLicenceNumbers);
+                deadLicenceNumbers,
+                liveLicenceNumbers);
             
             scrapingTasks.Add(scrapingTask);
 
@@ -261,6 +263,7 @@ async Task AllWork()
             issueDate = outputLine.IssueDate,
             issuer = outputLine.Issuer,
             meansFound = outputLine.MeansFound,
+            status = outputLine.Status,
             linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
             licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
             {
@@ -417,6 +420,41 @@ Dictionary<string, string> GetLicenceNumberMapping()
     return returnMapping;
 }
 
+HashSet<string> GetLiveLicenceNumbers()
+{
+    var liveLicencesPath = Environment.GetEnvironmentVariable("LiveLicencesPath")
+        ?? throw new NullReferenceException("LiveLicencesPath");
+    
+    var returnList = new HashSet<string>();
+    
+    var fileContents = File.Exists(liveLicencesPath)
+        ? File.ReadAllText(liveLicencesPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+    
+    var count = 0;
+    foreach (var line in fileContents)
+    {
+        if (count++ == 0)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+
+        if (parts.Length < 3)
+        {
+            continue;
+        }
+        
+        var licenceNumber = parts[2];
+        returnList.Add(licenceNumber);
+    }
+
+    return returnList;
+}
+
 HashSet<string> GetDeadLicenceNumbers()
 {
     var deadLicencesPath = Environment.GetEnvironmentVariable("DeadLicencesPath")
@@ -487,7 +525,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     int fileNumber,
     Dictionary<string, string> licenceNumberMapping,
     HashSet<string> impoundmentLicenceNumbers,
-    HashSet<string> deadLicenceNumbers)
+    HashSet<string> deadLicenceNumbers,
+    HashSet<string> liveLicenceNumbers)
 {
     var fileName = pdfFilePath.Split('/').Last();
 
@@ -520,6 +559,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             licenceNumberMapping,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
+            liveLicenceNumbers,
             pdfDataExtractor,
             outputFolder,
             cacheFolder,
@@ -566,6 +606,27 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
         ? (double)value8 : (double?)null;
 
     var meansFound = licence.MeansOfAbstraction.Length > 0;
+    var status = "Not Found";
+
+    if (licence.LicenceFoundInList)
+    {
+        status = "Found";
+    }
+    
+    if (licence.IsLiveLicence == true)
+    {
+        status = "Live";
+    }
+
+    if (licence.IsDeadLicence == true)
+    {
+        status = "Dead";
+    }
+
+    if (licence.IsImpoundmentLicence == true)
+    {
+        status = "Impound";
+    }
     
     var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
     var issuer = licence.LicenceVersion.Issuer;
@@ -602,6 +663,7 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
         IssueDate = issueDate,
         Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
         MeansFound = meansFound,
+        Status = status,
         LinkedLicences = licence.LinkedLicences,
         LicenceSets = licenceSets,
         LicenceSetReferences = licence.LicenceSets
@@ -664,7 +726,7 @@ IEnumerable<string> GetPdfPaths()
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440")).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100023__Application - Transfer - Issued licence 22.7.2016 9423969")).ToList();
     pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
     
     return pdfFilePaths;

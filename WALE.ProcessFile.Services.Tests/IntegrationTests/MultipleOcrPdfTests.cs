@@ -24,6 +24,7 @@ public class MultipleOcrPdfTests
         TestConfig.PdfFolder);
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
+    private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
     

@@ -460,6 +460,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
             "<td>" + (item.meansFound ? "True" : "False") + aiMeansLine + "</td>" +
             "<td>" + (item.linkedLicences.length > 0 ? linkedLicencesSb.join('') : "--") + aiLinkedLicencesLine + "</td>" +
             "<td class='licenceSetTd'>" + (item.licenceSets.length > 0 ? licenceSetsSb.join('') : "--") + "<span class='noLicenceSetsShowing'>--</span></td>" +
+            "<td>" + item.status + "</td>" +
             "</tr>";
 
         htmlSb.push(html);

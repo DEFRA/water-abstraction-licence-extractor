@@ -36,6 +36,7 @@ public class AzureAiVisionOcrPdfTests
         TestConfig.PdfFolder2);
     
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
     
@@ -133,6 +134,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -588,6 +590,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1052,6 +1055,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1281,6 +1285,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -1348,6 +1353,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,
@@ -1376,6 +1382,7 @@ public class AzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor2,
             OutputFolder,
             CacheFolder,

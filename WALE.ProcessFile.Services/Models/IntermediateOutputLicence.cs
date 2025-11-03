@@ -25,6 +25,7 @@ public class IntermediateOutputLicence
     public string? IssueDate;
     public string? Issuer;
     public bool MeansFound;
+    public string? Status;
     public LinkedLicence[]? LinkedLicences;
     public List<LicenceSet>? LicenceSets;
     public LicenceSetReference[] ? LicenceSetReferences;

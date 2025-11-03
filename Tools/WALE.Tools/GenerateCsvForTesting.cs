@@ -20,6 +20,7 @@ public static class GenerateCsvForTesting
     private static readonly string CacheFolder = "Cache/";
     private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
     private static readonly HashSet<string> DeadLicenceNumbers = [];
+    private static readonly HashSet<string> LiveLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
     
     public static async Task GenerateCsvForTestingAsync()
@@ -84,6 +85,7 @@ public static class GenerateCsvForTesting
                 FileLicenceMapping,
                 ImpoundmentLicenceNumbers,
                 DeadLicenceNumbers,
+                LiveLicenceNumbers,
                 pdfDataExtractor,
                 OutputFolder,
                 CacheFolder,
@@ -124,6 +126,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,            
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -138,6 +141,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -152,6 +156,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,            
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -166,6 +171,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,            
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -180,6 +186,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,            
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,
@@ -194,6 +201,7 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
+            LiveLicenceNumbers,            
             pdfDataExtractor,
             OutputFolder,
             CacheFolder,

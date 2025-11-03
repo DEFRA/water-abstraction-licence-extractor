@@ -12,7 +12,8 @@ public static class SchemaConverter
     private static Licence ToLicence(
         MatchesResult matchesResult,
         HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers)
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
     {
         var matches = matchesResult.Matches;
 
@@ -132,9 +133,12 @@ public static class SchemaConverter
                 }
 
                 var linkedLicenceNumber = firstLinkedLicence.LicenceNumber;
-                var isLiveLicence = (bool?)null;
                 
-                var isDeadLicence =  deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
+                var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
+                    ? liveLicenceNumbers.Contains(linkedLicenceNumber)
+                    : (bool?)null;
+                
+                var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
                     ? deadLicenceNumbers.Contains(linkedLicenceNumber)
                     : (bool?)null;
                 
@@ -234,9 +238,11 @@ public static class SchemaConverter
         
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
         
-        var isLiveLicence = (bool?)null;
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
+            ? liveLicenceNumbers.Contains(licenceNumber)
+            : (bool?)null;
                 
-        var isDeadLicence =  deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
             ? deadLicenceNumbers.Contains(licenceNumber)
             : (bool?)null;
 
@@ -247,7 +253,7 @@ public static class SchemaConverter
         var isFound = isDeadLicence == true
             || isImpoundmentLicence == true
             || isLiveLicence == true;
-
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -274,6 +280,7 @@ public static class SchemaConverter
         Dictionary<string, string> licenceNumbersMapping,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService  pdfDataExtractorService,
         string outputFolder,
         string cacheFolder,
@@ -284,7 +291,8 @@ public static class SchemaConverter
         var primaryLicence = ToLicence(
             matchesResult,
             impoundmentLicenceNumbers,
-            deadLicenceNumbers);
+            deadLicenceNumbers,
+            liveLicenceNumbers);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
@@ -294,6 +302,7 @@ public static class SchemaConverter
             licenceNumbersMapping,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
+            liveLicenceNumbers,
             pdfDataExtractorService,
             outputFolder,
             cacheFolder,
@@ -610,6 +619,7 @@ public static class SchemaConverter
         Dictionary<string, string> licenceNumberMapping,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService pdfDataExtractorService,
         string outputFolder,
         string cacheFolder,
@@ -645,7 +655,8 @@ public static class SchemaConverter
                     var linkedLicence = ToLicence(
                         matches,
                         impoundmentLicenceNumbers,
-                        deadLicenceNumbers);
+                        deadLicenceNumbers,
+                        liveLicenceNumbers);
                         
                     returnLicences.Add(linkedLicence);   
                 }
@@ -687,7 +698,12 @@ public static class SchemaConverter
                         new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
                         previouslyParsedPaths);
 
-                    var licence = ToLicence(relatedFileMatches, impoundmentLicenceNumbers, deadLicenceNumbers);
+                    var licence = ToLicence(
+                        relatedFileMatches,
+                        impoundmentLicenceNumbers,
+                        deadLicenceNumbers,
+                        liveLicenceNumbers);
+                    
                     returnLicences.Add(licence);
                 }
             }
@@ -722,7 +738,12 @@ public static class SchemaConverter
                 new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
                 previouslyParsedPaths);
                     
-            var licence = ToLicence(relatedFileMatches, impoundmentLicenceNumbers, deadLicenceNumbers);
+            var licence = ToLicence(
+                relatedFileMatches,
+                impoundmentLicenceNumbers,
+                deadLicenceNumbers,
+                liveLicenceNumbers);
+            
             returnLicences.Add(licence);
         }
 

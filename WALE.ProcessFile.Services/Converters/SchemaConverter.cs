@@ -237,19 +237,37 @@ public static class SchemaConverter
         noneSchemaData.Add("ocr", ocr);
         
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
+
+        var naldLicenceNumber = (string?)null;
+        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
         
-        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
-            ? liveLicenceNumbers.Contains(licenceNumber)
-            : (bool?)null;
-                
-        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
-            ? deadLicenceNumbers.Contains(licenceNumber)
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? liveLicenceNumbers.Contains(licenceNumberTransformed)
             : (bool?)null;
 
-        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
-            ? impoundmentLicenceNumbers.Contains(licenceNumber)
+        if (isLiveLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+        
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? deadLicenceNumbers.Contains(licenceNumberTransformed)
             : (bool?)null;
 
+        if (isDeadLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? impoundmentLicenceNumbers.Contains(licenceNumberTransformed)
+            : (bool?)null;
+
+        if (isImpoundmentLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+        
         var isFound = isDeadLicence == true
             || isImpoundmentLicence == true
             || isLiveLicence == true;
@@ -258,6 +276,7 @@ public static class SchemaConverter
         {
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
+            NaldLicenceNumber = naldLicenceNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,
@@ -273,6 +292,51 @@ public static class SchemaConverter
             LicenceFoundInList = isFound,
             DmsPath = null
         };
+    }
+
+    private static string? GetLicenceNumberTransformed(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(".", "/");
+        }
+        
+        var parts = licenceNumber.Split('/');
+
+        if (parts.Length < 4)
+        {
+            return licenceNumber;
+        }
+
+        var part2 = parts[2];
+
+        if (part2.Length == 1)
+        {
+            part2 = $"0{part2}";
+        }
+        
+        var part3 = parts[3];
+
+        if (part3.Length == 1)
+        {
+            part3 = $"00{part3}";
+        }
+        else if (part3.Length == 2)
+        {
+            part3 = $"0{part3}";
+        }
+
+        if (parts.Length == 4)
+        {
+            return $"{parts[0]}/{parts[1]}/{part2}/{part3}";            
+        }
+        
+        return $"{parts[0]}/{parts[1]}/{part2}/{part3}/{parts[4]}";
     }
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(

@@ -252,7 +252,7 @@ async Task AllWork()
             imagePath = $"{filename}/PdfPig/Images/page-1.jpg",
             filename = filename,
             licenceNumber =
-                $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+                $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}<br><span style=\"color: silver\">{outputLine.NaldLicenceNumber}</span>",
             licenceHolder =
                 $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
             purposes = outputLine.Purposes,
@@ -657,6 +657,7 @@ static IntermediateOutputLicence ToOutputLine(Licence licence, DateTime dtStart,
         MatchedLabelText = licence.NoneSchemaData.TryGetValue("issuedToMatchedLabelText", out var value2) ? (string)value2 : null,
         MatchedLabelPosition = licence.NoneSchemaData.TryGetValue("issuedToMatchLabelPosition", out var value3) ? (string)value3 : null,
         LicenceNumber = licenceNumber,
+        NaldLicenceNumber = licence.NaldLicenceNumber,
         LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
         LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
         AggregatesCount = licence.AbstractionLimits.Aggregates?.Sum(x => x.Limits.Count) ?? 0,
@@ -726,8 +727,8 @@ IEnumerable<string> GetPdfPaths()
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100023__Application - Transfer - Issued licence 22.7.2016 9423969")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12502133__Non-Application Licence Document [Licence] (06051998)")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(400).ToList();
     
     return pdfFilePaths;
 }

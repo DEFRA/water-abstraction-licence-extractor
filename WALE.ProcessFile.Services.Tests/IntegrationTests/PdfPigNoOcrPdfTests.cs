@@ -4142,8 +4142,8 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
@@ -4184,9 +4184,10 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
-            TestConfig.PdfFolder2);
+            OutputService,
+            CacheService,
+            TestConfig.PdfFolder2,
+            -1);
         
         Assert.Single(licenceSets);
         
@@ -4221,9 +4222,10 @@ public class PdfPigNoOcrPdfTests
             resultFull,
             FileLicenceMapping,
             _pdfDataExtractor2,
-            OutputFolder,
-            CacheFolder,
-            TestConfig.PdfFolder2);
+            OutputService,
+            CacheService,
+            TestConfig.PdfFolder2,
+            -1);
         
         Assert.Equal(2, licenceSets.Count);
         

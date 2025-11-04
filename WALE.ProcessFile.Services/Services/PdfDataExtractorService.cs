@@ -38,7 +38,7 @@ public class PdfDataExtractorService(
 
         var returnResult = new MatchesResult
         {
-            Filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath),
+            Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages
         };
@@ -472,9 +472,7 @@ public class PdfDataExtractorService(
                 {
                     continue;
                 }
-
-                var tailoredLines = TailorLines(lines, label);
-
+                
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
                     wrappedLines,
                     [label],

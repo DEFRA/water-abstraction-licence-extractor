@@ -2,12 +2,12 @@ using System.Collections;
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Models;
@@ -16,8 +16,8 @@ namespace WALE.Tools;
 
 public static class GenerateCsvForTesting
 {
-    private static readonly string OutputFolder = "Output/";
-    private static readonly string CacheFolder = "Cache/";
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> LiveLicenceNumbers = [];
@@ -31,8 +31,11 @@ public static class GenerateCsvForTesting
             {
                 new AzureAiVisionOcrDataExtractorService(
                     KeyConfig.AiVisionEndpoint,
-                    KeyConfig.AiVisionKey)
+                    KeyConfig.AiVisionKey,
+                    CacheService)
             },
+            CacheService,
+            OutputService,
             KeyConfig.PdfFolder);
 
         var data = await GetYorkshire70DataAsync(pdfDataExtractor);
@@ -52,10 +55,9 @@ public static class GenerateCsvForTesting
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                FileLicenceMapping,
-                OutputFolder,
-                CacheFolder),
-            [pdfFolder + fileName]);
+                FileLicenceMapping),
+            [pdfFolder + fileName],
+            0);
     }
 
     static async Task<List<CsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
@@ -65,14 +67,14 @@ public static class GenerateCsvForTesting
         var pdfFilePaths = Directory
             .GetFiles(KeyConfig.PdfFolder)
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            .Where(x =>
+            .Where(fileName =>
             {
-                var filename = x.Split('/').Last();
-                return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
+                var filenameToUse = FileHelper.GetFilenameWithoutExtension(fileName);
+                return yorkshire.Contains(filenameToUse, StringComparer.InvariantCultureIgnoreCase);
                 
             })
-            .Select(x => x.Split('/').Last())
-            .OrderBy(x => x).ToList();
+            .Select(FileHelper.GetFilenameWithoutExtension)
+            .OrderBy(fileName => fileName).ToList();
 
         var returnList = new List<CsvLine>();
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
@@ -87,9 +89,10 @@ public static class GenerateCsvForTesting
                 DeadLicenceNumbers,
                 LiveLicenceNumbers,
                 pdfDataExtractor,
-                OutputFolder,
-                CacheFolder,
-                KeyConfig.PdfFolder
+                OutputService,
+                CacheService,
+                KeyConfig.PdfFolder,
+                0
             );
 
             licenceSetGroups.Add(licenceSets);

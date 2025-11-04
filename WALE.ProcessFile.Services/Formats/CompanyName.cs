@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 

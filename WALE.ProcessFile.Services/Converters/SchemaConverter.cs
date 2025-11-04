@@ -1,9 +1,10 @@
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Models.Enums.OutputSchema;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Constants;
-using WALE.ProcessFile.Services.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
+using LabelGroupResult = WALE.ProcessFile.Models.LabelGroupResult;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -383,9 +384,10 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService  pdfDataExtractorService,
-        string outputFolder,
-        string cacheFolder,
-        string pdfFolder)
+        IOutputService outputService,
+        ICacheService cacheService,
+        string pdfFolder,
+        int processRunId)
     {
         var returnList = new List<LicenceSet>();
         
@@ -405,10 +407,11 @@ public static class SchemaConverter
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractorService,
-            outputFolder,
-            cacheFolder,
+            outputService,
+            cacheService,
             pdfFolder,
-            previouslyParsedPaths);
+            previouslyParsedPaths,
+            processRunId);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -733,10 +736,11 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService pdfDataExtractorService,
-        string outputFolder,
-        string cacheFolder,
+        IOutputService outputService,
+        ICacheService cacheService,
         string pdfFolder,
-        List<string> previouslyParsedPaths)
+        List<string> previouslyParsedPaths,
+        int processRunId)
     {
         var returnLicences = new List<Licence>();
         
@@ -808,7 +812,8 @@ public static class SchemaConverter
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
                         new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
-                        previouslyParsedPaths);
+                        previouslyParsedPaths,
+                        processRunId);
 
                     var licence = ToLicence(
                         relatedFileMatches,
@@ -848,7 +853,8 @@ public static class SchemaConverter
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 relatedFileName,
                 new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
-                previouslyParsedPaths);
+                previouslyParsedPaths,
+                processRunId);
                     
             var licence = ToLicence(
                 relatedFileMatches,

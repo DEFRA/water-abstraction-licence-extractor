@@ -9,12 +9,15 @@ using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.AzureFunction.ServiceBusTrigger.Functions;
 
 public class MessageReceivedFunction(
+    IOutputService outputService,
+    ICacheService cacheService,
     IConfiguration configuration/*,
     ILogger<MessageReceivedFunction> logger*/)
 {
@@ -57,24 +60,25 @@ public class MessageReceivedFunction(
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd),
-                new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey)
+                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService),
+                new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey, cacheService)
             ],
+            cacheService,
+            outputService,
             pdfFolderPath);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
-            fileLicenceMapping,
-            outputFolder,
-            cacheFolder),
-            previouslyParsedPaths);
+                LabelConfiguration.GetLabels(),
+                fileLicenceMapping),
+            previouslyParsedPaths,
+            0);
         
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtensions(pdfFilePath);
+        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var jsonFileName = $"{filenameOnlyNoExtension}.json";
 
         var assetsClient = blobClient.GetBlobContainerClient("assets");

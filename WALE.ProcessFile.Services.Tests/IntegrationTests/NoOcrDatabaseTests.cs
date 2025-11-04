@@ -51,6 +51,10 @@ public class NoOcrDatabaseTests
             }
         };
 
+    private readonly HashSet<string> _liveLicenceNumbers = [];
+    private readonly HashSet<string> _deadLicenceNumbers = [];
+    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
         return _pdfDataExtractor.GetMatchesAsync(
@@ -95,7 +99,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(13, resultList.Count);
+        Assert.Equal(14, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -214,6 +218,9 @@ public class NoOcrDatabaseTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
+            _liveLicenceNumbers,
             _pdfDataExtractor,
             OutputService,
             CacheService,

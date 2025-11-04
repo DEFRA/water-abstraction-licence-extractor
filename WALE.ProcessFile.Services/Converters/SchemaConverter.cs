@@ -10,7 +10,11 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static class SchemaConverter
 {
-    private static Licence ToLicence(MatchesResult matchesResult)
+    private static Licence ToLicence(
+        MatchesResult matchesResult,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
     {
         var matches = matchesResult.Matches;
 
@@ -99,6 +103,8 @@ public static class SchemaConverter
         linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
+        // NOTE - We don't want to get licence history licences
         
         linkedLicences = linkedLicences
             .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
@@ -126,14 +132,17 @@ public static class SchemaConverter
                         fromSection.Add(sectionItem);
                     }
                 }
-                
-                return new LinkedLicence
-                {
-                    LicenceNumber = firstLinkedLicence.LicenceNumber,
-                    Filename = firstLinkedLicence.Filename,
-                    Condition = firstLinkedLicence.Condition,
-                    FromSection = fromSection.ToArray()
-                };
+
+                var linkedLicenceNumber = firstLinkedLicence.LicenceNumber;
+
+                return ToLinkedLicence(
+                    linkedLicenceNumber,
+                    firstLinkedLicence.Filename,
+                    firstLinkedLicence.Condition,
+                    fromSection.ToArray(),
+                    impoundmentLicenceNumbers,
+                    deadLicenceNumbers,
+                    liveLicenceNumbers);
             })
             .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumber)
             .ToList();
@@ -209,11 +218,46 @@ public static class SchemaConverter
         noneSchemaData.Add("ocr", ocr);
         
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
+
+        var naldLicenceNumber = (string?)null;
+        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? liveLicenceNumbers.Contains(licenceNumberTransformed)
+            : (bool?)null;
+
+        if (isLiveLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+        
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? deadLicenceNumbers.Contains(licenceNumberTransformed)
+            : (bool?)null;
+
+        if (isDeadLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
+            ? impoundmentLicenceNumbers.Contains(licenceNumberTransformed)
+            : (bool?)null;
+
+        if (isImpoundmentLicence == true)
+        {
+            naldLicenceNumber = licenceNumberTransformed;
+        }
+        
+        var isFound = isDeadLicence == true
+            || isImpoundmentLicence == true
+            || isLiveLicence == true;
         
         return new Licence
         {
             Filename = matchesResult.Filename,
             LicenceNumber = licenceNumber,
+            NaldLicenceNumber = naldLicenceNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,
@@ -222,13 +266,123 @@ public static class SchemaConverter
             DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
-            NoneSchemaData = noneSchemaData
+            NoneSchemaData = noneSchemaData,
+            IsDeadLicence = isDeadLicence,
+            IsImpoundmentLicence = isImpoundmentLicence,
+            IsLiveLicence = isLiveLicence,
+            LicenceFoundInList = isFound,
+            DmsPath = null
         };
+    }
+
+    private static LinkedLicence ToLinkedLicence(
+        string? licenceNumber,
+        string? filename,
+        Condition? condition,
+        string[] fromSection,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
+    {
+        var linkedLicenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        var naldLicenceNumber = (string?)null;
+        
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? liveLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isLiveLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? deadLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isDeadLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? impoundmentLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isImpoundmentLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isFound = isDeadLicence == true
+            || isImpoundmentLicence == true
+            || isLiveLicence == true;
+        
+        return new LinkedLicence
+        {
+            LicenceNumber = licenceNumber,
+            NaldLicenceNumber = naldLicenceNumber,
+            Filename = filename,
+            Condition = condition,
+            FromSection = fromSection,
+            IsDeadLicence = isDeadLicence,
+            IsImpoundmentLicence = isImpoundmentLicence,
+            IsLiveLicence = isLiveLicence,
+            LicenceFoundInList = isFound,
+            DmsPath = null
+        };
+    }
+
+    private static string? GetLicenceNumberTransformed(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        // Replace dots with slashes IF its all dots
+        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(".", "/");
+        }
+        
+        var parts = licenceNumber.Split('/');
+        
+        if (parts.Length < 4)
+        {
+            return licenceNumber;
+        }
+        
+        var part1 = parts[0];
+        var part2 = parts[1];
+        var part3 = parts[2];
+        var part4 = parts[3];
+        var part5 = parts.Length >= 5 ? parts[4] : null;
+        
+        if (part3.Length == 1)
+        {
+            part3 = $"0{part3}";
+        }
+
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        part4 = part4.Where(char.IsDigit).Count() switch
+        {
+            1 => $"00{part4}",
+            2 => $"0{part4}",
+            _ => part4
+        };
+
+        return parts.Length == 4 ?
+            $"{part1}/{part2}/{part3}/{part4}"
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
-        Dictionary<string, string> fileLicenceMapping,
+        Dictionary<string, string> licenceNumbersMapping,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService  pdfDataExtractorService,
         IOutputService outputService,
         ICacheService cacheService,
@@ -236,14 +390,22 @@ public static class SchemaConverter
         int processRunId)
     {
         var returnList = new List<LicenceSet>();
-        var primaryLicence = ToLicence(matchesResult);
+        
+        var primaryLicence = ToLicence(
+            matchesResult,
+            impoundmentLicenceNumbers,
+            deadLicenceNumbers,
+            liveLicenceNumbers);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
         var linkedLicences = await GetLinkedLicencesAsync(
             matchesResult,
             primaryLicence,
-            fileLicenceMapping,
+            licenceNumbersMapping,
+            impoundmentLicenceNumbers,
+            deadLicenceNumbers,
+            liveLicenceNumbers,
             pdfDataExtractorService,
             outputService,
             cacheService,
@@ -312,7 +474,12 @@ public static class SchemaConverter
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
             }
             
-            AddMissingBackLinks([[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]], false);
+            AddMissingBackLinks(
+                [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
+                false,
+                impoundmentLicenceNumbers,
+                deadLicenceNumbers,
+                liveLicenceNumbers);
 
             var newLicenceSetIds = new List<LicenceSetReference>
             {
@@ -350,7 +517,10 @@ public static class SchemaConverter
     
     private static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        bool addImplicitLicenceSet)
+        bool addImplicitLicenceSet,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
     {
         var returnList = new List<LicenceSet>();
         
@@ -375,15 +545,15 @@ public static class SchemaConverter
                     var incomingLinks = GetLicencesThatReferenceLicence(allLicencesInSets, licence.LicenceNumber!);
                     var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
 
-                    var incomingAndOutgoingLinks = new List<string>(incomingLinks);
+                    var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
                     incomingAndOutgoingLinks.AddRange(outgoingLinks);
                     
                     //...
                     
                     foreach (var incomingLink in incomingLinks)
                     {
-                        if (outgoingLinks.Contains(incomingLink)
-                            || licence.LinkedLicences.Any(linkedLicence => linkedLicence.LicenceNumber == incomingLink))
+                        if (outgoingLinks.Contains(incomingLink.LicenceNumber)
+                            || licence.LinkedLicences.Any(linkedLicence => linkedLicence.LicenceNumber == incomingLink.LicenceNumber))
                         {
                             continue;
                         }
@@ -391,11 +561,14 @@ public static class SchemaConverter
                         // Back link is missing
                         var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
                         {
-                            new()
-                            {
-                                LicenceNumber = incomingLink,
-                                FromSection = ["ImplicitBackLink"]
-                            }
+                            ToLinkedLicence(
+                                incomingLink.LicenceNumber,
+                                incomingLink.Filename,
+                                null,
+                                ["ImplicitBackLink"],
+                                impoundmentLicenceNumbers,
+                                deadLicenceNumbers,
+                                liveLicenceNumbers)
                         };
 
                         licence.LinkedLicences = linkedLicencesNew.ToArray();
@@ -472,9 +645,9 @@ public static class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static List<string> GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
+    private static List<(string LicenceNumber, string? Filename)> GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<string>();
+        var returnList = new List<(string, string?)>();
         
         foreach (var licence in licences)
         {
@@ -485,7 +658,7 @@ public static class SchemaConverter
 
             if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
             {
-                returnList.Add(licence.LicenceNumber!);
+                returnList.Add((licence.LicenceNumber!, licence.Filename));
             }
         }
 
@@ -558,7 +731,10 @@ public static class SchemaConverter
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         MatchesResult matchesResult,
         Licence primaryLicence,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService pdfDataExtractorService,
         IOutputService outputService,
         ICacheService cacheService,
@@ -592,7 +768,11 @@ public static class SchemaConverter
                 foreach (var linkedLicenceData in linkedLicencesData)
                 {
                     var matches = ToMatchesResult(linkedLicenceData);
-                    var linkedLicence = ToLicence(matches);
+                    var linkedLicence = ToLicence(
+                        matches,
+                        impoundmentLicenceNumbers,
+                        deadLicenceNumbers,
+                        liveLicenceNumbers);
                         
                     returnLicences.Add(linkedLicence);   
                 }
@@ -606,13 +786,14 @@ public static class SchemaConverter
                 {
                     var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
 
+                    // Don't process ones we've already found
                     if (licenceNumber == primaryLicence.LicenceNumber
                         || returnLicences.Any(licence => licence.LicenceNumber == licenceNumber))
                     {
                         continue;
                     }
                     
-                    if (!licenceMapping.TryGetValue(licenceNumber!, out var relatedFileName))
+                    if (!licenceNumberMapping.TryGetValue(licenceNumber!, out var relatedFileName))
                     {
                         returnLicences.Add(new Licence
                         {
@@ -630,11 +811,17 @@ public static class SchemaConverter
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
-                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
+                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                         previouslyParsedPaths,
                         processRunId);
+
+                    var licence = ToLicence(
+                        relatedFileMatches,
+                        impoundmentLicenceNumbers,
+                        deadLicenceNumbers,
+                        liveLicenceNumbers);
                     
-                    returnLicences.Add(ToLicence(relatedFileMatches));
+                    returnLicences.Add(licence);
                 }
             }
         }
@@ -647,7 +834,7 @@ public static class SchemaConverter
                 continue;
             }
             
-            if (!licenceMapping.TryGetValue(linkedLicence.LicenceNumber!, out var relatedFileName))
+            if (!licenceNumberMapping.TryGetValue(linkedLicence.LicenceNumber!, out var relatedFileName))
             {
                 returnLicences.Add(new Licence
                 {
@@ -665,11 +852,17 @@ public static class SchemaConverter
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                 previouslyParsedPaths,
                 processRunId);
                     
-            returnLicences.Add(ToLicence(relatedFileMatches));
+            var licence = ToLicence(
+                relatedFileMatches,
+                impoundmentLicenceNumbers,
+                deadLicenceNumbers,
+                liveLicenceNumbers);
+            
+            returnLicences.Add(licence);
         }
 
         return returnLicences;
@@ -764,6 +957,42 @@ public static class SchemaConverter
                 FromSection = ["AdditionalInformation"]
             })
             .ToList();
+    }
+
+    private static List<LinkedLicence> GetPurposesLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var purposeSection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Purpose");
+
+        if (purposeSection == null)
+        {
+            return [];
+        }
+
+        var returnList = new List<LinkedLicence>();
+
+        foreach (var purposePointGroup in purposeSection.SubResults)
+        {
+            var purposes = purposePointGroup.SubResults
+                .Where(x => x.MatchedLabel!.Name == "Purpose")
+                .ToList();
+
+            foreach (var purpose in purposes)
+            {
+                returnList.AddRange(purpose.SubResults
+                    .Where(linkedLicenceNumber =>
+                        linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
+                    .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+                    .Select(linkedLicenceNumber => new LinkedLicence
+                    {
+                        LicenceNumber = linkedLicenceNumber,
+                        FromSection = ["Purposes"]
+                    })
+                    .ToList());
+            }
+        }
+        
+        return returnList;
     }
     
     private static List<LinkedLicence> GetRecordsLinkedLicences(List<LabelGroupResult> matches)
@@ -948,7 +1177,7 @@ public static class SchemaConverter
                 {
                     var condition = (Condition?)null; // TODO
                         
-                    var filename = siblings
+                    var linkedLicenceFilename = siblings
                         .FirstOrDefault(sibling =>
                             sibling.MatchedLabel?.Name == "LinkedLicenceFilename")?
                         .Text?
@@ -958,7 +1187,7 @@ public static class SchemaConverter
                     return new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
-                        Filename = filename,
+                        Filename = linkedLicenceFilename,
                         Condition = condition,
                         FromSection = ["AbstractionLimits"]
                     };
@@ -1801,10 +2030,19 @@ public static class SchemaConverter
         return null;
     }
     
-    public static List<LicenceSet> AddGroupLicenceSetDetails(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+    public static List<LicenceSet> AddGroupLicenceSetDetails(
+        List<IReadOnlyList<LicenceSet>> licenceSetGroups,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
     {
         var distinctLicenceSets = GetDistinctLicenceSets(licenceSetGroups);
-        distinctLicenceSets.AddRange(AddMissingBackLinks(licenceSetGroups, true));
+        distinctLicenceSets.AddRange(AddMissingBackLinks(
+            licenceSetGroups,
+            true,
+            impoundmentLicenceNumbers,
+            deadLicenceNumbers,
+            liveLicenceNumbers));
 
         foreach (var licenceSetGroup in licenceSetGroups)
         {

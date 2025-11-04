@@ -69,7 +69,7 @@ public class PdfDataExtractorService(
             configuration.Labels,
             notOcr,
             noOcrDataExtractorService.Name,
-            configuration.LicenceMapping,
+            configuration.LicenceNumberMapping,
             previouslyParsedPaths,
             processRunId);
 
@@ -172,7 +172,7 @@ public class PdfDataExtractorService(
                         unmatchedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        configuration.LicenceMapping,
+                        configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
                         processRunId);
                     
@@ -445,7 +445,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -480,7 +480,7 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     labelGroupMatches,
-                    licenceMapping,
+                    licenceNumberMapping,
                     previouslyParsedPaths,
                     processRunId);
                 
@@ -513,7 +513,7 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -530,7 +530,7 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                if (!licenceMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
+                if (!licenceNumberMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
                 {
                     // TODO this should log a warning
                     continue;
@@ -557,7 +557,7 @@ public class PdfDataExtractorService(
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceMapping),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                 previouslyParsedPaths,
                 processRunId);
 
@@ -685,7 +685,7 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, string> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -728,7 +728,7 @@ public class PdfDataExtractorService(
                             partialLine,
                             siblingMatches,
                             label,
-                            licenceMapping,
+                            licenceNumberMapping,
                             previouslyParsedPaths,
                             processRunId);
 
@@ -847,7 +847,7 @@ public class PdfDataExtractorService(
                         label = matchedLabel,
                         labelGroupName = labelGroupName,
                         labelGroupResult = labelGroupResult,
-                        licenceMapping = licenceMapping,
+                        licenceNumberMapping = licenceNumberMapping,
                         pdfDataExtractorService = this,
                         previouslyParsedPaths = previouslyParsedPaths,
                         previousLines = previousLines,

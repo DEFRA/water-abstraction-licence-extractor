@@ -28,6 +28,27 @@ public static class JsOutputHelper
         var licenceNumberOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData,"licenceNumberConfidence", null);
 
         var meansFound = licence.MeansOfAbstraction.Length > 0;
+        var status = "Not Found";
+
+        if (licence.LicenceFoundInList)
+        {
+            status = "Found";
+        }
+
+        if (licence.IsLiveLicence == true)
+        {
+            status = "Live";
+        }
+
+        if (licence.IsDeadLicence == true)
+        {
+            status = "Dead";
+        }
+
+        if (licence.IsImpoundmentLicence == true)
+        {
+            status = "Impound";
+        }
         
         var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = licence.LicenceVersion.Issuer;
@@ -58,12 +79,14 @@ public static class JsOutputHelper
             MatchedLabelText = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
             MatchedLabelPosition = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
             LicenceNumber = licenceNumber,
+            NaldLicenceNumber = licence.NaldLicenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
             AggregatesCount = licence.AbstractionLimits.Aggregates?.Sum(x => x.Limits.Count) ?? 0,
             IssueDate = issueDate,
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,
+            Status = status,
             LinkedLicences = licence.LinkedLicences,
             LicenceSets = licenceSets,
             LicenceSetReferences = licence.LicenceSets
@@ -114,7 +137,7 @@ public static class JsOutputHelper
                 imagePath = $"{filename}/{PdfDataExtractorService.Name}/Images/page-1.jpg",
                 filename = filename,
                 licenceNumber =
-                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}<br><span style=\"color: silver\">{outputLine.NaldLicenceNumber}</span>",
                 licenceHolder =
                     $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
                 purposes = outputLine.Purposes,
@@ -125,6 +148,7 @@ public static class JsOutputHelper
                 issueDate = outputLine.IssueDate,
                 issuer = outputLine.Issuer,
                 meansFound = outputLine.MeansFound,
+                status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
                 licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
                 {

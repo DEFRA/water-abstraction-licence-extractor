@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-using Tesseract;
+﻿using Tesseract;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.OutputSchema;
@@ -49,7 +47,11 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
     
-    var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
+    var licenceNumberMapping = GetLicenceNumberMapping(fileMappingPath);
+    var impoundmentLicenceNumbers = GetImpoundmentLicenceNumbers();
+    var deadLicenceNumbers = GetDeadLicenceNumbers();
+    var liveLicenceNumbers = GetLiveLicenceNumbers();
+    
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
@@ -72,11 +74,14 @@ async Task ProgramAsync()
             scrapingTasks.Add(ScrapeDocumentAsync(
                 pdfFilePath,
                 processCount++,
-                fileLicenceMapping,
+                licenceNumberMapping,
+                impoundmentLicenceNumbers,
+                deadLicenceNumbers,
+                liveLicenceNumbers,
                 outputService,
                 cacheService,
                 pdfDataExtractors,
-                fileLicenceMapping,
+                licenceNumberMapping,
                 processRun));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
@@ -113,7 +118,11 @@ async Task ProgramAsync()
         throw;
     }
 
-    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(licenceSetGroups);
+    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+        licenceSetGroups,
+        impoundmentLicenceNumbers,
+        deadLicenceNumbers,
+        liveLicenceNumbers);
     
     var outputLines = new List<IntermediateOutputLicence>();
 
@@ -282,6 +291,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
     Dictionary<string, string> licenceMapping,
+    HashSet<string> impoundmentLicenceNumbers,
+    HashSet<string> deadLicenceNumbers,
+    HashSet<string> liveLicenceNumbers,
     IOutputService outputService,
     ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
@@ -316,6 +328,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
+            impoundmentLicenceNumbers,
+            deadLicenceNumbers,
+            liveLicenceNumbers,
             pdfDataExtractor,
             outputService,
             cacheService,
@@ -338,18 +353,18 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-Dictionary<string, string> PopulateFileMapping(string fileMappingPath)
+Dictionary<string, string> GetLicenceNumberMapping(string fileMappingPath)
 {
-    var fileLicenceMapping = new Dictionary<string, string>();
-    
-    var fileMappingContents = File.Exists(fileMappingPath)
+    var returnMapping = new Dictionary<string, string>();
+
+    var fileContents = File.Exists(fileMappingPath)
         ? File.ReadAllText(fileMappingPath)
             .Replace("\r", string.Empty)
             .Split('\n')
         : [];
-    
+
     var count = 0;
-    foreach (var line in fileMappingContents)
+    foreach (var line in fileContents)
     {
         if (count++ == 0)
         {
@@ -358,15 +373,115 @@ Dictionary<string, string> PopulateFileMapping(string fileMappingPath)
 
         var parts = line.Split(',');
         var licenceNumber = parts[1];
-        var filename = FileHelper.GetFilenameWithoutExtension(parts[0]);
+        var filename = parts[0].Split('/').Last();
 
-        if (!fileLicenceMapping.TryAdd(licenceNumber, filename))
+        if (!returnMapping.TryAdd(licenceNumber, filename))
         {
-            fileLicenceMapping[licenceNumber] = filename;
+            returnMapping[licenceNumber] = filename;
         }
     }
 
-    return fileLicenceMapping;
+    return returnMapping;
+}
+
+HashSet<string> GetLiveLicenceNumbers()
+{
+    var liveLicencesPath = Environment.GetEnvironmentVariable("LiveLicencesPath")
+        ?? throw new NullReferenceException("LiveLicencesPath");
+
+    var returnList = new HashSet<string>();
+
+    var fileContents = File.Exists(liveLicencesPath)
+        ? File.ReadAllText(liveLicencesPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+
+    var count = 0;
+    foreach (var line in fileContents)
+    {
+        if (count++ == 0)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+
+        if (parts.Length < 3)
+        {
+            continue;
+        }
+
+        var licenceNumber = parts[2];
+        returnList.Add(licenceNumber);
+    }
+
+    return returnList;
+}
+
+HashSet<string> GetDeadLicenceNumbers()
+{
+    var deadLicencesPath = Environment.GetEnvironmentVariable("DeadLicencesPath")
+        ?? throw new NullReferenceException("DeadLicencesPath");
+
+    var returnList = new HashSet<string>();
+
+    var fileContents = File.Exists(deadLicencesPath)
+        ? File.ReadAllText(deadLicencesPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+
+    var count = 0;
+    foreach (var line in fileContents)
+    {
+        if (count++ == 0)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+
+        if (parts.Length < 6)
+        {
+            continue;
+        }
+
+        var licenceNumber = parts[5];
+        returnList.Add(licenceNumber);
+    }
+
+    return returnList;
+}
+
+HashSet<string> GetImpoundmentLicenceNumbers()
+{
+    var impoundmentLicencesPath = Environment.GetEnvironmentVariable("ImpoundmentLicencesPath")
+        ?? throw new NullReferenceException("ImpoundmentLicencesPath");
+
+    var returnList = new HashSet<string>();
+
+    var fileContents = File.Exists(impoundmentLicencesPath)
+        ? File.ReadAllText(impoundmentLicencesPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+
+    var count = 0;
+    foreach (var line in fileContents)
+    {
+        if (count++ == 0)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+        var licenceNumber = parts[0];
+
+        returnList.Add(licenceNumber);
+    }
+
+    return returnList;
 }
 
 async Task MoveReportHtmlFilesAsync(
@@ -465,7 +580,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

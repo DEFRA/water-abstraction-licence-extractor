@@ -34,5 +34,7 @@ public class ConfiguredServices
     
     public string? ThumbnailImageDataPath { get; set; }
     
+    public string? FullImageDataPath { get; set; }
+    
     public bool RefreshCache{ get; set; }
 }

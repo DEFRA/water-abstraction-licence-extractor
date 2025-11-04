@@ -125,6 +125,7 @@
     <script>
         const searchParams = new URLSearchParams(window.location.search);
         const filename = searchParams.get('filename');
+        window.imageUrl = [FULL_IMAGE_DATA_PATH];
         const hideBackLink = searchParams.get('hideBackLink');
         
         if (!!hideBackLink) {

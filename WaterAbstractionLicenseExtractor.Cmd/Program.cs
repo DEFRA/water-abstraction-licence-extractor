@@ -46,7 +46,8 @@ async Task ProgramAsync()
         services.InternalDataPath!,
         services.LicenceDataPath!,
         services.LicenceSetsDataPath!,
-        services.ThumbnailImageDataPath!);
+        services.ThumbnailImageDataPath!,
+        services.FullImageDataPath!);
     
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
@@ -204,7 +205,9 @@ ConfiguredServices ConfigureServices()
     var licenceSetsDataPath = Environment.GetEnvironmentVariable("LicenceSetsDataPath")
         ?? throw new NullReferenceException("LicenceSetsDataPath");
     var thumbnailImageDataPath = Environment.GetEnvironmentVariable("ThumbnailImageDataPath")
-        ?? throw new NullReferenceException("ThumbnailImageDataPath");    
+        ?? throw new NullReferenceException("ThumbnailImageDataPath");
+    var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
+        ?? throw new NullReferenceException("FullImageDataPath");
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
@@ -270,6 +273,7 @@ ConfiguredServices ConfigureServices()
         LicenceDataPath = licenceDataPath,
         LicenceSetsDataPath = licenceSetsDataPath,
         ThumbnailImageDataPath = thumbnailImageDataPath,
+        FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache
     };
 }
@@ -373,7 +377,8 @@ async Task MoveReportHtmlFilesAsync(
     string internalDataPath,
     string licenceDataPath,
     string licenceSetsDataPath,
-    string thumbnailImageDataPath)
+    string thumbnailImageDataPath,
+    string fullImageDataPath)
 {
     Copy(reportTemplatePath, outputFolder);
 
@@ -398,6 +403,7 @@ async Task MoveReportHtmlFilesAsync(
     var reportHtml = await File.ReadAllTextAsync(reportPath);
     reportHtml = reportHtml.Replace("[INTERNAL_DATA_PATH]", internalDataPath);
     reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
+    reportHtml = reportHtml.Replace("[FULL_IMAGE_DATA_PATH]", fullImageDataPath);
     reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
     
     await File.WriteAllTextAsync(reportPath, reportHtml);

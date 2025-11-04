@@ -83,6 +83,25 @@ app.MapGet("/thumbnail", async (string filename) =>
     return Results.File(data!, "image/jpeg");
 }).WithName("GetThumbnail");
 
+app.MapGet("/image", async (string filename) =>
+{
+    var parts = filename.Split('/');
+    var fileName1 = parts[0];
+    var serviceName = parts[1];
+
+    var pageNumberStr = parts.Last()
+        .Replace("page-", string.Empty)
+        .Replace(".jpg", string.Empty);
+        
+    var pageNumber = int.Parse(pageNumberStr);
+    var data = await outputService.GetPageScreenshotDataAsync(
+        pageNumber,
+        serviceName,
+        fileName1);
+    
+    return Results.File(data!, "image/jpeg");
+}).WithName("GetImage");
+
 app.MapGet("/internal", async (string filename) =>
 {
     var serializedData = JsonSerializer.Serialize(

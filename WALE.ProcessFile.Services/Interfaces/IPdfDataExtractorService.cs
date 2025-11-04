@@ -1,5 +1,5 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Interfaces;
 
@@ -10,7 +10,8 @@ public interface IPdfDataExtractorService
     public Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
         LookupConfiguration configuration,
-        List<string> previouslyParsedPaths);
+        List<string> previouslyParsedPaths,
+        int processRunId);
 
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
         LabelToMatch label,
@@ -20,8 +21,7 @@ public interface IPdfDataExtractorService
         string labelGroupName,
         Dictionary<string, string> licenceMapping,
         List<string> previouslyParsedPaths,
-        string outputFolder,
-        string cacheFolder);
+        int processRunId);
 
     public void Dispose();
 }

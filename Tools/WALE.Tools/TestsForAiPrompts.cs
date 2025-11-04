@@ -6,9 +6,9 @@ using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
 using Tesseract;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Services;
 
@@ -527,12 +527,12 @@ public static class TestsForAiPrompts
     {
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
-            ?? throw new NullReferenceException(KeyConfig.TesseractPrefix), PageSegMode.SparseTextOsd);
+                ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
+            PageSegMode.SparseTextOsd,
+            new FileSystemCacheService("Cache/"));
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
-            KeyConfig.OutputFolder,
-            KeyConfig.CacheFolder,
             true);
         
         var imagePrompts = new List<ChatMessageContentPart>();
@@ -568,9 +568,11 @@ public static class TestsForAiPrompts
             var lines =
                 (await tesseractOcr.GetTextLinesFromImageAsync(
                     pdfImageName,
+                    pdfFilename,
                     pageNumber,
                     1,
-                    mockPdfDocument)).ToList();
+                    mockPdfDocument,
+                    -1)).ToList();
 
             var averageLineLength = lines.Average(line
                 => line.Text.Length);

@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 

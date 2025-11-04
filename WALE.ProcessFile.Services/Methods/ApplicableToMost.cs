@@ -1,8 +1,9 @@
-using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -224,7 +225,10 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = request.isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(documentLine.Text, false, request.label?.AutoCorrect ?? false)
+                    ? AutoCorrectHelper.AutoCorrectText(
+                        documentLine.Text,
+                        false,
+                        request.label?.AutoCorrect ?? false)
                     : documentLine.Text;
 
                 //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;

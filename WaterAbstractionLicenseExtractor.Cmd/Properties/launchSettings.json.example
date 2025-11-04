@@ -13,7 +13,16 @@
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",
         "ConcurrentCount": "10",
-        "REGENERATE_MAPPING_JSON": "true"
+        "REGENERATE_MAPPING_JSON": "true",
+        "LOAD_AI_JS": "false",
+        "RefreshCache": "false",
+        "SqlConnectionString": "",
+        "ListDataPath": "list-data.js",
+        "InternalDataPath": "filename + '/internal.jsonp'",
+        "LicenceDataPath": "filename + '/licence.jsonp'",
+        "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'",
+        "ThumbnailImageDataPath": "''",
+        "FullImageDataPath": "''"
       }
     }
   }

@@ -1,0 +1,42 @@
+using WALE.ProcessFile.Models;
+
+namespace WALE.ProcessFile.Database.Interfaces;
+
+public interface IDatabaseAddService
+{
+    public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
+
+    public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
+    
+    public Task SaveLicenceAsync(string licence, string pdfFilePath, int processRunId);
+    
+    public Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId);
+
+    public Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
+        byte[] data, int processRunId);
+
+    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines, int processRunId);
+    
+    Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
+    
+    Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr, int processRunId);
+   
+    Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId);
+
+    Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
+        int pageNumber, string extension, int processRunId);
+
+    Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
+    
+    Task ClearCacheAsync();
+    
+    Task ClearCacheAsync(string pdfFilename);
+    
+    Task UpdateProcessRunAsync(ProcessRun processRun);
+    
+    Task SaveLicenceSetLicenceAsync(int licenceSetId, string? licenceNumber, string licenceVersionId, int processRunId);
+
+    Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId);
+    
+    Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
+}

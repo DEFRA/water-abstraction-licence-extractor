@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string?> SaveImageBytesAsync(int imageNumber, int pageNumber, string cacheFolder)
+    public async Task<string?> SaveImageBytesAsync(string folderPath, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
     {
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
@@ -16,19 +16,13 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         {
             if (imageData.TryGetPng(out var bytes))
             {
-                await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, pngExtension),
-                    bytes);
-                
+                await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, pngExtension, processRunId);
                 return pngExtension;
             }
 
             if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
-                await File.WriteAllBytesAsync(
-                    GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, bmpExtension),
-                    bytesMemory.ToArray());
-                
+                await cacheService.SaveImageOnPageAsync(bytesMemory.ToArray(), folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, bmpExtension, processRunId);
                 return bmpExtension;
             }
 
@@ -38,10 +32,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 throw new Exception("Cannot get bytes via either method");
             }
 
-            await File.WriteAllBytesAsync(
-                GetImageFilepath(imageNumber, pageNumber, cacheFolder, true, jpgExtension),
-                bytesSpanAry);
-            
+            await cacheService.SaveImageOnPageAsync(bytesSpanAry, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, jpgExtension, processRunId);
             return jpgExtension;
         }
         catch (Exception exception)
@@ -58,25 +49,11 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         }
     }
 
-    public string GetImageFilepath(int imageNumber, int pageNumber, string cacheFolder, bool createDirectory, string extension)
-    {
-        var outputFolderFull = $"{cacheFolder}/PdfPig/Images";
-        
-        if (createDirectory)
-        {
-            Directory.CreateDirectory(outputFolderFull);
-        }
-        
-        return $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
-    }
-
     public static byte[] Deflate(byte[] input)
     {
         var cutInput = new byte[input.Length - 2];
         Array.Copy(input, 2, cutInput, 0, cutInput.Length);
 
-        var str = System.Text.Encoding.Default.GetString(input);
-        
         var stream = new MemoryStream();
 
         using var compressStream = new MemoryStream(cutInput);

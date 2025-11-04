@@ -1,27 +1,31 @@
 using Tesseract;
+using WALE.ProcessFile.Database.Interfaces;
+using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class TessaractOcrPdfTests
 {
-    private static readonly string CacheFolder = "Cache/";
-    private static readonly string OutputFolder = "Output/";
-    
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+ 
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto)
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService)
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
@@ -33,10 +37,9 @@ public class TessaractOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                OutputFolder,
-                CacheFolder),
-            [PdfFolder + fileName]);
+                _fileLicenceMapping),
+            [PdfFolder + fileName],
+            0);
     }
     
     [Fact]
@@ -496,9 +499,10 @@ public class TessaractOcrPdfTests
             resultFull,
             _fileLicenceMapping,
             _pdfDataExtractorCombined,
-            OutputFolder,
-            CacheFolder,
-            TestConfig.PdfFolder);
+            OutputService,
+            CacheService,
+            TestConfig.PdfFolder,
+            0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);

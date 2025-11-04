@@ -1,26 +1,32 @@
 using Tesseract;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class MultipleOcrPdfTests
 {
+    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey),
+                TestConfig.AiVisionKey,
+                CacheService),
         },
+        CacheService,
+        OutputService,
         TestConfig.PdfFolder);
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
@@ -32,10 +38,9 @@ public class MultipleOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                "Output/",
-                "Cache/"),
-            [PdfFolder + fileName]);
+                _fileLicenceMapping),
+            [PdfFolder + fileName],
+            0);
     }
     
     [Fact]

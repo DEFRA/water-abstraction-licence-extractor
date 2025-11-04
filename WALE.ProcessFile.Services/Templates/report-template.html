@@ -125,15 +125,16 @@
     <script>
         const searchParams = new URLSearchParams(window.location.search);
         const filename = searchParams.get('filename');
+        window.imageUrl = [FULL_IMAGE_DATA_PATH];
         const hideBackLink = searchParams.get('hideBackLink');
         
         if (!!hideBackLink) {
             document.getElementById('backLink').style.display = 'none';
         }
         
-        loadScript(filename + "/internal.jsonp", function () { loadReport(filename); });
-        loadScript(filename + "/licence.jsonp", function () { loadReport(filename); });
-        loadScript(filename + "/licence-sets.jsonp", function () { loadReport(filename); });
+        loadScript([INTERNAL_DATA_PATH], function () { loadReport(filename); });
+        loadScript([LICENCE_DATA_PATH], function () { loadReport(filename); });
+        loadScript([LICENCE_SETS_DATA_PATH], function () { loadReport(filename); });
     </script>
 </body>
 </html>

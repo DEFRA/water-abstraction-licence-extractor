@@ -21,8 +21,8 @@
         "InternalDataPath": "filename + '/internal.jsonp'",
         "LicenceDataPath": "filename + '/licence.jsonp'",
         "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'",
-        "ThumbnailImageDataPath": "",
-        "FullImageDataPath": ""
+        "ThumbnailImageDataPath": "''",
+        "FullImageDataPath": "''"
       }
     }
   }

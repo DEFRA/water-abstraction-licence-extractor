@@ -26,7 +26,12 @@ public class DatabaseOutputService(
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         return Task.FromResult($"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}");
     }
-    
+
+    public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    {
+        return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilePath, pdfServiceName);
+    }
+
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
     {
         return databaseAddService.AddProcessRunAsync(processRun);
@@ -147,7 +152,7 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceAsync(filename);
     }
     
-    public Task<MatchesResult> GetMatchesResult(string filename)
+    public Task<MatchesResult?> GetMatchesResult(string filename)
     {
         return databaseReadService.GetMatchesResult(filename);
     }

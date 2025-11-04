@@ -32,5 +32,7 @@ public class ConfiguredServices
     
     public string? LicenceSetsDataPath { get; set; }
     
+    public string? ThumbnailImageDataPath { get; set; }
+    
     public bool RefreshCache{ get; set; }
 }

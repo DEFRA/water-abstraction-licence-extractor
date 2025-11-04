@@ -21,7 +21,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var outputService = GetOutputService();
+var config = new ConfigurationBuilder();
+config.AddJsonFile("appsettings.json");
+config.AddJsonFile("appsettings.Development.json");
+
+var outputService = GetOutputService(config.Build());
 
 app.MapGet("/list", async () =>
 {
@@ -60,6 +64,25 @@ app.MapGet("/list", async () =>
     return $"var data = {serializedData};";
 }).WithName("GetLicences");
 
+app.MapGet("/thumbnail", async (string filename) =>
+{
+    var parts = filename.Split('/');
+    var fileName1 = parts[0];
+    var serviceName = parts[1];
+
+    var pageNumberStr = parts.Last()
+        .Replace("page-", string.Empty)
+        .Replace(".jpg", string.Empty);
+        
+    var pageNumber = int.Parse(pageNumberStr);
+    var data = await outputService.GetPageScreenshotDataAsync(
+        pageNumber,
+        serviceName,
+        fileName1);
+    
+    return Results.File(data!, "image/jpeg");
+}).WithName("GetThumbnail");
+
 app.MapGet("/internal", async (string filename) =>
 {
     var serializedData = JsonSerializer.Serialize(
@@ -90,9 +113,9 @@ app.MapGet("/licenceSets", async (string filename) =>
 app.Run();
 return;
 
-static IOutputService GetOutputService()
+static IOutputService GetOutputService(IConfiguration configuration)
 {
-    var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")!;
+    var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
 
     var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
     var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);

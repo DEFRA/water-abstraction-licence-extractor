@@ -155,6 +155,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
                 "var textData = `" + body + "`;");
         }
     }
+    
+    public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    {
+        throw new NotImplementedException();
+    }
 
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
@@ -186,7 +191,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<MatchesResult> GetMatchesResult(string filename)
+    public Task<MatchesResult?> GetMatchesResult(string filename)
     {
         throw new NotImplementedException();
     }

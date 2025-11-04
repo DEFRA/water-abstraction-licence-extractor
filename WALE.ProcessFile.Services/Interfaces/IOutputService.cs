@@ -13,6 +13,11 @@ public interface IOutputService
         string pdfServiceName,
         string pdfFilePath);
     
+    public Task<byte[]?> GetPageScreenshotDataAsync(
+        int pageNumber,
+        string pdfServiceName,
+        string pdfFilePath);
+    
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
 
     public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId);
@@ -44,5 +49,5 @@ public interface IOutputService
     
     Task<Licence?> GetLicenceAsync(string filename);
     
-    Task<MatchesResult> GetMatchesResult(string filename);
+    Task<MatchesResult?> GetMatchesResult(string filename);
 }

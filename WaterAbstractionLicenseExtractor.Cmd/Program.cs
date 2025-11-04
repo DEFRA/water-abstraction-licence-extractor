@@ -45,7 +45,8 @@ async Task ProgramAsync()
         services.ListDataPath!,
         services.InternalDataPath!,
         services.LicenceDataPath!,
-        services.LicenceSetsDataPath!);
+        services.LicenceSetsDataPath!,
+        services.ThumbnailImageDataPath!);
     
     var fileLicenceMapping = PopulateFileMapping(fileMappingPath);
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
@@ -202,6 +203,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("LicenceDataPath");
     var licenceSetsDataPath = Environment.GetEnvironmentVariable("LicenceSetsDataPath")
         ?? throw new NullReferenceException("LicenceSetsDataPath");
+    var thumbnailImageDataPath = Environment.GetEnvironmentVariable("ThumbnailImageDataPath")
+        ?? throw new NullReferenceException("ThumbnailImageDataPath");    
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
@@ -265,7 +268,8 @@ ConfiguredServices ConfigureServices()
         ListDataPath = listDataPath,
         InternalDataPath = internalDataPath,
         LicenceDataPath = licenceDataPath,
-        LicenceSetsDataPath = licenceSetsDataPath,        
+        LicenceSetsDataPath = licenceSetsDataPath,
+        ThumbnailImageDataPath = thumbnailImageDataPath,
         RefreshCache = refreshCache
     };
 }
@@ -368,7 +372,8 @@ async Task MoveReportHtmlFilesAsync(
     string listDataPath,
     string internalDataPath,
     string licenceDataPath,
-    string licenceSetsDataPath)
+    string licenceSetsDataPath,
+    string thumbnailImageDataPath)
 {
     Copy(reportTemplatePath, outputFolder);
 
@@ -394,6 +399,7 @@ async Task MoveReportHtmlFilesAsync(
     reportHtml = reportHtml.Replace("[INTERNAL_DATA_PATH]", internalDataPath);
     reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
     reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
+    
     await File.WriteAllTextAsync(reportPath, reportHtml);
     
     File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
@@ -404,6 +410,8 @@ async Task MoveReportHtmlFilesAsync(
     var indexHtml = await File.ReadAllTextAsync(indexPath);
     indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
     indexHtml = indexHtml.Replace("[LIST_DATA_PATH]", listDataPath);
+    indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
+    
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 

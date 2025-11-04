@@ -404,7 +404,7 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
                 
         let html =
             "<tr style='" + backgroundCss + "'>" +
-            "<td style='text-align: center'><img src='" + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
+            "<td style='text-align: center'><img src='" + window.thumbnailImageUrl + item.imagePath + "' style='height: 80px' alt='No image found' onerror='this.style.display='none' /></td>" +
             "<td><a href='report.html?filename=" + item.filename + "' onclick=\"openIframe('" + item.filename + "'); return false;\">" + item.filename + "</a></td>" +
             "<td id='" + dashesIfNullOrEmpty(item.licenceNumber) + "'>" + dashesIfNullOrEmpty(item.licenceNumber) + aiLicenceNumberLine + "</td>" +
             "<td class='default-hidden'>" + dashesIfNullOrEmpty(item.licenceHolder) + "</td>" +

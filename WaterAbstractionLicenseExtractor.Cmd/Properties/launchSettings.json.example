@@ -20,7 +20,8 @@
         "ListDataPath": "list-data.js",
         "InternalDataPath": "filename + '/internal.jsonp'",
         "LicenceDataPath": "filename + '/licence.jsonp'",
-        "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'"
+        "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'",
+        "ThumbnailImageDataPath": ""
       }
     }
   }

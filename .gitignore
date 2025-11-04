@@ -26,3 +26,4 @@ WALE.ProcessFile.Models/bin
 WALE.ProcessFile.Models/obj
 WALE.ProcessFile.Web/bin
 WALE.ProcessFile.Web/obj
+WALE.ProcessFile.Web/appsettings.Development.json

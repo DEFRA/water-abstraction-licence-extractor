@@ -557,7 +557,7 @@ public class PdfDataExtractorService(
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                 previouslyParsedPaths,
                 processRunId);
 

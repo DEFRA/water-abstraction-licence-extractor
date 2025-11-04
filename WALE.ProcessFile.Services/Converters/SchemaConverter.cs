@@ -811,7 +811,7 @@ public static class SchemaConverter
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                         relatedFileName,
-                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
+                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                         previouslyParsedPaths,
                         processRunId);
 
@@ -852,7 +852,7 @@ public static class SchemaConverter
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping, outputFolder, cacheFolder),
+                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                 previouslyParsedPaths,
                 processRunId);
                     

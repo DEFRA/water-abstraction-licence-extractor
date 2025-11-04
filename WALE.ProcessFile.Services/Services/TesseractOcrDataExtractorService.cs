@@ -17,7 +17,13 @@ public class TesseractOcrDataExtractorService(
     public string Name => $"TesseractOcr-{pageSegMode}";
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
+        GetTextLinesFromImageAsync(
+            string imageReference,
+            string pdfFilepath,
+            int pageNumber,
+            int imageNumber,
+            PdfDocument pdfDocument,
+            int processRunId)
     {
         var returnLines = new List<LineAndWords>();
         var request = new OcrServiceImageTextCacheRequest
@@ -45,14 +51,15 @@ public class TesseractOcrDataExtractorService(
 
             try
             {
-                var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-                {
-                    PageNumber = pageNumber,
-                    ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
-                    NoOcrServiceName = PdfDataExtractorService.Name,
-                    Extension = imageReference.Split('.').Last()
-                });
+                var bytes = await cacheService.GetImageBytesAsync(
+                    new OcrServiceImageDataCacheRequest
+                    {
+                        PageNumber = pageNumber,
+                        ImageNumber = imageNumber,
+                        Filepath = pdfFilepath,
+                        NoOcrServiceName = PdfDataExtractorService.Name,
+                        Extension = imageReference.Split('.').Last()
+                    });
 
                 if (bytes == null)
                 {
@@ -89,7 +96,7 @@ public class TesseractOcrDataExtractorService(
         }
         
         const int lineHeight = 15;
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight);
+        return OcrHelper.Group(returnLines, pageNumber, lineHeight, 1);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)

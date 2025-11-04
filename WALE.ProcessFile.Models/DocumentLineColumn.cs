@@ -12,6 +12,27 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
     
     public List<DocumentLineWord> Words { get; set; } = words;
 
+    public double? OcrConfidence
+    {
+        get
+        {
+            var totalConfidence = 0.0;
+            
+            foreach (var word in Words)
+            {
+                if (word.OcrConfidence == null)
+                {
+                    continue;
+                }
+                
+                totalConfidence += word.OcrConfidence.Value;
+            }
+
+            var averageConfidence = totalConfidence / Words.Count;
+            return averageConfidence;
+        }
+    }
+
     public DocumentLineColumn Clone()
     {
         return new DocumentLineColumn(Text, Words.ToList());

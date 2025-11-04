@@ -9,7 +9,8 @@ public static class OcrHelper
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         int pageNumber,
-        int lineHeight)
+        int lineHeight,
+        int multiplyConfidenceBy)
     {
         var lineNumber = 0;
         
@@ -47,7 +48,7 @@ public static class OcrHelper
                     columns.Add(new DocumentLineColumn(line.Text!, line.Words!.Select(word =>
                         new DocumentLineWord(
                             word!.Text,
-                            word.OcrConfidence * 100,
+                            word.OcrConfidence * multiplyConfidenceBy,
                             new DocumentLineWordCoordinates(
                                 word.Coordinates.Top,
                                 word.Coordinates.Right,

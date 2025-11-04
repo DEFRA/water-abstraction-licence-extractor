@@ -118,7 +118,7 @@ async Task ProgramAsync()
         throw;
     }
 
-    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+    licenceSets = WaterAbstractionLicenceSchemaConverter.AddGroupLicenceSetDetails(
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
@@ -325,7 +325,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedPaths,
             processRun.ProcessRunId);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
             impoundmentLicenceNumbers,

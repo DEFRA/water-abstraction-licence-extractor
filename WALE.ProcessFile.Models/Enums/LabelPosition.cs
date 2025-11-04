@@ -3,8 +3,6 @@ namespace WALE.ProcessFile.Models.Enums;
 public enum LabelPosition
 {
     ApplicableToMost,
-    AfterTextContainsAnotherMatch,
-    Unknown,
     LabelIsBeforeTextToFind,
     LabelIsAfterTextToFind,
     LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
@@ -13,6 +11,6 @@ public enum LabelPosition
     ContractIsSuccession,
     TextToFindIsBetweenLabels,
     RelatedCategoryPosition,
-    Split,
-    ActuallyLabel
+    SplitAtLabel,
+    LabelIsActuallyResult
 }

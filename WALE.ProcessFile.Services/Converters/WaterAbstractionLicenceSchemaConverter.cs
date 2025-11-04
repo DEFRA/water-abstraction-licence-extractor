@@ -8,7 +8,7 @@ using LabelGroupResult = WALE.ProcessFile.Models.LabelGroupResult;
 
 namespace WALE.ProcessFile.Services.Converters;
 
-public static class SchemaConverter
+public static class WaterAbstractionLicenceSchemaConverter
 {
     private static Licence ToLicence(
         MatchesResult matchesResult,
@@ -22,6 +22,8 @@ public static class SchemaConverter
         {
             throw new Exception("No match object exists to convert");
         }
+        
+        
         
         var licenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -163,14 +165,14 @@ public static class SchemaConverter
             Individual = individual
         };
 
-        var noneSchemaData = new Dictionary<string, object>();
+        var noneSchemaData = new Dictionary<string, object?>();
 
         var issuedToMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
 
         if (issuedToMatch != null)
         {
-            var issuedToMatchType = issuedToMatch.MatchType;
+            var issuedToMatchType = issuedToMatch.MatchedPosition;
             noneSchemaData.Add("issuedToMatchType", issuedToMatchType.ToString());
             
             var issuedTo = issuedToMatch
@@ -181,15 +183,11 @@ public static class SchemaConverter
             if (!string.IsNullOrEmpty(issuedTo))
             {
                 noneSchemaData.Add("issuedTo", issuedTo);
-            }
-
-            var issuedToConfidence = issuedToMatch.Confidence;
-            
-            if (issuedToConfidence != null)
-            {
+                
+                var issuedToConfidence = issuedToMatch.Confidence;
                 noneSchemaData.Add("issuedToConfidence", issuedToConfidence);
             }
-
+            
             var issuedToMatchedLabelText = issuedToMatch.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
             noneSchemaData.Add("issuedToMatchedLabelText", issuedToMatchedLabelText);
             
@@ -204,10 +202,7 @@ public static class SchemaConverter
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
             .Confidence;
         
-        if (licenceNumberOcrConfidence != null)
-        {
-            noneSchemaData.Add("licenceNumberConfidence", licenceNumberOcrConfidence);
-        }
+        noneSchemaData.Add("licenceNumberConfidence", licenceNumberOcrConfidence);
         
         var ocr = matchesResult.ScannedFile ? "OCR" : "NoOCR";
         noneSchemaData.Add("ocr", ocr);

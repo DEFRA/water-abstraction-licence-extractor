@@ -73,10 +73,10 @@ public static class LabelConfiguration
                             }
                         ],
                         Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
+                        Position = LabelPosition.LabelIsActuallyResult,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
@@ -129,10 +129,10 @@ public static class LabelConfiguration
                             }
                         ],
                         Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
+                        Position = LabelPosition.LabelIsActuallyResult,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
@@ -183,10 +183,10 @@ public static class LabelConfiguration
                             }
                         ],
                         Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
+                        Position = LabelPosition.LabelIsActuallyResult,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
@@ -235,8 +235,8 @@ public static class LabelConfiguration
                             }
                         ],
                         Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        Position = LabelPosition.LabelIsActuallyResult,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
@@ -450,7 +450,7 @@ public static class LabelConfiguration
                     new(@"/Page \d* of \d*/"),
                     new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
                 ],
-                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
+                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
                 MinimumSubMatches = 1,
@@ -471,7 +471,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 100,
@@ -496,8 +496,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeGroupSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split,
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                        Position = LabelPosition.SplitAtLabel,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     }
                                 ]
                             },
@@ -597,7 +597,7 @@ public static class LabelConfiguration
                                 PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 100,
                                 IncludeStartLabelText = true,
-                                MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                                 SubLabels = new List<LabelToMatch>
                                 {
                                     new()
@@ -654,8 +654,8 @@ public static class LabelConfiguration
                                             {
                                                 Name = "PurposeLinkSub",
                                                 Text = [new("and ")],
-                                                Position = LabelPosition.Split,
-                                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                                Position = LabelPosition.SplitAtLabel,
+                                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                             }
                                         ]
                                     },
@@ -688,7 +688,7 @@ public static class LabelConfiguration
                                         Text = [
                                             new("marked") // TODO ' marked ' doesn't work, change so it does
                                         ],
-                                        Position = LabelPosition.Split,
+                                        Position = LabelPosition.SplitAtLabel,
                                         Format = "Text",
                                         PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 10,
@@ -761,7 +761,7 @@ public static class LabelConfiguration
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         NextLinesToFetch = 30,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         IncludeWholeLine = true,
                         Remove = [
                             new("4. PURPOSE OF ABSTRACTION"),
@@ -804,8 +804,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PointGroupSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split,
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                        Position = LabelPosition.SplitAtLabel,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     }
                                 ]
                             },
@@ -828,7 +828,7 @@ public static class LabelConfiguration
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
                                 IncludeStartLabelText = true,
                                 Format = "Text",
-                                MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                                 //Remove = [
                                 //    new(@"/Page \d* of \d*/"),
                                 //    new("/Licence Serial No: [A-Z0-9/]*/")
@@ -868,7 +868,7 @@ public static class LabelConfiguration
                                             new("4.3"),
                                             new("4.4")
                                         ],
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
                                     },
@@ -883,10 +883,10 @@ public static class LabelConfiguration
                                             }
                                         ],
                                         Format = LicenceNumber.Constant,
-                                        Position = LabelPosition.ActuallyLabel,
+                                        Position = LabelPosition.LabelIsActuallyResult,
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 0,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         SkipLineWhenContains =
                                         [
                                             new("Licence Serial No: ")
@@ -1086,7 +1086,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 10,
                         IncludeStartLabelText = true,
@@ -1120,8 +1120,8 @@ public static class LabelConfiguration
                                     {
                                         Name = "PurposeLinkSub",
                                         Text = [new("and ")],
-                                        Position = LabelPosition.Split,
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                        Position = LabelPosition.SplitAtLabel,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     }
                                 ]
                             },
@@ -1136,7 +1136,7 @@ public static class LabelConfiguration
                                     new("For Purpose ") { RemoveWholeLine = true },
                                     new("For Purposes ") { RemoveWholeLine = true }                                   
                                 ],
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Text",
                                 SubLabels = [
@@ -1148,9 +1148,9 @@ public static class LabelConfiguration
                                             new("From "),
                                             new("inclusive")
                                         ],
-                                        Position = LabelPosition.Split,
+                                        Position = LabelPosition.SplitAtLabel,
                                         Format = "DateOrPurpose",
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                                     }
                                 ]
                             }
@@ -1177,8 +1177,8 @@ public static class LabelConfiguration
                     {
                         Name = "DuringTheMonthsXToYOnlyTextParts",
                         Text = [new("to")],
-                        Position = LabelPosition.Split,
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                        Position = LabelPosition.SplitAtLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                     }
                 ]
             },
@@ -1226,7 +1226,7 @@ public static class LabelConfiguration
                         Format = "Text",
                         NextLinesToFetch = 6,
                         IncludeStartLabelText = true,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels =
                         [
                             new()
@@ -1291,7 +1291,7 @@ public static class LabelConfiguration
                                     new("3.3") { ColumnMustStartWith = true },
                                     new("3.4") { ColumnMustStartWith = true }
                                 ],
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Text",
                                 PreviousLinesToFetch = 0,
@@ -1358,7 +1358,7 @@ public static class LabelConfiguration
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
-                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
@@ -1406,7 +1406,7 @@ public static class LabelConfiguration
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         PreviousLinesToFetch = 3,
                         NextLinesToFetch = 20,
                         MinimumSubMatches = 1,
@@ -1425,8 +1425,8 @@ public static class LabelConfiguration
             {
                 Name = "AbstractionLimitPointSub",
                 Text = [new("and licence")],
-                Position = LabelPosition.Split,
-                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                Position = LabelPosition.SplitAtLabel,
+                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                 PreviousLinesToFetch = 20,
                 MinimumSubMatches = 2,
                 IncludeStartLabelText = true,
@@ -1449,7 +1449,7 @@ public static class LabelConfiguration
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
                         IncludeStartLabelText = true,
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                     },
                     new()
                     {
@@ -1488,7 +1488,7 @@ public static class LabelConfiguration
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         IncludeStartLabelText = true,
                         IncludeEndLabelText = true,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                     },
                     new()
                     {
@@ -1533,8 +1533,8 @@ public static class LabelConfiguration
                             {
                                 Name = "PurposeConditionSub",
                                 Text = [new("and ")],
-                                Position = LabelPosition.Split,
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                             }
                         ]
                     },
@@ -1612,8 +1612,8 @@ public static class LabelConfiguration
                             {
                                 Name = "PointConditionSub",
                                 Text = [new("and ")],
-                                Position = LabelPosition.Split,
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                             }
                         ]
                     },
@@ -1632,7 +1632,7 @@ public static class LabelConfiguration
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = LicenceNumber.Constant,
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         SkipLineWhenContains =
                         [
                             new("Licence Serial No: ")
@@ -1684,7 +1684,7 @@ public static class LabelConfiguration
                             "million gallons",
                             "gallons"
                         },
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1711,7 +1711,7 @@ public static class LabelConfiguration
                             "million gallons",
                             "gallons"
                         },
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1738,7 +1738,7 @@ public static class LabelConfiguration
                             "million gallons",
                             "gallons"
                         },
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1769,7 +1769,7 @@ public static class LabelConfiguration
                             "million gallons",
                             "gallons"
                         },
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1796,7 +1796,7 @@ public static class LabelConfiguration
                             "million gallons",
                             "gallons"
                         },
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1827,7 +1827,7 @@ public static class LabelConfiguration
                         [
                             "abstracted in total"
                         ],
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1867,7 +1867,7 @@ public static class LabelConfiguration
                         ],
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1897,7 +1897,7 @@ public static class LabelConfiguration
                         ],
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1927,7 +1927,7 @@ public static class LabelConfiguration
                         ],
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1961,7 +1961,7 @@ public static class LabelConfiguration
                         ],
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -1989,7 +1989,7 @@ public static class LabelConfiguration
                             "(11)",
                             "(111)"
                         ],
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true,
                         PreviousLinesToFetch = 1
                         // Not setting NextLinesToFetch to 1 as it breaks some existing tests
@@ -2015,7 +2015,7 @@ public static class LabelConfiguration
                         ],
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
                     new()
@@ -2032,11 +2032,11 @@ public static class LabelConfiguration
                             new()
                             {
                                 Name = "AYearDates",
-                                Position = LabelPosition.Split,
+                                Position = LabelPosition.SplitAtLabel,
                                 Text = [new("and")],
                                 Remove = [new("ending on")],
                                 Format = "DateOrPurpose",
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                             }
                         ]
                     },

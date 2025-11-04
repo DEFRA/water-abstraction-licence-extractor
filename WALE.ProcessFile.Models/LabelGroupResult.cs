@@ -1,5 +1,4 @@
 using WALE.ProcessFile.Models.Enums;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Models;
 
@@ -7,7 +6,7 @@ public class LabelGroupResult
 {
     public IReadOnlyList<DocumentLine>? Text { get; set; }
 
-    public MatchType MatchType { get; set; }
+    public MatchedPosition MatchedPosition { get; set; }
 
     public bool IsOcr { get; init; }
 
@@ -81,7 +80,7 @@ public class LabelGroupResult
         return new LabelGroupResult
         {
             Text = Text?.ToList(),
-            MatchType = MatchType,
+            MatchedPosition = MatchedPosition,
             IsOcr = IsOcr,
             LineNumber = LineNumber,
             CharPosition = CharPosition,
@@ -102,12 +101,12 @@ public class LabelGroupResult
     }
     
     public LabelGroupResult Clone(
-        MatchType matchType,
+        MatchedPosition matchedPosition,
         LabelPosition position,
         LabelToMatch label)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedPosition = matchedPosition;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
 
@@ -115,13 +114,13 @@ public class LabelGroupResult
     }
     
     public LabelGroupResult Clone(
-        MatchType matchType,
+        MatchedPosition matchedPosition,
         LabelPosition position,
         LabelToMatch label,
         IEnumerable<DocumentLine> text)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedPosition = matchedPosition;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
         labelGroupResult.Text = text.ToList();

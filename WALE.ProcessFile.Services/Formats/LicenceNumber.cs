@@ -29,7 +29,7 @@ public static partial class LicenceNumber
     {
         matchedLines = [];
         var anyMatchFound = false;
-        var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+        var findSingleResult = label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue;
         
         foreach (var line in lines)
         {

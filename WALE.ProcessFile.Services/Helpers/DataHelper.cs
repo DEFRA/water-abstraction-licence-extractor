@@ -89,7 +89,7 @@ public static partial class DataHelper
     {
         var beforeStuff = textBeforeAtAndAfterLabel!
             .Where(tuple =>
-                (includeLabelText && tuple.Label?.Position == LabelPosition.ActuallyLabel)
+                (includeLabelText && tuple.Label?.Position == LabelPosition.LabelIsActuallyResult)
                     || tuple.Label?.Position is LabelPosition.LabelIsBeforeTextToFind
                         or LabelPosition.TextToFindIsBetweenLabels)
             .OrderBy(x =>
@@ -97,7 +97,7 @@ public static partial class DataHelper
                 return x.Label?.Position switch
                 {
                     LabelPosition.LabelIsAfterTextToFind => -2,
-                    LabelPosition.ActuallyLabel => -1,
+                    LabelPosition.LabelIsActuallyResult => -1,
                     LabelPosition.TextToFindIsBetweenLabels => 0,
                     LabelPosition.LabelIsBeforeTextToFind => 1,
                     _ => throw new ArgumentOutOfRangeException()

@@ -6,7 +6,6 @@ using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -134,7 +133,7 @@ public class AzureAiVisionOcrPdfTests
 
         Assert.Equal(2, perHourValuesAll.Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
@@ -258,7 +257,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text!.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -338,7 +337,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -433,7 +432,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("SHERBORNE SCHOOL", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearNextLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -537,7 +536,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
@@ -591,7 +590,7 @@ public class AzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
@@ -639,7 +638,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -812,7 +811,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("Mr T M C Davey", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -861,7 +860,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("A A C McArthur", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["Licensee"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
         /*var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -1057,7 +1056,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
@@ -1288,7 +1287,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(2, purpose.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
@@ -1357,7 +1356,7 @@ public class AzureAiVisionOcrPdfTests
         var resultFull = await GetMatchesAsync(filename, false);
         Assert.Equal(7, resultFull.Matches?.Count); // TODO maybe should be 8
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,
@@ -1387,7 +1386,7 @@ public class AzureAiVisionOcrPdfTests
         var resultFull = await GetMatchesAsync(filename, false);
         Assert.Equal(6, resultFull.Matches?.Count);
 
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _impoundmentLicenceNumbers,

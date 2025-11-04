@@ -38,7 +38,8 @@ public class LabelToMatch
     public int PreviousLinesToFetch { get; init; } = 2;
     public int NextLinesToFetch { get; init; } = 4;
     public bool DoNotTrimLines { get; init; }
-    public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+    public MultipleMatchBehaviour MultipleMatchBehaviour { get; init; }
+        = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue;
     public bool FindMultipleOnSingleLine { get; init; }
         
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -80,7 +81,7 @@ public class LabelToMatch
             Possibilities = Possibilities?.ToList(),
             PreviousLinesToFetch = PreviousLinesToFetch,
             NextLinesToFetch = NextLinesToFetch,
-            MultipleBehaviour = MultipleBehaviour,
+            MultipleMatchBehaviour = MultipleMatchBehaviour,
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
             DoNotTrimLines = DoNotTrimLines,

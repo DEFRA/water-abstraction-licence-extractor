@@ -183,11 +183,8 @@ public static class SchemaConverter
                 noneSchemaData.Add("issuedTo", issuedTo);
             }
 
-            var issuedToConfidence = issuedToMatch
-                .Text?
-                .FirstOrDefault()?
-                .OcrConfidence;
-
+            var issuedToConfidence = issuedToMatch.Confidence;
+            
             if (issuedToConfidence != null)
             {
                 noneSchemaData.Add("issuedToConfidence", issuedToConfidence);
@@ -205,9 +202,7 @@ public static class SchemaConverter
 
         var licenceNumberOcrConfidence = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .OcrConfidence;
+            .Confidence;
         
         if (licenceNumberOcrConfidence != null)
         {

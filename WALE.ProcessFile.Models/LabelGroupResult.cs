@@ -23,6 +23,55 @@ public class LabelGroupResult
     
     public LabelToMatch? MatchedLabel { get; set; }
 
+    public double? Confidence
+    {
+        get
+        {
+            if (MatchedLabel == null)
+            {
+                return null;
+            }
+
+            switch (MatchedLabel.ConfidenceType)
+            {
+                case ConfidenceType.NotSet:
+                    return null;
+                case ConfidenceType.Static:
+                    return MatchedLabel.ConfidenceIfMatched;
+                case ConfidenceType.OcrConfidencePassthrough:
+                    if (Text == null || Text.Count == 0 || MatchedLabel == null)
+                    {
+                        return null;
+                    }
+
+                    return GetAverageConfidence();
+                case ConfidenceType.OcrConfidenceMultiplied:
+                    if (Text == null || Text.Count == 0 || MatchedLabel == null)
+                    {
+                        return null;
+                    }
+
+                    var averageConfidence = GetAverageConfidence();
+                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * averageConfidence;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
+    private double? GetAverageConfidence()
+    {
+        if (Text == null || Text.Count == 0 || MatchedLabel == null)
+        {
+            return null;
+        }
+                    
+        var totalConfidence = Text.Sum(t => t.OcrConfidence
+            ?? MatchedLabel.NoOcrConfidence);
+
+        return totalConfidence / Text.Count;
+    }   
+    
     public IReadOnlyList<LabelGroupResult> SubResults { get; set; } = new List<LabelGroupResult>();
     
     public LabelGroupResult Clone()

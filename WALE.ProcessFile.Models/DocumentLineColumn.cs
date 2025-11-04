@@ -17,6 +17,7 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
         get
         {
             var totalConfidence = 0.0;
+            var anyHaveOcrConfidence = false;
             
             foreach (var word in Words)
             {
@@ -26,8 +27,14 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
                 }
                 
                 totalConfidence += word.OcrConfidence.Value;
+                anyHaveOcrConfidence = true;
             }
 
+            if (!anyHaveOcrConfidence)
+            {
+                return null;
+            }
+            
             var averageConfidence = totalConfidence / Words.Count;
             return averageConfidence;
         }

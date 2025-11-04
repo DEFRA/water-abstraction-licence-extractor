@@ -963,7 +963,9 @@ public static class LabelConfiguration
                 ],
                 Remove = [
                     new("hereby grant a licence to")
-                ]
+                ],
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 93
             },
             new LabelToMatch
             {
@@ -986,7 +988,9 @@ public static class LabelConfiguration
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
-                ]
+                ],
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 94
             },
             new LabelToMatch
             {
@@ -1007,7 +1011,9 @@ public static class LabelConfiguration
                 IgnoreMatchIfContains = [
                     "source of supply",
                     "abstract water"
-                ]
+                ],
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 95
             },
             new LabelToMatch
             {
@@ -1021,7 +1027,9 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 2,
                 Format = "CompanyName",
                 MatchAllText = true,
-                Name = "IsSuccession"
+                Name = "IsSuccession",
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 85
             }
         ];
     }

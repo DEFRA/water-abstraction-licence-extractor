@@ -17,52 +17,91 @@ public static class Units
             return [];
         }
 
-        var newLines = lineNumbersAreDescending ? lines.Reverse().ToList() : lines.ToList();
-        
-        foreach (var line in newLines)
+        var lineGroups = new List<List<DocumentLine>>();
+        var initialLine = lines.FirstOrDefault(l => l.LineNumber == labelGroupResult.LineNumber);
+
+        if (initialLine != null)
         {
-            var matchedPossibilityForLine = (string?)null;
-            var newColumns = new List<DocumentLineColumn>();
-            
-            foreach (var column in line.Columns)
+            lineGroups.Add([initialLine!]);
+        }
+
+        if (lines.Count > 1 || lineGroups.Count == 0)
+        {
+            lineGroups.Add(lineNumbersAreDescending
+                ? lines.OrderByDescending(x => x.LineNumber).ToList()
+                : lines.OrderBy(x => x.LineNumber).ToList());
+        }
+
+        foreach (var lineGroup in lineGroups)
+        {
+            foreach (var line in lineGroup)
             {
-                var matchedPossibilityForColumn = (string?)null;
-                
-                foreach (var possibility in label.Possibilities!)
+                var matchedPossibilityForLine = (string?)null;
+                var newColumns = new List<DocumentLineColumn>();
+
+                foreach (var column in line.Columns)
                 {
-                    if (!column.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                    var matchedPossibilityForColumn = (string?)null;
+
+                    foreach (var possibility in label.Possibilities!)
+                    {
+                        if (!column.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        var clonedColumn = new DocumentLineColumn(possibility);
+                        newColumns.Add(clonedColumn);
+
+                        matchedPossibilityForLine = possibility;
+                        matchedPossibilityForColumn = possibility;
+
+                        break;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(matchedPossibilityForColumn))
                     {
                         continue;
                     }
 
-                    var clonedColumn = new DocumentLineColumn(possibility);
-                    newColumns.Add(clonedColumn);
-
-                    matchedPossibilityForLine = possibility;
-                    matchedPossibilityForColumn = possibility;
-
+                    newColumns.Add(column);
                     break;
                 }
 
-                if (!string.IsNullOrWhiteSpace(matchedPossibilityForColumn))
+                if (string.IsNullOrEmpty(matchedPossibilityForLine))
                 {
-                    continue;
+                    var previousLine = lines.FirstOrDefault(l => l.LineNumber == line.LineNumber - 1);
+
+                    // Look at this and the last line together for a match
+                    var multipleLineText = $"{previousLine?.Text} {line.Text}";
+
+                    foreach (var possibility in label.Possibilities!)
+                    {
+                        if (!multipleLineText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        var clonedColumn = new DocumentLineColumn(possibility);
+                        newColumns.Clear();
+                        newColumns.Add(clonedColumn);
+
+                        matchedPossibilityForLine = possibility;
+                        break;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(matchedPossibilityForLine))
+                    {
+                        continue;
+                    }
                 }
-                
-                newColumns.Add(column);
-                break;
-            }
 
-            if (string.IsNullOrEmpty(matchedPossibilityForLine))
-            {
-                continue;
-            }
-            
-            var clonedLine = line.Clone(newColumns);
-            labelGroupResult = labelGroupResult.Clone([clonedLine]);
-            labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine];
+                var clonedLine = line.Clone(newColumns);
+                labelGroupResult = labelGroupResult.Clone([clonedLine]);
+                labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine];
 
-            return [labelGroupResult];
+                return [labelGroupResult];
+            }
         }
 
         return [];

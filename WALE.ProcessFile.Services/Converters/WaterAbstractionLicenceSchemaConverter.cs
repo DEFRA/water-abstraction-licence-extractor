@@ -23,59 +23,36 @@ public static class WaterAbstractionLicenceSchemaConverter
             throw new Exception("No match object exists to convert");
         }
         
+        var noneSchemaData = new Dictionary<string, object?>();
+
+        var licenceNumberMatch = GetMatch("LicenceNumber", matches);
+        var licenceNumber = GetSingleLineText(licenceNumberMatch);
+        noneSchemaData.Add("Confidence:LicenceNumber", licenceNumberMatch?.Confidence);
+        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+
+        var effectiveDateMatch = GetMatch("DateEffective", matches);
+        var effectiveDateStr = DateFormatConsistent(GetSingleLineText(effectiveDateMatch));
+        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut) ? effectiveDateOut : (DateTime?)null;
+        noneSchemaData.Add("Confidence:EffectiveDate", effectiveDateMatch?.Confidence);
         
+        var dateOfIssueMatch = GetMatch("DateOfIssue", matches);
+        var dateOfIssueStr = DateFormatConsistent(GetSingleLineText(dateOfIssueMatch));
+        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut) ? dateOfIssueOut : (DateTime?)null;
+        noneSchemaData.Add("Confidence:DateOfIssue", dateOfIssueMatch?.Confidence);
         
-        var licenceNumber = matches
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
+        var dateOfOriginalIssueMatch = GetMatch("DateOfOriginalIssue", matches);
+        var dateOfOriginalIssueStr = DateFormatConsistent(GetSingleLineText(dateOfOriginalIssueMatch));
+        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut) ? dateOfOriginalIssueOut : (DateTime?)null;
+        noneSchemaData.Add("Confidence:DateOfOriginalIssue", dateOfOriginalIssueMatch?.Confidence);
 
-        var effectiveDateStr = DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
+        var dateOfExpiryMatch = GetMatch("DateOfExpiry", matches);
+        var dateOfExpiryStr = DateFormatConsistent(GetSingleLineText(dateOfExpiryMatch));
+        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut) ? dateOfExpiryOut : (DateTime?)null;
+        noneSchemaData.Add("Confidence:DateOfExpiry", dateOfExpiryMatch?.Confidence);
 
-        var dateOfIssueStr = DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfOriginalIssueStr = DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfExpiryStr = DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
-            ? dateOfExpiryOut
-            : (DateTime?)null;
-        
-        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
-            ? effectiveDateOut
-            : (DateTime?)null;
-        
-        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
-            ? dateOfIssueOut
-            : (DateTime?)null;
-        
-        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
-            ? dateOfOriginalIssueOut
-            : (DateTime?)null;
-
-        var issuer = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
+        var issuerMatch = GetMatch("Issuer", matches);
+        var issuer = GetSingleLineText(issuerMatch);
+        noneSchemaData.Add("Confidence:Issuer", issuer);
         
         var licenceVersion = new LicenceVersion
         {
@@ -86,8 +63,8 @@ public static class WaterAbstractionLicenceSchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches);
-        var points = GetPoints(matches);
+        var means = GetMeansOfAbstraction(matches, noneSchemaData);
+        var points = GetPoints(matches, noneSchemaData);
         var purposes = GetPurposes(matches);
         
         var (aggregates, individual) = GetAbstractionLimits(
@@ -95,17 +72,18 @@ public static class WaterAbstractionLicenceSchemaConverter
             licenceNumber,
             licenceVersion.LicenceVersionId,
             points,
-            purposes);
+            purposes,
+            noneSchemaData);
 
         var linkedLicences = aggregates
-            .Where(x => x.LinkedLicences?.Length >= 1)
-            .SelectMany(x => x.LinkedLicences!)
+            .Where(aggregate => aggregate.LinkedLicences?.Length >= 1)
+            .SelectMany(aggregate => aggregate.LinkedLicences!)
             .ToList();
 
-        linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
-        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
-        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
-        linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
+        linkedLicences.AddRange(GetRecordsLinkedLicences(matches, noneSchemaData));
+        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches, noneSchemaData));
+        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches, noneSchemaData));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches, noneSchemaData));
         // NOTE - We don't want to get licence history licences
         
         linkedLicences = linkedLicences
@@ -165,44 +143,32 @@ public static class WaterAbstractionLicenceSchemaConverter
             Individual = individual
         };
 
-        var noneSchemaData = new Dictionary<string, object?>();
+        var companyNameMatch = GetMatch("Company", matchesResult.Matches!);
 
-        var issuedToMatch = matchesResult.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        if (issuedToMatch != null)
+        if (companyNameMatch != null)
         {
-            var issuedToMatchType = issuedToMatch.MatchedPosition;
-            noneSchemaData.Add("issuedToMatchType", issuedToMatchType.ToString());
-            
-            var issuedTo = issuedToMatch
-                .Text?
-                .FirstOrDefault()?
-                .Text;
+            var companyNameMatchType = companyNameMatch.MatchedPosition;
+            noneSchemaData.Add("issuedToMatchType", companyNameMatchType.ToString());
 
-            if (!string.IsNullOrEmpty(issuedTo))
+            var companyName = GetSingleLineText(companyNameMatch);
+
+            if (!string.IsNullOrEmpty(companyName))
             {
-                noneSchemaData.Add("issuedTo", issuedTo);
+                noneSchemaData.Add("issuedTo", companyName);
                 
-                var issuedToConfidence = issuedToMatch.Confidence;
-                noneSchemaData.Add("issuedToConfidence", issuedToConfidence);
+                var issuedToConfidence = companyNameMatch.Confidence;
+                noneSchemaData.Add("Confidence:IssuedTo", issuedToConfidence);
             }
             
-            var issuedToMatchedLabelText = issuedToMatch.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
+            var issuedToMatchedLabelText = companyNameMatch.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
             noneSchemaData.Add("issuedToMatchedLabelText", issuedToMatchedLabelText);
             
-            var issuedToMatchLabelPosition = issuedToMatch.MatchedLabel?.Position.ToString() ?? "--";
+            var issuedToMatchLabelPosition = companyNameMatch.MatchedLabel?.Position.ToString() ?? "--";
             noneSchemaData.Add("issuedToMatchLabelPosition", issuedToMatchLabelPosition);
             
-            var issuedToCertainty = (int)issuedToMatchType / 100;
+            var issuedToCertainty = (int)companyNameMatchType / 100;
             noneSchemaData.Add("issuedToCertainty", issuedToCertainty);
         }
-
-        var licenceNumberOcrConfidence = matchesResult.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Confidence;
-        
-        noneSchemaData.Add("licenceNumberConfidence", licenceNumberOcrConfidence);
         
         var ocr = matchesResult.ScannedFile ? "OCR" : "NoOCR";
         noneSchemaData.Add("ocr", ocr);
@@ -210,7 +176,6 @@ public static class WaterAbstractionLicenceSchemaConverter
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
         var naldLicenceNumber = (string?)null;
-        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
             ? liveLicenceNumbers.Contains(licenceNumberTransformed)
@@ -264,108 +229,6 @@ public static class WaterAbstractionLicenceSchemaConverter
             DmsPath = null
         };
     }
-
-    private static LinkedLicence ToLinkedLicence(
-        string? licenceNumber,
-        string? filename,
-        Condition? condition,
-        string[] fromSection,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers)
-    {
-        var linkedLicenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
-        var naldLicenceNumber = (string?)null;
-        
-        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? liveLicenceNumbers.Contains(linkedLicenceNumberTransformed)
-            : (bool?)null;
-        
-        if (isLiveLicence == true)
-        {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
-        }
-        
-        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? deadLicenceNumbers.Contains(linkedLicenceNumberTransformed)
-            : (bool?)null;
-        
-        if (isDeadLicence == true)
-        {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
-        }
-        
-        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? impoundmentLicenceNumbers.Contains(linkedLicenceNumberTransformed)
-            : (bool?)null;
-        
-        if (isImpoundmentLicence == true)
-        {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
-        }
-        
-        var isFound = isDeadLicence == true
-            || isImpoundmentLicence == true
-            || isLiveLicence == true;
-        
-        return new LinkedLicence
-        {
-            LicenceNumber = licenceNumber,
-            NaldLicenceNumber = naldLicenceNumber,
-            Filename = filename,
-            Condition = condition,
-            FromSection = fromSection,
-            IsDeadLicence = isDeadLicence,
-            IsImpoundmentLicence = isImpoundmentLicence,
-            IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound,
-            DmsPath = null
-        };
-    }
-
-    private static string? GetLicenceNumberTransformed(string? licenceNumber)
-    {
-        if (string.IsNullOrEmpty(licenceNumber))
-        {
-            return licenceNumber;
-        }
-
-        // Replace dots with slashes IF its all dots
-        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
-        {
-            licenceNumber = licenceNumber.Replace(".", "/");
-        }
-        
-        var parts = licenceNumber.Split('/');
-        
-        if (parts.Length < 4)
-        {
-            return licenceNumber;
-        }
-        
-        var part1 = parts[0];
-        var part2 = parts[1];
-        var part3 = parts[2];
-        var part4 = parts[3];
-        var part5 = parts.Length >= 5 ? parts[4] : null;
-        
-        if (part3.Length == 1)
-        {
-            part3 = $"0{part3}";
-        }
-
-        // Pad part 4 with zeroes (needs to have 3 digits)
-        part4 = part4.Where(char.IsDigit).Count() switch
-        {
-            1 => $"00{part4}",
-            2 => $"0{part4}",
-            _ => part4
-        };
-
-        return parts.Length == 4 ?
-            $"{part1}/{part2}/{part3}/{part4}"
-            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
-    }
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
@@ -374,8 +237,6 @@ public static class WaterAbstractionLicenceSchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService  pdfDataExtractorService,
-        IOutputService outputService,
-        ICacheService cacheService,
         string pdfFolder,
         int processRunId)
     {
@@ -397,8 +258,6 @@ public static class WaterAbstractionLicenceSchemaConverter
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractorService,
-            outputService,
-            cacheService,
             pdfFolder,
             previouslyParsedPaths,
             processRunId);
@@ -503,6 +362,108 @@ public static class WaterAbstractionLicenceSchemaConverter
         }
         
         return returnList;
+    }
+    
+    private static LinkedLicence ToLinkedLicence(
+        string? licenceNumber,
+        string? filename,
+        Condition? condition,
+        string[] fromSection,
+        HashSet<string> impoundmentLicenceNumbers,
+        HashSet<string> deadLicenceNumbers,
+        HashSet<string> liveLicenceNumbers)
+    {
+        var linkedLicenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        var naldLicenceNumber = (string?)null;
+        
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? liveLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isLiveLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? deadLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isDeadLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
+            ? impoundmentLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+            : (bool?)null;
+        
+        if (isImpoundmentLicence == true)
+        {
+            naldLicenceNumber = linkedLicenceNumberTransformed;
+        }
+        
+        var isFound = isDeadLicence == true
+            || isImpoundmentLicence == true
+            || isLiveLicence == true;
+        
+        return new LinkedLicence
+        {
+            LicenceNumber = licenceNumber,
+            NaldLicenceNumber = naldLicenceNumber,
+            Filename = filename,
+            Condition = condition,
+            FromSection = fromSection,
+            IsDeadLicence = isDeadLicence,
+            IsImpoundmentLicence = isImpoundmentLicence,
+            IsLiveLicence = isLiveLicence,
+            LicenceFoundInList = isFound,
+            DmsPath = null
+        };
+    }
+
+    private static string? GetLicenceNumberTransformed(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        // Replace dots with slashes IF its all dots
+        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(".", "/");
+        }
+        
+        var parts = licenceNumber.Split('/');
+        
+        if (parts.Length < 4)
+        {
+            return licenceNumber;
+        }
+        
+        var part1 = parts[0];
+        var part2 = parts[1];
+        var part3 = parts[2];
+        var part4 = parts[3];
+        var part5 = parts.Length >= 5 ? parts[4] : null;
+        
+        if (part3.Length == 1)
+        {
+            part3 = $"0{part3}";
+        }
+
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        part4 = part4.Where(char.IsDigit).Count() switch
+        {
+            1 => $"00{part4}",
+            2 => $"0{part4}",
+            _ => part4
+        };
+
+        return parts.Length == 4 ?
+            $"{part1}/{part2}/{part3}/{part4}"
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     
     private static List<LicenceSet> AddMissingBackLinks(
@@ -726,17 +687,13 @@ public static class WaterAbstractionLicenceSchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService pdfDataExtractorService,
-        IOutputService outputService,
-        ICacheService cacheService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
         var returnLicences = new List<Licence>();
-        
-        var abstractionLimits = matchesResult.Matches?
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
+        var abstractionLimits = GetMatch("AbstractionLimits", matchesResult.Matches!);
         var abstractionLimitsPoints = abstractionLimits?.SubResults;
 
         if (abstractionLimitsPoints == null)
@@ -774,7 +731,7 @@ public static class WaterAbstractionLicenceSchemaConverter
 
                 foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
                 {
-                    var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
+                    var licenceNumber = GetSingleLineText(linkedLicencesNumberResult);
 
                     // Don't process ones we've already found
                     if (licenceNumber == primaryLicence.LicenceNumber
@@ -907,7 +864,7 @@ public static class WaterAbstractionLicenceSchemaConverter
             return null;
         }
         
-        var value = datePurpose.Text?.FirstOrDefault()?.Text;
+        var value = GetSingleLineText(datePurpose);
         if (string.IsNullOrWhiteSpace(value))
         {
             return null;
@@ -916,6 +873,7 @@ public static class WaterAbstractionLicenceSchemaConverter
         var parts = value
             .Replace(" and ending on ", " to ")
             .Split(" to ");
+        
         var startDate = parts[0]
             .Replace("beginning on ", string.Empty);
         
@@ -928,31 +886,40 @@ public static class WaterAbstractionLicenceSchemaConverter
         };
     }
 
-    private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var additional = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Additional");
+        var additional = GetMatch("Additional", matches);
 
         if (additional == null)
         {
             return [];
         }
 
+        var count = 0;
+        
         return additional.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
-            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-            .Select(linkedLicenceNumber => new LinkedLicence
+            .Select(linkedLicenceNumber =>
             {
-                LicenceNumber = linkedLicenceNumber,
-                FromSection = ["AdditionalInformation"]
+                noneSchemaData.Add($"Confidence:LinkedLicence_AdditionalInformation_{count++}", linkedLicenceNumber.Confidence);
+                var linkedLicenceNumberStr = GetSingleLineText(linkedLicenceNumber);
+                
+                return new LinkedLicence
+                {
+                    LicenceNumber = linkedLicenceNumberStr,
+                    FromSection = ["AdditionalInformation"]
+                };
             })
             .ToList();
     }
 
-    private static List<LinkedLicence> GetPurposesLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicence> GetPurposesLinkedLicences(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var purposeSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeSection = GetMatch("Purpose", matches);
 
         if (purposeSection == null)
         {
@@ -967,16 +934,23 @@ public static class WaterAbstractionLicenceSchemaConverter
                 .Where(x => x.MatchedLabel!.Name == "Purpose")
                 .ToList();
 
+            var count = 0;
+            
             foreach (var purpose in purposes)
             {
                 returnList.AddRange(purpose.SubResults
                     .Where(linkedLicenceNumber =>
                         linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
-                    .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-                    .Select(linkedLicenceNumber => new LinkedLicence
+                    .Select(linkedLicenceNumber =>
                     {
-                        LicenceNumber = linkedLicenceNumber,
-                        FromSection = ["Purposes"]
+                        noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
+                        var linkedLicenceNumberStr = GetSingleLineText(linkedLicenceNumber);
+                
+                        return new LinkedLicence
+                        {
+                            LicenceNumber = linkedLicenceNumberStr,
+                            FromSection = ["Purposes"]
+                        };
                     })
                     .ToList());
             }
@@ -985,44 +959,60 @@ public static class WaterAbstractionLicenceSchemaConverter
         return returnList;
     }
     
-    private static List<LinkedLicence> GetRecordsLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicence> GetRecordsLinkedLicences(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var records = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Records");
+        var records = GetMatch("Records", matches);
 
         if (records?.SubResults == null || records.SubResults.Count == 0)
         {
             return [];
         }
 
+        var count = 0;
+        
         return records.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
-            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-            .Select(linkedLicenceNumber => new LinkedLicence
+            .Select(linkedLicenceNumber =>
             {
-                LicenceNumber = linkedLicenceNumber,
-                FromSection = ["Records"]
+                noneSchemaData.Add($"Confidence:LinkedLicence_Records_{count++}", linkedLicenceNumber.Confidence);
+                var linkedLicenceNumberStr = GetSingleLineText(linkedLicenceNumber);
+                
+                return new LinkedLicence
+                {
+                    LicenceNumber = linkedLicenceNumberStr,
+                    FromSection = ["Records"]
+                };
             })
             .ToList();
     }
     
-    private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var furtherConditions = matches
-            .FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
+        var furtherConditions = GetMatch("FurtherConditions", matches);
 
         if (furtherConditions == null)
         {
             return [];
         }
 
+        var count = 0;
+
         return furtherConditions.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
-            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-            .Select(linkedLicenceNumber => new LinkedLicence
+            .Select(linkedLicenceNumber =>
             {
-                LicenceNumber = linkedLicenceNumber,
-                FromSection = ["FurtherConditions"]
+                noneSchemaData.Add($"Confidence:LinkedLicence_FurtherConditions_{count++}", linkedLicenceNumber.Confidence);
+                var linkedLicenceNumberStr = GetSingleLineText(linkedLicenceNumber);
+                
+                return new LinkedLicence
+                {
+                    LicenceNumber = linkedLicenceNumberStr,
+                    FromSection = ["FurtherConditions"]
+                };
             })
             .ToList();
     }
@@ -1032,10 +1022,10 @@ public static class WaterAbstractionLicenceSchemaConverter
         string? licenceNumber,
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
-        PurposeOfAbstraction[] allPurposes)
+        PurposeOfAbstraction[] allPurposes,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        var abstractionLimitsSection = GetMatch("AbstractionLimits", matches);
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults
@@ -1122,7 +1112,7 @@ public static class WaterAbstractionLicenceSchemaConverter
                 
             var siblings = abstractionLimitPointSub.SubResults;
             var datePurposes = siblings
-                .Where(x => x.MatchedLabel?.Name == "DatePurposeRough")
+                .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList();
 
             var shouldAddGroups = true;
@@ -1160,9 +1150,10 @@ public static class WaterAbstractionLicenceSchemaConverter
                 .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                 .ToList();
 
+            var count = 0;
+            
             var linkedLicenceNumbers = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
-                .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
                 .Select(linkedLicenceNumber =>
                 {
                     var condition = (Condition?)null; // TODO
@@ -1173,10 +1164,14 @@ public static class WaterAbstractionLicenceSchemaConverter
                         .Text?
                         .FirstOrDefault()?
                         .Text;
-                        
+
+                    noneSchemaData.Add($"Confidence:LinkedLicence_AbstractionLimits_{count++}", linkedLicenceNumber.Confidence);
+                    
+                    var linkedLicenceNumberStr = GetSingleLineText(linkedLicenceNumber);
+                    
                     return new LinkedLicence
                     {
-                        LicenceNumber = linkedLicenceNumber,
+                        LicenceNumber = linkedLicenceNumberStr,
                         Filename = linkedLicenceFilename,
                         Condition = condition,
                         FromSection = ["AbstractionLimits"]
@@ -1188,11 +1183,11 @@ public static class WaterAbstractionLicenceSchemaConverter
             var aggregateLimits = new List<AggregateAbstractionLimit>();
                 
             var purposeCondition = siblings
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
+                .FirstOrDefault(sibling => sibling.MatchedLabel?.Name == "PurposeCondition");
                     
             var purposeConditionSub = purposeCondition?
                 .SubResults
-                .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
+                .Where(subResult => subResult.MatchedLabel?.Name == "PurposeConditionSub")
                 .ToList();
                     
             var limitPurposes = purposeConditionSub?.Count > 0 ?
@@ -1201,11 +1196,11 @@ public static class WaterAbstractionLicenceSchemaConverter
                 : null;
                     
             var pointCondition = siblings
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
+                .FirstOrDefault(sibling => sibling.MatchedLabel?.Name == "PointCondition");
 
             var pointConditionSub = pointCondition?
                 .SubResults
-                .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
+                .Where(subResult => subResult.MatchedLabel?.Name == "PointConditionSub")
                 .ToList();
                     
             var limitPoints = pointConditionSub?.Count > 0 ?
@@ -1390,8 +1385,7 @@ public static class WaterAbstractionLicenceSchemaConverter
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
     {
-        var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        var abstractionLimitsSection = GetMatch("AbstractionLimits", matches);
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults
@@ -1443,7 +1437,7 @@ public static class WaterAbstractionLicenceSchemaConverter
     
     private static PeriodOfAbstraction[] GetPeriods(List<LabelGroupResult> matches)
     {
-        var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
+        var periodResults = GetMatch("PeriodsOfAbstraction", matches);
         var returnList = new List<PeriodOfAbstraction>();
 
         if (periodResults == null)
@@ -1548,31 +1542,34 @@ public static class WaterAbstractionLicenceSchemaConverter
         return returnList.ToArray();
     }
 
-    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches)
+    private static MeanOfAbstraction[] GetMeansOfAbstraction(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var meansResult = matches.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction");
-        var returnList = new List<MeanOfAbstraction>();
-
+        var meansResult = GetMatch("MeansOfAbstraction", matches);
         if (meansResult == null)
         {
-            return returnList.ToArray();
+            return [];
         }
+
+        var returnList = new List<MeanOfAbstraction>();
+        noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
         
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults.FirstOrDefault(
-                    x => x.MatchedLabel?.Name == "TextWithoutNumber")?
+                    subResult => subResult.MatchedLabel?.Name == "TextWithoutNumber")?
                 .Text?
-                .Select(t => t.Text);
+                .Select(documentLine => documentLine.Text);
 
             var meanId = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "MeanId");            
+                subResult => subResult.MatchedLabel?.Name == "MeanId");            
             
             var units = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "PerSecondUnitsMeans");
+                subResult => subResult.MatchedLabel?.Name == "PerSecondUnitsMeans");
 
             var value = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "PerSecondValueMeans");
+                subResult => subResult.MatchedLabel?.Name == "PerSecondValueMeans");
             
             if (textWithoutNumber == null && meanId == null)
             {
@@ -1582,12 +1579,9 @@ public static class WaterAbstractionLicenceSchemaConverter
             var text = textWithoutNumber != null
                 ? string.Join('\n', textWithoutNumber)
                 : null;
-            
-            var number = meanId?.Text?.FirstOrDefault()?.Text;
-            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
-            var value1 = value?.Text?.FirstOrDefault()?.Text;
-            var value2 = double.TryParse(value1, out var valueResult) ? valueResult : (double?)null;
+            var valueStr = GetSingleLineText(value);
+            var valueDbl = double.TryParse(valueStr, out var valueResult) ? valueResult : (double?)null;
 
             var periodType = LimitPeriodType.Unknown;
 
@@ -1598,13 +1592,13 @@ public static class WaterAbstractionLicenceSchemaConverter
             
             returnList.Add(new MeanOfAbstraction
             {
-                Id = number,
+                Id = GetSingleLineText(meanId),
                 Description = text,
-                AbstractionLimit = value2 != null ? new AbstractionLimit
+                AbstractionLimit = valueDbl != null ? new AbstractionLimit
                 {
                     PeriodType = periodType,
-                    Units = units?.Text?.FirstOrDefault()?.Text,
-                    Value = value2
+                    Units = GetSingleLineText(units),
+                    Value = valueDbl
                 } : null
             });
         }
@@ -1612,43 +1606,76 @@ public static class WaterAbstractionLicenceSchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches)
+    private static PointOfAbstraction[] GetPoints(
+        List<LabelGroupResult> matches,
+        Dictionary<string, object?> noneSchemaData)
     {
-        var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
+        var pointsResult = GetMatch("Points", matches);
+        if (pointsResult == null)
+        {
+            return [];
+        }
+
+        noneSchemaData.Add("Confidence:Points", pointsResult.Confidence);
         var returnList = new List<PointOfAbstraction>();
 
-        if (pointsResults == null)
-        {
-            return returnList.ToArray();
-        }
+        var pointPurposeGroupCount = -1;
         
-        foreach (var pointPurposeGroup in pointsResults.SubResults)
+        foreach (var pointPurposeGroup in pointsResult.SubResults)
         {
+            pointPurposeGroupCount += 1;
+            noneSchemaData.Add(
+                $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}",
+                pointPurposeGroup.Confidence);
+            
             var purposeGroupName = pointPurposeGroup.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeGroupName");
+                .FirstOrDefault(subResult => subResult.MatchedLabel?.Name == "PurposeGroupName");
 
             var purposeIds = purposeGroupName?.SubResults
-                .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
-                .Select(x => x.Text?.FirstOrDefault()?.Text)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => x!)
+                .Where(subResult => subResult.MatchedLabel?.Name == "PurposeGroupSub")
+                .Select(GetSingleLineText)
+                .Where(text => !string.IsNullOrEmpty(text))
+                .Select(text => text!)
                 .ToArray();
             
             var points = pointPurposeGroup.SubResults
-                .Where(x => x.MatchedLabel?.Name == "Point");
+                .Where(subResult => subResult.MatchedLabel?.Name == "Point");
 
+            var pointCount = -1;
+            
             foreach (var point in points)
             {
+                pointCount += 1;
+                noneSchemaData.Add(
+                    $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}",
+                    point.Confidence);
+                
                 var pointNumber = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
+                    .FirstOrDefault(subResult => subResult.MatchedLabel?.Name == "PointPointNumber");
 
-                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
+                if (pointNumber != null)
+                {
+                    noneSchemaData.Add(
+                        $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointPointNumber",
+                        pointNumber.Confidence);
+                }
+                
+                var number = GetSingleLineText(pointNumber);
 
-                var tLines = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint")?
+                var pointTextWithoutPurposeAndPoint = point.SubResults
+                    .FirstOrDefault(subResult => subResult.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint");
+                
+                var tLines = pointTextWithoutPurposeAndPoint?
                     .Text?
-                    .Select(t => t.Text)
+                    .Select(documentLine => documentLine.Text)
                     .ToList();
+
+                if (pointTextWithoutPurposeAndPoint != null)
+                {
+                    noneSchemaData.Add(
+                        $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTextWithoutPurposeAndPoint",
+                        pointTextWithoutPurposeAndPoint.Confidence);
+                }
                 
                 const string tKey = "Up to and Including ";
                 var upToAndIncludeLine = tLines?
@@ -1668,10 +1695,12 @@ public static class WaterAbstractionLicenceSchemaConverter
                 }
                 
                 var pointTable = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
+                    .FirstOrDefault(subResult => subResult.MatchedLabel?.Name == "PointTable");
 
                 if (pointTable != null)
                 {
+                    noneSchemaData.Add($"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable", pointTable.Confidence);
+                    
                     var tableLines = pointTable.Text!;
 
                     foreach (var tableLine in tableLines)
@@ -1724,7 +1753,7 @@ public static class WaterAbstractionLicenceSchemaConverter
 
     private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches)
     {
-        var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResults = GetMatch("Purpose", matches);
         var returnList = new List<PurposeOfAbstraction>();
 
         if (purposeResults == null)
@@ -2227,5 +2256,15 @@ public static class WaterAbstractionLicenceSchemaConverter
         }
 
         return returnList;
+    }
+    
+    private static LabelGroupResult? GetMatch(string labelGroupName, List<LabelGroupResult> matches)
+    {
+        return matches.FirstOrDefault(result => result.LabelGroupName == labelGroupName);
+    }
+
+    private static string? GetSingleLineText(LabelGroupResult? match)
+    {
+        return match?.Text?.FirstOrDefault()?.Text;
     }
 }

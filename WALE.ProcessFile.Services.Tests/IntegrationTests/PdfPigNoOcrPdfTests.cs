@@ -201,8 +201,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -396,8 +394,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -1817,8 +1813,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
 
@@ -2412,8 +2406,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
 
@@ -3187,8 +3179,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -3228,8 +3218,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -3350,8 +3338,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3453,8 +3439,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3568,8 +3552,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3663,8 +3645,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3737,8 +3717,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3872,8 +3850,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -3911,8 +3887,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -3984,8 +3958,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -4103,8 +4075,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0)).Last();
         
@@ -4151,8 +4121,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -4249,8 +4217,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             -1);
         
@@ -4290,8 +4256,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             -1);
         

@@ -505,8 +505,6 @@ public class TessaractOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractorCombined,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         

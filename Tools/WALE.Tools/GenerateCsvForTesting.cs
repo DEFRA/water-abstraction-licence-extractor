@@ -83,15 +83,13 @@ public static class GenerateCsvForTesting
         foreach (var pdfFilePath in pdfFilePaths)
         {
             var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
-            var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            var licenceSets = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
                 internalJson,
                 FileLicenceMapping,
                 ImpoundmentLicenceNumbers,
                 DeadLicenceNumbers,
                 LiveLicenceNumbers,
                 pdfDataExtractor,
-                OutputService,
-                CacheService,
                 KeyConfig.PdfFolder,
                 ProcessRunId
             );
@@ -99,7 +97,7 @@ public static class GenerateCsvForTesting
             licenceSetGroups.Add(licenceSets);
         }
 
-        SchemaConverter.AddGroupLicenceSetDetails(
+        WaterAbstractionLicenceSchemaConverter.AddGroupLicenceSetDetails(
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
@@ -129,15 +127,13 @@ public static class GenerateCsvForTesting
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
-        var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets1 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -145,15 +141,13 @@ public static class GenerateCsvForTesting
         var file1 = licenceSets1[0].Licences[0];
 
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
-        var licenceSets2 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets2 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -161,15 +155,13 @@ public static class GenerateCsvForTesting
         var file2 = licenceSets2[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
-        var licenceSets3 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets3 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -177,15 +169,13 @@ public static class GenerateCsvForTesting
         var file3 = licenceSets3[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
-        var licenceSets4 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets4 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -193,15 +183,13 @@ public static class GenerateCsvForTesting
         var file4 = licenceSets4[0].Licences[0];
         
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
-        var licenceSets5 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets5 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -209,22 +197,20 @@ public static class GenerateCsvForTesting
         var file5 = licenceSets5[0].Licences[0];
         
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
-        var licenceSets6 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets6 = await WaterAbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];
         
-        SchemaConverter.AddGroupLicenceSetDetails(
+        WaterAbstractionLicenceSchemaConverter.AddGroupLicenceSetDetails(
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,

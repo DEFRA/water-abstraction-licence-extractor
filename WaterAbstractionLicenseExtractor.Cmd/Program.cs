@@ -79,7 +79,6 @@ async Task ProgramAsync()
                 deadLicenceNumbers,
                 liveLicenceNumbers,
                 outputService,
-                cacheService,
                 pdfDataExtractors,
                 licenceNumberMapping,
                 processRun));
@@ -295,7 +294,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
     IOutputService outputService,
-    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
@@ -332,8 +330,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractor,
-            outputService,
-            cacheService,
             pdfFolder,
             processRun.ProcessRunId);
 

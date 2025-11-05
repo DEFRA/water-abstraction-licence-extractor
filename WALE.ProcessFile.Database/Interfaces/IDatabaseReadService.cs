@@ -28,6 +28,8 @@ public interface IDatabaseReadService
     
     Task<List<int>> GetLicenceSetIdsAsync(int processRunId);
     
+    Task<List<int>> GetLicenceSetIdsAsync(string filename, int processRunId);
+    
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId);
     
     Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId);

@@ -152,7 +152,17 @@ public static class JsOutputHelper
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
                 licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
                 {
-                    var ls = outputLine.LicenceSets!.First(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+
+                    if (ls == null)
+                    {
+                        return new OutputListDataItemLicenceSet
+                        {
+                            LicenceSetId = "ERROR",
+                            ShortLicenceSetId = "ERROR"
+                        };
+                    }
+                    
                     var licenceSetType = lsr.LicenceSetType;
 
                     return new OutputListDataItemLicenceSet

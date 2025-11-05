@@ -253,6 +253,28 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList;
     }
 
+    public async Task<List<int>> GetLicenceSetIdsAsync(string filename, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT LicenceSetId, ProcessRunId FROM LicenceSet WHERE ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@Filename", filename);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<int>();
+        
+        while (await reader.ReadAsync())
+        {
+            var licenceSetId = reader.GetInt32(0);
+            returnList.Add(licenceSetId);
+        }
+
+        return returnList;
+    }
+
     public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);

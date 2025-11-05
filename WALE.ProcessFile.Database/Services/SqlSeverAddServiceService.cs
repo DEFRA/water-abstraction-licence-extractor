@@ -242,13 +242,14 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         string licenceVersionId,
         int processRunId)
     {
+        
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
         const string sql = "INSERT INTO LicenceSetLicence (LicenceSetId, LicenceNumber, LicenceVersionId, ProcessRunId, DateTimeUtc) VALUES (@LicenceSetId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
-        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber ?? "UNKNOWN");
         command.Parameters.AddWithValue("@LicenceVersionId", licenceVersionId);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);

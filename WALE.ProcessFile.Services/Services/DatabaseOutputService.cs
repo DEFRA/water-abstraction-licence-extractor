@@ -200,7 +200,9 @@ public class DatabaseOutputService(
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
     {
         var processRun = await databaseReadService.GetMostRecentProcessRunAsync(filename);
-        return await GetLicenceSetsAsync(processRun!.ProcessRunId);
+        var licenceSetIds = await databaseReadService.GetLicenceSetIdsAsync(processRunId);
+        
+        return await GetLicenceSetsAsync(processRun!.ProcessRunId, filename);
     }
 
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)

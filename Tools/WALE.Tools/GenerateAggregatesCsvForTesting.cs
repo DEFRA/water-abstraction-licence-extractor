@@ -14,7 +14,7 @@ using WALE.Tools.Models;
 
 namespace WALE.Tools;
 
-public static class GenerateCsvForTesting
+public static class GenerateAggregatesCsvForTesting
 {
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -61,7 +61,7 @@ public static class GenerateCsvForTesting
             ProcessRunId);
     }
 
-    static async Task<List<CsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
     {
         var yorkshire = YorkshireFiles();
         
@@ -77,7 +77,7 @@ public static class GenerateCsvForTesting
             .Select(FileHelper.GetFilenameWithoutExtension)
             .OrderBy(fileName => fileName).ToList();
 
-        var returnList = new List<CsvLine>();
+        var returnList = new List<AggregatesCsvLine>();
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
         foreach (var pdfFilePath in pdfFilePaths)
@@ -124,7 +124,7 @@ public static class GenerateCsvForTesting
         return returnList;
     }
 
-    static async Task<List<CsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         

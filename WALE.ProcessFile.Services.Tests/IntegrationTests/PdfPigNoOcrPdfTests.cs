@@ -2352,49 +2352,10 @@ public class PdfPigNoOcrPdfTests
                 subResult.MatchedLabel!.Name == "LinkedLicence")
             .ToList();
         
-        Assert.Equal(2, linkedLicences.Count);
-        var linkedLicence1 = linkedLicences[0].SubResults;
-        
-        nameResult = linkedLicence1.FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        Assert.NotNull(nameResult);
-        Assert.False(nameResult.IsOcr);
-        Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
-        
-        var licenceNumberResult = linkedLicence1.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 247", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var linkedLicence2 = linkedLicences[1].SubResults;
-        
-        nameResult = linkedLicence2.FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        Assert.NotNull(nameResult);
-        Assert.False(nameResult.IsOcr);
-        Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
-        
-        licenceNumberResult = linkedLicence2.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 248", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var linkedNameResult = linkedLicences[0].SubResults.FirstOrDefault(result => result.LabelGroupName == "Company");
-        Assert.Equal("J & S Accessories Limited", linkedNameResult?.Text?.FirstOrDefault()?.Text);
-        
-        var linkedLicenceNumber = linkedLicences[0].SubResults.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        Assert.Equal("25 68 001 247", linkedLicenceNumber?.Text?.FirstOrDefault()?.Text);
+        Assert.Empty(linkedLicences);
         
         // TODO and the other licence
-        licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
@@ -2483,9 +2444,27 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
         Assert.Single(firstLinkedLicence.AbstractionLimits.Aggregates!);
         
+        Assert.NotNull(firstLinkedLicence.NoneSchemaData["issuedTo"]);
+        Assert.Equal("J & S Accessories Limited", (string)firstLinkedLicence.NoneSchemaData["issuedTo"]);
+        
+        Assert.NotNull(firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal(2, firstLinkedLicence.LinkedLicences.Length);
+        Assert.Equal("25 68 001 248", firstLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25 68 001 249", firstLinkedLicence.LinkedLicences[1].LicenceNumber);
+        
         var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
         Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
         Assert.Single(secondLinkedLicence.AbstractionLimits.Aggregates!);
+        
+        Assert.NotNull(secondLinkedLicence.NoneSchemaData["issuedTo"]);
+        Assert.Equal("J & S Accessories Limited", (string)secondLinkedLicence.NoneSchemaData["issuedTo"]);
+
+        Assert.NotNull(secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal(2, secondLinkedLicence.LinkedLicences.Length);
+        Assert.Equal("25 68 001 247", secondLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25 68 001 249", secondLinkedLicence.LinkedLicences[1].LicenceNumber);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);

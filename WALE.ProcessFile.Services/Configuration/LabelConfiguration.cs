@@ -1650,7 +1650,7 @@ public static class LabelConfiguration
                     {
                         Name = "LinkedLicence",
                         RelatedName = "LinkedLicenceNumber",
-                        Format = "LinkedLicence",
+                        Format = LinkedLicenceDontInline.Constant
                     },
                     new()
                     {

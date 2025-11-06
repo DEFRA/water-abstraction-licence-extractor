@@ -756,7 +756,7 @@ public static class SchemaConverter
             {
                 var linkedLicencesData = abstractionLimitPointSub.SubResults
                     .Where(subResult =>
-                        subResult.MatchedLabel!.Format == "LinkedLicence")
+                        subResult.MatchedLabel!.Format == Formats.LinkedLicenceDontInline.Constant)
                     .ToList();
 
                 foreach (var linkedLicenceData in linkedLicencesData)

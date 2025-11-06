@@ -97,7 +97,7 @@ public static class GenerateAggregatesCsvForTesting
             licenceSetGroups.Add(licenceSets);
         }
 
-        SchemaConverter.AddGroupLicenceSetDetails(
+        SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
@@ -210,7 +210,7 @@ public static class GenerateAggregatesCsvForTesting
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];
         
-        SchemaConverter.AddGroupLicenceSetDetails(
+        SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,

@@ -68,6 +68,7 @@ async Task ProgramAsync()
     {
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
+        var minimumToFreeUp = maxConcurrentScrapers / 3;
         
         foreach (var pdfFilePath in pdfPaths)
         {
@@ -87,12 +88,15 @@ async Task ProgramAsync()
             {
                 continue;
             }
-            
-            var licenceSetsTask = await Task.WhenAny(scrapingTasks);
-            scrapingTasks.Remove(licenceSetsTask);
 
-            allLicenceSets = await licenceSetsTask;
-            licenceSetGroups.Add(allLicenceSets);
+            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            {
+                var licenceSetsTask = await Task.WhenAny(scrapingTasks);
+                scrapingTasks.Remove(licenceSetsTask);
+
+                allLicenceSets = await licenceSetsTask;
+                licenceSetGroups.Add(allLicenceSets);   
+            }
         }
 
         if (scrapingTasks.Any())
@@ -117,11 +121,15 @@ async Task ProgramAsync()
         throw;
     }
 
-    allLicenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+    Console.WriteLine($"All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
+    allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
         liveLicenceNumbers);
+    
+    Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
     var outputLines = new List<IntermediateOutputLicence>();
 
@@ -154,6 +162,8 @@ async Task ProgramAsync()
         outputLines.Add(outputLine);
     }
     
+    Console.WriteLine($"Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     await JsOutputHelper.SaveListDataAsync(
         outputLines,
         outputFolder,
@@ -164,6 +174,8 @@ async Task ProgramAsync()
     
     processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun);
+    
+    Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
 }
 
 List<LicenceSet> GetLicenceSetsForLicenceSetIds(
@@ -312,7 +324,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFilePath
         };
 
-        var pdfFolder = pdfFilePath.Substring(0, pdfFilePath.LastIndexOf('/') + 1);
+        var pdfFolder = pdfFilePath[..(pdfFilePath.LastIndexOf('/') + 1)];
 
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
@@ -576,8 +588,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100068")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100068")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

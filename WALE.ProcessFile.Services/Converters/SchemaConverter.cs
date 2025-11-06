@@ -756,7 +756,7 @@ public static class SchemaConverter
             {
                 var linkedLicencesData = abstractionLimitPointSub.SubResults
                     .Where(subResult =>
-                        subResult.MatchedLabel!.Format == Formats.LinkedLicenceDontInline.Constant)
+                        subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
                     .ToList();
 
                 foreach (var linkedLicenceData in linkedLicencesData)
@@ -2024,7 +2024,7 @@ public static class SchemaConverter
         return null;
     }
     
-    public static List<LicenceSet> AddGroupLicenceSetDetails(
+    public static List<LicenceSet> AddAdditionalLicenceSets(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,

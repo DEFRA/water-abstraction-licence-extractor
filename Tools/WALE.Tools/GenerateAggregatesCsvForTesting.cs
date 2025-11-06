@@ -90,8 +90,6 @@ public static class GenerateAggregatesCsvForTesting
                 DeadLicenceNumbers,
                 LiveLicenceNumbers,
                 pdfDataExtractor,
-                OutputService,
-                CacheService,
                 KeyConfig.PdfFolder,
                 ProcessRunId
             );
@@ -136,8 +134,6 @@ public static class GenerateAggregatesCsvForTesting
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -152,8 +148,6 @@ public static class GenerateAggregatesCsvForTesting
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -166,10 +160,8 @@ public static class GenerateAggregatesCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -182,10 +174,8 @@ public static class GenerateAggregatesCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -198,10 +188,8 @@ public static class GenerateAggregatesCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         
@@ -214,10 +202,8 @@ public static class GenerateAggregatesCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
             pdfDataExtractor,
-            OutputService,
-            CacheService,
             KeyConfig.PdfFolder,
             ProcessRunId);
         

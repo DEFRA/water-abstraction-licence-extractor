@@ -15,7 +15,7 @@ public static class JsOutputHelper
         DateTime dtStart,
         int completeNumber,
         int fileNumber,
-        List<LicenceSet> allLicenceSets)
+        List<LicenceSet> licenceSetsFull)
     {
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
         var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
@@ -56,7 +56,7 @@ public static class JsOutputHelper
         var licenceSets = licence.LicenceSets
             .Select(lsi =>
             {
-                return allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId);
+                return licenceSetsFull.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId);
             })
             .Where(ls => ls != null)
             .Select(ls => ls!)

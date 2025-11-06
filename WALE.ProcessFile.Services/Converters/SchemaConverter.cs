@@ -384,8 +384,6 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService  pdfDataExtractorService,
-        IOutputService outputService,
-        ICacheService cacheService,
         string pdfFolder,
         int processRunId)
     {
@@ -407,8 +405,6 @@ public static class SchemaConverter
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractorService,
-            outputService,
-            cacheService,
             pdfFolder,
             previouslyParsedPaths,
             processRunId);
@@ -736,8 +732,6 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
         IPdfDataExtractorService pdfDataExtractorService,
-        IOutputService outputService,
-        ICacheService cacheService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
         int processRunId)
@@ -762,7 +756,7 @@ public static class SchemaConverter
             {
                 var linkedLicencesData = abstractionLimitPointSub.SubResults
                     .Where(subResult =>
-                        subResult.MatchedLabel!.Name == "LinkedLicence")
+                        subResult.MatchedLabel!.Format == "LinkedLicence")
                     .ToList();
 
                 foreach (var linkedLicenceData in linkedLicencesData)
@@ -2036,7 +2030,8 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
     {
-        var distinctLicenceSets = GetDistinctLicenceSets(licenceSetGroups);
+        var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
+        
         distinctLicenceSets.AddRange(AddMissingBackLinks(
             licenceSetGroups,
             true,
@@ -2097,7 +2092,7 @@ public static class SchemaConverter
         return returnList;
     }
     
-    private static List<LicenceSet> GetDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
+    private static List<LicenceSet> AsDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
     {
         var returnList = new List<LicenceSet>();
 

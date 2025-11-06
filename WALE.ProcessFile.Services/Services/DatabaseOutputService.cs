@@ -48,9 +48,13 @@ public class DatabaseOutputService(
             
             foreach (var licence in licenceSet.Licences)
             {
+                var licenceId = licence.NoneSchemaData.TryGetValue("licenceId", out var licenceIdOut)
+                    ? (int?)licenceIdOut
+                    : null;
+                
                 await databaseAddService.InsertLicenceSetLicenceAsync(
                     licenceSetId,
-                    licence.NoneSchemaData.TryGetValue("licenceId", out var licenceId) ? (int)licenceId : null,
+                    licenceId,
                     licence.LicenceNumber,
                     licence.LicenceVersion.LicenceVersionId,
                     processRunId);   

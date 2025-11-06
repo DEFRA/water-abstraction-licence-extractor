@@ -17,12 +17,15 @@ public static class GenerateLinkedLicencesCsv
     
     public static async Task GenerateCsvAsync()
     {
+        Console.WriteLine("Started generating linked licences csv");
+
         var data = await GetDataAsync();
 
         await using var writer = new StreamWriter($"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv");
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         await csv.WriteRecordsAsync((IEnumerable)data);
+        Console.WriteLine("Finished generating linked licences csv");
     }
 
     static async Task<List<LinkedLicencesCsvLine>> GetDataAsync()
@@ -41,9 +44,26 @@ public static class GenerateLinkedLicencesCsv
 
             if (licence == null)
             {
+                Console.WriteLine($"Error - {pdfFilePath} not found");
                 continue;
             }
 
+            if (licence.LinkedLicences.Length == 0)
+            {
+                returnList.Add(new LinkedLicencesCsvLine
+                {
+                    Filename = licence.Filename,
+                    LicenceNumber = licence.LicenceNumber,
+                    NaldLicenceNumber = licence.NaldLicenceNumber,
+                    LicenceFoundInList = licence.LicenceFoundInList,
+                    LicenceIsLive = licence.IsLiveLicence,
+                    LicenceIsDead = licence.IsDeadLicence,
+                    LicenceIsImpoundment = licence.IsImpoundmentLicence
+                });
+                
+                continue;
+            }
+            
             foreach (var linkedLicence in licence.LinkedLicences)
             {
                 foreach (var fromSection in linkedLicence.FromSection!)

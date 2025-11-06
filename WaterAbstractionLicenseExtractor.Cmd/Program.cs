@@ -79,7 +79,6 @@ async Task ProgramAsync()
                 deadLicenceNumbers,
                 liveLicenceNumbers,
                 outputService,
-                cacheService,
                 pdfDataExtractors,
                 licenceNumberMapping,
                 processRun));
@@ -150,7 +149,7 @@ async Task ProgramAsync()
             DateTime.Now,
             completeNumber++,
             fileNumber++,
-            allLicenceSets);
+            licenceSetsFull);
 
         outputLines.Add(outputLine);
     }
@@ -296,7 +295,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
     IOutputService outputService,
-    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
@@ -326,6 +324,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedPaths,
             processRun.ProcessRunId);
         
+        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
+        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
@@ -333,14 +334,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractor,
-            outputService,
-            cacheService,
             pdfFolder,
             processRun.ProcessRunId);
-
-        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
-    
-        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        
         return licenceSets;
     }
     catch (Exception ex)
@@ -580,8 +576,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(20).ToList();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100068")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

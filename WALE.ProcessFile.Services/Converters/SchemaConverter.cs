@@ -2029,7 +2029,7 @@ public static class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
-    {
+    {        
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
         
         distinctLicenceSets.AddRange(AddMissingBackLinks(
@@ -2039,16 +2039,7 @@ public static class SchemaConverter
             deadLicenceNumbers,
             liveLicenceNumbers));
 
-        foreach (var licenceSetGroup in licenceSetGroups)
-        {
-            if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
-            {
-                continue;
-            }
-
-            AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
-        }
-
+        AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         return distinctLicenceSets;
     }
     

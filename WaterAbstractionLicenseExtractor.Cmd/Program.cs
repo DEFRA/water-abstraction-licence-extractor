@@ -149,15 +149,15 @@ async Task ProgramAsync()
         var licenceId = await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
         licence.NoneSchemaData.Add("licenceId", licenceId);
 
-        var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
-        await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!, processRun.ProcessRunId);
+        var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
+        await outputService.SaveLicenceSetsAsync(licenceSets, licence.Filename!, processRun.ProcessRunId);
         
         var outputLine = JsOutputHelper.ToOutputLine(
             licence,
             DateTime.Now,
             completeNumber++,
             fileNumber++,
-            licenceSetsFull);
+            licenceSets);
 
         outputLines.Add(outputLine);
     }
@@ -172,9 +172,12 @@ async Task ProgramAsync()
         processRun,
         true);
     
+    Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun);
     
+    Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
 }
 
@@ -589,7 +592,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100068")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(2000).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

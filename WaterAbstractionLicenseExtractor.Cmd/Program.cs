@@ -62,7 +62,7 @@ async Task ProgramAsync()
     });
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
-    List<LicenceSet> licenceSets;
+    List<LicenceSet> allLicenceSets;
     
     try
     {
@@ -92,8 +92,8 @@ async Task ProgramAsync()
             var licenceSetsTask = await Task.WhenAny(scrapingTasks);
             scrapingTasks.Remove(licenceSetsTask);
 
-            licenceSets = await licenceSetsTask;
-            licenceSetGroups.Add(licenceSets);
+            allLicenceSets = await licenceSetsTask;
+            licenceSetGroups.Add(allLicenceSets);
         }
 
         if (scrapingTasks.Any())
@@ -102,8 +102,8 @@ async Task ProgramAsync()
 
             foreach (var scrapingTask in scrapingTasks)
             {
-                licenceSets = await scrapingTask;
-                licenceSetGroups.Add(licenceSets);
+                allLicenceSets = await scrapingTask;
+                licenceSetGroups.Add(allLicenceSets);
             }
         }
 
@@ -118,7 +118,7 @@ async Task ProgramAsync()
         throw;
     }
 
-    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+    allLicenceSets = SchemaConverter.AddGroupLicenceSetDetails(
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
@@ -139,9 +139,10 @@ async Task ProgramAsync()
         
         var licenceSet = licenceSetGroup.First();
         var licence = licenceSet.Licences.First();
-        await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
+        var licenceId = await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
+        licence.NoneSchemaData.Add("licenceId", licenceId);
 
-        var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, licenceSets);
+        var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
         await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!, processRun.ProcessRunId);
         
         var outputLine = JsOutputHelper.ToOutputLine(
@@ -149,11 +150,11 @@ async Task ProgramAsync()
             DateTime.Now,
             completeNumber++,
             fileNumber++,
-            licenceSets);
+            allLicenceSets);
 
         outputLines.Add(outputLine);
     }
-
+    
     await JsOutputHelper.SaveListDataAsync(
         outputLines,
         outputFolder,
@@ -580,7 +581,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1000).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(20).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

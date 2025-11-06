@@ -275,12 +275,44 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList;
     }
 
+    public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT LicenceId, LicenceNumber, LicenceVersionId, LicenceSetId FROM LicenceSetLicence WHERE ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<LicenceSetLicence>();
+        
+        while (await reader.ReadAsync())
+        {
+            var licenceId = reader.IsDBNull(0) ? (int?)null : reader.GetInt32(0);
+            var licenceNumber = reader.GetString(1);
+            var licenceVersionId = reader.GetString(2);
+            var licenceSetId = reader.GetInt32(3);
+            
+            returnList.Add(new LicenceSetLicence
+            {
+                LicenceId = licenceId,
+                LicenceNumber = licenceNumber,
+                LicenceVersionId = licenceVersionId,
+                LicenceSetId = licenceSetId,
+                ProcessRunId = processRunId
+            });
+        }
+
+        return returnList;
+    }
+
     public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT LicenceNumber, LicenceVersionId FROM LicenceSetLicence WHERE LicenceSetId = @LicenceSetId AND ProcessRunId = @ProcessRunId";
+        const string sql = "SELECT LicenceId, LicenceNumber, LicenceVersionId FROM LicenceSetLicence WHERE LicenceSetId = @LicenceSetId AND ProcessRunId = @ProcessRunId";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
@@ -290,13 +322,17 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         
         while (await reader.ReadAsync())
         {
-            var licenceNumber = reader.GetString(0);
-            var licenceVersionId = reader.GetString(1);
+            var licenceId = reader.IsDBNull(0) ? (int?)null : reader.GetInt32(0);
+            var licenceNumber = reader.GetString(1);
+            var licenceVersionId = reader.GetString(2);
             
             returnList.Add(new LicenceSetLicence
             {
+                LicenceId = licenceId,
                 LicenceNumber = licenceNumber,
-                LicenceVersionId = licenceVersionId
+                LicenceVersionId = licenceVersionId,
+                LicenceSetId = licenceSetId,
+                ProcessRunId = processRunId
             });
         }
 
@@ -343,6 +379,32 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         }
 
         return returnList.ToArray();
+    }
+
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 Data, LicenceId FROM Licence WHERE LicenceNumber = @LicenceNumber AND ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        
+        while (await reader.ReadAsync())
+        {
+            var dataStr = reader.GetString(0);
+            var licenceId = reader.GetInt32(1);
+            
+            var data = JsonSerializer.Deserialize<Licence>(dataStr, GetSerializerOptions())!;
+            data.NoneSchemaData.TryAdd("licenceId", licenceId);
+            
+            return data;
+        }
+
+        return null;
     }
 
     public async Task<Licence?> GetLicenceAsync(string filename)

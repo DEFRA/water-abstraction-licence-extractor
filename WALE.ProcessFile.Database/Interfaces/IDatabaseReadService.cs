@@ -30,6 +30,8 @@ public interface IDatabaseReadService
     
     Task<List<int>> GetLicenceSetIdsAsync(string filename, int processRunId);
     
+    Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
+    
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId);
     
     Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId);
@@ -37,6 +39,8 @@ public interface IDatabaseReadService
     Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
     
     Task<Licence?> GetLicenceAsync(string filename);
+    
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
     
     Task<MatchesResult?> GetMatchesResult(string filename);
 }

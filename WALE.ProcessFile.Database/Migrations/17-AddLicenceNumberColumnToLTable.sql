@@ -1,0 +1,2 @@
+ALTER TABLE Licence
+    ADD LicenceNumber NVARCHAR(MAX) NULL;

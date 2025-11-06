@@ -22,7 +22,7 @@ public interface IOutputService
 
     public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId);
+    public Task<int> SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId);
     
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId);
     

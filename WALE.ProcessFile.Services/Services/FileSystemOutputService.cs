@@ -57,16 +57,18 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
         
         var licenceJson = JsonHelper.GetAsString(licence);
 
-        return File.WriteAllTextAsync(
+        await File.WriteAllTextAsync(
             $"{outputFolder}/{folderName}/licence.jsonp",
             $"var data2 = {licenceJson}");
+
+        return -1;
     }
     
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)

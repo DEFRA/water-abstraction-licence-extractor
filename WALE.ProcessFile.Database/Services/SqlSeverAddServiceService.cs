@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.Services;
 
@@ -36,19 +37,20 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
-    public async Task SaveLicenceAsync(string licence, string pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string pdfFilePath, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO Licence (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc)";
+        const string sql = "INSERT INTO Licence (Filename, LicenceNumber, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);
-        command.Parameters.AddWithValue("@Data", licence);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber ?? (object?)DBNull.Value);
+        command.Parameters.AddWithValue("@Data", licenceData);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
-        await command.ExecuteNonQueryAsync();
+        return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
     public async Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId)
@@ -236,19 +238,35 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task SaveLicenceSetLicenceAsync(
+    public async Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "UPDATE LicenceSetLicence SET LicenceId = @LicenceId WHERE LicenceSetId = @LicenceSetId AND LicenceNumber = @LicenceNumber AND ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceSetId", licenceSetLicence.LicenceSetId);
+        command.Parameters.AddWithValue("@LicenceId", licenceSetLicence.LicenceId);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceSetLicence.LicenceNumber);
+        command.Parameters.AddWithValue("@ProcessRunId", licenceSetLicence.ProcessRunId);
+        
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task InsertLicenceSetLicenceAsync(
         int licenceSetId,
+        int? licenceId,
         string? licenceNumber,
         string licenceVersionId,
         int processRunId)
     {
-        
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO LicenceSetLicence (LicenceSetId, LicenceNumber, LicenceVersionId, ProcessRunId, DateTimeUtc) VALUES (@LicenceSetId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)";
+        const string sql = "INSERT INTO LicenceSetLicence (LicenceSetId, LicenceId, LicenceNumber, LicenceVersionId, ProcessRunId, DateTimeUtc) VALUES (@LicenceSetId, @LicenceId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
+        command.Parameters.AddWithValue("@LicenceId", licenceId ?? (object?)DBNull.Value);
         command.Parameters.AddWithValue("@LicenceNumber", licenceNumber ?? "UNKNOWN");
         command.Parameters.AddWithValue("@LicenceVersionId", licenceVersionId);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);

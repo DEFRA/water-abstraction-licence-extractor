@@ -38,7 +38,7 @@ app.MapGet("/list", async () =>
     var fileNumber = 1;
     
     var licences = await outputService.GetLicencesAsync(processRunId);
-    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
+    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
     
     var outputLines = licences
         .Select(licence => JsOutputHelper.ToOutputLine(

@@ -178,6 +178,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
     {
         throw new NotImplementedException();

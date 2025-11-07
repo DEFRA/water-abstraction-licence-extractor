@@ -43,7 +43,7 @@ public interface IOutputService
     
     Task<List<Licence>> GetLicencesAsync(int processRunId);
 
-    Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId);
+    Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(string filename);
     

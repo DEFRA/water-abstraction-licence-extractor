@@ -193,36 +193,63 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicencesAsync(processRunId);
     }
 
-    public async Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
+    public async Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)
     {
-        var licenceSetIds = await databaseReadService.GetLicenceSetIdsAsync(processRunId);
+        var licenceSets = await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
+        var allLicenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(processRunId);
+        var allLicenceSetTypes = await databaseReadService.GetLicenceSetTypesForProcessRun(processRunId);
+        var allAggregateSets = await databaseReadService.GetAggregateSetsForProcessRun(processRunId);
+        
         var returnList = new List<LicenceSet>();
         
-        foreach (var licenceSetId in licenceSetIds)
+        foreach (var licenceSetSimple in licenceSets)
         {
             var licenceSet = new LicenceSet();
             
-            var licenceSetLicenceIds =
-                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetId, processRunId);
-
-            var licences = new List<Licence>();
-
-            foreach (var licenceSetLicence in licenceSetLicenceIds)
-            {
-                var licence = new Licence
-                {
-                    LicenceNumber = licenceSetLicence.LicenceNumber
-                };
-                
-                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
-                licences.Add(licence);
-            }
-
-            licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetId);
-            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetId);;
+            var licenceSetLicenceIds = allLicenceSetLicences
+                .Where(lsl => lsl.LicenceSetId == licenceSetSimple.LicenceSetId);
             
-            returnList.Add(licenceSet);
+            try
+            {
+                var licences = new List<Licence>();
+
+                foreach (var licenceSetLicence in licenceSetLicenceIds)
+                {
+                    var licence = allLicences.FirstOrDefault(l =>
+                    {
+                        var licenceId = (int)l.NoneSchemaData["licenceId"];
+                        return licenceId == licenceSetLicence.LicenceId;
+                    });
+
+                    if (licence == null)
+                    {
+                        continue;
+                    }
+                    
+                    licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                    licences.Add(licence);
+                }
+
+                licenceSet.Licences = licences
+                    .ToArray();
+                
+                licenceSet.LicenceSetTypes = allLicenceSetTypes
+                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                    .Select(lst => lst.Type)
+                    .ToArray();
+                
+                licenceSet.AggregateSets = allAggregateSets
+                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                    .Select(lst => lst.AggregateSet)
+                    .ToArray();
+                
+                returnList.Add(licenceSet);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         return returnList;
@@ -231,16 +258,19 @@ public class DatabaseOutputService(
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
     {
         var processRun = (await databaseReadService.GetMostRecentProcessRunAsync(filename))!;
-        var licenceSetIds = await databaseReadService.GetLicenceSetIdsAsync(filename, processRun.ProcessRunId);
+        
+        var licenceSets = await databaseReadService.GetLicenceSetsSimpleAsync(
+            filename,
+            processRun.ProcessRunId);
         
         var returnList = new List<LicenceSet>();
         
-        foreach (var licenceSetId in licenceSetIds)
+        foreach (var licenceSetSimple in licenceSets)
         {
             var licenceSet = new LicenceSet();
             
             var licenceSetLicenceIds =
-                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetId, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId, processRun.ProcessRunId);
 
             var licences = new List<Licence>();
 
@@ -256,8 +286,8 @@ public class DatabaseOutputService(
             }
 
             licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetId);
-            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetId);;
+            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId);
+            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
             
             returnList.Add(licenceSet);
         }

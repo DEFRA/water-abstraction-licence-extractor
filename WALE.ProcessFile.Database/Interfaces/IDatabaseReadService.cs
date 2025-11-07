@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Models.OutputSchema.Table;
 
 namespace WALE.ProcessFile.Database.Interfaces;
 
@@ -26,9 +27,9 @@ public interface IDatabaseReadService
     
     Task<List<Licence>> GetLicencesAsync(int processRunId);
     
-    Task<List<int>> GetLicenceSetIdsAsync(int processRunId);
+    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
     
-    Task<List<int>> GetLicenceSetIdsAsync(string filename, int processRunId);
+    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(string filename, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
     
@@ -36,7 +37,11 @@ public interface IDatabaseReadService
     
     Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId);
     
+    Task<List<(int LicenceSetId, LicenceSetType Type)>> GetLicenceSetTypesForProcessRun(int processRunId);
+    
     Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
+    
+    Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
     
     Task<Licence?> GetLicenceAsync(string filename);
     

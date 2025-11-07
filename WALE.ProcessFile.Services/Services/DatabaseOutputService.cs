@@ -37,10 +37,12 @@ public class DatabaseOutputService(
         return databaseAddService.AddProcessRunAsync(processRun);
     }
 
-    public async Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
     {
-        foreach (var licenceSet in licenceSets)
+        foreach (var licenceSetKvp in licenceSets)
         {
+            var licenceSet = licenceSetKvp.Value;
+            
             var licenceSetId = await databaseAddService.SaveLicenceSetAsync(
                 licenceSet.LicenceSetId,
                 licenceSet.ShortLicenceSetId,
@@ -243,12 +245,7 @@ public class DatabaseOutputService(
                     .Select(lst => lst.AggregateSet)
                     .ToArray();
 
-                if (returnList.ContainsKey(licenceSet.LicenceSetId))
-                {
-                    continue;
-                }
-                
-                returnList.Add(licenceSet.LicenceSetId, licenceSet);
+                returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);
             }
             catch (Exception e)
             {

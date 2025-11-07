@@ -181,11 +181,11 @@ async Task ProgramAsync()
     Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
 }
 
-List<LicenceSet> GetLicenceSetsForLicenceSetIds(
+Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     IReadOnlyList<LicenceSetReference> licenceSetIds,
     IReadOnlyList<LicenceSet> licenceSets)
 {
-    var returnList = new List<LicenceSet>();
+    var returnDict = new Dictionary<string, LicenceSet>();
 
     foreach (var licenceSet in licenceSets)
     {
@@ -194,10 +194,10 @@ List<LicenceSet> GetLicenceSetsForLicenceSetIds(
             continue;
         }
         
-        returnList.Add(licenceSet);
+        returnDict.TryAdd(licenceSet.LicenceSetId, licenceSet);
     }
     
-    return returnList;
+    return returnDict;
 }
 
 ConfiguredServices ConfigureServices()

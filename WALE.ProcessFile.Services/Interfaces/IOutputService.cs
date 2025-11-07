@@ -20,7 +20,7 @@ public interface IOutputService
     
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
 
-    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId);
+    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
     public Task<int> SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId);
     

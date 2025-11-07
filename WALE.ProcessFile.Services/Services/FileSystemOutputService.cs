@@ -45,7 +45,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task SaveLicenceSetsAsync(
-        IReadOnlyList<LicenceSet> licenceSets,
+        Dictionary<string, LicenceSet> licenceSets,
         string pdfFilePath,
         int processRunId)
     {

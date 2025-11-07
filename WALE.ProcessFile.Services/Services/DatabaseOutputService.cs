@@ -193,14 +193,14 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicencesAsync(processRunId);
     }
 
-    public async Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)
+    public async Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)
     {
         var licenceSets = await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
         var allLicenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(processRunId);
         var allLicenceSetTypes = await databaseReadService.GetLicenceSetTypesForProcessRun(processRunId);
         var allAggregateSets = await databaseReadService.GetAggregateSetsForProcessRun(processRunId);
         
-        var returnList = new List<LicenceSet>();
+        var returnList = new Dictionary<string, LicenceSet>();
         
         foreach (var licenceSetSimple in licenceSets)
         {
@@ -242,8 +242,13 @@ public class DatabaseOutputService(
                     .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
                     .Select(lst => lst.AggregateSet)
                     .ToArray();
+
+                if (returnList.ContainsKey(licenceSet.LicenceSetId))
+                {
+                    continue;
+                }
                 
-                returnList.Add(licenceSet);
+                returnList.Add(licenceSet.LicenceSetId, licenceSet);
             }
             catch (Exception e)
             {

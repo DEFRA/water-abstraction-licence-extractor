@@ -235,7 +235,7 @@ public static class SchemaConverter
         }
         
         var naldLicenceNumber = (string?)null;
-        var licenceNumberTransformed = FormattingHelper.TransformLicenceNumber(licenceNumber);
+        var licenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
             ? liveLicenceNumbers.Contains(licenceNumberTransformed)
@@ -267,11 +267,6 @@ public static class SchemaConverter
         var isFound = isDeadLicence == true
             || isImpoundmentLicence == true
             || isLiveLicence == true;
-
-        if (licenceNumberTransformed == "124/5/34")
-        {
-            
-        }
         
         return new Licence
         {
@@ -304,7 +299,7 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
     {
-        var linkedLicenceNumberTransformed = FormattingHelper.TransformLicenceNumber(licenceNumber);
+        var linkedLicenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
         var naldLicenceNumber = (string?)null;
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)

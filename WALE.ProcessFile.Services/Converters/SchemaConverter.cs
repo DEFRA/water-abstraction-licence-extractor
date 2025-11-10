@@ -255,8 +255,8 @@ public static class SchemaConverter
             || isLiveLicence == true;
         
         var naldVersionStartDateStr = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDateLine1)
+            && !string.IsNullOrEmpty(licenceNumberTransformed)
+            && naldData.TryGetValue(licenceNumberTransformed, out var naldDateLine1)
             ? naldDateLine1.VersionStartDate
             : null;
         
@@ -265,8 +265,8 @@ public static class SchemaConverter
             : null;
         
         var naldVersionExpiryDateStr = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDateLine2)
+            && !string.IsNullOrEmpty(licenceNumberTransformed)
+            && naldData.TryGetValue(licenceNumberTransformed, out var naldDateLine2)
             ? naldDateLine2.ExpiryDate
             : null;
         

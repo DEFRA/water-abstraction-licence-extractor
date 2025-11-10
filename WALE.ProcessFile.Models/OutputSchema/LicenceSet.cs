@@ -10,7 +10,14 @@ public class LicenceSet
         get
         {
             var licencesAlphabetical = Licences
-                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
+                .OrderBy(licence =>
+                {
+                    var licenceNumber = licence.LicenceNumber?
+                        .Replace(" ", string.Empty)
+                        .Replace("/", string.Empty);
+                    
+                    return licenceNumber + licence.LicenceVersion.LicenceVersionId;
+                });
 
             var outputSb = new StringBuilder();
             

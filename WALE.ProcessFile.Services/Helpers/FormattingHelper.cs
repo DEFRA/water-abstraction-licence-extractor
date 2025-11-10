@@ -37,7 +37,14 @@ public static class FormattingHelper
             return licenceNumber;
         }
 
-        if (licenceNumber.Count(c => c == '/') == 1 || licenceNumber.Count(c => c == '/') == 2)
+        var numberOfSlashes = licenceNumber.Count(c => c == '/');
+        
+        if (numberOfSlashes is 1 or 2)
+        {
+            return licenceNumber;
+        }
+
+        if (numberOfSlashes == 3 && licenceNumber.Split('/')[0].Length == 2)
         {
             return licenceNumber;
         }
@@ -87,11 +94,20 @@ public static class FormattingHelper
         }
 
         var startsWithDigit = char.IsDigit(licenceNumber[0]);
+        var usesSlashes = true;
         
         // Replace dots with slashes IF its all dots
         if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
         {
             licenceNumber = licenceNumber.Replace(".", "/");
+            usesSlashes = false;
+        }
+        
+        // Replace spaches with slashes IF its all spaces
+        if (licenceNumber.Contains(' ') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(" ", "/");
+            usesSlashes = false;            
         }
         
         var parts = licenceNumber.Split('/');
@@ -100,7 +116,7 @@ public static class FormattingHelper
 
         if (parts.Length < 2)
         {
-            return startsWithDigit
+            return startsWithDigit && usesSlashes
                 ? ToNaldLicenceNumber(part1.Replace("/", string.Empty))
                 : part1;
         }
@@ -114,7 +130,7 @@ public static class FormattingHelper
         
         if (parts.Length < 3)
         {
-            return startsWithDigit
+            return startsWithDigit && usesSlashes
                 ? ToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
                 : $"{part1}/{part2}";
         }
@@ -128,7 +144,7 @@ public static class FormattingHelper
 
         if (parts.Length < 4)
         {
-            return startsWithDigit
+            return startsWithDigit && usesSlashes
                 ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
                 : $"{part1}/{part2}/{part3}";
         }
@@ -145,13 +161,14 @@ public static class FormattingHelper
         
         if (parts.Length < 5)
         {
-            return startsWithDigit
+            return startsWithDigit && usesSlashes
                 ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
                 : $"{part1}/{part2}/{part3}/{part4}";
         }
 
         var part5 = parts[4];
-        return startsWithDigit
+        
+        return startsWithDigit && usesSlashes
             ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
             : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }

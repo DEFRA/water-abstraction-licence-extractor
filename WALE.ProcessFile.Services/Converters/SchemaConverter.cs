@@ -96,74 +96,6 @@ public static class SchemaConverter
             points,
             purposes);
 
-        var linkedLicences = aggregates
-            .Where(x => x.LinkedLicences?.Length >= 1)
-            .SelectMany(x => x.LinkedLicences!)
-            .ToList();
-
-        linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
-        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
-        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
-        linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
-        // NOTE - We don't want to get licence history licences
-        
-        linkedLicences = linkedLicences
-            .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
-            .Select(linkedLicencesGroup =>
-            {
-                var firstLinkedLicence = linkedLicencesGroup.First();
-                var fromSection = new List<string>();
-
-                foreach (var linkedLicence in linkedLicencesGroup)
-                {
-                    if (linkedLicence.FromSection == null)
-                    {
-                        continue;
-                    }
-                    
-                    var sectionItems = linkedLicence.FromSection;
-
-                    foreach (var sectionItem in sectionItems)
-                    {
-                        if (fromSection.Contains(sectionItem))
-                        {
-                            continue;
-                        }
-                        
-                        fromSection.Add(sectionItem);
-                    }
-                }
-
-                var linkedLicenceNumber = firstLinkedLicence.LicenceNumber;
-
-                return ToLinkedLicence(
-                    linkedLicenceNumber,
-                    firstLinkedLicence.Filename,
-                    firstLinkedLicence.Condition,
-                    fromSection.ToArray(),
-                    impoundmentLicenceNumbers,
-                    deadLicenceNumbers,
-                    liveLicenceNumbers);
-            })
-            .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumber)
-            .ToList();
-
-        if (aggregates.Length == 0)
-        {
-            aggregates = null;
-        }
-        
-        if (individual.Length == 0)
-        {
-            individual = null;
-        }
-        
-        var limits = new AbstractionLimits
-        {
-            Aggregates = aggregates,
-            Individual = individual
-        };
-
         var noneSchemaData = new Dictionary<string, object>();
 
         var issuedToMatch = matchesResult.Matches!
@@ -268,6 +200,75 @@ public static class SchemaConverter
             || isImpoundmentLicence == true
             || isLiveLicence == true;
         
+        
+        var linkedLicences = aggregates
+            .Where(x => x.LinkedLicences?.Length >= 1)
+            .SelectMany(x => x.LinkedLicences!)
+            .ToList();
+
+        linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
+        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
+        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
+        // NOTE - We don't want to get licence history licences
+        
+        linkedLicences = linkedLicences
+            .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
+            .Select(linkedLicencesGroup =>
+            {
+                var firstLinkedLicence = linkedLicencesGroup.First();
+                var fromSection = new List<string>();
+
+                foreach (var linkedLicence in linkedLicencesGroup)
+                {
+                    if (linkedLicence.FromSection == null)
+                    {
+                        continue;
+                    }
+                    
+                    var sectionItems = linkedLicence.FromSection;
+
+                    foreach (var sectionItem in sectionItems)
+                    {
+                        if (fromSection.Contains(sectionItem))
+                        {
+                            continue;
+                        }
+                        
+                        fromSection.Add(sectionItem);
+                    }
+                }
+
+                var linkedLicenceNumber = firstLinkedLicence.LicenceNumber;
+
+                return ToLinkedLicence(
+                    linkedLicenceNumber,
+                    firstLinkedLicence.Filename,
+                    firstLinkedLicence.Condition,
+                    fromSection.ToArray(),
+                    impoundmentLicenceNumbers,
+                    deadLicenceNumbers,
+                    liveLicenceNumbers);
+            })
+            .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumberTransformed)
+            .ToList();
+        
+        if (aggregates.Length == 0)
+        {
+            aggregates = null;
+        }
+        
+        if (individual.Length == 0)
+        {
+            individual = null;
+        }
+        
+        var limits = new AbstractionLimits
+        {
+            Aggregates = aggregates,
+            Individual = individual
+        };
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -335,7 +336,7 @@ public static class SchemaConverter
         
         return new LinkedLicence
         {
-            LicenceNumber = licenceNumber,
+            LicenceNumber = linkedLicenceNumberTransformed,
             NaldLicenceNumber = naldLicenceNumber,
             Filename = filename,
             Condition = condition,
@@ -750,10 +751,11 @@ public static class SchemaConverter
                 foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
                 {
                     var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
+                    var licenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
 
                     // Don't process ones we've already found
-                    if (licenceNumber == primaryLicence.LicenceNumber
-                        || returnLicences.Any(licence => licence.LicenceNumber == licenceNumber))
+                    if (licenceNumberTransformed == primaryLicence.LicenceNumber
+                        || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
                     {
                         continue;
                     }

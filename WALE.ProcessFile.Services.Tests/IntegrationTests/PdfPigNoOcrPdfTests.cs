@@ -2374,9 +2374,9 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
         
-        Assert.Equal("25 68 001 249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
-        Assert.Equal("25 68 001 247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
-        Assert.Equal("25 68 001 248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
+        Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
+        Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
+        Assert.Equal("25/68/001/248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
         
         Assert.Equal("2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
             agreedSchemaLicenceGroup.LicenceSetId);
@@ -2384,15 +2384,15 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal(2, primaryLicence.LinkedLicences.Length);
         
-        Assert.Equal("25 68 001 247", primaryLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/247", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[0].FromSection!);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].FromSection![0]);
-        Assert.Equal("25 68 001 248", primaryLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/001/248", primaryLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[1].FromSection!);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[1].FromSection![0]);
         
         Assert.Equal(filename, primaryLicence.Filename);
-        Assert.Equal("25 68 001 249", primaryLicence.LicenceNumber);
+        Assert.Equal("25/68/001/249", primaryLicence.LicenceNumber);
         
         Assert.Equal(3, primaryLicence.AbstractionLimits.Individual![0].Limits.Count);
         var limitGroup = primaryLicence.AbstractionLimits.Individual[0];
@@ -2441,30 +2441,30 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.IssueDate);
         
         var firstLinkedLicence = agreedSchemaLicenceGroup.Licences[1];
-        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/247", firstLinkedLicence.LicenceNumber);
         Assert.Single(firstLinkedLicence.AbstractionLimits.Aggregates!);
         
         Assert.NotNull(firstLinkedLicence.NoneSchemaData["issuedTo"]);
         Assert.Equal("J & S Accessories Limited", (string)firstLinkedLicence.NoneSchemaData["issuedTo"]);
         
         Assert.NotNull(firstLinkedLicence.LicenceNumber);
-        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/247", firstLinkedLicence.LicenceNumber);
         Assert.Equal(2, firstLinkedLicence.LinkedLicences.Length);
-        Assert.Equal("25 68 001 248", firstLinkedLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("25 68 001 249", firstLinkedLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/001/248", firstLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/249", firstLinkedLicence.LinkedLicences[1].LicenceNumber);
         
         var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
-        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/248", secondLinkedLicence.LicenceNumber);
         Assert.Single(secondLinkedLicence.AbstractionLimits.Aggregates!);
         
         Assert.NotNull(secondLinkedLicence.NoneSchemaData["issuedTo"]);
         Assert.Equal("J & S Accessories Limited", (string)secondLinkedLicence.NoneSchemaData["issuedTo"]);
 
         Assert.NotNull(secondLinkedLicence.LicenceNumber);
-        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/248", secondLinkedLicence.LicenceNumber);
         Assert.Equal(2, secondLinkedLicence.LinkedLicences.Length);
-        Assert.Equal("25 68 001 247", secondLinkedLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("25 68 001 249", secondLinkedLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/001/247", secondLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/249", secondLinkedLicence.LinkedLicences[1].LicenceNumber);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);

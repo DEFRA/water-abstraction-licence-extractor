@@ -36,7 +36,12 @@ public static class FormattingHelper
         {
             return licenceNumber;
         }
-
+        
+        if (licenceNumber.Contains("I") || licenceNumber.Contains("S"))
+        {
+            return licenceNumber;
+        }
+        
         var numberOfSlashes = licenceNumber.Count(c => c == '/');
         
         if (numberOfSlashes is 1 or 2)

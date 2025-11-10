@@ -1390,7 +1390,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
-        Assert.Null(agreedSchemaLicence.LicenceNumber);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber);
+        Assert.NotNull(agreedSchemaLicence.LinkedLicences);
     }
 }

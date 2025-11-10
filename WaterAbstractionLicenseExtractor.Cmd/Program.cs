@@ -135,6 +135,8 @@ async Task ProgramAsync()
 
     var fileNumber = 1;
     var completeNumber = 1;
+
+    var savedLicenceNumbers = new Dictionary<string, int>();
     
     foreach (var licenceSetGroup in licenceSetGroups)
     {
@@ -145,8 +147,37 @@ async Task ProgramAsync()
         }
         
         var licenceSet = licenceSetGroup.First();
+        var licenceId = -1;
+
+        foreach (var licenceLoop in licenceSet.Licences)
+        {
+            if (licenceLoop.LicenceNumber!.Contains("152"))
+            {
+
+            }
+
+            int loopLicenceId;
+            
+            if (savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
+            {
+                loopLicenceId = number;
+            }
+            else
+            {
+                loopLicenceId =
+                    await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!, processRun.ProcessRunId);
+
+                savedLicenceNumbers.Add(licenceLoop.LicenceNumber, loopLicenceId);
+            }
+
+            if (licenceId == -1)
+            {
+                licenceId = loopLicenceId;
+            }
+        }
+        
         var licence = licenceSet.Licences.First();
-        var licenceId = await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
+
         licence.NoneSchemaData.Add("licenceId", licenceId);
 
         var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);

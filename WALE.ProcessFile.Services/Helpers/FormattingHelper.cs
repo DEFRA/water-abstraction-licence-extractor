@@ -32,6 +32,16 @@ public static class FormattingHelper
             // TODO something
         }
         
+        if (licenceNumber.Contains("*"))
+        {
+            return licenceNumber;
+        }
+
+        if (licenceNumber.Count(c => c == '/') == 1 || licenceNumber.Count(c => c == '/') == 2)
+        {
+            return licenceNumber;
+        }
+        
         return Yorkshire1_PadLicenceNumber(licenceNumber);
     }
 

@@ -151,12 +151,8 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                if (licenceLoop.LicenceNumber!.Contains("152"))
-                {
-
-                }
-
-                if (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
+                if (licenceLoop.LicenceNumber != null
+                    && !savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
                 {
                     var loopLicenceId =
                         await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!,

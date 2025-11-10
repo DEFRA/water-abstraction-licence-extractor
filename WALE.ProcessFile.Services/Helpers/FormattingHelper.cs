@@ -5,6 +5,60 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FormattingHelper
 {
+    public static string? ToNaldLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        return $"{licenceNumber[0]}/{licenceNumber.Substring(1, 2)}/{licenceNumber.Substring(3, 2)}/{licenceNumber[5..]}";
+    }
+
+    public static string? TransformLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        // Replace dots with slashes IF its all dots
+        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(".", "/");
+        }
+        
+        var parts = licenceNumber.Split('/');
+        
+        if (parts.Length < 4)
+        {
+            return licenceNumber;
+        }
+        
+        var part1 = parts[0];
+        var part2 = parts[1];
+        var part3 = parts[2];
+        var part4 = parts[3];
+        var part5 = parts.Length >= 5 ? parts[4] : null;
+        
+        if (part3.Length == 1)
+        {
+            part3 = $"0{part3}";
+        }
+
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        part4 = part4.Where(char.IsDigit).Count() switch
+        {
+            1 => $"00{part4}",
+            2 => $"0{part4}",
+            _ => part4
+        };
+
+        return parts.Length == 4 ?
+            $"{part1}/{part2}/{part3}/{part4}"
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
+    }
+    
     public static List<DocumentLine> RemoveMultipleBlankLines(IEnumerable<DocumentLine> sourceList)
     {
         var trimmedList = TrimList(sourceList);

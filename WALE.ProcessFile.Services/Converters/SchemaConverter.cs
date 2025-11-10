@@ -3,6 +3,7 @@ using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using LabelGroupResult = WALE.ProcessFile.Models.LabelGroupResult;
 
@@ -219,8 +220,22 @@ public static class SchemaConverter
         
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
+        if (string.IsNullOrEmpty(licenceNumber) && !string.IsNullOrEmpty(matchesResult.Filename))
+        {
+            var filenameParts = matchesResult.Filename!.Split('_');
+
+            licenceNumber = filenameParts[0];
+            noneSchemaData.TryAdd("filenameLicenceNumber", licenceNumber);
+
+            licenceNumber = FormattingHelper.ToNaldLicenceNumber(licenceNumber);
+        }
+        else if (!string.IsNullOrEmpty(licenceNumber))
+        {
+            noneSchemaData.TryAdd("scrapedLicenceNumber", licenceNumber);    
+        }
+        
         var naldLicenceNumber = (string?)null;
-        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        var licenceNumberTransformed = FormattingHelper.TransformLicenceNumber(licenceNumber);
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
             ? liveLicenceNumbers.Contains(licenceNumberTransformed)
@@ -252,11 +267,16 @@ public static class SchemaConverter
         var isFound = isDeadLicence == true
             || isImpoundmentLicence == true
             || isLiveLicence == true;
+
+        if (licenceNumberTransformed == "124/5/34")
+        {
+            
+        }
         
         return new Licence
         {
             Filename = matchesResult.Filename,
-            LicenceNumber = licenceNumber,
+            LicenceNumber = licenceNumberTransformed,
             NaldLicenceNumber = naldLicenceNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
@@ -284,7 +304,7 @@ public static class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
     {
-        var linkedLicenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        var linkedLicenceNumberTransformed = FormattingHelper.TransformLicenceNumber(licenceNumber);
         var naldLicenceNumber = (string?)null;
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
@@ -331,50 +351,6 @@ public static class SchemaConverter
             LicenceFoundInList = isFound,
             DmsPath = null
         };
-    }
-
-    private static string? GetLicenceNumberTransformed(string? licenceNumber)
-    {
-        if (string.IsNullOrEmpty(licenceNumber))
-        {
-            return licenceNumber;
-        }
-
-        // Replace dots with slashes IF its all dots
-        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
-        {
-            licenceNumber = licenceNumber.Replace(".", "/");
-        }
-        
-        var parts = licenceNumber.Split('/');
-        
-        if (parts.Length < 4)
-        {
-            return licenceNumber;
-        }
-        
-        var part1 = parts[0];
-        var part2 = parts[1];
-        var part3 = parts[2];
-        var part4 = parts[3];
-        var part5 = parts.Length >= 5 ? parts[4] : null;
-        
-        if (part3.Length == 1)
-        {
-            part3 = $"0{part3}";
-        }
-
-        // Pad part 4 with zeroes (needs to have 3 digits)
-        part4 = part4.Where(char.IsDigit).Count() switch
-        {
-            1 => $"00{part4}",
-            2 => $"0{part4}",
-            _ => part4
-        };
-
-        return parts.Length == 4 ?
-            $"{part1}/{part2}/{part3}/{part4}"
-            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(

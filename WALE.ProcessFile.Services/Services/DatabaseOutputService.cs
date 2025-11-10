@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml;
 using SkiaSharp;
 using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Database.Interfaces;
@@ -159,8 +160,10 @@ public class DatabaseOutputService(
                 continue;
             }
 
+            var licenceTransformed = FormattingHelper.TransformLicenceNumber(missingLicenceId.LicenceNumber)!;
+
             var licence =
-                await databaseReadService.GetLicenceAsync(missingLicenceId.LicenceNumber, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
 
             if (licence == null)
             {

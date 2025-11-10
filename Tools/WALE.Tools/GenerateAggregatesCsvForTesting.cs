@@ -82,7 +82,7 @@ public static class GenerateAggregatesCsvForTesting
 
         foreach (var pdfFilePath in pdfFilePaths)
         {
-            var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
+            var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
             var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
                 internalJson,
                 FileLicenceMapping,

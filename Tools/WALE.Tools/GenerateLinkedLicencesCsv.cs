@@ -40,7 +40,7 @@ public static class GenerateLinkedLicencesCsv
 
         foreach (var pdfFilePath in pdfFilePaths)
         {
-            var licence = await OutputService.GetLicenceAsync(pdfFilePath);
+            var licence = await OutputService.GetLicenceAsync(pdfFilePath!);
 
             if (licence == null)
             {

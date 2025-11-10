@@ -57,7 +57,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");

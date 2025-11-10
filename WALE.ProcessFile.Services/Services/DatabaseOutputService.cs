@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Xml;
 using SkiaSharp;
 using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Database.Interfaces;
@@ -87,7 +86,7 @@ public class DatabaseOutputService(
         }
     }
 
-    public Task<int> SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
+    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
@@ -97,7 +96,7 @@ public class DatabaseOutputService(
 
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
         
         return databaseAddService.SaveMatchResultAsync(matchesResultStr, pdfFilename, processRunId);
@@ -112,7 +111,7 @@ public class DatabaseOutputService(
     public async Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
         string pdfFilePath, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         var screenshot = await databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, noOcrServiceName);
 
         if (screenshot != null)
@@ -133,7 +132,7 @@ public class DatabaseOutputService(
 
     public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         var data = await databaseReadService.GetAllPagesTextAsync(pdfFilename, noOcrServiceName);
 
         if (data != null)
@@ -167,7 +166,7 @@ public class DatabaseOutputService(
 
             if (licence == null)
             {
-                // TODO log - shouldnt happen
+                // TODO log - shouldn't happen
                 continue;
             }
             

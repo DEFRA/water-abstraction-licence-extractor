@@ -137,6 +137,7 @@ async Task ProgramAsync()
     var completeNumber = 1;
 
     var savedLicenceNumbers = new Dictionary<string, int>();
+    var savedLicenceSetIds = new HashSet<string>();
     
     foreach (var licenceSetGroup in licenceSetGroups)
     {
@@ -145,44 +146,53 @@ async Task ProgramAsync()
             // TODO log this - it shouldn't happen
             continue;
         }
-        
-        var licenceSet = licenceSetGroup.First();
-        var licenceId = -1;
 
-        foreach (var licenceLoop in licenceSet.Licences)
+        foreach (var licenceSetLoop in licenceSetGroup)
         {
-            if (licenceLoop.LicenceNumber!.Contains("152"))
+            foreach (var licenceLoop in licenceSetLoop.Licences)
             {
+                if (licenceLoop.LicenceNumber!.Contains("152"))
+                {
 
-            }
+                }
 
-            int loopLicenceId;
-            
-            if (savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
-            {
-                loopLicenceId = number;
-            }
-            else
-            {
-                loopLicenceId =
-                    await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!, processRun.ProcessRunId);
+                if (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
+                {
+                    var loopLicenceId =
+                        await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!,
+                            processRun.ProcessRunId);
 
-                savedLicenceNumbers.Add(licenceLoop.LicenceNumber, loopLicenceId);
-            }
+                    savedLicenceNumbers.Add(licenceLoop.LicenceNumber, loopLicenceId);
+                    licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
+                }
+                
+                var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
+                    licenceLoop.LicenceSets,
+                    allLicenceSets);
 
-            if (licenceId == -1)
-            {
-                licenceId = loopLicenceId;
+                var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
+                
+                foreach (var kvp in licenceSetsLoop)
+                {
+                    if (savedLicenceSetIds.Contains(kvp.Key))
+                    {
+                        continue;
+                    }
+                    
+                    newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
+                    savedLicenceSetIds.Add(kvp.Key);
+                }
+                
+                await outputService.SaveLicenceSetsAsync(
+                    newLicenceSetsLoop,
+                    licenceLoop.Filename!,
+                    processRun.ProcessRunId);  
             }
         }
-        
-        var licence = licenceSet.Licences.First();
 
-        licence.NoneSchemaData.Add("licenceId", licenceId);
-
+        var licence = licenceSetGroup.First().Licences.First();
         var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
-        await outputService.SaveLicenceSetsAsync(licenceSets, licence.Filename!, processRun.ProcessRunId);
-        
+
         var outputLine = JsOutputHelper.ToOutputLine(
             licence,
             DateTime.Now,

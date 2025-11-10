@@ -9,7 +9,7 @@ public interface IDatabaseAddService
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
     
-    public Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string pdfFilePath, int processRunId);
+    public Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath, int processRunId);
     
     public Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId);
 

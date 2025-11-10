@@ -37,7 +37,7 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
-    public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath, int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
@@ -49,7 +49,7 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         
         const string sql = "INSERT INTO Licence (Filename, LicenceNumber, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Filename", pdfFilePath);
+        command.Parameters.AddWithValue("@Filename", pdfFilePath ?? "UNKNOWN");
         command.Parameters.AddWithValue("@LicenceNumber", licenceNumber ?? (object?)DBNull.Value);
         command.Parameters.AddWithValue("@Data", licenceData);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);

@@ -11,14 +11,45 @@ public static class FormattingHelper
         {
             return noneSeperatedLicenceNumber;
         }
-        
-        if (noneSeperatedLicenceNumber.Contains("152"))
+
+        if (noneSeperatedLicenceNumber.StartsWith("NE"))
         {
-            
+            // TODO something
+        }
+        
+        return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
+    }
+
+    public static string? PadLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
         }
 
+        if (licenceNumber.StartsWith("NE"))
+        {
+            // TODO something
+        }
+        
+        return Yorkshire1_PadLicenceNumber(licenceNumber);
+    }
+
+    private static string? Yorkshire1_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    {
+        if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
+        {
+            return noneSeperatedLicenceNumber;
+        }
+        
         var section1 = noneSeperatedLicenceNumber[0];
         var section2 = noneSeperatedLicenceNumber.Substring(1, 2);
+
+        if (noneSeperatedLicenceNumber.Length < 5)
+        {
+            return $"{section1}/{section2}";
+        }
+        
         var section3 = noneSeperatedLicenceNumber.Substring(3, 2);
         var section4 = noneSeperatedLicenceNumber[5..];
         
@@ -38,17 +69,14 @@ public static class FormattingHelper
         return $"{section1}/{section2}/{section3}/{section4}";
     }
 
-    public static string? PadLicenceNumber(string? licenceNumber)
+    private static string? Yorkshire1_PadLicenceNumber(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return licenceNumber;
         }
 
-        if (licenceNumber.Contains("152"))
-        {
-            
-        }
+        var startsWithDigit = char.IsDigit(licenceNumber[0]);
         
         // Replace dots with slashes IF its all dots
         if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
@@ -62,7 +90,9 @@ public static class FormattingHelper
 
         if (parts.Length < 2)
         {
-            return ToNaldLicenceNumber(part1.Replace("/", string.Empty));
+            return startsWithDigit
+                ? ToNaldLicenceNumber(part1.Replace("/", string.Empty))
+                : part1;
         }
         
         var part2 = parts[1];
@@ -74,7 +104,9 @@ public static class FormattingHelper
         
         if (parts.Length < 3)
         {
-            return ToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty));
+            return startsWithDigit
+                ? ToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
+                : $"{part1}/{part2}";
         }
         
         var part3 = parts[2];
@@ -86,7 +118,9 @@ public static class FormattingHelper
 
         if (parts.Length < 4)
         {
-            return ToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty));
+            return startsWithDigit
+                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
+                : $"{part1}/{part2}/{part3}";
         }
         
         var part4 = parts[3];
@@ -101,11 +135,15 @@ public static class FormattingHelper
         
         if (parts.Length < 5)
         {
-            return ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty));
+            return startsWithDigit
+                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
+                : $"{part1}/{part2}/{part3}/{part4}";
         }
 
         var part5 = parts[4];
-        return ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty));
+        return startsWithDigit
+            ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     
     public static List<DocumentLine> RemoveMultipleBlankLines(IEnumerable<DocumentLine> sourceList)

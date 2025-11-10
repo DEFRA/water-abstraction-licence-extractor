@@ -41,11 +41,6 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
-
-        if (licenceNumber == "124/5/34")
-        {
-            
-        }
         
         const string sql = "INSERT INTO Licence (Filename, LicenceNumber, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);

@@ -34,6 +34,7 @@ public class TessaractOcrPdfTests
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> _naldData = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {
@@ -505,6 +506,7 @@ public class TessaractOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractorCombined,
             OutputService,
             CacheService,

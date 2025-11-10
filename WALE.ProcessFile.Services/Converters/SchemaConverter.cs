@@ -14,7 +14,8 @@ public static class SchemaConverter
         MatchesResult matchesResult,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers)
+        HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData)
     {
         var matches = matchesResult.Matches;
 
@@ -253,6 +254,26 @@ public static class SchemaConverter
             || isImpoundmentLicence == true
             || isLiveLicence == true;
         
+        var naldVersionStartDateStr = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDateLine1)
+            ? naldDateLine1.VersionStartDate
+            : null;
+        
+        licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldVersionStartDateStr)
+            ? DateTime.Parse(naldVersionStartDateStr)
+            : null;
+        
+        var naldVersionExpiryDateStr = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDateLine2)
+            ? naldDateLine2.ExpiryDate
+            : null;
+        
+        licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldVersionExpiryDateStr)
+            ? DateTime.Parse(naldVersionExpiryDateStr)
+            : null;
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -383,6 +404,7 @@ public static class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService  pdfDataExtractorService,
         IOutputService outputService,
         ICacheService cacheService,
@@ -395,7 +417,8 @@ public static class SchemaConverter
             matchesResult,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
-            liveLicenceNumbers);
+            liveLicenceNumbers,
+            naldData);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
@@ -406,6 +429,7 @@ public static class SchemaConverter
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            naldData,
             pdfDataExtractorService,
             outputService,
             cacheService,
@@ -735,6 +759,7 @@ public static class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         IOutputService outputService,
         ICacheService cacheService,
@@ -772,7 +797,8 @@ public static class SchemaConverter
                         matches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                         
                     returnLicences.Add(linkedLicence);   
                 }
@@ -819,7 +845,8 @@ public static class SchemaConverter
                         relatedFileMatches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                     
                     returnLicences.Add(licence);
                 }
@@ -860,7 +887,8 @@ public static class SchemaConverter
                 relatedFileMatches,
                 impoundmentLicenceNumbers,
                 deadLicenceNumbers,
-                liveLicenceNumbers);
+                liveLicenceNumbers,
+                naldData);
             
             returnLicences.Add(licence);
         }

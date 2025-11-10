@@ -51,6 +51,7 @@ async Task ProgramAsync()
     var impoundmentLicenceNumbers = GetImpoundmentLicenceNumbers();
     var deadLicenceNumbers = GetDeadLicenceNumbers();
     var liveLicenceNumbers = GetLiveLicenceNumbers();
+    var naldData = GetNaldData();
     
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -71,18 +72,20 @@ async Task ProgramAsync()
         
         foreach (var pdfFilePath in pdfPaths)
         {
-            scrapingTasks.Add(ScrapeDocumentAsync(
-                pdfFilePath,
-                processCount++,
-                licenceNumberMapping,
-                impoundmentLicenceNumbers,
-                deadLicenceNumbers,
-                liveLicenceNumbers,
-                outputService,
-                cacheService,
-                pdfDataExtractors,
-                licenceNumberMapping,
-                processRun));
+            scrapingTasks.Add(
+                ScrapeDocumentAsync(
+                    pdfFilePath,
+                    processCount++,
+                    licenceNumberMapping,
+                    impoundmentLicenceNumbers,
+                    deadLicenceNumbers,
+                    liveLicenceNumbers,
+                    naldData,
+                    outputService,
+                    cacheService,
+                    pdfDataExtractors,
+                    licenceNumberMapping,
+                    processRun));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -294,6 +297,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> impoundmentLicenceNumbers,
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
+    Dictionary<string, NaldData> naldData,
     IOutputService outputService,
     ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
@@ -331,6 +335,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            naldData,
             pdfDataExtractor,
             outputService,
             cacheService,
@@ -351,6 +356,58 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     {
         pdfDataExtractor.InUse = false;
     }
+}
+
+Dictionary<string, NaldData> GetNaldData()
+{
+    var naldDataPath = Environment.GetEnvironmentVariable("NaldDataPath")
+        ?? throw new NullReferenceException("NaldDataPath");
+
+    var returnDict = new Dictionary<string, NaldData>();
+
+    var fileContents = File.Exists(naldDataPath)
+        ? File.ReadAllText(naldDataPath)
+            .Replace("\r", string.Empty)
+            .Split('\n')
+        : [];
+
+    var count = 0;
+    foreach (var line in fileContents)
+    {
+        if (count++ < 2)
+        {
+            continue;
+        }
+
+        var parts = line.Split(',');
+        var region = parts[0];
+
+        if (region != "North East Region")
+        {
+            continue;
+        }
+        
+        var licenceNumber = parts[4];
+
+        if (returnDict.ContainsKey(licenceNumber))
+        {
+            continue;
+        }
+        
+        var expiryDate = parts[6];
+        var versionStartDate = parts[7];
+        
+        returnDict.Add(
+            licenceNumber,
+            new NaldData
+            {
+                ExpiryDate = expiryDate,
+                VersionStartDate = versionStartDate,
+                LicenceNumber = licenceNumber
+            });
+    }
+
+    return returnDict;
 }
 
 Dictionary<string, string> GetLicenceNumberMapping(string fileMappingPath)

@@ -33,6 +33,7 @@ public class MultipleOcrPdfTests
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> _naldData = [];
     
     private static string PdfFolder => TestConfig.PdfFolder;
     

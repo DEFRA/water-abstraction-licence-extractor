@@ -13,6 +13,7 @@
         "LiveLicencesPath": "",
         "ImpoundmentLicencesPath": "",
         "DeadLicencesPath": "",
+        "NaldDataPath": "",
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",
         "ConcurrentCount": "10",

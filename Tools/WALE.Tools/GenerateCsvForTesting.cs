@@ -22,6 +22,7 @@ public static class GenerateCsvForTesting
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> LiveLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
+    private static readonly Dictionary<string, NaldData> NaldData = [];
     private static readonly int ProcessRunId = -1;
     
     public static async Task GenerateCsvForTestingAsync()
@@ -89,6 +90,7 @@ public static class GenerateCsvForTesting
                 ImpoundmentLicenceNumbers,
                 DeadLicenceNumbers,
                 LiveLicenceNumbers,
+                NaldData,
                 pdfDataExtractor,
                 OutputService,
                 CacheService,
@@ -135,6 +137,7 @@ public static class GenerateCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,
@@ -151,6 +154,7 @@ public static class GenerateCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,
@@ -166,7 +170,8 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,
@@ -182,7 +187,8 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,
@@ -198,7 +204,8 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,
@@ -214,7 +221,8 @@ public static class GenerateCsvForTesting
             FileLicenceMapping,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers,            
+            LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             OutputService,
             CacheService,

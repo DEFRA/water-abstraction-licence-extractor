@@ -114,9 +114,11 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-
+                    
                     // It's a date
-                    if (DateTime.TryParse(numberLine, out _))
+                    if (numberLine.Count(c => c == '/') == 2
+                        && DateTime.TryParse(numberLine, out var date)
+                        && date.Year is >= 1930 and <= 2100)
                     {
                         continue;
                     }
@@ -156,6 +158,12 @@ public static partial class LicenceNumber
                         //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
 
                     if (hasInvalidComboOfSeperators)
+                    {
+                        continue;
+                    }
+                    
+                    // Its a value + unit
+                    if (value.Contains('.') && value.Contains("MI"))
                     {
                         continue;
                     }

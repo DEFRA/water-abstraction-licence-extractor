@@ -1,4 +1,7 @@
-﻿using Tesseract;
+﻿using System.Globalization;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Tesseract;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.OutputSchema;
@@ -364,46 +367,48 @@ Dictionary<string, NaldData> GetNaldData()
         ?? throw new NullReferenceException("NaldDataPath");
 
     var returnDict = new Dictionary<string, NaldData>();
-
-    var fileContents = File.Exists(naldDataPath)
-        ? File.ReadAllText(naldDataPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
+    
+    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
     {
-        if (count++ < 2)
+        HasHeaderRecord = false,
+        ShouldSkipRecord = row => string.IsNullOrEmpty(row.Row[0]) || row.Row[0] == "Region" || row.Row[0] != "North East Region"
+    };
+    
+    using var reader = new StreamReader(naldDataPath);
+    using var csv = new CsvReader(reader, config);
+            
+    var records = csv.GetRecords<NaldDataLine>().ToList();
+    
+    foreach (var record in records)
+    {
+        var condition = record.Condition;
+        if (string.IsNullOrEmpty(condition) || condition == "-")
         {
-            continue;
-        }
-
-        var parts = line.Split(',');
-        var region = parts[0];
-
-        if (region != "North East Region")
-        {
-            continue;
-        }
-        
-        var licenceNumber = parts[4];
-
-        if (returnDict.ContainsKey(licenceNumber))
-        {
-            continue;
+            condition = null;
         }
         
-        var expiryDate = parts[6];
-        var versionStartDate = parts[7];
+        if (returnDict.ContainsKey(record.LicenceNo!))
+        {
+            var agg = returnDict[record.LicenceNo!].AggregateConditions;
+
+            if (!string.IsNullOrEmpty(condition) && !agg.Contains(condition))
+            {
+                agg.Add(condition);
+            }
+            
+            continue;
+        }
+
+        var conditionsAry = string.IsNullOrEmpty(condition) ? new List<string?>() : [condition];
         
         returnDict.Add(
-            licenceNumber,
+            record.LicenceNo!,
             new NaldData
             {
-                ExpiryDate = expiryDate,
-                VersionStartDate = versionStartDate,
-                LicenceNumber = licenceNumber
+                ExpiryDate = record.ExpiryDate,
+                VersionStartDate = record.VersionStartDate,
+                LicenceNumber = record.LicenceNo!,
+                AggregateConditions = conditionsAry
             });
     }
 

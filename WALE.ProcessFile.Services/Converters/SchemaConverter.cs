@@ -89,12 +89,16 @@ public static class SchemaConverter
         var points = GetPoints(matches);
         var purposes = GetPurposes(matches);
         
+        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
             licenceNumber,
             licenceVersion.LicenceVersionId,
             points,
-            purposes);
+            purposes,
+            naldData,
+            licenceNumberTransformed);
 
         var linkedLicences = aggregates
             .Where(x => x.LinkedLicences?.Length >= 1)
@@ -221,7 +225,6 @@ public static class SchemaConverter
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
         var naldLicenceNumber = (string?)null;
-        var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
         
         var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
             ? liveLicenceNumbers.Contains(licenceNumberTransformed)
@@ -256,8 +259,8 @@ public static class SchemaConverter
         
         var naldVersionStartDateStr = naldData.Count > 0
             && !string.IsNullOrEmpty(licenceNumberTransformed)
-            && naldData.TryGetValue(licenceNumberTransformed, out var naldDateLine1)
-            ? naldDateLine1.VersionStartDate
+            && naldData.TryGetValue(licenceNumberTransformed, out var naldDataLine1)
+            ? naldDataLine1.VersionStartDate
             : null;
         
         licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldVersionStartDateStr)
@@ -266,8 +269,8 @@ public static class SchemaConverter
         
         var naldVersionExpiryDateStr = naldData.Count > 0
             && !string.IsNullOrEmpty(licenceNumberTransformed)
-            && naldData.TryGetValue(licenceNumberTransformed, out var naldDateLine2)
-            ? naldDateLine2.ExpiryDate
+            && naldData.TryGetValue(licenceNumberTransformed, out var naldDataLine2)
+            ? naldDataLine2.ExpiryDate
             : null;
         
         licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldVersionExpiryDateStr)
@@ -1070,7 +1073,9 @@ public static class SchemaConverter
         string? licenceNumber,
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
-        PurposeOfAbstraction[] allPurposes)
+        PurposeOfAbstraction[] allPurposes,
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumberTransformed)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -1331,7 +1336,7 @@ public static class SchemaConverter
                 PrimaryType = linkedLicenceNumbers.Count >= 1
                     ? PrimaryType.LicenceToLicence
                     : PrimaryType.InLicence,
-                NaldType = GetNaldType(),
+                NaldType = GetNaldType(naldData, licenceNumberTransformed),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
@@ -2052,10 +2057,17 @@ public static class SchemaConverter
         };
     }
     
-    // ReSharper disable once IdentifierTypo
-    private static string? GetNaldType()
+    private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)
     {
-        return null;
+        var naldAggregateCondition = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            ? naldDataLine.AggregateConditions
+            : null;
+        
+        return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0])
+            ? naldAggregateCondition[0]
+            : null;
     }
     
     public static List<LicenceSet> AddGroupLicenceSetDetails(

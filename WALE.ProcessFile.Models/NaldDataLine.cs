@@ -16,8 +16,29 @@ public class NaldDataLine
     [Index(7)]
     public string? VersionStartDate { get; set; }
 
+    [Index(44)]
+    public string? PointName { get; set; }
+    
     [Index(46)]
-    public double PointId { get; set; }
+    public int PointId { get; set; }
+    
+    [Index(47)]
+    public string? Ngr1 { get; set; }
+    
+    [Index(51)]
+    public string? Ngr1Cartesian { get; set; }
+
+    [Index(55)]
+    public double? LicenceWideAnnualQty { get; set; }
+
+    [Index(56)]
+    public double? LicenceWideDailyQty { get; set; }
+
+    [Index(57)]
+    public double? LicenceWideHourlyQty { get; set; }
+
+    [Index(58)]
+    public double? LicenceWideInstQty { get; set; }
     
     [Index(60)]
     public string? Condition { get; set; }

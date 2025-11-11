@@ -366,62 +366,83 @@ Dictionary<string, NaldData> GetNaldData()
     var naldDataPath = Environment.GetEnvironmentVariable("NaldDataPath")
         ?? throw new NullReferenceException("NaldDataPath");
 
-    var returnDict = new Dictionary<string, NaldData>();
+    var processedLines = new Dictionary<string, NaldData>();
     
     var config = new CsvConfiguration(CultureInfo.InvariantCulture)
     {
         HasHeaderRecord = false,
-        ShouldSkipRecord = row => string.IsNullOrEmpty(row.Row[0]) || row.Row[0] == "Region" || row.Row[0] != "North East Region"
+        ShouldSkipRecord = row =>
+            string.IsNullOrEmpty(row.Row[0])
+            || row.Row[0] == "Region"
+            || row.Row[0] != "North East Region"
     };
     
     using var reader = new StreamReader(naldDataPath);
     using var csv = new CsvReader(reader, config);
             
-    var records = csv.GetRecords<NaldDataLine>().ToList();
+    var lines = csv.GetRecords<NaldDataLine>().ToList();
     
-    foreach (var record in records)
+    foreach (var line in lines)
     {
-        var condition = record.Condition;
-        if (string.IsNullOrEmpty(condition) || condition == "-")
+        var lineCondition = new NaldDataAggregate
         {
-            condition = null;
+            Condition = line.Condition,
+            AnnualQty = line.LicenceWideAnnualQty,
+            DailyQty = line.LicenceWideDailyQty,
+            HourlyQty = line.LicenceWideHourlyQty,
+            InstQty = line.LicenceWideInstQty
+        };
+        
+        if (string.IsNullOrEmpty(lineCondition.Condition) || lineCondition.Condition == "-")
+        {
+            lineCondition = null;
         }
-        
-        
-        if (returnDict.ContainsKey(record.LicenceNo!))
-        {
-            var agg = returnDict[record.LicenceNo!].AggregateConditions;
 
-            if (!string.IsNullOrEmpty(condition) && !agg.Contains(condition))
+        var linePoint = new NaldDataPoint
+        {
+            PointName = line.PointName,
+            Ngr1Cartesian = line.Ngr1Cartesian,
+            Ngr1 = line.Ngr1,
+            PointId = line.PointId
+        };
+        
+        if (processedLines.TryGetValue(line.LicenceNo!, out var existingItem))
+        {
+            if (lineCondition != null && existingItem.AggregateConditions
+                .All(existingCondition => existingCondition.ToString() != lineCondition.ToString()))
             {
-                agg.Add(condition);
+                existingItem.AggregateConditions.Add(lineCondition);
             }
             
-            var points = returnDict[record.LicenceNo!].Points;
-
-            if (!points.Contains(record.PointId))
+            if (existingItem.Points.All(existingPoint => existingPoint.ToString() != linePoint.ToString()))
             {
-                points.Add(record.PointId);
+                existingItem.Points.Add(linePoint);
             }
             
             continue;
         }
 
-        var conditionsAry = string.IsNullOrEmpty(condition) ? new List<string>() : [condition];
+        var lineConditionsArray = lineCondition == null
+            ? new List<NaldDataAggregate>()
+            : [lineCondition];
         
-        returnDict.Add(
-            record.LicenceNo!,
+        processedLines.Add(
+            line.LicenceNo!,
             new NaldData
             {
-                ExpiryDate = record.ExpiryDate,
-                VersionStartDate = record.VersionStartDate,
-                LicenceNumber = record.LicenceNo!,
-                AggregateConditions = conditionsAry,
-                Points = [record.PointId]
+                ExpiryDate = line.ExpiryDate,
+                VersionStartDate = line.VersionStartDate,
+                LicenceNumber = line.LicenceNo!,
+                LicenceWideAnnualQty = line.LicenceWideAnnualQty,
+                LicenceWideDailyQty = line.LicenceWideDailyQty,
+                LicenceWideHourlyQty = line.LicenceWideHourlyQty,
+                LicenceWideInstQty = line.LicenceWideInstQty,
+                AggregateConditions = lineConditionsArray,
+                Points = [linePoint],
             });
     }
-
-    return returnDict;
+    
+    return processedLines;
 }
 
 Dictionary<string, string> GetLicenceNumberMapping(string fileMappingPath)

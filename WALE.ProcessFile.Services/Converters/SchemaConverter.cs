@@ -2071,7 +2071,7 @@ public static class SchemaConverter
             : null;
         
         return naldPoints?.Count > 0
-            ? naldPoints[0].ToString(CultureInfo.InvariantCulture)
+            ? naldPoints[0].ToString()
             : null;
     }
     
@@ -2083,8 +2083,8 @@ public static class SchemaConverter
             ? naldDataLine.AggregateConditions
             : null;
         
-        return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0])
-            ? naldAggregateCondition[0]
+        return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0].Condition)
+            ? naldAggregateCondition[0].Condition
             : null;
     }
     

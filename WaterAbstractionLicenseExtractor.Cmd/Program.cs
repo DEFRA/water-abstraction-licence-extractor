@@ -387,6 +387,7 @@ Dictionary<string, NaldData> GetNaldData()
             condition = null;
         }
         
+        
         if (returnDict.ContainsKey(record.LicenceNo!))
         {
             var agg = returnDict[record.LicenceNo!].AggregateConditions;
@@ -396,10 +397,17 @@ Dictionary<string, NaldData> GetNaldData()
                 agg.Add(condition);
             }
             
+            var points = returnDict[record.LicenceNo!].Points;
+
+            if (!points.Contains(record.PointId))
+            {
+                points.Add(record.PointId);
+            }
+            
             continue;
         }
 
-        var conditionsAry = string.IsNullOrEmpty(condition) ? new List<string?>() : [condition];
+        var conditionsAry = string.IsNullOrEmpty(condition) ? new List<string>() : [condition];
         
         returnDict.Add(
             record.LicenceNo!,
@@ -408,7 +416,8 @@ Dictionary<string, NaldData> GetNaldData()
                 ExpiryDate = record.ExpiryDate,
                 VersionStartDate = record.VersionStartDate,
                 LicenceNumber = record.LicenceNo!,
-                AggregateConditions = conditionsAry
+                AggregateConditions = conditionsAry,
+                Points = [record.PointId]
             });
     }
 

@@ -16,6 +16,9 @@ public class NaldDataLine
     [Index(7)]
     public string? VersionStartDate { get; set; }
 
+    [Index(46)]
+    public double PointId { get; set; }
+    
     [Index(60)]
     public string? Condition { get; set; }
 }

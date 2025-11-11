@@ -1,3 +1,4 @@
+using System.Globalization;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
@@ -85,11 +86,11 @@ public static class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches);
-        var points = GetPoints(matches);
-        var purposes = GetPurposes(matches);
-        
         var licenceNumberTransformed = GetLicenceNumberTransformed(licenceNumber);
+        
+        var means = GetMeansOfAbstraction(matches);
+        var points = GetPoints(matches, licenceNumberTransformed, naldData);
+        var purposes = GetPurposes(matches);
         
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -1655,7 +1656,10 @@ public static class SchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches)
+    private static PointOfAbstraction[] GetPoints(
+        List<LabelGroupResult> matches,
+        string? licenceNumberTransformed,
+        Dictionary<string, NaldData> naldData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var returnList = new List<PointOfAbstraction>();
@@ -1757,7 +1761,8 @@ public static class SchemaConverter
                     Description = description,
                     Id = number,
                     PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff
+                    TimeCutoff = timeCutoff,
+                    NaldId = GetNaldPointId(naldData, licenceNumberTransformed)
                 });
             }
         }
@@ -2055,6 +2060,19 @@ public static class SchemaConverter
             "in total" => LimitPeriodType.InTotal,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
+    }
+
+    private static string? GetNaldPointId(Dictionary<string, NaldData> naldData, string? licenceNumber)
+    {
+        var naldPoints = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            ? naldDataLine.Points
+            : null;
+        
+        return naldPoints?.Count > 0
+            ? naldPoints[0].ToString(CultureInfo.InvariantCulture)
+            : null;
     }
     
     private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)

@@ -628,8 +628,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100068")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22631088")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

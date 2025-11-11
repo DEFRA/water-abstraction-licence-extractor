@@ -174,7 +174,7 @@ public static class JsOutputHelper
 
             listData.Add(listRow);
 
-            if (outputLine.LicenceNumber != null)
+            if (outputLine is { LicenceNumber: not null, Filename: not null })
             {
                 filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
                 licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);

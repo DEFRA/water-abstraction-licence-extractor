@@ -4,6 +4,7 @@ public class LinkedLicencesCsvLine
 {
     public string? Filename { get; set; }
     public string? LicenceNumber { get; set; }
+    public string? ScrapedLicenceNumber { get; set; }
     public string? NaldLicenceNumber { get; set; }
     public bool? LicenceIsLive { get; set; }
     

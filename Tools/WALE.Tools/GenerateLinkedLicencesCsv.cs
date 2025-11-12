@@ -32,9 +32,8 @@ public static class GenerateLinkedLicencesCsv
     {
         var returnList = new List<LinkedLicencesCsvLine>();
         
-        var pdfFilePaths = Directory
+        var pdfFilePaths = FileHelper
             .GetFiles(KeyConfig.PdfFolder)
-            .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .Select(FileHelper.GetFilenameWithoutExtension)
             .OrderBy(fileName => fileName).ToList();
 
@@ -54,6 +53,7 @@ public static class GenerateLinkedLicencesCsv
                 {
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber,
+                    ScrapedLicenceNumber = (string)licence.NoneSchemaData["x"],
                     NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = licence.LicenceFoundInList,
                     LicenceIsLive = licence.IsLiveLicence,
@@ -72,6 +72,7 @@ public static class GenerateLinkedLicencesCsv
                     {
                         Filename = licence.Filename,
                         LicenceNumber = licence.LicenceNumber,
+                        ScrapedLicenceNumber = (string)licence.NoneSchemaData["x"],
                         NaldLicenceNumber = licence.NaldLicenceNumber,
                         LicenceFoundInList = licence.LicenceFoundInList,
                         LicenceIsLive = licence.IsLiveLicence,

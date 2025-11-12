@@ -152,7 +152,7 @@ async Task ProgramAsync()
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
                 if (licenceLoop.LicenceNumber != null
-                    && !savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var number))
+                    && !savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))
                 {
                     var loopLicenceId =
                         await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!,
@@ -587,10 +587,8 @@ async Task MoveReportHtmlFilesAsync(
 
 IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
 {
-    var pdfFilePaths = Directory
-        .GetFiles(pdfFolderPath)
-        .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
-
+    var pdfFilePaths = FileHelper.GetFiles(pdfFolderPath);
+    
     //var yorkshire = Yorkshire200Files();
 
     // YORKSHIRE 200 - From new files
@@ -639,11 +637,15 @@ void Copy(string sourceDir, string targetDir)
 {
     Directory.CreateDirectory(targetDir);
 
-    foreach(var file in Directory.GetFiles(sourceDir))
+    foreach (var file in Directory.GetFiles(sourceDir))
+    {
         File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+    }
 
-    foreach(var directory in Directory.GetDirectories(sourceDir))
+    foreach (var directory in Directory.GetDirectories(sourceDir))
+    {
         Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
+    }
 }
 
 List<string> Yorkshire200Files()

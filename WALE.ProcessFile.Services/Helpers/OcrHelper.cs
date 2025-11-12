@@ -6,6 +6,16 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class OcrHelper
 {
+    private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)
+    {
+        if (coordinates == null)
+        {
+            return null;
+        }
+        
+        return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
+    }
+    
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         int pageNumber,
@@ -26,11 +36,10 @@ public static class OcrHelper
             {
                 previousLine ??= line;
 
-                var yDiff =
-                    line.Words![0]!.Coordinates.Top
-                    - (previousLine?.Words!)[0]!.Coordinates.Top;
+                var yDiff = GetMidpoint(line.Words![0]!.Coordinates)
+                    - GetMidpoint(previousLine?.Words![0]!.Coordinates);
                 
-                if (yDiff >= lineHeight)
+                if (yDiff > lineHeight)
                 {
                     lineIndex += 1;
                 }

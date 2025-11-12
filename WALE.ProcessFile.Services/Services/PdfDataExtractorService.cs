@@ -829,10 +829,10 @@ public class PdfDataExtractorService(
                     previousLines ??= fastLineOuter.PreviousLines(lines, label);
                     nextLines ??= fastLineOuter.NextLines(lines, label);
                     
-                    /*if (matchedLabel.Name == "ThisIsWhereYouCanPutABreakpointWhereALabelHasBeenFound")
+                    if (matchedLabel.Name is "DateOfIssue" or "DateOfIssueOldStyle")
                     {
                         
-                    }*/
+                    }
                     
                     var request = new FunctionInputModel
                     {

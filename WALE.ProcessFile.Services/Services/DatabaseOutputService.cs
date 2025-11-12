@@ -48,6 +48,12 @@ public class DatabaseOutputService(
             
             foreach (var licence in licenceSet.Licences)
             {
+                if (string.IsNullOrEmpty(licence.LicenceNumber))
+                {
+                    // TODO log
+                    continue;
+                }
+                
                 await databaseAddService.SaveLicenceSetLicenceAsync(
                     licenceSetId,
                     licence.LicenceNumber,

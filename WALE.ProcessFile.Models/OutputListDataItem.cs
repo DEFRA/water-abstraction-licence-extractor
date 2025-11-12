@@ -18,5 +18,5 @@ public class OutputListDataItem
     public bool meansFound { get; set; }
     public string? status{ get; set; }
     public LinkedLicence[]? linkedLicences { get; set; }
-    public OutputListDataItemLicenceSet[]? licenceSets { get; set; }
+    public OutputListDataItemLicenceSet?[] licenceSets { get; set; }
 }

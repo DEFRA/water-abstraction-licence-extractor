@@ -88,7 +88,7 @@ public class TesseractOcrDataExtractorService(
             await cacheService.SaveOcrImageTextAsync(request, returnLines);
         }
         
-        const int lineHeight = 15;
+        const int lineHeight = 21;
         return OcrHelper.Group(returnLines, pageNumber, lineHeight);
     }
 

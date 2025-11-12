@@ -2,7 +2,7 @@ using CsvHelper.Configuration.Attributes;
 
 namespace WALE.ProcessFile.Models;
 
-public class NaldDataLine
+public class NaldGeneralDataLine
 {
     [Index(0)]
     public string? Region { get; set; }
@@ -20,7 +20,7 @@ public class NaldDataLine
     public string? PointName { get; set; }
     
     [Index(46)]
-    public int PointId { get; set; }
+    public long PointId { get; set; }
     
     [Index(47)]
     public string? Ngr1 { get; set; }
@@ -39,6 +39,9 @@ public class NaldDataLine
 
     [Index(58)]
     public double? LicenceWideInstQty { get; set; }
+    
+    [Index(59)]
+    public long? ConditionId { get; set; }
     
     [Index(60)]
     public string? Condition { get; set; }

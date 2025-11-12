@@ -29,7 +29,6 @@ async Task ProgramAsync()
     
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
-    var fileMappingPath = services.FileMappingPath!;
     
     if (services.RefreshCache)
     {
@@ -50,11 +49,19 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
     
-    var licenceNumberMapping = GetLicenceNumberMapping(fileMappingPath);
-    var impoundmentLicenceNumbers = GetImpoundmentLicenceNumbers();
-    var deadLicenceNumbers = GetDeadLicenceNumbers();
-    var liveLicenceNumbers = GetLiveLicenceNumbers();
-    var naldData = GetNaldData();
+    var licenceNumberMapping = ExternalDataHelper.GetLicenceNumberMapping(
+        services.FileMappingPath!);
+    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
+        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
+    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
+        Environment.GetEnvironmentVariable("DeadLicencesPath"));
+    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
+        Environment.GetEnvironmentVariable("LiveLicencesPath"));
+    var naldGeneralData = ExternalDataHelper.GetNaldGeneralReportData(
+        Environment.GetEnvironmentVariable("NaldDataPath"));
+    
+    ExternalDataHelper.AddNaldLimitReportData(
+        Environment.GetEnvironmentVariable("NaldLimitDataPath"), naldGeneralData);
     
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -83,7 +90,7 @@ async Task ProgramAsync()
                     impoundmentLicenceNumbers,
                     deadLicenceNumbers,
                     liveLicenceNumbers,
-                    naldData,
+                    naldGeneralData,
                     outputService,
                     cacheService,
                     pdfDataExtractors,
@@ -359,221 +366,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     {
         pdfDataExtractor.InUse = false;
     }
-}
-
-Dictionary<string, NaldData> GetNaldData()
-{
-    var naldDataPath = Environment.GetEnvironmentVariable("NaldDataPath")
-        ?? throw new NullReferenceException("NaldDataPath");
-
-    var processedLines = new Dictionary<string, NaldData>();
-    
-    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-    {
-        HasHeaderRecord = false,
-        ShouldSkipRecord = row =>
-            string.IsNullOrEmpty(row.Row[0])
-            || row.Row[0] == "Region"
-            || row.Row[0] != "North East Region"
-    };
-    
-    using var reader = new StreamReader(naldDataPath);
-    using var csv = new CsvReader(reader, config);
-            
-    var lines = csv.GetRecords<NaldDataLine>().ToList();
-    
-    foreach (var line in lines)
-    {
-        var lineCondition = new NaldDataAggregate
-        {
-            Condition = line.Condition,
-            AnnualQty = line.LicenceWideAnnualQty,
-            DailyQty = line.LicenceWideDailyQty,
-            HourlyQty = line.LicenceWideHourlyQty,
-            InstQty = line.LicenceWideInstQty
-        };
-        
-        if (string.IsNullOrEmpty(lineCondition.Condition) || lineCondition.Condition == "-")
-        {
-            lineCondition = null;
-        }
-
-        var linePoint = new NaldDataPoint
-        {
-            PointName = line.PointName,
-            Ngr1Cartesian = line.Ngr1Cartesian,
-            Ngr1 = line.Ngr1,
-            PointId = line.PointId
-        };
-        
-        if (processedLines.TryGetValue(line.LicenceNo!, out var existingItem))
-        {
-            if (lineCondition != null && existingItem.AggregateConditions
-                .All(existingCondition => existingCondition.ToString() != lineCondition.ToString()))
-            {
-                existingItem.AggregateConditions.Add(lineCondition);
-            }
-            
-            if (existingItem.Points.All(existingPoint => existingPoint.ToString() != linePoint.ToString()))
-            {
-                existingItem.Points.Add(linePoint);
-            }
-            
-            continue;
-        }
-
-        var lineConditionsArray = lineCondition == null
-            ? new List<NaldDataAggregate>()
-            : [lineCondition];
-        
-        processedLines.Add(
-            line.LicenceNo!,
-            new NaldData
-            {
-                ExpiryDate = line.ExpiryDate,
-                VersionStartDate = line.VersionStartDate,
-                LicenceNumber = line.LicenceNo!,
-                LicenceWideAnnualQty = line.LicenceWideAnnualQty,
-                LicenceWideDailyQty = line.LicenceWideDailyQty,
-                LicenceWideHourlyQty = line.LicenceWideHourlyQty,
-                LicenceWideInstQty = line.LicenceWideInstQty,
-                AggregateConditions = lineConditionsArray,
-                Points = [linePoint],
-            });
-    }
-    
-    return processedLines;
-}
-
-Dictionary<string, string> GetLicenceNumberMapping(string fileMappingPath)
-{
-    var returnMapping = new Dictionary<string, string>();
-
-    var fileContents = File.Exists(fileMappingPath)
-        ? File.ReadAllText(fileMappingPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-        var licenceNumber = parts[1];
-        var filename = parts[0].Split('/').Last();
-
-        if (!returnMapping.TryAdd(licenceNumber, filename))
-        {
-            returnMapping[licenceNumber] = filename;
-        }
-    }
-
-    return returnMapping;
-}
-
-HashSet<string> GetLiveLicenceNumbers()
-{
-    var liveLicencesPath = Environment.GetEnvironmentVariable("LiveLicencesPath")
-        ?? throw new NullReferenceException("LiveLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(liveLicencesPath)
-        ? File.ReadAllText(liveLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-
-        if (parts.Length < 3)
-        {
-            continue;
-        }
-
-        var licenceNumber = parts[2];
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
-}
-
-HashSet<string> GetDeadLicenceNumbers()
-{
-    var deadLicencesPath = Environment.GetEnvironmentVariable("DeadLicencesPath")
-        ?? throw new NullReferenceException("DeadLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(deadLicencesPath)
-        ? File.ReadAllText(deadLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-
-        if (parts.Length < 6)
-        {
-            continue;
-        }
-
-        var licenceNumber = parts[5];
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
-}
-
-HashSet<string> GetImpoundmentLicenceNumbers()
-{
-    var impoundmentLicencesPath = Environment.GetEnvironmentVariable("ImpoundmentLicencesPath")
-        ?? throw new NullReferenceException("ImpoundmentLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(impoundmentLicencesPath)
-        ? File.ReadAllText(impoundmentLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-        var licenceNumber = parts[0];
-
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
 }
 
 async Task MoveReportHtmlFilesAsync(

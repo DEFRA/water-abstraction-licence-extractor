@@ -141,14 +141,16 @@ public class AzureAiVisionOcrDataExtractorService(
             .ToList();
         
         const int lineHeight = 18;
-        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight);
+        const int wordGap = 200;
+        
+        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)
     {
         return new DocumentLineWord(
             word.Text,
-            word.Confidence,
+            word.Confidence * 100,
             new DocumentLineWordCoordinates(
                 word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate, 

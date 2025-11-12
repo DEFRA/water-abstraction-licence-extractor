@@ -6,20 +6,11 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class OcrHelper
 {
-    private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)
-    {
-        if (coordinates == null)
-        {
-            return null;
-        }
-        
-        return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
-    }
-    
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         int pageNumber,
-        int lineHeight)
+        int lineHeight,
+        int wordGap)
     {
         var lineNumber = 0;
         
@@ -49,21 +40,43 @@ public static class OcrHelper
             })
             .Select(lines =>
             {
-                var columns = new List<DocumentLineColumn>();
-
+                var words = new List<DocumentLineWord>();
+                
                 foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
                 {
-                    columns.Add(new DocumentLineColumn(line.Text!, line.Words!.Select(word =>
-                        new DocumentLineWord(
-                            word!.Text,
-                            word.OcrConfidence * 100,
-                            new DocumentLineWordCoordinates(
-                                word.Coordinates.Top,
-                                word.Coordinates.Right,
-                                word.Coordinates.Bottom,
-                                word.Coordinates.Left)))
-                        .ToList())
-                    );
+                    if (line.Words == null)
+                    {
+                        continue;
+                    }
+
+                    words.AddRange(line.Words!);
+                }
+
+                var columns = new List<DocumentLineColumn>
+                {
+                    new()
+                };
+                
+                DocumentLineWord? previousWord = null;
+                
+                foreach (var word in words.OrderBy(w => w.Coordinates.Left))
+                {
+                    var xDiff = word.Coordinates.Left - previousWord?.Coordinates.Right;
+                
+                    if (xDiff > wordGap)
+                    {
+                        columns.Add(new DocumentLineColumn());
+                    }
+
+                    var column = columns.Last();
+                    column.Words.Add(word);
+
+                    previousWord = word;
+                }
+
+                foreach (var column in columns)
+                {
+                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
                 
                 var documentLine = new DocumentLine(
@@ -77,5 +90,15 @@ public static class OcrHelper
                 return documentLine;
             })
             .ToList();
+    }
+    
+    private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)
+    {
+        if (coordinates == null)
+        {
+            return null;
+        }
+        
+        return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
     }
 }

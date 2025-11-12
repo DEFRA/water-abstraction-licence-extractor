@@ -450,7 +450,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("506 25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text); // TODO should not have the 506 bit
+        Assert.Equal("25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text);
     }
 
     [Fact]
@@ -806,7 +806,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("day of 196. Twentieth September, 6", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO should be 'Twentieth day of September 1966'
+        Assert.StartsWith("Twentieth day of September, 196. 6", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO should be 'Twentieth day of September 1966'
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1114,9 +1114,9 @@ public class TessaractOcrPdfTests
 
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("grant a licence to— WATER BOARD", nameResult.Text?[0]?.Text); // TODO wrong
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal("CH Si IRE", nameResult.Text?[0]?.Text); // TODO wrong
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel?.Position);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

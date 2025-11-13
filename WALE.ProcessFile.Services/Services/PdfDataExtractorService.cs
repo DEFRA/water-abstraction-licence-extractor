@@ -81,27 +81,45 @@ public class PdfDataExtractorService(
         {
             var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
             
-            var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+            if (image1Reference == null)
             {
-                PageNumber = 1,
-                ImageNumber = 1,
-                Filepath = pdfFilePath,
-                NoOcrServiceName = Name,
-                Extension = image1Reference!.Split('.').Last()
-            });
+                returnResult.Matches = labelGroupMatches;
+                return returnResult;
+            }
+            
+            var extension = "bmp";
+            
+            if (image1Reference.Contains("png"))
+            {
+                extension = "png";
+            }
+            else if (image1Reference.Contains("jpg"))
+            {
+                extension = "jpg";
+            }
+            
+            var bytes = await cacheService.GetImageBytesAsync(
+                new OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = 1,
+                    ImageNumber = 1,
+                    Filepath = pdfFilePath,
+                    NoOcrServiceName = Name,
+                    Extension = extension
+                });
 
             if (bytes == null)
             {
                 throw new Exception("Image was not found");
             }
-            
+
             var image = Pix.LoadFromMemory(bytes);
             const int minWidthOrHeight = 2000;
-            
+
             if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
             {
                 returnResult.Matches = labelGroupMatches;
-                return returnResult;   
+                return returnResult;
             }
         }
         

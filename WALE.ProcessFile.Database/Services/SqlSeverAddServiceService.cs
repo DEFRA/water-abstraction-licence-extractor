@@ -218,7 +218,7 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
             delete [dbo].[PageScreenshot] WHERE Filename = @Filename";
 
         await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Filename", pdfFilename);
+        command.Parameters.AddWithValue("@Filename", pdfFilename.Split('.')[0]);
         
         await command.ExecuteNonQueryAsync();
     }

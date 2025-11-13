@@ -22,7 +22,7 @@ public static class OcrHelper
         
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedText(line.Text, 100))
+            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100))
             .GroupBy(line =>
             {
                 previousLine ??= line;

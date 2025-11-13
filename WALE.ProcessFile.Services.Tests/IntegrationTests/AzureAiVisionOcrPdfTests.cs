@@ -331,7 +331,7 @@ public class AzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("twenty-third day of .O.C", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO this isn't right
+        Assert.StartsWith("twenty-third day of March, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -344,7 +344,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -544,7 +544,7 @@ public class AzureAiVisionOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -557,7 +557,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         
         var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
         Assert.Equal("gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);

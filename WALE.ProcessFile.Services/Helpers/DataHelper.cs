@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
@@ -218,14 +219,55 @@ public static partial class DataHelper
     
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
-    
+
+    public static bool IsCorruptedText(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
+    {
+        if (words == null)
+        {
+            return false;
+        }
+        
+        var totalConfidence = 0.0;
+        const int minConfidence = 40;
+        
+        foreach (var word in words)
+        {
+            if (word?.OcrConfidence == null)
+            {
+                continue;
+            }
+            
+            var confidence = word.OcrConfidence.Value;
+
+            if (confidence < minConfidence
+                && word.Text.Length >= 5
+                && Dictionary.Check(word.Text))
+            {
+                confidence = 100.0;
+            }
+                
+            totalConfidence += confidence;
+        }
+        
+        var averageConfidence = totalConfidence / words.Count;
+        
+        if (averageConfidence is > 0 and < minConfidence)
+        {
+            return true;
+        }
+        
+        return IsCorruptedText(
+            string.Join(' ', words.Select(w => w.Text)),
+            unacceptableIncorrectValue);
+    }
+
     public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
     {
         if (string.IsNullOrEmpty(line))
         {
             return false;
         }
-
+        
         if (line.Contains('—'))
         {
             line = line.Replace("—", "-");
@@ -239,6 +281,11 @@ public static partial class DataHelper
         if (line.Contains('’'))
         {
             line = line.Replace("’", "'");
+        }
+
+        if (line.Contains("dayof", StringComparison.InvariantCultureIgnoreCase))
+        {
+            line = line.Replace("dayof", "day of");
         }
         
         var containsSpecialChar = line
@@ -283,8 +330,33 @@ public static partial class DataHelper
         {
             return false;
         }
+
+        var newLine = new StringBuilder();
         
-        var wordsSplit = GetNoneDigitWords(line.Split(' '));
+        var charIndex = 0;
+        var anySpacesInserted = false;
+        
+        foreach (var c in line)
+        {
+            if (
+                char.IsAsciiLetter(c)
+                && charIndex > 0
+                && char.IsDigit(line[charIndex - 1]))
+            {
+                newLine.Append(' ');
+                anySpacesInserted = true;
+            }
+
+            newLine.Append(c);
+            charIndex++;
+        }
+
+        if (anySpacesInserted)
+        {
+           line = newLine.ToString();
+        }
+        
+        var wordsSplit = GetNoneDigitOrCertain2LetterWords(line.Split(' '));
         var percentagePerWord = 100.0 / wordsSplit.Count;
         
         var countOfVeryShortWordsOrSymbols = wordsSplit.Count(word => word.Length <= 2);
@@ -299,7 +371,7 @@ public static partial class DataHelper
             return true;
         }
         
-        var countOfSuspectedIncorrectWords = wordsSplit.Count(word =>
+        var suspectedIncorrectWords = wordsSplit.Where(word =>
         {
             var wordWithoutPunctuation = new string(word
                 .Where(ch =>
@@ -314,10 +386,11 @@ public static partial class DataHelper
             return !word.Contains('/')
                 && !double.TryParse(PotentialNumber(word), out _)
                 && !Dictionary.Check(wordWithoutPunctuation);
-        });
-        
-        var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
+        }).ToList();
 
+        var countOfSuspectedIncorrectWords = suspectedIncorrectWords.Count;
+        var percentageOfSuspectedIncorrectWords = countOfSuspectedIncorrectWords * percentagePerWord;
+        
         var mostWordsIncorrectlySpelt = wordsSplit.Count >= 2
             && percentageOfSuspectedIncorrectWords >= unacceptableIncorrectValue;
         
@@ -339,7 +412,7 @@ public static partial class DataHelper
         return word;
     }
 
-    private static List<string> GetNoneDigitWords(IEnumerable<string> words)
+    private static List<string> GetNoneDigitOrCertain2LetterWords(IEnumerable<string> words)
     {
         return words
             .Where(word =>
@@ -361,7 +434,7 @@ public static partial class DataHelper
                        && wordLower != "on"
                        && wordLower != "or"
                        && wordLower != "to"
-                       && !wordLower.StartsWith("ta"); // TA is an OS reference
+                       && !wordLower.StartsWith("ta", StringComparison.InvariantCultureIgnoreCase); // TA is an OS reference
             })
             .ToList();
     }

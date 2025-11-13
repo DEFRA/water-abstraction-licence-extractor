@@ -64,6 +64,12 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrImageTextAsync(request);
     }
 
+    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseReadService.GetImagesAsync(request);
+    }
+
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);

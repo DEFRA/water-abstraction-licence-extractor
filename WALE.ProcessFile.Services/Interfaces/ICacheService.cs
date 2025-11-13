@@ -27,6 +27,8 @@ public interface ICacheService
         string extension);
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+
+    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     

@@ -694,14 +694,19 @@ public class PdfDataExtractorService(
         var lineCount = -1;
         var totalLineCount = lines.Count;
         
-        foreach (var fastLineOuter in lines)
+        foreach (var line in lines)
         {
-            var lineOuter = fastLineOuter.Line;
+            var fullLine = line.Line;
             var breakLineLoop = false;
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                var partialLine = lineOuter;
+                if (label.Name == "DocumentPointsAll" && line.Line?.Text.Contains("supply") == true)
+                {
+                        
+                }
+                
+                var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 
                 IReadOnlyList<DocumentLine>? previousLines = null;
@@ -752,13 +757,13 @@ public class PdfDataExtractorService(
                     
                     if (label.Text?.Any() == true)
                     {
-                        nextLines ??= fastLineOuter.NextLines(lines, label);
+                        nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
                         
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
-                            lineOuter!,
+                            fullLine!,
                             label.Text,
                             label.Position,
                             lineCount,
@@ -792,10 +797,10 @@ public class PdfDataExtractorService(
 
                     if (label.MatchAllText)
                     {
-                        previousLines ??= fastLineOuter.PreviousLines(lines, label);
-                        nextLines ??= fastLineOuter.NextLines(lines, label);
+                        previousLines ??= line.PreviousLines(lines, label);
+                        nextLines ??= line.NextLines(lines, label);
 
-                        if (ProcessMatchAll(partialLine, lineOuter!, label, lineCount, previousLines, nextLines))
+                        if (ProcessMatchAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -826,10 +831,10 @@ public class PdfDataExtractorService(
                         ServiceName = serviceName
                     };
 
-                    previousLines ??= fastLineOuter.PreviousLines(lines, label);
-                    nextLines ??= fastLineOuter.NextLines(lines, label);
+                    previousLines ??= line.PreviousLines(lines, label);
+                    nextLines ??= line.NextLines(lines, label);
                     
-                    if (matchedLabel.Name is "DateOfIssue" or "DateOfIssueOldStyle")
+                    if (matchedLabel.Name == "DocumentPointsAll")
                     {
                         
                     }
@@ -859,7 +864,7 @@ public class PdfDataExtractorService(
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
-                        lineForPosition = lineOuter,
+                        lineForPosition = fullLine,
                         lineNumber = partialLine.LineNumber
                     };
                     

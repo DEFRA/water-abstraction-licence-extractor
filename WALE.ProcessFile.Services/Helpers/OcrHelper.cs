@@ -19,10 +19,12 @@ public static class OcrHelper
         
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
-        
-        return returnLines
+
+        var uncorruptedLines = returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100))
+            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100));
+        
+        return uncorruptedLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -59,6 +61,22 @@ public static class OcrHelper
                         if (minHeight > wordHeight)
                         {
                             continue;
+                        }
+                        
+                        if (word is { OcrConfidence: < 40, Text.Length: > 3 }
+                            && word.Text.Count(char.IsAsciiLetter) > 3
+                            && !DataHelper.Dictionary.Check(word.Text))
+                        {
+                            var suggestions = DataHelper.Dictionary.Suggest(word.Text);
+                            var topSuggestion = suggestions.FirstOrDefault();
+
+                            if (topSuggestion != null)
+                            {
+                                lineWords.Add(new DocumentLineWord(topSuggestion, word.OcrConfidence,
+                                    word.Coordinates));
+                                
+                                continue;
+                            }
                         }
                         
                         lineWords.Add(word);

@@ -215,6 +215,7 @@ public class PdfDataExtractorService(
                     }
                     
                     var combinedList = labelGroupMatches.ToList();
+                    combinedList.AddRange(serviceMatches);
                     
                     var labelsNotMatchedAtAll = GetUnmatchedLabels(
                         unmatchedLabelLookups,
@@ -262,6 +263,8 @@ public class PdfDataExtractorService(
                         uniqueServiceMatches.Add(match);
                     }
                 }
+                
+                // TODO something here to use all 3 of them
                 
                 documentLines.AddRange(serviceImageLines);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
@@ -834,7 +837,7 @@ public class PdfDataExtractorService(
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
                     
-                    if (matchedLabel.Name == "DocumentPointsAll")
+                    if (matchedLabel.Name == "DateOfIssueOldStyle")
                     {
                         
                     }

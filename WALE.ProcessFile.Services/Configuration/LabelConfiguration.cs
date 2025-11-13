@@ -341,6 +341,9 @@ public static class LabelConfiguration
                 [
                     new("DATED THIS") { LineMustStartWith = true }
                 ],
+                Remove = [
+                    new("DATED THIS")
+                ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ApplicableToMost

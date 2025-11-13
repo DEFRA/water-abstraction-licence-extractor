@@ -699,7 +699,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("Fifteenth day of March, 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
+        Assert.StartsWith("Fifteenth day of March 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);

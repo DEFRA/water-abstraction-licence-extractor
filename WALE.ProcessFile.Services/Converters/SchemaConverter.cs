@@ -926,6 +926,8 @@ public static class SchemaConverter
         ReplaceIfContains(input, "rd", string.Empty, out input);
         ReplaceIfContains(input, "IEH", string.Empty, out input); // misreading of TH
         ReplaceIfContains(input, "th", string.Empty, out input);
+        
+        ReplaceIfContains(input, "196g", "1966", out input);
 
         return input;
     }

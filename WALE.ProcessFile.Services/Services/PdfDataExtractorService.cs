@@ -701,7 +701,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (label.Name == "DocumentPointsAll" && line.Line?.Text.Contains("supply") == true)
+                if (label.Name == "DocumentAbstractionLimitsSection" && line.Line?.Text.Contains("QUANTITY OF WATER") == true)
                 {
                         
                 }

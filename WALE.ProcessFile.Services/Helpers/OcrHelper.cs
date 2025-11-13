@@ -49,7 +49,22 @@ public static class OcrHelper
                         continue;
                     }
 
-                    words.AddRange(line.Words!);
+                    var lineWords = new List<DocumentLineWord>();
+
+                    foreach (var word in line.Words)
+                    {
+                        const int minHeight = 15;
+                        var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
+                        
+                        if (minHeight > wordHeight)
+                        {
+                            continue;
+                        }
+                        
+                        lineWords.Add(word);
+                    }
+                    
+                    words.AddRange(lineWords);
                 }
 
                 var columns = new List<DocumentLineColumn>

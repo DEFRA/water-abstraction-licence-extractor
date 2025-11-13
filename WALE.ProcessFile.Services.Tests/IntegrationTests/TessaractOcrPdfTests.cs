@@ -690,7 +690,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // File is scanned titled and font is very bold and hard to read
+        Assert.Equal(5, resultList.Count); // File is scanned titled and font is very bold and hard to read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -699,7 +699,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("Fifteenth day of March, © 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
+        Assert.StartsWith("Fifteenth day of March, 19", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO something
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
@@ -968,9 +968,9 @@ public class TessaractOcrPdfTests
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("(hereinafter referred to as \" The Licence Holder \")", nameResult.MatchedLabel!.Text!.Select(x => x.Text)!);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text!.Select(x => x.Text)!);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

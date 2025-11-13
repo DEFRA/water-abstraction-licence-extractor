@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Tesseract;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums;
@@ -78,8 +79,30 @@ public class PdfDataExtractorService(
         // If it's a text file, we don't need to go off and do image lookups
         if (isTextFile)
         {
-            returnResult.Matches = labelGroupMatches;
-            return returnResult;            
+            var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
+            
+            var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = 1,
+                ImageNumber = 1,
+                Filepath = pdfFilePath,
+                NoOcrServiceName = Name,
+                Extension = image1Reference!.Split('.').Last()
+            });
+
+            if (bytes == null)
+            {
+                throw new Exception("Image was not found");
+            }
+            
+            var image = Pix.LoadFromMemory(bytes);
+            const int minWidthOrHeight = 2000;
+            
+            if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
+            {
+                returnResult.Matches = labelGroupMatches;
+                return returnResult;   
+            }
         }
         
         var unmatchedLabelLookups =

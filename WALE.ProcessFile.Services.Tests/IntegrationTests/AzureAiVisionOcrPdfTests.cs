@@ -530,7 +530,9 @@ public class AzureAiVisionOcrPdfTests
         
         // Assert
         Assert.Equal(6, resultList.Count);
+
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.NotNull(nameResult);
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -1174,7 +1176,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text); // TODO should be 2/27/29/12
         
         var company = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
-        Assert.Equal("SCARBOROUGH CORPORATION", company?.Text?.Single().Text);
+        Assert.NotNull(company);
+        Assert.Equal("SCARBOROUGH CORPORATION", company.Text?.Single().Text);
         
         var abstractionLimitsResult = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -1286,7 +1289,7 @@ public class AzureAiVisionOcrPdfTests
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
         
-        Assert.Equal(2, purpose.Text!.Count);
+        Assert.Single(purpose.Text!);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

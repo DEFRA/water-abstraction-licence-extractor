@@ -17,8 +17,8 @@ public static class OcrHelper
         LineAndWords? previousLine = null;
         var lineIndex = 0;
         
-        // BoundingBox is { X top left, Y top left , X top right , Y top right,
-        // X bottom right , Y bottom right , X bottom left , Y bottom left }
+        // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
+        // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
         
         return returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
@@ -62,7 +62,7 @@ public static class OcrHelper
                 foreach (var word in words.OrderBy(w => w.Coordinates.Left))
                 {
                     var xDiff = word.Coordinates.Left - previousWord?.Coordinates.Right;
-                
+
                     if (xDiff > wordGap)
                     {
                         columns.Add(new DocumentLineColumn());

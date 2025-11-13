@@ -148,13 +148,15 @@ public class AzureAiVisionOcrDataExtractorService(
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)
     {
+        // See this post for visualisation of box https://learn.microsoft.com/en-us/answers/questions/776499/what-is-the-difference-between-the-boundingboxes-i
+        
         return new DocumentLineWord(
             word.Text,
             word.Confidence * 100,
             new DocumentLineWordCoordinates(
                 word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate, 
-                word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate, 
+                word.BoundingBox[5] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate));
     }
     
@@ -163,7 +165,7 @@ public class AzureAiVisionOcrDataExtractorService(
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo, line.Text))
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[5]!.Value, roundTo, line.Text))
             .ThenBy(line => line.BoundingBox[0]!.Value);
         
         return pageLines.Select(line => (line.Text, line.Words));

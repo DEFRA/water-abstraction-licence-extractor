@@ -29,7 +29,8 @@ public class DatabaseOutputService(
 
     public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilePath, pdfServiceName);
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, pdfServiceName);
     }
 
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)

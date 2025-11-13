@@ -339,10 +339,12 @@ public static class LabelConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("DATED THIS") { LineMustStartWith = true }
+                    new("DATED THIS") { LineMustStartWith = true },
+                    new("DATE THIS") { LineMustStartWith = true }
                 ],
                 Remove = [
-                    new("DATED THIS")
+                    new("DATED THIS"),
+                    new("DATE THIS")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

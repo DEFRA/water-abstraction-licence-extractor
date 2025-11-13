@@ -236,20 +236,23 @@ ConfiguredServices ConfigureServices()
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
             PageSegMode.SparseTextOsd,
-            cacheService);
+            cacheService,
+            outputService);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
             PageSegMode.Auto,
-            cacheService);
+            cacheService,
+            outputService);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
             ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
             ?? throw new NullReferenceException("AzureAIVisionKey"),
-            cacheService);
+            cacheService,
+            outputService);
 
         var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
             pdfPigNoOcr,
@@ -580,7 +583,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     pdfFilePaths = pdfFilePaths.Where(x =>
-        x.Contains("12201021")/*
+        x.Contains("12201078")/*
         || x.Contains("12201023")
         ||
         x.Contains("12201078")

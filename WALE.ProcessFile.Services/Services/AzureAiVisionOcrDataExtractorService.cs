@@ -6,14 +6,14 @@ using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
 public class AzureAiVisionOcrDataExtractorService(
     string endpoint,
     string key,
-    ICacheService cacheService) : IOcrDataExtractorService
+    ICacheService cacheService,
+    IOutputService outputService) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
     public string Name => "AzureAiVisionOcr";
@@ -48,17 +48,29 @@ public class AzureAiVisionOcrDataExtractorService(
         {
             //  TODO - check dimensions are more then X and Y or its pointless
             ReadInStreamHeaders? textHeaders;
-
+            
             try
             {
-                var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                byte[]? bytes;
+
+                if (imageReference.StartsWith("Screenshot"))
                 {
-                    PageNumber = pageNumber,
-                    ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
-                    NoOcrServiceName = PdfDataExtractorService.Name,
-                    Extension = imageReference.Split('.').Last()
-                });
+                    bytes = await outputService.GetPageScreenshotDataAsync(
+                        pageNumber,
+                        PdfDataExtractorService.Name,
+                        pdfFilepath);
+                }
+                else
+                {
+                    bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                    {
+                        PageNumber = pageNumber,
+                        ImageNumber = imageNumber,
+                        Filepath = pdfFilepath,
+                        NoOcrServiceName = PdfDataExtractorService.Name,
+                        Extension = imageReference.Split('.').Last()
+                    });
+                }
 
                 if (bytes == null)
                 {

@@ -143,8 +143,15 @@ public class PdfDataExtractorService(
             
             var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
+
+            var pageImages = page.Images.ToList();
             
-            foreach (var imageReference in page.Images)
+            if (pageImages.Count > 10)
+            {
+                pageImages = [page.ImageReference!];
+            }
+            
+            foreach (var imageReference in pageImages)
             {
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 

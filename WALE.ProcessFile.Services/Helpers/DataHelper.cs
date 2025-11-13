@@ -257,7 +257,7 @@ public static partial class DataHelper
         }
         
         return IsCorruptedText(
-            string.Join(' ', words.Select(w => w.Text)),
+            string.Join(' ', words.Select(w => w?.Text)),
             unacceptableIncorrectValue);
     }
 

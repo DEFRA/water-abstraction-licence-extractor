@@ -109,6 +109,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return await File.ReadAllTextAsync(outputFilename);
     }
 
+    public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         throw new NotImplementedException();
@@ -161,7 +166,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     
-    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
+    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
@@ -217,7 +222,17 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             outputFilename,
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
-    
+
+    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);

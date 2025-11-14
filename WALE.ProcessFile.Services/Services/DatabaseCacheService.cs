@@ -5,6 +5,7 @@ using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -62,6 +63,12 @@ public class DatabaseCacheService(
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetOcrImageTextAsync(request);
+    }
+
+    public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseReadService.GetOcrScreenshotTextAsync(request);
     }
 
     public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
@@ -136,7 +143,19 @@ public class DatabaseCacheService(
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseAddService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
-    
+
+    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseAddService.SaveOcrScreenshotTextAsync(request, pageLines, request.ProcessRunId);
+    }
+
+    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseAddService.SaveOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
+    }
+
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
@@ -149,8 +168,30 @@ public class DatabaseCacheService(
         return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     
-    public Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber)
+    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId)
     {
-        throw new NotImplementedException();
+        var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+        {
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilePath
+        });
+
+        if (bytAry == null)
+        {
+            throw new Exception("Image could not be found");
+        }
+        
+        var deflatedBytes = PdfPigNoOcrImageService.Deflate(bytAry);
+        await databaseAddService.SaveImageOnPageAsync(
+            deflatedBytes,
+            pdfFilePath, 
+            PdfDataExtractorService.Name,
+            imageNumber,
+            pageNumber,
+            "jpg",
+            processRunId);
+        
+        return deflatedBytes;
     }
 }

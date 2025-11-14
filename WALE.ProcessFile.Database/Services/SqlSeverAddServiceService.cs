@@ -186,7 +186,24 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         
         await command.ExecuteNonQueryAsync();
     }
-    
+
+    public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "INSERT INTO OcrScreenshotTextCache (Filename, OcrServiceName, PageNumber, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @OcrServiceName, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", request.Filepath);
+        command.Parameters.AddWithValue("@OcrServiceName", request.OcrServiceName);
+        command.Parameters.AddWithValue("@Data", data);
+        command.Parameters.AddWithValue("@PageNumber", request.PageNumber);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
+        
+        await command.ExecuteNonQueryAsync();
+    }
+
     public async Task ClearCacheAsync()
     {
         await using var connection = new SqlConnection(connectionString);

@@ -32,7 +32,9 @@ public class TesseractOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = isPageScreenshot ? null : await cacheService.GetOcrImageTextAsync(request);
+        var cacheFileText = isPageScreenshot
+            ? await cacheService.GetOcrScreenshotTextAsync(request)
+            : await cacheService.GetOcrImageTextAsync(request);
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
@@ -86,7 +88,8 @@ public class TesseractOcrDataExtractorService(
                 var bytes = await cacheService.SaveDeflatedImageAsync(
                     request.Filepath,
                     request.ImageNumber,
-                    request.PageNumber);
+                    request.PageNumber,
+                    request.ProcessRunId);
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }
@@ -100,9 +103,13 @@ public class TesseractOcrDataExtractorService(
                 Console.WriteLine(e);
             }
 
-            if (!isPageScreenshot)
+            if (isPageScreenshot)
             {
-                await cacheService.SaveOcrImageTextAsync(request, returnLines);   
+                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);                
+            }
+            else
+            {
+                await cacheService.SaveOcrImageTextAsync(request, returnLines);                
             }
         }
         

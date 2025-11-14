@@ -17,6 +17,8 @@ public interface IDatabaseReadService
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     
     Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+    
+    Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     

@@ -23,6 +23,8 @@ public class AzureOpenAiOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
     {
+        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        
         string? response;
         var request = new OcrServiceImageTextCacheRequest
         {
@@ -33,7 +35,9 @@ public class AzureOpenAiOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = await cacheService.GetOcrImageTextAsync(request);
+        var cacheFileText = isPageScreenshot
+            ? await cacheService.GetOcrScreenshotTextAsync(request)
+            : await cacheService.GetOcrImageTextAsync(request);
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
@@ -69,8 +73,15 @@ public class AzureOpenAiOcrDataExtractorService(
                     "You are an AI assistant that extracts a the text from documents"
                     + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
                 userPrompts);
-            
-            await cacheService.SaveOcrImageTextAsync(request, response!);
+
+            if (isPageScreenshot)
+            {
+                await cacheService.SaveOcrScreenshotTextAsync(request, response!);                
+            }
+            else
+            {
+                await cacheService.SaveOcrImageTextAsync(request, response!);                
+            }
         }
 
         if (string.IsNullOrEmpty(response)

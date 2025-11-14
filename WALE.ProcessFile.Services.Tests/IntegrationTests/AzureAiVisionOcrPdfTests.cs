@@ -22,7 +22,8 @@ public class AzureAiVisionOcrPdfTests
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
                 TestConfig.AiVisionKey,
-                CacheService)
+                CacheService,
+                OutputService)
         },
         CacheService,
         OutputService,
@@ -35,7 +36,8 @@ public class AzureAiVisionOcrPdfTests
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
                 TestConfig.AiVisionKey,
-                CacheService)
+                CacheService,
+                OutputService)
         },
         CacheService,
         OutputService,

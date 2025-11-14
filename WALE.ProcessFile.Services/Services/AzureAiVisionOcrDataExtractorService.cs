@@ -23,6 +23,8 @@ public class AzureAiVisionOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
     {
+        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        
         var returnLines = new List<(string Text, IList<Word> Words)>();
         var request = new OcrServiceImageTextCacheRequest
         {
@@ -33,7 +35,9 @@ public class AzureAiVisionOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = await cacheService.GetOcrImageTextAsync(request);
+        var cacheFileText = isPageScreenshot
+            ? await cacheService.GetOcrScreenshotTextAsync(request)
+            : await cacheService.GetOcrImageTextAsync(request);
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
@@ -53,7 +57,7 @@ public class AzureAiVisionOcrDataExtractorService(
             {
                 byte[]? bytes;
 
-                if (imageReference.StartsWith("Screenshot"))
+                if (isPageScreenshot)
                 {
                     bytes = await outputService.GetPageScreenshotDataAsync(
                         pageNumber,
@@ -91,7 +95,15 @@ public class AzureAiVisionOcrDataExtractorService(
                         var data = JsonSerializer.Serialize(new ReadResult { Lines = [] },
                             JsonHelper.GetSerializerOptions());
 
-                        await cacheService.SaveOcrImageTextAsync(request, data);
+                        if (isPageScreenshot)
+                        {
+                            await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                        }
+                        else
+                        {
+                            await cacheService.SaveOcrImageTextAsync(request, data);                
+                        }
+                        
                         return [];
                     }
                 }
@@ -104,7 +116,8 @@ public class AzureAiVisionOcrDataExtractorService(
                 var bytes = await cacheService.SaveDeflatedImageAsync(
                     request.Filepath,
                     request.ImageNumber,
-                    request.PageNumber);
+                    request.PageNumber,
+                    request.ProcessRunId);
 
                 await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);
@@ -137,8 +150,16 @@ public class AzureAiVisionOcrDataExtractorService(
             foreach (var page in results.AnalyzeResult.ReadResults)
             {
                 var data = JsonSerializer.Serialize(page, JsonHelper.GetSerializerOptions());
-                await cacheService.SaveOcrImageTextAsync(request, data);
-                
+
+                if (isPageScreenshot)
+                {
+                    await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                }
+                else
+                {
+                    await cacheService.SaveOcrImageTextAsync(request, data);                
+                }
+
                 var pageLines = ToPageLines(page!);
                 returnLines.AddRange(pageLines);
             }

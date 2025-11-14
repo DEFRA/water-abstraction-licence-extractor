@@ -72,6 +72,27 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return null;
     }
 
+    public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 [Data] FROM OcrScreenshotTextCache WHERE Filename = @Filename AND OcrServiceName = @OcrServiceName AND PageNumber = @PageNumber";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Filename", request.Filepath);
+        command.Parameters.AddWithValue("@OcrServiceName", request.OcrServiceName);
+        command.Parameters.AddWithValue("@PageNumber", request.PageNumber);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            return (string)reader.GetValue(0);
+        }
+
+        return null;
+    }
+
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
         await using var connection = new SqlConnection(connectionString);

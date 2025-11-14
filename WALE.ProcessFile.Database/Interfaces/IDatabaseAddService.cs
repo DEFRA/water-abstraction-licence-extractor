@@ -28,6 +28,8 @@ public interface IDatabaseAddService
 
     Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
     
+    Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
+    
     Task ClearCacheAsync();
     
     Task ClearCacheAsync(string pdfFilename);

@@ -236,20 +236,23 @@ ConfiguredServices ConfigureServices()
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
             PageSegMode.SparseTextOsd,
-            cacheService);
+            cacheService,
+            outputService);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
             Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
             ?? throw new NullReferenceException("TESSDATA_PREFIX"),
             PageSegMode.Auto,
-            cacheService);
+            cacheService,
+            outputService);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
             ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
             ?? throw new NullReferenceException("AzureAIVisionKey"),
-            cacheService);
+            cacheService,
+            outputService);
 
         var pdfDataExtractor = (IPdfDataExtractorService)new PdfDataExtractorService(
             pdfPigNoOcr,
@@ -579,8 +582,33 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12100065")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    pdfFilePaths = pdfFilePaths.Where(x => 
+        //x.Contains("12303008")
+            
+        x.Contains("12100004")
+        ||x.Contains("12100052")
+        ||x.Contains("12100065")
+        ||x.Contains("12201014")
+        ||x.Contains("12201021")
+        ||x.Contains("12201023")
+        ||x.Contains("12201078")
+        ||x.Contains("12202043")
+        ||x.Contains("12203007")
+        ||x.Contains("12203045")
+        ||x.Contains("12203120")
+        ||x.Contains("12205021")
+        ||x.Contains("12205044")
+        
+        ||x.Contains("12206039") // Pdf pages come through as pretty much blank
+        ||x.Contains("12301067")
+        ||x.Contains("12302006")
+        ||x.Contains("12302044")
+        ||x.Contains("12302207")
+        ||x.Contains("12303008") // Not found
+        ||x.Contains("12303075")
+        
+    ).ToList();
+    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
     
     return pdfFilePaths.ToList();

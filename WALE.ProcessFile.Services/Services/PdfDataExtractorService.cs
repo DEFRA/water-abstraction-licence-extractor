@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Tesseract;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums;
@@ -78,8 +79,37 @@ public class PdfDataExtractorService(
         // If it's a text file, we don't need to go off and do image lookups
         if (isTextFile)
         {
-            returnResult.Matches = labelGroupMatches;
-            return returnResult;            
+            var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
+            
+            if (image1Reference == null)
+            {
+                returnResult.Matches = labelGroupMatches;
+                return returnResult;
+            }
+            
+            var bytes = await cacheService.GetImageBytesAsync(
+                new OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = 1,
+                    ImageNumber = 1,
+                    Filepath = pdfFilePath,
+                    NoOcrServiceName = Name,
+                    Extension = FileHelper.GetImageExtension(image1Reference)
+                });
+
+            if (bytes == null)
+            {
+                throw new Exception("Image was not found");
+            }
+
+            var image = Pix.LoadFromMemory(bytes);
+            const int minWidthOrHeight = 2000;
+
+            if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
+            {
+                returnResult.Matches = labelGroupMatches;
+                return returnResult;
+            }
         }
         
         var unmatchedLabelLookups =
@@ -102,8 +132,15 @@ public class PdfDataExtractorService(
             
             var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
+
+            var pageImages = page.Images.ToList();
             
-            foreach (var imageReference in page.Images)
+            if (pageImages.Count > 10)
+            {
+                pageImages = [page.ImageReference!];
+            }
+            
+            foreach (var imageReference in pageImages)
             {
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 
@@ -215,6 +252,7 @@ public class PdfDataExtractorService(
                     }
                     
                     var combinedList = labelGroupMatches.ToList();
+                    combinedList.AddRange(serviceMatches);
                     
                     var labelsNotMatchedAtAll = GetUnmatchedLabels(
                         unmatchedLabelLookups,
@@ -262,6 +300,8 @@ public class PdfDataExtractorService(
                         uniqueServiceMatches.Add(match);
                     }
                 }
+                
+                // TODO something here to use all 3 of them
                 
                 documentLines.AddRange(serviceImageLines);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
@@ -694,14 +734,14 @@ public class PdfDataExtractorService(
         var lineCount = -1;
         var totalLineCount = lines.Count;
         
-        foreach (var fastLineOuter in lines)
+        foreach (var line in lines)
         {
-            var lineOuter = fastLineOuter.Line;
+            var fullLine = line.Line;
             var breakLineLoop = false;
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                var partialLine = lineOuter;
+                var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 
                 IReadOnlyList<DocumentLine>? previousLines = null;
@@ -752,13 +792,13 @@ public class PdfDataExtractorService(
                     
                     if (label.Text?.Any() == true)
                     {
-                        nextLines ??= fastLineOuter.NextLines(lines, label);
+                        nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
                         
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
-                            lineOuter!,
+                            fullLine!,
                             label.Text,
                             label.Position,
                             lineCount,
@@ -792,10 +832,10 @@ public class PdfDataExtractorService(
 
                     if (label.MatchAllText)
                     {
-                        previousLines ??= fastLineOuter.PreviousLines(lines, label);
-                        nextLines ??= fastLineOuter.NextLines(lines, label);
+                        previousLines ??= line.PreviousLines(lines, label);
+                        nextLines ??= line.NextLines(lines, label);
 
-                        if (ProcessMatchAll(partialLine, lineOuter!, label, lineCount, previousLines, nextLines))
+                        if (ProcessMatchAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -826,13 +866,8 @@ public class PdfDataExtractorService(
                         ServiceName = serviceName
                     };
 
-                    previousLines ??= fastLineOuter.PreviousLines(lines, label);
-                    nextLines ??= fastLineOuter.NextLines(lines, label);
-                    
-                    /*if (matchedLabel.Name == "ThisIsWhereYouCanPutABreakpointWhereALabelHasBeenFound")
-                    {
-                        
-                    }*/
+                    previousLines ??= line.PreviousLines(lines, label);
+                    nextLines ??= line.NextLines(lines, label);
                     
                     var request = new FunctionInputModel
                     {
@@ -859,7 +894,7 @@ public class PdfDataExtractorService(
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
-                        lineForPosition = lineOuter,
+                        lineForPosition = fullLine,
                         lineNumber = partialLine.LineNumber
                     };
                     

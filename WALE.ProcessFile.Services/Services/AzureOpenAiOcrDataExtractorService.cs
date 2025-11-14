@@ -4,6 +4,7 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
@@ -137,7 +138,7 @@ public class AzureOpenAiOcrDataExtractorService(
             ImageNumber = imageNumber,
             Filepath = pdfFilepath,
             NoOcrServiceName = PdfDataExtractorService.Name,
-            Extension = imageReference.Split('.').Last()
+            Extension = FileHelper.GetImageExtension(imageReference)
         });
         
         if (imageBytes == null)

@@ -87,17 +87,6 @@ public class PdfDataExtractorService(
                 return returnResult;
             }
             
-            var extension = "bmp";
-            
-            if (image1Reference.Contains("png"))
-            {
-                extension = "png";
-            }
-            else if (image1Reference.Contains("jpg"))
-            {
-                extension = "jpg";
-            }
-            
             var bytes = await cacheService.GetImageBytesAsync(
                 new OcrServiceImageDataCacheRequest
                 {
@@ -105,7 +94,7 @@ public class PdfDataExtractorService(
                     ImageNumber = 1,
                     Filepath = pdfFilePath,
                     NoOcrServiceName = Name,
-                    Extension = extension
+                    Extension = FileHelper.GetImageExtension(image1Reference)
                 });
 
             if (bytes == null)

@@ -28,4 +28,20 @@ public static class FileHelper
         var returnString  = string.Join(compositeCharacter, filenameParts.Take(filenameParts.Length - 1));
         return returnString.Trim();
     }
+
+    public static string GetImageExtension(string imageReference)
+    {
+        var extension = "bmp";
+            
+        if (imageReference.Contains("png"))
+        {
+            extension = "png";
+        }
+        else if (imageReference.Contains("jpg"))
+        {
+            extension = "jpg";
+        }
+
+        return extension;
+    }
 }

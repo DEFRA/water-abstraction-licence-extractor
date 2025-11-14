@@ -67,7 +67,7 @@ public class TesseractOcrDataExtractorService(
                         ImageNumber = imageNumber,
                         Filepath = pdfFilepath,
                         NoOcrServiceName = PdfDataExtractorService.Name,
-                        Extension = imageReference.Split('.').Last()
+                        Extension = FileHelper.GetImageExtension(imageReference)
                     });
                 }
 

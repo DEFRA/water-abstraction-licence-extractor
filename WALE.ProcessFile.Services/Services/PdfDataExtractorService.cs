@@ -741,11 +741,6 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (label.Name == "DocumentAbstractionLimitsSection" && line.Line?.Text.Contains("QUANTITY OF WATER") == true)
-                {
-                        
-                }
-                
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 

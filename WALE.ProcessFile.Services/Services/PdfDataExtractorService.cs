@@ -869,11 +869,6 @@ public class PdfDataExtractorService(
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
                     
-                    if (matchedLabel.Name == "DateOfIssueOldStyle")
-                    {
-                        
-                    }
-                    
                     var request = new FunctionInputModel
                     {
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,

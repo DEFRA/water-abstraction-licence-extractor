@@ -583,7 +583,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ).ToArray();*/
 
     pdfFilePaths = pdfFilePaths.Where(x => 
-        //x.Contains("12302207")
+        //x.Contains("12303008")
             
         x.Contains("12100004")
         ||x.Contains("12100052")
@@ -603,7 +603,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12301067")
         ||x.Contains("12302006")
         ||x.Contains("12302044")
-        ||x.Contains("12302207") // Not found
+        ||x.Contains("12302207")
         ||x.Contains("12303008") // Not found
         ||x.Contains("12303075")
         

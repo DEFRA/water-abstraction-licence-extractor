@@ -339,6 +339,7 @@ public static class LabelConfiguration
                 Format = "Text",
                 Text =
                 [
+                    new("'DATED THIS") { ColumnMustStartWith = true },
                     new("DATED THIS") { ColumnMustStartWith = true },
                     new("DATE THIS") { ColumnMustStartWith = true }
                 ],
@@ -352,6 +353,7 @@ public static class LabelConfiguration
                     new("March"),
                     new("April"),
                     new("May"),
+                    new("Nay"), //Misreading
                     new("June"),
                     new("July"),
                     new("August"),

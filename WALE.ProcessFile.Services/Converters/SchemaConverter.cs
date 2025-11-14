@@ -927,6 +927,8 @@ public static class SchemaConverter
         ReplaceIfContains(input, "IEH", string.Empty, out input); // misreading of TH
         ReplaceIfContains(input, "th", string.Empty, out input);
         
+        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
+        
         ReplaceIfContains(input, "196g", "1966", out input); // TODO this should be more generic (regex)
         ReplaceIfContains(input, "1575", "1975", out input); // TODO this should be more generic (regex)
 

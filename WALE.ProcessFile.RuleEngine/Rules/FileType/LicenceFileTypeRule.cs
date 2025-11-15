@@ -8,7 +8,7 @@ namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 /// </summary>
 public class LicenceFileTypeRule : IRule<FileTypeResult>
 {
-    public string RuleName => "LicenseFileType";
+    public string RuleName => "LicenceFileType";
     public int Priority => 100;
 
     private readonly string[] _scheduleTerms = { "SCHEDULE OF CONDITIONS" };

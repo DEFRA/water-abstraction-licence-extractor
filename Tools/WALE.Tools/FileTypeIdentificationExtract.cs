@@ -9,6 +9,7 @@ using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Helpers;
+using WALE.Tools.Models;
 
 namespace WALE.Tools;
 
@@ -95,19 +96,4 @@ public static class FileTypeIdentificationExtract
     }
 }
 
-/// <summary>
-/// Data model for file type identification CSV export
-/// </summary>
-public class FileTypeIdentificationResult
-{
-    public string FilePath { get; set; } = string.Empty;
-    public string FileName { get; set; } = string.Empty;
-    public string FileType { get; set; } = string.Empty;
-    public double Confidence { get; set; }
-    public string IdentifiedByRule { get; set; } = string.Empty;
-    public string MatchedTerms { get; set; } = string.Empty;
-    
-    public string? DateOfIssue { get; set; }
-    public long FileSize { get; set; }
-    public DateTime LastModified { get; set; }
-}
+

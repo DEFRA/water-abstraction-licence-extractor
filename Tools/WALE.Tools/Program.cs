@@ -1,7 +1,7 @@
 ﻿using WALE.Tools;
 
 //const string workflow = "TestsForAiPrompts";
-const string workflow = "PdfContentReaderExtract";
+const string workflow = "FileTypeIdentificationExtract";
 
 switch (workflow)
 {
@@ -16,5 +16,8 @@ switch (workflow)
         break;
     case "PdfContentReaderExtract":
         await PdfContentReaderExtract.GeneratePdfContentReaderExtractAsync();
+        break;
+    case "FileTypeIdentificationExtract":
+        await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
         break;
 }

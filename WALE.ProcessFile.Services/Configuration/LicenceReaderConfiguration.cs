@@ -52,7 +52,7 @@ public static class LicenceReaderConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetLicenceNumberLabels()
+    public static List<LabelToMatch> GetLicenceNumberLabels()
     {
         return
         [

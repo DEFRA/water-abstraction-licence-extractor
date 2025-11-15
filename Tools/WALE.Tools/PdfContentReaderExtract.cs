@@ -3,6 +3,7 @@ using System.Text;
 using CsvHelper;
 using Tesseract;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -522,49 +523,65 @@ public static class PdfContentReaderExtract
 
         try
         {
-            // License number patterns - both slash format and compact format
-            var licensePatterns = new[]
+            // Split text into potential words/tokens that could contain license numbers
+            var words = text.Split(new[] { ' ', '\t', '\n', '\r', ',', ';', ':', '(', ')', '[', ']', '{', '}' }, 
+                                  StringSplitOptions.RemoveEmptyEntries);
+
+            // Process each word individually and also check combinations
+            var allPotentialTexts = new List<string>(words);
+
+            // Add combinations of adjacent words for multi-part license numbers
+            for (int i = 0; i < words.Length - 1; i++)
             {
-                // Compact format patterns (no slashes) - like "42901G0001"
-                @"\d{4,5}[A-Z]\d{4}[A-Z]?", // 42901G0001 or 42901G0001A
+                allPotentialTexts.Add($"{words[i]} {words[i + 1]}");
+                if (i < words.Length - 2)
+                {
+                    allPotentialTexts.Add($"{words[i]} {words[i + 1]} {words[i + 2]}");
+                }
+            }
 
-                // Slash format patterns (existing)
-                // Pattern like "4/29/01/*G/0001" - basic format
-                @"\d{1,2}\/\d{1,2}\/\d{2}\/\*[A-Z]\/\d{4}",
+            // Also check the entire text as one piece
+            allPotentialTexts.Add(text);
 
-                // Pattern like "4/29/01/*S/0033/R01" - with additional suffix
-                @"\d{1,2}\/\d{1,2}\/\d{2}\/\*[A-Z]\/\d{4}\/[A-Z]\d{2}",
+            // Get license number labels configuration
+            var licenseNumberLabels = LicenceReaderConfiguration.GetLicenceNumberLabels();
 
-                // Pattern like "4/29/03/*G/0023B" - with letter suffix after number
-                @"\d{1,2}\/\d{1,2}\/\d{2}\/\*[A-Z]\/\d{4}[A-Z]",
-            };
-
-            foreach (var pattern in licensePatterns)
+            foreach (var potentialText in allPotentialTexts)
             {
-                var matches = System.Text.RegularExpressions.Regex.Matches(text, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (string.IsNullOrWhiteSpace(potentialText))
+                    continue;
+
+                // Create a DocumentLine from the text to use with LicenceNumber.AnyIsLicenceNumber
+                var documentLine = new DocumentLine();
+                documentLine.Columns.Add(new DocumentLineColumn(potentialText.Trim()));
+
+                // Try each license number label configuration
+                foreach (var label in licenseNumberLabels)
+                {
+                    if (LicenceNumber.AnyIsLicenceNumber(new[] { documentLine }, label, out var matchedLines))
+                    {
+                        foreach (var matchedLine in matchedLines)
+                        {
+                            foreach (var column in matchedLine.Columns)
+                            {
+                                if (!string.IsNullOrWhiteSpace(column.Text))
+                                {
+                                    var cleanedNumber = CleanLicenseNumber(column.Text);
+                                    licenseNumbers.Add(cleanedNumber);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Also try the existing LicenceNumber regex directly on each potential text
+                var regex = LicenceNumber.LicenceNumbersRegex();
+                var matches = regex.Matches(potentialText);
 
                 foreach (System.Text.RegularExpressions.Match match in matches)
                 {
-                    string licenseNumber;
-
-                    // If the pattern has a capture group, use that; otherwise use the full match
-                    if (match.Groups.Count > 1 && !string.IsNullOrWhiteSpace(match.Groups[1].Value))
-                    {
-                        licenseNumber = match.Groups[1].Value.Trim();
-                    }
-                    else
-                    {
-                        licenseNumber = match.Value.Trim();
-                    }
-
-                    // Clean up the license number
-                    licenseNumber = CleanLicenseNumber(licenseNumber);
-
-                    // Validate that it looks like a real license number
-                    if (IsValidLicenseNumber(licenseNumber))
-                    {
-                        licenseNumbers.Add(licenseNumber);
-                    }
+                    var licenseNumber = CleanLicenseNumber(match.Value.Trim());
+                    licenseNumbers.Add(licenseNumber);
                 }
             }
         }

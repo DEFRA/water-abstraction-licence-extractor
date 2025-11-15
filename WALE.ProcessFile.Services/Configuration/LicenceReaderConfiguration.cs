@@ -12,7 +12,49 @@ public static class LicenceReaderConfiguration
         [
             ("Company", GetCompanyNameLabels()),
             ("LicenceNumber", GetLicenceNumberLabels()),
-            ("DateOfIssue", GetDateOfIssueLabels())
+            ("DateOfIssue", GetDateOfIssueLabels()),
+            ("Headers", GetHeaderLabels()),
+            ("Addendum", GetAddendumLabels()),
+        ];
+    }
+    private static List<LabelToMatch> GetAddendumLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Issuer",
+                Format = "Text",
+                TextStart =
+                [
+                    new("this addendum"),
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ApplicableToMost,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetHeaderLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Issuer",
+                Format = "Text",
+                TextStart =
+                [
+                    new("CHANGE OF") { LineMustStartWith = true },
+                    new("SCHEDULE OF CONDITIONS") { LineMustStartWith = true },
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ApplicableToMost,
+                IncludeStartLabelText = true
+            }
         ];
     }
 

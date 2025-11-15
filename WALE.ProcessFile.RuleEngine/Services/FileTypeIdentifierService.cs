@@ -17,15 +17,6 @@ public class FileTypeIdentifierService
     private readonly IPdfDataExtractorService? _pdfExtractorService;
 
     /// <summary>
-    /// Initializes a new instance of FileTypeIdentifierService with default rules
-    /// </summary>
-    public FileTypeIdentifierService()
-    {
-        _ruleEngine = new RuleEngine<FileTypeResult>();
-        InitializeDefaultRules();
-    }
-
-    /// <summary>
     /// Initializes a new instance of FileTypeIdentifierService with PDF extractor service
     /// </summary>
     /// <param name="pdfExtractorService">PDF extractor service with OCR support</param>
@@ -37,28 +28,16 @@ public class FileTypeIdentifierService
     }
 
     /// <summary>
-    /// Initializes a new instance of FileTypeIdentifierService with all custom components
-    /// </summary>
-    /// <param name="ruleEngine">The rule engine to use</param>
-    /// <param name="pdfExtractorService">PDF extractor service with OCR support</param>
-    public FileTypeIdentifierService(IRuleEngine<FileTypeResult> ruleEngine, IPdfDataExtractorService pdfExtractorService)
-    {
-        _ruleEngine = ruleEngine ?? throw new ArgumentNullException(nameof(ruleEngine));
-        _pdfExtractorService = pdfExtractorService ?? throw new ArgumentNullException(nameof(pdfExtractorService));
-        InitializeDefaultRules();
-    }
-
-    /// <summary>
     /// Identifies the file type based on the content of a file using OCR when needed
     /// </summary>
     /// <param name="filePath">The path to the file</param>
     /// <returns>The file type identification result, or null if no type could be identified</returns>
-    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath)
+    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
     {
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"File not found: {filePath}");
 
-        var content = await ExtractContentAsync(filePath);
+        var content = await ExtractPdfContentAsync(filePath, configuration);
         return IdentifyFileType(content);
     }
 
@@ -73,22 +52,12 @@ public class FileTypeIdentifierService
     }
 
     /// <summary>
-    /// Gets all possible file type identifications for the given content
-    /// </summary>
-    /// <param name="content">The text content to analyze</param>
-    /// <returns>All matching file type identification results</returns>
-    public IEnumerable<FileTypeResult> IdentifyAllFileTypes(string content)
-    {
-        return _ruleEngine.EvaluateAll(content);
-    }
-
-    /// <summary>
     /// Processes all files in a directory and identifies their types
     /// </summary>
     /// <param name="directoryPath">The directory path to process</param>
     /// <param name="searchPattern">File search pattern (default: "*.*")</param>
     /// <returns>A dictionary mapping file paths to their identification results</returns>
-    public async Task<Dictionary<string, FileTypeResult?>> ProcessDirectoryAsync(string directoryPath, string searchPattern = "*.*")
+    public async Task<Dictionary<string, FileTypeResult?>> ProcessDirectoryAsync(string directoryPath, LookupConfiguration lookupConfiguration, string searchPattern = "*.*")
     {
         if (!Directory.Exists(directoryPath))
             throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
@@ -100,7 +69,7 @@ public class FileTypeIdentifierService
         {
             try
             {
-                var result = await IdentifyFileTypeAsync(file);
+                var result = await IdentifyFileTypeAsync(file, configuration: lookupConfiguration);
                 results[file] = result;
             }
             catch (Exception ex)
@@ -115,57 +84,12 @@ public class FileTypeIdentifierService
     }
 
     /// <summary>
-    /// Adds a custom rule to the rule engine
-    /// </summary>
-    /// <param name="rule">The rule to add</param>
-    public void AddRule(IRule<FileTypeResult> rule)
-    {
-        _ruleEngine.AddRule(rule);
-    }
-
-    /// <summary>
-    /// Removes a rule from the rule engine
-    /// </summary>
-    /// <param name="ruleName">The name of the rule to remove</param>
-    /// <returns>True if the rule was removed, false if it wasn't found</returns>
-    public bool RemoveRule(string ruleName)
-    {
-        return _ruleEngine.RemoveRule(ruleName);
-    }
-
-    /// <summary>
-    /// Gets all currently registered rules
-    /// </summary>
-    /// <returns>A collection of all registered rules</returns>
-    public IEnumerable<IRule<FileTypeResult>> GetRules()
-    {
-        return _ruleEngine.GetRules();
-    }
-
-    /// <summary>
-    /// Extracts text content from a file using appropriate method based on file type
-    /// </summary>
-    /// <param name="filePath">The path to the file</param>
-    /// <returns>The extracted text content</returns>
-    private async Task<string> ExtractContentAsync(string filePath)
-    {
-        try
-        {
-            return await ExtractPdfContentAsync(filePath);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error extracting content from {filePath}: {ex.Message}");
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
-    /// Extracts text content from PDF files using PdfDataExtractorService like PdfContentReaderExtract
+    /// Extracts text content from PDF files using GetMatchesAsync like other tool classes
     /// </summary>
     /// <param name="filePath">The path to the PDF file</param>
+    /// <param name="configuration">The lookup configuration</param>
     /// <returns>The extracted text content</returns>
-    private async Task<string> ExtractPdfContentAsync(string filePath)
+    private async Task<string> ExtractPdfContentAsync(string filePath, LookupConfiguration configuration)
     {
         if (_pdfExtractorService == null)
         {
@@ -175,26 +99,30 @@ public class FileTypeIdentifierService
 
         try
         {
-            // Create a minimal configuration (same pattern as used in other Tools classes)
-            var configuration = new LookupConfiguration(
-                new List<(string LabelGroupName, List<LabelToMatch> Labels)>(),
-                new Dictionary<string, string>(),
-                Path.GetTempPath(),
-                Path.GetTempPath());
+            // Use GetMatchesAsync to extract content (same pattern as other Tools classes)
+            var result = await _pdfExtractorService.GetMatchesAsync(filePath, configuration, new List<string>());
 
-            var result = await _pdfExtractorService.GetPagesAsync(filePath, configuration);
-
-            // Extract all text from all pages (same pattern as other Tools classes)
+            // Extract all text from matches and sub-results
             var allText = new List<string>();
 
-            if (result.Pages != null)
+            if (result.Matches != null)
             {
-                foreach (var page in result.Pages)
+                foreach (var match in result.Matches)
                 {
-                    if (page.Text != null)
+                    // Extract text from the main match
+                    if (match.Text != null)
                     {
-                        allText.Add(page.Text);
+                        foreach (var line in match.Text)
+                        {
+                            if (!string.IsNullOrEmpty(line.Text))
+                            {
+                                allText.Add(line.Text);
+                            }
+                        }
                     }
+
+                    // Extract text from sub-results recursively
+                    ExtractTextFromSubResults(match.SubResults, allText);
                 }
             }
 
@@ -204,6 +132,35 @@ public class FileTypeIdentifierService
         {
             Console.WriteLine($"Error extracting PDF content from {filePath}: {ex.Message}");
             return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Recursively extracts text from sub-results
+    /// </summary>
+    /// <param name="subResults">The sub-results to extract text from</param>
+    /// <param name="allText">The list to add extracted text to</param>
+    private void ExtractTextFromSubResults(IReadOnlyList<LabelGroupResult> subResults, List<string> allText)
+    {
+        foreach (var subResult in subResults)
+        {
+            // Extract text from this sub-result
+            if (subResult.Text != null)
+            {
+                foreach (var line in subResult.Text)
+                {
+                    if (!string.IsNullOrEmpty(line.Text))
+                    {
+                        allText.Add(line.Text);
+                    }
+                }
+            }
+
+            // Recursively process nested sub-results
+            if (subResult.SubResults.Any())
+            {
+                ExtractTextFromSubResults(subResult.SubResults, allText);
+            }
         }
     }
 

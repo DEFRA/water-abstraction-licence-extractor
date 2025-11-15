@@ -30,7 +30,7 @@ public class LicenceFileTypeRule : IRule<FileTypeResult>
 
         return new FileTypeResult
         {
-            FileType = "Schedule",
+            FileType = "Licence",
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
             MatchedTerms = matchedTerms,

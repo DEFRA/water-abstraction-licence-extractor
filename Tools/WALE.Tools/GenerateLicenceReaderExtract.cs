@@ -8,6 +8,7 @@ using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;
@@ -30,12 +31,14 @@ public static class GenerateLicenceReaderExtract
 
         var data = await GetLicenceReaderDataAsync(pdfDataExtractor);
 
-        var fileName = $"LicenceReader-{DateTime.Today:yyyyMMdd}.csv";
-        var fullPath = Path.Combine(OutputFolder, fileName);
-        await using var writer = new StreamWriter(fullPath);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-
-        await csv.WriteRecordsAsync((IEnumerable)data);
+        // Generate CSV report using ToolHelper
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            data,
+            "LicenceReader",
+            OutputFolder,
+            x => x.LicenceNumber ?? "No Licence",
+            "licence records",
+            "Licence Processing Summary");
     }
 
     static async Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
@@ -60,7 +63,6 @@ public static class GenerateLicenceReaderExtract
                 pdfFolder + fileName,
                 configuration,
                 [pdfFolder + fileName]);
-//'/Users/sriyankamohapatra/RiderProjects/WALE/WaterPdfs/2-27-16-196 6967036.PDF'
             Console.WriteLine($"PDF extraction completed successfully for {fileName}");
             return result;
         }
@@ -102,11 +104,11 @@ public static class GenerateLicenceReaderExtract
                 Console.WriteLine($"Matches extracted successfully, processing licence data...");
 
                 // Extract licence number and date of issue from matches
-                var licenceNumber = ExtractLicenceNumber(internalJson);
-                var dateOfIssue = ExtractDateOfIssue(internalJson);
+                var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
+                var dateOfIssue = SharedHelper.ExtractDateOfIssue(internalJson);
 
                 // Extract permit number from filename (everything before first underscore)
-                var permitNumber = ExtractPermitNumberFromFilename(pdfFilePath);
+                var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
 
                 Console.WriteLine($"Extracted - Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
 
@@ -134,7 +136,7 @@ public static class GenerateLicenceReaderExtract
                 returnList.Add(new LicenceReaderCsvLine
                 {
                     LicenceNumber = null,
-                    PermitNumber = ExtractPermitNumberFromFilename(pdfFilePath),
+                    PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath),
                     DateOfIssue = null
                 });
             }
@@ -143,57 +145,5 @@ public static class GenerateLicenceReaderExtract
         return returnList;
     }
 
-    private static string? ExtractLicenceNumber(MatchesResult matchesResult)
-    {
-        var licenceNumberMatch = matchesResult.Matches?
-            .FirstOrDefault(m => m.LabelGroupName == "LicenceNumber");
-
-        if (licenceNumberMatch?.Text != null && licenceNumberMatch.Text.Count > 0)
-        {
-            return string.Join(" ", licenceNumberMatch.Text
-                .SelectMany(line => line.Text)
-                .Select(element => element))
-                .Trim()
-                .Replace(" ", "");
-        }
-
-        return null;
-    }
-
-    private static string? ExtractDateOfIssue(MatchesResult matchesResult)
-    {
-        var dateOfIssueMatch = matchesResult.Matches?
-            .FirstOrDefault(m => m.LabelGroupName == "DateOfIssue");
-
-        if (dateOfIssueMatch?.Text != null && dateOfIssueMatch.Text.Count > 0)
-        {
-            return string.Join(" ", dateOfIssueMatch.Text
-                .SelectMany(line => line.Text)
-                .Select(element => element))
-                .Trim()
-                .Replace(" ", "");
-        }
-
-        return null;
-    }
-
-    private static string? ExtractPermitNumberFromFilename(string filename)
-    {
-        if (string.IsNullOrEmpty(filename))
-            return null;
-
-        // Remove file extension first
-        var nameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
-
-        // Find first underscore and extract everything before it
-        var underscoreIndex = nameWithoutExtension.IndexOf('_');
-
-        if (underscoreIndex > 0)
-        {
-            return nameWithoutExtension.Substring(0, underscoreIndex).Replace(" ", "");
-        }
-
-        // If no underscore found, return the whole filename without extension
-        return nameWithoutExtension.Replace(" ", "");
-    }
+    
 }

@@ -9,6 +9,7 @@ using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Helpers;
 
 namespace WALE.Tools;
 

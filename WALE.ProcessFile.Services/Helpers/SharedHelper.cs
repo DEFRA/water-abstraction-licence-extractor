@@ -53,4 +53,58 @@ public static class SharedHelper
             .Replace("rd", string.Empty, StringComparison.InvariantCultureIgnoreCase)
             .Replace("th", string.Empty, StringComparison.InvariantCultureIgnoreCase);
     }
+    
+    public static string? ExtractLicenceNumber(MatchesResult matchesResult)
+    {
+        var licenceNumberMatch = matchesResult.Matches?
+            .FirstOrDefault(m => m.LabelGroupName == "LicenceNumber");
+
+        if (licenceNumberMatch?.Text != null && licenceNumberMatch.Text.Count > 0)
+        {
+            return string.Join(" ", licenceNumberMatch.Text
+                    .SelectMany(line => line.Text)
+                    .Select(element => element))
+                .Trim()
+                .Replace(" ", "");
+        }
+
+        return null;
+    }
+
+    public static string? ExtractDateOfIssue(MatchesResult matchesResult)
+    {
+        var dateOfIssueMatch = matchesResult.Matches?
+            .FirstOrDefault(m => m.LabelGroupName == "DateOfIssue");
+
+        if (dateOfIssueMatch?.Text != null && dateOfIssueMatch.Text.Count > 0)
+        {
+            return string.Join(" ", dateOfIssueMatch.Text
+                    .SelectMany(line => line.Text)
+                    .Select(element => element))
+                .Trim()
+                .Replace(" ", "");
+        }
+
+        return null;
+    }
+
+    public static string? ExtractPermitNumberFromFilename(string filename)
+    {
+        if (string.IsNullOrEmpty(filename))
+            return null;
+
+        // Remove file extension first
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
+
+        // Find first underscore and extract everything before it
+        var underscoreIndex = nameWithoutExtension.IndexOf('_');
+
+        if (underscoreIndex > 0)
+        {
+            return nameWithoutExtension.Substring(0, underscoreIndex).Replace(" ", "");
+        }
+
+        // If no underscore found, return the whole filename without extension
+        return nameWithoutExtension.Replace(" ", "");
+    }
 }

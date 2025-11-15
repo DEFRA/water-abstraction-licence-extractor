@@ -2,9 +2,13 @@ using System.Globalization;
 using CsvHelper;
 using Tesseract;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Helpers;
 
 namespace WALE.Tools;
 
@@ -13,7 +17,9 @@ namespace WALE.Tools;
 /// </summary>
 public static class FileTypeIdentificationExtract
 {
-    private static readonly string OutputFolder = KeyConfig.PdfFolder;
+    private static readonly string OutputFolder = KeyConfig.OutputFolder;
+    private static readonly string CacheFolder = KeyConfig.CacheFolder;
+    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
 
     /// <summary>
     /// Identifies file types in the output folder and generates a CSV report
@@ -22,52 +28,70 @@ public static class FileTypeIdentificationExtract
     {
         Console.WriteLine("Starting file type identification...");
 
-        var fileTypeService = new FileTypeIdentifierService(new PdfDataExtractorService(
+        var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
                 new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
             },
-            KeyConfig.PdfFolder));
+            KeyConfig.PdfFolder);
+
+        var fileTypeService = new FileTypeIdentifierService(pdfDataExtractor);
 
         // Process all files in the output folder
-        var results = await fileTypeService.ProcessDirectoryAsync(OutputFolder);
+        var labels = LicenceReaderConfiguration.GetLabels();
+        Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
 
-        // Prepare data for CSV export
-        var csvData = results.Select(kvp => new FileTypeIdentificationResult
+        var configuration = new LookupConfiguration(
+            labels,
+            FileLicenceMapping,
+            OutputFolder,
+            CacheFolder);
+
+        var results = await fileTypeService.ProcessDirectoryAsync(KeyConfig.PdfFolder, configuration);
+        var csvData = new List<FileTypeIdentificationResult>();
+
+        foreach (var result in results)
         {
-            FilePath = kvp.Key,
-            FileName = Path.GetFileName(kvp.Key),
-            FileType = kvp.Value?.FileType ?? "Unknown",
-            Confidence = kvp.Value?.Confidence ?? 0.0,
-            IdentifiedByRule = kvp.Value?.IdentifiedByRule ?? "N/A",
-            MatchedTerms = kvp.Value?.MatchedTerms != null ? string.Join("; ", kvp.Value.MatchedTerms) : "",
-            FileSize = File.Exists(kvp.Key) ? new FileInfo(kvp.Key).Length : 0,
-            LastModified = File.Exists(kvp.Key) ? File.GetLastWriteTime(kvp.Key) : DateTime.MinValue
-        }).OrderBy(x => x.FileType).ThenBy(x => x.FileName).ToList();
+            var filePath = result.Key;
+            var fileTypeResult = result.Value;
 
-        // Generate CSV report
-        var fileName = $"FileTypeIdentification-{DateTime.Today:yyyyMMdd}.csv";
-        var fullPath = Path.Combine(OutputFolder, fileName);
+            // Extract date of issue for PDF files
+            string? dateOfIssue = null;
+            try
+            {
+                var matchesResult = await pdfDataExtractor.GetMatchesAsync(filePath, configuration, new List<string>());
+                dateOfIssue = SharedHelper.ExtractDateOfIssue(matchesResult);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error extracting date from {filePath}: {ex.Message}");
+            }
 
-        await using var writer = new StreamWriter(fullPath);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-
-        await csv.WriteRecordsAsync(csvData);
-
-        Console.WriteLine($"File type identification completed. Results written to: {fullPath}");
-        Console.WriteLine($"Total files processed: {results.Count}");
-
-        // Print summary
-        var summary = csvData.GroupBy(x => x.FileType)
-            .Select(g => new { FileType = g.Key, Count = g.Count() })
-            .OrderByDescending(x => x.Count);
-
-        Console.WriteLine("\nFile Type Summary:");
-        foreach (var item in summary)
-        {
-            Console.WriteLine($"  {item.FileType}: {item.Count} files");
+            csvData.Add(new FileTypeIdentificationResult
+            {
+                FilePath = filePath,
+                FileName = Path.GetFileName(filePath),
+                FileType = fileTypeResult?.FileType ?? "Unknown",
+                Confidence = fileTypeResult?.Confidence ?? 0.0,
+                IdentifiedByRule = fileTypeResult?.IdentifiedByRule ?? "N/A",
+                MatchedTerms = fileTypeResult?.MatchedTerms != null ? string.Join("; ", fileTypeResult.MatchedTerms) : "",
+                DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue),
+                FileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0,
+                LastModified = File.Exists(filePath) ? File.GetLastWriteTime(filePath) : DateTime.MinValue
+            });
         }
+
+        csvData = csvData.OrderBy(x => x.FileType).ThenBy(x => x.FileName).ToList();
+
+        // Generate CSV report using ToolHelper
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            csvData,
+            "FileTypeIdentification",
+            OutputFolder,
+            x => x.FileType,
+            "files",
+            "File Type Summary");
     }
 }
 
@@ -82,6 +106,8 @@ public class FileTypeIdentificationResult
     public double Confidence { get; set; }
     public string IdentifiedByRule { get; set; } = string.Empty;
     public string MatchedTerms { get; set; } = string.Empty;
+    
+    public string? DateOfIssue { get; set; }
     public long FileSize { get; set; }
     public DateTime LastModified { get; set; }
 }

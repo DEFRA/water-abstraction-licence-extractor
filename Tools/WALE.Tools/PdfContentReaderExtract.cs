@@ -8,6 +8,7 @@ using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;
@@ -64,18 +65,16 @@ public static class PdfContentReaderExtract
             }
         }
 
-        // Step 3: Save results to CSV file
-        var fileName = $"PDF-Content-Extract-{DateTime.Today:yyyyMMdd}.csv";
-        var fullPath = Path.Combine(OutputFolder, fileName);
+        // Step 3: Save results to CSV file using ToolHelper
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            csvResults,
+            "PDF-Content-Extract",
+            OutputFolder,
+            x => x.FileName,
+            "content entries",
+            "Files Summary");
 
-        await using var writer = new StreamWriter(fullPath, false, Encoding.UTF8);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-
-        await csv.WriteRecordsAsync(csvResults);
-
-        Console.WriteLine($"PDF content extraction completed. Results saved to: {fullPath}");
         Console.WriteLine($"Total files processed: {pdfFilePaths.Count}");
-        Console.WriteLine($"Total content entries: {csvResults.Count}");
     }
 
     private static async Task<List<PdfContentCsvLine>> ExtractAllPdfContentAsync(string pdfFilePath)

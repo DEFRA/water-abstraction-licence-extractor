@@ -222,15 +222,15 @@
 
         <iframe id="iframeNUMBER" class="iframe" src="about:blank"></iframe>
     </div>
-    
-    <script src="[LIST_DATA_PATH]" onerror="alert('API not running (or list data path incorrect)')"></script>
+
+    <script src="Assets/list.js"></script>
     <script>
         window.thumbnailImageUrl = [THUMBNAIL_IMAGE_DATA_PATH];
 
         const searchParams = new URLSearchParams(window.location.search);
-        window.processRunId = parseInt(searchParams.get('processRunId'));
-        alert(window.processRunId);
+        let processRunId = parseInt(searchParams.get('processRunId'));
+        
+        loadScript("[LIST_DATA_PATH]?processRunId=" + processRunId, loadList);
     </script>
-    <script src="Assets/list.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
@@ -52,11 +53,12 @@ app.MapGet("/process-run", async () =>
 
 app.MapGet("/list", async (int processRunId) =>
 {
+    var licencesTask = outputService.GetLicencesAsync(processRunId);
+    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
+    var licences = await licencesTask;
+    
     var completeNumber = 1;
     var fileNumber = 1;
-    
-    var licences = await outputService.GetLicencesAsync(processRunId);
-    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
     
     var outputLines = licences
         .Select(licence => JsOutputHelper.ToOutputLine(
@@ -72,7 +74,10 @@ app.MapGet("/list", async (int processRunId) =>
         string.Empty,// Not used
         outputService,// Not used
         false, // Not used
-        new ProcessRun(), // Not used
+        new ProcessRun
+        {
+            ProcessRunId = processRunId
+        }, // Not used
         false);
 
     var serializedData = JsonSerializer.Serialize(

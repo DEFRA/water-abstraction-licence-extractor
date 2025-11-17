@@ -888,6 +888,7 @@ public static class SchemaConverter
         }
         
         ReplaceIfContains(input, " ", string.Empty, out input);
+        ReplaceIfContains(input, ":", string.Empty, out input);
         ReplaceIfContains(input, "first", "1", out input);
         ReplaceIfContains(input, "second", "2", out input);
         ReplaceIfContains(input, "third", "3", out input);
@@ -932,6 +933,11 @@ public static class SchemaConverter
         ReplaceIfContains(input, "196g", "1966", out input); // TODO this should be more generic (regex)
         ReplaceIfContains(input, "1575", "1975", out input); // TODO this should be more generic (regex)
 
+        if (!char.IsDigit(input[0]))
+        {
+            input = input[1..];
+        }
+        
         return input;
     }
 

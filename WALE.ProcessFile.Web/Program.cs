@@ -30,14 +30,28 @@ var config = configBuilder.Build();
 
 var cacheService = GetCacheService(config);
 var outputService = GetOutputService(config);
+var indexLink = "list.html?showAll=true&processRunId=";
 
-app.MapGet("/list", async () =>
+app.MapGet("/process-run", async () =>
 {
     var processRuns = await outputService.GetProcessRunsAsync();
-    var processRunId = processRuns
-        .OrderByDescending(processRun => processRun.ProcessRunId)
-        .FirstOrDefault()?.ProcessRunId ?? -1;
 
+    var listData = new List<string>();
+    
+    foreach (var processRun in processRuns.OrderByDescending(pr => pr.ProcessRunId))
+    {
+        listData.Add($"<li><a href='{indexLink}{processRun.ProcessRunId}'>{processRun.ProcessRunId} - {processRun.StartDateTimeUtc}</a> - {processRun.Description} ({processRun.NumberOfFiles} files)</li>");
+    }
+
+    var serializedData = JsonSerializer.Serialize(
+        listData,
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var data = {serializedData};";
+}).WithName("ChooseProcessRun");
+
+app.MapGet("/list", async (int processRunId) =>
+{
     var completeNumber = 1;
     var fileNumber = 1;
     
@@ -83,8 +97,13 @@ app.MapGet("/thumbnail", async (string filename) =>
         pageNumber,
         serviceName,
         fileName1);
+
+    if (data == null)
+    {
+        throw new Exception($"Cannot find screenshot for {fileName1} - {serviceName} - {pageNumber}");
+    }
     
-    return Results.File(data!, "image/jpeg");
+    return Results.File(data, "image/jpeg");
 }).WithName("GetThumbnail");
 
 app.MapGet("/image", async (string filename) =>

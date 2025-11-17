@@ -2,6 +2,7 @@ using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Rendering.Skia;
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Models;
@@ -10,16 +11,12 @@ public class PdfDocument
 {
     public bool FromCache { get; }
     public string PdfFilePath { get; }
-    public string OutputFolder { get; }
-    public string CacheFolder { get; }
     
     private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
     
-    public PdfDocument(string pdfFilePath, string outputFolder, string cacheFolder, bool fromCache)
+    public PdfDocument(string pdfFilePath, bool fromCache)
     {
         PdfFilePath = pdfFilePath;
-        OutputFolder = outputFolder;
-        CacheFolder = cacheFolder;
         FromCache = fromCache;
         
         if (fromCache)
@@ -75,8 +72,9 @@ public class PdfDocument
                         NumberOfImages = page.NumberOfImages,
                         Text = page.Text
                     };
-                    
-                    pdfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
+
+                    //var OutputFolder = ""; // TODO
+                    //dfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
                     
                     pdfPage.Providers.Add(new PdfPageProvider
                     {

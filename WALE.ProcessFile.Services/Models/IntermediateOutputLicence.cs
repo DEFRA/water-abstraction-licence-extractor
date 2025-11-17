@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Services.Models.OutputSchema;
+using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models;
 
@@ -19,12 +19,14 @@ public class IntermediateOutputLicence
     public string? MatchedLabelText;
     public string? MatchedLabelPosition;
     public string? LicenceNumber;
+    public string? NaldLicenceNumber;    
     public double? LicenceNumberOcrConfidence;
     public int LimitsCount;
     public int AggregatesCount;
     public string? IssueDate;
     public string? Issuer;
     public bool MeansFound;
+    public string? Status;
     public LinkedLicence[]? LinkedLicences;
     public List<LicenceSet>? LicenceSets;
     public LicenceSetReference[] ? LicenceSetReferences;

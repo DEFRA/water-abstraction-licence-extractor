@@ -1,15 +1,19 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) : IOcrDataExtractorService
+public class AzureAiVisionOcrDataExtractorService(
+    string endpoint,
+    string key,
+    ICacheService cacheService,
+    IOutputService outputService) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
     public string Name => "AzureAiVisionOcr";
@@ -17,18 +21,28 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
     {
-        var returnLines = new List<(string Text, IList<Word> Words)>();
-
-        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
-        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
+        var isPageScreenshot = imageReference.StartsWith("Screenshot");
         
-        if (pdfDocument.FromCache && File.Exists(outputFilename))
+        var returnLines = new List<(string Text, IList<Word> Words)>();
+        var request = new OcrServiceImageTextCacheRequest
         {
-            var cachedText = await File.ReadAllTextAsync(outputFilename);
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            OcrServiceName = Name,
+            ProcessRunId = processRunId
+        };
+        
+        var cacheFileText = isPageScreenshot
+            ? await cacheService.GetOcrScreenshotTextAsync(request)
+            : await cacheService.GetOcrImageTextAsync(request);
+        
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        {
             var cachedPage = JsonSerializer.Deserialize<ReadResult>(
-                cachedText,
+                cacheFileText,
                 JsonHelper.GetSerializerOptions());
 
             var pageLines = ToPageLines(cachedPage!);
@@ -38,10 +52,36 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         {
             //  TODO - check dimensions are more then X and Y or its pointless
             ReadInStreamHeaders? textHeaders;
-
+            
             try
             {
-                await using var stream = new FileStream(imageFilepath, FileMode.Open);
+                byte[]? bytes;
+
+                if (isPageScreenshot)
+                {
+                    bytes = await outputService.GetPageScreenshotDataAsync(
+                        pageNumber,
+                        PdfDataExtractorService.Name,
+                        pdfFilepath);
+                }
+                else
+                {
+                    bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                    {
+                        PageNumber = pageNumber,
+                        ImageNumber = imageNumber,
+                        Filepath = pdfFilepath,
+                        NoOcrServiceName = PdfDataExtractorService.Name,
+                        Extension = FileHelper.GetImageExtension(imageReference)
+                    });
+                }
+
+                if (bytes == null)
+                {
+                    throw new Exception("Image was not found");
+                }
+                
+                await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);
             }
             catch (Exception ex)
@@ -52,28 +92,34 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
 
                     if (errorCode == "InvalidImageDimension")
                     {
-                        await File.WriteAllTextAsync(
-                            outputFilename,
-                            JsonSerializer.Serialize(new ReadResult { Lines = [] },
-                            JsonHelper.GetSerializerOptions()));
+                        var data = JsonSerializer.Serialize(new ReadResult { Lines = [] },
+                            JsonHelper.GetSerializerOptions());
+
+                        if (isPageScreenshot)
+                        {
+                            await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                        }
+                        else
+                        {
+                            await cacheService.SaveOcrImageTextAsync(request, data);                
+                        }
                         
                         return [];
                     }
                 }
                 
-                if (!imageFilepath.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
                 {
                     throw;
                 }
                 
-                var bytAry = await File.ReadAllBytesAsync(imageFilepath);
-                var deflated = PdfPigNoOcrImageService.Deflate(bytAry);
+                var bytes = await cacheService.SaveDeflatedImageAsync(
+                    request.Filepath,
+                    request.ImageNumber,
+                    request.PageNumber,
+                    request.ProcessRunId);
 
-                var imageFilenameDeflated = imageFilepath.Replace(".jpg", "-deflated.jpg",
-                    StringComparison.InvariantCultureIgnoreCase);
-                await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
-
-                await using var stream = new FileStream(imageFilenameDeflated, FileMode.Open);
+                await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);
             }
             
@@ -98,14 +144,21 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             
             if (results.AnalyzeResult.ReadResults.Count > 1)
             {
-                throw new Exception("Cache is broken with more then one result");
+                throw new Exception("Cache is broken with more then one result - generally the result of passing in a PDF rather then an image");
             }
-            
-            Directory.CreateDirectory(folder);
             
             foreach (var page in results.AnalyzeResult.ReadResults)
             {
-                await File.WriteAllTextAsync(outputFilename, JsonSerializer.Serialize(page, JsonHelper.GetSerializerOptions()));
+                var data = JsonSerializer.Serialize(page, JsonHelper.GetSerializerOptions());
+
+                if (isPageScreenshot)
+                {
+                    await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                }
+                else
+                {
+                    await cacheService.SaveOcrImageTextAsync(request, data);                
+                }
 
                 var pageLines = ToPageLines(page!);
                 returnLines.AddRange(pageLines);
@@ -120,19 +173,23 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             })
             .ToList();
         
-        const int lineHeight = 15;
-        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight);
+        const int lineHeight = 23;
+        const int wordGap = 150;
+        
+        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)
     {
+        // See this post for visualisation of box https://learn.microsoft.com/en-us/answers/questions/776499/what-is-the-difference-between-the-boundingboxes-i
+        
         return new DocumentLineWord(
             word.Text,
-            word.Confidence,
+            word.Confidence * 100,
             new DocumentLineWordCoordinates(
                 word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate, 
-                word.BoundingBox[3] ?? PositionConstants.UnknownCoordinate, 
+                word.BoundingBox[5] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate));
     }
     
@@ -141,7 +198,7 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
         const int roundTo = 40;
         
         var pageLines = page.Lines
-            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[3]!.Value, roundTo, line.Text))
+            .OrderBy(line => LineSnappingHelper.RoundToNearestN(line.BoundingBox[5]!.Value, roundTo, line.Text))
             .ThenBy(line => line.BoundingBox[0]!.Value);
         
         return pageLines.Select(line => (line.Text, line.Words));
@@ -156,7 +213,6 @@ public class AzureAiVisionOcrDataExtractorService(string endpoint, string key) :
             };
     }
     
-
     public void Dispose()
     {
         GC.SuppressFinalize(this);

@@ -1,8 +1,9 @@
-using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Services.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -14,13 +15,11 @@ public static class ApplicableToMost
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        var returnListTop = new List<LabelGroupResult>();
-        
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.Split
             or LabelPosition.RelatedCategoryPosition)
         {
-            return returnListTop;
+            return [];
         }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
@@ -37,9 +36,10 @@ public static class ApplicableToMost
         
         if (!LabelMatchingHelper.PotentialMatchOnLabelLine(request.textBeforeAtAndAfterLabel!))
         {
-            return returnListTop;
+            return [];
         }
 
+        var returnListTop = new List<LabelGroupResult>();
         var textBeforeAtAndAfterLabel = request.textBeforeAtAndAfterLabel!.ToList();
 
         if (request.label.Position is LabelPosition.LabelIsBeforeTextToFind
@@ -93,7 +93,14 @@ public static class ApplicableToMost
                         labelGroupResult = labelGroupResult.Clone([matchedLine]);
                         
                         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                        return await ProcessSubLabelsAsync(request, labelGroupResult);                        
+                        labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        
+                        if (labelGroupResult == null)
+                        {
+                            return [];
+                        }
+                        
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);
                     }
                 }
                 
@@ -113,7 +120,14 @@ public static class ApplicableToMost
                         labelGroupResult = labelGroupResult.Clone([matchedLine]);
                         
                         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                        return await ProcessSubLabelsAsync(request, labelGroupResult);                        
+                        labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        
+                        if (labelGroupResult == null)
+                        {
+                            return [];
+                        }
+                        
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);
                     }
                 }
                 
@@ -142,6 +156,13 @@ public static class ApplicableToMost
                         labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
 
                         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        
+                        if (labelGroupResult == null)
+                        {
+                            return [];
+                        }
+                        
                         return await ProcessSubLabelsAsync(request, labelGroupResult);
                     }
                 }
@@ -155,7 +176,7 @@ public static class ApplicableToMost
 
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -168,7 +189,7 @@ public static class ApplicableToMost
 
                     if (!isMultiple)
                     {
-                        return returnList;
+                        return CheckContains(request.label, returnList);
                     }
 
                     returnListTop.AddRange(returnList);
@@ -176,7 +197,7 @@ public static class ApplicableToMost
                 
                 if (isLast)
                 {
-                    return returnListTop;
+                    return CheckContains(request.label, returnListTop);
                 }
                 
                 continue;
@@ -186,14 +207,14 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
                         {
                             continue;
                         }
@@ -203,8 +224,8 @@ public static class ApplicableToMost
                         
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
-
-                    return returnList;
+                    
+                    return CheckContains(request.label, returnList);
                 }
                 
                 continue;
@@ -216,6 +237,12 @@ public static class ApplicableToMost
                 labelGroupResult.Clone([documentLine]);
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                labelGroupResult = CheckContains(request.label, labelGroupResult);
+                if (labelGroupResult == null)
+                {
+                    return [];
+                }
+                
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
@@ -224,7 +251,10 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = request.isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(documentLine.Text, false, request.label?.AutoCorrect ?? false)
+                    ? AutoCorrectHelper.AutoCorrectText(
+                        documentLine.Text,
+                        false,
+                        request.label?.AutoCorrect ?? false)
                     : documentLine.Text;
 
                 //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;
@@ -257,7 +287,13 @@ public static class ApplicableToMost
                 
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [outputText];
-                
+
+                    labelGroupResult = CheckContains(request.label, labelGroupResult);
+                    if (labelGroupResult == null)
+                    {
+                        return [];
+                    }
+                    
                     return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
                 
@@ -275,7 +311,8 @@ public static class ApplicableToMost
                 }
 
                 labelGroupResult = labelGroupResult.Clone([documentLine]);
-                return r;
+                
+                return CheckContains(request.label, r);
             }
             
             if (!request.label!.DoNotTrimLines)
@@ -319,6 +356,12 @@ public static class ApplicableToMost
                     labelGroupResult.MatchedLabel.Possibilities = [outputText!];   
                 }
                 
+                labelGroupResult = CheckContains(request.label, labelGroupResult);
+                if (labelGroupResult == null)
+                {
+                    return [];
+                }
+                
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
@@ -338,6 +381,12 @@ public static class ApplicableToMost
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
                 {
                     labelGroupResult.MatchedLabel.Possibilities = [outputText];   
+                }
+
+                labelGroupResult = CheckContains(request.label, labelGroupResult);
+                if (labelGroupResult == null)
+                {
+                    return [];
                 }
                 
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
@@ -365,6 +414,46 @@ public static class ApplicableToMost
             }
         }
         
-        return returnListTop;
+        return CheckContains(request.label, returnListTop);
+    }
+
+    private static List<LabelGroupResult> CheckContains(LabelToMatch? label, List<LabelGroupResult> results)
+    {
+        if (label?.MustContain == null || label.MustContain.Count == 0)
+        {
+            return results;
+        }
+        
+        var returnList = new List<LabelGroupResult>();
+        
+        foreach (var result in results)
+        {
+            var matches = label.MustContain.Any(containsInstance =>
+                !string.IsNullOrEmpty(containsInstance)
+                && result.Text?.Any(t =>
+                    t.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase)) == true);
+
+            if (matches)
+            {
+                returnList.Add(result);
+            }
+        }
+
+        return returnList;
+    }
+    
+    private static LabelGroupResult? CheckContains(LabelToMatch? label, LabelGroupResult? result)
+    {
+        if (label?.MustContain == null || label.MustContain.Count == 0 || result == null)
+        {
+            return result;
+        }
+        
+        var matches = label.MustContain.Any(containsInstance =>
+            !string.IsNullOrEmpty(containsInstance)
+            && result.Text?.Any(t =>
+                t.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase)) == true);
+
+        return matches ? result : null;
     }
 }

@@ -2,29 +2,47 @@ using System.ClientModel;
 using Azure.AI.OpenAI;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
-using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, string modelName, string deploymentName)
+public class AzureOpenAiOcrDataExtractorService(
+    string endpoint,
+    string key,
+    string modelName,
+    string deploymentName,
+    ICacheService cacheService)
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => true;
     public string Name => "AzureOpenAiOcr";
     
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument)
+        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
     {
-        var folder = $"{pdfDocument.CacheFolder}/{Name}/Text";
-        var outputFilename = $"{folder}/ocr-page-{pageNumber}-image-{imageNumber}.json";
-
-        string? response;
+        var isPageScreenshot = imageReference.StartsWith("Screenshot");
         
-        if (pdfDocument.FromCache && File.Exists(outputFilename))
+        string? response;
+        var request = new OcrServiceImageTextCacheRequest
         {
-            response = await File.ReadAllTextAsync(outputFilename);
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            OcrServiceName = Name,
+            ProcessRunId = processRunId
+        };
+        
+        var cacheFileText = isPageScreenshot
+            ? await cacheService.GetOcrScreenshotTextAsync(request)
+            : await cacheService.GetOcrImageTextAsync(request);
+        
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        {
+            response = cacheFileText;
         }
         else
         {
@@ -42,7 +60,12 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
                 )
             };
         
-            var imagePrompt = await GetImagePromptAsync(imageFilepath);
+            var imagePrompt = await GetImagePromptAsync(
+                pageNumber,
+                imageNumber,
+                pdfFilepath,
+                imageReference);
+            
             userPrompts.Add(imagePrompt);
             
             response = await GetTextResponseAsync(
@@ -51,10 +74,15 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
                     "You are an AI assistant that extracts a the text from documents"
                     + " and returns it as is. Return only this text, with no other instructions or text. DO NOT give a description of the image" ],
                 userPrompts);
-            
-            Directory.CreateDirectory(folder);
-            
-            await File.WriteAllTextAsync(outputFilename, response);
+
+            if (isPageScreenshot)
+            {
+                await cacheService.SaveOcrScreenshotTextAsync(request, response!);                
+            }
+            else
+            {
+                await cacheService.SaveOcrImageTextAsync(request, response!);                
+            }
         }
 
         if (string.IsNullOrEmpty(response)
@@ -102,11 +130,22 @@ public class AzureOpenAiOcrDataExtractorService(string endpoint, string key, str
             .ToList();
     }
     
-    async Task<ChatMessageContentPart> GetImagePromptAsync(
-        string imageFilename)
+    async Task<ChatMessageContentPart> GetImagePromptAsync(int pageNumber, int imageNumber, string pdfFilepath, string imageReference)
     {
-        var imageBytes = await File.ReadAllBytesAsync(imageFilename);
-            
+        var imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+        {
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            NoOcrServiceName = PdfDataExtractorService.Name,
+            Extension = FileHelper.GetImageExtension(imageReference)
+        });
+        
+        if (imageBytes == null)
+        {
+            throw new Exception("Image was not found");
+        }
+        
         return ChatMessageContentPart.CreateImagePart(
             BinaryData.FromBytes(imageBytes),
             "image/jpeg",

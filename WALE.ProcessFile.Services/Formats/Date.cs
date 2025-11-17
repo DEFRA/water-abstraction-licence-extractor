@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
@@ -13,6 +13,28 @@ public static partial class Date
     {
         matchedLines = lines.Where(line => IsDate(line?.Text)).ToList()!;
         return matchedLines.Count > 0;
+    }
+
+    public static bool ContainsDate(string? text, out List<string> dates)
+    {
+        dates = [];
+        
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+        
+        var words = text.Split(' ');
+
+        foreach (var word in words)
+        {
+            if (DateTime.TryParse(word, out _))
+            {
+                dates.Add(word);
+            }
+        }
+
+        return dates.Count > 0;
     }
     
     public static bool IsDate(string? text)

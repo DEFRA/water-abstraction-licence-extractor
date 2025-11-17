@@ -78,4 +78,9 @@
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.ProcessFile.Database\WALE.ProcessFile.Database.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Models\WALE.ProcessFile.Models.csproj" />
+    </ItemGroup>
 </Project>

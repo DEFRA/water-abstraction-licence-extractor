@@ -103,6 +103,15 @@
                 <td>
                     <select id="licence-sets-filter" data-field="licenceSets" data-subfield="shortLicenceSetId" data-type="ArrayValueMapped"></select>
                 </td>
+                <td>
+                    <select id="status-filter" data-field="status" data-type="Values">
+                        <option value="All">All</option>
+                        <option value="Live">Live</option>
+                        <option value="Dead">Dead</option>
+                        <option value="Impoundment">Impoundment</option>
+                        <option value="Not Found">Not Found</option>                        
+                    </select>
+                </td>
             </tr>
             <tr>
                 <td style='width: 5%'>&nbsp;</td>
@@ -119,6 +128,7 @@
                 <td style='width: 7%'>Means of abstraction <a href="javascript: sortBy('meansFound')">&#8693;</a></td><!--85-->
                 <td style='width: 7%'>Linked&nbsp;licences <a href="javascript: sortBy('linkedLicences')">&#8693;</a></td><!--92-->
                 <td style='width: 8%'>Licence sets <a href="javascript: sortBy('licenceSets')">&#8693;</a></td><!--100-->
+                <td style='width: 3%'>Status <a href="javascript: sortBy('status')">&#8693;</a></td><!--100-->                
             </tr>
             </thead>
             <tbody>
@@ -139,6 +149,7 @@
                     <td id="means-total"></td>
                     <td id="linked-licences-total"></td>
                     <td id="licence-sets-total"></td>
+                    <td id="status-total"></td>
                 </tr>
                 <tr>
                     <td colspan="11"></td>
@@ -158,6 +169,7 @@
                         <span style="color: forestgreen; font-weight: bold; text-decoration: underline">Green</span> - Fully encompassed in<br>
                         <span style="color: deeppink; font-weight: bold; text-decoration: underline">Pink</span> - Partially encompassed in
                     </td>
+                    <td></td>
                 </tr>
             </tfoot>
         </table>
@@ -211,7 +223,8 @@
         <iframe id="iframeNUMBER" class="iframe" src="about:blank"></iframe>
     </div>
     
-    <script src="list-data.js"></script>
+    <script src="[LIST_DATA_PATH]" onerror="alert('API not running (or list data path incorrect)')"></script>
+    <script>window.thumbnailImageUrl = [THUMBNAIL_IMAGE_DATA_PATH];</script>
     <script src="Assets/list.js"></script>
 </body>
 </html>

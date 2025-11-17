@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Services.Constants;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
@@ -12,8 +12,7 @@ public static class FormattingHelper
         var returnList = new List<DocumentLine>();
         var previousLineWasBlank = false;
         
-        foreach (var line in trimmedList.Where(line =>
-            !previousLineWasBlank || !string.IsNullOrEmpty(line.Text)))
+        foreach (var line in trimmedList.Where(line => !previousLineWasBlank || !string.IsNullOrEmpty(line.Text)))
         {
             previousLineWasBlank = string.IsNullOrEmpty(line.Text);
             returnList.Add(line);
@@ -32,10 +31,10 @@ public static class FormattingHelper
         if (trimPunctuationStart)
         {
             while (trimmed?.Length >= 1
-                   && trimmed[0] != '('
-                   && (char.IsPunctuation(trimmed[0])
-                       || char.IsSymbol(trimmed[0])
-                       || char.IsWhiteSpace(trimmed[0])))
+               && trimmed[0] != '('
+               && (char.IsPunctuation(trimmed[0])
+                   || char.IsSymbol(trimmed[0])
+                   || char.IsWhiteSpace(trimmed[0])))
             {
                 trimmed = trimmed[1..];
             }
@@ -44,12 +43,12 @@ public static class FormattingHelper
         if (trimPunctuationEnd)
         {
             while (trimmed?.Length >= 1
-                   && trimmed[^1] != ')'
-                   && trimmed[^1] != ':'
-                   && trimmed[^1] != '/'
-                   && (char.IsPunctuation(trimmed[^1])
-                       || char.IsSymbol(trimmed[^1])
-                       || char.IsWhiteSpace(trimmed[^1])))
+               && trimmed[^1] != ')'
+               && trimmed[^1] != ':'
+               && trimmed[^1] != '/'
+               && (char.IsPunctuation(trimmed[^1])
+                   || char.IsSymbol(trimmed[^1])
+                   || char.IsWhiteSpace(trimmed[^1])))
             {
                 trimmed = trimmed[..^1];
             }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
@@ -18,6 +19,8 @@ public static class CompanyName
         bool isOcr,
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
+        // TODO get rid of any dates in here (d/m/yy)
+        
         matchedLines = null;
         var matched = false;
         
@@ -228,6 +231,17 @@ public static class CompanyName
             }
             
             matchedCompanyOrPersonalName = text;
+
+            if (Date.ContainsDate(matchedCompanyOrPersonalName, out var dates))
+            {
+                foreach (var date in dates)
+                {
+                    matchedCompanyOrPersonalName = matchedCompanyOrPersonalName.Replace(date, string.Empty);
+                }
+
+                matchedCompanyOrPersonalName = matchedCompanyOrPersonalName.Trim();
+            }
+
             return true;
         }
 

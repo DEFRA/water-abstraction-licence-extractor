@@ -56,6 +56,22 @@ public static class TestConfig
         }
     }
     
+    private static string? _pdfFolder3;
+
+    public static string PdfFolder3
+    {
+        get
+        {
+            if (_pdfFolder3 != null)
+            {
+                return _pdfFolder3;
+            }
+            
+            _pdfFolder3 = Config["PdfFolder3"]!;
+            return _pdfFolder3;
+        }
+    }
+    
     private static string? _aiVisionEndpoint;
 
     public static string AiVisionEndpoint
@@ -165,6 +181,21 @@ public static class TestConfig
             
             _tesseractPath = Config["TesseractPath"]!;
             return _tesseractPath;
+        }
+    }
+
+    private static string? _sqlConnectionString;
+    public static string SqlConnectionString
+    {
+        get
+        {
+            if (_sqlConnectionString != null)
+            {
+                return _sqlConnectionString;
+            }
+            
+            _sqlConnectionString = Config["SqlConnectionString"]!;
+            return _sqlConnectionString;
         }
     }
 }

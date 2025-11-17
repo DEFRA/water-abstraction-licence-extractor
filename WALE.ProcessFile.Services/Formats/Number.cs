@@ -1,7 +1,6 @@
-using System.Globalization;
-using WALE.ProcessFile.Services.Constants;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 

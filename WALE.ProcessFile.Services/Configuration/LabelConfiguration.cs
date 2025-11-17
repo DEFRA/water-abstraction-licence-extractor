@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
@@ -24,7 +24,8 @@ public static class LabelConfiguration
             ("Issuer", GetIssuerLabels()),
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
-            ("Additional", GetAdditional())
+            ("Additional", GetAdditional()),
+            ("LicenceHistory", GetLicenceHistory())
         ];
     }
     
@@ -66,7 +67,7 @@ public static class LabelConfiguration
                         Name = "RecordsLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -122,7 +123,61 @@ public static class LabelConfiguration
                         Name = "AdditionalLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetLicenceHistory()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "LicenceHistoryAll",
+                TextStart =
+                [
+                    new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                ],
+                TextEnd =
+                [
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("Map accompanying licence number"),
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    new(@"/Page \d* of \d*/"),
+                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "LicenceHistoryLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -174,7 +229,7 @@ public static class LabelConfiguration
                         Name = "FCLinkedLicenceNumber",
                         Text =
                         [
-                            new(LicenceNumber.RegexPatten)
+                            new(LicenceNumber.YorkshireRegexPatten)
                             {
                                 IsRegularExpression = true
                             }
@@ -284,7 +339,28 @@ public static class LabelConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("DATED THIS") { LineMustStartWith = true }
+                    new("'DATED THIS") { ColumnMustStartWith = true },
+                    new("DATED THIS") { ColumnMustStartWith = true },
+                    new("DATE THIS") { ColumnMustStartWith = true }
+                ],
+                Remove = [
+                    new("DATED THIS"),
+                    new("DATE THIS")
+                ],
+                MustContain = [
+                    new("January"),
+                    new("February"),
+                    new("March"),
+                    new("April"),
+                    new("May"),
+                    new("Nay"), //Misreading
+                    new("June"),
+                    new("July"),
+                    new("August"),
+                    new("September"),
+                    new("October"),
+                    new("November"),
+                    new("December")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -547,7 +623,23 @@ public static class LabelConfiguration
                                 {
                                     new()
                                     {
-                                        Name  = "PointPointNumber",
+                                        Name = "PointTable",
+                                        Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                        TextStart = [
+                                            new("Abstraction National Grid Location Description Map"),
+                                        ],
+                                        TextEnd = [
+                                            new("[END_OF_BLOCK]")
+                                        ],
+                                        Remove = [
+                                            new("Point Reference")
+                                        ],
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 5
+                                    },
+                                    new()
+                                    {
+                                        Name = "PointPointNumber",
                                         Possibilities = [
                                             "2.1",
                                             "2.2",
@@ -767,7 +859,7 @@ public static class LabelConfiguration
                                 [
                                     new()
                                     {
-                                        Name  = "PurposeNumber",
+                                        Name = "PurposeNumber",
                                         Possibilities = [
                                             "4.1",
                                             "4.2",
@@ -800,7 +892,27 @@ public static class LabelConfiguration
                                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
-                                    }                            
+                                    },
+                                    new()
+                                    {
+                                        Name = "PurposeLinkedLicenceNumber",
+                                        Text =
+                                        [
+                                            new(LicenceNumber.YorkshireRegexPatten)
+                                            {
+                                                IsRegularExpression = true
+                                            }
+                                        ],
+                                        Format = LicenceNumber.Constant,
+                                        Position = LabelPosition.ActuallyLabel,
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,
+                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                                        SkipLineWhenContains =
+                                        [
+                                            new("Licence Serial No: ")
+                                        ]
+                                    }
                                 ]
                             }
                         ]
@@ -995,7 +1107,7 @@ public static class LabelConfiguration
                         [
                             new()
                             {
-                                Name  = "PeriodPeriodNumber",
+                                Name = "PeriodPeriodNumber",
                                 Possibilities = [
                                     "5.1",
                                     "5.2",
@@ -1132,7 +1244,7 @@ public static class LabelConfiguration
                         [
                             new()
                             {
-                                Name  = "MeanId",
+                                Name = "MeanId",
                                 Possibilities = [
                                     "3.1",
                                     "3.2",
@@ -1311,598 +1423,654 @@ public static class LabelConfiguration
                         PreviousLinesToFetch = 3,
                         NextLinesToFetch = 20,
                         MinimumSubMatches = 1,
-                        SubLabels = new List<LabelToMatch>
-                        {
+                        SubLabels = GetLimitLineSubLabels()
+                    }
+                }
+            }
+        ];
+    }
+
+    private static List<LabelToMatch> GetLimitLineSubLabels()
+    {
+        return
+        [
+            new()
+            {
+                Name = "AbstractionLimitPointSub",
+                Text = [new("and licence")],
+                Position = LabelPosition.Split,
+                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                PreviousLinesToFetch = 20,
+                MinimumSubMatches = 2,
+                IncludeStartLabelText = true,
+                DoNotTrimLines = true,
+                SubLabels = new List<LabelToMatch>
+                {
+                    new()
+                    {
+                        Name = "DateOnly",
+                        Text =
+                        [
+                            new("Up to and including "),
+                            new("From "),
+                            new("aggregate quantity of water authorised")
+                        ],
+                        IgnoreBlockIfContains =
+                        [
+                            "Note:"
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                        Format = "Date",
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                    },
+                    new()
+                    {
+                        Name = "DatePurposeRough",
+                        Format = "Text",
+                        TextStart =
+                        [
+                            new("January") { LineMustStartWith = true },
+                            new("February") { LineMustStartWith = true },
+                            new("March") { LineMustStartWith = true },
+                            new("April") { LineMustStartWith = true },
+                            new("May") { LineMustStartWith = true },
+                            new("June") { LineMustStartWith = true },
+                            new("July") { LineMustStartWith = true },
+                            new("August") { LineMustStartWith = true },
+                            new("September") { LineMustStartWith = true },
+                            new("October") { LineMustStartWith = true },
+                            new("November") { LineMustStartWith = true }
+                        ],
+                        TextEnd =
+                        [
+                            new("February[END_OF_COLUMN]"),
+                            new("March[END_OF_COLUMN]"),
+                            new("April[END_OF_COLUMN]"),
+                            new("May[END_OF_COLUMN]"),
+                            new("June[END_OF_COLUMN]"),
+                            new("July[END_OF_COLUMN]"),
+                            new("August[END_OF_COLUMN]"),
+                            new("September[END_OF_COLUMN]"),
+                            new("October[END_OF_COLUMN]"),
+                            new("November[END_OF_COLUMN]"),
+                            new("December[END_OF_COLUMN]")
+                        ],
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        IncludeStartLabelText = true,
+                        IncludeEndLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
+                    new()
+                    {
+                        Name = "PurposeCondition",
+                        Text =
+                        [
+                            new("condition "),
+                            new("conditions "),
+                            new("purposes specified in "),
+                        ],
+                        TextEnd =
+                        [
+                            new("shall not exceed"),
+                            new(":")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        Remove =
+                        [
+                            new("(above)"),
+                            new("numbers")
+                        ],
+                        MustContain =
+                        [
+                            "4.1",
+                            "4.2",
+                            "4.3",
+                            "4.4",
+                            "4.5",
+                            "4.6",
+                            "4.7",
+                            "4.8",
+                            "4.9",
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)",
+                        ],
+                        SubLabels =
+                        [
                             new()
                             {
-                                Name = "AbstractionLimitPointSub",
-                                Text = [new("and licence")],
+                                Name = "PurposeConditionSub",
+                                Text = [new("and ")],
                                 Position = LabelPosition.Split,
-                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
-                                PreviousLinesToFetch = 20,
-                                MinimumSubMatches = 2,
-                                IncludeStartLabelText = true,
-                                DoNotTrimLines = true,
-                                SubLabels = new List<LabelToMatch>
-                                {
-                                    new()
-                                    {
-                                        Name = "DateOnly",
-                                        Text = [
-                                            new("Up to and including "),
-                                            new("From "),
-                                            new("aggregate quantity of water authorised")
-                                        ],
-                                        IgnoreBlockIfContains = [
-                                            "Note:"
-                                        ],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = "Date",
-                                        IncludeStartLabelText = true,
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
-                                    },
-                                    new()
-                                    {
-                                        Name = "DatePurposeRough",
-                                        Format = "Text",
-                                        TextStart = [
-                                            new("January") { LineMustStartWith = true },
-                                            new("February") { LineMustStartWith = true },
-                                            new("March") { LineMustStartWith = true },
-                                            new("April") { LineMustStartWith = true },
-                                            new("May") { LineMustStartWith = true },
-                                            new("June") { LineMustStartWith = true },
-                                            new("July") { LineMustStartWith = true },
-                                            new("August") { LineMustStartWith = true },
-                                            new("September") { LineMustStartWith = true },
-                                            new("October") { LineMustStartWith = true },
-                                            new("November") { LineMustStartWith = true }
-                                        ],
-                                        TextEnd = [
-                                            new("February[END_OF_COLUMN]"),
-                                            new("March[END_OF_COLUMN]"),
-                                            new("April[END_OF_COLUMN]"),
-                                            new("May[END_OF_COLUMN]"),
-                                            new("June[END_OF_COLUMN]"),
-                                            new("July[END_OF_COLUMN]"),
-                                            new("August[END_OF_COLUMN]"),
-                                            new("September[END_OF_COLUMN]"),
-                                            new("October[END_OF_COLUMN]"),
-                                            new("November[END_OF_COLUMN]"),
-                                            new("December[END_OF_COLUMN]")
-                                        ],
-                                        PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 0,
-                                        Position = LabelPosition.TextToFindIsBetweenLabels,
-                                        IncludeStartLabelText = true,
-                                        IncludeEndLabelText = true,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
-                                    },
-                                    new()
-                                    {
-                                        Name = "PurposeCondition",
-                                        Text = [
-                                            new("condition "),
-                                            new("conditions "),
-                                            new("purposes specified in "),
-                                        ],
-                                        TextEnd = [
-                                            new("shall not exceed"),
-                                            new(":")
-                                        ],
-                                        Position = LabelPosition.TextToFindIsBetweenLabels,
-                                        Format = "Text",
-                                        Remove = [
-                                            new("(above)"),
-                                            new("numbers")
-                                        ],
-                                        MustContain = [
-                                            "4.1",
-                                            "4.2",
-                                            "4.3",
-                                            "4.4",
-                                            "4.5",
-                                            "4.6",
-                                            "4.7",
-                                            "4.8",
-                                            "4.9",
-                                            "(1)",
-                                            "(2)",
-                                            "(3)",
-                                            "(4)",
-                                        ],
-                                        SubLabels =
-                                        [
-                                            new()
-                                            {
-                                                Name = "PurposeConditionSub",
-                                                Text = [new("and ")],
-                                                Position = LabelPosition.Split,
-                                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
-                                            }
-                                        ]
-                                    },
-                                    new()
-                                    {
-                                        Name = "PointCondition",
-                                        Text = [
-                                            new("Abstraction Point A"),
-                                            new("Abstraction Point B"),
-                                            new("condition "),
-                                            new("conditions "),
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        TextEnd = [
-                                            new("Abstraction Point B"),
-                                            new("Abstraction Point C"),
-                                            new("shall not exceed"),
-                                            new(":"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)"),
-                                            new("[END_OF_BLOCK]")                                            
-                                        ],
-                                        Position = LabelPosition.TextToFindIsBetweenLabels,
-                                        IncludeStartLabelText = true,
-                                        Format = "Text",
-                                        Possibilities = [
-                                            "Abstraction Point A",
-                                            "Abstraction Point B",
-                                            "2.1",
-                                            "2.2",
-                                            "2.3",
-                                            "2.4",
-                                            "2.5",
-                                            "2.6",
-                                            "2.7",
-                                            "2.8",
-                                            "2.9",
-                                            "(1)",
-                                            "(2)",
-                                            "(3)",
-                                            "(4)"
-                                        ],
-                                        MustContain = [
-                                            "Abstraction Point A",
-                                            "Abstraction Point B",
-                                            "2.1",
-                                            "2.2",
-                                            "2.3",
-                                            "2.4",
-                                            "2.5",
-                                            "2.6",
-                                            "2.7",
-                                            "2.8",
-                                            "2.9",
-                                            "(1)",
-                                            "(2)",
-                                            "(3)",
-                                            "(4)"
-                                        ],
-                                        Remove = [
-                                            new("number ")
-                                        ],
-                                        SubLabels =
-                                        [
-                                            new()
-                                            {
-                                                Name = "PointConditionSub",
-                                                Text = [new("and ")],
-                                                Position = LabelPosition.Split,
-                                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
-                                            }
-                                        ]
-                                    },
-                                    new()
-                                    {
-                                        Name = "LinkedLicenceNumber",
-                                        Text = [
-                                            new("licence number "),
-                                            new("licence serial number "),
-                                            new("licence serial numbers "),
-                                            new("under this licence and licence"),
-                                            new("and licence "),
-                                            new("and under licence "),
-                                            new("and under license ") // spelling mistake in licence                                    
-                                        ],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = LicenceNumber.Constant,
-                                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
-                                        SkipLineWhenContains = [
-                                            new("Licence Serial No: ")
-                                        ]
-                                    },
-                                    new()
-                                    {
-                                        Name = "LinkedLicenceFilename",
-                                        Text = [
-                                            new("licence number "),
-                                            new("licence serial number "),
-                                            new("licence serial numbers "),
-                                            new("under this licence and licence"),
-                                            new("and licence "),
-                                            new("and under licence "),
-                                            new("and under license ") // spelling mistake in licence                                    
-                                        ],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                                        Format = "LicenceNumberFilename"
-                                    },
-                                    new()
-                                    {
-                                        Name = "LinkedLicence",
-                                        RelatedName = "LinkedLicenceNumber",
-                                        Format = "LinkedLicence",
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerHourUnits",
-                                        CategoryName = "PerUnits",
-                                        Text = [new("per hour")],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",                                            
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerDayUnits",
-                                        CategoryName = "PerUnits",                                
-                                        Text = [new("per day")],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerMonthUnits",
-                                        CategoryName = "PerUnits",                                
-                                        Text = [new("per month")],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",                                            
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerYearUnits",
-                                        CategoryName = "PerUnits",                                
-                                        Text = [
-                                            new("per year"),
-                                            new("per annum")
-                                        ],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerSecondUnits",                                
-                                        CategoryName = "PerUnits",                                
-                                        Text = [new("per second")],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "InTotalUnits",                                
-                                        CategoryName = "PerUnits",                                
-                                        Text = [new("in total")],
-                                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
-                                        Format = "Units",
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        Possibilities = new List<string>
-                                        {
-                                            "megalitres",
-                                            "litres",
-                                            "thousand cubic metres",
-                                            "cubic metres",
-                                            "cubic meters",
-                                            "cubic metre",
-                                            "cubic meter",
-                                            "m\u00b3", // m3
-                                            "megagallons",
-                                            "thousand gallons",
-                                            "million gallons",
-                                            "gallons"                                    
-                                        },
-                                        SkipLineWhenContains = [
-                                            "abstracted in total"
-                                        ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerHourValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [new("per hour")],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerHourUnits",                                
-                                        Format = "Number",
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        Remove = [
-                                            new("6.1"),
-                                            new("6.2"),
-                                            new("6.3"),
-                                            new("1 ")
-                                            {
-                                                LineMustStartWith = true,
-                                                ColumnMustHave2SequentialNumbers = true
-                                            },
-                                            new("2 ")
-                                            {
-                                                LineMustStartWith = true,
-                                                ColumnMustHave2SequentialNumbers = true
-                                            },
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerDayValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [new("per day")],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerDayUnits",
-                                        Format = "Number",
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        Remove = [
-                                            new("6.1"),
-                                            new("6.2"),
-                                            new("6.3"),
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerMonthValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [new("per month")],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerMonthUnits",                                
-                                        Format = "Number",
-                                        Remove = [
-                                            new("6.1"),
-                                            new("6.2"),
-                                            new("6.3"),
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerYearValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [
-                                            new("per year"),
-                                            new("per annum")                                            
-                                        ],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerYearUnits",
-                                        Format = "Number",
-                                        Remove = [
-                                            new("6.1"),
-                                            new("6.2"),
-                                            new("6.3"),
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "PerSecondValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [new("per second")],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "PerSecondUnits",                                
-                                        Format = "Number",
-                                        Remove = [
-                                            new("6.1"),
-                                            new("6.2"),
-                                            new("6.3"),
-                                            new("(1)"),
-                                            new("(2)"),
-                                            new("(3)"),
-                                            new("(4)")
-                                        ],
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true,
-                                        PreviousLinesToFetch = 1
-                                        // Not setting NextLinesToFetch to 1 as it breaks some existing tests
-                                    },
-                                    new()
-                                    {
-                                        Name = "InTotalValue",                                
-                                        CategoryName = "PerValue",
-                                        Text = [new("in total")],
-                                        Position = LabelPosition.RelatedCategoryPosition,
-                                        RelatedCategoryName = "PerUnits",
-                                        RelatedName = "InTotalUnits",                                
-                                        Format = "Number", // TODO add date extraction,
-                                        SkipLineWhenContains = [
-                                            "abstracted in total"
-                                        ],
-                                        IgnoreMatchIfContains = [
-                                            "(1)",
-                                            "(11)",
-                                            "(111)"
-                                        ],
-                                        PreviousLinesToFetch = 1,
-                                        NextLinesToFetch = 1,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        FindMultipleOnSingleLine = true
-                                    },
-                                    new()
-                                    {
-                                        Name = "AYearDefinitionLine",
-                                        TextStart = [new("beginning on")],
-                                        TextEnd = [new(".")],
-                                        Position = LabelPosition.TextToFindIsBetweenLabels,
-                                        PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 1,
-                                        Format = "Text",
-                                        SubLabels = [
-                                            new()
-                                            {
-                                                Name = "AYearDates",
-                                                Position = LabelPosition.Split,
-                                                Text = [new("and")],
-                                                Remove = [new("ending on")],
-                                                Format = "DateOrPurpose",
-                                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
-                                            }
-                                        ]
-                                    }
-                                }       
+                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
                             }
-                        }
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "PointCondition",
+                        Text =
+                        [
+                            new("Abstraction Point A"),
+                            new("Abstraction Point B"),
+                            new("condition "),
+                            new("conditions "),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        TextEnd =
+                        [
+                            new("Abstraction Point B"),
+                            new("Abstraction Point C"),
+                            new("shall not exceed"),
+                            new(":"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        IncludeStartLabelText = true,
+                        Format = "Text",
+                        Possibilities =
+                        [
+                            "Abstraction Point A",
+                            "Abstraction Point B",
+                            "2.1",
+                            "2.2",
+                            "2.3",
+                            "2.4",
+                            "2.5",
+                            "2.6",
+                            "2.7",
+                            "2.8",
+                            "2.9",
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)"
+                        ],
+                        MustContain =
+                        [
+                            "Abstraction Point A",
+                            "Abstraction Point B",
+                            "2.1",
+                            "2.2",
+                            "2.3",
+                            "2.4",
+                            "2.5",
+                            "2.6",
+                            "2.7",
+                            "2.8",
+                            "2.9",
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)"
+                        ],
+                        Remove =
+                        [
+                            new("number ")
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PointConditionSub",
+                                Text = [new("and ")],
+                                Position = LabelPosition.Split,
+                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "LinkedLicenceNumber",
+                        Text =
+                        [
+                            new("licence number "),
+                            new("licence serial number "),
+                            new("licence serial numbers "),
+                            new("under this licence and licence"),
+                            new("and licence "),
+                            new("and under licence "),
+                            new("and under license ") // spelling mistake in licence                                    
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                        Format = LicenceNumber.Constant,
+                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                        SkipLineWhenContains =
+                        [
+                            new("Licence Serial No: ")
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "LinkedLicenceFilename",
+                        Text =
+                        [
+                            new("licence number "),
+                            new("licence serial number "),
+                            new("licence serial numbers "),
+                            new("under this licence and licence"),
+                            new("and licence "),
+                            new("and under licence "),
+                            new("and under license ") // spelling mistake in licence                                    
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                        Format = "LicenceNumberFilename"
+                    },
+                    new()
+                    {
+                        Name = "LinkedLicence",
+                        RelatedName = "LinkedLicenceNumber",
+                        Format = "LinkedLicence",
+                    },
+                    new()
+                    {
+                        Name = "PerHourUnits",
+                        CategoryName = "PerUnits",
+                        Text = [new("per hour")],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerDayUnits",
+                        CategoryName = "PerUnits",
+                        Text = [new("per day")],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerMonthUnits",
+                        CategoryName = "PerUnits",
+                        Text = [new("per month")],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerYearUnits",
+                        CategoryName = "PerUnits",
+                        Text =
+                        [
+                            new("per year"),
+                            new("per annum")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerSecondUnits",
+                        CategoryName = "PerUnits",
+                        Text = [new("per second")],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "InTotalUnits",
+                        CategoryName = "PerUnits",
+                        Text = [new("in total")],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        SkipLineWhenContains =
+                        [
+                            "abstracted in total"
+                        ],
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerHourValue",
+                        CategoryName = "PerValue",
+                        Text = [new("per hour")],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "PerHourUnits",
+                        Format = "Number",
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("1 ")
+                            {
+                                LineMustStartWith = true,
+                                ColumnMustHave2SequentialNumbers = true
+                            },
+                            new("2 ")
+                            {
+                                LineMustStartWith = true,
+                                ColumnMustHave2SequentialNumbers = true
+                            },
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerDayValue",
+                        CategoryName = "PerValue",
+                        Text = [new("per day")],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "PerDayUnits",
+                        Format = "Number",
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerMonthValue",
+                        CategoryName = "PerValue",
+                        Text = [new("per month")],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "PerMonthUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerYearValue",
+                        CategoryName = "PerValue",
+                        Text =
+                        [
+                            new("per year"),
+                            new("per annum")
+                        ],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "PerYearUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "PerSecondValue",
+                        CategoryName = "PerValue",
+                        Text = [new("per second")],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "PerSecondUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true,
+                        PreviousLinesToFetch = 1
+                        // Not setting NextLinesToFetch to 1 as it breaks some existing tests
+                    },
+                    new()
+                    {
+                        Name = "InTotalValue",
+                        CategoryName = "PerValue",
+                        Text = [new("in total")],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "InTotalUnits",
+                        Format = "Number", // TODO add date extraction,
+                        SkipLineWhenContains =
+                        [
+                            "abstracted in total"
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "AYearDefinitionLine",
+                        TextStart = [new("beginning on")],
+                        TextEnd = [new(".")],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 1,
+                        Format = "Text",
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "AYearDates",
+                                Position = LabelPosition.Split,
+                                Text = [new("and")],
+                                Remove = [new("ending on")],
+                                Format = "DateOrPurpose",
+                                MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "LimitPointTable",
+                        Position =  LabelPosition.TextToFindIsBetweenLabels,
+                        TextStart = [
+                            new("Abstraction Hourly Daily quantity Yearly quantity Instantaneous rate"),
+                        ],
+                        TextEnd = [
+                            new("6.2"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Remove = [
+                            new("Point quantity (cubic metres) (cubic metres) not exceeding (litres"),
+                            new("(cubic per second)"),
+                            new("metres)")
+                        ],
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 10
                     }
                 }
             }

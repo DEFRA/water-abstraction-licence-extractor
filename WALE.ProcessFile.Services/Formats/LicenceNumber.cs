@@ -230,5 +230,5 @@ public static partial class LicenceNumber
     }
     
     [GeneratedRegex(RegexPatten)]
-    public static partial Regex LicenceNumbersRegex();
+    private static partial Regex LicenceNumbersRegex();
 }

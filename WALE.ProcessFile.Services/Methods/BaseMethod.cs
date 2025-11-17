@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -80,7 +81,7 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumber.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines))
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     
@@ -98,13 +99,13 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumberFilename.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, out var licenceNumberLines2))
+                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines2))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
                         {
                             continue;
                         }
@@ -191,10 +192,9 @@ public static class BaseMethod
                 request.isOcr,
                 request.serviceName,
                 request.labelGroupName!,
-                request.licenceMapping!,
+                request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
-                request.outputFolder!,
-                request.cacheFolder!);
+                request.processRunId);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

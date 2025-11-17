@@ -2,6 +2,7 @@ using Tesseract;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -29,6 +30,22 @@ public class MultipleOcrPdfTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder);
+    
+    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new AzureAiVisionOcrDataExtractorService(
+                TestConfig.AiVisionEndpoint,
+                TestConfig.AiVisionKey,
+                CacheService,
+                OutputService),
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder3);
 
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};    
     private readonly HashSet<string> _liveLicenceNumbers = [];
@@ -37,14 +54,17 @@ public class MultipleOcrPdfTests
     
     private static string PdfFolder => TestConfig.PdfFolder;
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + fileName,
+        var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
+        var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        
+        return pdfExtractor.GetMatchesAsync(
+            folder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping),
-            [PdfFolder + fileName],
+            [folder + fileName],
             0);
     }
     
@@ -283,5 +303,54 @@ public class MultipleOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+    }
+    
+    [Theory]
+    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)]
+    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 67", "02/06/1967", 6)]
+    [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March . 1974", "21/03/1974", 7)]
+    [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6)]
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 5)]
+    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of . JULY, 19 66", "28/07/1966", 7)]
+    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 6)]
+    [InlineData("12203007__1-22-03-007 5822413.PDF", "day of MARCH, 1966", "01/03/1966", 6)]
+    [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "2 3rd day of MAY, 19 66", "23/05/1966", 7)]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 10)]
+    [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6)]
+    [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 6)]
+    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST , 19 66", "01/08/1966", 7)]
+    [InlineData("12302006__Licence Document 10031966.pdf", "day of MARCH, 1966", "01/03/1966", 6)]
+    [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY . 1966", "27/05/1966", 7)]
+    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 6)]
+    [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11 th day of NAY, 19 66", "11/05/1966", 7)]
+    [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 7)]
+    public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
+    {
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(expectedResults, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
+        
+        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            [],
+            [],
+            [],
+            [],
+            _pdfDataExtractor3,
+            OutputService,
+            CacheService,
+            TestConfig.PdfFolder3,
+            0);
+
+        var licence = schemaData[0].Licences[0];
+        Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
     }
 }

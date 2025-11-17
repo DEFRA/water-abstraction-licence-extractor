@@ -59,10 +59,13 @@ public static class FileTypeIdentificationExtract
 
             // Extract date of issue for PDF files
             string? dateOfIssue = null;
+            string? licenceNumber = null;
             try
             {
                 var matchesResult = await pdfDataExtractor.GetMatchesAsync(filePath, configuration, new List<string>());
                 dateOfIssue = SharedHelper.ExtractDateOfIssue(matchesResult);
+                licenceNumber = SharedHelper.ExtractLicenceNumber(matchesResult);
+                
             }
             catch (Exception ex)
             {
@@ -72,13 +75,15 @@ public static class FileTypeIdentificationExtract
             csvData.Add(new FileTypeIdentificationResult
             {
                 FilePath = filePath,
-                FileName = Path.GetFileName(filePath),
+                OriginalFileName = Path.GetFileName(filePath), 
+                FileName = GetFileNameAfterFirstUnderscore(Path.GetFileName(filePath)),
                 FileType = fileTypeResult?.FileType ?? "Unknown",
                 Confidence = fileTypeResult?.Confidence ?? 0.0,
                 IdentifiedByRule = fileTypeResult?.IdentifiedByRule ?? "N/A",
                 MatchedTerms = fileTypeResult?.MatchedTerms != null ? string.Join("; ", fileTypeResult.MatchedTerms) : "",
                 DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue),
                 FileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0,
+                LicenceNumber = licenceNumber,
                 LastModified = File.Exists(filePath) ? File.GetLastWriteTime(filePath) : DateTime.MinValue
             });
         }
@@ -94,6 +99,18 @@ public static class FileTypeIdentificationExtract
             "files",
             "File Type Summary");
     }
+    
+    /// <summary>
+    /// Extracts substring after the first occurrence of "__" in filename
+    /// </summary>
+    private static string GetFileNameAfterFirstUnderscore(string fileName)
+    {
+        var underscoreIndex = fileName.IndexOf("__");
+        return underscoreIndex >= 0 && underscoreIndex < fileName.Length - 2 
+            ? fileName.Substring(underscoreIndex + 2) 
+            : fileName;
+    }
+
 }
 
 

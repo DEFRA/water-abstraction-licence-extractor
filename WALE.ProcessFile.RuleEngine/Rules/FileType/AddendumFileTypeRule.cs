@@ -11,7 +11,7 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
     public string RuleName => "AddendumFileType";
     public int Priority => 100;
 
-    private readonly string[] _addendumTerms = { "this addendum", "CHANGE OF" };
+    private readonly string[] _addendumTerms = { "Please keep this addendum with the", "CHANGE OF" };
 
     public bool CanApply(string content)
     {

@@ -76,7 +76,7 @@ public static class DuplicateLicenceIdentificationExtract
         var usedRange = worksheet.RangeUsed();
 
         // Read header row to create column mapping
-        var headerMapping = new Dictionary<string, int>();
+        var headerMapping = new Dictionary<string, int>(); 
         for (int col = 1; col <= usedRange.LastColumn().ColumnNumber(); col++)
         {
             var headerValue = worksheet.Cell(1, col).GetValue<string>()?.Trim();

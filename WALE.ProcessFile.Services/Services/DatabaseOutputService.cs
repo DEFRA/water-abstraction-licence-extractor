@@ -29,7 +29,7 @@ public class DatabaseOutputService(
 
     public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, pdfServiceName);
     }
 
@@ -55,13 +55,13 @@ public class DatabaseOutputService(
                     ? (int?)licenceIdOut
                     : null;
                 
-                if (string.IsNullOrEmpty(licence.LicenceNumber) && string.IsNullOrEmpty(licenceId))
+                if (string.IsNullOrEmpty(licence.LicenceNumber) && licenceId == null)
                 {
                     // TODO log
                     continue;
                 }
                 
-                await databaseAddService.SaveLicenceSetLicenceAsync(
+                await databaseAddService.InsertLicenceSetLicenceAsync(
                     licenceSetId,
                     licenceId,
                     licence.LicenceNumber,

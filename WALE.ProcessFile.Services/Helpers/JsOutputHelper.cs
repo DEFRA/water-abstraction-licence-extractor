@@ -162,29 +162,15 @@ public static class JsOutputHelper
                     var licenceSetType = lsr.LicenceSetType;
 
                     return new OutputListDataItemLicenceSet
-                licenceSets = outputLine.LicenceSetReferences?
-                    .Select(lsr =>
                     {
-                        var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+                        LicenceSetId = ls.LicenceSetId,
+                        ShortLicenceSetId = ls.ShortLicenceSetId,
+                        LicenceSetTypes = ls.LicenceSetTypes,
+                        LicenceSetType = licenceSetType
 
-                        if (ls == null)
-                        {
-                            return null;
-                        }
-                        
-                        var licenceSetType = lsr.LicenceSetType;
-
-                        return new OutputListDataItemLicenceSet
-                        {
-                            LicenceSetId = ls.LicenceSetId,
-                            ShortLicenceSetId = ls.ShortLicenceSetId,
-                            LicenceSetTypes = ls.LicenceSetTypes,
-                            LicenceSetType = licenceSetType
-
-                        };
-                    })
-                    .Where(ls => ls != null)
-                    .ToArray() ?? []
+                    };
+                })
+                .ToArray() ?? []
             };
 
             listData.Add(listRow);

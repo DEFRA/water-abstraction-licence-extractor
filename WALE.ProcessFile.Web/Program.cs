@@ -54,10 +54,6 @@ app.MapGet("/process-run", async () =>
 
 app.MapGet("/list", async (int processRunId) =>
 {
-    var licencesTask = outputService.GetLicencesAsync(processRunId);
-    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
-    var licences = await licencesTask;
-    
     var completeNumber = 1;
     var fileNumber = 1;
     

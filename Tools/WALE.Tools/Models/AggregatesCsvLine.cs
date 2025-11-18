@@ -1,6 +1,6 @@
 namespace WALE.Tools.Models;
 
-public class CsvLine
+public class AggregatesCsvLine
 {
     public string? Filename { get; set; }
     public string? LicenceNumber { get; set; }

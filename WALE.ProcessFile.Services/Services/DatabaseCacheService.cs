@@ -164,7 +164,7 @@ public class DatabaseCacheService(
     
     public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         return databaseAddService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     

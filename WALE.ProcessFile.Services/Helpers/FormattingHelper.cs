@@ -5,6 +5,179 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FormattingHelper
 {
+    public static string? ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    {
+        if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
+        {
+            return noneSeperatedLicenceNumber;
+        }
+
+        if (noneSeperatedLicenceNumber.StartsWith("NE"))
+        {
+            // TODO something
+        }
+        
+        return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
+    }
+
+    public static string? PadLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        if (licenceNumber.StartsWith("NE"))
+        {
+            // TODO something
+        }
+        
+        if (licenceNumber.Contains("*"))
+        {
+            return licenceNumber;
+        }
+        
+        if (licenceNumber.Contains("I") || licenceNumber.Contains("S"))
+        {
+            return licenceNumber;
+        }
+        
+        var numberOfSlashes = licenceNumber.Count(c => c == '/');
+        
+        if (numberOfSlashes is 1 or 2)
+        {
+            return licenceNumber;
+        }
+
+        if (numberOfSlashes == 3 && licenceNumber.Split('/')[0].Length == 2)
+        {
+            return licenceNumber;
+        }
+        
+        return Yorkshire1_PadLicenceNumber(licenceNumber);
+    }
+
+    private static string? Yorkshire1_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    {
+        if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
+        {
+            return noneSeperatedLicenceNumber;
+        }
+        
+        var section1 = noneSeperatedLicenceNumber[0];
+        var section2 = noneSeperatedLicenceNumber.Substring(1, 2);
+
+        if (noneSeperatedLicenceNumber.Length < 5)
+        {
+            return $"{section1}/{section2}";
+        }
+        
+        var section3 = noneSeperatedLicenceNumber.Substring(3, 2);
+        var section4 = noneSeperatedLicenceNumber[5..];
+        
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        section4 = section4.Where(char.IsDigit).Count() switch
+        {
+            1 => $"00{section4}",
+            2 => $"0{section4}",
+            _ => section4
+        };
+
+        if (section4.Length > 3)
+        {
+            section4 = section4[..3] + "/" + section4[3..];;
+        }
+        
+        return $"{section1}/{section2}/{section3}/{section4}";
+    }
+
+    private static string? Yorkshire1_PadLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+
+        var startsWithDigit = char.IsDigit(licenceNumber[0]);
+        var usesSlashes = true;
+        
+        // Replace dots with slashes IF its all dots
+        if (licenceNumber.Contains('.') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(".", "/");
+            usesSlashes = false;
+        }
+        
+        // Replace spaches with slashes IF its all spaces
+        if (licenceNumber.Contains(' ') && !licenceNumber.Contains('/'))
+        {
+            licenceNumber = licenceNumber.Replace(" ", "/");
+            usesSlashes = false;            
+        }
+        
+        var parts = licenceNumber.Split('/');
+        
+        var part1 = parts[0];
+
+        if (parts.Length < 2)
+        {
+            return startsWithDigit && usesSlashes
+                ? ToNaldLicenceNumber(part1.Replace("/", string.Empty))
+                : part1;
+        }
+        
+        var part2 = parts[1];
+        
+        if (part2.Length == 1)
+        {
+            part2 = $"0{part2}";
+        }
+        
+        if (parts.Length < 3)
+        {
+            return startsWithDigit && usesSlashes
+                ? ToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
+                : $"{part1}/{part2}";
+        }
+        
+        var part3 = parts[2];
+
+        if (part3.Length == 1)
+        {
+            part3 = $"0{part3}";
+        }
+
+        if (parts.Length < 4)
+        {
+            return startsWithDigit && usesSlashes
+                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
+                : $"{part1}/{part2}/{part3}";
+        }
+        
+        var part4 = parts[3];
+
+        // Pad part 4 with zeroes (needs to have 3 digits)
+        part4 = part4.Where(char.IsDigit).Count() switch
+        {
+            1 => $"00{part4}",
+            2 => $"0{part4}",
+            _ => part4
+        };
+        
+        if (parts.Length < 5)
+        {
+            return startsWithDigit && usesSlashes
+                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
+                : $"{part1}/{part2}/{part3}/{part4}";
+        }
+
+        var part5 = parts[4];
+        
+        return startsWithDigit && usesSlashes
+            ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
+            : $"{part1}/{part2}/{part3}/{part4}/{part5}";
+    }
+    
     public static List<DocumentLine> RemoveMultipleBlankLines(IEnumerable<DocumentLine> sourceList)
     {
         var trimmedList = TrimList(sourceList);

@@ -355,8 +355,6 @@ public class MultipleOcrPdfTests
             [],
             [],
             _pdfDataExtractor3,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder3,
             0);
 

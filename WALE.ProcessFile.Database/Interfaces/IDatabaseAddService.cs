@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.Interfaces;
 
@@ -8,7 +9,7 @@ public interface IDatabaseAddService
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
     
-    public Task SaveLicenceAsync(string licence, string pdfFilePath, int processRunId);
+    public Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath, int processRunId);
     
     public Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId);
 
@@ -36,7 +37,9 @@ public interface IDatabaseAddService
     
     Task UpdateProcessRunAsync(ProcessRun processRun);
     
-    Task SaveLicenceSetLicenceAsync(int licenceSetId, string? licenceNumber, string licenceVersionId, int processRunId);
+    Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence);
+    
+    Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber, string licenceVersionId, int processRunId);
 
     Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId);
     

@@ -20,9 +20,9 @@ public interface IOutputService
     
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
 
-    public Task SaveLicenceSetsAsync(IReadOnlyList<LicenceSet> licenceSets, string pdfFilePath, int processRunId);
+    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId);
+    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId);
     
     public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId);
     
@@ -43,7 +43,7 @@ public interface IOutputService
     
     Task<List<Licence>> GetLicencesAsync(int processRunId);
 
-    Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId);
+    Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(string filename);
     

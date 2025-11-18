@@ -62,12 +62,13 @@ async Task ProgramAsync()
     });
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
-    List<LicenceSet> licenceSets;
+    List<LicenceSet> allLicenceSets;
     
     try
     {
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
+        var minimumToFreeUp = maxConcurrentScrapers / 3;
         
         foreach (var pdfFilePath in pdfPaths)
         {
@@ -79,7 +80,6 @@ async Task ProgramAsync()
                 deadLicenceNumbers,
                 liveLicenceNumbers,
                 outputService,
-                cacheService,
                 pdfDataExtractors,
                 licenceNumberMapping,
                 processRun));
@@ -88,12 +88,15 @@ async Task ProgramAsync()
             {
                 continue;
             }
-            
-            var licenceSetsTask = await Task.WhenAny(scrapingTasks);
-            scrapingTasks.Remove(licenceSetsTask);
 
-            licenceSets = await licenceSetsTask;
-            licenceSetGroups.Add(licenceSets);
+            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            {
+                var licenceSetsTask = await Task.WhenAny(scrapingTasks);
+                scrapingTasks.Remove(licenceSetsTask);
+
+                allLicenceSets = await licenceSetsTask;
+                licenceSetGroups.Add(allLicenceSets);   
+            }
         }
 
         if (scrapingTasks.Any())
@@ -102,8 +105,8 @@ async Task ProgramAsync()
 
             foreach (var scrapingTask in scrapingTasks)
             {
-                licenceSets = await scrapingTask;
-                licenceSetGroups.Add(licenceSets);
+                allLicenceSets = await scrapingTask;
+                licenceSetGroups.Add(allLicenceSets);
             }
         }
 
@@ -118,16 +121,23 @@ async Task ProgramAsync()
         throw;
     }
 
-    licenceSets = SchemaConverter.AddGroupLicenceSetDetails(
+    Console.WriteLine($"All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
+    allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
         liveLicenceNumbers);
     
+    Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     var outputLines = new List<IntermediateOutputLicence>();
 
     var fileNumber = 1;
     var completeNumber = 1;
+
+    var savedLicenceNumbers = new Dictionary<string, int>();
+    var savedLicenceSetIds = new HashSet<string>();
     
     foreach (var licenceSetGroup in licenceSetGroups)
     {
@@ -136,14 +146,49 @@ async Task ProgramAsync()
             // TODO log this - it shouldn't happen
             continue;
         }
-        
-        var licenceSet = licenceSetGroup.First();
-        var licence = licenceSet.Licences.First();
-        await outputService.SaveLicenceAsync(licence, licence.Filename!, processRun.ProcessRunId);
 
-        var licenceSetsFull = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, licenceSets);
-        await outputService.SaveLicenceSetsAsync(licenceSetsFull, licence.Filename!, processRun.ProcessRunId);
-        
+        foreach (var licenceSetLoop in licenceSetGroup)
+        {
+            foreach (var licenceLoop in licenceSetLoop.Licences)
+            {
+                if (licenceLoop.LicenceNumber != null
+                    && !savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))
+                {
+                    var loopLicenceId =
+                        await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!,
+                            processRun.ProcessRunId);
+
+                    savedLicenceNumbers.Add(licenceLoop.LicenceNumber, loopLicenceId);
+                    licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
+                }
+                
+                var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
+                    licenceLoop.LicenceSets,
+                    allLicenceSets);
+
+                var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
+                
+                foreach (var kvp in licenceSetsLoop)
+                {
+                    if (savedLicenceSetIds.Contains(kvp.Key))
+                    {
+                        continue;
+                    }
+                    
+                    newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
+                    savedLicenceSetIds.Add(kvp.Key);
+                }
+                
+                await outputService.SaveLicenceSetsAsync(
+                    newLicenceSetsLoop,
+                    licenceLoop.Filename!,
+                    processRun.ProcessRunId);  
+            }
+        }
+
+        var licence = licenceSetGroup.First().Licences.First();
+        var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
+
         var outputLine = JsOutputHelper.ToOutputLine(
             licence,
             DateTime.Now,
@@ -153,7 +198,9 @@ async Task ProgramAsync()
 
         outputLines.Add(outputLine);
     }
-
+    
+    Console.WriteLine($"Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     await JsOutputHelper.SaveListDataAsync(
         outputLines,
         outputFolder,
@@ -162,15 +209,20 @@ async Task ProgramAsync()
         processRun,
         true);
     
+    Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun);
+    
+    Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
 }
 
-List<LicenceSet> GetLicenceSetsForLicenceSetIds(
+Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     IReadOnlyList<LicenceSetReference> licenceSetIds,
     IReadOnlyList<LicenceSet> licenceSets)
 {
-    var returnList = new List<LicenceSet>();
+    var returnDict = new Dictionary<string, LicenceSet>();
 
     foreach (var licenceSet in licenceSets)
     {
@@ -179,10 +231,10 @@ List<LicenceSet> GetLicenceSetsForLicenceSetIds(
             continue;
         }
         
-        returnList.Add(licenceSet);
+        returnDict.TryAdd(licenceSet.LicenceSetId, licenceSet);
     }
     
-    return returnList;
+    return returnDict;
 }
 
 ConfiguredServices ConfigureServices()
@@ -298,7 +350,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
     IOutputService outputService,
-    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
@@ -316,7 +367,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFilePath
         };
 
-        var pdfFolder = pdfFilePath.Substring(0, pdfFilePath.LastIndexOf('/') + 1);
+        var pdfFolder = pdfFilePath[..(pdfFilePath.LastIndexOf('/') + 1)];
 
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
@@ -328,6 +379,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedPaths,
             processRun.ProcessRunId);
         
+        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
+        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
@@ -335,14 +389,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             deadLicenceNumbers,
             liveLicenceNumbers,
             pdfDataExtractor,
-            outputService,
-            cacheService,
             pdfFolder,
             processRun.ProcessRunId);
-
-        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
-    
-        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        
         return licenceSets;
     }
     catch (Exception ex)
@@ -541,10 +590,8 @@ async Task MoveReportHtmlFilesAsync(
 
 IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
 {
-    var pdfFilePaths = Directory
-        .GetFiles(pdfFolderPath)
-        .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase));
-
+    var pdfFilePaths = FileHelper.GetFiles(pdfFolderPath);
+    
     //var yorkshire = Yorkshire200Files();
 
     // YORKSHIRE 200 - From new files
@@ -618,11 +665,15 @@ void Copy(string sourceDir, string targetDir)
 {
     Directory.CreateDirectory(targetDir);
 
-    foreach(var file in Directory.GetFiles(sourceDir))
+    foreach (var file in Directory.GetFiles(sourceDir))
+    {
         File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+    }
 
-    foreach(var directory in Directory.GetDirectories(sourceDir))
+    foreach (var directory in Directory.GetDirectories(sourceDir))
+    {
         Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
+    }
 }
 
 List<string> Yorkshire200Files()

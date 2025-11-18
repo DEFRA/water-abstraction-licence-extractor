@@ -245,7 +245,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     private string GetFolderPath(string pdfFilePath)
     {
-        var fileOutputFolder = Path.Combine(cacheFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath));
+        var fileOutputFolder = Path.Combine(cacheFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
         if (fileOutputFolder.StartsWith('/'))
         {
             fileOutputFolder = fileOutputFolder[1..];

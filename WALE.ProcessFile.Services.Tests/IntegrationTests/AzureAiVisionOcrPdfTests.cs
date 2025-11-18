@@ -143,8 +143,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -602,8 +600,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -1068,8 +1064,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -1300,8 +1294,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
 
@@ -1369,8 +1361,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -1399,15 +1389,13 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
-        Assert.Null(agreedSchemaLicence.LicenceNumber);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber);
+        Assert.NotNull(agreedSchemaLicence.LinkedLicences);
     }
 }

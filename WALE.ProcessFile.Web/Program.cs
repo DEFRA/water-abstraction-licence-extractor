@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
@@ -42,9 +43,10 @@ app.MapGet("/list", async () =>
     var fileNumber = 1;
     
     var licences = await outputService.GetLicencesAsync(processRunId);
-    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
+    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
     
     var outputLines = licences
+        .Where(licence => licence.Status == LicenceStatus.Ok)
         .Select(licence => JsOutputHelper.ToOutputLine(
             licence,
             DateTime.Now,

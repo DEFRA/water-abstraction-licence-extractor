@@ -222,8 +222,6 @@ public class NoOcrDatabaseTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
 

@@ -374,7 +374,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -386,7 +386,8 @@ public class TessaractOcrPdfTests
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.Null(dateOfIssue); // OCR cant pick up the date here
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal("10 4", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO - bit weird
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         

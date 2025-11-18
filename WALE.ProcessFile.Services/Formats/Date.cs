@@ -45,7 +45,8 @@ public static partial class Date
         }
         
         return YearRegex().IsMatch(text)
-            || ContainsMonth(text);
+            || ContainsMonth(text)
+            || DateTime.TryParse(text, out _);
     }
 
     private static bool ContainsMonth(string text)

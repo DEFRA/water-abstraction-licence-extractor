@@ -331,7 +331,10 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Remove = [
                     new("...")
-                ]
+                ],
+                IgnoreMatchIfContains = [
+                    "Date effective"
+                ],
             },
             new LabelToMatch
             {
@@ -361,6 +364,9 @@ public static class LabelConfiguration
                     new("October"),
                     new("November"),
                     new("December")
+                ],
+                IgnoreMatchIfContains = [
+                    "Date effective"
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

@@ -33,7 +33,8 @@ public static class GenerateAggregatesCsvForTesting
                 new AzureAiVisionOcrDataExtractorService(
                     KeyConfig.AiVisionEndpoint,
                     KeyConfig.AiVisionKey,
-                    CacheService)
+                    CacheService,
+                    OutputService)
             },
             CacheService,
             OutputService,

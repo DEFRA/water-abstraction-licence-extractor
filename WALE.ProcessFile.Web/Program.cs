@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
@@ -22,11 +23,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var config = new ConfigurationBuilder();
-config.AddJsonFile("appsettings.json");
-config.AddJsonFile("appsettings.Development.json");
+var configBuilder = new ConfigurationBuilder();
+configBuilder.AddJsonFile("appsettings.json");
+configBuilder.AddJsonFile("appsettings.Development.json");
 
-var outputService = GetOutputService(config.Build());
+var config = configBuilder.Build();
+
+var cacheService = GetCacheService(config);
+var outputService = GetOutputService(config);
 
 app.MapGet("/list", async () =>
 {
@@ -104,6 +108,51 @@ app.MapGet("/image", async (string filename) =>
     return Results.File(data!, "image/jpeg");
 }).WithName("GetImage");
 
+app.MapGet("/page-images", async (string filename, int pageNumber) =>
+{
+    var pageImages = await cacheService.GetImagesAsync(new OcrServiceImageDataCacheRequest
+    {
+        PageNumber = pageNumber,
+        Filepath = filename,
+        NoOcrServiceName = PdfDataExtractorService.Name
+    });
+
+    var htmlSb = new StringBuilder();
+    htmlSb.AppendLine("<html><body>");
+
+    var pageImagesUnique = pageImages
+        .GroupBy(pi => pi.imageNumber)
+        .Select(pi => pi.Last())
+        .OrderBy(pi => pi.imageNumber);
+    
+    foreach (var pageImage in pageImagesUnique)
+    {
+        htmlSb.AppendLine($"<img src='/partial-page-image?filename={filename}&extension={pageImage.extension}&pageNumber={pageNumber}&imageNumber={pageImage.imageNumber}' /><hr /><br />");
+    }
+    
+    htmlSb.Append("</body></html>");
+    return Results.Text(htmlSb.ToString(), "text/html");
+}).WithName("GetPageImages");
+
+app.MapGet("/partial-page-image", async (string filename, string extension, int pageNumber, int imageNumber) =>
+{
+    var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+    {
+        PageNumber = pageNumber,
+        ImageNumber = imageNumber,
+        Filepath = filename,
+        NoOcrServiceName = PdfDataExtractorService.Name,
+        Extension = extension
+    });
+
+    if (bytes == null)
+    {
+        return Results.NotFound();
+    }
+    
+    return Results.File(bytes, "image/jpeg");
+}).WithName("GetPartialPageImage");
+
 app.MapGet("/internal", async (string filename) =>
 {
     var serializedData = JsonSerializer.Serialize(
@@ -133,6 +182,17 @@ app.MapGet("/licenceSets", async (string filename) =>
 
 app.Run();
 return;
+
+static ICacheService GetCacheService(IConfiguration configuration)
+{
+    var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
+
+    var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var outputService = (ICacheService)new DatabaseCacheService(sqlReadService, sqlAddService);
+    
+    return outputService;
+}
 
 static IOutputService GetOutputService(IConfiguration configuration)
 {

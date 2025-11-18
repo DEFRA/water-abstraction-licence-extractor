@@ -46,4 +46,20 @@ public static class FileHelper
             .Where(fileName => !fileName.Contains("Determination", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName => !fileName.Contains("Compliance", StringComparison.InvariantCultureIgnoreCase));
     }
+    
+    public static string GetImageExtension(string imageReference)
+    {
+        var extension = "bmp";
+            
+        if (imageReference.Contains("png"))
+        {
+            extension = "png";
+        }
+        else if (imageReference.Contains("jpg"))
+        {
+            extension = "jpg";
+        }
+
+        return extension;
+    }
 }

@@ -866,6 +866,10 @@ public static partial class SchemaConverter
                 // TODO This assumption should be logged - really we shouldn't do it at all
                 dateOnlyDigits = "1";
             }
+            else if (dateOnlyDigits.Length > 2)
+            {
+                dateOnlyDigits = dateOnlyDigits[..2];
+            }
             
             var yearStr = string.Join(string.Empty, yearPart.Select(c => c == 'g' ? '6' : c).Where(char.IsDigit).ToArray());
 

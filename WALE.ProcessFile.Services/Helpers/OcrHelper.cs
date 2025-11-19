@@ -12,6 +12,7 @@ public static class OcrHelper
         int lineHeight,
         int wordGap)
     {
+        const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
         
         LineAndWords? previousLine = null;
@@ -22,8 +23,7 @@ public static class OcrHelper
 
         var uncorruptedLines = returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100))
-            .ToList();
+            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue));
         
         return uncorruptedLines
             .GroupBy(line =>
@@ -123,6 +123,7 @@ public static class OcrHelper
 
                 return documentLine;
             })
+            .Where(line => !DataHelper.IsCorruptedText(line.Text, false, unacceptableIncorrectValue))
             .ToList();
     }
     

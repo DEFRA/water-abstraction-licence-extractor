@@ -220,7 +220,7 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
-    public static bool IsCorruptedText(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
     {
         if (words == null)
         {
@@ -250,18 +250,22 @@ public static partial class DataHelper
         }
         
         var averageConfidence = totalConfidence / words.Count;
-        
-        if (averageConfidence is > 0 and < minConfidence)
+        var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
+
+        if (averageConfidenceBelowThreshold)
         {
             return true;
         }
         
-        return IsCorruptedText(
+        var isCorrupt = IsCorruptedText(
             string.Join(' ', words.Select(w => w?.Text)),
+            true,
             unacceptableIncorrectValue);
+        
+        return isCorrupt;
     }
 
-    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedText(string? line, bool isPartialChunk = false, double unacceptableIncorrectValue = 50.01)
     {
         if (string.IsNullOrEmpty(line))
         {
@@ -299,6 +303,7 @@ public static partial class DataHelper
                 && ch != ')'
                 && ch != ','
                 && ch != '"'
+                && ch != '‘'
                 && ch != '\''
                 && ch != '-'
                 && ch != ':'
@@ -363,7 +368,7 @@ public static partial class DataHelper
         var countOfVeryShortWordsOrSymbols = wordsSplit.Count(word => word.Length <= 2);
         var percentageOfShortWords = countOfVeryShortWordsOrSymbols * percentagePerWord;
         
-        const double unacceptableShortWordsValue = 25.0;
+        const double unacceptableShortWordsValue = 30.0;
         var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
                 && percentageOfShortWords >= unacceptableShortWordsValue;
 

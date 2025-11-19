@@ -349,20 +349,20 @@ public static class LabelConfiguration
                     new("DATE THIS")
                 ],
                 MustContain = [
-                    new("January"),
-                    new("February"),
-                    new("March"),
-                    new("April"),
+                    new("Jan"),
+                    new("Feb"),
+                    new("Mar"),
+                    new("Apr"),
                     new("May"),
                     new("Nay"), //Misreading
                     new("Hay"), //Misreading                    
-                    new("June"),
-                    new("July"),
-                    new("August"),
-                    new("September"),
-                    new("October"),
-                    new("November"),
-                    new("December")
+                    new("Jun"),
+                    new("Jul"),
+                    new("Aug"),
+                    new("Sep"),
+                    new("Oct"),
+                    new("Nov"),
+                    new("Dec")
                 ],
                 IgnoreMatchIfContains = [
                     "Date effective"

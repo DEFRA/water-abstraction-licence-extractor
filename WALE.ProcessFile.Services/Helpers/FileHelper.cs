@@ -40,8 +40,7 @@ public static class FileHelper
         return Directory
             .GetFiles(folder)
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            .Where(fileName => !fileName.Contains(" WR"))
-            .Where(fileName => !fileName.Contains("_WR"))
+            .Where(fileName => !fileName.Contains("WR179"))
             .Where(fileName => !fileName.Contains("Warning", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName => !fileName.Contains("Determination", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName => !fileName.Contains("Compliance", StringComparison.InvariantCultureIgnoreCase));

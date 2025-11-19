@@ -246,10 +246,10 @@ public static partial class DataHelper
                 confidence = 100.0;
             }
                 
-            totalConfidence += confidence;
+            totalConfidence += confidence * word.Text.Length;
         }
-        
-        var averageConfidence = totalConfidence / words.Count;
+
+        var averageConfidence = totalConfidence / words.Sum(c => c?.Text.Length);
         var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
 
         if (averageConfidenceBelowThreshold)

@@ -53,23 +53,34 @@ public static partial class Date
     {
         var months = new List<string>
         {
+            " Jan ",
             "January",
+            " Feb ",
             "February",
+            " Mar ",
             "March",
+            " Apr ",
             "April",
-            "May",
+            " May ",
+            " Jun ",
             "June",
+            " Jul ",
             "July",
-            "August",
-            "September",
+            " Aug ",
+            " August",
+            " Sep ",
+            " September",
+            " Oct ",
             "October",
+            " Nov ",
             "November",
-            "December"
+            " Dec ",
+            " December"
         };
         
-        return months.Any(text.Contains);
+        return months.Any(m => text.Contains(m, StringComparison.InvariantCultureIgnoreCase));
     }
     
-    [GeneratedRegex(@"19\d\d|20\d\d")]
+    [GeneratedRegex(@"18\d\d|19\d\d|20\d\d")]
     private static partial Regex YearRegex();
 }

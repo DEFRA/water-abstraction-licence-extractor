@@ -871,11 +871,6 @@ public class PdfDataExtractorService(
                         PageNumber = partialLine.PageNumber,
                         ServiceName = serviceName
                     };
-
-                    if (line.Line?.Text.Contains("Dated this") == true)
-                    {
-                        
-                    }
                     
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);

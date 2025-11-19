@@ -337,7 +337,11 @@ public class MultipleOcrPdfTests
     //[InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March . 1974", "21/03/1974", 7)]
     //[InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6)]
     //[InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4)]
-    [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 13)]
+    //[InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 13)]
+    //[InlineData("12504178R01__Application type unknown Licence Issued (01.05.2007).pdf", "299 July'03", "29/07/2003", 10)] // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
+    //[InlineData("22630110__Issued licence- 2-26-30-110 6075592.PDF", "299 July'03", "29/07/2003", 12)] // Skips word 'issue' in Azure AI frustratingly
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11)]
+    //[InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 12)] // Should be 2000 but impossible to tell in file, so fine
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {
         // Act

@@ -23,7 +23,8 @@ public static class OcrHelper
 
         var uncorruptedLines = returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue));
+            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
+            .ToList();
         
         return uncorruptedLines
             .GroupBy(line =>

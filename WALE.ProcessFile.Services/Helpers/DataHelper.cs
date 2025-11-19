@@ -227,18 +227,21 @@ public static partial class DataHelper
             return false;
         }
         
+        var digitsCount = 0;
         var totalConfidence = 0.0;
         const int minConfidence = 40;
         
         foreach (var word in words)
         {
+            digitsCount += word?.Text.Count(char.IsDigit) ?? 0;
+            
             if (word?.OcrConfidence == null)
             {
                 continue;
             }
             
             var confidence = word.OcrConfidence.Value;
-
+            
             if (confidence < minConfidence
                 && word.Text.Length >= 5
                 && Dictionary.Check(word.Text))
@@ -249,10 +252,14 @@ public static partial class DataHelper
             totalConfidence += confidence * word.Text.Length;
         }
 
-        var averageConfidence = totalConfidence / words.Sum(c => c?.Text.Length);
+        var lineLength = words.Sum(w => w?.Text.Length);
+        var averageConfidence = totalConfidence / lineLength;
         var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
-
-        if (averageConfidenceBelowThreshold)
+        
+        var lineLengthWithoutDots = words.Sum(w => w?.Text.Count(c => c != '.'));
+        var mainlyDigits = ((100.0 / lineLengthWithoutDots) * digitsCount) >= 60;
+        
+        if (averageConfidenceBelowThreshold && !mainlyDigits)
         {
             return true;
         }

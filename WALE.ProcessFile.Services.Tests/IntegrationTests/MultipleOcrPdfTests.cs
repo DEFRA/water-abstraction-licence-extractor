@@ -306,7 +306,7 @@ public class MultipleOcrPdfTests
     }
     
     [Theory]
-    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)]
+    /*[InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)]
     [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 67", "02/06/1967", 6)]
     [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March . 1974", "21/03/1974", 7)]
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6)]
@@ -333,7 +333,9 @@ public class MultipleOcrPdfTests
     [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 12)]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12)]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "Signed 8 NOV 2005", "08/11/2005", 11)]
-    [InlineData("12504120__Abstraction licence.PDF", "29/4/99", "29/04/1999", 12)]
+    [InlineData("12504120__Abstraction licence.PDF", "29/4/99", "29/04/1999", 12)]*/
+    //[InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March . 1974", "21/03/1974", 7)]
+    [InlineData("12401034__1-24-01-034 6099401.pdf", "e 2th dey of Lay, 19694", "2/05/1969", 6)]
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {
         // Act

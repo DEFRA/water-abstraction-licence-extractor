@@ -355,6 +355,7 @@ public static class LabelConfiguration
                     new("April"),
                     new("May"),
                     new("Nay"), //Misreading
+                    new("Hay"), //Misreading                    
                     new("June"),
                     new("July"),
                     new("August"),

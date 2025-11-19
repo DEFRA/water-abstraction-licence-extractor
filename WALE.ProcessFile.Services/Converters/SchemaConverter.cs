@@ -854,8 +854,6 @@ public static partial class SchemaConverter
         {
             return null;
         }
-
-        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
         
         if (ContainsMonthWord(input, out var monthWord, out var monthPosition))
         {
@@ -994,7 +992,11 @@ public static partial class SchemaConverter
         {
             return false;
         }
-
+        
+        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
+        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
+        ReplaceIfContains(input, "HAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
+        
         if (input.Contains("january", StringComparison.InvariantCultureIgnoreCase))
         {
             matchedWord = "january";

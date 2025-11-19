@@ -72,7 +72,7 @@ public class SqlSeverWriteService(string connectionString) : IDatabaseWriteServi
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
-
+        
         const string sql = "INSERT INTO MatchesResult (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);

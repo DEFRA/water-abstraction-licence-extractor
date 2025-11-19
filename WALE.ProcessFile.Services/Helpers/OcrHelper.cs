@@ -22,7 +22,8 @@ public static class OcrHelper
 
         var uncorruptedLines = returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100));
+            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100))
+            .ToList();
         
         return uncorruptedLines
             .GroupBy(line =>
@@ -62,7 +63,7 @@ public static class OcrHelper
                         {
                             continue;
                         }
-                        
+
                         if (word is { OcrConfidence: < 40, Text.Length: > 3 }
                             && word.Text.Count(char.IsAsciiLetter) > 3
                             && !DataHelper.Dictionary.Check(word.Text))
@@ -70,7 +71,7 @@ public static class OcrHelper
                             var suggestions = DataHelper.Dictionary.Suggest(word.Text);
                             var topSuggestion = suggestions.FirstOrDefault();
 
-                            if (topSuggestion != null)
+                            if (topSuggestion != null && topSuggestion.Length == word.Text.Length)
                             {
                                 lineWords.Add(new DocumentLineWord(topSuggestion, word.OcrConfidence,
                                     word.Coordinates));

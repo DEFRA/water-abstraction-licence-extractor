@@ -379,6 +379,14 @@ public static partial class DataHelper
         
         var suspectedIncorrectWords = wordsSplit.Where(word =>
         {
+            if (word.Equals("th", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("rd", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("nd", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("st", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return false;
+            }
+            
             var wordWithoutPunctuation = new string(word
                 .Where(ch =>
                     ch != '"'

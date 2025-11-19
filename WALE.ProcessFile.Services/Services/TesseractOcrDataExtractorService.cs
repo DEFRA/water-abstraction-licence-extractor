@@ -78,9 +78,14 @@ public class TesseractOcrDataExtractorService(
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }
-            catch
+            catch (Exception ex)
             {
                 if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw;
+                }
+
+                if (!ex.Message.Contains("Failed to load image from memory."))
                 {
                     throw;
                 }
@@ -89,7 +94,8 @@ public class TesseractOcrDataExtractorService(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,
-                    request.ProcessRunId);
+                    request.ProcessRunId,
+                    FileHelper.GetImageExtension(imageReference));
                 
                 ocrImage = Pix.LoadFromMemory(bytes);
             }

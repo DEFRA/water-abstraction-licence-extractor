@@ -335,7 +335,8 @@ public class MultipleOcrPdfTests
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "Signed 8 NOV 2005", "08/11/2005", 11)]
     [InlineData("12504120__Abstraction licence.PDF", "29/4/99", "29/04/1999", 12)]*/
     //[InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March . 1974", "21/03/1974", 7)]
-    [InlineData("12401034__1-24-01-034 6099401.pdf", "e 2th dey of Lay, 19694", "2/05/1969", 6)]
+    //[InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6)]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4)]
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {
         // Act

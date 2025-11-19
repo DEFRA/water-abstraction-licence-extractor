@@ -220,7 +220,7 @@ public class PdfDataExtractorService(
                     {
                         // Short lines indicate it may be a map page,
                         // no point processing that with the other services
-                        if (averageLineLength < 30)
+                        if (averageLineLength < 20)
                         {
                             break;
                         }
@@ -872,6 +872,11 @@ public class PdfDataExtractorService(
                         ServiceName = serviceName
                     };
 
+                    if (line.Line?.Text.Contains("Dated this") == true)
+                    {
+                        
+                    }
+                    
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
                     

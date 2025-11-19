@@ -168,13 +168,14 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     
-    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId)
+    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId,  string extension)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilePath
+            Filepath = pdfFilePath,
+            Extension = extension
         });
 
         if (bytAry == null)

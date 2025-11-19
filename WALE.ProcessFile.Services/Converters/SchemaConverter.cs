@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
@@ -9,7 +10,7 @@ using LabelGroupResult = WALE.ProcessFile.Models.LabelGroupResult;
 
 namespace WALE.ProcessFile.Services.Converters;
 
-public static class SchemaConverter
+public static partial class SchemaConverter
 {
     private static Licence ToLicence(
         MatchesResult matchesResult,
@@ -853,9 +854,63 @@ public static class SchemaConverter
         {
             return null;
         }
+
+        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
         
-        ReplaceIfContains(input, " ", string.Empty, out input);
-        ReplaceIfContains(input, ":", string.Empty, out input);
+        if (ContainsMonthWord(input, out var monthWord, out var monthPosition))
+        {
+            var datePart = input[..monthPosition];
+            var yearPart = input[(monthPosition + monthWord!.Length)..];
+
+            var dateOnlyDigits = string.Join(string.Empty, datePart.Where(char.IsDigit).ToArray());
+            if (string.IsNullOrEmpty(dateOnlyDigits))
+            {
+                // TODO This assumption should be logged - really we shouldn't do it at all
+                dateOnlyDigits = "1";
+            }
+            
+            var yearStr = string.Join(string.Empty, yearPart.Select(c => c == 'g' ? '6' : c).Where(char.IsDigit).ToArray());
+
+            if (yearStr[..2] == "15" && yearStr.Length == 4)
+            {
+                yearStr = $"19{yearStr[2..]}";
+            }
+            
+            return $"{dateOnlyDigits}/{monthWord}/{yearStr}";
+        }
+        
+        var countOfColons = input.Count(c => c == ':');
+        if (countOfColons >= 2)
+        {
+            ReplaceIfContains(input, " ", string.Empty, out input);
+            ReplaceIfContains(input, ".", string.Empty, out input);
+            ReplaceIfContains(input, "/", string.Empty, out input);
+        }
+        
+        var countOfSpaces = input.Count(c => c == ' ');
+        if (countOfSpaces >= 2)
+        {
+            ReplaceIfContains(input, ":", string.Empty, out input);
+            ReplaceIfContains(input, ".", string.Empty, out input);
+            ReplaceIfContains(input, "/", string.Empty, out input);
+        }
+        
+        var countOfSlashes = input.Count(c => c == '/');
+        if (countOfSlashes >= 2)
+        {
+            ReplaceIfContains(input, " ", string.Empty, out input);
+            ReplaceIfContains(input, ".", string.Empty, out input);
+            ReplaceIfContains(input, ":", string.Empty, out input);
+        }
+        
+        var countOfDots = input.Count(c => c == '.');
+        if (countOfDots >= 2)
+        {
+            ReplaceIfContains(input, " ", string.Empty, out input);
+            ReplaceIfContains(input, "/", string.Empty, out input);
+            ReplaceIfContains(input, ":", string.Empty, out input);
+        }
+        
         ReplaceIfContains(input, "Signed", string.Empty, out input);
         ReplaceIfContains(input, "first", "1", out input);
         ReplaceIfContains(input, "second", "2", out input);
@@ -895,11 +950,6 @@ public static class SchemaConverter
         ReplaceIfContains(input, "rd", string.Empty, out input);
         ReplaceIfContains(input, "IEH", string.Empty, out input); // misreading of TH
         ReplaceIfContains(input, "th", string.Empty, out input);
-        
-        ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
-        
-        ReplaceIfContains(input, "196g", "1966", out input); // TODO this should be more generic (regex)
-        ReplaceIfContains(input, "1575", "1975", out input); // TODO this should be more generic (regex)
 
         if (input.Length >= 2 && !char.IsDigit(input[0]) && char.IsDigit(input[1]))
         {
@@ -909,6 +959,213 @@ public static class SchemaConverter
         return input;
     }
 
+    private static bool Contains4DigitWord(string? input, out int matchedYear, out int yearPosition)
+    {
+        matchedYear = -1;
+        yearPosition = -1;
+
+        if (input == null)
+        {
+            return false;
+        }
+
+        var match = FourDigitYearRegex().Match(input);
+        if (!match.Success)
+        {
+            return false;
+        }
+        
+        if (input.Contains(match.Value, StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedYear = int.Parse(match.Value);
+            yearPosition = input.IndexOf(match.Value, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool ContainsMonthWord(string? input, out string? matchedWord, out int monthPosition)
+    {
+        matchedWord = null;
+        monthPosition = -1;
+        
+        if (input == null)
+        {
+            return false;
+        }
+
+        if (input.Contains("january", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "january";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("february", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "february";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("march", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "march";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("april", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "april";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("may", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "may";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("june", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "june";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("july", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "july";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("august", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "august";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("september", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "september";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("october", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "october";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("november", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "november";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("december", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "december";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("jan", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "jan";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("feb", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "feb";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("mar", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "mar";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("apr", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "apr";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("may", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "may";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("jun", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "jun";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("jul", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "jul";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("aug", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "aug";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("sep", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "sep";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("oct", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "oct";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("nov", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "nov";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+        
+        if (input.Contains("dec", StringComparison.InvariantCultureIgnoreCase))
+        {
+            matchedWord = "dec";
+            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            return true;
+        }
+
+        return false;
+    }
+    
     private static TimePeriod? GetTimePeriod(LabelGroupResult? datePurpose)
     {
         if (datePurpose == null)
@@ -2229,4 +2486,7 @@ public static class SchemaConverter
 
         return returnList;
     }
+
+    [GeneratedRegex("(13|14|15|16|17|18|19|20)\\d\\d")]
+    private static partial Regex FourDigitYearRegex();
 }

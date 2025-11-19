@@ -210,8 +210,8 @@ static ICacheService GetCacheService(IConfiguration configuration)
 {
     var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
 
-    var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
+    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
     var outputService = (ICacheService)new DatabaseCacheService(sqlReadService, sqlAddService);
     
     return outputService;
@@ -221,8 +221,8 @@ static IOutputService GetOutputService(IConfiguration configuration)
 {
     var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
 
-    var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
+    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
     var outputService = (IOutputService)new DatabaseOutputService(sqlReadService, sqlAddService);
     
     return outputService;

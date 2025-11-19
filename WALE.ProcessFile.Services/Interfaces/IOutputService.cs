@@ -24,7 +24,9 @@ public interface IOutputService
     
     public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId);
     
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId);
+    public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
+    
+    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
     

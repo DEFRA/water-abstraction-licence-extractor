@@ -9,7 +9,7 @@ using WALE.ProcessFile.Models.OutputSchema.Table;
 
 namespace WALE.ProcessFile.Database.Services;
 
-public class SqlSeverReadServiceService(string connectionString) : IDatabaseReadService
+public class SqlSeverReadService(string connectionString) : IDatabaseReadService
 {
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {

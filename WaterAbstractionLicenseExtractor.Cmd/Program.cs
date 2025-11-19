@@ -275,8 +275,8 @@ ConfiguredServices ConfigureServices()
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
-    var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
-    var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    var databaseReadService = new SqlSeverReadService(sqlConnectionString);
+    var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
@@ -382,8 +382,24 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             lookupConfig,
             previouslyParsedPaths,
             processRun.ProcessRunId);
-        
-        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
+
+        var matchResultId = await outputService.SaveMatchResultAsync(
+            matchesFull,
+            pdfFilePath,
+            processRun.ProcessRunId);
+
+        if (matchesFull.Matches != null)
+        {
+            foreach (var match in matchesFull.Matches)
+            {
+                await outputService.SaveMatchAsync(
+                    matchResultId,
+                    match.MatchedLabel?.Name,
+                    match.LabelGroupName,
+                    match);
+            }
+        }
+
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -668,8 +684,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(200).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22632422__2-26-32-422 6937642")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
     
     return pdfFilePaths.ToList();
 }

@@ -1,7 +1,4 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Models;
-
-namespace WALE.ProcessFile.Services.Interfaces;
+namespace WALE.ProcessFile.Models.Interfaces;
 
 public interface IOcrDataExtractorService
 {
@@ -12,7 +9,8 @@ public interface IOcrDataExtractorService
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
-            int processRunId);
+            int processRunId,
+            string noOcrServiceName);
     
     public bool HasDirectCost { get; }
     

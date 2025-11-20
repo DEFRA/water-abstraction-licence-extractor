@@ -1,16 +1,21 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tesseract;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Configuration;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
@@ -170,7 +175,8 @@ public class PdfDataExtractorService(
                                 pageNumber,
                                 pageImageNumber,
                                 pdfDocument,
-                                processRunId)).ToList();
+                                processRunId,
+                                Name)).ToList();
                     }
                     catch (Exception ex)
                     {

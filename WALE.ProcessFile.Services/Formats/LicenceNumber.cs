@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Helpers;

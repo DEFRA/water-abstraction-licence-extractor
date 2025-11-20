@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {

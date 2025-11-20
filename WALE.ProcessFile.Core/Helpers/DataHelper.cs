@@ -1,12 +1,11 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Models;
 using WeCantSpell.Hunspell;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static partial class DataHelper
 {
@@ -322,12 +321,12 @@ public static partial class DataHelper
             return true;
         }
         
-        if (CompanyName.StartsWithCompanyOrPersonalPrefix(line))
+        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(line))
         {
             return false;
         }
 
-        if (CompanyName.EndsWithCompanyOrPersonalSuffix(line))
+        if (CompanyNameHelper.EndsWithCompanyOrPersonalSuffix(line))
         {
             return false;
         }

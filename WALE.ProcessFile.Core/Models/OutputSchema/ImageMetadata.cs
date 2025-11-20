@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WALE.ProcessFile.Services.Models;
+namespace WALE.ProcessFile.Models.OutputSchema;
 
 public class ImageMetadata
 {

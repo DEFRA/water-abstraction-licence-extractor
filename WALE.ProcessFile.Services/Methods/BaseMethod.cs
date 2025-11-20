@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;

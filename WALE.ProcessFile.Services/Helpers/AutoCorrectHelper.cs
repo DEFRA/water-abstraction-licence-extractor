@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Services.Formats;
 using WeCantSpell.Hunspell;
 
@@ -10,7 +11,7 @@ public static class AutoCorrectHelper
         bool removeFirstWordIfLowercase,
         bool checkDictionary)
     {
-        if (CompanyName.StartsWithCompanyOrPersonalPrefix(lineText)
+        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText)
             || CompanyName.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
         {
             return lineText;

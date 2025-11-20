@@ -1,6 +1,4 @@
-using WALE.ProcessFile.Models;
-
-namespace WALE.ProcessFile.Services.Models;
+namespace WALE.ProcessFile.Models.OutputSchema;
 
 public class LineAndWords
 {

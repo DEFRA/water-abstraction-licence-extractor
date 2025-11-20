@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class JsonHelper
 {

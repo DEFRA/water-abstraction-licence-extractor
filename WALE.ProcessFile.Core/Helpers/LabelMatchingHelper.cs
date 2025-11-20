@@ -1,10 +1,10 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
 using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Models;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class LabelMatchingHelper
 {

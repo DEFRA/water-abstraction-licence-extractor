@@ -1,8 +1,8 @@
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class OcrHelper
 {

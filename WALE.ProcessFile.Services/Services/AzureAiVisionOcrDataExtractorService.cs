@@ -1,10 +1,12 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
@@ -21,7 +23,14 @@ public class AzureAiVisionOcrDataExtractorService(
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
+        GetTextLinesFromImageAsync(
+            string imageReference,
+            string pdfFilepath,
+            int pageNumber,
+            int imageNumber,
+            PdfDocument pdfDocument,
+            int processRunId,
+            string noOcrServiceName)
     {
         var isPageScreenshot = imageReference.StartsWith("Screenshot");
         

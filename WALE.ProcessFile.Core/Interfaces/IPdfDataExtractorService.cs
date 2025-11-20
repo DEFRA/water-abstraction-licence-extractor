@@ -1,7 +1,6 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Models.Configuration;
 
-namespace WALE.ProcessFile.Services.Interfaces;
+namespace WALE.ProcessFile.Models.Interfaces;
 
 public interface IPdfDataExtractorService
 {

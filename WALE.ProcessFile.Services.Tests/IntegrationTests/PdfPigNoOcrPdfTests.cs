@@ -1,11 +1,12 @@
 using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Configuration;
 using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
+using WALE.ProcessFile.Models.Interfaces;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using MatchType = WALE.ProcessFile.Models.Enums.MatchType;

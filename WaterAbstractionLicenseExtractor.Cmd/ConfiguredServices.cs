@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Models.Interfaces;
 
 namespace WaterAbstractionLicenseExtractor.Cmd;
 

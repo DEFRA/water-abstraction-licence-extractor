@@ -1,23 +1,20 @@
 using System.Text.Json;
-using Tesseract;
+using Amazon.Textract;
+using Amazon.Textract.Model;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Interfaces;
 using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
 
-namespace WALE.ProcessFile.Services.Services;
+namespace WALE.ProcessFile.Services.AwsTextract;
 
-public class TesseractOcrDataExtractorService(
-    string dataPath,
-    PageSegMode pageSegMode,
+public class AwsTextractOcrDataExtractorService(
     ICacheService cacheService,
     IOutputService outputService)
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => false;
-    public string Name => $"TesseractOcr-{pageSegMode}";
+    public string Name => "AwsTextractOcrDataExtractorService";
 
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -55,17 +52,15 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            Pix? ocrImage;
-
+            byte[]? bytes;
+            
             try
             {
-                byte[]? bytes;
-
                 if (isPageScreenshot)
                 {
                     bytes = await outputService.GetPageScreenshotDataAsync(
                         pageNumber,
-                        PdfDataExtractorService.Name,
+                        noOcrServiceName,
                         pdfFilepath);
                 }
                 else
@@ -75,7 +70,7 @@ public class TesseractOcrDataExtractorService(
                         PageNumber = pageNumber,
                         ImageNumber = imageNumber,
                         Filepath = pdfFilepath,
-                        NoOcrServiceName = PdfDataExtractorService.Name,
+                        NoOcrServiceName = noOcrServiceName,
                         Extension = FileHelper.GetImageExtension(imageReference)
                     });
                 }
@@ -84,8 +79,6 @@ public class TesseractOcrDataExtractorService(
                 {
                     throw new Exception("Image was not found");
                 }
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
             }
             catch
             {
@@ -94,18 +87,16 @@ public class TesseractOcrDataExtractorService(
                     throw;
                 }
 
-                var bytes = await cacheService.SaveDeflatedImageAsync(
+                bytes = await cacheService.SaveDeflatedImageAsync(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,
                     request.ProcessRunId);
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
             }
 
             try
             {
-                returnLines = await Task.Run(() => GetDataFromTesseract(ocrImage));
+                returnLines = await GetDataFromTextractAsync(bytes);
             }
             catch (Exception e)
             {
@@ -127,90 +118,34 @@ public class TesseractOcrDataExtractorService(
         
         return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap);
     }
-
-    private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)
+    
+    private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)
     {
         try
         {
-            //  TODO - check dimensions are more then X and Y or its pointless
-            TesseractEngine tesseractEngine = new(dataPath, "eng");
-            tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                    
-            var page = tesseractEngine.Process(ocrImage, pageSegMode);
+            var stream = new MemoryStream(bytes);
+            var client = new AmazonTextractClient();
 
-            // ReSharper disable once AccessToDisposedClosure
-            var task = Task.Run(() => GetTextLinesFromPageAsync(page));
-                
-            const int maxExecutionTimeMs = 30_000;
-            var isCompletedSuccessfully = task.Wait(TimeSpan.FromMilliseconds(maxExecutionTimeMs));
-
-            return !isCompletedSuccessfully ? [] : task.Result;
-        }
-        catch (Exception e)
-        {
-            //Console.SetOut(TextWriter.Null);
+            var analyzeDocumentRequest = new AnalyzeDocumentRequest
+            {
+                Document = new Document
+                {
+                    Bytes = stream
+                }
+            };
             
-            Console.WriteLine(e);
-            return [];
-        }
-    }
+            var analyzeDocumentResponse = await client.AnalyzeDocumentAsync(analyzeDocumentRequest);
 
-    private List<LineAndWords> GetTextLinesFromPageAsync(Page page)
-    {
-        try
-        {
-            using var iterator = page.GetIterator();
-            iterator.Begin();
-
-            return ToPageLines(iterator);
+            //Get the text blocks
+            var blocks = analyzeDocumentResponse.Blocks;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             return [];
         }
-    }
 
-    private static List<LineAndWords> ToPageLines(ResultIterator? iterator)
-    {
-        var returnLines = new List<LineAndWords>();
-        
-        do
-        {
-            var lineText = iterator!.GetText(PageIteratorLevel.TextLine);
-
-            if (lineText == null)
-            {
-                continue;
-            }
-
-            var line = new string(lineText
-                .Where(ch => ch != '\n')
-                .ToArray());
-
-            var words = new List<DocumentLineWord?>();
-
-            do
-            {
-                var wordText = iterator.GetText(PageIteratorLevel.Word);
-                var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
-                iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
-
-                words.Add(new DocumentLineWord(
-                    wordText,
-                    wordConfidence,
-                    new DocumentLineWordCoordinates(
-                        coordinates.Y1,
-                        coordinates.X2,
-                        coordinates.Y2,
-                        coordinates.X1
-                    )));
-            } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
-
-            returnLines.Add(new LineAndWords { Text = line, Words = words });
-        } while (iterator.Next(PageIteratorLevel.TextLine));
-        
-        return returnLines;
+        return [];
     }
     
     public void Dispose()

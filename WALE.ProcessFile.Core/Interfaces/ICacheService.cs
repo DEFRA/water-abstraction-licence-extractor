@@ -1,8 +1,7 @@
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Services.Interfaces;
+namespace WALE.ProcessFile.Models.Interfaces;
 
 public interface ICacheService
 {

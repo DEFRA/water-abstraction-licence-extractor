@@ -1,12 +1,12 @@
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Models.Interfaces;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
-using PdfDocument = WALE.ProcessFile.Services.Models.PdfDocument;
 
 namespace WALE.ProcessFile.Services.Services.PdfPig;
 

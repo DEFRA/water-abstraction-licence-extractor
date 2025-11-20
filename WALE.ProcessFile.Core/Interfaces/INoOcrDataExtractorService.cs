@@ -1,8 +1,4 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Models;
-using PdfDocument = WALE.ProcessFile.Services.Models.PdfDocument;
-
-namespace WALE.ProcessFile.Services.Interfaces;
+namespace WALE.ProcessFile.Models.Interfaces;
 
 public interface INoOcrDataExtractorService
 {

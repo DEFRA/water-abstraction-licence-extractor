@@ -2,10 +2,9 @@ using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Rendering.Skia;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Models.Services.PdfPig;
 
-namespace WALE.ProcessFile.Services.Models;
+namespace WALE.ProcessFile.Models;
 
 public class PdfDocument
 {

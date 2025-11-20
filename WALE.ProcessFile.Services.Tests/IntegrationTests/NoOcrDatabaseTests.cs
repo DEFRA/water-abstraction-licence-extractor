@@ -15,13 +15,13 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class NoOcrDatabaseTests
 {
     private static readonly IDatabaseReadService ReadService =
-        new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
+        new SqlSeverReadService(TestConfig.SqlConnectionString);
 
-    private static readonly IDatabaseAddService AddService =
-        new SqlSeverAddServiceService(TestConfig.SqlConnectionString);
+    private static readonly IDatabaseWriteService WriteService =
+        new SqlSeverWriteService(TestConfig.SqlConnectionString);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, AddService);
-    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, AddService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

@@ -81,7 +81,7 @@ public static class AutoCorrectHelper
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
 
-                    if (checkDictionary && Dictionary.Check(removedSpaceCombinedWord))
+                    if (checkDictionary && (CustomDictionary.Check(removedSpaceCombinedWord) || Dictionary.Check(removedSpaceCombinedWord)))
                     {
                         newWords.Add(removedSpaceCombinedWord);
                         skipNextWord = true;

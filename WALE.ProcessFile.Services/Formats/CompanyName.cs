@@ -201,7 +201,7 @@ public static class CompanyName
             && parts.Last().Length >= 3
             && parts.Last().All(char.IsLetter)
             && !parts.All(word => word.Length > 1
-                && (!label.AutoCorrect || DataHelper.Dictionary.Check(word)));
+                && (!label.AutoCorrect || AutoCorrectHelper.Dictionary.Check(word)));
 
         if (looksLikeNameWithInitials && !lineText.Contains('"'))
         {

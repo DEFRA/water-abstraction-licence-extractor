@@ -70,7 +70,7 @@ public static class AutoCorrectHelper
                     continue;
                 }
 
-                var wordSpeltCorrectly = !checkDictionary || DataHelper.Dictionary.Check(word);
+                var wordSpeltCorrectly = !checkDictionary || Dictionary.Check(word) || CustomDictionary.Check(word);
                 
                 if (
                     !string.IsNullOrWhiteSpace(nextWord)
@@ -81,7 +81,7 @@ public static class AutoCorrectHelper
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
 
-                    if (checkDictionary && DataHelper.Dictionary.Check(removedSpaceCombinedWord))
+                    if (checkDictionary && Dictionary.Check(removedSpaceCombinedWord))
                     {
                         newWords.Add(removedSpaceCombinedWord);
                         skipNextWord = true;
@@ -110,21 +110,11 @@ public static class AutoCorrectHelper
                     continue;
                 }
                 
-                var suggestions = DataHelper.Dictionary.Suggest(
-                    word,
-                    new QueryOptions
-                    {
-                        MaxSuggestions = 20
-                    }).ToList();
-                
-                var topSuggestion = suggestions.FirstOrDefault(
-                    suggestion => PreferredSuggestions.Contains(
-                        suggestion,
-                        StringComparer.InvariantCultureIgnoreCase)) ?? suggestions.FirstOrDefault();
+                var topSuggestion = GetTopSuggestion(word);
 
-                var shouldUseSuggestion = PreferredSuggestions.Contains(topSuggestion,
+                var shouldUseSuggestion = CustomSuggestions.Contains(topSuggestion,
                         StringComparer.InvariantCultureIgnoreCase)
-                    || !wordSpeltCorrectly;
+                    && !wordSpeltCorrectly;
 
                 if (shouldUseSuggestion && !string.IsNullOrEmpty(topSuggestion))
                 {
@@ -162,11 +152,55 @@ public static class AutoCorrectHelper
         { "PALLONS", "GALLONS" },
         { "ld", "ltd" },
         { "Ld", "Ltd" },
-        { "LD", "LTD" },        
+        { "LD", "LTD" }
     };
+
+    public static string? GetTopSuggestion(string word)
+    {
+        var customSuggestions = CustomDictionary.Suggest(
+            word,
+            new QueryOptions
+            {
+                MaxSuggestions = 1,
+                MaxSharps = 0,
+                MaxWords = 1,
+                MaxCompoundSuggestions = 0
+            }).ToList();
+        
+        var allUppercase = word.All(char.IsUpper);
+
+        if (!customSuggestions.Any())
+        {
+            if (word.Contains('w', StringComparison.InvariantCultureIgnoreCase))
+            {
+                var letterMSwappedWithW = word
+                    .Replace('w', 'm')
+                    .Replace('W', 'M');
+                
+                return GetTopSuggestion(letterMSwappedWithW);
+            }
+            
+            if (word.Contains('q', StringComparison.InvariantCultureIgnoreCase))
+            {
+                var letterQSwappedWithG = word
+                    .Replace('q', 'g')
+                    .Replace('Q', 'G');
+                
+                return GetTopSuggestion(letterQSwappedWithG);
+            }
+            
+            return null;
+        }
+        
+        var topSuggestion = customSuggestions.First();
+        return allUppercase ? topSuggestion.ToUpper() : topSuggestion;
+    }
     
-    private static readonly IEnumerable<string> PreferredSuggestions =
+    public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
+ 
+    private static readonly IEnumerable<string> CustomSuggestions =
     [
+        "Cheshire",
         "Mid",
         "Central",
         "North",
@@ -174,6 +208,11 @@ public static class AutoCorrectHelper
         "Ltd",
         "Farm",
         "Farms",
-        "Gallons"
+        "Gallons",
+        "August",
+        "March",
+        "Dated"
     ];
+    
+    public static readonly WordList CustomDictionary = WordList.CreateFromWords(CustomSuggestions);
 }

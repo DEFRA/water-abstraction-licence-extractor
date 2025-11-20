@@ -81,6 +81,6 @@ public static partial class Date
         return months.Any(m => text.Contains(m, StringComparison.InvariantCultureIgnoreCase));
     }
     
-    [GeneratedRegex(@"18\d\d|19\d\d|20\d\d")]
+    [GeneratedRegex(@"18 ?\d\d|19 ?\d\d|20 ?\d\d")]
     private static partial Regex YearRegex();
 }

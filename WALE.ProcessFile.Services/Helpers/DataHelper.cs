@@ -10,8 +10,6 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static partial class DataHelper
 {
-    public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
-
     public static List<DocumentLine> RemoveExcludesAndNotContains(
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
@@ -229,7 +227,7 @@ public static partial class DataHelper
         
         var digitsCount = 0;
         var totalConfidence = 0.0;
-        const int minConfidence = 40;
+        const int minConfidence = 38;
         
         foreach (var word in words)
         {
@@ -244,7 +242,7 @@ public static partial class DataHelper
             
             if (confidence < minConfidence
                 && word.Text.Length >= 5
-                && Dictionary.Check(word.Text))
+                && (AutoCorrectHelper.Dictionary.Check(word.Text) || AutoCorrectHelper.CustomDictionary.Check(word.Text)))
             {
                 confidence = 100.0;
             }
@@ -406,7 +404,8 @@ public static partial class DataHelper
 
             return !word.Contains('/')
                 && !double.TryParse(PotentialNumber(word), out _)
-                && !Dictionary.Check(wordWithoutPunctuation);
+                && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation)
+                && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation);
         }).ToList();
 
         var countOfSuspectedIncorrectWords = suspectedIncorrectWords.Count;

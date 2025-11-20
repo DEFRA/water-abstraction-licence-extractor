@@ -870,12 +870,21 @@ public static partial class SchemaConverter
             {
                 dateOnlyDigits = dateOnlyDigits[..2];
             }
+
+            if (dateOnlyDigits.StartsWith("4"))
+            {
+                dateOnlyDigits = $"1{dateOnlyDigits[1..]}";
+            }
             
             var yearStr = string.Join(string.Empty, yearPart.Select(c => c == 'g' ? '6' : c).Where(char.IsDigit).ToArray());
 
             if (yearStr[..2] == "15" && yearStr.Length == 4)
             {
                 yearStr = $"19{yearStr[2..]}";
+            }
+            else if (yearStr.Length > 4)
+            {
+                yearStr = yearStr[..4];
             }
             
             return $"{dateOnlyDigits}/{monthWord}/{yearStr}";

@@ -26,7 +26,7 @@ public static class OcrHelper
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
         
-        return uncorruptedLines
+        var groupedLines = uncorruptedLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -65,19 +65,28 @@ public static class OcrHelper
                             continue;
                         }
 
+                        var wordTextWithoutPunctuation = word.Text
+                            .Replace(",", string.Empty)
+                            .Replace(".", string.Empty);
+                        
                         if (word is { OcrConfidence: < 40, Text.Length: > 3 }
-                            && word.Text.Count(char.IsAsciiLetter) > 3
-                            && !DataHelper.Dictionary.Check(word.Text))
+                            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
+                            && !AutoCorrectHelper.Dictionary.Check(wordTextWithoutPunctuation)
+                            && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation))
                         {
-                            var suggestions = DataHelper.Dictionary.Suggest(word.Text);
-                            var topSuggestion = suggestions.FirstOrDefault();
+                            var topSuggestion = AutoCorrectHelper.GetTopSuggestion(wordTextWithoutPunctuation);
 
-                            if (topSuggestion != null && topSuggestion.Length == word.Text.Length)
+                            if (topSuggestion != null)
                             {
-                                lineWords.Add(new DocumentLineWord(topSuggestion, word.OcrConfidence,
-                                    word.Coordinates));
-                                
-                                continue;
+                                var lengthDiff = Math.Abs(topSuggestion.Length - word.Text.Length);
+
+                                if (lengthDiff < 2)
+                                {
+                                    lineWords.Add(new DocumentLineWord(topSuggestion, word.OcrConfidence,
+                                        word.Coordinates));
+                                    
+                                    continue;
+                                }
                             }
                         }
                         
@@ -126,6 +135,8 @@ public static class OcrHelper
             })
             .Where(line => !DataHelper.IsCorruptedText(line.Text, false, unacceptableIncorrectValue))
             .ToList();
+
+        return groupedLines;
     }
     
     private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)

@@ -44,8 +44,6 @@ public class AwsTextractOcrDataExtractorService(
         var cacheFileText = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
-
-        cacheFileText = null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {

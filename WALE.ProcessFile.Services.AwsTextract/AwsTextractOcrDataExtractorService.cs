@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Amazon;
 using Amazon.Textract;
 using Amazon.Textract.Model;
 using WALE.ProcessFile.Core.Helpers;
@@ -9,6 +10,8 @@ using WALE.ProcessFile.Models.OutputSchema;
 namespace WALE.ProcessFile.Services.AwsTextract;
 
 public class AwsTextractOcrDataExtractorService(
+    string accessKey,
+    string secretKey,
     ICacheService cacheService,
     IOutputService outputService)
     : IOcrDataExtractorService, IDisposable
@@ -41,6 +44,8 @@ public class AwsTextractOcrDataExtractorService(
         var cacheFileText = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
+
+        cacheFileText = null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
@@ -113,10 +118,11 @@ public class AwsTextractOcrDataExtractorService(
             }
         }
         
-        const int lineHeight = 21;
-        const int wordGap = 200;
+        const int lineHeight = 12;
+        const int wordGap = 100;
+        const int minWordHeight = 5;
         
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap);
+        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap, minWordHeight);
     }
     
     private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)
@@ -124,28 +130,59 @@ public class AwsTextractOcrDataExtractorService(
         try
         {
             var stream = new MemoryStream(bytes);
-            var client = new AmazonTextractClient();
+            
+            var awsCredentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
+            var client = new AmazonTextractClient(awsCredentials, RegionEndpoint.EUWest2);
 
             var analyzeDocumentRequest = new AnalyzeDocumentRequest
             {
                 Document = new Document
                 {
                     Bytes = stream
-                }
+                },
+                FeatureTypes = [FeatureType.FORMS]
             };
+
+            const double coordinatesFormatMultiplier = 1000.0;
             
             var analyzeDocumentResponse = await client.AnalyzeDocumentAsync(analyzeDocumentRequest);
+            var returnList = new List<LineAndWords>();
+            
+            foreach (var block in analyzeDocumentResponse.Blocks)
+            {
+                if (block.Text == null)
+                {
+                    continue;
+                }
+                
+                var line = new LineAndWords
+                {
+                    Words = new List<DocumentLineWord>
+                    {
+                        new(
+                            block.Text,
+                            block.Confidence,
+                            new DocumentLineWordCoordinates(
+                                (block.Geometry.BoundingBox.Top ?? -1.0) * coordinatesFormatMultiplier,
+                                    (block.Geometry.BoundingBox.Left + block.Geometry.BoundingBox.Width ?? -1.0) * coordinatesFormatMultiplier,
+                                    (block.Geometry.BoundingBox.Top + block.Geometry.BoundingBox.Height ?? -1.0) * coordinatesFormatMultiplier,
+                                (block.Geometry.BoundingBox.Left ?? -1.0) * coordinatesFormatMultiplier
+                            )
+                        )
+                    }!
+                };
 
-            //Get the text blocks
-            var blocks = analyzeDocumentResponse.Blocks;
+                line.Text = string.Join(" ", line.Words.Select(w => w!.Text));
+                returnList.Add(line);
+            }
+
+            return returnList;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return [];
+            throw;
         }
-
-        return [];
     }
     
     public void Dispose()

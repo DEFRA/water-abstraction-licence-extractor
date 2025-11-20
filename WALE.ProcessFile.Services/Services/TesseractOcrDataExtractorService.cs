@@ -124,8 +124,9 @@ public class TesseractOcrDataExtractorService(
         
         const int lineHeight = 21;
         const int wordGap = 200;
+        const int minWordHeight = 15;;
         
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap);
+        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap, minWordHeight);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)

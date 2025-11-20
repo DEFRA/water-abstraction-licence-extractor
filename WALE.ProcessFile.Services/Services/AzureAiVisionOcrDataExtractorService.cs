@@ -184,8 +184,9 @@ public class AzureAiVisionOcrDataExtractorService(
         
         const int lineHeight = 23;
         const int wordGap = 150;
+        const int minWordHeight = 15;
         
-        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap);
+        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap, minWordHeight);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)

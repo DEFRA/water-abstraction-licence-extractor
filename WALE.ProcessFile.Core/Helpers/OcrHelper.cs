@@ -10,7 +10,8 @@ public static class OcrHelper
         IReadOnlyList<LineAndWords> returnLines,
         int pageNumber,
         int lineHeight,
-        int wordGap)
+        int wordGap,
+        int minHeight)
     {
         var lineNumber = 0;
         
@@ -22,9 +23,10 @@ public static class OcrHelper
 
         var uncorruptedLines = returnLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100));
+            .Where(line => !DataHelper.IsCorruptedText(line.Words, 100))
+            .ToList();
         
-        return uncorruptedLines
+        var groupedLines = uncorruptedLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -55,7 +57,6 @@ public static class OcrHelper
 
                     foreach (var word in line.Words)
                     {
-                        const int minHeight = 15;
                         var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
                         
                         if (minHeight > wordHeight)
@@ -123,6 +124,8 @@ public static class OcrHelper
                 return documentLine;
             })
             .ToList();
+
+        return groupedLines;
     }
     
     private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)

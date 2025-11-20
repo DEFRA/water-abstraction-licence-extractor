@@ -71,8 +71,8 @@ public static class OcrHelper
                         
                         if (word is { OcrConfidence: < 40, Text.Length: > 3 }
                             && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
-                            && !AutoCorrectHelper.Dictionary.Check(wordTextWithoutPunctuation)
-                            && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation))
+                            && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation)
+                            && !AutoCorrectHelper.Dictionary.Check(wordTextWithoutPunctuation))
                         {
                             var topSuggestion = AutoCorrectHelper.GetTopSuggestion(wordTextWithoutPunctuation);
 

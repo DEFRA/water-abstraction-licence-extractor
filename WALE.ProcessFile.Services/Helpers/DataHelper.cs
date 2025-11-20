@@ -242,7 +242,7 @@ public static partial class DataHelper
             
             if (confidence < minConfidence
                 && word.Text.Length >= 5
-                && (AutoCorrectHelper.Dictionary.Check(word.Text) || AutoCorrectHelper.CustomDictionary.Check(word.Text)))
+                && (AutoCorrectHelper.CustomDictionary.Check(word.Text) || AutoCorrectHelper.Dictionary.Check(word.Text)))
             {
                 confidence = 100.0;
             }
@@ -404,8 +404,8 @@ public static partial class DataHelper
 
             return !word.Contains('/')
                 && !double.TryParse(PotentialNumber(word), out _)
-                && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation)
-                && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation);
+                && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
+                && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation);
         }).ToList();
 
         var countOfSuspectedIncorrectWords = suspectedIncorrectWords.Count;

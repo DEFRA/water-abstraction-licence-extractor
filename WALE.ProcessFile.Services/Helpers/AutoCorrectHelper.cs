@@ -70,7 +70,7 @@ public static class AutoCorrectHelper
                     continue;
                 }
 
-                var wordSpeltCorrectly = !checkDictionary || Dictionary.Check(word) || CustomDictionary.Check(word);
+                var wordSpeltCorrectly = !checkDictionary || CustomDictionary.Check(word) || Dictionary.Check(word);
                 
                 if (
                     !string.IsNullOrWhiteSpace(nextWord)
@@ -112,11 +112,7 @@ public static class AutoCorrectHelper
                 
                 var topSuggestion = GetTopSuggestion(word);
 
-                var shouldUseSuggestion = CustomSuggestions.Contains(topSuggestion,
-                        StringComparer.InvariantCultureIgnoreCase)
-                    && !wordSpeltCorrectly;
-
-                if (shouldUseSuggestion && !string.IsNullOrEmpty(topSuggestion))
+                if (!wordSpeltCorrectly && !string.IsNullOrEmpty(topSuggestion))
                 {
                     if (topSuggestion.Equals($"{word}s", StringComparison.InvariantCultureIgnoreCase)
                         || $"{topSuggestion}s".Equals(word, StringComparison.InvariantCultureIgnoreCase))

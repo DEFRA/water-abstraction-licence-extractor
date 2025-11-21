@@ -142,9 +142,13 @@ public class PdfDataExtractorService(
             {
                 pageImages = [page.ImageReference!];
             }
+
+            var pageImageNumber = 0;
             
             foreach (var imageReference in pageImages)
             {
+                pageImageNumber += 1;
+                
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 
                 var breakImageLoop = false;
@@ -160,10 +164,6 @@ public class PdfDataExtractorService(
                         returnResult.ServicesUsed.Add(ocrService.Name);
                     }
 
-                    pageImageNumberDict.TryAdd(ocrService.Name, 1);
-                    var pageImageNumber = pageImageNumberDict[ocrService.Name];
-                    pageImageNumberDict[ocrService.Name] = pageImageNumber + 1;
-                    
                     try
                     {
                         serviceImageLines =
@@ -178,8 +178,6 @@ public class PdfDataExtractorService(
                     }
                     catch (Exception ex)
                     {
-                        serviceImageLines = [];
-                        
                         Console.WriteLine(ex);
                         
                         // TODO proper logging somewhere

@@ -57,45 +57,28 @@ public class AwsTextractOcrDataExtractorService(
         {
             byte[]? bytes;
             
-            try
+            if (isPageScreenshot)
             {
-                if (isPageScreenshot)
-                {
-                    bytes = await outputService.GetPageScreenshotDataAsync(
-                        pageNumber,
-                        noOcrServiceName,
-                        pdfFilepath);
-                }
-                else
-                {
-                    bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-                    {
-                        PageNumber = pageNumber,
-                        ImageNumber = imageNumber,
-                        Filepath = pdfFilepath,
-                        NoOcrServiceName = noOcrServiceName,
-                        Extension = FileHelper.GetImageExtension(imageReference)
-                    });
-                }
-
-                if (bytes == null)
-                {
-                    throw new Exception("Image was not found");
-                }
+                bytes = await outputService.GetPageScreenshotDataAsync(
+                    pageNumber,
+                    noOcrServiceName,
+                    pdfFilepath);
             }
-            catch
+            else
             {
-                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
                 {
-                    throw;
-                }
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    Filepath = pdfFilepath,
+                    NoOcrServiceName = noOcrServiceName,
+                    Extension = FileHelper.GetImageExtension(imageReference)
+                });
+            }
 
-                bytes = await cacheService.SaveDeflatedImageAsync(
-                    request.Filepath,
-                    request.ImageNumber,
-                    request.PageNumber,
-                    request.ProcessRunId,
-                    FileHelper.GetImageExtension(imageReference));
+            if (bytes == null)
+            {
+                throw new Exception("Image was not found");
             }
 
             try

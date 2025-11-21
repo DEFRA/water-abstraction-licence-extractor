@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using Tesseract;
 using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Core.Interfaces;
 
@@ -11,29 +12,79 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
         const string jpgExtension = "jpg";
+
+        string returnExtension;
+        byte[]? bytes;
         
         try
         {
-            if (imageData.TryGetPng(out var bytes))
+            if (imageData.TryGetPng(out bytes))
             {
-                await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, pngExtension, processRunId);
-                return pngExtension;
-            }
+                returnExtension = pngExtension;
+                
+                try
+                {
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    {
+                        throw;
+                    }
 
-            if (imageData.TryGetBytesAsMemory(out var bytesMemory))
+                    returnExtension = jpgExtension;
+                    bytes = Deflate(bytes);
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+            }
+            else if (imageData.TryGetBytesAsMemory(out var bytesMemory))
             {
-                await cacheService.SaveImageOnPageAsync(bytesMemory.ToArray(), folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, bmpExtension, processRunId);
-                return bmpExtension;
-            }
+                returnExtension = bmpExtension;
+                bytes = bytesMemory.ToArray();
 
-            var bytesSpanAry = imageData.RawBytes.ToArray();
-            if (bytesSpanAry.Length == 0)
+                try
+                {
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    {
+                        throw;
+                    }
+
+                    returnExtension = jpgExtension;
+                    bytes = Deflate(bytes);
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+            }
+            else
             {
-                throw new Exception("Cannot get bytes via either method");
-            }
+                var bytesSpanAry = imageData.RawBytes.ToArray();
+                if (bytesSpanAry.Length == 0)
+                {
+                    throw new Exception("Cannot get bytes via either method");
+                }
 
-            await cacheService.SaveImageOnPageAsync(bytesSpanAry, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, jpgExtension, processRunId);
-            return jpgExtension;
+                bytes = bytesSpanAry;
+                returnExtension = jpgExtension;
+
+                try
+                {
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    {
+                        throw;
+                    }
+
+                    bytes = Deflate(bytes);
+                    _ = Pix.LoadFromMemory(bytes);
+                }
+            }
         }
         catch (Exception exception)
         {
@@ -42,11 +93,11 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 return null;
             }
 
-            // TODO should work out when need to deflate
-            //bytesAry = Deflate(bytesAry);
-
             return null;
         }
+        
+        await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, returnExtension, processRunId);
+        return returnExtension;
     }
 
     public static byte[] Deflate(byte[] input)

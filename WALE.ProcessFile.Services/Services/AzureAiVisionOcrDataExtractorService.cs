@@ -121,7 +121,7 @@ public class AzureAiVisionOcrDataExtractorService(
                     throw;
                 }
                 
-                var bytes = await cacheService.SaveDeflatedImageAsync(
+                var bytes = await cacheService.DeflateImageAsync(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,

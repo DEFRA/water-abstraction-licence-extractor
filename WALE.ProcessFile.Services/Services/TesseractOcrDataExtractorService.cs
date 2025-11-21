@@ -53,59 +53,33 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            Pix? ocrImage;
+            byte[]? bytes;
 
-            try
+            if (isPageScreenshot)
             {
-                byte[]? bytes;
-
-                if (isPageScreenshot)
-                {
-                    bytes = await outputService.GetPageScreenshotDataAsync(
-                        pageNumber,
-                        PdfDataExtractorService.Name,
-                        pdfFilepath);
-                }
-                else
-                {
-                    bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-                    {
-                        PageNumber = pageNumber,
-                        ImageNumber = imageNumber,
-                        Filepath = pdfFilepath,
-                        NoOcrServiceName = PdfDataExtractorService.Name,
-                        Extension = FileHelper.GetImageExtension(imageReference)
-                    });
-                }
-
-                if (bytes == null)
-                {
-                    throw new Exception("Image was not found");
-                }
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
+                bytes = await outputService.GetPageScreenshotDataAsync(
+                    pageNumber,
+                    PdfDataExtractorService.Name,
+                    pdfFilepath);
             }
-            catch (Exception ex)
+            else
             {
-                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
                 {
-                    throw;
-                }
-
-                if (!ex.Message.Contains("Failed to load image from memory."))
-                {
-                    throw;
-                }
-
-                var bytes = await cacheService.SaveDeflatedImageAsync(
-                    request.Filepath,
-                    request.ImageNumber,
-                    request.PageNumber,
-                    request.ProcessRunId,
-                    FileHelper.GetImageExtension(imageReference));
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    Filepath = pdfFilepath,
+                    NoOcrServiceName = PdfDataExtractorService.Name,
+                    Extension = FileHelper.GetImageExtension(imageReference)
+                });
             }
+
+            if (bytes == null)
+            {
+                throw new Exception("Image was not found");
+            }
+            
+            var ocrImage = Pix.LoadFromMemory(bytes);
 
             try
             {

@@ -205,9 +205,10 @@ public static class RelatedCategoryPosition
                 PositionConstants.UnknownLineNumber,
                 PositionConstants.UnknownPageNumber,
                 line.Columns,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate);
+                line.Top,
+                line.Right,
+                line.Bottom,
+                line.Left);
 
             labelGroupResult.Text = [documentLine];
             labelGroupResult.MatchedLabel = request.label;

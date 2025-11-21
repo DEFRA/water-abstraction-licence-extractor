@@ -303,9 +303,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         lineNumber++,
                         pageNumber,
                         [new(string.Empty, [])],
-                        firstLine.BoundingBox.Bottom + blankLineGap,
-                        bottomRounded + blankLineGap,
-                        PositionConstants.UnknownCoordinate);
+                        firstLine.BoundingBox.Top,
+                        firstLine.BoundingBox.Right,
+                        firstLine.BoundingBox.Bottom,
+                        firstLine.BoundingBox.Left);
 
                     resultList.Add(documentLineToAdd);
                 }
@@ -349,8 +350,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     lineNumber++,
                     pageNumber,
                     columns,
+                    firstLine.BoundingBox.Top,
+                    firstLine.BoundingBox.Right,
                     firstLine.BoundingBox.Bottom,
-                    bottomRounded,
                     firstLine.BoundingBox.Left);
 
                 resultList.Add(documentLine);

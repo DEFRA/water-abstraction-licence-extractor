@@ -123,13 +123,16 @@ public static class OcrHelper
                     column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
                 
+                var firstWordCoords = columns.FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates;
+                
                 var documentLine = new DocumentLine(
                     lineNumber++,
                     pageNumber,
                     columns,
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate,
-                    PositionConstants.UnknownCoordinate);
+                    firstWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
+                    firstWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                    firstWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
+                    firstWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
 
                 return documentLine;
             })

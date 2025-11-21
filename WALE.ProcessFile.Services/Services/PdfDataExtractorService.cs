@@ -181,7 +181,9 @@ public class PdfDataExtractorService(
                         serviceImageLines = [];
                         
                         Console.WriteLine(ex);
+                        
                         // TODO proper logging somewhere
+                        throw;
                     }
 
                     // No lines found, no point processing that with the other services

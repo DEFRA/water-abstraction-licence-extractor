@@ -6,8 +6,9 @@ public class DocumentLine(
     int lineNumber,
     int pageNumber,
     List<DocumentLineColumn> columns,
+    double top,
+    double right,
     double bottom,
-    double bottomRounded,
     double left)
 {
     // ReSharper disable once MemberCanBePrivate.Global
@@ -16,6 +17,7 @@ public class DocumentLine(
         PositionConstants.UnknownPageNumber,
         [],
         PositionConstants.UnknownCoordinate,
+        PositionConstants.UnknownCoordinate,        
         PositionConstants.UnknownCoordinate,
         PositionConstants.UnknownCoordinate) { }
 
@@ -53,10 +55,12 @@ public class DocumentLine(
             return total / wordsWithConfidence.Count;
         }
     }
+    
+    public double Top { get; init; } = top;
 
+    public double Right { get; init; } = right;
+    
     public double Bottom { get; init; } = bottom;
-
-    public double BottomRounded { get; init; } = bottomRounded;
 
     public double Left { get; init; } = left;
     
@@ -77,8 +81,9 @@ public class DocumentLine(
             PageNumber = PageNumber,
             LineNumber = LineNumber,
             Columns = Columns.Select(c => c.Clone()).ToList(),
+            Top = Top,
+            Right = Right,
             Bottom = Bottom,
-            BottomRounded = BottomRounded,
             Left = Left
         };
     }

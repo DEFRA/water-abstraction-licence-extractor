@@ -264,6 +264,11 @@ public static partial class DataHelper
             string.Join(' ', words.Select(w => w?.Text)),
             true,
             unacceptableIncorrectValue);
+
+        if (isCorrupt)
+        {
+            
+        }
         
         return isCorrupt;
     }

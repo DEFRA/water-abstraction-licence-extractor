@@ -21,10 +21,9 @@ public static class DuplicateLicenceIdentificationExtract
     
     private static readonly string CacheFolder = KeyConfig.CacheFolder;
 
-    public static async Task GenerateDuplicateLicenceIdentificationExtractAsync()
+    public static async Task GenerateDuplicateLicenceIdentificationExtractAsync(bool byFilName = true)
     {
-        var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
-                                  ?? throw new NullReferenceException("SqlConnectionString");
+        var sqlConnectionString = KeyConfig.SqlConnectionString;
     
         var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
         var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
@@ -46,29 +45,86 @@ public static class DuplicateLicenceIdentificationExtract
         // Step 2: Group by Permit Number and loop over each group to process each group and generate a result list of LicenceDuplicateCsvLine objects
         var csvResults = new List<LicenceDuplicateCsvLine>();
 
-        var groupedByPermit = duplicateInputs
+        var groupedByPermit = 
+             duplicateInputs
             .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
             .GroupBy(x => x.PermitNumber);
+        
+        var y =
+            duplicateInputs
+                .Where(x => !string.IsNullOrEmpty(x.PermitNumber) && x.PermitNumber == "18540204071").ToList();
+        var groupedByPermitAndSize =
+        duplicateInputs
+            .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
+            .GroupBy(x => (x.PermitNumber, x.FileSize));
 
-        foreach (var group in groupedByPermit)
+        if (byFilName)
         {
-            // Step 3: Get the list of files for the current permit number
-            var filesForPermit = group.ToList();
-
-            // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
-            var pdfFilesData = ReadPdfFilesForPermit(filesForPermit);
-
-            // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other files are sub strings of
-            // for example 0-034 5665255.PDF is main file in a group with that and -034 5665255.PDF
-            var mainFile = IdentifyMainFile(pdfFilesData);
-
-            // Step 6 - Process the main file and compare with other files for duplicate analysis
-            if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
+            // ParallelOptions parallelOptions = new ParallelOptions
+            // {
+            //     MaxDegreeOfParallelism = 10 // Limits to a maximum of 10 concurrent tasks/threads
+            // };
+            // Parallel.ForEachAsync(groupedByPermit, parallelOptions, group =>
+            // {
+            //     // Step 3: Get the list of files for the current permit number
+            //     var filesForPermit = group.ToList();
+            //
+            //     // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+            //     var pdfFilesData = ReadPdfFilesForPermit(filesForPermit);
+            //
+            //     // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other files are sub strings of
+            //     // for example 0-034 5665255.PDF is main file in a group with that and -034 5665255.PDF
+            //     var mainFile = IdentifyMainFile(pdfFilesData);
+            //
+            //     // Step 6 - Process the main file and compare with other files for duplicate analysis
+            //     if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
+            //     {
+            //         var duplicateResults =
+            //             await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key, pdfExtractorService);
+            //         csvResults.AddRange(duplicateResults);
+            //     }
+            // });
+            foreach (var group in groupedByPermit)
             {
-                var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key, pdfExtractorService);
-                csvResults.AddRange(duplicateResults);
+                // Step 3: Get the list of files for the current permit number
+                var filesForPermit = group.ToList();
+            
+                // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+                var pdfFilesData = ReadPdfFilesForPermit(filesForPermit);
+            
+                // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other files are sub strings of
+                // for example 0-034 5665255.PDF is main file in a group with that and -034 5665255.PDF
+                var mainFile = IdentifyMainFile(pdfFilesData);
+            
+                // Step 6 - Process the main file and compare with other files for duplicate analysis
+                if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
+                {
+                    var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key, pdfExtractorService);
+                    csvResults.AddRange(duplicateResults);
+                }
             }
         }
+        else
+        {
+            foreach (var group in groupedByPermitAndSize)
+            {
+                // Step 3: Get the list of files for the current permit number
+                var filesForPermit = group.ToList();
+
+                // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+                var firstFile = filesForPermit
+                    ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
+                    ?.FirstOrDefault();
+                if (firstFile != null)
+                {
+                    var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
+
+                    var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber, pdfExtractorService);
+                    csvResults.AddRange(duplicateResults);
+                }
+            }
+        }
+        
 
         var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.csv";
         var fullPath = Path.Combine(OutputFolder, fileName);
@@ -99,8 +155,9 @@ public static class DuplicateLicenceIdentificationExtract
         }
 
         var permitNumberCol = headerMapping["Permit Number"];
-        var fileNameCol = headerMapping["File Name"];
+        var fileNameCol = headerMapping["Downloaded file name"];
         var fileUrlCol = headerMapping["File URL"];
+        var fileSizeCol = headerMapping["File Size"];
 
         // Read data rows starting from row 2
         for (int row = 2; row <= usedRange.LastRow().RowNumber(); row++)
@@ -108,12 +165,14 @@ public static class DuplicateLicenceIdentificationExtract
             var permitNumber = worksheet.Cell(row, permitNumberCol).GetValue<string>();
             var fileName = worksheet.Cell(row, fileNameCol).GetValue<string>();
             var fileUrl = worksheet.Cell(row, fileUrlCol).GetValue<string>();
+            var fileSize = worksheet.Cell(row, fileSizeCol).GetValue<string>();
 
             duplicateInputs.Add(new LicenceDuplicateFinderInput
             {
                 PermitNumber = permitNumber,
                 FileName = fileName,
-                FileUrl = fileUrl
+                FileUrl = fileUrl,
+                FileSize = fileSize
             });
         }
 
@@ -159,6 +218,26 @@ public static class DuplicateLicenceIdentificationExtract
         }
 
         return pdfFilesData;
+    }
+    
+    private static List<LicenceDuplicateFinderInput> ReadPdfFilesForPermitAndSize(
+        LicenceDuplicateFinderInput file, List<LicenceDuplicateFinderInput> filesForPermitAndSize)
+    {
+        var pdfFilesData = new List<(string FileName, string FilePath, bool FileExists, string FileUrl)>();
+
+        if (!string.IsNullOrEmpty(file.FileName))
+        {
+            var x = filesForPermitAndSize
+                .Where(f => f.FileSize.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) &&
+                            !f.FileUrl.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase)).ToList();
+
+            // Search for files that end with the expected filename after number__ prefix
+            return filesForPermitAndSize
+                .Where(f => f.FileSize.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) &&
+                            !f.FileUrl.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        }
+
+        return new List<LicenceDuplicateFinderInput>();
     }
 
     private static (string FileName, string FilePath, bool FileExists, string FileUrl)? IdentifyMainFile(
@@ -207,6 +286,89 @@ public static class DuplicateLicenceIdentificationExtract
                 {
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
                     var otherFileImages = await ExtractPdfImagesAsync(otherFile.FilePath, pdfExtractorService);
+
+                    if (otherFileImages.Count == 0)
+                    {
+                        Console.WriteLine($"Warning: No images extracted from {otherFile.FileName}");
+                        continue;
+                    }
+
+                    // Compare images using hash comparison
+                    var isDuplicate = await CompareImagesAsync(mainFileImages, otherFileImages);
+
+                    Console.WriteLine($"Main file images: {mainFileImages.Count}, Other file images: {otherFileImages.Count}");
+
+                    if (isDuplicate)
+                    {
+                        results.Add(new LicenceDuplicateCsvLine
+                        {
+                            PermitNumber = permitNumber,
+                            FileName = mainFile.FileName,
+                            FileUrl = mainFile.FileUrl,
+                            DuplicateFileName = otherFile.FileName,
+                            DuplicateFileUrl = otherFile.FileUrl
+                        });
+
+                        Console.WriteLine($"✓ Duplicate found: {mainFile.FileName} == {otherFile.FileName}");
+                    }
+                    else
+                    {
+                        results.Add(new LicenceDuplicateCsvLine
+                        {
+                            PermitNumber = permitNumber,
+                            FileName = mainFile.FileName,
+                            FileUrl = mainFile.FileUrl,
+                            DuplicateFileName = string.Empty,
+                            DuplicateFileUrl = string.Empty,
+                        });
+                        Console.WriteLine($"✗ Not duplicate: {mainFile.FileName} != {otherFile.FileName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing main file {mainFile.FileName}: {ex.Message}");
+        }
+
+        return results;
+    }
+    
+    private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
+        LicenceDuplicateFinderInput mainFile,
+        List<LicenceDuplicateFinderInput> allFiles,
+        string permitNumber, PdfDataExtractorService pdfExtractorService)
+    {
+        var results = new List<LicenceDuplicateCsvLine>();
+
+        Console.WriteLine($"Comparing files for permit {permitNumber}");
+        Console.WriteLine($"Main file: {mainFile.FileName}");
+
+        try
+        {
+            // Extract images from main file
+            var mainFileImages = await ExtractPdfImagesAsync(Directory.GetFiles(KeyConfig.PdfFolderForDuplicates, mainFile.FileName).FirstOrDefault(), pdfExtractorService);
+
+            if (mainFileImages.Count == 0)
+            {
+                Console.WriteLine($"Warning: No images extracted from main file {mainFile.FileName}");
+                return results;
+            }
+
+            // Compare with other files
+            var otherFiles = allFiles.Where(f => f.FileName != mainFile.FileName).ToList();
+            Console.WriteLine($"Comparing with {otherFiles.Count} other files");
+
+            foreach (var otherFile in otherFiles)
+            {
+                try
+                {
+                    Console.WriteLine($"Comparing with: {otherFile.FileName}");
+                    var otherFileImages = await ExtractPdfImagesAsync(Directory.GetFiles(KeyConfig.PdfFolderForDuplicates, otherFile.FileName).FirstOrDefault(), pdfExtractorService);
 
                     if (otherFileImages.Count == 0)
                     {

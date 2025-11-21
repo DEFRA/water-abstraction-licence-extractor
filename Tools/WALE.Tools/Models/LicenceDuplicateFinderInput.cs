@@ -6,4 +6,6 @@ public class LicenceDuplicateFinderInput
     public string? FileName { get; set; }
     
     public string? FileUrl { get; set; }
+    
+    public string? FileSize { get; set; }
 }

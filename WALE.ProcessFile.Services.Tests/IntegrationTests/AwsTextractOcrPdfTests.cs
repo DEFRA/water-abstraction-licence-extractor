@@ -75,7 +75,7 @@ public class AwsTextractOcrPdfTests
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(35, records.Text!.Count);
+        Assert.Equal(15, records.Text!.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -105,7 +105,7 @@ public class AwsTextractOcrPdfTests
 
         Assert.NotNull(abstractionLimitsResult.SubResults);
         Assert.Single(abstractionLimitsResult.SubResults);
-        Assert.Equal(53, abstractionLimitsResult.LineNumber);
+        Assert.Equal(16, abstractionLimitsResult.LineNumber);
 
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(8, abstractionLimitsSection1.Text!.Count);

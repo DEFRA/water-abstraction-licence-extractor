@@ -132,6 +132,11 @@ public class AwsTextractOcrDataExtractorService(
             
             foreach (var block in analyzeDocumentResponse.Blocks)
             {
+                if (block.BlockType != BlockType.WORD)
+                {
+                    continue;
+                }
+                
                 if (block.Text == null)
                 {
                     continue;

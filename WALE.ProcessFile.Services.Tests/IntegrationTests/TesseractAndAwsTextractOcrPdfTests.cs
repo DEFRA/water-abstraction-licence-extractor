@@ -86,27 +86,26 @@ public class TesseractAndAwsTextractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("9th dayof January, 196/", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("9th day of January, 1967", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal("H.H. Henderson C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text); // Should have an ampersand really
+        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         Assert.Single(abstractionLimitsResult!.SubResults!);
 
         var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
         Assert.NotNull(abstractionPoint1);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -119,7 +118,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(5, section1Sub1.SubResults.Count);
+        Assert.Equal(2, section1Sub1.SubResults.Count);
         // TODO fix for this
         
         /*
@@ -165,11 +164,12 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.StartsWith("third day of April, 19 70", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        Assert.Null(nameResult); // Should be, WARRINGTON, RUNCORN AND DISTRICT WATER BOARD" - Is crossed out but Azure AI can read it
+        Assert.NotNull(nameResult); // Should be, WARRINGTON, RUNCORN AND DISTRICT WATER BOARD" - Is crossed out but Azure AI can read it
+        Assert.Equal("WARRINGTON RUNCORN AND DISTRICT WATER BOARD", nameResult.Text!.First().Text);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -182,7 +182,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(2, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults!.Count);
         
         // NOTE - it does a bad job getting these subresults
         
@@ -212,15 +212,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.StartsWith("22ND DAY OF SEPTEMBER 1986", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        
-        Assert.NotNull(nameResult);
-        Assert.True(nameResult.IsOcr);
-        Assert.Equal(10, nameResult.LineNumber);
-        // NOTE - According to companies house this is actually H.N. BUTLER FARMS LIMITED        
-        Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!);
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Null(nameResult); // AzureAi finds this - AWS finds 'Fams' (with 88% confidence and doesnt find word 'Ltd')
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         

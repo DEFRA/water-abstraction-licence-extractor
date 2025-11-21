@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models;
 

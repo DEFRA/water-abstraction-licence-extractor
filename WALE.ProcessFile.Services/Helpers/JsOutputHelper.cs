@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Interfaces;
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 

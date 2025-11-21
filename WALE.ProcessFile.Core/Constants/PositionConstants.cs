@@ -1,4 +1,6 @@
-namespace WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Core.Models;
+
+namespace WALE.ProcessFile.Core.Constants;
 
 public static class PositionConstants
 {

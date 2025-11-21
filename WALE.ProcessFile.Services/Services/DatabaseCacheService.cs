@@ -1,12 +1,10 @@
 using System.Text.Json;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Interfaces;
-using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;

@@ -2,6 +2,12 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class CompanyNameHelper
 {
+    public static bool MayBeInitials(string word)
+    {
+        return word.Length is 2
+               && word.All(char.IsUpper);
+    }
+    
     public static bool StartsWithCompanyOrPersonalPrefix(string? text)
     {
         if (text == null)
@@ -64,4 +70,6 @@ public static class CompanyNameHelper
         " and partners",
         " farms"
     ];
+    
+    public static readonly List<string> CompanyWords = ["trading as"];
 }

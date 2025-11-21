@@ -1,12 +1,12 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Configuration;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.AwsTextract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -56,19 +56,17 @@ public class AwsTextractOcrPdfTests
 
         // Assert
         Assert.Equal(11, resultList.Count);
-        // Tesseract struggles to read licence number in header and abstraction limits
-        // in this document. Azure AI does read them
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(18, records.Text!.Count);
+        Assert.Equal(35, records.Text!.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
 
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
+        Assert.Equal("14/46/03/0853", licenceNumber.Text?.FirstOrDefault()?.Text); // NOTE - Tesseract gets this wrong
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -78,7 +76,7 @@ public class AwsTextractOcrPdfTests
 
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
+        Assert.Equal("Mr T MC Davey", nameResult.Text?[0]?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
@@ -91,7 +89,7 @@ public class AwsTextractOcrPdfTests
 
         Assert.NotNull(abstractionLimitsResult.SubResults);
         Assert.Single(abstractionLimitsResult.SubResults);
-        Assert.Equal(16, abstractionLimitsResult.LineNumber);
+        Assert.Equal(53, abstractionLimitsResult.LineNumber);
 
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(8, abstractionLimitsSection1.Text!.Count);

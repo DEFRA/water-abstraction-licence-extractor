@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
 using WeCantSpell.Hunspell;
 
 namespace WALE.ProcessFile.Core.Helpers;

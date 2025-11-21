@@ -1,8 +1,6 @@
-using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Services.Formats;
 using WeCantSpell.Hunspell;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class AutoCorrectHelper
 {
@@ -12,7 +10,7 @@ public static class AutoCorrectHelper
         bool checkDictionary)
     {
         if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText)
-            || CompanyName.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
+            || CompanyNameHelper.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
         {
             return lineText;
         }
@@ -65,7 +63,7 @@ public static class AutoCorrectHelper
             
             if (words.Count >= 2)
             {
-                if (CompanyName.MayBeInitials(word))
+                if (CompanyNameHelper.MayBeInitials(word))
                 {
                     newWords.Add(word);                       
                     continue;

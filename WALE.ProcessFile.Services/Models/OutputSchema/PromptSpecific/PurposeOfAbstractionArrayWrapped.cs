@@ -1,6 +1,6 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 

@@ -1,5 +1,3 @@
-using WALE.ProcessFile.Models;
-
 namespace WALE.ProcessFile.Core.Models;
 
 public class TextAndLabel

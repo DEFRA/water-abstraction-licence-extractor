@@ -1,4 +1,6 @@
-namespace WALE.ProcessFile.Models.Configuration;
+using WALE.ProcessFile.Core.Models;
+
+namespace WALE.ProcessFile.Core.Configuration;
 
 public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,

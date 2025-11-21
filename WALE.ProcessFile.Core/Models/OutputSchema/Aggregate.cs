@@ -1,7 +1,7 @@
 using System.Text;
-using WALE.ProcessFile.Models.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 
-namespace WALE.ProcessFile.Models.OutputSchema;
+namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class Aggregate : AbstractionLimitGroup
 {

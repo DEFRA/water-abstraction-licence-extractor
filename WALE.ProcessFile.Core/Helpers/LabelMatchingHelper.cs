@@ -1,8 +1,7 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
 
 namespace WALE.ProcessFile.Core.Helpers;
 

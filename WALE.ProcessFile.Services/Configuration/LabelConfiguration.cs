@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;

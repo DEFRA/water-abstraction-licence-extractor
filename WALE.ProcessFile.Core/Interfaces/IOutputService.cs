@@ -1,6 +1,7 @@
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Models.Interfaces;
+namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IOutputService
 {

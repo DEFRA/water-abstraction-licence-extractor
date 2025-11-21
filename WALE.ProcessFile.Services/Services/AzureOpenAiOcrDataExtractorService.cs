@@ -2,10 +2,10 @@ using System.ClientModel;
 using Azure.AI.OpenAI;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 

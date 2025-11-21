@@ -1,8 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
@@ -10,8 +9,6 @@ namespace WALE.ProcessFile.Services.Formats;
 public static class CompanyName
 {
     public const string Constant = "CompanyName";
-
-    public static readonly List<string> CompanyWords = ["trading as"];
 
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
@@ -249,12 +246,6 @@ public static class CompanyName
         return false;
     }
     
-    public static bool MayBeInitials(string word)
-    {
-        return word.Length is 2
-               && word.All(char.IsUpper);
-    }
-    
     private static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
@@ -274,7 +265,7 @@ public static class CompanyName
             }
         }
         
-        return CompanyWords
+        return CompanyNameHelper.CompanyWords
             .Any(companyWord => text.Contains(companyWord,
                 StringComparison.InvariantCultureIgnoreCase));
     }

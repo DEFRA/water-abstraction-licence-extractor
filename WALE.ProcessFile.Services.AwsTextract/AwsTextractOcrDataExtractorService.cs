@@ -3,9 +3,9 @@ using Amazon;
 using Amazon.Textract;
 using Amazon.Textract.Model;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Interfaces;
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.AwsTextract;
 
@@ -94,7 +94,8 @@ public class AwsTextractOcrDataExtractorService(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,
-                    request.ProcessRunId);
+                    request.ProcessRunId,
+                    FileHelper.GetImageExtension(imageReference));
             }
 
             try

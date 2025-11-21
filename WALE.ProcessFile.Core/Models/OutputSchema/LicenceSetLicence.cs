@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Models.OutputSchema;
+namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class LicenceSetLicence
 {

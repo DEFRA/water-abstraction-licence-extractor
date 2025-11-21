@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Models.Enums.OutputSchema;
+namespace WALE.ProcessFile.Core.Enums.OutputSchema;
 
 public enum SubType
 {

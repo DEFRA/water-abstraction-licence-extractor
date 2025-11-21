@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Models.Enums;
+namespace WALE.ProcessFile.Core.Enums;
 
 public enum MultipleBehaviour
 {

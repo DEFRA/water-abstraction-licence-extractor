@@ -1,14 +1,12 @@
 using WALE.ProcessFile.Core.Helpers;
 using System.Text.RegularExpressions;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Configuration;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums.OutputSchema;
-using WALE.ProcessFile.Models.Interfaces;
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Helpers;
-using LabelGroupResult = WALE.ProcessFile.Models.LabelGroupResult;
 
 namespace WALE.ProcessFile.Services.Converters;
 

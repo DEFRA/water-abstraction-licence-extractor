@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Configuration;
-using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;

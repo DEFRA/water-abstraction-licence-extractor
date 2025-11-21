@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Models.Interfaces;
+namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface INoOcrPdfImageService
 {

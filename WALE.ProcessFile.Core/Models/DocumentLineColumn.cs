@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Core.Constants;
 
-namespace WALE.ProcessFile.Models;
+namespace WALE.ProcessFile.Core.Models;
 
 public class DocumentLineColumn(string text, List<DocumentLineWord> words)
 {

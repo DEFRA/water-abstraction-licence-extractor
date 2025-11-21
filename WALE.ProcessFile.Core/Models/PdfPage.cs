@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WALE.ProcessFile.Models;
+namespace WALE.ProcessFile.Core.Models;
 
 public class PdfPage
 {

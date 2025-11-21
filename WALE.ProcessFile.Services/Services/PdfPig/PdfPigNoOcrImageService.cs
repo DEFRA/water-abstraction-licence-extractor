@@ -1,6 +1,6 @@
 using System.IO.Compression;
 using UglyToad.PdfPig.Content;
-using WALE.ProcessFile.Models.Interfaces;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Services.Services.PdfPig;
 

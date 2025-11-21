@@ -1,7 +1,7 @@
-using WALE.ProcessFile.Models.Enums;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
+using WALE.ProcessFile.Core.Enums;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
-namespace WALE.ProcessFile.Models;
+namespace WALE.ProcessFile.Core.Models;
 
 public class LabelGroupResult
 {

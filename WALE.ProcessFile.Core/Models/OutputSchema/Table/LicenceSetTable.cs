@@ -1,6 +1,4 @@
-using WALE.ProcessFile.Models.Enums.OutputSchema;
-
-namespace WALE.ProcessFile.Models.OutputSchema.Table;
+namespace WALE.ProcessFile.Core.Models.OutputSchema.Table;
 
 public class LicenceSetTable
 {

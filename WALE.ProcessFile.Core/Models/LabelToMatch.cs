@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Enums;
 
-namespace WALE.ProcessFile.Models;
+namespace WALE.ProcessFile.Core.Models;
 
 public class LabelToMatch
 {

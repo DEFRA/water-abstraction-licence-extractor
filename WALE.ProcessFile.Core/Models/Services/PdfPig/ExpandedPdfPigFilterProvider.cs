@@ -2,7 +2,7 @@ using UglyToad.PdfPig.Filters;
 using UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2;
 using UglyToad.PdfPig.Tokens;
 
-namespace WALE.ProcessFile.Models.Services.PdfPig;
+namespace WALE.ProcessFile.Core.Models.Services.PdfPig;
 
 public sealed class ExpandedPdfPigFilterProvider : BaseFilterProvider
 {

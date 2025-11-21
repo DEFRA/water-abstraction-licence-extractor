@@ -9,8 +9,6 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static partial class DataHelper
 {
-    public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");
-
     public static List<DocumentLine> RemoveExcludesAndNotContains(
         LabelToMatch label,
         IReadOnlyList<DocumentLine>? betweenText,
@@ -219,48 +217,59 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
-    public static bool IsCorruptedText(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
     {
         if (words == null)
         {
             return false;
         }
         
+        var digitsCount = 0;
         var totalConfidence = 0.0;
-        const int minConfidence = 40;
+        const int minConfidence = 38;
         
         foreach (var word in words)
         {
+            digitsCount += word?.Text.Count(char.IsDigit) ?? 0;
+            
             if (word?.OcrConfidence == null)
             {
                 continue;
             }
             
             var confidence = word.OcrConfidence.Value;
-
+            
             if (confidence < minConfidence
                 && word.Text.Length >= 5
-                && Dictionary.Check(word.Text))
+                && (AutoCorrectHelper.CustomDictionary.Check(word.Text) || AutoCorrectHelper.Dictionary.Check(word.Text)))
             {
                 confidence = 100.0;
             }
                 
-            totalConfidence += confidence;
+            totalConfidence += confidence * word.Text.Length;
         }
+
+        var lineLength = words.Sum(w => w?.Text.Length);
+        var averageConfidence = totalConfidence / lineLength;
+        var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
         
-        var averageConfidence = totalConfidence / words.Count;
+        var lineLengthWithoutDots = words.Sum(w => w?.Text.Count(c => c != '.'));
+        var mainlyDigits = ((100.0 / lineLengthWithoutDots) * digitsCount) >= 60;
         
-        if (averageConfidence is > 0 and < minConfidence)
+        if (averageConfidenceBelowThreshold && !mainlyDigits)
         {
             return true;
         }
         
-        return IsCorruptedText(
+        var isCorrupt = IsCorruptedText(
             string.Join(' ', words.Select(w => w?.Text)),
+            true,
             unacceptableIncorrectValue);
+        
+        return isCorrupt;
     }
 
-    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedText(string? line, bool isPartialChunk = false, double unacceptableIncorrectValue = 50.01)
     {
         if (string.IsNullOrEmpty(line))
         {
@@ -298,6 +307,7 @@ public static partial class DataHelper
                 && ch != ')'
                 && ch != ','
                 && ch != '"'
+                && ch != '‘'
                 && ch != '\''
                 && ch != '-'
                 && ch != ':'
@@ -362,7 +372,7 @@ public static partial class DataHelper
         var countOfVeryShortWordsOrSymbols = wordsSplit.Count(word => word.Length <= 2);
         var percentageOfShortWords = countOfVeryShortWordsOrSymbols * percentagePerWord;
         
-        const double unacceptableShortWordsValue = 25.0;
+        const double unacceptableShortWordsValue = 30.0;
         var manyAndMajorityVeryShortWords = countOfVeryShortWordsOrSymbols > 3
                 && percentageOfShortWords >= unacceptableShortWordsValue;
 
@@ -373,6 +383,14 @@ public static partial class DataHelper
         
         var suspectedIncorrectWords = wordsSplit.Where(word =>
         {
+            if (word.Equals("th", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("rd", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("nd", StringComparison.InvariantCultureIgnoreCase)
+                || word.Equals("st", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return false;
+            }
+            
             var wordWithoutPunctuation = new string(word
                 .Where(ch =>
                     ch != '"'
@@ -385,7 +403,8 @@ public static partial class DataHelper
 
             return !word.Contains('/')
                 && !double.TryParse(PotentialNumber(word), out _)
-                && !Dictionary.Check(wordWithoutPunctuation);
+                && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
+                && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation);
         }).ToList();
 
         var countOfSuspectedIncorrectWords = suspectedIncorrectWords.Count;

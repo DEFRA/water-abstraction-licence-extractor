@@ -126,7 +126,8 @@ public class AzureAiVisionOcrDataExtractorService(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,
-                    request.ProcessRunId);
+                    request.ProcessRunId,
+                   FileHelper.GetImageExtension(imageReference));
 
                 await using var stream = new MemoryStream(bytes);
                 textHeaders = await _client.ReadInStreamAsync(stream);

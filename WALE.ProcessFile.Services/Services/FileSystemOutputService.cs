@@ -71,17 +71,24 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         return -1;
     }
-    
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+
+    public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
 
         var internalJson = JsonHelper.GetAsString(matchesResult);
         
-        return File.WriteAllTextAsync(
+        await File.WriteAllTextAsync(
             $"{outputFolder}/{folderName}/internal.jsonp",
             $"var data = {internalJson}");
+
+        return -1;
     }
 
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)

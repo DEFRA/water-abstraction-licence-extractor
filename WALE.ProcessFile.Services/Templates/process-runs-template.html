@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <title>Water licences - Process runs</title>
+    <script>
+    function loadList() {
+        let ul = document.getElementsByTagName("ul")[0];
+        let htmlSb = [];
+        
+        for (let i = 0; i < data.length; i++) {
+            let item = data[i];
+            htmlSb.push(item);
+        }
+        
+        ul.innerHTML = htmlSb.join('');
+    }
+    </script>
+</head>
+<body>
+    <ul></ul>
+    <script src="[PROCESS_RUNS_DATA_PATH]" onerror="alert('API not running (or process runs data path incorrect)')" onload="loadList()"></script>
+</body>
+</html>

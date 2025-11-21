@@ -14,11 +14,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class OcrDatabaseTests
 {
-    private static readonly IDatabaseReadService ReadService = new SqlSeverReadServiceService(TestConfig.SqlConnectionString);
-    private static readonly IDatabaseAddService AddService = new SqlSeverAddServiceService(TestConfig.SqlConnectionString);       
+    private static readonly IDatabaseReadService ReadService = new SqlSeverReadService(TestConfig.SqlConnectionString);
+    private static readonly IDatabaseWriteService WriteService = new SqlSeverWriteService(TestConfig.SqlConnectionString);       
     
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, AddService);
-    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, AddService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

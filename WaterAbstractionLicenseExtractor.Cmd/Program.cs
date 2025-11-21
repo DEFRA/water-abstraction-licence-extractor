@@ -43,6 +43,7 @@ async Task ProgramAsync()
         outputFolder,
         services.LoadAiJs,
         services.ListDataPath!,
+        services.ProcessRunsDataPath!,
         services.InternalDataPath!,
         services.LicenceDataPath!,
         services.LicenceSetsDataPath!,
@@ -261,6 +262,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("CacheFolder");
     var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
         ?? throw new NullReferenceException("ListDataPath");
+    var processRunsDataPath = Environment.GetEnvironmentVariable("ProcessRunsDataPath")
+        ?? throw new NullReferenceException("ProcessRunsDataPath");
     var internalDataPath = Environment.GetEnvironmentVariable("InternalDataPath")
         ?? throw new NullReferenceException("InternalDataPath");
     var licenceDataPath = Environment.GetEnvironmentVariable("LicenceDataPath")
@@ -274,8 +277,8 @@ ConfiguredServices ConfigureServices()
     var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
         ?? throw new NullReferenceException("SqlConnectionString");
     
-    var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
-    var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    var databaseReadService = new SqlSeverReadService(sqlConnectionString);
+    var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
@@ -335,6 +338,7 @@ ConfiguredServices ConfigureServices()
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
         ListDataPath = listDataPath,
+        ProcessRunsDataPath = processRunsDataPath,
         InternalDataPath = internalDataPath,
         LicenceDataPath = licenceDataPath,
         LicenceSetsDataPath = licenceSetsDataPath,
@@ -380,8 +384,24 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             lookupConfig,
             previouslyParsedPaths,
             processRun.ProcessRunId);
-        
-        await outputService.SaveMatchResultAsync(matchesFull, pdfFilePath, processRun.ProcessRunId);
+
+        var matchResultId = await outputService.SaveMatchResultAsync(
+            matchesFull,
+            pdfFilePath,
+            processRun.ProcessRunId);
+
+        if (matchesFull.Matches != null)
+        {
+            foreach (var match in matchesFull.Matches)
+            {
+                await outputService.SaveMatchAsync(
+                    matchResultId,
+                    match.MatchedLabel?.Name,
+                    match.LabelGroupName,
+                    match);
+            }
+        }
+
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -543,6 +563,7 @@ async Task MoveReportHtmlFilesAsync(
     string outputFolder,
     bool loadAiJs,
     string listDataPath,
+    string processRunsPath,
     string internalDataPath,
     string licenceDataPath,
     string licenceSetsDataPath,
@@ -579,7 +600,15 @@ async Task MoveReportHtmlFilesAsync(
     
     File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
 
-    var indexPath = $"{outputFolder}index.html";
+    var processRunSelectorPath = $"{outputFolder}index.html";
+    File.Move($"{outputFolder}process-runs-template.html", processRunSelectorPath, true);
+    
+    var processRunsHtml = await File.ReadAllTextAsync(processRunSelectorPath);
+    processRunsHtml = processRunsHtml.Replace("[PROCESS_RUNS_DATA_PATH]", processRunsPath);
+    
+    await File.WriteAllTextAsync(processRunSelectorPath, processRunsHtml);
+    
+    var indexPath = $"{outputFolder}list.html";
     File.Move($"{outputFolder}list-template.html", indexPath, true);
 
     var indexHtml = await File.ReadAllTextAsync(indexPath);
@@ -631,7 +660,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         || x.Contains("11761845")
         ).ToArray();*/
 
-    pdfFilePaths = pdfFilePaths.Where(x => 
+    /*pdfFilePaths = pdfFilePaths.Where(x => 
         //x.Contains("12303008")
             
         x.Contains("12100004")
@@ -656,9 +685,9 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303008") // Not found
         ||x.Contains("12303075")
         
-    ).ToList();
-    //pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22723432")).ToList();
+    ).ToList();*/
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22632422__2-26-32-422 6937642")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
     
     return pdfFilePaths.ToList();
 }

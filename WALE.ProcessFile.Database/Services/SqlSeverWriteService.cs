@@ -5,7 +5,7 @@ using WALE.ProcessFile.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.Services;
 
-public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddService
+public class SqlSeverWriteService(string connectionString) : IDatabaseWriteService
 {
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
@@ -53,19 +53,34 @@ public class SqlSeverAddServiceService(string connectionString) : IDatabaseAddSe
         return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
-    public async Task SaveMatchResultAsync(string matchesResult, string pdfFilePath, int processRunId)
+    public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "INSERT INTO MatchesResult (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc)";
+        const string sql = "INSERT INTO Match (MatchesResultId, LabelName, LabelGroupName, Data) VALUES (@MatchesResultId, @LabelName, @LabelGroupName, @Data)";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@MatchesResultId", matchesResultId);
+        command.Parameters.AddWithValue("@LabelName", labelName?? (object?)DBNull.Value);
+        command.Parameters.AddWithValue("@LabelGroupName", labelGroupName?? (object?)DBNull.Value);
+        command.Parameters.AddWithValue("@Data", data);
+        
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<int> SaveMatchesResultAsync(string matchesResult, string pdfFilePath, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        
+        const string sql = "INSERT INTO MatchesResult (Filename, Data, ProcessRunId, DateTimeUtc) VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc); SELECT SCOPE_IDENTITY()";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", pdfFilePath);
         command.Parameters.AddWithValue("@Data", matchesResult);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         command.Parameters.AddWithValue("@DateTimeUtc", DateTime.UtcNow);
         
-        await command.ExecuteNonQueryAsync();
+        return (int)(decimal)(await command.ExecuteScalarAsync())!;
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data, int processRunId)

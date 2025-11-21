@@ -1,4 +1,4 @@
-window.onload = function () {
+function loadList() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
     let bodyEle = document.getElementsByTagName("body")[0];
@@ -15,7 +15,7 @@ window.onload = function () {
 
         for (let i = 0; i < data.length; i++) {
             let item = data[i];
-            loadScript(item.filename, bodyEle);
+            loadAiScript(item.filename, bodyEle);
         }
     } else {
         window.loadedOrErrored = data.length;
@@ -90,7 +90,7 @@ function showDashesInLicenceSetsWhereNeeded() {
     }
 }
 
-function loadScript(filename, bodyEle) {
+function loadAiScript(filename, bodyEle) {
     let script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = filename + '/ai-data.jsonp';
@@ -104,6 +104,18 @@ function loadScript(filename, bodyEle) {
     }
 
     bodyEle.appendChild(script);
+}
+
+function loadScript(file, callback) {
+    const newScript = document.createElement('script');
+    newScript.setAttribute('src', file);
+    newScript.setAttribute('type', 'text/javascript');
+    newScript.setAttribute('async', 'true');
+
+    newScript.onload = () => callback();
+    newScript.onerror = () => console.error(`Error loading script: ${file}`);
+
+    document.head.appendChild(newScript);
 }
 
 function resetFilters(except) {

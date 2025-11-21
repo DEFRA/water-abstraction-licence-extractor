@@ -26,6 +26,8 @@ public class ConfiguredServices
     
     public string? ListDataPath { get; set; }
     
+    public string? ProcessRunsDataPath { get; set; }
+    
     public string? InternalDataPath { get; set; }
     
     public string? LicenceDataPath { get; set; }

@@ -13,8 +13,8 @@ namespace WALE.Tools;
 public static class GenerateLinkedLicencesCsv
 {
     private static readonly IOutputService OutputService = new DatabaseOutputService(
-        new SqlSeverReadServiceService(KeyConfig.SqlConnectionString),
-        new SqlSeverAddServiceService(KeyConfig.SqlConnectionString));
+        new SqlSeverReadService(KeyConfig.SqlConnectionString),
+        new SqlSeverWriteService(KeyConfig.SqlConnectionString));
     
     public static async Task GenerateCsvAsync()
     {

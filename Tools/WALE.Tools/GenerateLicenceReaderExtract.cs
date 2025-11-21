@@ -2,6 +2,8 @@ using System.Collections;
 using System.Globalization;
 using CsvHelper;
 using Tesseract;
+using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
@@ -21,12 +23,27 @@ public static class GenerateLicenceReaderExtract
 
     public static async Task GenerateLicenceReaderExtractAsync()
     {
+        var sqlConnectionString = KeyConfig.SqlConnectionString;
+    
+        var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
+        var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                new AzureAiVisionOcrDataExtractorService(
+                    KeyConfig.AiVisionEndpoint,
+                    KeyConfig.AiVisionKey,
+                    cacheService,
+                    outputService)
             },
+            cacheService,
+            outputService,
             KeyConfig.PdfFolder);
 
         var data = await GetLicenceReaderDataAsync(pdfDataExtractor);
@@ -53,16 +70,15 @@ public static class GenerateLicenceReaderExtract
 
             var configuration = new LookupConfiguration(
                 labels,
-                FileLicenceMapping,
-                OutputFolder,
-                CacheFolder);
+                FileLicenceMapping);
 
             Console.WriteLine($"Configuration created, calling PDF extractor...");
 
             var result = await pdfDataExtractor.GetMatchesAsync(
                 pdfFolder + fileName,
                 configuration,
-                [pdfFolder + fileName]);
+                [pdfFolder + fileName],
+                0);
             Console.WriteLine($"PDF extraction completed successfully for {fileName}");
             return result;
         }
@@ -105,7 +121,7 @@ public static class GenerateLicenceReaderExtract
 
                 // Extract licence number and date of issue from matches
                 var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
-                var dateOfIssue = SharedHelper.ExtractDateOfIssue(internalJson);
+                var dateOfIssue =  SharedHelper.ExtractDateOfIssue(internalJson);
 
                 // Extract permit number from filename (everything before first underscore)
                 var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);

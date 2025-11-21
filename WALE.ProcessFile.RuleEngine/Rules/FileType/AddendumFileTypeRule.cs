@@ -1,5 +1,7 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
+using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 
@@ -11,21 +13,18 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
     public string RuleName => "AddendumFileType";
     public int Priority => 100;
 
-    private readonly string[] _addendumTerms = { "Please keep this addendum with the", "CHANGE OF" };
+    private readonly string[] _addendumTerms = { "Please keep this addendum with" };
 
-    public bool CanApply(string content)
+    public bool CanApply(MatchesResult content)
     {
-        if (string.IsNullOrWhiteSpace(content))
-            return false;
-
-        return _addendumTerms.Any(term => 
-            content.Contains(term, StringComparison.OrdinalIgnoreCase));
+        return content.Matches?
+            .Where(m => m.LabelGroupName == "Addendum")?.Any() == true;
     }
 
-    public FileTypeResult Apply(string content)
+    public FileTypeResult Apply(MatchesResult content)
     {
-        var matchedTerms = _addendumTerms
-            .Where(term => content.Contains(term, StringComparison.OrdinalIgnoreCase))
+        var matchedTerms = content.Matches?
+            .Where(m => m.LabelGroupName == "Addendum")
             .ToList();
 
         return new FileTypeResult
@@ -33,11 +32,12 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
             FileType = "Addendum",
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
-            MatchedTerms = matchedTerms,
+            MatchedTerms = matchedTerms?.SelectMany(m => m.Text?.Select(t => t.Text))?.ToList(),
+            DateOfIssue = SharedHelper.DateFormatConsistent(SharedHelper.ExtractDateOfIssue(content)),
+            LicenceNumber = SharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>
             {
-                ["MatchCount"] = matchedTerms.Count,
-                ["ContentLength"] = content.Length
+                ["MatchCount"] = matchedTerms?.Count ?? 0
             }
         };
     }

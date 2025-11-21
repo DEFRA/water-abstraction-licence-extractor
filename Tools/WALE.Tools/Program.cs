@@ -14,9 +14,6 @@ switch (workflow)
     case "DuplicateLicenceIdentificationExtract":
         await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync();
         break;
-    case "PdfContentReaderExtract":
-        await PdfContentReaderExtract.GeneratePdfContentReaderExtractAsync();
-        break;
     case "FileTypeIdentificationExtract":
         await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
         break;

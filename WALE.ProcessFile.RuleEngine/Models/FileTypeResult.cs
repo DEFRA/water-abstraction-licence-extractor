@@ -29,4 +29,8 @@ public class FileTypeResult
     /// The matched terms that led to this identification
     /// </summary>
     public List<string> MatchedTerms { get; set; } = new();
+    
+    public string? DateOfIssue { get; set; } = string.Empty;
+    
+    public string? LicenceNumber { get; set; } = string.Empty;
 }

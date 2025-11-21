@@ -23,9 +23,5 @@ public interface IPdfDataExtractorService
         List<string> previouslyParsedPaths,
         int processRunId);
 
-    Task<MatchesResult> GetPagesAsync(
-        string pdfFilePath,
-        LookupConfiguration configuration);
-    
     public void Dispose();
 }

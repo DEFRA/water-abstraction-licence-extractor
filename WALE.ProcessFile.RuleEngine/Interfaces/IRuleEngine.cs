@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Models;
+
 namespace WALE.ProcessFile.RuleEngine.Interfaces;
 
 /// <summary>
@@ -25,14 +27,14 @@ public interface IRuleEngine<T>
     /// </summary>
     /// <param name="content">The content to evaluate</param>
     /// <returns>The result from the first applicable rule, or default(T) if no rules apply</returns>
-    T? Evaluate(string content);
+    T? Evaluate(MatchesResult content);
 
     /// <summary>
     /// Evaluates content against all rules and returns results from all applicable rules
     /// </summary>
     /// <param name="content">The content to evaluate</param>
     /// <returns>A collection of results from all applicable rules</returns>
-    IEnumerable<T> EvaluateAll(string content);
+    IEnumerable<T> EvaluateAll(MatchesResult content);
 
     /// <summary>
     /// Gets all registered rules

@@ -1,6 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using Tesseract;
+using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
@@ -19,7 +20,6 @@ namespace WALE.Tools;
 public static class FileTypeIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly string CacheFolder = KeyConfig.CacheFolder;
     private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
 
     /// <summary>
@@ -28,13 +28,22 @@ public static class FileTypeIdentificationExtract
     public static async Task GenerateFileTypeIdentificationAsync()
     {
         Console.WriteLine("Starting file type identification...");
-
+        var sqlConnectionString = KeyConfig.SqlConnectionString;
+    
+        var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
+        var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                
             },
+            cacheService, 
+            outputService,
             KeyConfig.PdfFolder);
 
         var fileTypeService = new FileTypeIdentifierService(pdfDataExtractor);
@@ -45,9 +54,7 @@ public static class FileTypeIdentificationExtract
 
         var configuration = new LookupConfiguration(
             labels,
-            FileLicenceMapping,
-            OutputFolder,
-            CacheFolder);
+            FileLicenceMapping);
 
         var results = await fileTypeService.ProcessDirectoryAsync(KeyConfig.PdfFolder, configuration);
         var csvData = new List<FileTypeIdentificationResult>();
@@ -56,21 +63,6 @@ public static class FileTypeIdentificationExtract
         {
             var filePath = result.Key;
             var fileTypeResult = result.Value;
-
-            // Extract date of issue for PDF files
-            string? dateOfIssue = null;
-            string? licenceNumber = null;
-            try
-            {
-                var matchesResult = await pdfDataExtractor.GetMatchesAsync(filePath, configuration, new List<string>());
-                dateOfIssue = SharedHelper.ExtractDateOfIssue(matchesResult);
-                licenceNumber = SharedHelper.ExtractLicenceNumber(matchesResult);
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error extracting date from {filePath}: {ex.Message}");
-            }
 
             csvData.Add(new FileTypeIdentificationResult
             {
@@ -81,9 +73,9 @@ public static class FileTypeIdentificationExtract
                 Confidence = fileTypeResult?.Confidence ?? 0.0,
                 IdentifiedByRule = fileTypeResult?.IdentifiedByRule ?? "N/A",
                 MatchedTerms = fileTypeResult?.MatchedTerms != null ? string.Join("; ", fileTypeResult.MatchedTerms) : "",
-                DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue),
+                DateOfIssue = fileTypeResult?.DateOfIssue,
                 FileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0,
-                LicenceNumber = licenceNumber,
+                LicenceNumber = fileTypeResult?.LicenceNumber,
                 LastModified = File.Exists(filePath) ? File.GetLastWriteTime(filePath) : DateTime.MinValue
             });
         }

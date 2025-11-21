@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using ClosedXML.Excel;
 using CsvHelper;
 using Tesseract;
+using WALE.ProcessFile.Database.Services;
 using WALE.Tools.Models;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Configuration;
@@ -17,17 +18,28 @@ public static class DuplicateLicenceIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
     private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
-    private static readonly IPdfDataExtractorService PdfExtractorService = new PdfDataExtractorService(
-    new PdfPigNoOcrDataExtractorService(),
-    new List<IOcrDataExtractorService>
-    {
-        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto)
-    },
-    KeyConfig.PdfFolder);
+    
     private static readonly string CacheFolder = KeyConfig.CacheFolder;
 
     public static async Task GenerateDuplicateLicenceIdentificationExtractAsync()
     {
+        var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
+                                  ?? throw new NullReferenceException("SqlConnectionString");
+    
+        var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
+        var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+    
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var pdfExtractorService = new PdfDataExtractorService(
+            new PdfPigNoOcrDataExtractorService(),
+            new List<IOcrDataExtractorService>
+            {
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService)
+            },
+            cacheService,
+            outputService,
+            KeyConfig.PdfFolder);
         // Step 1: Get the input of processing by reading DuplicateResults_Extract.xlsx from KeyConfig.PdfFolderForDuplicates into a list of LicenceDuplicateFinderInput objects
         var duplicateInputs = await ReadDuplicateResultsFromExcelAsync();
         
@@ -53,7 +65,7 @@ public static class DuplicateLicenceIdentificationExtract
             // Step 6 - Process the main file and compare with other files for duplicate analysis
             if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
             {
-                var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key);
+                var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key, pdfExtractorService);
                 csvResults.AddRange(duplicateResults);
             }
         }
@@ -167,7 +179,7 @@ public static class DuplicateLicenceIdentificationExtract
     private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
         (string FileName, string FilePath, bool FileExists, string FileUrl) mainFile,
         List<(string FileName, string FilePath, bool FileExists, string FileUrl)> allFiles,
-        string permitNumber)
+        string permitNumber, PdfDataExtractorService pdfExtractorService)
     {
         var results = new List<LicenceDuplicateCsvLine>();
 
@@ -177,7 +189,7 @@ public static class DuplicateLicenceIdentificationExtract
         try
         {
             // Extract images from main file
-            var mainFileImages = await ExtractPdfImagesAsync(mainFile.FilePath);
+            var mainFileImages = await ExtractPdfImagesAsync(mainFile.FilePath, pdfExtractorService);
 
             if (mainFileImages.Count == 0)
             {
@@ -194,7 +206,7 @@ public static class DuplicateLicenceIdentificationExtract
                 try
                 {
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
-                    var otherFileImages = await ExtractPdfImagesAsync(otherFile.FilePath);
+                    var otherFileImages = await ExtractPdfImagesAsync(otherFile.FilePath, pdfExtractorService);
 
                     if (otherFileImages.Count == 0)
                     {
@@ -247,8 +259,8 @@ public static class DuplicateLicenceIdentificationExtract
         return results;
     }
 
-    private static async Task<List<string>> ExtractPdfImagesAsync(string pdfFilePath)
-    {
+    private static async Task<List<string>> ExtractPdfImagesAsync(string pdfFilePath, PdfDataExtractorService PdfExtractorService)
+    { 
         try
         {
             Console.WriteLine($"Extracting images from: {pdfFilePath}");
@@ -257,11 +269,9 @@ public static class DuplicateLicenceIdentificationExtract
             // Create minimal configuration for image extraction
             var configuration = new LookupConfiguration(
                 labels,
-                FileLicenceMapping,
-                OutputFolder,
-                CacheFolder);
+                FileLicenceMapping);
 
-            var result = await PdfExtractorService.GetPagesAsync(pdfFilePath, configuration);
+            var result = await PdfExtractorService.GetMatchesAsync(pdfFilePath, configuration, new List<string>(), 0);
 
             if (result?.Pages != null && result.Pages.Any())
             {

@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.Enums;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
@@ -13,7 +13,7 @@ public static class LicenceReaderConfiguration
             ("Company", GetCompanyNameLabels()),
             ("LicenceNumber", GetLicenceNumberLabels()),
             ("DateOfIssue", GetDateOfIssueLabels()),
-            ("Headers", GetHeaderLabels()),
+            ("Licence Header", GetHeaderLabels()),
             ("Addendum", GetAddendumLabels()),
         ];
     }
@@ -23,11 +23,11 @@ public static class LicenceReaderConfiguration
         [
             new LabelToMatch
             {
-                Name = "Issuer",
+                Name = "Addendum",
                 Format = "Text",
-                TextStart =
+                Text = 
                 [
-                    new("this addendum"),
+                    new("Please keep this addendum with"),
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -43,12 +43,14 @@ public static class LicenceReaderConfiguration
         [
             new LabelToMatch
             {
-                Name = "Issuer",
+                Name = "Licence Header",
                 Format = "Text",
                 TextStart =
                 [
-                    new("CHANGE OF") { LineMustStartWith = true },
-                    new("SCHEDULE OF CONDITIONS") { LineMustStartWith = true },
+                    new("SCHEDULE OF CONDITIONS"),
+                    new("Licence of right to abstract water"),
+                    new("Licence [of right] to abstract water"),
+                    new("Licence to abstract water")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -85,7 +87,28 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("DATED THIS") { LineMustStartWith = true }
+                    new("'DATED THIS") { ColumnMustStartWith = true },
+                    new("DATED THIS") { ColumnMustStartWith = true },
+                    new("DATE THIS") { ColumnMustStartWith = true }
+                ],
+                Remove = [
+                    new("DATED THIS"),
+                    new("DATE THIS")
+                ],
+                MustContain = [
+                    new("January"),
+                    new("February"),
+                    new("March"),
+                    new("April"),
+                    new("May"),
+                    new("Nay"), //Misreading
+                    new("June"),
+                    new("July"),
+                    new("August"),
+                    new("September"),
+                    new("October"),
+                    new("November"),
+                    new("December")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

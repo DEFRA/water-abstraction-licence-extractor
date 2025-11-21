@@ -1,5 +1,7 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
+using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 
@@ -10,22 +12,16 @@ public class LicenceFileTypeRule : IRule<FileTypeResult>
 {
     public string RuleName => "LicenceFileType";
     public int Priority => 100;
-
-    private readonly string[] _scheduleTerms = { "SCHEDULE OF CONDITIONS" };
-
-    public bool CanApply(string content)
+    public bool CanApply(MatchesResult content)
     {
-        if (string.IsNullOrWhiteSpace(content))
-            return false;
-
-        return _scheduleTerms.Any(term => 
-            content.Contains(term, StringComparison.OrdinalIgnoreCase));
+        return content.Matches?
+            .Where(m => m.LabelGroupName == "Licence Header")?.Any() == true;
     }
 
-    public FileTypeResult Apply(string content)
+    public FileTypeResult Apply(MatchesResult content)
     {
-        var matchedTerms = _scheduleTerms
-            .Where(term => content.Contains(term, StringComparison.OrdinalIgnoreCase))
+        var matchedTerms = content.Matches?
+            .Where(m => m.LabelGroupName == "Licence Header")
             .ToList();
 
         return new FileTypeResult
@@ -33,11 +29,12 @@ public class LicenceFileTypeRule : IRule<FileTypeResult>
             FileType = "Licence",
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
-            MatchedTerms = matchedTerms,
+            MatchedTerms = matchedTerms?.SelectMany(m => m.Text.Select(t => t.Text))?.ToList(),
+            DateOfIssue = SharedHelper.DateFormatConsistent(SharedHelper.ExtractDateOfIssue(content)),
+            LicenceNumber = SharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>
             {
-                ["MatchCount"] = matchedTerms.Count,
-                ["ContentLength"] = content.Length
+                ["MatchCount"] = matchedTerms?.Count ?? 0
             }
         };
     }

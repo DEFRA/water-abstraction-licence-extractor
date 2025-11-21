@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 
 namespace WALE.ProcessFile.RuleEngine.Engine;
@@ -41,7 +42,7 @@ public class RuleEngine<T> : IRuleEngine<T>
     }
 
     /// <inheritdoc />
-    public T? Evaluate(string content)
+    public T? Evaluate(MatchesResult content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
@@ -60,7 +61,7 @@ public class RuleEngine<T> : IRuleEngine<T>
     }
 
     /// <inheritdoc />
-    public IEnumerable<T> EvaluateAll(string content)
+    public IEnumerable<T> EvaluateAll(MatchesResult content)
     {
         ArgumentNullException.ThrowIfNull(content);
 

@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Models;
+
 namespace WALE.ProcessFile.RuleEngine.Interfaces;
 
 /// <summary>
@@ -22,12 +24,12 @@ public interface IRule<out T>
     /// </summary>
     /// <param name="content">The content to evaluate</param>
     /// <returns>True if the rule applies, false otherwise</returns>
-    bool CanApply(string content);
+    bool CanApply(MatchesResult content);
 
     /// <summary>
     /// Applies the rule to the content and returns the result
     /// </summary>
     /// <param name="content">The content to evaluate</param>
     /// <returns>The result of applying the rule</returns>
-    T Apply(string content);
+    T Apply(MatchesResult content);
 }

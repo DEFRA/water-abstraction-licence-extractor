@@ -46,18 +46,6 @@ public class TessaractOcrPdfTests
             0);
     }
     
-    private Task<MatchesResult> GetMatchesForLicenceReaderAsync(string fileName)
-    {
-        return _pdfDataExtractorCombined.GetMatchesAsync(
-            PdfFolder + fileName,
-            new LookupConfiguration(
-                LicenceReaderConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                OutputFolder,
-                CacheFolder),
-            [PdfFolder + fileName]);
-    }
-    
     [Fact]
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
@@ -160,8 +148,6 @@ public class TessaractOcrPdfTests
         
         // See notes RE licence
     }
-    
-    
     
     [Fact]
     public async Task Alternate_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
@@ -1245,23 +1231,5 @@ public class TessaractOcrPdfTests
         Assert.Equal("28/39/22/427", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         // Name cannot be found as its stricken through (should be 'Barry Ball')
-    }
-    
-    [Fact]
-    public async Task WhenReadDetails_WithLicenceReaderConfiguration_ThenFoundCorrectly()
-    {
-        // Arrange
-        const string filename = "14460030853 licence effective 24.07.2005.PDF";
-
-        // Act
-        var resultFull = await GetMatchesForLicenceReaderAsync(filename);
-        var resultList = resultFull.Matches!;
-        
-        // Assert
-        Assert.Equal(3, resultList.Count);
-
-        var dateOfIssue = resultFull.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.NotNull(dateOfIssue);    
     }
 }

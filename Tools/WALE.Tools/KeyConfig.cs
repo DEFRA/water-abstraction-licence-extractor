@@ -166,4 +166,19 @@ public static class KeyConfig
             return _pdfFolderForDuplicates;
         }
     }
+    
+    private static string? _sqlServerConnectionString;
+    public static string SqlConnectionString
+    {
+        get
+        {
+            if (_sqlServerConnectionString != null)
+            {
+                return _sqlServerConnectionString;
+            }
+            
+            _sqlServerConnectionString = Config["SqlConnectionString"]!;
+            return _sqlServerConnectionString;
+        }
+    }
 }

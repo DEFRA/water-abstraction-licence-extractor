@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Models;
 using WALE.ProcessFile.RuleEngine.Engine;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
@@ -37,17 +38,8 @@ public class FileTypeIdentifierService
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"File not found: {filePath}");
 
-        var content = await ExtractPdfContentAsync(filePath, configuration);
-        return IdentifyFileType(content);
-    }
-
-    /// <summary>
-    /// Identifies the file type based on text content
-    /// </summary>
-    /// <param name="content">The text content to analyze</param>
-    /// <returns>The file type identification result, or null if no type could be identified</returns>
-    public FileTypeResult? IdentifyFileType(string content)
-    {
+        var content = await _pdfExtractorService?.GetMatchesAsync(
+            filePath, configuration, new List<string>(), 0)! ?? new MatchesResult();
         return _ruleEngine.Evaluate(content);
     }
 
@@ -65,105 +57,53 @@ public class FileTypeIdentifierService
         var results = new Dictionary<string, FileTypeResult?>();
         var files = Directory.GetFiles(directoryPath, searchPattern, SearchOption.TopDirectoryOnly);
 
-        foreach (var file in files)
+        // Define terms to exclude
+        var excludeTerms = new[] { "letter", "WR51", "determination" };
+
+        // Filter out excluded files
+        var filteredFiles = files.Where(file =>
         {
-            try
+            var fileName = Path.GetFileName(file).ToLowerInvariant();
+            return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));
+        }).ToList();
+
+        // Process files in batches of 10
+        const int batchSize = 10;
+        var batches = filteredFiles
+            .Select((file, index) => new { file, index })
+            .GroupBy(x => x.index / batchSize)
+            .Select(g => g.Select(x => x.file).ToList())
+            .ToList();
+
+        foreach (var batch in batches)
+        {
+            var batchTasks = batch.Select(async file =>
             {
-                var result = await IdentifyFileTypeAsync(file, configuration: lookupConfiguration);
-                results[file] = result;
-            }
-            catch (Exception ex)
+                try
+                {
+                    var result = await IdentifyFileTypeAsync(file, configuration: lookupConfiguration);
+                    return new KeyValuePair<string, FileTypeResult?>(file, result);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error but continue processing other files
+                    Console.WriteLine($"Error processing file {file}: {ex.Message}");
+                    return new KeyValuePair<string, FileTypeResult?>(file, null);
+                }
+            });
+
+            // Wait for all tasks in the current batch to complete
+            var batchResults = await Task.WhenAll(batchTasks);
+
+            // Add batch results to the main results dictionary
+            foreach (var result in batchResults)
             {
-                // Log the error but continue processing other files
-                Console.WriteLine($"Error processing file {file}: {ex.Message}");
-                results[file] = null;
+                results[result.Key] = result.Value;
             }
         }
 
         return results;
     }
-
-    /// <summary>
-    /// Extracts text content from PDF files using GetMatchesAsync like other tool classes
-    /// </summary>
-    /// <param name="filePath">The path to the PDF file</param>
-    /// <param name="configuration">The lookup configuration</param>
-    /// <returns>The extracted text content</returns>
-    private async Task<string> ExtractPdfContentAsync(string filePath, LookupConfiguration configuration)
-    {
-        if (_pdfExtractorService == null)
-        {
-            Console.WriteLine("PDF extractor service not available, cannot process PDF files");
-            return string.Empty;
-        }
-
-        try
-        {
-            // Use GetMatchesAsync to extract content (same pattern as other Tools classes)
-            var result = await _pdfExtractorService.GetMatchesAsync(filePath, configuration, new List<string>());
-
-            // Extract all text from matches and sub-results
-            var allText = new List<string>();
-
-            if (result.Matches != null)
-            {
-                foreach (var match in result.Matches)
-                {
-                    // Extract text from the main match
-                    if (match.Text != null)
-                    {
-                        foreach (var line in match.Text)
-                        {
-                            if (!string.IsNullOrEmpty(line.Text))
-                            {
-                                allText.Add(line.Text);
-                            }
-                        }
-                    }
-
-                    // Extract text from sub-results recursively
-                    ExtractTextFromSubResults(match.SubResults, allText);
-                }
-            }
-
-            return string.Join(" ", allText);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error extracting PDF content from {filePath}: {ex.Message}");
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
-    /// Recursively extracts text from sub-results
-    /// </summary>
-    /// <param name="subResults">The sub-results to extract text from</param>
-    /// <param name="allText">The list to add extracted text to</param>
-    private void ExtractTextFromSubResults(IReadOnlyList<LabelGroupResult> subResults, List<string> allText)
-    {
-        foreach (var subResult in subResults)
-        {
-            // Extract text from this sub-result
-            if (subResult.Text != null)
-            {
-                foreach (var line in subResult.Text)
-                {
-                    if (!string.IsNullOrEmpty(line.Text))
-                    {
-                        allText.Add(line.Text);
-                    }
-                }
-            }
-
-            // Recursively process nested sub-results
-            if (subResult.SubResults.Any())
-            {
-                ExtractTextFromSubResults(subResult.SubResults, allText);
-            }
-        }
-    }
-
     private void InitializeDefaultRules()
     {
         _ruleEngine.AddRule(new LicenceFileTypeRule());

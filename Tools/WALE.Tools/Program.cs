@@ -1,7 +1,7 @@
 ﻿using WALE.Tools;
 
 //const string workflow = "TestsForAiPrompts";
-const string workflow = "FileTypeIdentificationExtract";
+const string workflow = "DuplicateLicenceIdentificationExtractBySize";
 
 switch (workflow)
 {

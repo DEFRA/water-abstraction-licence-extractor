@@ -16,5 +16,4 @@ public class FileTypeIdentificationResult
     public string? DateOfIssue { get; set; }
     public string? LicenceNumber { get; set; }
     public long FileSize { get; set; }
-    public DateTime LastModified { get; set; }
 }

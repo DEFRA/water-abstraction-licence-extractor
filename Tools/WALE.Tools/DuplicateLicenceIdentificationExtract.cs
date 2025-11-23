@@ -5,6 +5,7 @@ using ClosedXML.Excel;
 using CsvHelper;
 using Tesseract;
 using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Models;
 using WALE.Tools.Models;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Configuration;
@@ -106,23 +107,61 @@ public static class DuplicateLicenceIdentificationExtract
         }
         else
         {
-            foreach (var group in groupedByPermitAndSize)
+            const int batchSize = 10;
+            var batches = groupedByPermitAndSize
+                .Select((file, index) => new { file, index })
+                .GroupBy(x => x.index / batchSize)
+                .Select(g => g.Select(x => x.file).ToList())
+                .ToList();
+
+            foreach (var batch in batches)
             {
-                // Step 3: Get the list of files for the current permit number
-                var filesForPermit = group.ToList();
-
-                // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
-                var firstFile = filesForPermit
-                    ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
-                    ?.FirstOrDefault();
-                if (firstFile != null)
+                var batchTasks = batch.Select(async group =>
                 {
-                    var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
+                    try
+                    {
+                        // Step 3: Get the list of files for the current permit number
+                        var filesForPermit = group.ToList();
 
-                    var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber, pdfExtractorService);
-                    csvResults.AddRange(duplicateResults);
-                }
+                        // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+                        var firstFile = filesForPermit
+                            ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
+                            ?.FirstOrDefault();
+                        if (firstFile != null)
+                        {
+                            var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
+
+                            var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber, pdfExtractorService);
+                            csvResults.AddRange(duplicateResults);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error but continue processing other files
+                        Console.WriteLine($"Error processing file {group.Key.PermitNumber}: {ex.Message}");
+                    }
+                });
+
+                // Wait for all tasks in the current batch to complete
+                await Task.WhenAll(batchTasks);
             }
+            // foreach (var group in groupedByPermitAndSize)
+            // {
+            //     // Step 3: Get the list of files for the current permit number
+            //     var filesForPermit = group.ToList();
+            //
+            //     // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+            //     var firstFile = filesForPermit
+            //         ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
+            //         ?.FirstOrDefault();
+            //     if (firstFile != null)
+            //     {
+            //         var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
+            //
+            //         var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber, pdfExtractorService);
+            //         csvResults.AddRange(duplicateResults);
+            //     }
+            // }
         }
         
 
@@ -426,11 +465,11 @@ public static class DuplicateLicenceIdentificationExtract
         try
         {
             Console.WriteLine($"Extracting images from: {pdfFilePath}");
-            var labels = LabelConfiguration.GetLabels();
+        
 
             // Create minimal configuration for image extraction
             var configuration = new LookupConfiguration(
-                labels,
+                new List<(string LabelGroupName, List<LabelToMatch> Labels)>(),
                 FileLicenceMapping);
 
             var result = await PdfExtractorService.GetMatchesAsync(pdfFilePath, configuration, new List<string>(), 0);

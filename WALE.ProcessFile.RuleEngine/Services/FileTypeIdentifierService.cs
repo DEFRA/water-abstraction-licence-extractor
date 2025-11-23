@@ -55,7 +55,7 @@ public class FileTypeIdentifierService
             throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
 
         var results = new Dictionary<string, FileTypeResult?>();
-        var files = Directory.GetFiles(directoryPath, searchPattern, SearchOption.TopDirectoryOnly);
+        var files = Directory.GetFiles(directoryPath, searchPattern, SearchOption.TopDirectoryOnly).Distinct();
 
         // Define terms to exclude
         var excludeTerms = new[] { "letter", "WR51", "determination" };

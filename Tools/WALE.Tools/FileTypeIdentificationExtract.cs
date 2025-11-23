@@ -75,8 +75,7 @@ public static class FileTypeIdentificationExtract
                 MatchedTerms = fileTypeResult?.MatchedTerms != null ? string.Join("; ", fileTypeResult.MatchedTerms) : "",
                 DateOfIssue = fileTypeResult?.DateOfIssue,
                 FileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0,
-                LicenceNumber = fileTypeResult?.LicenceNumber,
-                LastModified = File.Exists(filePath) ? File.GetLastWriteTime(filePath) : DateTime.MinValue
+                LicenceNumber = fileTypeResult?.LicenceNumber
             });
         }
 

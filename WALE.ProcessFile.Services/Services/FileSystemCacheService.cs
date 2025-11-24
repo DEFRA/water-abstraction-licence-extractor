@@ -166,13 +166,15 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     
-    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId)
+    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilePath
+            Filepath = pdfFilePath,
+            ProcessRunId = processRunId,
+            Extension = extension
         });
 
         if (bytAry == null)
@@ -245,7 +247,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     private string GetFolderPath(string pdfFilePath)
     {
-        var fileOutputFolder = Path.Combine(cacheFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath));
+        var fileOutputFolder = Path.Combine(cacheFolder, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
         if (fileOutputFolder.StartsWith('/'))
         {
             fileOutputFolder = fileOutputFolder[1..];

@@ -2,6 +2,8 @@ using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
@@ -30,21 +32,36 @@ var config = configBuilder.Build();
 
 var cacheService = GetCacheService(config);
 var outputService = GetOutputService(config);
+var indexLink = "list.html?showAll=true&processRunId=";
 
-app.MapGet("/list", async () =>
+app.MapGet("/process-run", async () =>
 {
     var processRuns = await outputService.GetProcessRunsAsync();
-    var processRunId = processRuns
-        .OrderByDescending(processRun => processRun.ProcessRunId)
-        .FirstOrDefault()?.ProcessRunId ?? -1;
 
+    var listData = new List<string>();
+    
+    foreach (var processRun in processRuns.OrderByDescending(pr => pr.ProcessRunId))
+    {
+        listData.Add($"<li><a href='{indexLink}{processRun.ProcessRunId}'>{processRun.ProcessRunId} - {processRun.StartDateTimeUtc}</a> - {processRun.Description} ({processRun.NumberOfFiles} files)</li>");
+    }
+
+    var serializedData = JsonSerializer.Serialize(
+        listData,
+        JsonHelper.GetSerializerOptions());
+    
+    return $"var data = {serializedData};";
+}).WithName("ChooseProcessRun");
+
+app.MapGet("/list", async (int processRunId) =>
+{
     var completeNumber = 1;
     var fileNumber = 1;
     
     var licences = await outputService.GetLicencesAsync(processRunId);
-    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId);
+    var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
     
     var outputLines = licences
+        .Where(licence => licence.Status == LicenceStatus.Ok)
         .Select(licence => JsOutputHelper.ToOutputLine(
             licence,
             DateTime.Now,
@@ -58,7 +75,10 @@ app.MapGet("/list", async () =>
         string.Empty,// Not used
         outputService,// Not used
         false, // Not used
-        new ProcessRun(), // Not used
+        new ProcessRun
+        {
+            ProcessRunId = processRunId
+        }, // Not used
         false);
 
     var serializedData = JsonSerializer.Serialize(
@@ -83,8 +103,13 @@ app.MapGet("/thumbnail", async (string filename) =>
         pageNumber,
         serviceName,
         fileName1);
+
+    if (data == null)
+    {
+        throw new Exception($"Cannot find screenshot for {fileName1} - {serviceName} - {pageNumber}");
+    }
     
-    return Results.File(data!, "image/jpeg");
+    return Results.File(data, "image/jpeg");
 }).WithName("GetThumbnail");
 
 app.MapGet("/image", async (string filename) =>
@@ -185,8 +210,8 @@ static ICacheService GetCacheService(IConfiguration configuration)
 {
     var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
 
-    var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
+    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
     var outputService = (ICacheService)new DatabaseCacheService(sqlReadService, sqlAddService);
     
     return outputService;
@@ -196,8 +221,8 @@ static IOutputService GetOutputService(IConfiguration configuration)
 {
     var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
 
-    var sqlAddService = new SqlSeverAddServiceService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadServiceService(sqlConnectionString);
+    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
+    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
     var outputService = (IOutputService)new DatabaseOutputService(sqlReadService, sqlAddService);
     
     return outputService;

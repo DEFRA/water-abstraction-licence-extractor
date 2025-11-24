@@ -278,8 +278,7 @@ public static class LabelConfiguration
                     new("The Somerset River Authority"),
                     new("Southern Water Authority"),
                     new("Sussex River Authority"),
-                    new("Yorkshire Water Authority"),
-                    new("Yorkshire River Authority"),                    
+                    new("Yorkshire Water Authority")                  
                 ],
                 Possibilities = [
                     "Environment Agency",
@@ -301,8 +300,7 @@ public static class LabelConfiguration
                     "The Somerset River Authority",
                     "Southern Water Authority",
                     "Sussex River Authority",
-                    "Yorkshire Water Authority",
-                    "Yorkshire River Authority"
+                    "Yorkshire Water Authority"
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -331,7 +329,10 @@ public static class LabelConfiguration
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                 Remove = [
                     new("...")
-                ]
+                ],
+                IgnoreMatchIfContains = [
+                    "Date effective"
+                ],
             },
             new LabelToMatch
             {
@@ -348,19 +349,23 @@ public static class LabelConfiguration
                     new("DATE THIS")
                 ],
                 MustContain = [
-                    new("January"),
-                    new("February"),
-                    new("March"),
-                    new("April"),
+                    new("Jan"),
+                    new("Feb"),
+                    new("Mar"),
+                    new("Apr"),
                     new("May"),
                     new("Nay"), //Misreading
-                    new("June"),
-                    new("July"),
-                    new("August"),
-                    new("September"),
-                    new("October"),
-                    new("November"),
-                    new("December")
+                    new("Hay"), //Misreading                    
+                    new("Jun"),
+                    new("Jul"),
+                    new("Aug"),
+                    new("Sep"),
+                    new("Oct"),
+                    new("Nov"),
+                    new("Dec")
+                ],
+                IgnoreMatchIfContains = [
+                    "Date effective"
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -1671,7 +1676,7 @@ public static class LabelConfiguration
                     {
                         Name = "LinkedLicence",
                         RelatedName = "LinkedLicenceNumber",
-                        Format = "LinkedLicence",
+                        Format = LinkedLicenceDontInline.Constant
                     },
                     new()
                     {

@@ -220,7 +220,7 @@ public class PdfDataExtractorService(
                     {
                         // Short lines indicate it may be a map page,
                         // no point processing that with the other services
-                        if (averageLineLength < 30)
+                        if (averageLineLength < 20)
                         {
                             break;
                         }
@@ -762,20 +762,26 @@ public class PdfDataExtractorService(
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
-                    if (label.Format == "LinkedLicence")
+                    switch (label.Format)
                     {
-                        var linkedLicences = await ProcessLinkedLicenceAsync(
-                            partialLine,
-                            siblingMatches,
-                            label,
-                            licenceNumberMapping,
-                            previouslyParsedPaths,
-                            processRunId);
+                        case LinkedLicenceDontInline.Constant:
+                            partialLine = null;
+                            continue;
+                        case LinkedLicence.Constant:
+                        {
+                            var linkedLicences = await ProcessLinkedLicenceAsync(
+                                partialLine,
+                                siblingMatches,
+                                label,
+                                licenceNumberMapping,
+                                previouslyParsedPaths,
+                                processRunId);
 
-                        returnList.AddRange(linkedLicences);
+                            returnList.AddRange(linkedLicences);
 
-                        partialLine = null;
-                        continue;
+                            partialLine = null;
+                            continue;
+                        }
                     }
 
                     if (FormattingHelper.IsLineEmpty(partialLine)
@@ -865,7 +871,7 @@ public class PdfDataExtractorService(
                         PageNumber = partialLine.PageNumber,
                         ServiceName = serviceName
                     };
-
+                    
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
                     

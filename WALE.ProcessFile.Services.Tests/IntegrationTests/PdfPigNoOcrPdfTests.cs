@@ -202,8 +202,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -397,8 +395,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -565,7 +561,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(11, section2Sub1.SubResults.Count);
+        Assert.Equal(12, section2Sub1.SubResults.Count);
             
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1818,8 +1814,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
 
@@ -2358,49 +2352,10 @@ public class PdfPigNoOcrPdfTests
                 subResult.MatchedLabel!.Name == "LinkedLicence")
             .ToList();
         
-        Assert.Equal(2, linkedLicences.Count);
-        var linkedLicence1 = linkedLicences[0].SubResults;
-        
-        nameResult = linkedLicence1.FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        Assert.NotNull(nameResult);
-        Assert.False(nameResult.IsOcr);
-        Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
-        
-        var licenceNumberResult = linkedLicence1.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 247", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var linkedLicence2 = linkedLicences[1].SubResults;
-        
-        nameResult = linkedLicence2.FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        Assert.NotNull(nameResult);
-        Assert.False(nameResult.IsOcr);
-        Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
-        
-        licenceNumberResult = linkedLicence2.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("25 68 001 248", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var linkedNameResult = linkedLicences[0].SubResults.FirstOrDefault(result => result.LabelGroupName == "Company");
-        Assert.Equal("J & S Accessories Limited", linkedNameResult?.Text?.FirstOrDefault()?.Text);
-        
-        var linkedLicenceNumber = linkedLicences[0].SubResults.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        Assert.Equal("25 68 001 247", linkedLicenceNumber?.Text?.FirstOrDefault()?.Text);
+        Assert.Empty(linkedLicences);
         
         // TODO and the other licence
-        licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
@@ -2413,17 +2368,15 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
         
-        Assert.Equal("25 68 001 249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
-        Assert.Equal("25 68 001 247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
-        Assert.Equal("25 68 001 248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
+        Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
+        Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
+        Assert.Equal("25/68/001/248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
         
         Assert.Equal("2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
             agreedSchemaLicenceGroup.LicenceSetId);
@@ -2431,15 +2384,15 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal(2, primaryLicence.LinkedLicences.Length);
         
-        Assert.Equal("25 68 001 247", primaryLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/247", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[0].FromSection!);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].FromSection![0]);
-        Assert.Equal("25 68 001 248", primaryLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/001/248", primaryLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[1].FromSection!);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[1].FromSection![0]);
         
         Assert.Equal(filename, primaryLicence.Filename);
-        Assert.Equal("25 68 001 249", primaryLicence.LicenceNumber);
+        Assert.Equal("25/68/001/249", primaryLicence.LicenceNumber);
         
         Assert.Equal(3, primaryLicence.AbstractionLimits.Individual![0].Limits.Count);
         var limitGroup = primaryLicence.AbstractionLimits.Individual[0];
@@ -2488,12 +2441,30 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.IssueDate);
         
         var firstLinkedLicence = agreedSchemaLicenceGroup.Licences[1];
-        Assert.Equal("25 68 001 247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/247", firstLinkedLicence.LicenceNumber);
         Assert.Single(firstLinkedLicence.AbstractionLimits.Aggregates!);
         
+        Assert.NotNull(firstLinkedLicence.NoneSchemaData["issuedTo"]);
+        Assert.Equal("J & S Accessories Limited", (string)firstLinkedLicence.NoneSchemaData["issuedTo"]);
+        
+        Assert.NotNull(firstLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/247", firstLinkedLicence.LicenceNumber);
+        Assert.Equal(2, firstLinkedLicence.LinkedLicences.Length);
+        Assert.Equal("25/68/001/248", firstLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/249", firstLinkedLicence.LinkedLicences[1].LicenceNumber);
+        
         var secondLinkedLicence = agreedSchemaLicenceGroup.Licences[2];
-        Assert.Equal("25 68 001 248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/248", secondLinkedLicence.LicenceNumber);
         Assert.Single(secondLinkedLicence.AbstractionLimits.Aggregates!);
+        
+        Assert.NotNull(secondLinkedLicence.NoneSchemaData["issuedTo"]);
+        Assert.Equal("J & S Accessories Limited", (string)secondLinkedLicence.NoneSchemaData["issuedTo"]);
+
+        Assert.NotNull(secondLinkedLicence.LicenceNumber);
+        Assert.Equal("25/68/001/248", secondLinkedLicence.LicenceNumber);
+        Assert.Equal(2, secondLinkedLicence.LinkedLicences.Length);
+        Assert.Equal("25/68/001/247", secondLinkedLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/001/249", secondLinkedLicence.LinkedLicences[1].LicenceNumber);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
@@ -3188,8 +3159,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -3229,8 +3198,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -3351,8 +3318,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3454,8 +3419,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3569,8 +3532,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3664,8 +3625,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3738,8 +3697,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0)).Last();
         
@@ -3873,8 +3830,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -3912,8 +3867,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -3985,8 +3938,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -4104,8 +4055,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0)).Last();
         
@@ -4152,8 +4101,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -4250,8 +4197,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             -1);
         
@@ -4291,8 +4236,6 @@ public class PdfPigNoOcrPdfTests
             DeadLicenceNumbers,
             LiveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             -1);
         

@@ -114,9 +114,23 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-
+                    
+                    // It's a date
+                    if (numberLine.Count(c => c == '/') == 2
+                        && DateTime.TryParse(numberLine, out var date)
+                        && date.Year is >= 1930 and <= 2100)
+                    {
+                        continue;
+                    }
+                    
                     var numberLineWithSlashes = numberLine;
 
+                    // No slashes, 1 dot - is invalid format (its probably a decimal number
+                    if (!numberLineWithSlashes.Contains('/') && numberLineWithSlashes.Count(c => c == '.') == 1)
+                    {
+                        continue;
+                    }
+                    
                     if (numberLineWithSlashes.Contains(' '))
                     {
                         numberLineWithSlashes = numberLineWithSlashes.Replace(" ", "/");
@@ -126,7 +140,7 @@ public static partial class LicenceNumber
                     {
                         numberLineWithSlashes = numberLineWithSlashes.Replace(".", "/");
                     }
-                    
+
                     var enoughPartsWithNumbers = numberLineWithSlashes
                         .Split('/')
                         .Count(section => section.Any(char.IsDigit)) >= 2;
@@ -142,10 +156,30 @@ public static partial class LicenceNumber
                     var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
                         || (value.Contains('/') && value.Contains(' '));
                         //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
-                    
+
                     if (hasInvalidComboOfSeperators)
                     {
                         continue;
+                    }
+                    
+                    // Its a value + unit
+                    if (value.Contains('.') && value.Contains("MI"))
+                    {
+                        continue;
+                    }
+                    
+                    var sections = value.Split('/');
+
+                    // Last bit is too long - its because of a space near the end
+                    if (sections.Length == 4 && sections.Last().Length == 4)
+                    {
+                        var valueWithoutLastChar = value[..^1];
+                        var valueEndingWithSpace = $"{valueWithoutLastChar} ";
+                        
+                        if (subLine.Contains(valueEndingWithSpace))
+                        {
+                            value = valueWithoutLastChar;
+                        }
                     }
 
                     var shortLimit = value.Contains('/') ? 5 : 6;

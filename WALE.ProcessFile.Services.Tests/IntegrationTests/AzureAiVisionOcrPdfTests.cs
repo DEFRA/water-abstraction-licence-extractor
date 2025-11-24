@@ -143,8 +143,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -195,7 +193,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(6, resultList.Count);
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -346,7 +344,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -546,7 +544,7 @@ public class AzureAiVisionOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -559,7 +557,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         
         var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
         Assert.Equal("gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
@@ -602,8 +600,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -1068,8 +1064,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
         
@@ -1300,8 +1294,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder,
             0);
 
@@ -1360,7 +1352,7 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, false);
-        Assert.Equal(7, resultFull.Matches?.Count); // TODO maybe should be 8
+        Assert.Equal(9, resultFull.Matches?.Count); // TODO maybe should be 8
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1369,8 +1361,6 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
@@ -1399,15 +1389,13 @@ public class AzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor2,
-            OutputService,
-            CacheService,
             TestConfig.PdfFolder2,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
-        Assert.Null(agreedSchemaLicence.LicenceNumber);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber);
+        Assert.NotNull(agreedSchemaLicence.LinkedLicences);
     }
 }

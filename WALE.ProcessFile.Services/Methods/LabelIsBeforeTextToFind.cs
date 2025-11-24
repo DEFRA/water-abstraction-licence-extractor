@@ -34,6 +34,20 @@ public static class LabelIsBeforeTextToFind
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return ProcessSubLabelsAsync(request, returnList);
+        var newReturnList = new List<LabelGroupResult>();
+        
+        foreach (var item in returnList)
+        {
+            var text = item.Text?.FirstOrDefault()?.Text;
+            
+            if (!string.IsNullOrEmpty(text) && LabelMatchingHelper.ShouldSkipResultAsForbidden(text, request.label))
+            {
+                continue;
+            }
+            
+            newReturnList.Add(item);
+        }
+        
+        return ProcessSubLabelsAsync(request, newReturnList);
     }
 }

@@ -1,12 +1,15 @@
 ﻿using WALE.Tools;
 
 //const string workflow = "TestsForAiPrompts";
-const string workflow = "DuplicateLicenceIdentificationExtractBySize";
+const string workflow = "GenerateCsvForTesting";
 
 switch (workflow)
 {
-    case "GenerateCsvForTesting":
-        await GenerateCsvForTesting.GenerateCsvForTestingAsync();
+    case "GenerateLinkedLicencesCsv":
+        await GenerateLinkedLicencesCsv.GenerateCsvAsync();
+        break;
+    case "GenerateAggregatesCsvForTesting":
+        await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync();
         break;
     case "GenerateLicenceReaderExtract":
         await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync();

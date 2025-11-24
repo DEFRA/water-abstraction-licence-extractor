@@ -21,6 +21,7 @@
         "RefreshCache": "false",
         "SqlConnectionString": "",
         "ListDataPath": "list-data.js",
+        "ProcessRunsDataPath": "",
         "InternalDataPath": "filename + '/internal.jsonp'",
         "LicenceDataPath": "filename + '/licence.jsonp'",
         "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'",

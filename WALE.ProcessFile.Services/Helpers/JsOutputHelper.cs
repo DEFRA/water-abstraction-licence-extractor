@@ -15,7 +15,7 @@ public static class JsOutputHelper
         DateTime dtStart,
         int completeNumber,
         int fileNumber,
-        List<LicenceSet> allLicenceSets)
+        Dictionary<string, LicenceSet> licenceSetsFull)
     {
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
         var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
@@ -54,12 +54,8 @@ public static class JsOutputHelper
         var issuer = licence.LicenceVersion.Issuer;
 
         var licenceSets = licence.LicenceSets
-            .Select(lsi =>
-            {
-                return allLicenceSets.FirstOrDefault(ls => ls.LicenceSetId == lsi.LicenceSetId);
-            })
-            .Where(ls => ls != null)
-            .Select(ls => ls!)
+            .Where(ls => licenceSetsFull.ContainsKey(ls.LicenceSetId!))
+            .Select(ls => licenceSetsFull[ls.LicenceSetId!])
             .ToList();
         
         return new IntermediateOutputLicence
@@ -150,34 +146,36 @@ public static class JsOutputHelper
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
-                licenceSets = outputLine.LicenceSetReferences?
-                    .Select(lsr =>
+                licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
+                {
+                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+
+                    if (ls == null)
                     {
-                        var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
-
-                        if (ls == null)
-                        {
-                            return null;
-                        }
-                        
-                        var licenceSetType = lsr.LicenceSetType;
-
                         return new OutputListDataItemLicenceSet
                         {
-                            LicenceSetId = ls.LicenceSetId,
-                            ShortLicenceSetId = ls.ShortLicenceSetId,
-                            LicenceSetTypes = ls.LicenceSetTypes,
-                            LicenceSetType = licenceSetType
-
+                            LicenceSetId = "ERROR",
+                            ShortLicenceSetId = "ERROR"
                         };
-                    })
-                    .Where(ls => ls != null)
-                    .ToArray() ?? []
+                    }
+                    
+                    var licenceSetType = lsr.LicenceSetType;
+
+                    return new OutputListDataItemLicenceSet
+                    {
+                        LicenceSetId = ls.LicenceSetId,
+                        ShortLicenceSetId = ls.ShortLicenceSetId,
+                        LicenceSetTypes = ls.LicenceSetTypes,
+                        LicenceSetType = licenceSetType
+
+                    };
+                })
+                .ToArray() ?? []
             };
 
             listData.Add(listRow);
 
-            if (outputLine.LicenceNumber != null)
+            if (outputLine is { LicenceNumber: not null, Filename: not null })
             {
                 filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
                 licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);

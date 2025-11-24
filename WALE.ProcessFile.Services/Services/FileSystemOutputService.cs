@@ -45,7 +45,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task SaveLicenceSetsAsync(
-        IReadOnlyList<LicenceSet> licenceSets,
+        Dictionary<string, LicenceSet> licenceSets,
         string pdfFilePath,
         int processRunId)
     {
@@ -57,28 +57,37 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public Task SaveLicenceAsync(Licence licence, string pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
         
         var licenceJson = JsonHelper.GetAsString(licence);
 
-        return File.WriteAllTextAsync(
+        await File.WriteAllTextAsync(
             $"{outputFolder}/{folderName}/licence.jsonp",
             $"var data2 = {licenceJson}");
+
+        return -1;
     }
-    
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+
+    public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");
 
         var internalJson = JsonHelper.GetAsString(matchesResult);
         
-        return File.WriteAllTextAsync(
+        await File.WriteAllTextAsync(
             $"{outputFolder}/{folderName}/internal.jsonp",
             $"var data = {internalJson}");
+
+        return -1;
     }
 
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
@@ -172,6 +181,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
     {
         throw new NotImplementedException();
     }

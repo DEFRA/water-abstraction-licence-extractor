@@ -5,10 +5,11 @@ using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Models;
 using WALE.ProcessFile.Models.Enums.OutputSchema;
 using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Models.OutputSchema.Table;
 
 namespace WALE.ProcessFile.Database.Services;
 
-public class SqlSeverReadServiceService(string connectionString) : IDatabaseReadService
+public class SqlSeverReadService(string connectionString) : IDatabaseReadService
 {
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
@@ -258,7 +259,7 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT Data FROM Licence WHERE ProcessRunId = @ProcessRunId";
+        const string sql = "SELECT Data, LicenceId FROM Licence WHERE ProcessRunId = @ProcessRunId";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
@@ -268,7 +269,10 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         while (await reader.ReadAsync())
         {
             var dataStr = reader.GetString(0);
+            var licenceId = reader.GetInt32(1);
+            
             var data = JsonSerializer.Deserialize<Licence>(dataStr, GetSerializerOptions())!;
+            data.NoneSchemaData.TryAdd("licenceId", licenceId);
             
             returnList.Add(data);
         }
@@ -276,22 +280,92 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList;
     }
 
-    public async Task<List<int>> GetLicenceSetIdsAsync(int processRunId)
+    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT LicenceSetId, ProcessRunId FROM LicenceSet WHERE ProcessRunId = @ProcessRunId";
+        const string sql = "SELECT LicenceSetId, ShortLicenceSetId, SchemaLicenceSetId FROM LicenceSet WHERE ProcessRunId = @ProcessRunId";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
         
         await using var reader = await command.ExecuteReaderAsync();
-        var returnList = new List<int>();
+        var returnList = new List<LicenceSetTable>();
         
         while (await reader.ReadAsync())
         {
             var licenceSetId = reader.GetInt32(0);
-            returnList.Add(licenceSetId);
+            var shortLicenceSetId = reader.GetString(1);
+            var schemaLicenceSetId = reader.GetString(2);
+            
+            returnList.Add(new LicenceSetTable
+            {
+                LicenceSetId = licenceSetId,
+                ShortLicenceSetId = shortLicenceSetId,
+                SchemaLicenceSetId = schemaLicenceSetId
+            });
+        }
+
+        return returnList;
+    }
+
+    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(string filename, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT LicenceSetId, ShortLicenceSetId, SchemaLicenceSetId FROM LicenceSet WHERE ProcessRunId = @ProcessRunId AND Filename = @Filename";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        command.Parameters.AddWithValue("@Filename", filename);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<LicenceSetTable>();
+        
+        while (await reader.ReadAsync())
+        {
+            var licenceSetId = reader.GetInt32(0);
+            var shortLicenceSetId = reader.GetString(1);
+            var schemaLicenceSetId = reader.GetString(2);
+            
+            returnList.Add(new LicenceSetTable
+            {
+                LicenceSetId = licenceSetId,
+                ShortLicenceSetId = shortLicenceSetId,
+                SchemaLicenceSetId = schemaLicenceSetId
+            });
+        }
+
+        return returnList;
+    }
+
+    public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT LicenceId, LicenceNumber, LicenceVersionId, LicenceSetId FROM LicenceSetLicence WHERE ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<LicenceSetLicence>();
+        
+        while (await reader.ReadAsync())
+        {
+            var licenceId = reader.IsDBNull(0) ? (int?)null : reader.GetInt32(0);
+            var licenceNumber = reader.GetString(1);
+            var licenceVersionId = reader.GetString(2);
+            var licenceSetId = reader.GetInt32(3);
+            
+            returnList.Add(new LicenceSetLicence
+            {
+                LicenceId = licenceId,
+                LicenceNumber = licenceNumber,
+                LicenceVersionId = licenceVersionId,
+                LicenceSetId = licenceSetId,
+                ProcessRunId = processRunId
+            });
         }
 
         return returnList;
@@ -302,7 +376,7 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT LicenceNumber, LicenceVersionId FROM LicenceSetLicence WHERE LicenceSetId = @LicenceSetId AND ProcessRunId = @ProcessRunId";
+        const string sql = "SELECT LicenceId, LicenceNumber, LicenceVersionId FROM LicenceSetLicence WHERE LicenceSetId = @LicenceSetId AND ProcessRunId = @ProcessRunId";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@LicenceSetId", licenceSetId);
         command.Parameters.AddWithValue("@ProcessRunId", processRunId);
@@ -312,13 +386,17 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         
         while (await reader.ReadAsync())
         {
-            var licenceNumber = reader.GetString(0);
-            var licenceVersionId = reader.GetString(1);
+            var licenceId = reader.IsDBNull(0) ? (int?)null : reader.GetInt32(0);
+            var licenceNumber = reader.GetString(1);
+            var licenceVersionId = reader.GetString(2);
             
             returnList.Add(new LicenceSetLicence
             {
+                LicenceId = licenceId,
                 LicenceNumber = licenceNumber,
-                LicenceVersionId = licenceVersionId
+                LicenceVersionId = licenceVersionId,
+                LicenceSetId = licenceSetId,
+                ProcessRunId = processRunId
             });
         }
 
@@ -347,6 +425,35 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList.ToArray();
     }
 
+    public async Task<List<(int LicenceSetId, LicenceSetType Type)>> GetLicenceSetTypesForProcessRun(int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = @"SELECT
+                lst.LicenceSetId
+                , lst.LicenceSetType
+            FROM LicenceSetType lst
+            JOIN LicenceSet ls on ls.LicenceSetId = lst.LicenceSetId
+            WHERE
+                ls.ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<(int, LicenceSetType)>();
+        
+        while (await reader.ReadAsync())
+        {
+            var licenceSetId = reader.GetInt32(0);
+            var licenceSetType = reader.GetInt32(1);
+            
+            returnList.Add((licenceSetId, (LicenceSetType)licenceSetType));
+        }
+
+        return returnList;
+    }
+
     public async Task<AggregateSet[]?> GetAggregateSets(int licenceSetId)
     {
         await using var connection = new SqlConnection(connectionString);
@@ -367,12 +474,58 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         return returnList.ToArray();
     }
 
+    public async Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT AggregateSetId, SchemaAggregateSetId, Data FROM AggregateSet WHERE ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        var returnList = new List<(int LicenceSetId, AggregateSet AggregateSet)>();
+        
+        while (await reader.ReadAsync())
+        {
+            returnList.Add((-1, new AggregateSet())); // TOOD add the detail
+        }
+
+        return returnList;
+    }
+
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT TOP 1 Data, LicenceId FROM Licence WHERE LicenceNumber = @LicenceNumber AND ProcessRunId = @ProcessRunId";
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@LicenceNumber", licenceNumber);
+        command.Parameters.AddWithValue("@ProcessRunId", processRunId);
+        
+        await using var reader = await command.ExecuteReaderAsync();
+        
+        while (await reader.ReadAsync())
+        {
+            var dataStr = reader.GetString(0);
+            var licenceId = reader.GetInt32(1);
+            
+            var data = JsonSerializer.Deserialize<Licence>(dataStr, GetSerializerOptions())!;
+            data.NoneSchemaData.TryAdd("licenceId", licenceId);
+            
+            return data;
+        }
+
+        return null;
+    }
+
     public async Task<Licence?> GetLicenceAsync(string filename)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        const string sql = "SELECT TOP 1 Data FROM Licence WHERE Filename = @Filename ORDER BY ProcessRunId DESC";
+        const string sql = "SELECT TOP 1 Data, LicenceId FROM Licence WHERE Filename = @Filename ORDER BY ProcessRunId DESC";
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Filename", filename);
         
@@ -381,7 +534,10 @@ public class SqlSeverReadServiceService(string connectionString) : IDatabaseRead
         while (await reader.ReadAsync())
         {
             var dataStr = reader.GetString(0);
+            var licenceId = reader.GetInt32(1);
+            
             var data = JsonSerializer.Deserialize<Licence>(dataStr, GetSerializerOptions())!;
+            data.NoneSchemaData.TryAdd("licenceId", licenceId);
             
             return data;
         }

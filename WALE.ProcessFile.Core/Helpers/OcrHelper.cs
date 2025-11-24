@@ -6,6 +6,13 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class OcrHelper
 {
+    private class TopBottomPositions
+    {
+        public double Top { get; set; }
+        
+        public double Bottom { get; set; }
+    }
+    
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         bool wordPerLine,
@@ -14,7 +21,8 @@ public static class OcrHelper
         int wordGap,
         int minWordHeight,
         int maxDiffPercentLineHeight,
-        int maxDiffBetweenWordTop)
+        int maxNegativeDiffBetweenWordTop,
+        int maxPositiveDiffBetweenWordTop)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -31,17 +39,177 @@ public static class OcrHelper
                 : !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
+
+        if (wordPerLine)
+        {
+            // 1. Order broadly by vertical then horizontal position
+            
+            var naiveOrderedWords = uncorruptedLines
+                .Where(line => !string.IsNullOrEmpty(line.Text))
+                .SelectMany(line => line.Words!)
+                .OrderBy(x => x!.Coordinates.Top)
+                .ThenBy(x => x!.Coordinates.Left)
+                .ToList();
+
+            DocumentLineWord? previousWord = null;
+            
+            var verticalWordGridDict = new Dictionary<TopBottomPositions, List<DocumentLineWord>>();
+            
+            // 2. Fit into a grid based dictionary, by checking how words overlap with existing lines
+            
+            foreach (var word in naiveOrderedWords)
+            {
+                var wordTop = (int)word!.Coordinates.Top;
+                var wordBottom = (int)word.Coordinates.Bottom;
+
+                if (word.Text == "Hampshire" || word.Text == "Hampshire.")
+                {
+                    
+                }
+                
+                var positions = new TopBottomPositions
+                {
+                    Top = wordTop,
+                    Bottom = wordBottom
+                };
+                
+                if (previousWord == null)
+                {
+                    verticalWordGridDict.Add(positions, [word]);
+                    previousWord = word;
+                    
+                    continue;
+                }
+
+                if (word.Text == "2.")
+                {
+                    
+                }
+
+                var overlapsWithLine = verticalWordGridDict
+                    .FirstOrDefault(gridLine =>
+                    {
+                        var wordTopOverlaps = wordTop >= gridLine.Key.Top
+                            && wordTop <= gridLine.Key.Bottom;
+                        
+                        var wordBottomOverlaps = wordBottom >= gridLine.Key.Top
+                            && wordBottom <= gridLine.Key.Bottom;
+
+                        return wordTopOverlaps || wordBottomOverlaps;
+                    });
+
+                if (overlapsWithLine.Value != null)
+                {
+                    if (positions.Top < overlapsWithLine.Key.Top)
+                    {
+                        //overlapsWithLine.Key.Top = wordTop;
+                    }
+                    
+                    if (positions.Bottom > overlapsWithLine.Key.Bottom)
+                    {
+                        //overlapsWithLine.Key.Bottom = wordBottom;
+                    }
+                    
+                    overlapsWithLine.Value.Add(word);
+                 
+                    previousWord = word;
+                    continue;
+                }
+                
+                verticalWordGridDict.Add(positions, [word]);
+                previousWord = word;
+            }
+            
+            var orderedLines = new List<DocumentLine>();
+
+            // 3. Order each line to produce ordered words per line
+            
+            foreach (var kvp in verticalWordGridDict)
+            {
+                var orderedWords = kvp.Value
+                    .OrderBy(word => word.Coordinates.Left)
+                    .ToList();
+
+                var columns = new List<DocumentLineColumn>
+                {
+                    new()
+                    {
+                        Words = orderedWords,
+                        Text = string.Join(' ', orderedWords.Select(w => w.Text))
+                    }
+                };
+
+                var firstWordCoords = orderedWords.First().Coordinates;
+                
+                var documentLine = new DocumentLine(
+                    lineNumber++,
+                    pageNumber,
+                    columns,
+                    firstWordCoords.Top,
+                    firstWordCoords.Right,
+                    firstWordCoords.Bottom,
+                    firstWordCoords.Left);
+                
+                orderedLines.Add(documentLine);
+            }
+            
+            // 4. Combine sibling lines that should be one
+            var combinedLines = new List<DocumentLine>();
+            DocumentLine? previousLine2 = null;
+            
+            foreach (var line in orderedLines)
+            {
+                var top = line.Columns.First().Words.First().Coordinates.Top;
+                
+                if (previousLine2 != null && line.Columns.Count == 1 && line.Columns.First().Words.Count < 3)
+                {
+                    var firstWordOfPreviousLine = previousLine2.Columns[0].Words[0];
+                    var fwplTop = firstWordOfPreviousLine.Coordinates.Top;
+
+                    var diff = Math.Abs(top - fwplTop);
+
+                    if (diff < 5)
+                    {
+                        previousLine2.Columns.Insert(
+                            0,
+                            new()
+                            {
+                                Words = line.Columns.First().Words,
+                                Text = string.Join(' ', line.Columns.First().Words.Select(w => w.Text))
+                            });
+                        
+                        previousLine2 = line;
+                        continue;
+                    }
+                }
+                
+                previousLine2 = line;
+                combinedLines.Add(line);
+            }
+
+            var x = combinedLines.Count;
+        }
         
         var groupedLines = uncorruptedLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
 
+                var xDiff = line.Words![0]!.Coordinates.Left
+                    - previousLine.Words![0]!.Coordinates.Left;
+                var isNotContinuingLeftToRight = xDiff < 0;
+                
                 var yDiff = GetMidpoint(line.Words![0]!.Coordinates)
                     - GetMidpoint(previousLine?.Words![0]!.Coordinates);
+                var hasAVerticalGapToPreviousWordBiggerThenALine = yDiff > lineHeight;
                 
-                if (yDiff > lineHeight)
+                if (hasAVerticalGapToPreviousWordBiggerThenALine || isNotContinuingLeftToRight)
                 {
+                    if (isNotContinuingLeftToRight && !hasAVerticalGapToPreviousWordBiggerThenALine)
+                    {
+                        
+                    }
+                    
                     lineIndex += 1;
                 }
 
@@ -60,6 +228,11 @@ public static class OcrHelper
                         continue;
                     }
 
+                    if (line.Text?.Contains("SUCCESSION", StringComparison.InvariantCultureIgnoreCase) == true)
+                    {
+                                
+                    }
+                    
                     var lineWords = new List<DocumentLineWord>();
                     
                     foreach (var word in line.Words)
@@ -68,7 +241,7 @@ public static class OcrHelper
                         
                         if (minWordHeight > wordHeight)
                         {
-                            if (word.Text.Contains("&"))
+                            if (word.Text.Contains("SUCCESSION", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 
                             }
@@ -122,9 +295,24 @@ public static class OcrHelper
                 
                 foreach (var word in words.OrderBy(w => w.Coordinates.Left)) // TODO is this order by useless
                 {
-                    var diffBetweenTops = previousOkWord?.Coordinates.Top - word.Coordinates.Top;
+                    if (word.Text.Contains("bris", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                                
+                    }
+                    
+                    var diffBetweenTops = word.Coordinates.Top - previousOkWord?.Coordinates.Top;
 
-                    if (previousOkWord != null && diffBetweenTops > maxDiffBetweenWordTop)
+                    if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop)
+                    {
+                        if (word.Text.Contains("&"))
+                        {
+                                
+                        }
+                        
+                        continue;
+                    }
+                    
+                    if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop)
                     {
                         if (word.Text.Contains("&"))
                         {
@@ -152,6 +340,17 @@ public static class OcrHelper
                     
                     var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
 
+                    if (-3 > xDiff)
+                    {
+                        if (pageNumber == 2)
+                        {
+                            
+                        }
+                        
+                        // Wrong order
+                        continue;
+                    }
+                    
                     if (xDiff > wordGap)
                     {
                         columns.Add(new DocumentLineColumn());

@@ -110,7 +110,8 @@ public class AwsTextractOcrDataExtractorService(
         const int wordGap = 100;
         const int minWordHeight = 7; // Can't really go lower, this is tiny
         const int maxPercentHeightDiff = 60;
-        const int maxDiffBetweenWordTop = 30;
+        const int maxNegativeDiffBetweenWordTop = -10;
+        const int maxPositiveDiffBetweenWordTop = 10;
         
         return OcrHelper.Group(
             returnLines,
@@ -120,7 +121,8 @@ public class AwsTextractOcrDataExtractorService(
             wordGap,
             minWordHeight,
             maxPercentHeightDiff,
-            maxDiffBetweenWordTop);
+            maxNegativeDiffBetweenWordTop,
+            maxPositiveDiffBetweenWordTop);
     }
     
     private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)

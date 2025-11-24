@@ -104,7 +104,8 @@ public class TesseractOcrDataExtractorService(
         const int wordGap = 200;
         const int minWordHeight = 15;
         const int maxPercentHeightDiff = 0;
-        const int maxDiffBetweenWordTop = 100;
+        const int maxNegativeDiffBetweenWordTop = -100;
+        const int maxPositiveDiffBetweenWordTop = 100;
         
         return OcrHelper.Group(
             returnLines,
@@ -114,7 +115,8 @@ public class TesseractOcrDataExtractorService(
             wordGap,
             minWordHeight,
             maxPercentHeightDiff,
-            maxDiffBetweenWordTop);
+            maxNegativeDiffBetweenWordTop,
+            maxPositiveDiffBetweenWordTop);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)

@@ -108,12 +108,13 @@ public class AwsTextractOcrDataExtractorService(
         
         const int lineHeight = 11;
         const int wordGap = 100;
-        const int minWordHeight = 5;
-        const int maxPercentHeightDiff = 75;
+        const int minWordHeight = 7; // Can't really go lower, this is tiny
+        const int maxPercentHeightDiff = 60;
         const int maxDiffBetweenWordTop = 30;
         
         return OcrHelper.Group(
             returnLines,
+            true,
             pageNumber,
             lineHeight,
             wordGap,

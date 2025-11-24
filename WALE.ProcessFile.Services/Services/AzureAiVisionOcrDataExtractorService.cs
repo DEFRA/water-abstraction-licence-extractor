@@ -190,6 +190,7 @@ public class AzureAiVisionOcrDataExtractorService(
         
         return OcrHelper.Group(
             returnLinesInFormat,
+            false,
             pageNumber,
             lineHeight,
             wordGap,

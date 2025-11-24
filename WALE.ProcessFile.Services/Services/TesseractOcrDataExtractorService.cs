@@ -108,6 +108,7 @@ public class TesseractOcrDataExtractorService(
         
         return OcrHelper.Group(
             returnLines,
+            false,
             pageNumber,
             lineHeight,
             wordGap,

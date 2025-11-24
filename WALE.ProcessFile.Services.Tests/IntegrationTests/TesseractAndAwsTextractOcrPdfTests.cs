@@ -92,7 +92,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("H.H. Henderson C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text); // Should have an ampersand really
+        Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text); // Should have an ampersand really
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
@@ -169,11 +169,11 @@ public class TesseractAndAwsTextractOcrPdfTests
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
-        Assert.Equal(1, abstractionLimitsSections.Count);
+        Assert.Single(abstractionLimitsSections);
         
         var abstractionLimitsSection = abstractionLimitsSections[0];
         Assert.NotNull(abstractionLimitsSection);
@@ -182,7 +182,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(8, section1Sub1.SubResults!.Count);
+        Assert.Equal(2, section1Sub1.SubResults!.Count);
         
         // NOTE - it does a bad job getting these subresults
         

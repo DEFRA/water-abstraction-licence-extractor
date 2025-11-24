@@ -8,6 +8,7 @@ public static class OcrHelper
 {
     public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
+        bool wordPerLine,
         int pageNumber,
         int lineHeight,
         int wordGap,
@@ -25,7 +26,9 @@ public static class OcrHelper
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
         var uncorruptedLines = returnLines
-            .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
+            .Where(line => wordPerLine ?
+                !string.IsNullOrEmpty(line.Text)
+                : !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
         
@@ -65,6 +68,11 @@ public static class OcrHelper
                         
                         if (minWordHeight > wordHeight)
                         {
+                            if (word.Text.Contains("&"))
+                            {
+                                
+                            }
+                            
                             continue;
                         }
                         
@@ -118,6 +126,11 @@ public static class OcrHelper
 
                     if (previousOkWord != null && diffBetweenTops > maxDiffBetweenWordTop)
                     {
+                        if (word.Text.Contains("&"))
+                        {
+                                
+                        }
+                        
                         continue;
                     }
                  
@@ -129,6 +142,11 @@ public static class OcrHelper
                     
                     if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight)
                     {
+                        if (word.Text.Contains("&"))
+                        {
+                                
+                        }
+                        
                         continue;
                     }
                     

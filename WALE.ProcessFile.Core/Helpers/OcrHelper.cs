@@ -226,6 +226,15 @@ public static class OcrHelper
             }
 
             var x = combinedLines.Count;
+
+            var z = combinedLines
+                .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
+                .Where(line => !DataHelper.IsCorruptedLine(
+                    line.Columns.SelectMany(c => c.Words).ToList()!, unacceptableIncorrectValue))
+                .ToList();
+
+            var y = z.Count;
+
         }
         
         var groupedLines = uncorruptedLines

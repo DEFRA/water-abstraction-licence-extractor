@@ -59,14 +59,9 @@ public static class OcrHelper
             
             foreach (var word in naiveOrderedWords)
             {
-                var wordTop = (int)word!.Coordinates.Top;
-                var wordBottom = (int)word.Coordinates.Bottom;
+                var wordTop = word!.Coordinates.Top;
+                var wordBottom = word.Coordinates.Bottom;
 
-                if (word.Text == "Hampshire" || word.Text == "Hampshire.")
-                {
-                    
-                }
-                
                 var positions = new TopBottomPositions
                 {
                     Top = wordTop,
@@ -81,7 +76,7 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Text == "2.")
+                if (word.Text == "NOTES")
                 {
                     
                 }
@@ -89,29 +84,69 @@ public static class OcrHelper
                 var overlapsWithLine = verticalWordGridDict
                     .FirstOrDefault(gridLine =>
                     {
-                        var wordTopOverlaps = wordTop >= gridLine.Key.Top
-                            && wordTop <= gridLine.Key.Bottom;
+                        var gridOrderedWords = gridLine
+                            .Value
+                            .OrderBy(w => w.Coordinates.Left)
+                            .ToList();
                         
-                        var wordBottomOverlaps = wordBottom >= gridLine.Key.Top
-                            && wordBottom <= gridLine.Key.Bottom;
+                        var previousHorizontalWord = gridOrderedWords
+                            .LastOrDefault(w => w.Coordinates.Right < word.Coordinates.Left);
+                        
+                        var nextHorizontalWord = gridOrderedWords
+                            .FirstOrDefault(w => w.Coordinates.Left > word.Coordinates.Right);
 
-                        return wordTopOverlaps || wordBottomOverlaps;
+                        var siblingWord = previousHorizontalWord ?? nextHorizontalWord;
+
+                        if (siblingWord == null)
+                        {
+                            return false;
+                        }
+                        
+                        var siblingTop = siblingWord.Coordinates.Top;
+                        var siblingBottom = siblingWord.Coordinates.Bottom;
+                        
+                        var wordTopOverlaps = wordTop >= siblingTop
+                            && wordTop <= siblingBottom;
+
+                        var wordBottomOverlaps = wordBottom >= siblingTop
+                            && wordBottom <= siblingBottom;
+                        
+                        // Font is smaller, but fully enclosed in the line
+                        if (wordTopOverlaps && wordBottomOverlaps)
+                        {
+                            return true;
+                        }
+                        
+                        // Word is slightly futher down the page, or font is bigger
+                        if (wordTopOverlaps && wordBottom >= siblingBottom)
+                        {
+                            return true;
+                        }
+
+                        // Word starts above the line, but goes into it
+                        if (wordBottomOverlaps && wordTop < siblingBottom)
+                        {
+                            return true;
+                        }
+
+                        return false;
                     });
 
                 if (overlapsWithLine.Value != null)
                 {
-                    if (positions.Top < overlapsWithLine.Key.Top)
-                    {
-                        //overlapsWithLine.Key.Top = wordTop;
-                    }
-                    
-                    if (positions.Bottom > overlapsWithLine.Key.Bottom)
-                    {
-                        //overlapsWithLine.Key.Bottom = wordBottom;
-                    }
-                    
                     overlapsWithLine.Value.Add(word);
-                 
+                    var orderedWords = overlapsWithLine
+                        .Value
+                        .OrderBy(w => w.Coordinates.Left)
+                        .ToList();
+
+                    overlapsWithLine.Value.Clear();
+                    overlapsWithLine.Value.AddRange(orderedWords);
+                    
+                    var firstWord = orderedWords.First();
+                    overlapsWithLine.Key.Top = firstWord.Coordinates.Top;
+                    overlapsWithLine.Key.Bottom = firstWord.Coordinates.Bottom;
+                        
                     previousWord = word;
                     continue;
                 }

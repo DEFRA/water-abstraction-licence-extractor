@@ -222,6 +222,11 @@ public static partial class DataHelper
         {
             return false;
         }
+
+        if (words.Count > 0 && words[0]!.Text == "ΓaMaHT")
+        {
+            
+        }
         
         var digitsCount = 0;
         var totalConfidence = 0.0;
@@ -273,11 +278,37 @@ public static partial class DataHelper
         return isCorrupt;
     }
 
+    private static bool IsSpecialCharacter(char ch)
+    {
+        return 
+            (!char.IsLetterOrDigit(ch) || !char.IsAscii(ch))
+            && ch != ' '
+            && ch != '/'
+            && ch != '.'
+            && ch != '%'
+            && ch != '('
+            && ch != ')'
+            && ch != ','
+            && ch != '"'
+            && ch != '‘'
+            && ch != '\''
+            && ch != '-'
+            && ch != ':'
+            && ch != ';'
+            && ch != '£'
+            && ch != '*';
+    }
+    
     public static bool IsCorruptedText(string? line, bool isPartialChunk = false, double unacceptableIncorrectValue = 50.01)
     {
         if (string.IsNullOrEmpty(line))
         {
             return false;
+        }
+
+        if (IsSpecialCharacter(line[0]))
+        {
+            return true;
         }
         
         if (line.Contains('—'))
@@ -302,22 +333,7 @@ public static partial class DataHelper
         }
         
         var containsSpecialChar = line
-            .Where(ch =>
-                ch != ' '
-                && ch != '/'
-                && ch != '.'
-                && ch != '%'
-                && ch != '('
-                && ch != ')'
-                && ch != ','
-                && ch != '"'
-                && ch != '‘'
-                && ch != '\''
-                && ch != '-'
-                && ch != ':'
-                && ch != ';'
-                && ch != '£'
-                && ch != '*')
+            .Where(IsSpecialCharacter)
             .Count(ch => !char.IsLetterOrDigit(ch) || !char.IsAscii(ch));
 
         if (line.Length < 8 && CharDigitCharRegex().IsMatch(line))

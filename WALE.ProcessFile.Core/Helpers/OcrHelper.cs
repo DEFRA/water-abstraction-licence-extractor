@@ -76,11 +76,6 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Text == "Hampshire.")
-                {
-                    
-                }
-
                 var overlapsWithLine = verticalWordGridDict
                     .FirstOrDefault(gridLine =>
                     {
@@ -157,10 +152,10 @@ public static class OcrHelper
                 verticalWordGridDict.Add(positions, [word]);
                 previousWord = word;
             }
-            
-            var orderedLines = new List<DocumentLine>();
 
             // 3. Order each line to produce ordered words per line
+            
+            var orderedLines = new List<DocumentLine>();
             
             foreach (var kvp in verticalWordGridDict)
             {
@@ -192,6 +187,7 @@ public static class OcrHelper
             }
             
             // 4. Combine sibling lines that should be one
+            
             var combinedLines = new List<DocumentLine>();
             DocumentLine? previousLine2 = null;
             
@@ -225,15 +221,13 @@ public static class OcrHelper
                 combinedLines.Add(line);
             }
 
-            var x = combinedLines.Count;
-
-            var z = combinedLines
+            var combinedLinesNoBlanks = combinedLines
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-                .Where(line => !DataHelper.IsCorruptedLine(
-                    line.Columns.SelectMany(c => c.Words).ToList()!, unacceptableIncorrectValue))
+                /*.Where(line => !DataHelper.IsCorruptedLine(
+                    line.Columns.SelectMany(c => c.Words).ToList()!, unacceptableIncorrectValue))*/
                 .ToList();
 
-            var y = z.Count;
+            return combinedLinesNoBlanks;
 
         }
         

@@ -222,11 +222,6 @@ public static partial class DataHelper
         {
             return false;
         }
-
-        if (words.Count > 0 && words[0]!.Text == "ΓaMaHT")
-        {
-            
-        }
         
         var digitsCount = 0;
         var totalConfidence = 0.0;
@@ -269,11 +264,6 @@ public static partial class DataHelper
             string.Join(' ', words.Select(w => w?.Text)),
             true,
             unacceptableIncorrectValue);
-
-        if (isCorrupt)
-        {
-            
-        }
         
         return isCorrupt;
     }
@@ -308,7 +298,7 @@ public static partial class DataHelper
 
         if (IsSpecialCharacter(line[0]))
         {
-            return true;
+            //return true;
         }
         
         if (line.Contains('—'))
@@ -331,22 +321,20 @@ public static partial class DataHelper
         {
             line = line.Replace("dayof", "day of");
         }
-        
-        var containsSpecialChar = line
-            .Where(IsSpecialCharacter)
-            .Count(ch => !char.IsLetterOrDigit(ch) || !char.IsAscii(ch));
+
+        var specialCharCount = line.Count(IsSpecialCharacter);
 
         if (line.Length < 8 && CharDigitCharRegex().IsMatch(line))
         {
             return true;
         }
 
-        if (containsSpecialChar >= 3)
+        if (specialCharCount >= 3)
         {
             return true;
         }
         
-        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && containsSpecialChar >= 1)
+        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && specialCharCount >= 1)
         {
             return true;
         }

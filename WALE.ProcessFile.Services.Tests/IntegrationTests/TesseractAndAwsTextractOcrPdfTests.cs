@@ -169,7 +169,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -182,7 +182,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(2, section1Sub1.SubResults!.Count);
+        Assert.Equal(12, section1Sub1.SubResults!.Count);
         
         // NOTE - it does a bad job getting these subresults
         

@@ -76,7 +76,7 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Text == "NOTES")
+                if (word.Text == "Hampshire.")
                 {
                     
                 }
@@ -117,8 +117,11 @@ public static class OcrHelper
                             return true;
                         }
                         
+                        var wordTopConsiderablyOverlaps = wordTop + 5 >= siblingTop
+                            && wordTop + 5 <= siblingBottom;
+                        
                         // Word is slightly futher down the page, or font is bigger
-                        if (wordTopOverlaps && wordBottom >= siblingBottom)
+                        if (wordTopOverlaps && wordTopConsiderablyOverlaps && wordBottom >= siblingBottom)
                         {
                             return true;
                         }

@@ -106,7 +106,7 @@ public class AwsTextractOcrDataExtractorService(
         const int maxPercentHeightDiff = 82;
         const int maxDiffBetweenWordTop = 30;*/
         
-        const int lineHeight = 11;
+        const int lineHeight = 8;
         const int wordGap = 100;
         const int minWordHeight = 7; // Can't really go lower, this is tiny
         const int maxPercentHeightDiff = 60;

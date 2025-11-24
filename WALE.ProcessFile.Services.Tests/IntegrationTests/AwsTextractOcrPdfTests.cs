@@ -75,7 +75,7 @@ public class AwsTextractOcrPdfTests
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(17, records.Text!.Count);
+        Assert.Equal(18, records.Text!.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);

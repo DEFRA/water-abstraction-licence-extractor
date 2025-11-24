@@ -624,7 +624,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
 
-    private bool ProcessMatchAll(
+    private bool NotMatchedAll(
         DocumentLine line,
         DocumentLine lineForPosition,
         LabelToMatch label,
@@ -740,6 +740,11 @@ public class PdfDataExtractorService(
         
         foreach (var line in lines)
         {
+            if (serviceName == "AwsTextractOcrDataExtractorService" && line.Line?.Text.Contains("Succession to licence", StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                
+            }
+            
             var fullLine = line.Line;
             var breakLineLoop = false;
             
@@ -845,7 +850,7 @@ public class PdfDataExtractorService(
                         previousLines ??= line.PreviousLines(lines, label);
                         nextLines ??= line.NextLines(lines, label);
 
-                        if (ProcessMatchAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
+                        if (NotMatchedAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -859,6 +864,11 @@ public class PdfDataExtractorService(
                         {
                             matchedLabel.Text = [matchedStartText];
                         }
+                    }
+
+                    if (matchedLabel.Format == "CompanyName")
+                    {
+                        
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(

@@ -102,9 +102,18 @@ public class TesseractOcrDataExtractorService(
         
         const int lineHeight = 21;
         const int wordGap = 200;
-        const int minWordHeight = 15;;
+        const int minWordHeight = 15;
+        const int maxPercentHeightDiff = 0;
+        const int maxDiffBetweenWordTop = 100;
         
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap, minWordHeight);
+        return OcrHelper.Group(
+            returnLines,
+            pageNumber,
+            lineHeight,
+            wordGap,
+            minWordHeight,
+            maxPercentHeightDiff,
+            maxDiffBetweenWordTop);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)
@@ -183,7 +192,8 @@ public class TesseractOcrDataExtractorService(
                         coordinates.X2,
                         coordinates.Y2,
                         coordinates.X1
-                    )));
+                    ),
+                    null));
             } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
             returnLines.Add(new LineAndWords { Text = line, Words = words });

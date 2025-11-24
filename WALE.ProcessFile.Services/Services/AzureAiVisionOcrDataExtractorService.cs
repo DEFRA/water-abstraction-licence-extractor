@@ -185,8 +185,17 @@ public class AzureAiVisionOcrDataExtractorService(
         const int lineHeight = 23;
         const int wordGap = 150;
         const int minWordHeight = 15;
+        const int maxPercentHeightDiff = 0;
+        const int maxDiffBetweenWordTop = 100;
         
-        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap, minWordHeight);
+        return OcrHelper.Group(
+            returnLinesInFormat,
+            pageNumber,
+            lineHeight,
+            wordGap,
+            minWordHeight,
+            maxPercentHeightDiff,
+            maxDiffBetweenWordTop);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)
@@ -200,7 +209,8 @@ public class AzureAiVisionOcrDataExtractorService(
                 word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[5] ?? PositionConstants.UnknownCoordinate, 
-                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate));
+                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate),
+            null);
     }
     
     private static IEnumerable<(string, IList<Word>)> ToPageLines(ReadResult page)

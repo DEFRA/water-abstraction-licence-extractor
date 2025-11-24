@@ -100,11 +100,26 @@ public class AwsTextractOcrDataExtractorService(
             }
         }
         
-        const int lineHeight = 12;
+        /*const int lineHeight = 7;
+        const int wordGap = 100;
+        const int minWordHeight = 8;
+        const int maxPercentHeightDiff = 82;
+        const int maxDiffBetweenWordTop = 30;*/
+        
+        const int lineHeight = 11;
         const int wordGap = 100;
         const int minWordHeight = 5;
+        const int maxPercentHeightDiff = 75;
+        const int maxDiffBetweenWordTop = 30;
         
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap, minWordHeight);
+        return OcrHelper.Group(
+            returnLines,
+            pageNumber,
+            lineHeight,
+            wordGap,
+            minWordHeight,
+            maxPercentHeightDiff,
+            maxDiffBetweenWordTop);
     }
     
     private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)
@@ -150,11 +165,12 @@ public class AwsTextractOcrDataExtractorService(
                             block.Text,
                             block.Confidence,
                             new DocumentLineWordCoordinates(
-                                (block.Geometry.BoundingBox.Top ?? -1.0) * coordinatesFormatMultiplier,
-                                    (block.Geometry.BoundingBox.Left + block.Geometry.BoundingBox.Width ?? -1.0) * coordinatesFormatMultiplier,
-                                    (block.Geometry.BoundingBox.Top + block.Geometry.BoundingBox.Height ?? -1.0) * coordinatesFormatMultiplier,
-                                (block.Geometry.BoundingBox.Left ?? -1.0) * coordinatesFormatMultiplier
-                            )
+                                (block.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
+                                   (block.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
+                                    (block.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
+                                (block.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
+                            ),
+                            block.TextType.Value
                         )
                     }!
                 };

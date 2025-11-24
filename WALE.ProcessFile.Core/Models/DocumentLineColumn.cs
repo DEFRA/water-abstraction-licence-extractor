@@ -32,7 +32,11 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
         return text
             .Split(' ')
             .Select(word =>
-                new DocumentLineWord(word, null, PositionConstants.UnknownCoordinates))
+                new DocumentLineWord(
+                    word,
+                    null,
+                    PositionConstants.UnknownCoordinates,
+                    null))
             .ToList();
     }
 }

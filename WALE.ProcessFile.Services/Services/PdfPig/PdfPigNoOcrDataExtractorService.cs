@@ -335,7 +335,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     columnToAddTo.Words.Add(new DocumentLineWord(
                         word.Text,
                         null,
-                        DocumentLineWordCoordinatesHelper.Convert(word.BoundingBox)
+                        DocumentLineWordCoordinatesHelper.Convert(word.BoundingBox),
+                        "Digital"
                     ));
 
                     previousWord2 = word;

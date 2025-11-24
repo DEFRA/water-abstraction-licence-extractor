@@ -11,7 +11,9 @@ public static class OcrHelper
         int pageNumber,
         int lineHeight,
         int wordGap,
-        int minHeight)
+        int minWordHeight,
+        int maxDiffPercentLineHeight,
+        int maxDiffBetweenWordTop)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -46,6 +48,7 @@ public static class OcrHelper
             .Select(lines =>
             {
                 var words = new List<DocumentLineWord>();
+                DocumentLineWord? previousOkWord = null;
                 
                 foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
                 {
@@ -55,16 +58,16 @@ public static class OcrHelper
                     }
 
                     var lineWords = new List<DocumentLineWord>();
-
+                    
                     foreach (var word in line.Words)
                     {
                         var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
                         
-                        if (minHeight > wordHeight)
+                        if (minWordHeight > wordHeight)
                         {
                             continue;
                         }
-
+                        
                         var wordTextWithoutPunctuation = word.Text
                             .Replace(",", string.Empty)
                             .Replace(".", string.Empty);
@@ -82,14 +85,20 @@ public static class OcrHelper
 
                                 if (lengthDiff < 2)
                                 {
-                                    lineWords.Add(new DocumentLineWord(topSuggestion, word.OcrConfidence,
-                                        word.Coordinates));
+                                    lineWords.Add(
+                                        new DocumentLineWord(
+                                            topSuggestion,
+                                            word.OcrConfidence,
+                                            word.Coordinates,
+                                            word.HandwrittenOrTyped));
                                     
+                                    previousOkWord = word;                                    
                                     continue;
                                 }
                             }
                         }
                         
+                        previousOkWord = word;                        
                         lineWords.Add(word);
                     }
                     
@@ -101,11 +110,29 @@ public static class OcrHelper
                     new()
                 };
                 
-                DocumentLineWord? previousWord = null;
+                previousOkWord = null;
                 
-                foreach (var word in words.OrderBy(w => w.Coordinates.Left))
+                foreach (var word in words.OrderBy(w => w.Coordinates.Left)) // TODO is this order by useless
                 {
-                    var xDiff = word.Coordinates.Left - previousWord?.Coordinates.Right;
+                    var diffBetweenTops = previousOkWord?.Coordinates.Top - word.Coordinates.Top;
+
+                    if (previousOkWord != null && diffBetweenTops > maxDiffBetweenWordTop)
+                    {
+                        continue;
+                    }
+                 
+                    var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
+                    var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
+                    var percentOfPrevious = previousOkWord != null ?
+                        GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
+                        : null;
+                    
+                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight)
+                    {
+                        continue;
+                    }
+                    
+                    var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
 
                     if (xDiff > wordGap)
                     {
@@ -115,7 +142,7 @@ public static class OcrHelper
                     var column = columns.Last();
                     column.Words.Add(word);
 
-                    previousWord = word;
+                    previousOkWord = word;
                 }
 
                 foreach (var column in columns)
@@ -140,6 +167,14 @@ public static class OcrHelper
             .ToList();
 
         return groupedLines;
+    }
+
+    private static double? GetPercentOfPrevious(double previousWordHeight, double wordHeight)
+    {
+        var percentPerCharacter = 100.0 / previousWordHeight;
+        var percentOfPrevious = percentPerCharacter * wordHeight;
+        
+        return percentOfPrevious;
     }
     
     private static double? GetMidpoint(DocumentLineWordCoordinates? coordinates)

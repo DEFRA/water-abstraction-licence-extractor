@@ -89,7 +89,7 @@ public static class Split
                 
                 var leftPartWords = leftPart
                     .Split(PositionConstants.SpaceChar)
-                    .Select(text => new DocumentLineWord(text, null, coords))
+                    .Select(text => new DocumentLineWord(text, request.line.OcrConfidence, coords, null))
                     .ToList();
 
                 var leftColumns = new List<DocumentLineColumn>
@@ -110,8 +110,9 @@ public static class Split
                         .Split(PositionConstants.SpaceChar)
                         .Select(text => new DocumentLineWord(
                             text,
-                            null,
-                            coords))
+                            request.line.OcrConfidence,
+                            coords,
+                            null))
                         .ToList();
 
                     var rightColumns = new List<DocumentLineColumn>

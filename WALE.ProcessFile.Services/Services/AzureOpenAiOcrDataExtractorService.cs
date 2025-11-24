@@ -127,7 +127,7 @@ public class AzureOpenAiOcrDataExtractorService(
                     lineText,
                     lineText
                         .Split(' ')
-                        .Select(wordText => new DocumentLineWord(wordText, -1, unknownCoords)).ToList());
+                        .Select(wordText => new DocumentLineWord(wordText, -1, unknownCoords, null)).ToList());
                 
                 documentLine.Columns.Add(column);
                 

@@ -222,7 +222,7 @@ public static partial class DataHelper
         {
             return false;
         }
-
+        
         var digitsCount = word.Text.Count(char.IsDigit);
         var totalConfidence = 0.0;
         const int minConfidence = 38;
@@ -232,16 +232,22 @@ public static partial class DataHelper
             return false;
         }
 
-        if (word.Text == "aondom")
-        {
-            
-        }
+        var wordWithoutPunctuation = new string(word.Text
+            .Where(ch =>
+                ch != '"'
+                && ch != '\''
+                && ch != '('
+                && ch != ')'
+                && ch != ','
+                && ch != ':')
+            .ToArray());
         
         var confidence = word.OcrConfidence.Value;
         
         if (confidence < minConfidence
             && word.Text.Length >= 5
-            && (AutoCorrectHelper.CustomDictionary.Check(word.Text) || AutoCorrectHelper.Dictionary.Check(word.Text)))
+            && (AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
+                || AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation)))
         {
             confidence = 100.0;
         }
@@ -279,8 +285,8 @@ public static partial class DataHelper
 
         if (!mainlyDigits
             && averageConfidence < checkIfUnderConfidence
-            && !AutoCorrectHelper.CustomDictionary.Check(word.Text)
-            && !AutoCorrectHelper.Dictionary.Check(word.Text))
+            && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
+            && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation))
         {
             return true;
         }

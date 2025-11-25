@@ -246,7 +246,7 @@ public static class OcrHelper
             {
                 var top = line.Columns.First().Words.First().Coordinates.Top;
                 
-                if (previousLine2 != null && line.Columns.Count == 1 && line.Columns.First().Words.Count < 3)
+                if (previousLine2 != null)
                 {
                     var firstWordOfPreviousLine = previousLine2.Columns[0].Words[0];
                     var fwplTop = firstWordOfPreviousLine.Coordinates.Top;

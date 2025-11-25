@@ -17,12 +17,12 @@ public static class OcrHelper
         IReadOnlyList<LineAndWords> returnLines,
         bool wordPerLine,
         int pageNumber,
-        int lineHeight,
-        int wordGap,
-        int minWordHeight,
-        int maxDiffPercentLineHeight,
-        int maxNegativeDiffBetweenWordTop,
-        int maxPositiveDiffBetweenWordTop)
+        int lineHeight_OLDFLOWONLY,
+        int horizontalColumnGapTrigger,
+        int minimumFontSize,
+        int maxDiffPercentLineHeight_OLDFLOWONLY,
+        int maxNegativeDiffBetweenWordTop_OLDFLOWONLY,
+        int maxPositiveDiffBetweenWordTop_OLDFLOWONLY)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -42,18 +42,40 @@ public static class OcrHelper
 
         if (wordPerLine)
         {
-            // 0. Autocorrect words
+            // 0. Autocorrect + remove corrupted
             var autoCorrectedWords = uncorruptedLines
                 .Where(line => !string.IsNullOrEmpty(line.Text))
                 .SelectMany(line => line.Words!)
                 .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
-                .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary);
+                .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
+                .Where(word => !DataHelper.IsCorruptedLine([word]));
+            
+            // 0b. Remove tiny words
+
+            var correctSizedWords = new List<DocumentLineWord>();
+
+            foreach (var word in autoCorrectedWords)
+            {
+                if (word == null)
+                {
+                    continue;
+                }
+                
+                var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
+
+                if (minimumFontSize > wordHeight)
+                {    
+                    continue;
+                }
+                
+                correctSizedWords.Add(word);
+            }
             
             // 1. Order broadly by vertical then horizontal position
             
-            var naiveOrderedWords = autoCorrectedWords
-                .OrderBy(x => x!.Coordinates.Top)
-                .ThenBy(x => x!.Coordinates.Left)
+            var naiveOrderedWords = correctSizedWords
+                .OrderBy(word => word.Coordinates.Top)
+                .ThenBy(word => word.Coordinates.Left)
                 .ToList();
 
             DocumentLineWord? previousWord = null;
@@ -64,7 +86,7 @@ public static class OcrHelper
             
             foreach (var word in naiveOrderedWords)
             {
-                var wordTop = word!.Coordinates.Top;
+                var wordTop = word.Coordinates.Top;
                 var wordBottom = word.Coordinates.Bottom;
 
                 var positions = new TopBottomPositions
@@ -180,9 +202,9 @@ public static class OcrHelper
                 {
                     if (previousWord != null)
                     {
-                        var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
+                        var horizontalGapFromPreviousWord = word.Coordinates.Left - previousWord.Coordinates.Right;
 
-                        if (xDiff > wordGap)
+                        if (horizontalGapFromPreviousWord > horizontalColumnGapTrigger)
                         {
                             columns.Add(new DocumentLineColumn());
                         }
@@ -278,7 +300,7 @@ public static class OcrHelper
                     lineIndex += 1;
                 }*/
 
-                if (yDiff > lineHeight)
+                if (yDiff > lineHeight_OLDFLOWONLY)
                 {
                     lineIndex += 1;
                 }
@@ -309,7 +331,7 @@ public static class OcrHelper
                     {
                         var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
                         
-                        if (minWordHeight > wordHeight)
+                        if (minimumFontSize > wordHeight)
                         {
                             if (word.Text.Contains("SUCCESSION", StringComparison.InvariantCultureIgnoreCase))
                             {
@@ -372,7 +394,7 @@ public static class OcrHelper
                     
                     var diffBetweenTops = word.Coordinates.Top - previousOkWord?.Coordinates.Top;
 
-                    if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop)
+                    if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop_OLDFLOWONLY)
                     {
                         if (word.Text.Contains("&"))
                         {
@@ -382,7 +404,7 @@ public static class OcrHelper
                         continue;
                     }
                     
-                    if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop)
+                    if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop_OLDFLOWONLY)
                     {
                         if (word.Text.Contains("&"))
                         {
@@ -398,7 +420,7 @@ public static class OcrHelper
                         GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
                         : null;
                     
-                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight)
+                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight_OLDFLOWONLY)
                     {
                         if (word.Text.Contains("&"))
                         {
@@ -421,7 +443,7 @@ public static class OcrHelper
                         continue;
                     }*/
                     
-                    if (xDiff > wordGap)
+                    if (xDiff > horizontalColumnGapTrigger)
                     {
                         columns.Add(new DocumentLineColumn());
                     }

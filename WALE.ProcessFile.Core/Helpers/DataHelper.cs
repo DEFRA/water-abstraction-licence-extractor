@@ -244,10 +244,25 @@ public static partial class DataHelper
             {
                 confidence = 100.0;
             }
+
+            if (word.Autocorrected)
+            {
+                confidence = 100.0;
+            }
                 
             totalConfidence += confidence * word.Text.Length;
         }
 
+        var firstWord = words[0]!;
+        if (char.IsDigit(firstWord.Text[0])
+            && (firstWord.Text.EndsWith("st", StringComparison.InvariantCultureIgnoreCase)
+                || firstWord.Text.EndsWith("nd", StringComparison.InvariantCultureIgnoreCase)
+                || firstWord.Text.EndsWith("rd", StringComparison.InvariantCultureIgnoreCase)            
+                || firstWord.Text.EndsWith("th", StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return false;
+        }
+        
         var lineLength = words.Sum(w => w?.Text.Length);
         var averageConfidence = totalConfidence / lineLength;
         var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;

@@ -745,11 +745,6 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
-                if (label.Name == "DateOfIssueOldStyle" && serviceName == "AwsTextractOcrDataExtractorService" && line.Line?.Text.Contains("DATED this", StringComparison.InvariantCultureIgnoreCase) == true)
-                {
-                
-                }
-                
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 
@@ -864,11 +859,6 @@ public class PdfDataExtractorService(
                         {
                             matchedLabel.Text = [matchedStartText];
                         }
-                    }
-
-                    if (matchedLabel.Format == "CompanyName")
-                    {
-                        
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(

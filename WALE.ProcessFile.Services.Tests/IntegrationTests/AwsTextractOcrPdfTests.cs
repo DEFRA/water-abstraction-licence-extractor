@@ -171,7 +171,7 @@ public class AwsTextractOcrPdfTests
     [Theory]
     [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)] // Works in Tesseract+AI too
     [InlineData("22630110__Issued licence- 2-26-30-110 6075592.PDF", "29/10/02", "29/10/2002", 13)] // Does better then Azure AI Vison - that skips word 'issue'
-    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 6)] // Does better then Azure AI Vison - that skips word 'JULY'
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 5)] // Does better then Azure AI Vison - that skips word 'JULY'
     // EXAMPLE OF IMPOSSIBLE ONE "12504178R01__Application type unknown Licence Issued (01.05.2007).pdf", "299 July'03", "", 10 // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {

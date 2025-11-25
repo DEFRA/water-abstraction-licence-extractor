@@ -57,11 +57,6 @@ public static class AutoCorrectHelper
             wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("\"", string.Empty);
         }
 
-        if (word.Text.Equals("ld", StringComparison.InvariantCultureIgnoreCase))
-        {
-            
-        }
-
         const int minLengthForAutocorrection = 2;
         const int maxConfidenceNotToFix = 50;
         const int maxLengthDifference = 3;

@@ -282,7 +282,7 @@ public static partial class DataHelper
             && !AutoCorrectHelper.CustomDictionary.Check(word.Text)
             && !AutoCorrectHelper.Dictionary.Check(word.Text))
         {
-            return false;
+            return true;
         }
         
         var isCorrupt = IsCorruptedText(

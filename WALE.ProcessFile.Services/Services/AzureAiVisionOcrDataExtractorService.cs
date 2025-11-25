@@ -188,6 +188,7 @@ public class AzureAiVisionOcrDataExtractorService(
         const int maxPercentHeightDiff = 0;
         const int maxNegativeDiffBetweenWordTop = -100;
         const int maxPositiveDiffBetweenWordTop = 100;
+        const int considerableOverlapAmount = 15;
         
         return OcrHelper.Group(
             returnLinesInFormat,
@@ -198,7 +199,8 @@ public class AzureAiVisionOcrDataExtractorService(
             minWordHeight,
             maxPercentHeightDiff,
             maxNegativeDiffBetweenWordTop,
-            maxPositiveDiffBetweenWordTop);
+            maxPositiveDiffBetweenWordTop,
+            considerableOverlapAmount);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)

@@ -22,7 +22,8 @@ public static class OcrHelper
         int minimumFontSize,
         int maxDiffPercentLineHeight_OLDFLOWONLY,
         int maxNegativeDiffBetweenWordTop_OLDFLOWONLY,
-        int maxPositiveDiffBetweenWordTop_OLDFLOWONLY)
+        int maxPositiveDiffBetweenWordTop_OLDFLOWONLY,
+        int considerableOverlapAmount)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -33,6 +34,8 @@ public static class OcrHelper
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
+        //wordPerLine = true;
+        
         var uncorruptedLines = returnLines
             .Where(line => wordPerLine ?
                 !string.IsNullOrEmpty(line.Text)
@@ -139,9 +142,8 @@ public static class OcrHelper
                             return true;
                         }
 
-                        const int overlapAmount = 3;
-                        var wordTopConsiderablyOverlaps = wordTop + overlapAmount >= siblingTop
-                            && wordTop + overlapAmount <= siblingBottom;
+                        var wordTopConsiderablyOverlaps = wordTop + considerableOverlapAmount >= siblingTop
+                            && wordTop + considerableOverlapAmount <= siblingBottom;
                         
                         // Word is slightly futher down the page, or font is bigger
                         if (wordTopOverlaps && wordTopConsiderablyOverlaps && wordBottom >= siblingBottom)
@@ -282,23 +284,8 @@ public static class OcrHelper
             {
                 previousLine ??= line;
 
-                /*var xDiff = line.Words![0]!.Coordinates.Left
-                    - previousLine.Words![0]!.Coordinates.Left;
-                var isNotContinuingLeftToRight = xDiff < 0;*/
-
                 var yDiff = GetMidpoint(line.Words![0]!.Coordinates)
                     - GetMidpoint(previousLine?.Words![0]!.Coordinates);
-                /*var hasAVerticalGapToPreviousWordBiggerThenALine = yDiff > lineHeight;
-
-                if (hasAVerticalGapToPreviousWordBiggerThenALine || isNotContinuingLeftToRight)
-                {
-                    if (isNotContinuingLeftToRight && !hasAVerticalGapToPreviousWordBiggerThenALine)
-                    {
-
-                    }
-
-                    lineIndex += 1;
-                }*/
 
                 if (yDiff > lineHeight_OLDFLOWONLY)
                 {
@@ -320,11 +307,6 @@ public static class OcrHelper
                         continue;
                     }
 
-                    if (line.Text?.Contains("SUCCESSION", StringComparison.InvariantCultureIgnoreCase) == true)
-                    {
-                                
-                    }
-                    
                     var lineWords = new List<DocumentLineWord>();
                     
                     foreach (var word in line.Words)
@@ -333,11 +315,6 @@ public static class OcrHelper
                         
                         if (minimumFontSize > wordHeight)
                         {
-                            if (word.Text.Contains("SUCCESSION", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                
-                            }
-                            
                             continue;
                         }
                         
@@ -385,32 +362,17 @@ public static class OcrHelper
                 
                 previousOkWord = null;
                 
-                foreach (var word in words.OrderBy(w => w.Coordinates.Left)) // TODO is this order by useless
+                foreach (var word in words.OrderBy(w => w.Coordinates.Left))
                 {
-                    if (word.Text.Contains("bris", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                                
-                    }
-                    
                     var diffBetweenTops = word.Coordinates.Top - previousOkWord?.Coordinates.Top;
 
                     if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop_OLDFLOWONLY)
                     {
-                        if (word.Text.Contains("&"))
-                        {
-                                
-                        }
-                        
                         continue;
                     }
                     
                     if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop_OLDFLOWONLY)
                     {
-                        if (word.Text.Contains("&"))
-                        {
-                                
-                        }
-                        
                         continue;
                     }
                  
@@ -422,26 +384,10 @@ public static class OcrHelper
                     
                     if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight_OLDFLOWONLY)
                     {
-                        if (word.Text.Contains("&"))
-                        {
-                                
-                        }
-                        
                         continue;
                     }
                     
                     var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
-
-                    /*if (-3 > xDiff)
-                    {
-                        if (pageNumber == 2)
-                        {
-                            
-                        }
-                        
-                        // Wrong order
-                        continue;
-                    }*/
                     
                     if (xDiff > horizontalColumnGapTrigger)
                     {

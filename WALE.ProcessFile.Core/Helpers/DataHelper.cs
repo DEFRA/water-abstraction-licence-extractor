@@ -216,6 +216,83 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
+    public static bool IsCorruptedWord(DocumentLineWord? word, double unacceptableIncorrectValue = 50.01)
+    {
+        if (word == null)
+        {
+            return false;
+        }
+
+        var digitsCount = word.Text.Count(char.IsDigit);
+        var totalConfidence = 0.0;
+        const int minConfidence = 38;
+        
+        if (word.OcrConfidence == null)
+        {
+            return false;
+        }
+
+        if (word.Text == "aondom")
+        {
+            
+        }
+        
+        var confidence = word.OcrConfidence.Value;
+        
+        if (confidence < minConfidence
+            && word.Text.Length >= 5
+            && (AutoCorrectHelper.CustomDictionary.Check(word.Text) || AutoCorrectHelper.Dictionary.Check(word.Text)))
+        {
+            confidence = 100.0;
+        }
+
+        if (word.Autocorrected)
+        {
+            confidence = 100.0;
+        }
+            
+        totalConfidence += confidence * word.Text.Length;
+        var firstWord = word;
+        
+        if (char.IsDigit(firstWord.Text[0])
+            && (firstWord.Text.EndsWith("st", StringComparison.InvariantCultureIgnoreCase)
+                || firstWord.Text.EndsWith("nd", StringComparison.InvariantCultureIgnoreCase)
+                || firstWord.Text.EndsWith("rd", StringComparison.InvariantCultureIgnoreCase)            
+                || firstWord.Text.EndsWith("th", StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return false;
+        }
+        
+        var lineLength = word.Text.Length;
+        var averageConfidence = totalConfidence / lineLength;
+        var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
+        
+        var lineLengthWithoutDots = word.Text.Count(c => c != '.');
+        var mainlyDigits = ((100.0 / lineLengthWithoutDots) * digitsCount) >= 60;
+        
+        if (averageConfidenceBelowThreshold && !mainlyDigits)
+        {
+            return true;
+        }
+
+        const int checkIfUnderConfidence = 70;
+
+        if (!mainlyDigits
+            && averageConfidence < checkIfUnderConfidence
+            && !AutoCorrectHelper.CustomDictionary.Check(word.Text)
+            && !AutoCorrectHelper.Dictionary.Check(word.Text))
+        {
+            return false;
+        }
+        
+        var isCorrupt = IsCorruptedText(
+            word.Text,
+            true,
+            unacceptableIncorrectValue);
+        
+        return isCorrupt;
+    }
+    
     public static bool IsCorruptedLine(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
     {
         if (words == null)
@@ -234,6 +311,11 @@ public static partial class DataHelper
             if (word?.OcrConfidence == null)
             {
                 continue;
+            }
+
+            if (word.Text == "aondom")
+            {
+                
             }
             
             var confidence = word.OcrConfidence.Value;

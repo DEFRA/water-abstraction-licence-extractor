@@ -30,6 +30,11 @@ public static class AutoCorrectHelper
             return null;
         }
         
+        if (word.Text.StartsWith("Authority", StringComparison.InvariantCultureIgnoreCase))
+        {
+            
+        }
+        
         var wordTextWithoutPunctuation = word.Text;
 
         if (wordTextWithoutPunctuation.Contains(','))
@@ -51,9 +56,18 @@ public static class AutoCorrectHelper
         {
             wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("\"", string.Empty);
         }
-                        
-        if (word is { OcrConfidence: < 40, Text.Length: > 3 }
-            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
+
+        if (word.Text.Equals("ld", StringComparison.InvariantCultureIgnoreCase))
+        {
+            
+        }
+
+        const int minLengthForAutocorrection = 2;
+        const int maxConfidenceNotToFix = 50;
+        const int maxLengthDifference = 3;
+        
+        if (word is { OcrConfidence: < maxConfidenceNotToFix, Text.Length: >= minLengthForAutocorrection }
+            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) >= minLengthForAutocorrection
             && !CustomDictionary.Check(wordTextWithoutPunctuation)
             && !Dictionary.Check(wordTextWithoutPunctuation))
         {
@@ -66,7 +80,7 @@ public static class AutoCorrectHelper
             
             var lengthDiff = Math.Abs(topSuggestion.Length - wordTextWithoutPunctuation.Length);
 
-            if (lengthDiff < 2)
+            if (lengthDiff <= maxLengthDifference)
             {
                 word.Text = topSuggestion;
                 word.Autocorrected = true;
@@ -281,7 +295,8 @@ public static class AutoCorrectHelper
         "August",
         "Aug",
         "March",
-        "Dated"
+        "Dated",
+        "Authority"
     ];
     
     public static readonly WordList CustomDictionary = WordList.CreateFromWords(CustomSuggestions);

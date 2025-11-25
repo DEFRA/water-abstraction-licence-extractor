@@ -182,24 +182,21 @@ public class AzureAiVisionOcrDataExtractorService(
             })
             .ToList();
         
-        const int lineHeight = 23;
         const int wordGap = 150;
         const int minWordHeight = 15;
-        const int maxPercentHeightDiff = 0;
-        const int maxNegativeDiffBetweenWordTop = -100;
-        const int maxPositiveDiffBetweenWordTop = 100;
         const int considerableOverlapAmount = 15;
+        const int unusedValue = -1;
         
         return OcrHelper.Group(
             returnLinesInFormat,
-            false,
+            true,
             pageNumber,
-            lineHeight,
+            unusedValue,
             wordGap,
             minWordHeight,
-            maxPercentHeightDiff,
-            maxNegativeDiffBetweenWordTop,
-            maxPositiveDiffBetweenWordTop,
+            unusedValue,
+            unusedValue,
+            unusedValue,
             considerableOverlapAmount);
     }
 

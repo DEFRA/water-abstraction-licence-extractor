@@ -51,7 +51,7 @@ public static class OcrHelper
                 .SelectMany(line => line.Words!)
                 .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
                 .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
-                .Where(word => !DataHelper.IsCorruptedLine([word]));
+                .Where(word => !DataHelper.IsCorruptedWord(word));
             
             // 0b. Remove tiny words
 
@@ -275,7 +275,7 @@ public static class OcrHelper
             var combinedLinesNoBlanks = combinedLines
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
                 .ToList();
-
+            
             return combinedLinesNoBlanks;
         }
         

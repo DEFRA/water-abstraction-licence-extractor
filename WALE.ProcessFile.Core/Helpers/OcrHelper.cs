@@ -111,9 +111,10 @@ public static class OcrHelper
                         {
                             return true;
                         }
-                        
-                        var wordTopConsiderablyOverlaps = wordTop + 5 >= siblingTop
-                            && wordTop + 5 <= siblingBottom;
+
+                        const int overlapAmount = 3;
+                        var wordTopConsiderablyOverlaps = wordTop + overlapAmount >= siblingTop
+                            && wordTop + overlapAmount <= siblingBottom;
                         
                         // Word is slightly futher down the page, or font is bigger
                         if (wordTopOverlaps && wordTopConsiderablyOverlaps && wordBottom >= siblingBottom)

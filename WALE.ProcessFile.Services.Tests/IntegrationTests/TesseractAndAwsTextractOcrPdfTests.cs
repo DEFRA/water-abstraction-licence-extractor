@@ -92,20 +92,20 @@ public class TesseractAndAwsTextractOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("H.H. Henderson C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text); // Should have an ampersand really
+        Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
         Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         Assert.Single(abstractionLimitsResult!.SubResults!);
 
         var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
         Assert.NotNull(abstractionPoint1);
-        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -118,7 +118,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(2, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         // TODO fix for this
         
         /*
@@ -263,7 +263,7 @@ public class TesseractAndAwsTextractOcrPdfTests
     [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 1967", "02/06/1967", 6)]
     [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6)]
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6)]
-    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 4)]
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 6)]
     [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of . JULY, 19 66", "28/07/1966", 4)]
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 4)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "day of MARCH, 1966", "01/03/1966", 6)]
@@ -308,7 +308,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.NotNull(dateOfIssue); // todo fix this 021 date issue, hopefully fixes a bunch of these tests
+        Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(

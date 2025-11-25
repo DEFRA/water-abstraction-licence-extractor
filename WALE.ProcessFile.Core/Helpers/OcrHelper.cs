@@ -244,36 +244,49 @@ public static class OcrHelper
             
             foreach (var line in orderedLines)
             {
-                var top = line.Columns.First().Words.First().Coordinates.Top;
-                
-                if (previousLine2 != null)
+                if (previousLine2 == null)
                 {
-                    var shouldContinue = false;
-                    
-                    foreach (var prevColumn in previousLine2.Columns)
+                    previousLine2 = line;
+                    combinedLines.Add(line);
+
+                    continue;
+                }
+                
+                var shouldContinue = false;
+
+                var prevColumn = previousLine2.Columns.First();
+                var prevLineWord = prevColumn.Words.First();
+
+                foreach (var column in line.Columns)
+                {
+                    foreach (var word in column.Words.ToList())
                     {
-                        var firstWordOfPreviousLine = prevColumn.Words[0];
-                        var fwplTop = firstWordOfPreviousLine.Coordinates.Top;
+                        var top = word.Coordinates.Top;
+                        var fwplTop = prevLineWord.Coordinates.Top;
 
                         var yDiff = Math.Abs(top - fwplTop);
 
                         if (yDiff < 5)
                         {
-                            prevColumn.Words.AddRange(line.Columns.First().Words);
+                            prevColumn.Words.Add(word);
                             prevColumn.Text = string.Join(' ', prevColumn.Words.Select(w => w.Text));
-                            
+
                             shouldContinue = true;
-                            break;
                         }
                     }
 
                     if (shouldContinue)
                     {
-                        previousLine2 = line;
-                        continue;
+                        break;
                     }
                 }
-                
+
+                if (shouldContinue)
+                {
+                    previousLine2 = line;
+                    continue;
+                }
+
                 previousLine2 = line;
                 combinedLines.Add(line);
             }

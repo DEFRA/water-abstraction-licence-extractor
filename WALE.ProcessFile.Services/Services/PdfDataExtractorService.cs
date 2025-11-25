@@ -740,16 +740,16 @@ public class PdfDataExtractorService(
         
         foreach (var line in lines)
         {
-            if (serviceName == "AwsTextractOcrDataExtractorService" && line.Line?.Text.Contains("Succession to licence", StringComparison.InvariantCultureIgnoreCase) == true)
-            {
-                
-            }
-            
             var fullLine = line.Line;
             var breakLineLoop = false;
             
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
+                if (label.Name == "DateOfIssueOldStyle" && serviceName == "AwsTextractOcrDataExtractorService" && line.Line?.Text.Contains("DATED this", StringComparison.InvariantCultureIgnoreCase) == true)
+                {
+                
+                }
+                
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 

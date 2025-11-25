@@ -1,9 +1,83 @@
+using WALE.ProcessFile.Core.Models;
 using WeCantSpell.Hunspell;
 
 namespace WALE.ProcessFile.Core.Helpers;
 
 public static class AutoCorrectHelper
 {
+    public static DocumentLineWord? ReplaceSomeSpecialCharacters(DocumentLineWord? word)
+    {
+        if (word == null)
+        {
+            return null;
+        }
+        
+        var wordText = word.Text;
+
+        if (wordText.Contains("ᵗʰ"))
+        {
+            wordText = wordText.Replace("ᵗʰ", "th");
+        }
+
+        word.Text = wordText;
+        return word;
+    }
+
+    public static DocumentLineWord? AutoCorrectWordIfNecessary(DocumentLineWord? word)
+    {
+        if (word == null)
+        {
+            return null;
+        }
+        
+        var wordTextWithoutPunctuation = word.Text;
+
+        if (wordTextWithoutPunctuation.Contains(','))
+        {
+            wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace(",", string.Empty);
+        }
+        
+        if (wordTextWithoutPunctuation.Contains('.'))
+        {
+            wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace(".", string.Empty);
+        }
+        
+        if (wordTextWithoutPunctuation.Contains('\''))
+        {
+            wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("'", string.Empty);
+        }
+        
+        if (wordTextWithoutPunctuation.Contains('"'))
+        {
+            wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("\"", string.Empty);
+        }
+                        
+        if (word is { OcrConfidence: < 40, Text.Length: > 3 }
+            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
+            && !CustomDictionary.Check(wordTextWithoutPunctuation)
+            && !Dictionary.Check(wordTextWithoutPunctuation))
+        {
+            var topSuggestion = GetTopSuggestion(wordTextWithoutPunctuation);
+
+            if (topSuggestion == null)
+            {
+                return word;
+            }
+            
+            var lengthDiff = Math.Abs(topSuggestion.Length - wordTextWithoutPunctuation.Length);
+
+            if (lengthDiff < 2)
+            {
+                word.Text = topSuggestion;
+                word.Autocorrected = true;
+                
+                return word;
+            }
+        }
+        
+        return word;
+    }
+
     public static string? AutoCorrectText(
         string? lineText,
         bool removeFirstWordIfLowercase,
@@ -205,6 +279,7 @@ public static class AutoCorrectHelper
         "Farms",
         "Gallons",
         "August",
+        "Aug",
         "March",
         "Dated"
     ];

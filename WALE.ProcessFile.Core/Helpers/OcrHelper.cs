@@ -37,16 +37,21 @@ public static class OcrHelper
             .Where(line => wordPerLine ?
                 !string.IsNullOrEmpty(line.Text)
                 : !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
+            .Where(line => wordPerLine || !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
 
         if (wordPerLine)
         {
-            // 1. Order broadly by vertical then horizontal position
-            
-            var naiveOrderedWords = uncorruptedLines
+            // 0. Autocorrect words
+            var autoCorrectedWords = uncorruptedLines
                 .Where(line => !string.IsNullOrEmpty(line.Text))
                 .SelectMany(line => line.Words!)
+                .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
+                .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary);
+            
+            // 1. Order broadly by vertical then horizontal position
+            
+            var naiveOrderedWords = autoCorrectedWords
                 .OrderBy(x => x!.Coordinates.Top)
                 .ThenBy(x => x!.Coordinates.Left)
                 .ToList();
@@ -167,12 +172,33 @@ public static class OcrHelper
                 var columns = new List<DocumentLineColumn>
                 {
                     new()
-                    {
-                        Words = orderedWords,
-                        Text = string.Join(' ', orderedWords.Select(w => w.Text))
-                    }
                 };
 
+                previousWord = null;
+                
+                foreach (var word in orderedWords)
+                {
+                    if (previousWord != null)
+                    {
+                        var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
+
+                        if (xDiff > wordGap)
+                        {
+                            columns.Add(new DocumentLineColumn());
+                        }
+                    }
+                    
+                    var column = columns.Last();
+                    column.Words.Add(word);
+
+                    previousWord = word;
+                }
+
+                foreach (var column in columns)
+                {
+                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
+                }
+                
                 var firstWordCoords = orderedWords.First().Coordinates;
                 
                 var documentLine = new DocumentLine(
@@ -224,12 +250,9 @@ public static class OcrHelper
 
             var combinedLinesNoBlanks = combinedLines
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-                /*.Where(line => !DataHelper.IsCorruptedLine(
-                    line.Columns.SelectMany(c => c.Words).ToList()!, unacceptableIncorrectValue))*/
                 .ToList();
 
             return combinedLinesNoBlanks;
-
         }
         
         var groupedLines = uncorruptedLines

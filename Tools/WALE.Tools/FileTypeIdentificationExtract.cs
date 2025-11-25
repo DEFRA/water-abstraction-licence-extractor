@@ -30,8 +30,8 @@ public static class FileTypeIdentificationExtract
         Console.WriteLine("Starting file type identification...");
         var sqlConnectionString = KeyConfig.SqlConnectionString;
     
-        var databaseReadService = new SqlSeverReadServiceService(sqlConnectionString);
-        var databaseAddService = new SqlSeverAddServiceService(sqlConnectionString);
+        var databaseReadService = new SqlSeverReadService(sqlConnectionString);
+        var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
     
         var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);

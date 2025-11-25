@@ -108,12 +108,13 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Text.Contains("day", StringComparison.InvariantCultureIgnoreCase) == true)
+                if (word.Coordinates?.Top == 3100 && word.Text.Contains("DURING", StringComparison.InvariantCultureIgnoreCase) == true)
                 {
                     
                 }
 
                 var overlapsWithLine = verticalWordGridDict
+                    .Where(gridLine => gridLine.Key.Top + 100 > word.Coordinates!.Bottom)
                     .FirstOrDefault(gridLine =>
                     {
                         var gridOrderedWords = gridLine
@@ -129,6 +130,11 @@ public static class OcrHelper
 
                         var siblingWord = previousHorizontalWord ?? nextHorizontalWord;
 
+                        if (siblingWord?.Text.Equals("Abstracted", StringComparison.InvariantCultureIgnoreCase) == true)
+                        {
+                            
+                        }
+                        
                         if (siblingWord == null)
                         {
                             return false;
@@ -300,7 +306,7 @@ public static class OcrHelper
                     
                     foreach (var word in column.Words)
                     {
-                        if (word.Text.Equals("Pinners", StringComparison.InvariantCultureIgnoreCase))
+                        if (word.Text.Equals("DURING", StringComparison.InvariantCultureIgnoreCase))
                         {
                             
                         }

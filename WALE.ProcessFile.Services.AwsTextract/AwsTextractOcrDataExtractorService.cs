@@ -110,6 +110,7 @@ public class AwsTextractOcrDataExtractorService(
         const int horizontalColumnGap = 100;
         const int minFontSize = 5; // Can't really go lower, this is tiny
         const int considerableOverlapAmount = 3;
+        const int maxYDiffToCombine = 5;
         
         return OcrHelper.Group(
             returnLines,
@@ -121,7 +122,8 @@ public class AwsTextractOcrDataExtractorService(
             unusedValue,
             unusedValue,
             unusedValue,
-            considerableOverlapAmount);
+            considerableOverlapAmount,
+            maxYDiffToCombine);
     }
     
     private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)

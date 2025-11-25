@@ -107,7 +107,8 @@ public class TesseractOcrDataExtractorService(
         const int maxNegativeDiffBetweenWordTop = -100;
         const int maxPositiveDiffBetweenWordTop = 100;
         const int considerableOverlapAmount = 3; // TODO check and tweak
-        
+        const int maxYDiffToCombine = 5;
+
         return OcrHelper.Group(
             returnLines,
             false,
@@ -118,7 +119,8 @@ public class TesseractOcrDataExtractorService(
             maxPercentHeightDiff,
             maxNegativeDiffBetweenWordTop,
             maxPositiveDiffBetweenWordTop,
-            considerableOverlapAmount);
+            considerableOverlapAmount,
+            maxYDiffToCombine);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)

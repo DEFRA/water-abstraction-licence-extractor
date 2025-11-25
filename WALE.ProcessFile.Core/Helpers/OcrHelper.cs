@@ -23,7 +23,8 @@ public static class OcrHelper
         int maxDiffPercentLineHeight_OLDFLOWONLY,
         int maxNegativeDiffBetweenWordTop_OLDFLOWONLY,
         int maxPositiveDiffBetweenWordTop_OLDFLOWONLY,
-        int considerableOverlapAmount)
+        int considerableOverlapAmount,
+        int maxYDiffToCombine)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -237,58 +238,128 @@ public static class OcrHelper
                 orderedLines.Add(documentLine);
             }
             
-            // 4. Combine sibling lines that should be one
-            
+            // 4. Move words down if they would fit better there
+
             var combinedLines = new List<DocumentLine>();
-            DocumentLine? previousLine2 = null;
+
+            var lineCount = 0;
+            var totalLines = orderedLines.Count;
             
             foreach (var line in orderedLines)
             {
-                if (previousLine2 == null)
+                if (lineCount == totalLines - 1)
                 {
-                    previousLine2 = line;
-                    combinedLines.Add(line);
-
                     continue;
                 }
                 
-                var shouldContinue = false;
+                var nextLine = orderedLines[lineCount + 1];
+                var allNextLineWords = new List<(DocumentLineColumn Column, DocumentLineWord Word)>();
 
-                var prevColumn = previousLine2.Columns.First();
-                var prevLineWord = prevColumn.Words.First();
-
+                foreach (var nextLineColumn in nextLine.Columns)
+                {
+                    foreach (var nextLineColumnWord in nextLineColumn.Words)
+                    {
+                        allNextLineWords.Add((nextLineColumn, nextLineColumnWord));
+                    }
+                }
+                
+                var allLineWords = line.Columns
+                    .SelectMany(column => column.Words)
+                    .ToList();
+                
+                var totalWords = line.Columns
+                    .Sum(column => column.Words.Count);
+                
+                previousWord = null;
+                var wordCount = 0;
+                
                 foreach (var column in line.Columns)
                 {
-                    foreach (var word in column.Words.ToList())
+                    var newWords = new List<DocumentLineWord>();
+                    
+                    foreach (var word in column.Words)
                     {
-                        var top = word.Coordinates.Top;
-                        var fwplTop = prevLineWord.Coordinates.Top;
+                        var nextWord = wordCount + 1 < totalWords ? allLineWords[wordCount + 1] : null;
 
-                        var yDiff = Math.Abs(top - fwplTop);
+                        var xDiffToPreviousWord = previousWord?.Coordinates.Right - word.Coordinates.Left;
+                        var xDiffToNextWord = nextWord?.Coordinates.Left - word.Coordinates.Right;
 
-                        if (yDiff < 5)
+                        var closestSibling = previousWord == null
+                            || xDiffToPreviousWord > xDiffToNextWord ? nextWord : previousWord;
+                        
+                        DocumentLineWord? nextLineClosestSibling = null;
+                        DocumentLineColumn? nextLineColumnClosestSibling = null;
+                        
+                        double nextLineSiblingXDiff = int.MaxValue;
+
+                        foreach (var nextLineWordTuple in allNextLineWords)
                         {
-                            prevColumn.Words.Add(word);
-                            prevColumn.Text = string.Join(' ', prevColumn.Words.Select(w => w.Text));
+                            var nextLineWord = nextLineWordTuple.Word;
+                            double d;
 
-                            shouldContinue = true;
+                            if (nextLineWord.Coordinates.Right < word.Coordinates.Left)
+                            {
+                                d = word.Coordinates.Left - nextLineWord.Coordinates.Right;
+                            }
+                            else
+                            {
+                                d = nextLineWord.Coordinates.Left - word.Coordinates.Right;
+                            }
+
+                            if (d < nextLineSiblingXDiff)
+                            {
+                                nextLineSiblingXDiff = d;
+                                
+                                nextLineClosestSibling = nextLineWord;
+                                nextLineColumnClosestSibling = nextLineWordTuple.Column;
+                            }
                         }
+                        
+                        var siblingYDiff = closestSibling?.Coordinates.Top - word.Coordinates.Top;
+                        var nextLineSiblingYDiff = nextLineClosestSibling?.Coordinates.Top - word.Coordinates.Top;
+
+                        if (siblingYDiff != null && nextLineSiblingYDiff != null)
+                        {
+                            if (Math.Abs(siblingYDiff.Value) > Math.Abs(nextLineSiblingYDiff.Value))
+                            {
+                                // Move it to the next row then
+                                nextLineColumnClosestSibling!.Words.Add(word);
+                                nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling!.Words
+                                    .OrderBy(w => w.Coordinates.Left).ToList();
+                                
+                                nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
+                            }
+                            else
+                            {
+                                newWords.Add(word);
+                            }
+                        }
+                        else if (nextLineSiblingYDiff != null && Math.Abs(nextLineSiblingYDiff.Value) < 5)
+                        {
+                            // Move it to the next row then
+                            nextLineColumnClosestSibling!.Words.Add(word);
+                            nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling!.Words
+                                .OrderBy(w => w.Coordinates.Left).ToList();
+                            
+                            nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
+                        }
+                        else
+                        {
+                            newWords.Add(word);
+                        }
+                        
+                        // ... Do something
+                        
+                        previousWord = word;
+                        wordCount += 1;
                     }
 
-                    if (shouldContinue)
-                    {
-                        break;
-                    }
+                    column.Words = newWords;
+                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
 
-                if (shouldContinue)
-                {
-                    previousLine2 = line;
-                    continue;
-                }
-
-                previousLine2 = line;
                 combinedLines.Add(line);
+                lineCount += 1;
             }
 
             var combinedLinesNoBlanks = combinedLines

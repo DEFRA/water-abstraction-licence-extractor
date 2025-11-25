@@ -37,7 +37,7 @@ public static class OcrHelper
 
         //wordPerLine = true;
         
-        var uncorruptedLines = returnLines
+        var rawLines = returnLines
             .Where(line => wordPerLine ?
                 !string.IsNullOrEmpty(line.Text)
                 : !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
@@ -47,10 +47,11 @@ public static class OcrHelper
         if (wordPerLine)
         {
             // 0. Autocorrect + remove corrupted
-            var autoCorrectedWords = uncorruptedLines
+            var autoCorrectedWords = rawLines
                 .Where(line => !string.IsNullOrEmpty(line.Text))
                 .SelectMany(line => line.Words!)
                 .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
+                .Where(word => !string.IsNullOrEmpty(word?.Text))
                 .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
                 .Where(word => !DataHelper.IsCorruptedWord(word));
             
@@ -105,6 +106,11 @@ public static class OcrHelper
                     previousWord = word;
                     
                     continue;
+                }
+
+                if (word.Text.Contains("Licensee", StringComparison.InvariantCultureIgnoreCase) == true)
+                {
+                    
                 }
 
                 var overlapsWithLine = verticalWordGridDict
@@ -279,6 +285,11 @@ public static class OcrHelper
                     
                     foreach (var word in column.Words)
                     {
+                        if (word.Text.Equals("Licensee", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            
+                        }
+                        
                         var nextWord = wordCount + 1 < totalWords ? allLineWords[wordCount + 1] : null;
 
                         var xDiffToPreviousWord = previousWord?.Coordinates.Right - word.Coordinates.Left;
@@ -374,7 +385,7 @@ public static class OcrHelper
             return combinedLinesNoBlanks;
         }
         
-        var groupedLines = uncorruptedLines
+        var groupedLines = rawLines
             .GroupBy(line =>
             {
                 previousLine ??= line;

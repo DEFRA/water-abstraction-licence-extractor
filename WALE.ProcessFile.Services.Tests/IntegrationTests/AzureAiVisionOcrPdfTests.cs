@@ -332,7 +332,7 @@ public class AzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("twenty-third day of March, 0. 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("twenty-third day of March, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -859,7 +859,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
-        Assert.Equal("A A C McArthur T A J Carrol", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be just A A C McArthur
+        Assert.Equal("A A C McArthur", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be just A A C McArthur
         Assert.Equal(["Licensee"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
@@ -993,7 +993,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(15, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
         Assert.Equal("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE", abstractionLimitsResult.Text![0].Text);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
@@ -1012,7 +1012,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal("(1)", pointName);
         
-        Assert.Equal(3, section1Sub1.Text?.Count);
+        Assert.Equal(2, section1Sub1.Text?.Count);
         Assert.Equal(5, section1Sub1.SubResults.Count);
 
         var units1 = section1Sub1.SubResults[1];

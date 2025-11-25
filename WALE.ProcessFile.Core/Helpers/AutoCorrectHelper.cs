@@ -14,12 +14,28 @@ public static class AutoCorrectHelper
         
         var wordText = word.Text;
 
+        while (wordText.Contains(" ."))
+        {
+            wordText = wordText.Replace(" .", ".");
+        }
+        
+        while (wordText.Contains(".."))
+        {
+            wordText = wordText.Replace("..", ".");
+        }
+        
         if (wordText.Contains("ᵗʰ"))
         {
             wordText = wordText.Replace("ᵗʰ", "th");
         }
 
-        word.Text = wordText;
+        word.Text = wordText.Trim();
+
+        if (word.Text == ".")
+        {
+            return null;
+        }
+        
         return word;
     }
 
@@ -28,6 +44,11 @@ public static class AutoCorrectHelper
         if (word == null)
         {
             return null;
+        }
+        
+        if (word.Text.Contains("Licensee", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            
         }
         
         var wordTextWithoutPunctuation = word.Text;

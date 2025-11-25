@@ -184,7 +184,7 @@ public class AzureAiVisionOcrDataExtractorService(
         
         const int wordGap = 150;
         const int minWordHeight = 15;
-        const int considerableOverlapAmount = 15;
+        const int considerableOverlapAmount = 19;
         const int unusedValue = -1;
         const int maxYDiffToCombine = 13;
 

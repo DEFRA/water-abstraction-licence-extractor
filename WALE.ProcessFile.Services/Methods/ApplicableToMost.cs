@@ -62,7 +62,23 @@ public static class ApplicableToMost
             labelGroupResult.MatchedLabel = matchedLabel;
             
             var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
+            var labelText = matchedLabel.Text?.FirstOrDefault()?.Text;
+
+            var columnTextOnly = matchedLabel.Name == "CompanyName"; // TODO make it a flag in config
             
+            if (columnTextOnly && labelText != null)
+            {
+                var column = request.line!.Columns
+                    .FirstOrDefault(c =>
+                        c.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
+
+                if (column != null)
+                {
+                    t = column.Text[(column.Text.IndexOf(labelText, StringComparison.Ordinal) + labelText.Length)..]
+                        .Trim();
+                }
+            }
+
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(
                 matchedLabel,

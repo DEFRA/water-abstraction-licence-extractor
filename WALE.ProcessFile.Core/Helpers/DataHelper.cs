@@ -231,6 +231,11 @@ public static partial class DataHelper
         {
             return false;
         }
+        
+        if (word.Text.Contains("pinners", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            
+        }
 
         var wordWithoutPunctuation = new string(word.Text
             .Where(ch =>
@@ -239,6 +244,7 @@ public static partial class DataHelper
                 && ch != '('
                 && ch != ')'
                 && ch != ','
+                && ch != '.'                
                 && ch != ':')
             .ToArray());
         
@@ -284,6 +290,7 @@ public static partial class DataHelper
         const int checkIfUnderConfidence = 70;
 
         if (!mainlyDigits
+            && !wordWithoutPunctuation.All(char.IsUpper)
             && averageConfidence < checkIfUnderConfidence
             && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
             && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation))

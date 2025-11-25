@@ -860,6 +860,11 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
+
+                    if (matchedLabel.Name == "CompanyName")
+                    {
+                        
+                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
@@ -1444,7 +1449,6 @@ public class PdfDataExtractorService(
             line.Text[..labelTextPositionIndex], true, false);
 
         var textAtLabel = matchedLabelText;
-        
         var textAfterLabel = FormattingHelper.TrimFormatting(
             line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
         

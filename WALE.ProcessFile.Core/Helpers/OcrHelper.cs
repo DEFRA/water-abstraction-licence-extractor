@@ -108,7 +108,7 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Text.Contains("Licensee", StringComparison.InvariantCultureIgnoreCase) == true)
+                if (word.Text.Contains("day", StringComparison.InvariantCultureIgnoreCase) == true)
                 {
                     
                 }
@@ -155,6 +155,21 @@ public static class OcrHelper
                         // Word is slightly futher down the page, or font is bigger
                         if (wordTopOverlaps && wordTopConsiderablyOverlaps && wordBottom >= siblingBottom)
                         {
+                            const int considerableAmount = 10;
+                            
+                            var wouldOverlapWordConsiderably = gridOrderedWords
+                                .Any(gow => word.Coordinates.Left >= gow.Coordinates.Left
+                                    && word.Coordinates.Left + considerableAmount <= gow.Coordinates.Right);
+
+                            if (word.Text == "day")
+                            {
+                            }
+
+                            if (wouldOverlapWordConsiderably)
+                            {
+                                return false;
+                            }
+                            
                             return true;
                         }
 
@@ -285,7 +300,7 @@ public static class OcrHelper
                     
                     foreach (var word in column.Words)
                     {
-                        if (word.Text.Equals("Licensee", StringComparison.InvariantCultureIgnoreCase))
+                        if (word.Text.Equals("Pinners", StringComparison.InvariantCultureIgnoreCase))
                         {
                             
                         }

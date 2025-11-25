@@ -248,21 +248,32 @@ public static class OcrHelper
                 
                 if (previousLine2 != null)
                 {
-                    var firstWordOfPreviousLine = previousLine2.Columns[0].Words[0];
-                    var fwplTop = firstWordOfPreviousLine.Coordinates.Top;
-
-                    var diff = Math.Abs(top - fwplTop);
-
-                    if (diff < 5)
+                    var shouldContinue = false;
+                    
+                    foreach (var prevColumn in previousLine2.Columns)
                     {
-                        previousLine2.Columns.Insert(
-                            0,
-                            new()
-                            {
-                                Words = line.Columns.First().Words,
-                                Text = string.Join(' ', line.Columns.First().Words.Select(w => w.Text))
-                            });
-                        
+                        var firstWordOfPreviousLine = prevColumn.Words[0];
+                        var fwplTop = firstWordOfPreviousLine.Coordinates.Top;
+
+                        var yDiff = Math.Abs(top - fwplTop);
+
+                        if (yDiff < 5)
+                        {
+                            previousLine2.Columns.Insert(
+                                0,
+                                new()
+                                {
+                                    Words = line.Columns.First().Words,
+                                    Text = string.Join(' ', line.Columns.First().Words.Select(w => w.Text))
+                                });
+                            
+                            shouldContinue = true;
+                            break;
+                        }
+                    }
+
+                    if (shouldContinue)
+                    {
                         previousLine2 = line;
                         continue;
                     }

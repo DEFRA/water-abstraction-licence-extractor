@@ -192,7 +192,7 @@ public static class CompanyName
         }
 
         var parts = lineText.Split(' ');
-        var looksLikeNameWithInitials = parts.Length is 2 or 3 or 4
+        var looksLikeNameWithInitials = parts.Length >= 2
             && parts.First().Length is 1 or 2
             && parts.First().All(char.IsLetter)
             && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))

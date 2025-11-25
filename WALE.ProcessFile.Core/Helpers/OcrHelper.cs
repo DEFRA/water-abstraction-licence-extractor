@@ -369,6 +369,8 @@ public static class OcrHelper
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
                 .ToList();
             
+            // TODO - another pass to look for pointlessly short lines? ones without any values on or just a floating number?
+            
             return combinedLinesNoBlanks;
         }
         

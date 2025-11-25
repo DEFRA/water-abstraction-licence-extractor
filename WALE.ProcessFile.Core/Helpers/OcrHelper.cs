@@ -315,16 +315,19 @@ public static class OcrHelper
                             }
                         }
                         
-                        var siblingYDiff = closestSibling?.Coordinates.Top - word.Coordinates.Top;
-                        var nextLineSiblingYDiff = nextLineClosestSibling?.Coordinates.Top - word.Coordinates.Top;
+                        var siblingYDiff = GetMidpoint(closestSibling?.Coordinates) - GetMidpoint(word.Coordinates);
+                        var nextLineSiblingYDiff = GetMidpoint(nextLineClosestSibling?.Coordinates) - GetMidpoint(word.Coordinates);
 
+                        const int worthwhileYDifference = 5;
+                        
                         if (siblingYDiff != null && nextLineSiblingYDiff != null)
                         {
-                            if (Math.Abs(siblingYDiff.Value) > Math.Abs(nextLineSiblingYDiff.Value))
+                            if (Math.Abs(siblingYDiff.Value) > Math.Abs(nextLineSiblingYDiff.Value)
+                                && Math.Abs(siblingYDiff.Value) - Math.Abs(nextLineSiblingYDiff.Value) > worthwhileYDifference)
                             {
                                 // Move it to the next row then
                                 nextLineColumnClosestSibling!.Words.Add(word);
-                                nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling!.Words
+                                nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                                     .OrderBy(w => w.Coordinates.Left).ToList();
                                 
                                 nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
@@ -334,11 +337,11 @@ public static class OcrHelper
                                 newWords.Add(word);
                             }
                         }
-                        else if (nextLineSiblingYDiff != null && Math.Abs(nextLineSiblingYDiff.Value) < 5)
+                        else if (nextLineSiblingYDiff != null && Math.Abs(nextLineSiblingYDiff.Value) < worthwhileYDifference)
                         {
                             // Move it to the next row then
                             nextLineColumnClosestSibling!.Words.Add(word);
-                            nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling!.Words
+                            nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                                 .OrderBy(w => w.Coordinates.Left).ToList();
                             
                             nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));

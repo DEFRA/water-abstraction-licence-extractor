@@ -259,13 +259,8 @@ public static class OcrHelper
 
                         if (yDiff < 5)
                         {
-                            previousLine2.Columns.Insert(
-                                0,
-                                new()
-                                {
-                                    Words = line.Columns.First().Words,
-                                    Text = string.Join(' ', line.Columns.First().Words.Select(w => w.Text))
-                                });
+                            prevColumn.Words.AddRange(line.Columns.First().Words);
+                            prevColumn.Text = string.Join(' ', prevColumn.Words.Select(w => w.Text));
                             
                             shouldContinue = true;
                             break;

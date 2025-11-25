@@ -236,21 +236,26 @@ public static class OcrHelper
             {
                 previousLine ??= line;
 
-                var xDiff = line.Words![0]!.Coordinates.Left
+                /*var xDiff = line.Words![0]!.Coordinates.Left
                     - previousLine.Words![0]!.Coordinates.Left;
-                var isNotContinuingLeftToRight = xDiff < 0;
-                
+                var isNotContinuingLeftToRight = xDiff < 0;*/
+
                 var yDiff = GetMidpoint(line.Words![0]!.Coordinates)
                     - GetMidpoint(previousLine?.Words![0]!.Coordinates);
-                var hasAVerticalGapToPreviousWordBiggerThenALine = yDiff > lineHeight;
-                
+                /*var hasAVerticalGapToPreviousWordBiggerThenALine = yDiff > lineHeight;
+
                 if (hasAVerticalGapToPreviousWordBiggerThenALine || isNotContinuingLeftToRight)
                 {
                     if (isNotContinuingLeftToRight && !hasAVerticalGapToPreviousWordBiggerThenALine)
                     {
-                        
+
                     }
-                    
+
+                    lineIndex += 1;
+                }*/
+
+                if (yDiff > lineHeight)
+                {
                     lineIndex += 1;
                 }
 
@@ -381,7 +386,7 @@ public static class OcrHelper
                     
                     var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
 
-                    if (-3 > xDiff)
+                    /*if (-3 > xDiff)
                     {
                         if (pageNumber == 2)
                         {
@@ -390,7 +395,7 @@ public static class OcrHelper
                         
                         // Wrong order
                         continue;
-                    }
+                    }*/
                     
                     if (xDiff > wordGap)
                     {

@@ -30,11 +30,6 @@ public static class AutoCorrectHelper
             return null;
         }
         
-        if (word.Text.StartsWith("Authority", StringComparison.InvariantCultureIgnoreCase))
-        {
-            
-        }
-        
         var wordTextWithoutPunctuation = word.Text;
 
         if (wordTextWithoutPunctuation.Contains(','))
@@ -58,7 +53,7 @@ public static class AutoCorrectHelper
         }
 
         const int minLengthForAutocorrection = 2;
-        const int maxConfidenceNotToFix = 50;
+        const int maxConfidenceNotToFix = 63;
         const int maxLengthDifference = 3;
         
         if (word is { OcrConfidence: < maxConfidenceNotToFix, Text.Length: >= minLengthForAutocorrection }
@@ -291,7 +286,7 @@ public static class AutoCorrectHelper
         "Aug",
         "March",
         "Dated",
-        "Authority"
+        "Authority",
     ];
     
     public static readonly WordList CustomDictionary = WordList.CreateFromWords(CustomSuggestions);

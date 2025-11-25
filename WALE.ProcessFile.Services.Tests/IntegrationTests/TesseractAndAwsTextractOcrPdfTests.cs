@@ -71,7 +71,7 @@ public class TesseractAndAwsTextractOcrPdfTests
     }
     
     [Fact]
-    public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
+    public async Task GetSomeFromTesseractAndSomeFromAwsTextract_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";

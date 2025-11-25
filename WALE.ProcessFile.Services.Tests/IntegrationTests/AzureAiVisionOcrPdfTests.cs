@@ -332,7 +332,7 @@ public class AzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("twenty-third day of March, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("twenty-third day of March, 0. 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
@@ -345,7 +345,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);

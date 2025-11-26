@@ -232,7 +232,7 @@ public static partial class DataHelper
             return false;
         }
         
-        if (word.Text.Contains("1897", StringComparison.InvariantCultureIgnoreCase) == true)
+        if (word.Text.Contains("July", StringComparison.InvariantCultureIgnoreCase) == true)
         {
             
         }
@@ -295,11 +295,15 @@ public static partial class DataHelper
 
         const int checkIfUnderConfidence = 69;
 
+        var wordWithoutPunctuationAndDigits = new string(wordWithoutPunctuation
+            .Where(ch => !char.IsDigit(ch))
+            .ToArray());
+        
         if (!mainlyDigits
             && !wordWithoutPunctuation.All(char.IsUpper)
             && averageConfidence < checkIfUnderConfidence
-            && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuation)
-            && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuation))
+            && !AutoCorrectHelper.CustomDictionary.Check(wordWithoutPunctuationAndDigits)
+            && !AutoCorrectHelper.Dictionary.Check(wordWithoutPunctuationAndDigits))
         {
             return true;
         }

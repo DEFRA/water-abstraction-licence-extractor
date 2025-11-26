@@ -108,13 +108,13 @@ public static class OcrHelper
                     continue;
                 }
 
-                if (word.Coordinates?.Top == 3100 && word.Text.Contains("DURING", StringComparison.InvariantCultureIgnoreCase) == true)
+                if (word.Coordinates.Top > 780 && word.Text.Contains("WATER", StringComparison.InvariantCultureIgnoreCase) == true)
                 {
                     
                 }
 
                 var overlapsWithLine = verticalWordGridDict
-                    .Where(gridLine => gridLine.Key.Top + 100 > word.Coordinates!.Bottom)
+                    .Where(gridLine => gridLine.Key.Top + 100 > word.Coordinates.Top)
                     .FirstOrDefault(gridLine =>
                     {
                         var gridOrderedWords = gridLine

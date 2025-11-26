@@ -67,6 +67,10 @@ public static class AutoCorrectHelper
         {
             wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("\"", string.Empty);
         }
+        
+        if (word.Text.Contains("auq", StringComparison.InvariantCultureIgnoreCase))
+        {
+        }
 
         const int minLengthForAutocorrection = 2;
         const int maxConfidenceNotToFix = 63;
@@ -349,7 +353,7 @@ public static class AutoCorrectHelper
         var bothWordLength = newWordLower.Length + oldWordLower.Length;
         var differencePercent = (int)(100.0 / bothWordLength) * differenceCount;
 
-        if (differencePercent >= 30)
+        if (differencePercent >= 33)
         {
             return true;
         }

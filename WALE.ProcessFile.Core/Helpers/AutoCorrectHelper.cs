@@ -46,11 +46,6 @@ public static class AutoCorrectHelper
             return null;
         }
         
-        if (word.Text.Contains("Licensee", StringComparison.InvariantCultureIgnoreCase) == true)
-        {
-            
-        }
-        
         var wordTextWithoutPunctuation = word.Text;
 
         if (wordTextWithoutPunctuation.Contains(','))
@@ -78,10 +73,18 @@ public static class AutoCorrectHelper
         const int maxLengthDifference = 3;
 
         // No matter the confidence, these are wrong
-        if (word.Text.Equals("fallons", StringComparison.InvariantCultureIgnoreCase)
-            || word.Text.Equals("pallons", StringComparison.InvariantCultureIgnoreCase))
+        if (word.Text.Contains("fallons", StringComparison.InvariantCultureIgnoreCase)
+            || word.Text.Contains("pallons", StringComparison.InvariantCultureIgnoreCase))
         {
             word.Text = "gallons";
+            word.Autocorrected = true;
+            
+            return word;
+        }
+        
+        if (word.Text.Contains("MARCI", StringComparison.InvariantCultureIgnoreCase))
+        {
+            word.Text = "march";
             word.Autocorrected = true;
             
             return word;

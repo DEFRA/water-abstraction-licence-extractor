@@ -53,7 +53,8 @@ public static class OcrHelper
                 .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
                 .Where(word => !string.IsNullOrEmpty(word?.Text))
                 .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
-                .Where(word => !DataHelper.IsCorruptedWord(word));
+                .Where(word => !DataHelper.IsCorruptedWord(word))
+                .ToList();
             
             // 0b. Remove tiny words
 

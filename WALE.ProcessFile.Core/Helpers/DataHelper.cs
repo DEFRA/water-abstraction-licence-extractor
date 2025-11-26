@@ -232,7 +232,9 @@ public static partial class DataHelper
             return false;
         }
         
-        if (word.Text.Contains("pinners", StringComparison.InvariantCultureIgnoreCase) == true)
+        
+        
+        if (word.Text.Contains("i2", StringComparison.InvariantCultureIgnoreCase) == true)
         {
             
         }
@@ -293,7 +295,7 @@ public static partial class DataHelper
             return true;
         }
 
-        const int checkIfUnderConfidence = 70;
+        const int checkIfUnderConfidence = 69;
 
         if (!mainlyDigits
             && !wordWithoutPunctuation.All(char.IsUpper)

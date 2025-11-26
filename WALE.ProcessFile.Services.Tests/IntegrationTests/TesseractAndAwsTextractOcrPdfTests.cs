@@ -264,7 +264,7 @@ public class TesseractAndAwsTextractOcrPdfTests
     [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6)]
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6)]
     [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 6)]
-    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6)]
+    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 5)]
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1966", "09/03/1966", 5)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7)]

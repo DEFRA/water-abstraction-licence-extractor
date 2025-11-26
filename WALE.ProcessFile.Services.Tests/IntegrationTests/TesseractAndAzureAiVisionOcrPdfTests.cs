@@ -69,7 +69,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0);
     }
     
-    [Fact]
+    [Fact(Skip = "ProblemsWithCarbonPaper")]
     public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange

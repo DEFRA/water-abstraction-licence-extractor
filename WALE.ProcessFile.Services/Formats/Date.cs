@@ -43,10 +43,12 @@ public static partial class Date
         {
             return false;
         }
+
+        var tweakedText = text.Replace("o", "0", StringComparison.InvariantCultureIgnoreCase);
         
-        return YearRegex().IsMatch(text)
-            || ContainsMonth(text)
-            || DateTime.TryParse(text, out _);
+        return YearRegex().IsMatch(tweakedText)
+            || ContainsMonth(tweakedText)
+            || DateTime.TryParse(tweakedText, out _);
     }
 
     private static bool ContainsMonth(string text)

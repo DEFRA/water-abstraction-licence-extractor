@@ -35,7 +35,6 @@ public static class OcrHelper
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
-        //wordPerLine = true;
         
         var rawLines = returnLines
             .Where(line => wordPerLine ?

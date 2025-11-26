@@ -161,7 +161,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("third day of April 19 70", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("third day of April, 19 70", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
@@ -308,13 +308,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     
     [Theory]
     [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)]
-    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 67", "02/06/1967", 5)]
+    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 62", "02/06/1962", 5)]
     [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 7)]
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7)]
     [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6)]
     [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 7)]
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 6)]
-    [InlineData("12203007__1-22-03-007 5822413.PDF", "day of MARCH, 1966", "01/03/1966", 6)]
+    [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "2 3rd day of MAY, 19 66", "23/05/1966", 7)]
     [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 10)]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6)]
@@ -327,8 +327,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 7)]
     [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967:", "13/03/1967", 7)]
     [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14)]
-    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of march 19 666", "10/03/1966", 5)]
-    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "i2 0 JUL 2005", "20/07/2005", 12)]
+    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH 19 66", "10/03/1966", 5)]
+    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 12)]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 12)]
     [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 12)]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12)]

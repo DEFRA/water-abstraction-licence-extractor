@@ -22,7 +22,10 @@ public class LabelToMatch
     public IReadOnlyList<TextToMatch>? TextEnd { get; set; }
     public IReadOnlyList<string>? MustContain { get; set; }
     public int? MinimumSubMatches { get; init; }
-    public bool CanGoOverPageBoundary{ get; init; }
+
+    public MultipleServiceMatchBehaviour MultipleServiceMatchBehaviour { get; init; } =
+        MultipleServiceMatchBehaviour.UseLastServiceResult;
+    public bool CanGoOverPageBoundary { get; init; }
     public LabelPosition Position { get; set; }
     public string? RelatedCategoryName { get; init; }
     public string? RelatedName { get; init; }
@@ -60,6 +63,7 @@ public class LabelToMatch
             TextEnd = TextEnd?.ToList(),
             MustContain = MustContain?.ToList(),
             MinimumSubMatches = MinimumSubMatches,
+            MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour,
             Position = Position,
             RelatedCategoryName = RelatedCategoryName,
             RelatedName = RelatedName,

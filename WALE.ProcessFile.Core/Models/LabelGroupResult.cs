@@ -24,6 +24,8 @@ public class LabelGroupResult
     public LabelToMatch? MatchedLabel { get; set; }
 
     public IReadOnlyList<LabelGroupResult> SubResults { get; set; } = new List<LabelGroupResult>();
+
+    public List<LabelGroupResult> AlternativeMatches { get; set; } = [];
     
     public LabelGroupResult Clone()
     {
@@ -40,7 +42,8 @@ public class LabelGroupResult
             ServiceName = ServiceName,
             LabelGroupName = LabelGroupName,
             MatchedLabel = MatchedLabel?.Clone(),
-            SubResults = SubResults.Select(x => x.Clone()).ToList()
+            SubResults = SubResults.Select(x => x.Clone()).ToList(),
+            AlternativeMatches = AlternativeMatches.Select(x => x.Clone()).ToList()
         };
     }
 

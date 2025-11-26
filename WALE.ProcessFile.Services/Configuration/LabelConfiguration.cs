@@ -327,12 +327,13 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 1,
                 NextLinesToFetch = 1,
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
                 IgnoreMatchIfContains = [
                     "Date effective"
-                ],
+                ]
             },
             new LabelToMatch
             {
@@ -369,7 +370,8 @@ public static class LabelConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost
+                Position = LabelPosition.ApplicableToMost,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
             }
         ];
     }
@@ -389,6 +391,7 @@ public static class LabelConfiguration
                     new("Date of original issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -413,6 +416,7 @@ public static class LabelConfiguration
                     new("Date effective")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -436,6 +440,7 @@ public static class LabelConfiguration
                     new("Date of expiry ...")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],

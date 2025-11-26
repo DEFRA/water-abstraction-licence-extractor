@@ -1210,7 +1210,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // TODO maybe should be 7
+        Assert.Equal(6, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1219,7 +1219,7 @@ public class TessaractOcrPdfTests
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("14th dayof January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO should be dayof ideally
+        Assert.StartsWith("14th day of January, 1976", dateOfIssue.Text?.FirstOrDefault()?.Text); // TODO should be dayof ideally
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

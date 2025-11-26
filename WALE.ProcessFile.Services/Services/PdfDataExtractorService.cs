@@ -298,7 +298,76 @@ public class PdfDataExtractorService(
 
                         if (alreadyFound != null)
                         {
-                            uniqueServiceMatches.Remove(alreadyFound);
+                            switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
+                            {
+                                case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                                    match.AlternativeMatches.Add(alreadyFound);
+                                    uniqueServiceMatches.Remove(alreadyFound);
+                                    uniqueServiceMatches.Add(match);
+                                    
+                                    break;
+                                case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
+                                    var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                                    var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                                    if (newValue.Length >= existingValue.Length)
+                                    {
+                                        match.AlternativeMatches.Add(alreadyFound);
+                                        
+                                        uniqueServiceMatches.Remove(alreadyFound);
+                                        uniqueServiceMatches.Add(match);
+                                    }
+                                    else
+                                    {
+                                        alreadyFound.AlternativeMatches.Add(match);
+                                    }
+                                    
+                                    break;
+                                case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
+                                    var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                                    var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                                    if (existingDate == null)
+                                    {
+                                        match.AlternativeMatches.Add(alreadyFound);
+                                        
+                                        uniqueServiceMatches.Remove(alreadyFound);
+                                        uniqueServiceMatches.Add(match);
+                                    }
+                                    else if (newDate == null)
+                                    {
+                                        alreadyFound.AlternativeMatches.Add(match);
+                                    }
+                                    else
+                                    {
+                                        var existingDateHasDayField = existingDate.Value.Day > 1;
+                                        var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
+                                        var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
+                                        
+                                        var newDateHasDayField = newDate.Value.Day > 1;
+                                        var newDateIsPost1911 = newDate.Value.Year >= 1911;
+                                        var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
+                                        
+                                        if (newDateHasDayField && newDateIsPost1911
+                                            && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                                        {
+                                            match.AlternativeMatches.Add(alreadyFound);
+
+                                            uniqueServiceMatches.Remove(alreadyFound);
+                                            uniqueServiceMatches.Add(match);
+                                        }
+                                        else
+                                        {
+                                            alreadyFound.AlternativeMatches.Add(match);
+                                        }
+                                    }
+                                    
+                                    break;
+                                default:
+                                    throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
+                            }
+                            
+                            continue;
                         }
 
                         uniqueServiceMatches.Add(match);
@@ -861,7 +930,7 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (matchedLabel.Name == "CompanyName")
+                    if (matchedLabel.Name == "DateOfIssue")
                     {
                         
                     }

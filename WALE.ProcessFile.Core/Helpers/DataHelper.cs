@@ -222,6 +222,11 @@ public static partial class DataHelper
         {
             return false;
         }
+
+        if (word.Coordinates.Top >= 3072)
+        {
+            var fontSize = word.Coordinates.Bottom - word.Coordinates.Top;
+        }
         
         var digitsCount = word.Text.Count(char.IsDigit);
         var totalConfidence = 0.0;

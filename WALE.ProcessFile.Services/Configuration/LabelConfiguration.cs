@@ -1339,6 +1339,7 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
+                    new("G. QUANTITY OF WATER AUTHORISED TO BE"), // TODO hack
                     new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("The quantity of water authorised to be abstracted shall be") { IfMultiplePreferLast = true }

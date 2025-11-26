@@ -545,7 +545,7 @@ public class AzureAiVisionOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -993,7 +993,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(15, abstractionLimitsResult.Text?.Count);
         Assert.Equal("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE", abstractionLimitsResult.Text![0].Text);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
@@ -1012,7 +1012,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal("(1)", pointName);
         
-        Assert.Equal(2, section1Sub1.Text?.Count);
+        Assert.Equal(3, section1Sub1.Text?.Count);
         Assert.Equal(5, section1Sub1.SubResults.Count);
 
         var units1 = section1Sub1.SubResults[1];

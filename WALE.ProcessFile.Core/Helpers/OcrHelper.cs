@@ -277,6 +277,7 @@ public static class OcrHelper
             {
                 if (lineCount == totalLines - 1)
                 {
+                    combinedLines.Add(line);
                     continue;
                 }
                 

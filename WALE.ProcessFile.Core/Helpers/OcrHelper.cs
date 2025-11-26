@@ -20,7 +20,7 @@ public static class OcrHelper
         int lineHeight_OLDFLOWONLY,
         int horizontalColumnGapTrigger,
         int minimumFontSize,
-        int maxDiffPercentLineHeight_OLDFLOWONLY,
+        int maxDiffPercentFontSize_OLDFLOWONLY,
         int maxNegativeDiffBetweenWordTop_OLDFLOWONLY,
         int maxPositiveDiffBetweenWordTop_OLDFLOWONLY,
         int considerableOverlapAmount,
@@ -398,6 +398,48 @@ public static class OcrHelper
                 combinedLines.Add(line);
                 lineCount += 1;
             }
+            
+            // 5. Check size of each word against its siblings - remove if its too small
+            foreach (var line in combinedLines)
+            {
+                foreach (var column in line.Columns)
+                {
+                    DocumentLineWord? previousOkWord = null;
+                    var anyColumnChange = false;
+                    var newWordList = new List<DocumentLineWord>();
+                    
+                    foreach (var word in column.Words)
+                    {
+                        if (pageNumber == 2 && word.Text.Equals("ОТ", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            
+                        }
+                        
+                        var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
+                        var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
+                        
+                        var percentOfPrevious = previousOkWord != null ?
+                            GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
+                            : null;
+                    
+                        if (previousOkWord != null
+                            && percentOfPrevious < maxDiffPercentFontSize_OLDFLOWONLY)
+                        {
+                            anyColumnChange = true;
+                            continue;
+                        }
+                        
+                        newWordList.Add(word);
+                        previousOkWord = word;
+                    }
+
+                    if (anyColumnChange)
+                    {
+                        column.Words = newWordList;
+                        column.Text = string.Join(' ', column.Words.Select(w => w.Text));
+                    }
+                }
+            }
 
             var combinedLinesNoBlanks = combinedLines
                 .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
@@ -514,7 +556,7 @@ public static class OcrHelper
                         GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
                         : null;
                     
-                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentLineHeight_OLDFLOWONLY)
+                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentFontSize_OLDFLOWONLY)
                     {
                         continue;
                     }

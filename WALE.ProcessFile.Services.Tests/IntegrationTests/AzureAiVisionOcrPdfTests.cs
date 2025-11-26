@@ -707,7 +707,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(7, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1286,7 +1286,7 @@ public class AzureAiVisionOcrPdfTests
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
         
-        Assert.Equal(2, purpose.Text.Count);
+        Assert.Equal(3, purpose.Text!.Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

@@ -99,13 +99,13 @@ public class TesseractAndAwsTextractOcrPdfTests
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         Assert.Single(abstractionLimitsResult!.SubResults!);
 
         var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
         Assert.NotNull(abstractionPoint1);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -118,7 +118,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(6, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         // TODO fix for this
         
         /*

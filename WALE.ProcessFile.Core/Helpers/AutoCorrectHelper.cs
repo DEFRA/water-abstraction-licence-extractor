@@ -207,10 +207,10 @@ public static class AutoCorrectHelper
                     newWords.Add(word);                       
                     continue;
                 }
-                
-                var topSuggestion = GetTopSuggestion(word);
 
-                if (!wordSpeltCorrectly && !string.IsNullOrEmpty(topSuggestion))
+                string? topSuggestion;
+
+                if (!wordSpeltCorrectly && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(word)))
                 {
                     if (topSuggestion.Equals($"{word}s", StringComparison.InvariantCultureIgnoreCase)
                         || $"{topSuggestion}s".Equals(word, StringComparison.InvariantCultureIgnoreCase))
@@ -260,8 +260,6 @@ public static class AutoCorrectHelper
                 MaxWords = 1,
                 MaxCompoundSuggestions = 0
             }).ToList();
-        
-        var allUppercase = word.All(char.IsUpper);
 
         if (!customSuggestions.Any())
         {
@@ -287,7 +285,104 @@ public static class AutoCorrectHelper
         }
         
         var topSuggestion = customSuggestions.First();
+        
+        // Too different from the original
+        if (IsTotallyDifferentWord(word, topSuggestion))
+        {
+            return null;
+        }
+        
+        var allUppercase = word.All(char.IsUpper);
         return allUppercase ? topSuggestion.ToUpper() : topSuggestion;
+    }
+
+    private static bool IsTotallyDifferentWord(string oldWord, string newWord)
+    {
+        var differenceCount = 0;
+        
+        var oldWordLower = oldWord.ToLower();
+        var newWordLower = newWord.ToLower();
+
+        var c = 0;
+        foreach (var newWordChar in newWordLower)
+        {
+            var isAddition = !oldWordLower.Contains(newWordChar);
+
+            if (isAddition)
+            {
+                differenceCount += 1;
+            }
+            else
+            {
+                if (c++ == 0 && newWordChar != oldWordLower[0])
+                {
+                    differenceCount += 1;
+                }
+            }
+        }
+        
+        foreach (var oldWordChar in oldWordLower)
+        {
+            var removedLetter = !newWordLower.Contains(oldWordChar);
+
+            if (removedLetter)
+            {
+                differenceCount += 1;
+            }
+        }
+        
+        // TODO - something with the shared character order
+        
+        var bothWordLength = newWordLower.Length + oldWordLower.Length;
+        var differencePercent = (int)(100.0 / bothWordLength) * differenceCount;
+
+        if (differencePercent >= 30)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    ///     Calculate the difference between 2 strings using the Levenshtein distance algorithm.
+    /// From https://gist.github.com/Davidblkx/e12ab0bb2aff7fd8072632b396538560
+    /// </summary>
+    /// <param name="source1">First string</param>
+    /// <param name="source2">Second string</param>
+    /// <returns></returns>
+    private static int Calculate(string source1, string source2) //O(n*m)
+    {
+        var source1Length = source1.Length;
+        var source2Length = source2.Length;
+
+        var matrix = new int[source1Length + 1, source2Length + 1];
+
+        // First calculation, if one entry is empty return full length
+        if (source1Length == 0)
+            return source2Length;
+
+        if (source2Length == 0)
+            return source1Length;
+
+        // Initialization of matrix with row size source1Length and columns size source2Length
+        for (var i = 0; i <= source1Length; matrix[i, 0] = i++){}
+        for (var j = 0; j <= source2Length; matrix[0, j] = j++){}
+
+        // Calculate rows and collumns distances
+        for (var i = 1; i <= source1Length; i++)
+        {
+            for (var j = 1; j <= source2Length; j++)
+            {
+                var cost = (source2[j - 1] == source1[i - 1]) ? 0 : 1;
+
+                matrix[i, j] = Math.Min(
+                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                    matrix[i - 1, j - 1] + cost);
+            }
+        }
+        // return result
+        return matrix[source1Length, source2Length];
     }
     
     public static readonly WordList Dictionary = WordList.CreateFromFiles("en_GB.dic");

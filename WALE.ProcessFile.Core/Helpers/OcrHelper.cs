@@ -447,7 +447,10 @@ public static class OcrHelper
                         
                         var wordTextWithoutPunctuation = word.Text
                             .Replace(",", string.Empty)
-                            .Replace(".", string.Empty);
+                            .Replace(".", string.Empty)
+                            .Replace(";", string.Empty)
+                            .Replace("'", string.Empty)
+                            .Replace("\"", string.Empty);                        
                         
                         if (word is { OcrConfidence: < 40, Text.Length: > 3 }
                             && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3

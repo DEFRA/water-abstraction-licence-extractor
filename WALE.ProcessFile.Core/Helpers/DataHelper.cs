@@ -275,6 +275,12 @@ public static partial class DataHelper
             return false;
         }
         
+        // TODO - why? shouldnt need to
+        if (word.Text.Equals("per", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return false;
+        }
+        
         var lineLength = word.Text.Length;
         var averageConfidence = totalConfidence / lineLength;
         var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;

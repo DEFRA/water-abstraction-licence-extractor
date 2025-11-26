@@ -76,6 +76,16 @@ public static class AutoCorrectHelper
         const int minLengthForAutocorrection = 2;
         const int maxConfidenceNotToFix = 63;
         const int maxLengthDifference = 3;
+
+        // No matter the confidence, these are wrong
+        if (word.Text.Equals("fallons", StringComparison.InvariantCultureIgnoreCase)
+            || word.Text.Equals("pallons", StringComparison.InvariantCultureIgnoreCase))
+        {
+            word.Text = "gallons";
+            word.Autocorrected = true;
+            
+            return word;
+        }
         
         if (word is { OcrConfidence: < maxConfidenceNotToFix, Text.Length: >= minLengthForAutocorrection }
             && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) >= minLengthForAutocorrection
@@ -403,6 +413,7 @@ public static class AutoCorrectHelper
         "March",
         "Dated",
         "Authority",
+        "per"
     ];
     
     public static readonly WordList CustomDictionary = WordList.CreateFromWords(CustomSuggestions);

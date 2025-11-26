@@ -232,9 +232,7 @@ public static partial class DataHelper
             return false;
         }
         
-        
-        
-        if (word.Text.Contains("i2", StringComparison.InvariantCultureIgnoreCase) == true)
+        if (word.Text.Contains("1897", StringComparison.InvariantCultureIgnoreCase) == true)
         {
             
         }
@@ -288,7 +286,7 @@ public static partial class DataHelper
         var averageConfidenceBelowThreshold = averageConfidence is > 0 and < minConfidence;
         
         var lineLengthWithoutDots = word.Text.Count(c => c != '.');
-        var mainlyDigits = ((100.0 / lineLengthWithoutDots) * digitsCount) >= 60;
+        var mainlyDigits = ((100.0 / lineLengthWithoutDots) * digitsCount) >= 57;
         
         if (averageConfidenceBelowThreshold && !mainlyDigits)
         {

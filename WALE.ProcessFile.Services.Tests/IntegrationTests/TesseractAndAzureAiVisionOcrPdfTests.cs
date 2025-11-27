@@ -309,6 +309,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 13)] // Correct
     [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12)] // Correct
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 12)] // Year incorrect - faint stamp, can't even read as a human
+    [InlineData("22634080__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1997", "27/03/1997", 11)] // Correct
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11)] // Incorrect - stamp is not amazing
+    [InlineData("22715238__Non-Application Licence Document (05.03.2004).PDF", "5 MAR 2004", "05/03/2004", 13)] // Correct (I think - there is '-' in the stamp)
     public async Task WhenHarishSpottedNoIssueDateFiles1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {
         // Act

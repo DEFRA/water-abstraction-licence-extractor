@@ -905,18 +905,6 @@ public static partial class SchemaConverter
             return [];
         }
         
-        var text = string.Join('\n', additional.Text!.Select(t => t.Text));
-        string? linkReason = null;
-        
-        if (text.Contains("read in conjunction"))
-        {
-            linkReason = "ReadInConjunction";
-        }
-        else if (text.Contains("aggregate conditions"))
-        {
-            linkReason = "AggregateConditions";
-        }
-
         return additional.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
@@ -927,7 +915,7 @@ public static partial class SchemaConverter
                     new LinkedLicenceSection
                     {
                         SectionName = LinkedLicenceSectionNames.AdditionalInformation,
-                        LinkReason = linkReason
+                        LinkReason = GetLinkReason(string.Join('\n', additional.Text!.Select(t => t.Text)))
                     }
                 ]
             })
@@ -980,16 +968,6 @@ public static partial class SchemaConverter
             return [];
         }
         
-        var text = string.Join('\n', records.Text!.Select(t => t.Text));
-        string? linkReason = null;
-        
-        if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
-        {
-            linkReason = "ReadingsDischargedAugmentationCondition";
-        }
-
         return records.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
@@ -1000,7 +978,7 @@ public static partial class SchemaConverter
                     new LinkedLicenceSection
                     {
                         SectionName = LinkedLicenceSectionNames.Records,
-                        LinkReason = linkReason
+                        LinkReason = GetLinkReason(string.Join('\n', records.Text!.Select(t => t.Text)))
                     }
                 ]
             })
@@ -1017,7 +995,23 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var text = string.Join('\n', furtherConditions.Text!.Select(t => t.Text));
+        return furtherConditions.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                ContainedIn = [new LinkedLicenceSection
+                {
+                    SectionName = LinkedLicenceSectionNames.FurtherConditions,
+                    LinkReason = GetLinkReason(string.Join('\n', furtherConditions.Text!.Select(t => t.Text)))
+                }]
+            })
+            .ToList();
+    }
+
+    private static string? GetLinkReason(string text)
+    {
         string? linkReason = null;
         
         if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
@@ -1028,22 +1022,28 @@ public static partial class SchemaConverter
         {
             linkReason = "SimultaneousCompensatoryDischargeCondition";
         }
-        
-        return furtherConditions.SubResults
-            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
-            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-            .Select(linkedLicenceNumber => new LinkedLicence
-            {
-                LicenceNumber = linkedLicenceNumber,
-                ContainedIn = [new LinkedLicenceSection
-                {
-                    SectionName = LinkedLicenceSectionNames.FurtherConditions,
-                    LinkReason = linkReason
-                }]
-            })
-            .ToList();
-    }
+        else if (text.Contains("read in conjunction"))
+        {
+            linkReason = "ReadInConjunction";
+        }
+        else if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+        {
+            linkReason = "ReadingsDischargedAugmentationCondition";
+        }
+        else if (text.Contains("aggregate conditions"))
+        {
+            linkReason = "AggregateConditions";
+        }
+        else if (text.Contains("aggregate"))
+        {
+            linkReason = "AggregateCondition";
+        }
 
+        return linkReason;
+    }
+    
     private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(
         List<LabelGroupResult> matches,
         string? licenceNumber,
@@ -1190,15 +1190,7 @@ public static partial class SchemaConverter
                         .Text?
                         .FirstOrDefault()?
                         .Text;
-                    
-                    var text = string.Join('\n', abstractionLimitPointSub.Text!.Select(t => t.Text));
-                    string? linkReason = null;
-        
-                    if (text.Contains("aggregate"))
-                    {
-                        linkReason = "AggregateCondition";
-                    }
-                    
+
                     return new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
@@ -1208,7 +1200,7 @@ public static partial class SchemaConverter
                             new LinkedLicenceSection
                             {
                                 SectionName = LinkedLicenceSectionNames.AbstractionLimits,
-                                LinkReason = linkReason
+                                LinkReason = GetLinkReason(string.Join('\n', abstractionLimitPointSub.Text!.Select(t => t.Text)))
                             }
                         ]
                     };

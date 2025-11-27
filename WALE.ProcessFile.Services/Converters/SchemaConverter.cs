@@ -717,7 +717,7 @@ public static partial class SchemaConverter
         var returnLicences = new List<Licence>();
         
         var abstractionLimits = matchesResult.Matches?
-            .FirstOrDefault(result => result.LabelGroupName == LinkedLicenceSectionNames.AbstractionLimits);
+            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
         var abstractionLimitsPoints = abstractionLimits?.SubResults;
 
@@ -904,6 +904,18 @@ public static partial class SchemaConverter
         {
             return [];
         }
+        
+        var text = string.Join('\n', additional.Text!.Select(t => t.Text));
+        string? linkReason = null;
+        
+        if (text.Contains("read in conjunction"))
+        {
+            linkReason = "ReadInConjunction";
+        }
+        else if (text.Contains("aggregate conditions"))
+        {
+            linkReason = "AggregateConditions";
+        }
 
         return additional.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
@@ -911,7 +923,13 @@ public static partial class SchemaConverter
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                ContainedIn = [new LinkedLicenceSection { SectionName = "AdditionalInformation" }]
+                ContainedIn = [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.AdditionalInformation,
+                        LinkReason = linkReason
+                    }
+                ]
             })
             .ToList();
     }
@@ -961,6 +979,16 @@ public static partial class SchemaConverter
         {
             return [];
         }
+        
+        var text = string.Join('\n', records.Text!.Select(t => t.Text));
+        string? linkReason = null;
+        
+        if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+        {
+            linkReason = "ReadingsDischargedAugmentationCondition";
+        }
 
         return records.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
@@ -968,7 +996,13 @@ public static partial class SchemaConverter
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                ContainedIn = [new LinkedLicenceSection { SectionName = "Records" }]
+                ContainedIn = [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.Records,
+                        LinkReason = linkReason
+                    }
+                ]
             })
             .ToList();
     }
@@ -976,7 +1010,7 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(List<LabelGroupResult> matches)
     {
         var furtherConditions = matches
-            .FirstOrDefault(result => result.LabelGroupName == LinkedLicenceSectionNames.FurtherConditions);
+            .FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
 
         if (furtherConditions == null)
         {
@@ -986,9 +1020,13 @@ public static partial class SchemaConverter
         var text = string.Join('\n', furtherConditions.Text!.Select(t => t.Text));
         string? linkReason = null;
         
-        if (text.Contains("simultaneous discharge"))
+        if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
         {
             linkReason = "SimultaneousDischargeCondition";
+        }
+        else if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+        {
+            linkReason = "SimultaneousCompensatoryDischargeCondition";
         }
         
         return furtherConditions.SubResults

@@ -10,7 +10,7 @@ public class LinkedLicence
     
     public Condition? Condition { get; set; }
     
-    public string[]? FromSection { get; set; }
+    public LinkedLicenceSection[]? ContainedIn { get; set; }
     
     public bool? IsLiveLicence { get; set; }
     

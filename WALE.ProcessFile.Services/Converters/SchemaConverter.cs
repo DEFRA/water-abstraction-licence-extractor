@@ -218,20 +218,20 @@ public static partial class SchemaConverter
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
-                var fromSection = new List<string>();
+                var fromSection = new List<LinkedLicenceSection>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
                 {
-                    if (linkedLicence.FromSection == null)
+                    if (linkedLicence.ContainedIn == null)
                     {
                         continue;
                     }
                     
-                    var sectionItems = linkedLicence.FromSection;
+                    var sectionItems = linkedLicence.ContainedIn;
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (fromSection.Contains(sectionItem))
+                        if (fromSection.Any(fs => fs.SectionName == sectionItem.SectionName))
                         {
                             continue;
                         }
@@ -296,7 +296,7 @@ public static partial class SchemaConverter
         string? licenceNumber,
         string? filename,
         Condition? condition,
-        string[] fromSection,
+        LinkedLicenceSection[] containedIn,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
@@ -341,7 +341,7 @@ public static partial class SchemaConverter
             NaldLicenceNumber = naldLicenceNumber,
             Filename = filename,
             Condition = condition,
-            FromSection = fromSection,
+            ContainedIn = containedIn,
             IsDeadLicence = isDeadLicence,
             IsImpoundmentLicence = isImpoundmentLicence,
             IsLiveLicence = isLiveLicence,
@@ -410,7 +410,7 @@ public static partial class SchemaConverter
         }
 
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
-            .Where(linkedLicence => linkedLicence.FromSection?.Contains("AbstractionLimits") == true)
+            .Where(linkedLicence => linkedLicence.ContainedIn?.Any(ci => ci.SectionName == "AbstractionLimits") == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber == ln))
             .Where(ln => ln != null)
@@ -534,7 +534,7 @@ public static partial class SchemaConverter
                                 incomingLink.LicenceNumber,
                                 incomingLink.Filename,
                                 null,
-                                ["ImplicitBackLink"],
+                                [new LinkedLicenceSection { SectionName = "ImplicitBackLink" }],
                                 impoundmentLicenceNumbers,
                                 deadLicenceNumbers,
                                 liveLicenceNumbers)
@@ -906,7 +906,7 @@ public static partial class SchemaConverter
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["AdditionalInformation"]
+                ContainedIn = [new LinkedLicenceSection { SectionName = "AdditionalInformation" }]
             })
             .ToList();
     }
@@ -938,7 +938,7 @@ public static partial class SchemaConverter
                     .Select(linkedLicenceNumber => new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
-                        FromSection = ["Purposes"]
+                        ContainedIn = [new LinkedLicenceSection { SectionName = "Purposes" }]
                     })
                     .ToList());
             }
@@ -963,7 +963,7 @@ public static partial class SchemaConverter
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["Records"]
+                ContainedIn = [new LinkedLicenceSection { SectionName = "Records" }]
             })
             .ToList();
     }
@@ -984,7 +984,7 @@ public static partial class SchemaConverter
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["FurtherConditions"]
+                ContainedIn = [new LinkedLicenceSection { SectionName = "FurtherConditions" }]
             })
             .ToList();
     }
@@ -1141,7 +1141,7 @@ public static partial class SchemaConverter
                         LicenceNumber = linkedLicenceNumber,
                         Filename = linkedLicenceFilename,
                         Condition = condition,
-                        FromSection = ["AbstractionLimits"]
+                        ContainedIn = [new LinkedLicenceSection { SectionName = "AbstractionLimits" }]
                     };
                 })
                 .ToList();
@@ -2144,7 +2144,7 @@ public static partial class SchemaConverter
 
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber == l.LicenceNumber
-                      || licence1.LinkedLicences.Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
+                      || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci => ci.SectionName == "ImplicitBackLink") != true)
                           .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

@@ -69,78 +69,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0);
     }
     
-    [Fact(Skip = "ProblemsWithCarbonPaper")]
-    public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
-    {
-        // Arrange
-        const string filename = "Non-Application Licence Document (08.06.1987).PDF";
-
-        // Act
-        var resultFull = await GetMatchesAsync(filename);
-        var resultList = resultFull.Matches!;
-        
-        // Assert
-        //Assert.Equal(6, resultList.Count);
-
-        var dateOfIssue = resultFull.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("9th day of January, 1967", dateOfIssue.Text?.FirstOrDefault()?.Text);
-        
-        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        
-        Assert.NotNull(nameResult);
-        Assert.True(nameResult.IsOcr);
-        Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
-        
-        var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        Assert.NotNull(abstractionLimitsResult);
-        Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
-        
-        Assert.Single(abstractionLimitsResult!.SubResults!);
-
-        var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
-        Assert.NotNull(abstractionPoint1);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
-        
-        var abstractionLimitsSections = abstractionLimitsResult.SubResults;
-        Assert.NotNull(abstractionLimitsSections);
-        Assert.Single(abstractionLimitsSections);
-        
-        var abstractionLimitsSection = abstractionLimitsSections[0];
-        Assert.NotNull(abstractionLimitsSection);
-        Assert.NotNull(abstractionLimitsSection.SubResults);
-
-        Assert.Single(abstractionLimitsSection.SubResults);
-        var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        
-        Assert.Equal(2, section1Sub1.SubResults.Count);
-        // TODO fix for this
-        
-        /*
-        var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
-
-        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("5183", perDayValue?.Text?.FirstOrDefault()?.Text); // Should be 5600, bad OCR
-
-        var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
-
-        var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("1500", perHourValue?.Text?.FirstOrDefault()?.Text);
-        */
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("28/39/22/271", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-    }
-    
     [Fact]
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
@@ -373,5 +301,116 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
+    }
+    
+    [Theory]
+    [InlineData("22702013__2-27-02-013 6999981.PDF", "16 June 2000", "16/06/2000", 12)] // Correct
+    [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 13)] // Correct
+    [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 13)] // Correct
+    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12)] // Correct
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 12)] // Year incorrect - faint stamp, can't even read as a human
+    [InlineData("22634080__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1997", "27/03/1997", 11)] // Correct
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11)] // Incorrect - stamp is not amazing
+    [InlineData("22715238__Non-Application Licence Document (05.03.2004).PDF", "5 MAR 2004", "05/03/2004", 13)] // Correct (I think - there is '-' in the stamp)
+    public async Task WhenHarishSpottedNoIssueDateFiles1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
+    {
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(expectedResults, resultList.Count);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
+        
+        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            [],
+            [],
+            [],
+            [],
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            0);
+
+        var licence = schemaData[0].Licences[0];
+
+        Assert.NotNull(licence.LicenceVersion.IssueDate);
+        Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
+    }
+    
+    [Fact(Skip = "ProblemsWithCarbonPaper")]
+    public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "Non-Application Licence Document (08.06.1987).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(6, resultList.Count);
+
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("9th day of January, 1967", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+        
+        Assert.NotNull(nameResult);
+        Assert.True(nameResult.IsOcr);
+        Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
+        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        
+        var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.True(abstractionLimitsResult.IsOcr);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        
+        Assert.Single(abstractionLimitsResult!.SubResults!);
+
+        var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
+        Assert.NotNull(abstractionPoint1);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        
+        var abstractionLimitsSections = abstractionLimitsResult.SubResults;
+        Assert.NotNull(abstractionLimitsSections);
+        Assert.Single(abstractionLimitsSections);
+        
+        var abstractionLimitsSection = abstractionLimitsSections[0];
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.NotNull(abstractionLimitsSection.SubResults);
+
+        Assert.Single(abstractionLimitsSection.SubResults);
+        var section1Sub1 = abstractionLimitsSection.SubResults![0];
+        
+        Assert.Equal(2, section1Sub1.SubResults.Count);
+        // TODO fix for this
+        
+        /*
+        var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("5183", perDayValue?.Text?.FirstOrDefault()?.Text); // Should be 5600, bad OCR
+
+        var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("1500", perHourValue?.Text?.FirstOrDefault()?.Text);
+        */
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal("28/39/22/271", licenceNumberResult.Text?.FirstOrDefault()?.Text);
     }
 }

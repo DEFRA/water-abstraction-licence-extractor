@@ -1,11 +1,10 @@
 using System.Text.Json;
 using SkiaSharp;
 using UglyToad.PdfPig.Graphics.Colors;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -96,6 +95,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         return File.WriteAllTextAsync(jsListFilePath, "var data = " +
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
+    }
+
+    public Task SavePageScreenshotIfDoesntExistAsync(UglyToad.PdfPig.PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
+        string pdfFilePath, int processRunId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(

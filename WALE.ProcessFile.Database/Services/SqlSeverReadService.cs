@@ -1,11 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Data.SqlClient;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.OutputSchema.Table;
 using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums.OutputSchema;
-using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Models.OutputSchema.Table;
 
 namespace WALE.ProcessFile.Database.Services;
 

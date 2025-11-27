@@ -1,8 +1,8 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
@@ -205,9 +205,10 @@ public static class RelatedCategoryPosition
                 PositionConstants.UnknownLineNumber,
                 PositionConstants.UnknownPageNumber,
                 line.Columns,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate);
+                line.Top,
+                line.Right,
+                line.Bottom,
+                line.Left);
 
             labelGroupResult.Text = [documentLine];
             labelGroupResult.MatchedLabel = request.label;

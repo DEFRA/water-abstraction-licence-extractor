@@ -27,3 +27,7 @@ WALE.ProcessFile.Models/obj
 WALE.ProcessFile.Web/bin
 WALE.ProcessFile.Web/obj
 WALE.ProcessFile.Web/appsettings.Development.json
+/WALE.ProcessFile.Services.AwsTextract/bin
+/WALE.ProcessFile.Services.AwsTextract/obj
+/WALE.ProcessFile.Core/bin
+/WALE.ProcessFile.Core/obj

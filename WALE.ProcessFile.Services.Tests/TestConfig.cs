@@ -104,6 +104,38 @@ public static class TestConfig
         }
     }
     
+    private static string? _awsAccessKey;
+
+    public static string AwsAccessKey
+    {
+        get
+        {
+            if (_awsAccessKey != null)
+            {
+                return _awsAccessKey;
+            }
+            
+            _awsAccessKey = Config["AwsAccessKey"]!;
+            return _awsAccessKey;
+        }
+    }
+    
+    private static string? _awsSecretKey;
+
+    public static string AwsSecretKey
+    {
+        get
+        {
+            if (_awsSecretKey != null)
+            {
+                return _awsSecretKey;
+            }
+            
+            _awsSecretKey = Config["AwsSecretKey"]!;
+            return _awsSecretKey;
+        }
+    }
+    
     private static string? _openAiEndpoint;
 
     public static string OpenAiEndpoint

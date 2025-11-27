@@ -1,10 +1,10 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -89,7 +89,7 @@ public static class Split
                 
                 var leftPartWords = leftPart
                     .Split(PositionConstants.SpaceChar)
-                    .Select(text => new DocumentLineWord(text, null, coords))
+                    .Select(text => new DocumentLineWord(text, request.line.OcrConfidence, coords, null))
                     .ToList();
 
                 var leftColumns = new List<DocumentLineColumn>
@@ -110,8 +110,9 @@ public static class Split
                         .Split(PositionConstants.SpaceChar)
                         .Select(text => new DocumentLineWord(
                             text,
-                            null,
-                            coords))
+                            request.line.OcrConfidence,
+                            coords,
+                            null))
                         .ToList();
 
                     var rightColumns = new List<DocumentLineColumn>

@@ -1,10 +1,10 @@
 using System.Text.Json;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Services.PdfPig;
 
 namespace WALE.ProcessFile.Services.Services;
@@ -166,7 +166,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     
-    public async Task<byte[]> SaveDeflatedImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension)
+    public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {

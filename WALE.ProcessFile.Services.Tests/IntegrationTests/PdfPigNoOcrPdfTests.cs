@@ -1,14 +1,13 @@
-using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Database.Services;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Models.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -85,7 +84,7 @@ public class PdfPigNoOcrPdfTests
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
-        Assert.Equal(15, history.Text!.Count);
+        Assert.Equal(16, history.Text!.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3339,7 +3338,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
-        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
         Assert.Equal("All Year", agreedSchemaLicence.PeriodsOfAbstraction.Single().Description);

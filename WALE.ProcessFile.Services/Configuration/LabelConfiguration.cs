@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
@@ -327,12 +327,13 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 1,
                 NextLinesToFetch = 1,
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
                 IgnoreMatchIfContains = [
                     "Date effective"
-                ],
+                ]
             },
             new LabelToMatch
             {
@@ -369,7 +370,8 @@ public static class LabelConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost
+                Position = LabelPosition.ApplicableToMost,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
             }
         ];
     }
@@ -389,6 +391,7 @@ public static class LabelConfiguration
                     new("Date of original issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -413,6 +416,7 @@ public static class LabelConfiguration
                     new("Date effective")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -436,6 +440,7 @@ public static class LabelConfiguration
                     new("Date of expiry ...")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -950,6 +955,7 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
@@ -1339,6 +1345,7 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
+                    new("G. QUANTITY OF WATER AUTHORISED TO BE"), // TODO hack
                     new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("The quantity of water authorised to be abstracted shall be") { IfMultiplePreferLast = true }

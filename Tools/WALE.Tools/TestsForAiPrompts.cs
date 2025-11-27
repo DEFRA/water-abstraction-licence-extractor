@@ -6,9 +6,9 @@ using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
 using Tesseract;
-using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Services;
 
@@ -573,7 +573,8 @@ public static class TestsForAiPrompts
                     pageNumber,
                     1,
                     mockPdfDocument,
-                    -1)).ToList();
+                    -1,
+                    PdfDataExtractorService.Name)).ToList();
 
             var averageLineLength = lines.Average(line
                 => line.Text.Length);

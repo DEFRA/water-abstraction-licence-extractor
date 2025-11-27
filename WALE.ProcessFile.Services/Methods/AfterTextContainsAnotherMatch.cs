@@ -1,7 +1,7 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Methods;

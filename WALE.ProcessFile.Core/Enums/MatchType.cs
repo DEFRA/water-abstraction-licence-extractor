@@ -1,0 +1,18 @@
+namespace WALE.ProcessFile.Core.Enums;
+
+public enum MatchType
+{
+    Unknown = -101,
+    NotApplicable = -100,
+    NotFound = -99,
+    
+    SameLineIsCompany1Line = 9900,
+    SameLineIsCompany2Lines = 7500,
+    SameLineSingleWord = 9903,
+    
+    NearPreviousLineIsCompany = 8005,
+    NearNextLineIsMatch = 9901,
+    MatchIsEitherSideOfLabel = 9901,
+    
+    Between = 9503
+}

@@ -955,6 +955,7 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,

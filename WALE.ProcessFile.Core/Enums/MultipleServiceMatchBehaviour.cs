@@ -4,5 +4,6 @@ public enum MultipleServiceMatchBehaviour
 {
     UseLastServiceResult,
     UseLongestUseLastServiceResultIfEqual,
-    UseFullestDateUseLastServiceResultIfMultipleFull
+    UseFullestDateUseLastServiceResultIfMultipleFull,
+    UseBestLicenceNumberUseLastServiceResultIfEqual
 }

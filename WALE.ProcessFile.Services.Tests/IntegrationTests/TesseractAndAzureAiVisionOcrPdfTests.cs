@@ -304,11 +304,11 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     }
     
     [Theory]
-    [InlineData("22702013__2-27-02-013 6999981.PDF", "16 June 2000", "16/06/2000", 12)]
-    [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 13)]
-    [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 13)]
-    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12)]
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 12)]
+    [InlineData("22702013__2-27-02-013 6999981.PDF", "16 June 2000", "16/06/2000", 12)] // Correct
+    [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 13)] // Correct
+    [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 13)] // Correct
+    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12)] // Correct
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 12)] // Incorrect - faint stamp
     public async Task WhenHarishSpottedNoIssueDateFiles1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
     {
         // Act

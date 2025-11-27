@@ -284,180 +284,10 @@ public class PdfDataExtractorService(
                         }
                     }
                 }
-
-                var uniqueServiceMatches = new List<LabelGroupResult>();
-
-                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key.HasDirectCost)) // TODO should be OrderByDescending
-                {
-                    var serviceMatches = kvp.Value;
-
-                    foreach (var match in serviceMatches)
-                    {
-                        var alreadyFound = uniqueServiceMatches
-                            .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
-
-                        if (alreadyFound != null)
-                        {
-                            switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
-                            {
-                                case MultipleServiceMatchBehaviour.UseLastServiceResult:
-                                    match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                    alreadyFound.AlternativeMatches = [];
-                                    match.AlternativeMatches.Add(alreadyFound);
-
-                                    uniqueServiceMatches.Remove(alreadyFound);
-                                    uniqueServiceMatches.Add(match);
-                                    
-                                    break;
-                                case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
-                                    var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                                    var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
-
-                                    if (newValue.Length >= existingValue.Length)
-                                    {
-                                        match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                        alreadyFound.AlternativeMatches = [];
-                                        match.AlternativeMatches.Add(alreadyFound);
-
-                                        uniqueServiceMatches.Remove(alreadyFound);
-                                        uniqueServiceMatches.Add(match);
-                                    }
-                                    else
-                                    {
-                                        alreadyFound.AlternativeMatches.Add(match);
-                                    }
-                                    
-                                    break;
-                                case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
-                                    var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                                    var existingDocumentLine = new DocumentLine
-                                    {
-                                        Columns = [
-                                            new()
-                                            {
-                                                Text = existingLicenceNumber,
-                                                Words = [new(
-                                                    existingLicenceNumber,
-                                                    null,
-                                                    new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                                    null)]
-                                            }
-                                        ]
-                                    };
-                                    
-                                    var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                        [existingDocumentLine],
-                                        new LabelToMatch(),
-                                        alreadyFound.IsOcr,
-                                        out var existingLicenceNumberOutput);
-
-                                    var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
-                                    var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
-                                    var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
-                                    var existingValueLength = existingLicenceNumber.Length;
-                                    
-                                    var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
-                                    var newDocumentLine = new DocumentLine
-                                    {
-                                        Columns = [
-                                            new()
-                                            {
-                                                Text = newLicenceNumber,
-                                                Words = [new(
-                                                    newLicenceNumber,
-                                                    null,
-                                                    new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                                    null)]
-                                            }
-                                        ]
-                                    };
-                                    
-                                    var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                        [newDocumentLine],
-                                        new LabelToMatch(),
-                                        alreadyFound.IsOcr,
-                                        out var newLicenceNumberOutput);
-
-                                    var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
-                                    var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
-                                    var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
-                                    var newValueLength = newLicenceNumber.Length;
-
-                                    if (newValueLength > existingValueLength
-                                        || newValueNumberOfDigits > existingValueNumberOfDigits
-                                        || newValueNumberOfParts > existingValueNumberOfParts)
-                                    {
-                                        match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                        alreadyFound.AlternativeMatches = [];
-                                        match.AlternativeMatches.Add(alreadyFound);
-
-                                        uniqueServiceMatches.Remove(alreadyFound);
-                                        uniqueServiceMatches.Add(match);
-                                    }
-                                    else
-                                    {
-                                        alreadyFound.AlternativeMatches.Add(match);
-                                    }
-                                    
-                                    break;
-                                case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
-                                    var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
-                                    var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
-
-                                    if (existingDate == null)
-                                    {
-                                        match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                        alreadyFound.AlternativeMatches = [];
-                                        match.AlternativeMatches.Add(alreadyFound);
-
-                                        uniqueServiceMatches.Remove(alreadyFound);
-                                        uniqueServiceMatches.Add(match);
-                                    }
-                                    else if (newDate == null)
-                                    {
-                                        alreadyFound.AlternativeMatches.Add(match);
-                                    }
-                                    else
-                                    {
-                                        var existingDateHasDayField = existingDate.Value.Day > 1;
-                                        var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
-                                        var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
-                                        
-                                        var newDateHasDayField = newDate.Value.Day > 1;
-                                        var newDateIsPost1911 = newDate.Value.Year >= 1911;
-                                        var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
-                                        
-                                        if (newDateHasDayField && newDateIsPost1911
-                                            && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
-                                        {
-                                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                            alreadyFound.AlternativeMatches = [];
-                                            match.AlternativeMatches.Add(alreadyFound);
-
-                                            uniqueServiceMatches.Remove(alreadyFound);
-                                            uniqueServiceMatches.Add(match);
-                                        }
-                                        else
-                                        {
-                                            alreadyFound.AlternativeMatches.Add(match);
-                                        }
-                                    }
-                                    
-                                    break;
-                                default:
-                                    throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
-                            }
-                            
-                            continue;
-                        }
-
-                        uniqueServiceMatches.Add(match);
-                    }
-                }
-                
-                // TODO something here to use all 3 of them
                 
                 documentLines.AddRange(serviceImageLines);
+
+                var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
@@ -508,6 +338,181 @@ public class PdfDataExtractorService(
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
+    }
+
+    private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    {
+        var uniqueServiceMatches = new List<LabelGroupResult>();
+
+        foreach (var kvp in serviceMatchesDict.OrderBy(service => service.Key.HasDirectCost))
+        {
+            var serviceMatches = kvp.Value;
+
+            foreach (var match in serviceMatches)
+            {
+                var alreadyFound = uniqueServiceMatches
+                    .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
+
+                if (alreadyFound != null)
+                {
+                    switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
+                    {
+                        case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
+                            var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                            var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                            if (newValue.Length >= existingValue.Length)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
+                            var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                            var existingDocumentLine = new DocumentLine
+                            {
+                                Columns = [
+                                    new()
+                                    {
+                                        Text = existingLicenceNumber,
+                                        Words = [new(
+                                            existingLicenceNumber,
+                                            null,
+                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                            null)]
+                                    }
+                                ]
+                            };
+                            
+                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                                [existingDocumentLine],
+                                new LabelToMatch(),
+                                alreadyFound.IsOcr,
+                                out var existingLicenceNumberOutput);
+
+                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
+                            var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
+                            var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
+                            var existingValueLength = existingLicenceNumber.Length;
+                            
+                            var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
+                            var newDocumentLine = new DocumentLine
+                            {
+                                Columns = [
+                                    new()
+                                    {
+                                        Text = newLicenceNumber,
+                                        Words = [new(
+                                            newLicenceNumber,
+                                            null,
+                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                            null)]
+                                    }
+                                ]
+                            };
+                            
+                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                                [newDocumentLine],
+                                new LabelToMatch(),
+                                alreadyFound.IsOcr,
+                                out var newLicenceNumberOutput);
+
+                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
+                            var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
+                            var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
+                            var newValueLength = newLicenceNumber.Length;
+
+                            if (newValueLength > existingValueLength
+                                || newValueNumberOfDigits > existingValueNumberOfDigits
+                                || newValueNumberOfParts > existingValueNumberOfParts)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
+                            var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                            var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                            if (existingDate == null)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else if (newDate == null)
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            else
+                            {
+                                var existingDateHasDayField = existingDate.Value.Day > 1;
+                                var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
+                                var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
+                                
+                                var newDateHasDayField = newDate.Value.Day > 1;
+                                var newDateIsPost1911 = newDate.Value.Year >= 1911;
+                                var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
+                                
+                                if (newDateHasDayField && newDateIsPost1911
+                                    && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                                {
+                                    match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                    alreadyFound.AlternativeMatches = [];
+                                    match.AlternativeMatches.Add(alreadyFound);
+
+                                    uniqueServiceMatches.Remove(alreadyFound);
+                                    uniqueServiceMatches.Add(match);
+                                }
+                                else
+                                {
+                                    alreadyFound.AlternativeMatches.Add(match);
+                                }
+                            }
+                            
+                            break;
+                        default:
+                            throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
+                    }
+                    
+                    continue;
+                }
+
+                uniqueServiceMatches.Add(match);
+            }
+        }
+
+        return uniqueServiceMatches;
     }
     
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, int processRunId)

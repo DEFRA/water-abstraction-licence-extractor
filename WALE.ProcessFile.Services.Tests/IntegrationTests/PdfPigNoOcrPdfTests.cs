@@ -84,7 +84,7 @@ public class PdfPigNoOcrPdfTests
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
-        Assert.Equal(15, history.Text!.Count);
+        Assert.Equal(16, history.Text!.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3338,7 +3338,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Single(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
-        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
         Assert.Equal("All Year", agreedSchemaLicence.PeriodsOfAbstraction.Single().Description);

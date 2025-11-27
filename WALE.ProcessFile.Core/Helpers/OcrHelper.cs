@@ -576,7 +576,7 @@ public static class OcrHelper
 
                 return documentLine;
             })
-            .Where(line => !DataHelper.IsCorruptedText(line.Text, false, unacceptableIncorrectValue))
+            .Where(line => !DataHelper.IsCorruptedText(line.Text, unacceptableIncorrectValue))
             .ToList();
 
         return groupedLines;

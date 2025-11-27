@@ -68,10 +68,6 @@ public static class AutoCorrectHelper
             wordTextWithoutPunctuation = wordTextWithoutPunctuation.Replace("\"", string.Empty);
         }
         
-        if (word.Text.Contains("auq", StringComparison.InvariantCultureIgnoreCase))
-        {
-        }
-
         const int minLengthForAutocorrection = 2;
         const int maxConfidenceNotToFix = 63;
         const int maxLengthDifference = 3;
@@ -81,6 +77,14 @@ public static class AutoCorrectHelper
             || word.Text.Contains("pallons", StringComparison.InvariantCultureIgnoreCase))
         {
             word.Text = "gallons";
+            word.Autocorrected = true;
+            
+            return word;
+        }
+        
+        if (word.Text.Contains("dayof", StringComparison.InvariantCultureIgnoreCase))
+        {
+            word.Text = "day of";
             word.Autocorrected = true;
             
             return word;

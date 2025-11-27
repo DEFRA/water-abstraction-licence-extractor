@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WeCantSpell.Hunspell;
 
 namespace WALE.ProcessFile.Core.Helpers;
 
@@ -222,11 +221,6 @@ public static partial class DataHelper
         {
             return false;
         }
-
-        if (word.Coordinates.Top >= 3072)
-        {
-            var fontSize = word.Coordinates.Bottom - word.Coordinates.Top;
-        }
         
         var digitsCount = word.Text.Count(char.IsDigit);
         var totalConfidence = 0.0;
@@ -237,11 +231,6 @@ public static partial class DataHelper
             return false;
         }
         
-        if (word.Text.Contains("July", StringComparison.InvariantCultureIgnoreCase) == true)
-        {
-            
-        }
-
         var wordWithoutPunctuation = new string(word.Text
             .Where(ch =>
                 ch != '"'
@@ -315,7 +304,6 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             word.Text,
-            true,
             unacceptableIncorrectValue);
         
         return isCorrupt;
@@ -339,11 +327,6 @@ public static partial class DataHelper
             if (word?.OcrConfidence == null)
             {
                 continue;
-            }
-
-            if (word.Text == "aondom")
-            {
-                
             }
             
             var confidence = word.OcrConfidence.Value;
@@ -387,7 +370,6 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             string.Join(' ', words.Select(w => w?.Text)),
-            true,
             unacceptableIncorrectValue);
         
         return isCorrupt;
@@ -411,19 +393,15 @@ public static partial class DataHelper
             && ch != ':'
             && ch != ';'
             && ch != '£'
+            && ch != '&'
             && ch != '*';
     }
     
-    public static bool IsCorruptedText(string? line, bool isPartialChunk = false, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
     {
         if (string.IsNullOrEmpty(line))
         {
             return false;
-        }
-
-        if (IsSpecialCharacter(line[0]))
-        {
-            //return true;
         }
         
         if (line.Contains('—'))
@@ -440,11 +418,10 @@ public static partial class DataHelper
         {
             line = line.Replace("’", "'");
         }
-
-        // TODO sort common misreadings
-        if (line.Contains("dayof", StringComparison.InvariantCultureIgnoreCase))
+        
+        if (IsSpecialCharacter(line[0]))
         {
-            line = line.Replace("dayof", "day of");
+            return true;
         }
 
         var specialCharCount = line.Count(IsSpecialCharacter);

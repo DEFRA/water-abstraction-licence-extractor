@@ -100,27 +100,26 @@ public class TesseractOcrDataExtractorService(
             }
         }
         
-        const int lineHeight = 21;
-        const int wordGap = 200;
-        const int minWordHeight = 15;
+        const int horizontalColumnGap = 200;
+        const int minFontSize = 15;
         const int maxPercentHeightDiff = 0;
+
+        const int lineHeight = 21;
         const int maxNegativeDiffBetweenWordTop = -100;
         const int maxPositiveDiffBetweenWordTop = 100;
         const int considerableOverlapAmount = 3; // TODO check and tweak
-        const int maxYDiffToCombine = 5;
 
         return OcrHelper.Group(
             returnLines,
             false,
             pageNumber,
+            horizontalColumnGap,
+            minFontSize,
+            considerableOverlapAmount,
             lineHeight,
-            wordGap,
-            minWordHeight,
             maxPercentHeightDiff,
             maxNegativeDiffBetweenWordTop,
-            maxPositiveDiffBetweenWordTop,
-            considerableOverlapAmount,
-            maxYDiffToCombine);
+            maxPositiveDiffBetweenWordTop);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)

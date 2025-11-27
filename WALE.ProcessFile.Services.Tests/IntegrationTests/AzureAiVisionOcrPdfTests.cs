@@ -519,7 +519,7 @@ public class AzureAiVisionOcrPdfTests
         // TODO - other 2 things
     }
     
-    // SKIP FOR NOW AS BROKEN WITH NEW IMPLEMENTATION [Fact]
+    [Fact(Skip = "TEST BROKEN WITH NEW IMPLEMENTATION ")]
     public async Task Succession_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
@@ -800,7 +800,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

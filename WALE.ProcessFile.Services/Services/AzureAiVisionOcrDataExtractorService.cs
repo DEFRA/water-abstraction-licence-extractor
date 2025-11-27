@@ -182,25 +182,17 @@ public class AzureAiVisionOcrDataExtractorService(
             })
             .ToList();
         
-        const int wordGap = 150;
+        const int horizontalColumnGap = 150;
         const int minFontSize = 15;
         const int considerableOverlapAmount = 19;
-        const int unusedValue = -1;
-        const int maxYDiffToCombine = 13;
-        const int maxPercentFontSizeDiff = 70;
 
         return OcrHelper.Group(
             returnLinesInFormat,
             true,
             pageNumber,
-            unusedValue,
-            wordGap,
+            horizontalColumnGap,
             minFontSize,
-            maxPercentFontSizeDiff,
-            unusedValue,
-            unusedValue,
-            considerableOverlapAmount,
-            maxYDiffToCombine);
+            considerableOverlapAmount);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)

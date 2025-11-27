@@ -100,30 +100,17 @@ public class AwsTextractOcrDataExtractorService(
             }
         }
         
-        /*const int lineHeight = 7;
-        const int wordGap = 100;
-        const int minWordHeight = 8;
-        const int maxPercentHeightDiff = 82;
-        const int maxDiffBetweenWordTop = 30;*/
-
-        const int unusedValue = -1;
         const int horizontalColumnGap = 100;
         const int minFontSize = 5; // Can't really go lower, this is tiny
         const int considerableOverlapAmount = 3;
-        const int maxYDiffToCombine = 5;
         
         return OcrHelper.Group(
             returnLines,
             true,
             pageNumber,
-            unusedValue,
             horizontalColumnGap,
             minFontSize,
-            unusedValue,
-            unusedValue,
-            unusedValue,
-            considerableOverlapAmount,
-            maxYDiffToCombine);
+            considerableOverlapAmount);
     }
     
     private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)

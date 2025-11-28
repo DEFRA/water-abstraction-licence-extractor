@@ -3931,7 +3931,15 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("9. FURTHER CONDITIONS", furtherConditions.Text?.FirstOrDefault()?.Text);
         Assert.Equal(36, furtherConditions.Text!.Count);
 
-        Assert.Equal(4, furtherConditions.SubResults.Count);
+        Assert.Equal(8, furtherConditions.SubResults.Count);
+        Assert.Equal("9.1 (i) No abstraction shall take place unless the Licence Holder has installed a", furtherConditions.SubResults[0].Text!.First().Text);
+        Assert.Equal("9.2 No abstraction shall take place when the flow in the Back Delfin as gauged", furtherConditions.SubResults[1].Text!.First().Text);
+        Assert.Equal("9.3 Abstraction shall not exceed 2,000 cubic metres per day when the flow in the", furtherConditions.SubResults[2].Text!.First().Text);
+        Assert.Equal("9.4 The minimum value for the quantity of water authorised to be abstracted", furtherConditions.SubResults[3].Text!.First().Text);
+        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[4].Text!.First().Text);
+        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[5].Text!.First().Text);
+        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[6].Text!.First().Text);
+        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[7].Text!.First().Text);
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4060,9 +4068,12 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(records);
         Assert.Equal(12, records.Text!.Count);
 
-        Assert.Equal(2, records.SubResults.Count);
-        Assert.Equal("2/27/18/158/R01", records.SubResults[0].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("2/27/18/117/R01", records.SubResults[1].Text!.FirstOrDefault()!.Text);
+        Assert.Equal(5, records.SubResults.Count);
+        Assert.Equal("8.1 The Licence Holder shall take and record readings of the meter specified in", records.SubResults[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("8.2 The Licence Holder shall send a copy of the record or summary data from it to", records.SubResults[1].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("8.3 Each record shall be kept and be made available during all reasonable", records.SubResults[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("2/27/18/158/R01", records.SubResults[3].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("2/27/18/117/R01", records.SubResults[4].Text!.FirstOrDefault()!.Text);
         
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

@@ -64,6 +64,42 @@ public static class LabelConfiguration
                 [
                     new()
                     {
+                      Name = "RecordPoint",
+                        TextStart = [
+                            new("8.1"),
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("8.11"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
+                    new()
+                    {
                         Name = "RecordsLinkedLicenceNumber",
                         Text =
                         [
@@ -224,6 +260,42 @@ public static class LabelConfiguration
                 NextLinesToFetch = 60,
                 SubLabels = 
                 [
+                    new()
+                    {
+                        Name = "FurtherConditionsPoint",
+                        TextStart = [
+                            new("9.1"),
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("9.11"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
                     new()
                     {
                         Name = "FCLinkedLicenceNumber",

@@ -357,7 +357,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
-        IPdfDataExtractorService  pdfDataExtractorService,
+        IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         int processRunId)
     {

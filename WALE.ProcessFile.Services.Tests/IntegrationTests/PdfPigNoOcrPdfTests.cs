@@ -242,6 +242,8 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
         Assert.Null(agreedSchemaLicenceGroup.Last().AggregateSets);
+        
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 
     [Fact]
@@ -447,6 +449,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(new DateTime(2019, 11, 11), primaryLicence.LicenceVersion.EffectiveDate);
         Assert.Equal(new DateTime(1975, 01, 22), primaryLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2019, 12, 24), primaryLicence.LicenceVersion.IssueDate);
+        
+        Assert.Single(primaryLicence.LinkedLicences);
+        Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
     }
 
     [Fact]
@@ -3179,6 +3186,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.MeansOfAbstraction);
         Assert.Single(agreedSchemaLicence.Purposes);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual);
+
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("DewateringDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
     }
     
     [Fact]

@@ -1042,7 +1042,7 @@ public static partial class SchemaConverter
                 return "SimultaneousCompensatoryDischargeCondition";
             }
             
-            if (text.Contains("read in conjunction"))
+            if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "ReadInConjunction";
             }
@@ -1054,12 +1054,17 @@ public static partial class SchemaConverter
                 return "ReadingsDischargedAugmentationCondition";
             }
             
-            if (text.Contains("aggregate conditions"))
+            if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "AggregateConditions";
             }
             
-            if (text.Contains("aggregate"))
+            if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "DewateringDischargeCondition";
+            }
+            
+            if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "AggregateCondition";
             }

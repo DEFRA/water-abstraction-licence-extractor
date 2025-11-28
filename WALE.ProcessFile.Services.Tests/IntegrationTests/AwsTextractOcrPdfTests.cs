@@ -167,6 +167,24 @@ public class AwsTextractOcrPdfTests
         Assert.Equal("cubic metres", perYearUnits2);
 
         // See notes RE licence
+        
+        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            [],
+            [],
+            [],
+            [],
+            _pdfDataExtractor1,
+            TestConfig.PdfFolder,
+            0)).Last();
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+
+        Assert.Equal("14/46/03/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
     }
     
     [Theory]
@@ -199,6 +217,7 @@ public class AwsTextractOcrPdfTests
             0);
 
         var licence = schemaData[0].Licences[0];
+        Assert.Empty(licence.LinkedLicences);
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());

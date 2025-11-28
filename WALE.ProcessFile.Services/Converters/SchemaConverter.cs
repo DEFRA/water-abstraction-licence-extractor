@@ -1010,38 +1010,59 @@ public static partial class SchemaConverter
             .ToList();
     }
 
+    private static List<string> GetSectionsFromText(string text)
+    {
+        var returnList = new List<string>();
+
+        //
+        
+        return returnList;
+    }
+    
     private static string? GetLinkReason(string text)
     {
-        string? linkReason = null;
-        
-        if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
+        var sections = GetSectionsFromText(text);
+        if (sections.Count == 0)
         {
-            linkReason = "SimultaneousDischargeCondition";
-        }
-        else if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
-        {
-            linkReason = "SimultaneousCompensatoryDischargeCondition";
-        }
-        else if (text.Contains("read in conjunction"))
-        {
-            linkReason = "ReadInConjunction";
-        }
-        else if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
-        {
-            linkReason = "ReadingsDischargedAugmentationCondition";
-        }
-        else if (text.Contains("aggregate conditions"))
-        {
-            linkReason = "AggregateConditions";
-        }
-        else if (text.Contains("aggregate"))
-        {
-            linkReason = "AggregateCondition";
+            sections.Add(text);
         }
 
-        return linkReason;
+        foreach (var section in sections)
+        {
+            if (section.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SimultaneousDischargeCondition";
+            }
+            
+            if (section.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SimultaneousCompensatoryDischargeCondition";
+            }
+            
+            if (section.Contains("read in conjunction"))
+            {
+                return "ReadInConjunction";
+            }
+            
+            if (section.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+                && section.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+                && section.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ReadingsDischargedAugmentationCondition";
+            }
+            
+            if (section.Contains("aggregate conditions"))
+            {
+                return "AggregateConditions";
+            }
+            
+            if (section.Contains("aggregate"))
+            {
+                return "AggregateCondition";
+            }
+        }
+
+        return null;
     }
     
     private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(

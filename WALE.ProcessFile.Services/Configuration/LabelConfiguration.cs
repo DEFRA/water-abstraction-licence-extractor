@@ -6,10 +6,11 @@ namespace WALE.ProcessFile.Services.Configuration;
 
 public static class LabelConfiguration
 {
+    private const string LicenceNumberLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
         new(@"/Page \d* of \d*/");
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^Licence Serial No: {LicenceNumber.YorkshireRegexPatten}^/");
+        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/");
     
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -120,7 +121,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -176,7 +177,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -230,7 +231,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -316,7 +317,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0
@@ -992,7 +993,7 @@ public static class LabelConfiguration
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         SkipLineWhenContains =
                                         [
-                                            new("Licence Serial No: ")
+                                            LicenceNumberLine
                                         ]
                                     }
                                 ]
@@ -1732,7 +1733,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     },
                     new()

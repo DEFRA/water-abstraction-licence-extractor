@@ -932,6 +932,12 @@ public static partial class SchemaConverter
             return [];
         }
 
+        var sections = purposeSection
+            .SubResults
+            .Where(ps => ps.MatchedLabel?.Name == "PurposePointGroup")
+            .SelectMany(ppg => ppg.SubResults.Where(ppgs => ppgs.MatchedLabel?.Name == "Purpose"))
+            .ToList();
+
         var returnList = new List<LinkedLicence>();
 
         foreach (var purposePointGroup in purposeSection.SubResults)
@@ -949,7 +955,13 @@ public static partial class SchemaConverter
                     .Select(linkedLicenceNumber => new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
-                        ContainedIn = [new LinkedLicenceSection { SectionName = "Purposes" }]
+                        ContainedIn = [
+                            new LinkedLicenceSection
+                            {
+                                SectionName = LinkedLicenceSectionNames.Purposes,
+                                LinkReason = GetLinkReason(sections, linkedLicenceNumber)
+                            }
+                        ]
                     })
                     .ToList());
             }
@@ -1032,6 +1044,11 @@ public static partial class SchemaConverter
                 continue;
             }
             
+            if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "DischargeAndReabstractionCondition";
+            }
+            
             if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "SimultaneousDischargeCondition";
@@ -1040,6 +1057,11 @@ public static partial class SchemaConverter
             if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "SimultaneousCompensatoryDischargeCondition";
+            }
+            
+            if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "CompensatoryDischargeCondition";
             }
             
             if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))

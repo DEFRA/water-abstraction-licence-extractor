@@ -666,8 +666,9 @@ public class AzureAiVisionOcrPdfTests
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         Assert.Equal(8, section1Sub1.SubResults!.Count);
 
-        var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber");
+        var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber").ToList();
         Assert.Single(linkedLicences);
+        Assert.Equal("14/46/03/0852", linkedLicences[0].Text!.First().Text);
         
         var linkedLicenceFilenames = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceFilename");
         Assert.Empty(linkedLicenceFilenames);

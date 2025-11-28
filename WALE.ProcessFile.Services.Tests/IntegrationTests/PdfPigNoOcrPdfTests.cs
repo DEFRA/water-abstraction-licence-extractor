@@ -475,7 +475,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(41, additionalInformation.Text!.Count);
+        Assert.Equal(39, additionalInformation.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -500,7 +500,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(15, abstractionLimitsResult.Text!.Count);
         Assert.Equal(143, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
@@ -561,7 +561,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
-        Assert.Equal(13, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(11, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -2843,7 +2843,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(9, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(7, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -2894,13 +2894,7 @@ public class PdfPigNoOcrPdfTests
             0)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
-
-        Assert.Single(primaryLicence.LinkedLicences); // TODO there isnt one
-
-        Assert.Equal("S/0098/R01", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
-        Assert.Equal("TODO", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Empty(primaryLicence.LinkedLicences);
     }
     
     [Fact]
@@ -4028,6 +4022,10 @@ public class PdfPigNoOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename);
         Assert.Equal(15, resultFull.Matches?.Count);
+        
+        var licenceNumber = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("18/54/21/0116", licenceNumber.Text!.First().Text);
         
         var records = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

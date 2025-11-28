@@ -6,6 +6,11 @@ namespace WALE.ProcessFile.Services.Configuration;
 
 public static class LabelConfiguration
 {
+    private static readonly TextToMatch PageNumberPattern =
+        new(@"/Page \d* of \d*/");
+    private static readonly TextToMatch LicenceNumberInHeaderPattern =
+        new($"/^Licence Serial No: {LicenceNumber.YorkshireRegexPatten}^/");
+    
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         return
@@ -53,8 +58,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -145,8 +150,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -199,8 +204,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -251,8 +256,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -550,8 +555,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -838,8 +843,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 IgnoreMatchIfContains = [
                     "You can find our forms"
@@ -932,11 +937,6 @@ public static class LabelConfiguration
                                 IncludeStartLabelText = true,
                                 Format = "Text",
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
-                                //Remove = [
-                                //    new(@"/Page \d* of \d*/"),
-                                //    new("/Licence Serial No: [A-Z0-9/]*/")
-                                //    /* TODO add flag to include parent removes */
-                                //],
                                 SubLabels =
                                 [
                                     new()
@@ -1450,8 +1450,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,

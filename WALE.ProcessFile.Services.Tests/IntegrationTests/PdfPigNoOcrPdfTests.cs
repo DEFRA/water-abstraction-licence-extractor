@@ -1,6 +1,8 @@
+using System.Text.Json;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
@@ -1168,7 +1170,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection8.SubResults);
 
         var section8Sub1 = abstractionLimitsSection8.SubResults[0];
-        //Assert.Equal(8, section8Sub1.SubResults.Count);
+        Assert.Equal(9, section8Sub1.SubResults.Count);
         
         perHour = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1280,7 +1282,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection10.SubResults);
 
         var section10Sub1 = abstractionLimitsSection10.SubResults[0];
-//        Assert.Equal(10, section10Sub1.SubResults.Count);
+        Assert.Equal(9, section10Sub1.SubResults.Count);
         
         perHour = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1641,7 +1643,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLimitsSection5.SubResults);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        //Assert.Equal(12, section5Sub1.SubResults.Count);
+        Assert.Equal(10, section5Sub1.SubResults.Count);
 
         perYearList = section5Sub1.SubResults
             .Where(subResult =>
@@ -2221,7 +2223,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(sectionPoint1.SubResults);
 
         var sectionPoint1Sub1 = sectionPoint1.SubResults[0];
-        //Assert.Equal(9, sectionPoint1Sub1.SubResults.Count);
+        Assert.Equal(8, sectionPoint1Sub1.SubResults.Count);
         Assert.Single(sectionPoint1Sub1.SubResults[0].Text!);
         
         var sectionPoint2 = abstractionLimitsSection.SubResults[1];
@@ -2303,11 +2305,12 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-//        Assert.Equal(14, abstractionLimitsSection.Text.Count);
-//        Assert.Equal("The aggregate quantity of water authorised to be abstracted for the purpose of", 
-          //  abstractionLimitsSection.Text![10].Text);
+        Assert.NotNull(abstractionLimitsSection.Text);
+        Assert.Equal(11, abstractionLimitsSection.Text.Count);
+        Assert.Equal("200,000 cubic metres per year.", 
+        abstractionLimitsSection.Text![10].Text);
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
-//        Assert.Equal(9, abstractionLimitsSection.SubResults[0].Text!.Count);
+        Assert.Equal(7, abstractionLimitsSection.SubResults[0].Text!.Count);
 
         var point1 = abstractionLimitsSection.SubResults[0];
         var point1Sub1 = point1.SubResults[0];
@@ -2336,17 +2339,14 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
-        /*Assert.Equal("200000", subResult.SubResults
+        Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
-        Assert.Equal("cubic metres", subResult.SubResults
+        Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);*/
+                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         
         // TODO
-
-        /*Assert.Equal("NE/026/0034/052", abstractionLimitsResult.SubResults[1].SubResults[2].Text!.First().Text);
-        Assert.Equal(5, abstractionLimitsResult.SubResults[1].Text!.Count);*/
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");   
         
@@ -2611,13 +2611,13 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
 
-        /*var licenceGroupJson = JsonSerializer.Serialize(agreedSchemaLicenceGroup, JsonHelper.GetSerializer());
+        var licenceGroupJson = JsonSerializer.Serialize(agreedSchemaLicenceGroup, JsonHelper.GetSerializerOptions());
         var expectedJson =
             await File.ReadAllTextAsync("Data/2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619.json");
 
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),
-            licenceGroupJson.Replace(" ", string.Empty).Replace("\n", string.Empty));*/
+            licenceGroupJson.Replace(" ", string.Empty).Replace("\n", string.Empty));
         
         //TODO
     }
@@ -2977,11 +2977,7 @@ public class PdfPigNoOcrPdfTests
 
         // TODO add a test for the futher conditions 90,923
         
-        /*Assert.Equal("SO/042/0036/023", subResult.SubResults[8].Text!.First().Text);
-        Assert.Equal("110", subResult.SubResults[9].Text!.First().Text);
-        Assert.Equal(6, subResult.SubResults[10].Text!.Count);
-        Assert.Equal(6, subResult.SubResults[11].Text!.Count);
-        Assert.Equal(14, subResult.SubResults[12].Text!.Count);*/
+        Assert.Equal("25.3", point1Sub1.SubResults[8].Text!.First().Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3598,10 +3594,10 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Single(agreedSchemaLicence.PeriodsOfAbstraction);
         Assert.Equal("All Year", agreedSchemaLicence.PeriodsOfAbstraction.Single().Description);
-        //Assert.NotNull(agreedSchemaLicence.PeriodsOfAbstraction.Single().StartDate);
-        //Assert.NotNull(agreedSchemaLicence.PeriodsOfAbstraction.Single().EndDate);
-        //Assert.Equal(5.1, agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
-        //Assert.Null(agreedSchemaLicence.PeriodsOfAbstraction.Single().Inclusive);
+        Assert.NotNull(agreedSchemaLicence.PeriodsOfAbstraction.Single().StartDate);
+        Assert.Null(agreedSchemaLicence.PeriodsOfAbstraction.Single().EndDate);
+        Assert.Equal("5.1", agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
+        Assert.False(agreedSchemaLicence.PeriodsOfAbstraction.Single().Inclusive);
         
         Assert.Equal(10, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
 
@@ -3617,16 +3613,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(360, limitGroup.Limits[5].Value);
         Assert.Equal(2270, limitGroup.Limits[6].Value);
         Assert.Equal(0.42, limitGroup.Limits[7].Value);
-        
-        /*Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Equal("SW0470051003LV2023020720380331-LL-1547013S020",
-            agreedSchemaLicence.AbstractionLimits.Aggregates[0].Id);
-        Assert.Equal("LV2023020720380331",
-            agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits);
-        Assert.Equal(148000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
-        Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);*/
+
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal("1 January", agreedSchemaLicence.DefinitionOfYear.StartDate);

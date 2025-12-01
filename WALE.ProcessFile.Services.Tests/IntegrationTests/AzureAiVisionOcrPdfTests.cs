@@ -637,8 +637,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
 
         // Surprisingly the OCR really struggles with this document (TODO fix for this)
-        //var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        //Assert.Equal("5183", perDayValue?.Text?.FirstOrDefault()?.Text); // Should actually be 5600    
+        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("5183", perDayValue?.Text?.FirstOrDefault()?.Text); // Should actually be 5600    
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -703,7 +703,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(10, resultList.Count);
+        Assert.Equal(11, resultList.Count);
 
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
@@ -986,7 +986,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.StartsWith("Northumbrian Water Authority", issuer.Text?.FirstOrDefault()?.Text);
         
         // Assert
-//        Assert.Equal(4, resultList.Count);
+        Assert.Equal(7, resultList.Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -997,11 +997,8 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
         
-        /*var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
-        Assert.NotNull(abstractionLimitsSection);
-        Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text?.Count);*/
+        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        Assert.Null(abstractionLimitsSection);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1202,12 +1199,11 @@ public class AzureAiVisionOcrPdfTests
         
         var section5Sub1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(4, section5Sub1.SubResults.Count);
-
-       // Assert.Equal("DateOrPurpose", section5Sub1.SubResults[0].MatchedLabel?.Format);
         
         var units3 = section5Sub1.SubResults[0];
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
+        Assert.Equal("Units", section5Sub1.SubResults[0].MatchedLabel?.Format);
         Assert.Equal(10, units3.LineNumber);
         
         var units4 = section5Sub1.SubResults[1];
@@ -1500,11 +1496,10 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("June", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.StartDate);
         Assert.Equal("October", agreedSchemaLicence.AbstractionLimits.Individual[2].TimePeriod!.EndDate);
         
-//        Assert.Equal("2/27/29/12", agreedSchemaLicence.LicenceNumber);
- //       Assert.Equal("Lakeminster Park Limited", agreedSchemaLicence.LicenceHolder);
-  //      Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.IssueDate);
-     //   Assert.Equal(new DateTime(1993, 06, 23), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
- //       Assert.Equal(new DateTime(2012, 08, 16), agreedSchemaLicence.LicenceVersion.EffectiveDate);
+        Assert.Equal("SCARBOROUGH CORPORATION", agreedSchemaLicence.NoneSchemaData["issuedTo"]);
+        Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Null(agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
+        Assert.Null(agreedSchemaLicence.LicenceVersion.EffectiveDate);
         Assert.Equal("272912-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 

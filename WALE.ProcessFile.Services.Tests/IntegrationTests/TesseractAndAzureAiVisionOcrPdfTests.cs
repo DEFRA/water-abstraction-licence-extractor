@@ -80,7 +80,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(8, resultList.Count);
+        Assert.Equal(8, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -340,7 +340,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
-            _pdfDataExtractor,
+            _pdfDataExtractor3,
             TestConfig.PdfFolder,
             0);
         
@@ -400,7 +400,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
-            _pdfDataExtractor,
+            _pdfDataExtractor3,
             TestConfig.PdfFolder,
             0);
         
@@ -462,7 +462,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2, section1Sub1.SubResults.Count);
         // TODO fix for this
         
-        /*
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
         Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
 
@@ -474,7 +473,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
         Assert.Equal("1500", perHourValue?.Text?.FirstOrDefault()?.Text);
-        */
+        
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);

@@ -121,19 +121,18 @@ public class TesseractAndAwsTextractOcrPdfTests
         Assert.Equal(4, section1Sub1.SubResults.Count);
         // TODO fix for this
         
-        /*
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
         Assert.Equal("gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
 
         var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("5183", perDayValue?.Text?.FirstOrDefault()?.Text); // Should be 5600, bad OCR
+        Assert.Equal("5600", perDayValue?.Text?.FirstOrDefault()?.Text); // This is better then Azure AI Vision
 
         var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
         Assert.Equal("gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
 
         var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
         Assert.Equal("1500", perHourValue?.Text?.FirstOrDefault()?.Text);
-        */
+        
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
@@ -168,7 +167,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(8, resultList.Count);
+        Assert.Equal(8, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

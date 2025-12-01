@@ -52,6 +52,7 @@ public static class LabelConfiguration
                 TextEnd =
                 [
                     new("9. Further conditions"),
+                    new("9. Further provisions"),
                     new("10. Further conditions"),
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },

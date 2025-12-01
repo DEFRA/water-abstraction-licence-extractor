@@ -1112,6 +1112,16 @@ public static partial class SchemaConverter
                 return "DewateringDischargeCondition";
             }
             
+            if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "WhenAddedTo";
+            }
+            
+            if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SubsequentAbstraction";
+            }
+            
             if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "AggregateCondition";

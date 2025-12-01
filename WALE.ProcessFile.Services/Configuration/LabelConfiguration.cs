@@ -6,6 +6,12 @@ namespace WALE.ProcessFile.Services.Configuration;
 
 public static class LabelConfiguration
 {
+    private const string LicenceNumberLine = "Licence Serial No: ";
+    private static readonly TextToMatch PageNumberPattern =
+        new(@"/Page \d* of \d*/");
+    private static readonly TextToMatch LicenceNumberInHeaderPattern =
+        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/");
+    
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         return
@@ -25,7 +31,8 @@ public static class LabelConfiguration
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
-            ("LicenceHistory", GetLicenceHistory())
+            ("LicenceHistory", GetLicenceHistory()),
+            ("FurtherProvisions", GetFurtherProvisions())            
         ];
     }
     
@@ -47,14 +54,15 @@ public static class LabelConfiguration
                     new("9. Further conditions"),
                     new("10. Further conditions"),
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -62,6 +70,42 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
+                    new()
+                    {
+                      Name = "RecordPoint",
+                        TextStart = [
+                            new("8.1"),
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("8.11"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
                     new()
                     {
                         Name = "RecordsLinkedLicenceNumber",
@@ -79,7 +123,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -109,8 +153,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -135,7 +179,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -163,8 +207,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -189,7 +233,59 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetFurtherProvisions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "FurtherProvisionsAll",
+                TextStart =
+                [
+                    new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("Reasons For Conditions") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "FurtherProvisionsLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.YorkshireRegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            LicenceNumberLine
                         ]
                     }
                 ]
@@ -215,8 +311,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 IncludeWholeLine = true,
@@ -224,6 +320,42 @@ public static class LabelConfiguration
                 NextLinesToFetch = 60,
                 SubLabels = 
                 [
+                    new()
+                    {
+                        Name = "FurtherConditionsPoint",
+                        TextStart = [
+                            new("9.1"),
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("9.11"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
                     new()
                     {
                         Name = "FCLinkedLicenceNumber",
@@ -239,7 +371,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0
@@ -478,8 +610,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -766,8 +898,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 IgnoreMatchIfContains = [
                     "You can find our forms"
@@ -860,11 +992,6 @@ public static class LabelConfiguration
                                 IncludeStartLabelText = true,
                                 Format = "Text",
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
-                                //Remove = [
-                                //    new(@"/Page \d* of \d*/"),
-                                //    new("/Licence Serial No: [A-Z0-9/]*/")
-                                //    /* TODO add flag to include parent removes */
-                                //],
                                 SubLabels =
                                 [
                                     new()
@@ -920,7 +1047,7 @@ public static class LabelConfiguration
                                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                                         SkipLineWhenContains =
                                         [
-                                            new("Licence Serial No: ")
+                                            LicenceNumberLine
                                         ]
                                     }
                                 ]
@@ -1378,8 +1505,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1660,7 +1787,7 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         SkipLineWhenContains =
                         [
-                            new("Licence Serial No: ")
+                            LicenceNumberLine
                         ]
                     },
                     new()

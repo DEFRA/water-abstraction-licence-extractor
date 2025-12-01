@@ -69,13 +69,13 @@ public class OcrDatabaseTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(12, resultList.Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(18, records.Text!.Count);
+        Assert.Equal(8, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);

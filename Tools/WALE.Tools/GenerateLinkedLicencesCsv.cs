@@ -66,7 +66,7 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                foreach (var fromSection in linkedLicence.FromSection!)
+                foreach (var fromSection in linkedLicence.ContainedIn!)
                 {
                     returnList.Add(new LinkedLicencesCsvLine
                     {
@@ -80,7 +80,7 @@ public static class GenerateLinkedLicencesCsv
                         LicenceIsImpoundment = licence.IsImpoundmentLicence,
                         LinkedLicenceNumber = linkedLicence.LicenceNumber,
                         NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
-                        LinkedLicenceFromSection = fromSection,
+                        LinkedLicenceFromSection = fromSection.SectionName,
                         LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
                         LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
                         LinkedLicenceIsDead = linkedLicence.IsDeadLicence,

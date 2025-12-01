@@ -7,6 +7,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Enums;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -209,6 +210,7 @@ public static partial class SchemaConverter
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
+        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
         // NOTE - We don't want to get licence history licences
@@ -218,20 +220,20 @@ public static partial class SchemaConverter
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
-                var fromSection = new List<string>();
+                var fromSection = new List<LinkedLicenceSection>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
                 {
-                    if (linkedLicence.FromSection == null)
+                    if (linkedLicence.ContainedIn == null)
                     {
                         continue;
                     }
                     
-                    var sectionItems = linkedLicence.FromSection;
+                    var sectionItems = linkedLicence.ContainedIn;
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (fromSection.Contains(sectionItem))
+                        if (fromSection.Any(fs => fs.SectionName == sectionItem.SectionName))
                         {
                             continue;
                         }
@@ -296,7 +298,7 @@ public static partial class SchemaConverter
         string? licenceNumber,
         string? filename,
         Condition? condition,
-        string[] fromSection,
+        LinkedLicenceSection[] containedIn,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
@@ -341,7 +343,7 @@ public static partial class SchemaConverter
             NaldLicenceNumber = naldLicenceNumber,
             Filename = filename,
             Condition = condition,
-            FromSection = fromSection,
+            ContainedIn = containedIn,
             IsDeadLicence = isDeadLicence,
             IsImpoundmentLicence = isImpoundmentLicence,
             IsLiveLicence = isLiveLicence,
@@ -356,7 +358,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
-        IPdfDataExtractorService  pdfDataExtractorService,
+        IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         int processRunId)
     {
@@ -410,7 +412,7 @@ public static partial class SchemaConverter
         }
 
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
-            .Where(linkedLicence => linkedLicence.FromSection?.Contains("AbstractionLimits") == true)
+            .Where(linkedLicence => linkedLicence.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber == ln))
             .Where(ln => ln != null)
@@ -534,7 +536,11 @@ public static partial class SchemaConverter
                                 incomingLink.LicenceNumber,
                                 incomingLink.Filename,
                                 null,
-                                ["ImplicitBackLink"],
+                                [new LinkedLicenceSection
+                                {
+                                    SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
+                                    LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})"
+                                }],
                                 impoundmentLicenceNumbers,
                                 deadLicenceNumbers,
                                 liveLicenceNumbers)
@@ -899,14 +905,20 @@ public static partial class SchemaConverter
         {
             return [];
         }
-
+        
         return additional.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["AdditionalInformation"]
+                ContainedIn = [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.AdditionalInformation,
+                        LinkReason = GetLinkReason([additional], linkedLicenceNumber)
+                    }
+                ]
             })
             .ToList();
     }
@@ -920,6 +932,12 @@ public static partial class SchemaConverter
         {
             return [];
         }
+
+        var sections = purposeSection
+            .SubResults
+            .Where(ps => ps.MatchedLabel?.Name == "PurposePointGroup")
+            .SelectMany(ppg => ppg.SubResults.Where(ppgs => ppgs.MatchedLabel?.Name == "Purpose"))
+            .ToList();
 
         var returnList = new List<LinkedLicence>();
 
@@ -938,7 +956,13 @@ public static partial class SchemaConverter
                     .Select(linkedLicenceNumber => new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
-                        FromSection = ["Purposes"]
+                        ContainedIn = [
+                            new LinkedLicenceSection
+                            {
+                                SectionName = LinkedLicenceSectionNames.Purposes,
+                                LinkReason = GetLinkReason(sections, linkedLicenceNumber)
+                            }
+                        ]
                     })
                     .ToList());
             }
@@ -957,13 +981,26 @@ public static partial class SchemaConverter
             return [];
         }
 
-        return records.SubResults
+        var sections = records.SubResults
+            .Where(sub => sub.MatchedLabel?.Name == "RecordPoint")
+            .ToList();
+        
+        return records
+            .SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["Records"]
+                ContainedIn = [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.Records,
+                        LinkReason = GetLinkReason(
+                            sections.Count > 0 ? sections : [records],
+                            linkedLicenceNumber)
+                    }
+                ]
             })
             .ToList();
     }
@@ -978,17 +1015,122 @@ public static partial class SchemaConverter
             return [];
         }
 
+        var sections = furtherConditions.SubResults
+            .Where(sub => sub.MatchedLabel?.Name == "FurtherConditionsPoint")
+            .ToList();
+        
         return furtherConditions.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
             .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
             .Select(linkedLicenceNumber => new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                FromSection = ["FurtherConditions"]
+                ContainedIn = [new LinkedLicenceSection
+                {
+                    SectionName = LinkedLicenceSectionNames.FurtherConditions,
+                    LinkReason = GetLinkReason(sections, linkedLicenceNumber)
+                }]
             })
             .ToList();
     }
+    
+    private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var furtherProvisions = matches
+            .FirstOrDefault(result => result.LabelGroupName == "FurtherProvisions");
 
+        if (furtherProvisions == null)
+        {
+            return [];
+        }
+        
+        return furtherProvisions.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FurtherProvisionsLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                ContainedIn = [new LinkedLicenceSection
+                {
+                    SectionName = LinkedLicenceSectionNames.FurtherProvisions,
+                    LinkReason = GetLinkReason([furtherProvisions], linkedLicenceNumber)
+                }]
+            })
+            .ToList();
+    }
+    
+    private static string? GetLinkReason(List<LabelGroupResult> sections, string? linkedLicenceNumber)
+    {
+        foreach (var section in sections)
+        {
+            var text = string.Join('\n', section.Text!.Select(t => t.Text));
+
+            if (string.IsNullOrEmpty(linkedLicenceNumber) || !text.Contains(linkedLicenceNumber))
+            {
+                continue;
+            }
+            
+            if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "DischargeAndReabstractionCondition";
+            }
+            
+            if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SimultaneousDischargeCondition";
+            }
+            
+            if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SimultaneousCompensatoryDischargeCondition";
+            }
+            
+            if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "CompensatoryDischargeCondition";
+            }
+            
+            if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ReadInConjunction";
+            }
+            
+            if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+                && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+                && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ReadingsDischargedAugmentationCondition";
+            }
+            
+            if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "AggregateConditions";
+            }
+            
+            if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "DewateringDischargeCondition";
+            }
+            
+            if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "WhenAddedTo";
+            }
+            
+            if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SubsequentAbstraction";
+            }
+            
+            if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "AggregateCondition";
+            }
+        }
+
+        return null;
+    }
+    
     private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(
         List<LabelGroupResult> matches,
         string? licenceNumber,
@@ -1121,7 +1263,7 @@ public static partial class SchemaConverter
             var valueResults = siblings
                 .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                 .ToList();
-
+            
             var linkedLicenceNumbers = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
                 .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
@@ -1135,13 +1277,19 @@ public static partial class SchemaConverter
                         .Text?
                         .FirstOrDefault()?
                         .Text;
-                        
+
                     return new LinkedLicence
                     {
                         LicenceNumber = linkedLicenceNumber,
                         Filename = linkedLicenceFilename,
                         Condition = condition,
-                        FromSection = ["AbstractionLimits"]
+                        ContainedIn = [
+                            new LinkedLicenceSection
+                            {
+                                SectionName = LinkedLicenceSectionNames.AbstractionLimits,
+                                LinkReason = GetLinkReason([abstractionLimitPointSub], linkedLicenceNumber)
+                            }
+                        ]
                     };
                 })
                 .ToList();
@@ -2144,7 +2292,8 @@ public static partial class SchemaConverter
 
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber == l.LicenceNumber
-                      || licence1.LinkedLicences.Where(ll => ll.FromSection?.Contains("ImplicitBackLink") != true)
+                      || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
+                              ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
                           .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

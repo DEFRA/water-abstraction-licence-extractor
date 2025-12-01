@@ -1106,6 +1106,11 @@ public static partial class SchemaConverter
                 return "AggregateConditions";
             }
             
+            if (text.Contains("emergency circumstances", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "EmergencyCircumstances";
+            }
+            
             if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "DewateringDischargeCondition";

@@ -1095,11 +1095,10 @@ public static partial class SchemaConverter
                 return "ReadInConjunction";
             }
             
-            if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
-                && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
-                && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+            if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
+                || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
             {
-                return "ReadingsDischargedAugmentationCondition";
+                return "UsedInConjunction";
             }
             
             if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
@@ -1120,6 +1119,13 @@ public static partial class SchemaConverter
             if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "SubsequentAbstraction";
+            }
+            
+            if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+                && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+                && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ReadingsDischargedAugmentationCondition";
             }
             
             if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))

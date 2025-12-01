@@ -218,7 +218,7 @@ async Task ProgramAsync()
     await outputService.FinishProcessRunAsync(processRun);
     
     Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
+    Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
 }
 
 Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(

@@ -2292,7 +2292,8 @@ public static partial class SchemaConverter
 
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber == l.LicenceNumber
-                      || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci => ci.SectionName == "ImplicitBackLink") != true)
+                      || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
+                              ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
                           .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

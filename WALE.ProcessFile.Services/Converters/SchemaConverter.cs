@@ -210,6 +210,7 @@ public static partial class SchemaConverter
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(matches));
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches));
+        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
         // NOTE - We don't want to get licence history licences
@@ -1028,6 +1029,31 @@ public static partial class SchemaConverter
                 {
                     SectionName = LinkedLicenceSectionNames.FurtherConditions,
                     LinkReason = GetLinkReason(sections, linkedLicenceNumber)
+                }]
+            })
+            .ToList();
+    }
+    
+    private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var furtherProvisions = matches
+            .FirstOrDefault(result => result.LabelGroupName == "FurtherProvisions");
+
+        if (furtherProvisions == null)
+        {
+            return [];
+        }
+        
+        return furtherProvisions.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FurtherProvisionsLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                ContainedIn = [new LinkedLicenceSection
+                {
+                    SectionName = LinkedLicenceSectionNames.FurtherProvisions,
+                    LinkReason = GetLinkReason([furtherProvisions], linkedLicenceNumber)
                 }]
             })
             .ToList();

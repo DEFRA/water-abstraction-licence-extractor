@@ -31,7 +31,8 @@ public static class LabelConfiguration
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
-            ("LicenceHistory", GetLicenceHistory())
+            ("LicenceHistory", GetLicenceHistory()),
+            ("FurtherProvisions", GetFurtherProvisions())            
         ];
     }
     
@@ -217,6 +218,58 @@ public static class LabelConfiguration
                     new()
                     {
                         Name = "LicenceHistoryLinkedLicenceNumber",
+                        Text =
+                        [
+                            new(LicenceNumber.YorkshireRegexPatten)
+                            {
+                                IsRegularExpression = true
+                            }
+                        ],
+                        Format = LicenceNumber.Constant,
+                        Position = LabelPosition.ActuallyLabel,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        SkipLineWhenContains =
+                        [
+                            LicenceNumberLine
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetFurtherProvisions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "FurtherProvisionsAll",
+                TextStart =
+                [
+                    new("Further Provisions[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("Reasons For Conditions") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "FurtherProvisionsLinkedLicenceNumber",
                         Text =
                         [
                             new(LicenceNumber.YorkshireRegexPatten)

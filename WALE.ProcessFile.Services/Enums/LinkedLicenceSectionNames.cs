@@ -6,6 +6,8 @@ public static class LinkedLicenceSectionNames
 
     public static readonly string FurtherConditions = "FurtherConditions";
     
+    public static readonly string FurtherProvisions = "FurtherProvisions";    
+    
     public static readonly string AbstractionLimits = "AbstractionLimits";
 
     public static readonly string AdditionalInformation = "AdditionalInformation";

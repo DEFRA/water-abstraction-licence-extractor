@@ -161,6 +161,14 @@ public static class FormattingHelper
             }
         }
 
+        if (section4.EndsWith("/A") || section4.EndsWith("/B") || section4.EndsWith("/C"))
+        {
+            section4 = section4
+                .Replace("/A", "A")
+                .Replace("/B", "B")
+                .Replace("/C", "C");                
+        }
+        
         if (section4.Contains("R01") && !section4.Contains("/R01"))
         {
             var section4Parts = section4.Split('/');

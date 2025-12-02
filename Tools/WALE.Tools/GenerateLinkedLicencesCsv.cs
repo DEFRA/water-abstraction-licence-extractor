@@ -35,6 +35,11 @@ public static class GenerateLinkedLicencesCsv
         
         foreach (var licence in licences)
         {
+            if (string.IsNullOrEmpty(licence.Filename))
+            {
+                continue;
+            }
+            
             if (licence.LinkedLicences.Length == 0)
             {
                 var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)

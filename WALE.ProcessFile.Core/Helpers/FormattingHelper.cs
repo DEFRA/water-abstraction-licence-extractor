@@ -42,6 +42,11 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
+        if (licenceNumber.StartsWith("J"))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        
         var numberOfSlashes = licenceNumber.Count(c => c == '/');
         
         if (numberOfSlashes is 1 or 2)
@@ -65,6 +70,17 @@ public static class FormattingHelper
         }
         
         var section1 = noneSeperatedLicenceNumber[0];
+
+        if (section1 == 'J')
+        {
+            section1 = '1';
+        }
+
+        if (noneSeperatedLicenceNumber.Length < 3)
+        {
+            return noneSeperatedLicenceNumber;
+        }
+        
         var section2 = noneSeperatedLicenceNumber.Substring(1, 2);
 
         if (noneSeperatedLicenceNumber.Length < 5)

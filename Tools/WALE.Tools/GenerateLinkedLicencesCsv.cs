@@ -9,6 +9,8 @@ namespace WALE.Tools;
 
 public static class GenerateLinkedLicencesCsv
 {
+    private const int ProcessRunId = 676;
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(
         new SqlSeverReadService(KeyConfig.SqlConnectionString),
         new SqlSeverWriteService(KeyConfig.SqlConnectionString));
@@ -29,11 +31,9 @@ public static class GenerateLinkedLicencesCsv
     private static async Task<List<LinkedLicencesCsvLine>> GetDataAsync()
     {
         var returnList = new List<LinkedLicencesCsvLine>();
-        
-        const int processRunId = 670;
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await OutputService.GetLicencesAsync(processRunId);
+        var licences = await OutputService.GetLicencesAsync(ProcessRunId);
         
         foreach (var licence in licences)
         {

@@ -26,7 +26,7 @@ public static partial class SchemaConverter
             throw new Exception("No match object exists to convert");
         }
         
-        var licenceNumber = matches
+        var scrapedLicenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
             .Text?
             .FirstOrDefault()?
@@ -91,14 +91,49 @@ public static partial class SchemaConverter
         var points = GetPoints(matches);
         var purposes = GetPurposes(matches);
         
+        var noneSchemaData = new Dictionary<string, object>();
+        
+        var licenceNumber = scrapedLicenceNumber;
+        
+        if (!string.IsNullOrEmpty(scrapedLicenceNumber))
+        {
+            noneSchemaData.TryAdd("scrapedLicenceNumber", scrapedLicenceNumber);
+            licenceNumber = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
+        }
+        
+        string? fileNameLicenceNumber = null;
+
+        if (!string.IsNullOrEmpty(matchesResult.Filename))
+        {
+            var filenameParts = matchesResult.Filename!.Split('_');
+            fileNameLicenceNumber = filenameParts[0];
+            fileNameLicenceNumber = FormattingHelper.ToNaldLicenceNumber(fileNameLicenceNumber);
+
+            if (!string.IsNullOrEmpty(fileNameLicenceNumber))
+            {
+                noneSchemaData.TryAdd("filenameLicenceNumber", fileNameLicenceNumber);
+                
+                if (string.IsNullOrEmpty(scrapedLicenceNumber))
+                {
+                    licenceNumber = fileNameLicenceNumber;
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(scrapedLicenceNumber)
+            && !string.IsNullOrEmpty(fileNameLicenceNumber)
+            && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
+        {
+            var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
+            
+        }
+        
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
             licenceNumber,
             licenceVersion.LicenceVersionId,
             points,
             purposes);
-
-        var noneSchemaData = new Dictionary<string, object>();
 
         var issuedToMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -154,20 +189,6 @@ public static partial class SchemaConverter
         
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
-        if (string.IsNullOrEmpty(licenceNumber) && !string.IsNullOrEmpty(matchesResult.Filename))
-        {
-            var filenameParts = matchesResult.Filename!.Split('_');
-
-            licenceNumber = filenameParts[0];
-            noneSchemaData.TryAdd("filenameLicenceNumber", licenceNumber);
-
-            licenceNumber = FormattingHelper.ToNaldLicenceNumber(licenceNumber);
-        }
-        else if (!string.IsNullOrEmpty(licenceNumber))
-        {
-            noneSchemaData.TryAdd("scrapedLicenceNumber", licenceNumber);    
-        }
-        
         var naldLicenceNumber = (string?)null;
         var licenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
         
@@ -1078,6 +1099,11 @@ public static partial class SchemaConverter
             if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "SimultaneousDischargeCondition";
+            }
+            
+            if (text.Contains("simultaneous abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "SimultaneousAbstractionCondition";
             }
             
             if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))

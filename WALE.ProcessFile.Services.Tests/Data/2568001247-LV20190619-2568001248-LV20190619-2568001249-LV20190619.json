@@ -11,7 +11,7 @@
         {
           "id": "2568001249-LV20190619-LL-2568001247-2568001248",
           "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
-          "licenceNumber": "25 68 001 249",
+          "licenceNumber": "25/68/001/249",
           "licenceVersionId": "LV20190619",
           "primaryType": "licenceToLicence",
           "linkedLicences": [
@@ -55,8 +55,8 @@
         },
         {
           "id": "2568001247-LV20190619-LL-2568001248-2568001249",
-          "aggregateSetId": "2568001247-LV20190619-2568001248-LVUNKNOWN-2568001249-LVUNKNOWN",
-          "licenceNumber": "25 68 001 247",
+          "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
+          "licenceNumber": "25/68/001/247",
           "licenceVersionId": "LV20190619",
           "primaryType": "licenceToLicence",
           "linkedLicences": [
@@ -100,8 +100,8 @@
         },
         {
           "id": "2568001248-LV20190619-LL-2568001247-2568001249",
-          "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LV20190619-2568001249-LVUNKNOWN",
-          "licenceNumber": "25 68 001 248",
+          "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
+          "licenceNumber": "25/68/001/248",
           "licenceVersionId": "LV20190619",
           "primaryType": "licenceToLicence",
           "linkedLicences": [
@@ -215,7 +215,7 @@
           {
             "id": "2568001249-LV20190619-LL-2568001247-2568001248",
             "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
-            "licenceNumber": "25 68 001 249",
+            "licenceNumber": "25/68/001/249",
             "licenceVersionId": "LV20190619",
             "primaryType": "licenceToLicence",
             "linkedLicences": [
@@ -298,6 +298,8 @@
         }
       ],
       "noneSchemaData": {
+        "scrapedLicenceNumber": "25 68 001 249",
+        "filenameLicenceNumber": "A/pp/li/0ca/tion - Transfer -Application New Licence Issued 19",
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
@@ -306,8 +308,7 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ],
-        "scrapedLicenceNumber": "25 68 001 249"
+        ]
       },
       "licenceFoundInList": false
     },
@@ -378,8 +379,8 @@
         "aggregates": [
           {
             "id": "2568001247-LV20190619-LL-2568001248-2568001249",
-            "aggregateSetId": "2568001247-LV20190619-2568001248-LVUNKNOWN-2568001249-LVUNKNOWN",
-            "licenceNumber": "25 68 001 247",
+            "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
+            "licenceNumber": "25/68/001/247",
             "licenceVersionId": "LV20190619",
             "primaryType": "licenceToLicence",
             "linkedLicences": [
@@ -462,6 +463,8 @@
         }
       ],
       "noneSchemaData": {
+        "scrapedLicenceNumber": "25 68 001 247",
+        "filenameLicenceNumber": "A/pp/li/0ca/tion - Transfer -Application New Licence Issued 19",
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
@@ -470,8 +473,7 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ],
-        "scrapedLicenceNumber": "25 68 001 247"
+        ]
       },
       "licenceFoundInList": false
     },
@@ -542,8 +544,8 @@
         "aggregates": [
           {
             "id": "2568001248-LV20190619-LL-2568001247-2568001249",
-            "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LV20190619-2568001249-LVUNKNOWN",
-            "licenceNumber": "25 68 001 248",
+            "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
+            "licenceNumber": "25/68/001/248",
             "licenceVersionId": "LV20190619",
             "primaryType": "licenceToLicence",
             "linkedLicences": [
@@ -626,6 +628,8 @@
         }
       ],
       "noneSchemaData": {
+        "scrapedLicenceNumber": "25 68 001 248",
+        "filenameLicenceNumber": "A/pp/li/0ca/tion - Transfer -Application New Licence Issued 19",
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
@@ -634,8 +638,7 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ],
-        "scrapedLicenceNumber": "25 68 001 248"
+        ]
       },
       "licenceFoundInList": false
     }

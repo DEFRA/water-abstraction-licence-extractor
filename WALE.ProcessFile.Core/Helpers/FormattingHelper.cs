@@ -42,7 +42,15 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
-        if (licenceNumber.StartsWith("J"))
+        if (licenceNumber.StartsWith('J'))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        if (licenceNumber.StartsWith('4'))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        if (licenceNumber.StartsWith('7'))
         {
             licenceNumber = '1' + licenceNumber[1..];
         }
@@ -71,7 +79,7 @@ public static class FormattingHelper
         
         var section1 = noneSeperatedLicenceNumber[0];
 
-        if (section1 == 'J')
+        if (section1 == 'J' || section1 == '4' || section1 == '7')
         {
             section1 = '1';
         }

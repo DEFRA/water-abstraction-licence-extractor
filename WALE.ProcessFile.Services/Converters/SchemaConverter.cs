@@ -106,16 +106,20 @@ public static partial class SchemaConverter
         if (!string.IsNullOrEmpty(matchesResult.Filename))
         {
             var filenameParts = matchesResult.Filename!.Split('_');
-            fileNameLicenceNumber = filenameParts[0];
-            fileNameLicenceNumber = FormattingHelper.ToNaldLicenceNumber(fileNameLicenceNumber);
 
-            if (!string.IsNullOrEmpty(fileNameLicenceNumber))
+            if (filenameParts[0].Length > 5)
             {
-                noneSchemaData.TryAdd("filenameLicenceNumber", fileNameLicenceNumber);
-                
-                if (string.IsNullOrEmpty(scrapedLicenceNumber))
+                fileNameLicenceNumber = filenameParts[0];
+                fileNameLicenceNumber = FormattingHelper.ToNaldLicenceNumber(fileNameLicenceNumber);
+
+                if (!string.IsNullOrEmpty(fileNameLicenceNumber))
                 {
-                    licenceNumber = fileNameLicenceNumber;
+                    noneSchemaData.TryAdd("filenameLicenceNumber", fileNameLicenceNumber);
+
+                    if (string.IsNullOrEmpty(scrapedLicenceNumber))
+                    {
+                        licenceNumber = fileNameLicenceNumber;
+                    }
                 }
             }
         }
@@ -125,7 +129,24 @@ public static partial class SchemaConverter
             && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
         {
             var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
+
+            var diffCount = 0;
+            var indexPos = 0;
             
+            foreach (var c in fileNameLicenceNumber)
+            {
+                var c2 = formattedScraped!.Length > indexPos ? formattedScraped[indexPos++] : (char?)null;
+
+                if (c != c2)
+                {
+                    diffCount += 1;
+                }
+            }
+
+            if (diffCount <= 2)
+            {
+                licenceNumber = fileNameLicenceNumber;
+            }
         }
         
         var (aggregates, individual) = GetAbstractionLimits(

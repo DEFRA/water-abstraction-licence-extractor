@@ -3318,7 +3318,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
-        Assert.Equal("0/83/75/400/61R01", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("8/37/54/0061/R01", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);

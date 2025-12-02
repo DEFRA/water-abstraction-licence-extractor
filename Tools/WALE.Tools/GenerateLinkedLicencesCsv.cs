@@ -9,17 +9,15 @@ namespace WALE.Tools;
 
 public static class GenerateLinkedLicencesCsv
 {
-    private const int ProcessRunId = 676;
-    
     private static readonly IOutputService OutputService = new DatabaseOutputService(
         new SqlSeverReadService(KeyConfig.SqlConnectionString),
         new SqlSeverWriteService(KeyConfig.SqlConnectionString));
     
-    public static async Task GenerateCsvAsync()
+    public static async Task GenerateCsvAsync(int processRunId)
     {
         Console.WriteLine("Started generating linked licences csv");
 
-        var data = await GetDataAsync();
+        var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter($"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv");
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -28,12 +26,12 @@ public static class GenerateLinkedLicencesCsv
         Console.WriteLine("Finished generating linked licences csv");
     }
 
-    private static async Task<List<LinkedLicencesCsvLine>> GetDataAsync()
+    private static async Task<List<LinkedLicencesCsvLine>> GetDataAsync(int processRunId)
     {
         var returnList = new List<LinkedLicencesCsvLine>();
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await OutputService.GetLicencesAsync(ProcessRunId);
+        var licences = await OutputService.GetLicencesAsync(processRunId);
         
         foreach (var licence in licences)
         {

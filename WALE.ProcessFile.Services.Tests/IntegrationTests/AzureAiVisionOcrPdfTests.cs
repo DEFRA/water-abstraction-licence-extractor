@@ -1061,8 +1061,11 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-
+        
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Equal("8/36/19/S/101", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
+        Assert.Equal("8/36/19/S/101", agreedSchemaLicence.LicenceNumber);
+        
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
@@ -1471,7 +1474,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal("27/29/12", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("2/27/29/012", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -1506,7 +1509,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Null(agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Null(agreedSchemaLicence.LicenceVersion.EffectiveDate);
-        Assert.Equal("272912-LVUNKNOWN", agreedSchemaLicence.Id);
+        Assert.Equal("22729012-LVUNKNOWN", agreedSchemaLicence.Id);
         Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
         Assert.Equal(2, agreedSchemaLicence.Points.Length);

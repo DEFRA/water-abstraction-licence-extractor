@@ -7,7 +7,8 @@ const string workflow = "GenerateLinkedLicencesCsv";
 switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
-        await GenerateLinkedLicencesCsv.GenerateCsvAsync();
+        const int processRunId = 696;
+        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
         break;
     case "GenerateAggregatesCsvForTesting":
         await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync();

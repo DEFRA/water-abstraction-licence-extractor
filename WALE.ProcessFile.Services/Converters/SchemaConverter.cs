@@ -105,12 +105,12 @@ public static partial class SchemaConverter
 
         if (!string.IsNullOrEmpty(matchesResult.Filename))
         {
-            var filenameParts = matchesResult.Filename!.Split('_');
+            var filenameParts = matchesResult.Filename!.Replace(" ", "_").Split('_');
 
-            if (filenameParts[0].Length > 5)
+            if (filenameParts[0].Length > 5 && !filenameParts[0].Contains('.') && filenameParts[0].Count(char.IsDigit) >= 3)
             {
-                fileNameLicenceNumber = filenameParts[0];
-                fileNameLicenceNumber = FormattingHelper.ToNaldLicenceNumber(fileNameLicenceNumber);
+                fileNameLicenceNumber = filenameParts[0].Replace("-", string.Empty);
+                fileNameLicenceNumber = FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber);
 
                 if (!string.IsNullOrEmpty(fileNameLicenceNumber))
                 {
@@ -124,24 +124,13 @@ public static partial class SchemaConverter
             }
         }
 
+        // If they are similar, use the filename version of the licence number
         if (!string.IsNullOrEmpty(scrapedLicenceNumber)
             && !string.IsNullOrEmpty(fileNameLicenceNumber)
             && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
         {
             var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
-
-            var diffCount = 0;
-            var indexPos = 0;
-            
-            foreach (var c in fileNameLicenceNumber)
-            {
-                var c2 = formattedScraped!.Length > indexPos ? formattedScraped[indexPos++] : (char?)null;
-
-                if (c != c2)
-                {
-                    diffCount += 1;
-                }
-            }
+            var diffCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
 
             if (diffCount <= 2)
             {
@@ -149,6 +138,8 @@ public static partial class SchemaConverter
             }
         }
         
+        licenceNumber = FormattingHelper.PadLicenceNumber(licenceNumber);
+
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
             licenceNumber,
@@ -211,33 +202,32 @@ public static partial class SchemaConverter
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
         var naldLicenceNumber = (string?)null;
-        var licenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
         
-        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
-            ? liveLicenceNumbers.Contains(licenceNumberTransformed)
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
+            ? liveLicenceNumbers.Contains(licenceNumber)
             : (bool?)null;
 
         if (isLiveLicence == true)
         {
-            naldLicenceNumber = licenceNumberTransformed;
+            naldLicenceNumber = licenceNumber;
         }
         
-        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
-            ? deadLicenceNumbers.Contains(licenceNumberTransformed)
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
+            ? deadLicenceNumbers.Contains(licenceNumber)
             : (bool?)null;
 
         if (isDeadLicence == true)
         {
-            naldLicenceNumber = licenceNumberTransformed;
+            naldLicenceNumber = licenceNumber;
         }
 
-        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumberTransformed)
-            ? impoundmentLicenceNumbers.Contains(licenceNumberTransformed)
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(licenceNumber)
+            ? impoundmentLicenceNumbers.Contains(licenceNumber)
             : (bool?)null;
 
         if (isImpoundmentLicence == true)
         {
-            naldLicenceNumber = licenceNumberTransformed;
+            naldLicenceNumber = licenceNumber;
         }
         
         var isFound = isDeadLicence == true
@@ -284,7 +274,7 @@ public static partial class SchemaConverter
                     }
                 }
 
-                var linkedLicenceNumber = firstLinkedLicence.LicenceNumber;
+                var linkedLicenceNumber = FormattingHelper.PadLicenceNumber(firstLinkedLicence.LicenceNumber);
 
                 return ToLinkedLicence(
                     linkedLicenceNumber,
@@ -295,7 +285,9 @@ public static partial class SchemaConverter
                     deadLicenceNumbers,
                     liveLicenceNumbers);
             })
-            .Where(linkedLicence => linkedLicence.LicenceNumber != licenceNumberTransformed)
+            .Where(linkedLicence =>
+                FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
+                != FormattingHelper.ToZeroFormatting(licenceNumber))
             .ToList();
         
         if (aggregates.Length == 0)
@@ -317,7 +309,7 @@ public static partial class SchemaConverter
         return new Licence
         {
             Filename = matchesResult.Filename,
-            LicenceNumber = licenceNumberTransformed,
+            LicenceNumber = licenceNumber,
             NaldLicenceNumber = naldLicenceNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
@@ -337,7 +329,7 @@ public static partial class SchemaConverter
     }
 
     private static LinkedLicence ToLinkedLicence(
-        string? licenceNumber,
+        string? linkedLicenceNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
@@ -345,34 +337,33 @@ public static partial class SchemaConverter
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers)
     {
-        var linkedLicenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
         var naldLicenceNumber = (string?)null;
         
-        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? liveLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
+            ? liveLicenceNumbers.Contains(linkedLicenceNumber)
             : (bool?)null;
         
         if (isLiveLicence == true)
         {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
+            naldLicenceNumber = linkedLicenceNumber;
         }
         
-        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? deadLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
+            ? deadLicenceNumbers.Contains(linkedLicenceNumber)
             : (bool?)null;
         
         if (isDeadLicence == true)
         {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
+            naldLicenceNumber = linkedLicenceNumber;
         }
         
-        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumberTransformed)
-            ? impoundmentLicenceNumbers.Contains(linkedLicenceNumberTransformed)
+        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(linkedLicenceNumber)
+            ? impoundmentLicenceNumbers.Contains(linkedLicenceNumber)
             : (bool?)null;
         
         if (isImpoundmentLicence == true)
         {
-            naldLicenceNumber = linkedLicenceNumberTransformed;
+            naldLicenceNumber = linkedLicenceNumber;
         }
         
         var isFound = isDeadLicence == true
@@ -381,7 +372,7 @@ public static partial class SchemaConverter
         
         return new LinkedLicence
         {
-            LicenceNumber = linkedLicenceNumberTransformed,
+            LicenceNumber = linkedLicenceNumber,
             NaldLicenceNumber = naldLicenceNumber,
             Filename = filename,
             Condition = condition,
@@ -2388,6 +2379,27 @@ public static partial class SchemaConverter
         }
 
         return returnList;
+    }
+    
+    private static int DifferenceCount(string? str1, string? str2)
+    {
+        if (str1 == null)
+        {
+            return -1;
+        }
+        if (str2 == null)
+        {
+            return -1;
+        }
+    
+        var set1 = str1.Split(' ').Distinct().ToList();
+        var set2 = str2.Split(' ').Distinct().ToList();
+
+        var diff = set2.Count > set1.Count
+            ? set2.Except(set1).ToList()
+            : set1.Except(set2).ToList();
+
+        return diff.Count;
     }
 
     [GeneratedRegex("(13|14|15|16|17|18|19|20)\\d\\d")]

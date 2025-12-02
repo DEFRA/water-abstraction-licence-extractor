@@ -307,7 +307,11 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ]
+        ],
+        "AdditionalLinkedLicence:1": "14/10/2011",
+        "AdditionalLinkedLicence:2": "108/506/506",
+        "AdditionalLinkedLicence:3": "800/80/70/060",
+        "AdditionalLinkedLicence:4": "845/988/1188"
       },
       "licenceFoundInList": false
     },
@@ -471,7 +475,11 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ]
+        ],
+        "AdditionalLinkedLicence:1": "14/10/2011",
+        "AdditionalLinkedLicence:2": "108/506/506",
+        "AdditionalLinkedLicence:3": "800/80/70/060",
+        "AdditionalLinkedLicence:4": "845/988/1188"
       },
       "licenceFoundInList": false
     },
@@ -635,7 +643,11 @@
         "ocr": "NoOCR",
         "servicesUsed": [
           "PdfPig"
-        ]
+        ],
+        "AdditionalLinkedLicence:1": "14/10/2011",
+        "AdditionalLinkedLicence:2": "108/506/506",
+        "AdditionalLinkedLicence:3": "800/80/70/060",
+        "AdditionalLinkedLicence:4": "845/988/1188"
       },
       "licenceFoundInList": false
     }

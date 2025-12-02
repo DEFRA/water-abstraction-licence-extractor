@@ -15,4 +15,6 @@ public static class LinkedLicenceSectionNames
     public static readonly string Records = "Records";
     
     public static readonly string Purposes = "Purposes";
+    
+    public static readonly string LicenceHistory = "LicenceHistory";
 }

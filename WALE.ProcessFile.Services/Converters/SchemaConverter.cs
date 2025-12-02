@@ -245,7 +245,9 @@ public static partial class SchemaConverter
         linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
-        // NOTE - We don't want to get licence history licences
+        
+        var licenceHistory = GetLicenceHistoryLinkedLicences(matches);
+        // NOTE - We don't want to include licence history licences in our output, we just want to check against them
         
         linkedLicences = linkedLicences
             .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
@@ -291,7 +293,8 @@ public static partial class SchemaConverter
             .ToList();
 
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(matches);
-
+        var additionalLinkedLicenceCount = 1;
+        
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
             var allDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
@@ -306,9 +309,19 @@ public static partial class SchemaConverter
                     FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
                         == FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber));
 
+            if (!found && licenceHistory.Count > 0)
+            {
+                found = licenceHistory
+                    .Any(linkedLicence =>
+                        FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
+                        == FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber));
+            }
+            
             if (!found)
             {
-                // TODO - Do something
+                noneSchemaData.Add(
+                    $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",
+                    allDocumentLinkedLicenceNumber!);
             }
         }
         
@@ -1008,6 +1021,33 @@ public static partial class SchemaConverter
                 ]
             });
         }
+        
+        return returnList;
+    }
+    
+    private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var licenceHistorySection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
+
+        if (licenceHistorySection == null)
+        {
+            return [];
+        }
+
+        var returnList = licenceHistorySection.SubResults
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "LicenceHistoryLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                ContainedIn = [new LinkedLicenceSection
+                {
+                    SectionName = LinkedLicenceSectionNames.LicenceHistory,
+                    LinkReason = GetLinkReason([licenceHistorySection], linkedLicenceNumber)
+                }]
+            })
+            .ToList();
         
         return returnList;
     }

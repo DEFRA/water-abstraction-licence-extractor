@@ -153,6 +153,15 @@ public static partial class LicenceNumber
                     }
 
                     var value = regexMatches[0].Value;
+                    
+                    // It's a date (check again)
+                    if (numberLine.Count(c => c == '/') == 2
+                        && DateTime.TryParse(numberLine, out var date2)
+                        && date2.Year is >= 1930 and <= 2100)
+                    {
+                        continue;
+                    }
+                    
                     var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
                         || (value.Contains('/') && value.Contains(' '));
                         //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7

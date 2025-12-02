@@ -686,7 +686,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12201078__Application type unknown Licence Issued [22011974]")).ToList();
+    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22708052__Application - Formal Variation - Issued Licence 24.01.2017 9644004")).ToList();
     pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
     
     return pdfFilePaths.ToList();

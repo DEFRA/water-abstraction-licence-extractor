@@ -153,6 +153,11 @@ public static partial class LicenceNumber
                     }
 
                     var value = regexMatches[0].Value;
+
+                    if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
                     
                     // It's a date (check again)
                     if (numberLine.Count(c => c == '/') == 2

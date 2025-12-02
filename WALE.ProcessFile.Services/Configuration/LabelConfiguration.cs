@@ -32,7 +32,8 @@ public static class LabelConfiguration
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
             ("LicenceHistory", GetLicenceHistory()),
-            ("FurtherProvisions", GetFurtherProvisions())            
+            ("FurtherProvisions", GetFurtherProvisions()),
+            ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers())
         ];
     }
     
@@ -237,6 +238,33 @@ public static class LabelConfiguration
                             LicenceNumberLine
                         ]
                     }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetGeneralLinkedLicenceNumbers()
+    {
+        return
+        [
+            new()
+            {
+                Name = "GeneralLinkedLicenceNumber",
+                Text =
+                [
+                    new(LicenceNumber.YorkshireRegexPatten)
+                    {
+                        IsRegularExpression = true
+                    }
+                ],
+                Format = LicenceNumber.Constant,
+                Position = LabelPosition.ActuallyLabel,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                SkipLineWhenContains =
+                [
+                    LicenceNumberLine
                 ]
             }
         ];

@@ -289,6 +289,28 @@ public static partial class SchemaConverter
                 FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
                 != FormattingHelper.ToZeroFormatting(licenceNumber))
             .ToList();
+
+        var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(matches);
+
+        foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
+        {
+            var allDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
+            if (FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber)
+                == FormattingHelper.ToZeroFormatting(licenceNumber))
+            {
+                continue;
+            }
+            
+            var found = linkedLicences
+                .Any(linkedLicence =>
+                    FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
+                        == FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber));
+
+            if (!found)
+            {
+                // TODO - Do something
+            }
+        }
         
         if (aggregates.Length == 0)
         {
@@ -956,6 +978,40 @@ public static partial class SchemaConverter
             .ToList();
     }
 
+    private static List<LinkedLicence> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var generalLinkedLicenceNumbers = matches
+            .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
+            .ToList();
+
+        if (generalLinkedLicenceNumbers.Count == 0)
+        {
+            return [];
+        }
+
+        var returnList = new List<LinkedLicence>();
+
+        foreach (var generalLinkedLicenceNumber in generalLinkedLicenceNumbers)
+        {
+            var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+            
+            returnList.Add(new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber,
+                ContainedIn =
+                [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.Purposes,
+                        LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber)
+                    }
+                ]
+            });
+        }
+        
+        return returnList;
+    }
+    
     private static List<LinkedLicence> GetPurposesLinkedLicences(List<LabelGroupResult> matches)
     {
         var purposeSection = matches

@@ -667,7 +667,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (!LabelIsInDocument(label, documentLines, out _))
+                if (LabelIsInDocument(label, documentLines) == false)
                 {
                     continue;
                 }
@@ -1697,13 +1697,10 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private static bool LabelIsInDocument(
+    private static bool? LabelIsInDocument(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> lines,
-        out List<DocumentLine> matchedLines)
+        IReadOnlyList<DocumentLine> lines)
     {
-        matchedLines = [];
-        
         var labelText = label.Text!
             .Select(labelTextMatch =>
             {
@@ -1721,34 +1718,21 @@ public class PdfDataExtractorService(
                         .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
                 }
                 
-                return text;
-                
-                
+                return (labelTextMatch, text);
             })
             .ToList();
         
-        if (labelText.Any(text =>
-            text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Any(tuple =>
+            tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
-
-        foreach (var text in labelText)
-        {
-            foreach (var line in lines)
-            {
-                if (!line.Text.Contains(text, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    continue;
-                }
-                
-                matchedLines.Add(line);
-            }
-        }
         
-        return labelText.Any(text =>
+        var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
+
+        return isRegularExpression || labelText.Any(tuple =>
         {
-            return string.Join(',', lines.Select(line => line.Text)).Contains(text,
+            return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
                 StringComparison.InvariantCultureIgnoreCase);
         });
     }

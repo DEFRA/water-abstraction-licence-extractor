@@ -69,6 +69,11 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0);
     }
     
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
+    
     [Fact]
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
@@ -80,7 +85,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(8, ExcludeGeneralList(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -188,7 +193,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(8, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -312,7 +317,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, resultList.Count);
+        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -372,7 +377,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, resultList.Count);
+        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -421,7 +426,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

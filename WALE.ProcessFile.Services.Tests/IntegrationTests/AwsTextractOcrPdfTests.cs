@@ -59,6 +59,11 @@ public class AwsTextractOcrPdfTests
             [pdfFolder + fileName],
             0);
     }
+    
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
 
     [Fact]
     public async Task WhenA_ThenFoundCorrectly()
@@ -71,7 +76,7 @@ public class AwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(11, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -199,7 +204,7 @@ public class AwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, resultList.Count);
+        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

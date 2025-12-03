@@ -90,11 +90,27 @@ public static class LabelMatchingHelper
                 if (matches.Count > 0)
                 {
                     matchedText = labelTextOption.Clone(labelTextOption.Text);
-                    labelCharPosition = lineForPosition.Text.IndexOf(
-                        matches[0].Value,
-                        StringComparison.InvariantCultureIgnoreCase);
-                    
-                    return true;
+
+                    foreach (var match in matches.AsQueryable())
+                    {
+                        labelCharPosition = lineForPosition.Text.IndexOf(
+                            match.Value,
+                            StringComparison.InvariantCultureIgnoreCase);
+
+                        if (labelCharPosition is -1 or 0)
+                        {
+                            return true;
+                        }
+
+                        var previousChar = lineForPosition.Text[labelCharPosition - 1];
+
+                        if (previousChar is ' ' or ',' or '.')
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
                 }
             }
             

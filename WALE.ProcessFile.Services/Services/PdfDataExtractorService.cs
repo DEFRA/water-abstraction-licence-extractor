@@ -955,6 +955,11 @@ public class PdfDataExtractorService(
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
                     
+                    if (partialLine.Text.Contains("/052") && label.Name == "FCLinkedLicenceNumber")
+                    {
+                        
+                    }
+                    
                     if (label.Text?.Any() == true)
                     {
                         nextLines ??= line.NextLines(lines, label);
@@ -1015,15 +1020,10 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
-
-                    if (partialLine.Text.Contains("988 1188"))
-                    {
-                        
-                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
+                    
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
                     
@@ -1540,38 +1540,54 @@ public class PdfDataExtractorService(
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
         {
             var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text);
-                
-            var position = line.Text.IndexOf(
-                matches[0].Value,
-                StringComparison.InvariantCultureIgnoreCase);
 
-            var beforeText = line.Text.Substring(0, position);
-            var beforeLabel = label.Clone();
-            beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
-            
-            returnItems.Add(new TextAndLabel
+            foreach (var match in matches.AsQueryable())
             {
-                Text = beforeText,
-                Label = beforeLabel
-            });
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = matches.FirstOrDefault()?.Value,
-                Label = label
-            });
+                var value = match.Value;
+                var indexOnLine = line.Text.IndexOf(value, StringComparison.Ordinal);
 
-            if (line.Text.Length > position + matches.FirstOrDefault()?.Value.Length + 1)
-            {
-                var afterLabel = label.Clone();
-                var afterText = line.Text.Substring(position + matches.FirstOrDefault()!.Value.Length);
-                beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+                if (indexOnLine > 0)
+                {
+                    var previousChar = line.Text[indexOnLine - 1];
+
+                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
+                    {
+                        continue;
+                    }
+                }
+
+                var position = line.Text.IndexOf(
+                    value,
+                    StringComparison.InvariantCultureIgnoreCase);
+
+                var beforeText = line.Text.Substring(0, position);
+                var beforeLabel = label.Clone();
+                beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
 
                 returnItems.Add(new TextAndLabel
                 {
-                    Text = afterText,
-                    Label = afterLabel
+                    Text = beforeText,
+                    Label = beforeLabel
                 });
+
+                returnItems.Add(new TextAndLabel
+                {
+                    Text = value,
+                    Label = label
+                });
+
+                if (line.Text.Length > position + value.Length + 1)
+                {
+                    var afterLabel = label.Clone();
+                    var afterText = line.Text.Substring(position + value.Length);
+                    beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                    returnItems.Add(new TextAndLabel
+                    {
+                        Text = afterText,
+                        Label = afterLabel
+                    });
+                }
             }
 
             return returnItems; 

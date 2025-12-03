@@ -48,7 +48,7 @@ public static partial class Date
         
         return YearRegex().IsMatch(tweakedText)
             || ContainsMonth(tweakedText)
-            || DateTime.TryParse(tweakedText, out _);
+            || (DateTime.TryParse(tweakedText, out var dateOut) && dateOut.Year is >= 1930 and <= 2100);
     }
 
     public static DateTime? GetDateFromString(string? input)

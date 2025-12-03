@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .][A-Z0-9]{1,5}([\/ .][0-9]{1,4})?([\/ .][0-9A-Z\*]{1,4})?([\/ .][0-9]{1,4})?([\/ .][0-9A-Z]{1,3})?[\/ .]?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -116,9 +116,7 @@ public static partial class LicenceNumber
                     }
                     
                     // It's a date
-                    if (numberLine.Count(c => c == '/') == 2
-                        && DateTime.TryParse(numberLine, out var date)
-                        && date.Year is >= 1930 and <= 2100)
+                    if (Date.IsDate(numberLine))
                     {
                         continue;
                     }
@@ -152,17 +150,69 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var value = regexMatches[0].Value;
+                    var value = regexMatches[0].Value.Trim();
 
                     if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }
                     
+                    var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
+
+                    if (lengthBeforePeriod >= 10)
+                    {
+                        value = value.Split('.')[0];
+                    }
+                    
+                    var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
+
+                    if (lengthBeforeSpace >= 10)
+                    {
+                        value = value.Split(' ')[0];
+                    }
+                    
                     // It's a date (check again)
-                    if (numberLine.Count(c => c == '/') == 2
-                        && DateTime.TryParse(numberLine, out var date2)
-                        && date2.Year is >= 1930 and <= 2100)
+                    if (Date.IsDate(value))
+                    {
+                        continue;
+                    }
+
+                    var previousCharIsLetterCount = -1;
+                    var maxSequenceLength = 0;
+
+                    maxSequenceLength = value
+                        .Select(c =>
+                        {
+                            if (c == ' ' || c == '/' || c == '.')
+                            {
+                                return maxSequenceLength;
+                            }
+                            
+                            if (!char.IsLetter(c))
+                            {
+                                // ReSharper disable once AccessToModifiedClosure
+                                if (previousCharIsLetterCount + 1 > maxSequenceLength)
+                                {
+                                    maxSequenceLength = previousCharIsLetterCount + 1;
+                                }
+
+                                previousCharIsLetterCount = -1;
+                                return maxSequenceLength;
+                            }
+
+                            previousCharIsLetterCount += 1;
+
+                            if (previousCharIsLetterCount + 1 > maxSequenceLength)
+                            {
+                                maxSequenceLength = previousCharIsLetterCount + 1;
+                            }
+
+                            return maxSequenceLength;
+                        })
+                        .OrderByDescending(r => r)
+                        .First();
+                    
+                    if (maxSequenceLength >= 3)
                     {
                         continue;
                     }
@@ -233,7 +283,7 @@ public static partial class LicenceNumber
 
                     if (!isOsRef)
                     {
-                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ");
+                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ") || value.Contains(" TA ") || value.Contains(" SE ");
                     }
                     
                     if (isOsRef)

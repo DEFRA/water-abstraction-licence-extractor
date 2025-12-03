@@ -308,10 +308,46 @@
         "servicesUsed": [
           "PdfPig"
         ],
-        "AdditionalLinkedLicence:1": "14/10/2011",
-        "AdditionalLinkedLicence:2": "108/506/506",
-        "AdditionalLinkedLicence:3": "800/80/70/060",
-        "AdditionalLinkedLicence:4": "845/988/1188"
+        "AdditionalLinkedLicence:1": {
+          "pageNumber": 3,
+          "licenceNumber": "14/10/2011",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:2": {
+          "pageNumber": 7,
+          "licenceNumber": "708 506 506",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:3": {
+          "pageNumber": 7,
+          "licenceNumber": "800 80 70 60",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:4": {
+          "pageNumber": 7,
+          "licenceNumber": "845 988 1188",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        }
       },
       "licenceFoundInList": false
     },
@@ -476,10 +512,46 @@
         "servicesUsed": [
           "PdfPig"
         ],
-        "AdditionalLinkedLicence:1": "14/10/2011",
-        "AdditionalLinkedLicence:2": "108/506/506",
-        "AdditionalLinkedLicence:3": "800/80/70/060",
-        "AdditionalLinkedLicence:4": "845/988/1188"
+        "AdditionalLinkedLicence:1": {
+          "pageNumber": 3,
+          "licenceNumber": "14/10/2011",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:2": {
+          "pageNumber": 7,
+          "licenceNumber": "708 506 506",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:3": {
+          "pageNumber": 7,
+          "licenceNumber": "800 80 70 60",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:4": {
+          "pageNumber": 7,
+          "licenceNumber": "845 988 1188",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        }
       },
       "licenceFoundInList": false
     },
@@ -644,10 +716,46 @@
         "servicesUsed": [
           "PdfPig"
         ],
-        "AdditionalLinkedLicence:1": "14/10/2011",
-        "AdditionalLinkedLicence:2": "108/506/506",
-        "AdditionalLinkedLicence:3": "800/80/70/060",
-        "AdditionalLinkedLicence:4": "845/988/1188"
+        "AdditionalLinkedLicence:1": {
+          "pageNumber": 3,
+          "licenceNumber": "14/10/2011",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:2": {
+          "pageNumber": 7,
+          "licenceNumber": "708 506 506",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:3": {
+          "pageNumber": 7,
+          "licenceNumber": "800 80 70 60",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        "AdditionalLinkedLicence:4": {
+          "pageNumber": 7,
+          "licenceNumber": "845 988 1188",
+          "containedIn": [
+            {
+              "sectionName": "Purposes"
+            }
+          ],
+          "licenceFoundInList": false
+        }
       },
       "licenceFoundInList": false
     }

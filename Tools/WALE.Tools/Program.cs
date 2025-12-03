@@ -5,15 +5,17 @@
 //const string workflow = "GenerateLinkedLicencesCsv";
 const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
 
-const int processRunId = 741;
-
 switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
-        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
+        const int processRunId1 = 744;
+        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId1);
+
         break;
     case "GenerateUnknownSectionLinkedLicencesCsv":
-        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
+        const int processRunId2 = 757;
+        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId2);
+        
         break;
     case "GenerateAggregatesCsvForTesting":
         await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync();

@@ -1,6 +1,9 @@
 using System.Globalization;
+using System.Text.Json;
 using CsvHelper;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Models;
@@ -42,6 +45,11 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
 
             var unknownLinkedLicences = licence.NoneSchemaData
                 .Where(kvp => kvp.Key.StartsWith("AdditionalLinkedLicence:"))
+                .Select(kvp =>
+                {
+                    var json = kvp.Value.ToString()!;
+                    return JsonSerializer.Deserialize<LinkedLicenceWithPageNumber>(json, JsonHelper.GetSerializerOptions());
+                })
                 .ToList();
             
             if (unknownLinkedLicences.Count == 0)
@@ -49,9 +57,9 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 continue;
             }
             
-            foreach (var linkedLicenceKvp in unknownLinkedLicences)
+            foreach (var linkedLicence in unknownLinkedLicences)
             {
-                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                var scrapedLicenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
                     ? value.ToString()
                     : null;
                 
@@ -59,13 +67,14 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 {
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = scrapedLicenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = licence.LicenceFoundInList,
                     LicenceIsLive = licence.IsLiveLicence,
                     LicenceIsDead = licence.IsDeadLicence,
                     LicenceIsImpoundment = licence.IsImpoundmentLicence,
-                    LinkedLicenceNumber = linkedLicenceKvp.Value.ToString()
+                    LinkedLicenceNumber = linkedLicence!.LicenceNumber,
+                    PageNumber = linkedLicence.PageNumber
                 });
             }
         }

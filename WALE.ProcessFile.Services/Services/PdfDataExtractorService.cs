@@ -1016,7 +1016,7 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (matchedLabel.Name == "DateOfIssue")
+                    if (partialLine.Text.Contains("988 1188"))
                     {
                         
                     }

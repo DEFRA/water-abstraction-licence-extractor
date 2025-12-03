@@ -14,4 +14,5 @@ public class UnknownSectionLinkedLicencesCsvLine
     
     public bool LicenceFoundInList { get; set; }
     public string? LinkedLicenceNumber { get; set; }
+    public int PageNumber { get; set; }
 }

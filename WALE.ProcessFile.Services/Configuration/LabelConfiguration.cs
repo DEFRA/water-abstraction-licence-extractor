@@ -8,9 +8,17 @@ public static class LabelConfiguration
 {
     private const string LicenceNumberLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
-        new(@"/Page \d* of \d*/");
+        new(@"/Page \d* of \d*/") { IsRegularExpression = true };
+    private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
+        new("708 506 506"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =
+        new("800 80 70 60"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone3Pattern =
+        new("345 988 1188"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
+        new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/");
+        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
     
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -262,10 +270,18 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                Remove =
+                [
+                    PageNumberPattern,
+                    EnvironmentAgencyTelephone1Pattern,
+                    EnvironmentAgencyTelephone2Pattern,
+                    EnvironmentAgencyTelephone3Pattern,
+                    EnvironmentAgencyTelephone4Pattern                    
+                ],
                 SkipLineWhenContains =
                 [
                     LicenceNumberLine
-                ]
+                ],
             }
         ];
     }

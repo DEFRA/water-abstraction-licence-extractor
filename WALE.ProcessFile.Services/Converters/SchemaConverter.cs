@@ -321,7 +321,7 @@ public static partial class SchemaConverter
             {
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",
-                    allDocumentLinkedLicenceNumber!);
+                    allDocumentLinkedLicence);
             }
         }
         
@@ -991,7 +991,7 @@ public static partial class SchemaConverter
             .ToList();
     }
 
-    private static List<LinkedLicence> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicenceWithPageNumber> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
     {
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
@@ -1002,13 +1002,13 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var returnList = new List<LinkedLicence>();
+        var returnList = new List<LinkedLicenceWithPageNumber>();
 
         foreach (var generalLinkedLicenceNumber in generalLinkedLicenceNumbers)
         {
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
-            returnList.Add(new LinkedLicence
+            returnList.Add(new LinkedLicenceWithPageNumber
             {
                 LicenceNumber = linkedLicenceNumber,
                 ContainedIn =
@@ -1018,7 +1018,8 @@ public static partial class SchemaConverter
                         SectionName = LinkedLicenceSectionNames.Purposes,
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber)
                     }
-                ]
+                ],
+                PageNumber = generalLinkedLicenceNumber.PageNumber
             });
         }
         
@@ -1037,15 +1038,22 @@ public static partial class SchemaConverter
 
         var returnList = licenceHistorySection.SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "LicenceHistoryLinkedLicenceNumber")
-            .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
-            .Select(linkedLicenceNumber => new LinkedLicence
+            .Select(linkedLicenceNumber =>
             {
-                LicenceNumber = linkedLicenceNumber,
-                ContainedIn = [new LinkedLicenceSection
+                var lln = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+                
+                return new LinkedLicence
                 {
-                    SectionName = LinkedLicenceSectionNames.LicenceHistory,
-                    LinkReason = GetLinkReason([licenceHistorySection], linkedLicenceNumber)
-                }]
+                    LicenceNumber = lln,
+                    ContainedIn =
+                    [
+                        new LinkedLicenceSection
+                        {
+                            SectionName = LinkedLicenceSectionNames.LicenceHistory,
+                            LinkReason = GetLinkReason([licenceHistorySection], lln)
+                        }
+                    ]
+                };
             })
             .ToList();
         

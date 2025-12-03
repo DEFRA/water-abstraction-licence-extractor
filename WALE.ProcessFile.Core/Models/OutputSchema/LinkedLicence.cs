@@ -2,9 +2,9 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class LinkedLicence
 {
-    public string? LicenceNumber { get; init; }
+    public string? LicenceNumber { get; set; }
     
-    public string? NaldLicenceNumber { get; init; }
+    public string? NaldLicenceNumber { get; set; }
     
     public string? Filename { get; set; }
     

@@ -1821,7 +1821,7 @@ public static class LabelConfiguration
                         Text =
                         [
                             new("licence number "),
-                            new("licence no "),
+                            new("licence serial no "),
                             new("licence serial number "),
                             new("licence serial numbers "),
                             new("under this licence and licence"),

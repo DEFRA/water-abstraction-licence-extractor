@@ -305,7 +305,12 @@ public static class LabelConfiguration
                     EnvironmentAgencyTelephone2Pattern,
                     EnvironmentAgencyTelephone3Pattern,
                     EnvironmentAgencyTelephone4Pattern,
-                    new("0 250 500 1")
+                    new("0 250 500 1"),
+                    new("0 125 250 M"),
+                    new("0 170 340"),
+                    new("0 150 300"),
+                    // TODO EXCLUDE consent to discharge reference
+                    // TODO some licence numbers have a space in where they should be slashes
                 ],
                 SkipLineWhenContains =
                 [

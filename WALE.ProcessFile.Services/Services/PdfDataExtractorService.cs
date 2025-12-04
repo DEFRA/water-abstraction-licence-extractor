@@ -67,7 +67,8 @@ public class PdfDataExtractorService(
         }
 
         const bool notOcr = false;
-
+        const int minAverageLineLength = 15;
+        
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
             configuration.Labels,
@@ -133,9 +134,7 @@ public class PdfDataExtractorService(
         {
             pageNumber += 1;
             
-            var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
-
             var pageImages = page.Images.ToList();
             
             if (pageImages.Count > 10)
@@ -189,8 +188,24 @@ public class PdfDataExtractorService(
                     {
                         break;
                     }
+                    
+                    var containsTheWordMap = serviceImageLines
+                        .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
+                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase));
 
+                    if (containsTheWordMap)
+                    {
+                        break;
+                    }
+                    
                     var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
+                    
+                    // Short lines indicate it may be a map page,
+                    // no point processing that with the other services
+                    if (averageLineLength < minAverageLineLength)
+                    {
+                        break;
+                    }
                     
                     var allLinesSoFar = documentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
@@ -222,13 +237,6 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
-                        // Short lines indicate it may be a map page,
-                        // no point processing that with the other services
-                        if (averageLineLength < 20)
-                        {
-                            break;
-                        }
-                        
                         continue;
                     }
                     
@@ -269,19 +277,6 @@ public class PdfDataExtractorService(
                         breakPageLoop = true;
 
                         break;
-                    }
-
-                    // Short lines indicate it may be a map page,
-                    // no point processing that with the other services
-                    if (averageLineLength < 30)
-                    {
-                        var containsTheWordMap = serviceImageLines
-                            .Any(l => l.Text.Contains("Map ", StringComparison.InvariantCultureIgnoreCase));
-
-                        if (containsTheWordMap)
-                        {
-                            break;
-                        }
                     }
                 }
                 
@@ -955,9 +950,14 @@ public class PdfDataExtractorService(
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
                     
-                    if (partialLine.Text.Contains("/052") && label.Name == "FCLinkedLicenceNumber")
+                    if (partialLine.Text.Contains("2/26/30/023") && label.Name == "LinkedLicenceNumber")
                     {
                         
+                    }
+                    
+                    if (partialLine.Text.Contains("licence serial", StringComparison.InvariantCultureIgnoreCase))// && label.Name == "LinkedLicenceNumber")
+                    {
+                
                     }
                     
                     if (label.Text?.Any() == true)
@@ -992,11 +992,6 @@ public class PdfDataExtractorService(
                         }
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
-                    }
-
-                    if (partialLine.Text.Contains("2/27/18/131"))
-                    {
-                        
                     }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))

@@ -1216,6 +1216,12 @@ public static partial class SchemaConverter
                 continue;
             }
             
+            // TODO split down Additional information by heading to get this level of reasoning
+            /*if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "LapsedLicence";
+            }*/
+            
             if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "DischargeAndReabstractionCondition";

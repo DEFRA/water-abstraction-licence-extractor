@@ -62,9 +62,9 @@ public static partial class LicenceNumber
 
                 var columnText = column.Text;
 
-                if (columnText.Contains("."))
+                if (columnText.Contains(". "))
                 {
-                    columnText = columnText.Replace(".", splitChar);
+                    columnText = columnText.Replace(". ", $"{splitChar} ");
                 }
                 
                 if (columnText.Contains(" and"))

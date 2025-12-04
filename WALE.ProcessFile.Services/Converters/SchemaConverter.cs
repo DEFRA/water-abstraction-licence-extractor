@@ -300,8 +300,8 @@ public static partial class SchemaConverter
         
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
-            var allDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
-            if (FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber)
+            var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
+            if (FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber)
                 == FormattingHelper.ToZeroFormatting(licenceNumber))
             {
                 continue;
@@ -310,14 +310,18 @@ public static partial class SchemaConverter
             var found = linkedLicences
                 .Any(linkedLicence =>
                     FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
-                        == FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber));
+                        == FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber));
 
             if (!found && licenceHistory.Count > 0)
             {
                 found = licenceHistory
                     .Any(linkedLicence =>
-                        FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
-                        == FormattingHelper.ToZeroFormatting(allDocumentLinkedLicenceNumber));
+                    {
+                        var paddedLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(linkedLicence.LicenceNumber);
+                        
+                        return FormattingHelper.ToZeroFormatting(paddedLinkedLicenceNumber)
+                            == FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber);
+                    });
             }
             
             if (!found)

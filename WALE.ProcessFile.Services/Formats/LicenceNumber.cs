@@ -37,6 +37,11 @@ public static partial class LicenceNumber
             {
                 continue;
             }
+
+            if (line.Text.Contains("/479"))
+            {
+                
+            }
             
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
@@ -57,6 +62,11 @@ public static partial class LicenceNumber
 
                 var columnText = column.Text;
 
+                if (columnText.Contains("."))
+                {
+                    columnText = columnText.Replace(".", splitChar);
+                }
+                
                 if (columnText.Contains(" and"))
                 {
                     columnText = columnText.Replace(" and", splitChar);
@@ -370,11 +380,17 @@ public static partial class LicenceNumber
                         continue;
                     }
                     
+                    // Invalid end of a licence number (probably cut off)
+                    if (value?.EndsWith("/R") == true)
+                    {
+                        continue;
+                    }
+                    
                     var colText = FormattingHelper.TrimFormatting(
                         value,
                         true,
                         true);
-                        
+                    
                     var clonedColumn = new DocumentLineColumn(colText!);
                     newColumns.Clear();
                     newColumns.Add(clonedColumn);

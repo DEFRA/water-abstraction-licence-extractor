@@ -1833,7 +1833,8 @@ public static class LabelConfiguration
                         SkipLineWhenContains =
                         [
                             LicenceNumberLine
-                        ]
+                        ],
+                        NextLinesToFetch = 10
                     },
                     new()
                     {

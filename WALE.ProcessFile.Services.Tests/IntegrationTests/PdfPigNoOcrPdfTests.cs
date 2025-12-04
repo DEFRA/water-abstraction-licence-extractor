@@ -4935,7 +4935,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("2/27/18/153/R01", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Equal(5, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(17, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/09/025", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
@@ -4957,11 +4957,69 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].LinkReason);
         
-        // TODO should be an additional bunch
-        
         Assert.Single(agreedSchemaLicence.LinkedLicences[4].ContainedIn!);
-        Assert.Equal("NE/027/0018/037", agreedSchemaLicence.LinkedLicences[4].LicenceNumber);
-        Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].SectionName);
-        Assert.Equal("DonorLicence", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].LinkReason);
+        Assert.Equal("2/27/18/131/R01", agreedSchemaLicence.LinkedLicences[4].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[5].ContainedIn!);
+        Assert.Equal("2/27/18/146/R01", agreedSchemaLicence.LinkedLicences[5].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[5].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[5].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[6].ContainedIn!);
+        Assert.Equal("2/27/18/147/R01", agreedSchemaLicence.LinkedLicences[6].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[6].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[6].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[7].ContainedIn!);
+        Assert.Equal("2/27/18/152/R01", agreedSchemaLicence.LinkedLicences[7].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[7].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[7].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[8].ContainedIn!);
+        Assert.Equal("2/27/18/158/R01", agreedSchemaLicence.LinkedLicences[8].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[8].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[8].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[9].ContainedIn!);
+        Assert.Equal("NE/027/0024/003/R01", agreedSchemaLicence.LinkedLicences[9].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[9].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[9].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[10].ContainedIn!);
+        Assert.Equal("NE/027/0024/071", agreedSchemaLicence.LinkedLicences[10].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[10].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[10].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[11].ContainedIn!);
+        Assert.Equal("2/27/24/477/R01", agreedSchemaLicence.LinkedLicences[11].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[11].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[11].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[12].ContainedIn!);
+        Assert.Equal("2/27/24/478/R01", agreedSchemaLicence.LinkedLicences[12].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[12].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[12].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[13].ContainedIn!);
+        Assert.Equal("2/27/24/480/R01", agreedSchemaLicence.LinkedLicences[13].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[13].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[13].ContainedIn![0].LinkReason);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[14].ContainedIn!);
+        Assert.Equal("2/27/24/486/R01", agreedSchemaLicence.LinkedLicences[14].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[14].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[14].ContainedIn![0].LinkReason);
+
+        Assert.Single(agreedSchemaLicence.LinkedLicences[15].ContainedIn!);
+        Assert.Equal("NE/027/0028/029/R01", agreedSchemaLicence.LinkedLicences[15].LicenceNumber);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[15].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[15].ContainedIn![0].LinkReason);        
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences[16].ContainedIn!);
+        Assert.Equal("NE/027/0018/037", agreedSchemaLicence.LinkedLicences[16].LicenceNumber);
+        Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[16].ContainedIn![0].SectionName);
+        Assert.Equal("DonorLicence", agreedSchemaLicence.LinkedLicences[16].ContainedIn![0].LinkReason);        
     }
 }

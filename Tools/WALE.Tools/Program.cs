@@ -8,12 +8,12 @@ const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
 switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
-        const int processRunId1 = 744;
+        const int processRunId1 = 792;
         await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId1);
 
         break;
     case "GenerateUnknownSectionLinkedLicencesCsv":
-        const int processRunId2 = 773;
+        const int processRunId2 = 804;
         await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId2);
         
         break;

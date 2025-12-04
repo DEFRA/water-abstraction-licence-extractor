@@ -2195,7 +2195,10 @@ public static class LabelConfiguration
                     {
                         Name = "InTotalValue",
                         CategoryName = "PerValue",
-                        Text = [new("in total")],
+                        Text = [
+                            new("in total"),
+                            new("total annual quantity")
+                        ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",
                         RelatedName = "InTotalUnits",
@@ -2204,6 +2207,16 @@ public static class LabelConfiguration
                         [
                             "abstracted in total"
                         ],
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
                         IgnoreMatchIfContains =
                         [
                             "(1)",
@@ -2211,7 +2224,7 @@ public static class LabelConfiguration
                             "(111)"
                         ],
                         PreviousLinesToFetch = 1,
-                        NextLinesToFetch = 1,
+                        NextLinesToFetch = 3,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },

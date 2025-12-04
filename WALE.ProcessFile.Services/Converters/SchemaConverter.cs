@@ -13,6 +13,8 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static partial class SchemaConverter
 {
+    public static int DiffCounter;
+    
     private static Licence ToLicence(
         MatchesResult matchesResult,
         HashSet<string> impoundmentLicenceNumbers,
@@ -135,6 +137,7 @@ public static partial class SchemaConverter
             if (diffCount <= 2)
             {
                 licenceNumber = fileNameLicenceNumber;
+                DiffCounter += 1;
             }
         }
         
@@ -2273,6 +2276,7 @@ public static partial class SchemaConverter
             "per annum" => LimitPeriodType.PerYear,
             "per year" => LimitPeriodType.PerYear,
             "in total" => LimitPeriodType.InTotal,
+            "total annual quantity" => LimitPeriodType.InTotal,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

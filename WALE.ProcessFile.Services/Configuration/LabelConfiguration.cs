@@ -196,6 +196,34 @@ public static class LabelConfiguration
             }
         ];
     }
+
+    private static LabelToMatch GetLinkedLicenceAbstractionLimits()
+    {
+        return new()
+        {
+            Name = "LinkedLicenceNumber",
+            Text =
+            [
+                new("licence number "),
+                new("licence serial no "),
+                new("licence serial no. "),
+                new("licence serial number "),
+                new("licence serial numbers "),
+                new("under this licence and licence"),
+                new("and licence "),
+                new("and under licence "),
+                new("and under license ") // spelling mistake in licence                                    
+            ],
+            Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+            Format = LicenceNumber.Constant,
+            MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+            SkipLineWhenContains =
+            [
+                LicenceNumberLine
+            ],
+            NextLinesToFetch = 10
+        };
+    }
     
     private static List<LabelToMatch> GetLicenceHistory()
     {
@@ -904,7 +932,8 @@ public static class LabelConfiguration
                                         PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 10,
                                         DoNotTrimLines = true
-                                    }
+                                    },
+                                    GetLinkedLicenceAbstractionLimits()
                                 }
                             }
                         ]
@@ -1817,29 +1846,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    new()
-                    {
-                        Name = "LinkedLicenceNumber",
-                        Text =
-                        [
-                            new("licence number "),
-                            new("licence serial no "),
-                            new("licence serial number "),
-                            new("licence serial numbers "),
-                            new("under this licence and licence"),
-                            new("and licence "),
-                            new("and under licence "),
-                            new("and under license ") // spelling mistake in licence                                    
-                        ],
-                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                        Format = LicenceNumber.Constant,
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ],
-                        NextLinesToFetch = 10
-                    },
+                    GetLinkedLicenceAbstractionLimits(),
                     new()
                     {
                         Name = "LinkedLicenceFilename",

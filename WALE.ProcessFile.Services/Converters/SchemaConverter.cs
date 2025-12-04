@@ -248,6 +248,7 @@ public static partial class SchemaConverter
         linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches));
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
+        linkedLicences.AddRange(GetPointsLinkedLicences(matches));
         
         var licenceHistory = GetLicenceHistoryLinkedLicences(matches);
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
@@ -1098,6 +1099,54 @@ public static partial class SchemaConverter
                 returnList.AddRange(purpose.SubResults
                     .Where(linkedLicenceNumber =>
                         linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
+                    .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
+                    .Select(linkedLicenceNumber => new LinkedLicence
+                    {
+                        LicenceNumber = linkedLicenceNumber,
+                        ContainedIn = [
+                            new LinkedLicenceSection
+                            {
+                                SectionName = LinkedLicenceSectionNames.Purposes,
+                                LinkReason = GetLinkReason(sections, linkedLicenceNumber)
+                            }
+                        ]
+                    })
+                    .ToList());
+            }
+        }
+        
+        return returnList;
+    }
+    
+    private static List<LinkedLicence> GetPointsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var pointsSection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Points");
+
+        if (pointsSection == null)
+        {
+            return [];
+        }
+
+        var sections = pointsSection
+            .SubResults
+            .Where(ps => ps.MatchedLabel?.Name == "PointPurposeGroup")
+            .SelectMany(ppg => ppg.SubResults.Where(ppgs => ppgs.MatchedLabel?.Name == "Point"))
+            .ToList();
+
+        var returnList = new List<LinkedLicence>();
+
+        foreach (var pointPurposeGroup in pointsSection.SubResults)
+        {
+            var points = pointPurposeGroup.SubResults
+                .Where(x => x.MatchedLabel!.Name == "Point")
+                .ToList();
+
+            foreach (var point in points)
+            {
+                returnList.AddRange(point.SubResults
+                    .Where(linkedLicenceNumber =>
+                        linkedLicenceNumber.MatchedLabel?.Name == "LinkedLicenceNumber")
                     .Select(linkedLicenceNumber => linkedLicenceNumber.Text?.FirstOrDefault()?.Text)
                     .Select(linkedLicenceNumber => new LinkedLicence
                     {

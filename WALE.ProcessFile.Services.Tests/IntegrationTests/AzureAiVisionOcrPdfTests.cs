@@ -461,7 +461,7 @@ public class AzureAiVisionOcrPdfTests
             0)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
     }
 
     [Fact]

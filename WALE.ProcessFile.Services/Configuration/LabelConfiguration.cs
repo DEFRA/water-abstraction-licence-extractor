@@ -276,7 +276,8 @@ public static class LabelConfiguration
                     EnvironmentAgencyTelephone1Pattern,
                     EnvironmentAgencyTelephone2Pattern,
                     EnvironmentAgencyTelephone3Pattern,
-                    EnvironmentAgencyTelephone4Pattern                    
+                    EnvironmentAgencyTelephone4Pattern,
+                    new("0 250 500 1")
                 ],
                 SkipLineWhenContains =
                 [

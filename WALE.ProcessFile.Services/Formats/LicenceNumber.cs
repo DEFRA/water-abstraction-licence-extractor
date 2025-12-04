@@ -283,7 +283,15 @@ public static partial class LicenceNumber
 
                     if (!isOsRef)
                     {
-                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ") || value.Contains(" TA ") || value.Contains(" SE ");
+                        isOsRef =
+                            value.StartsWith("NZ ")
+                            || value.Contains(" NZ")
+                            || value.StartsWith("TA ")
+                            || value.Contains(" TA ")
+                            || value.StartsWith("SE ")
+                            || value.Contains(" SE ")
+                            || value.StartsWith("TF ")
+                            || value.Contains(" TF ");
                     }
                     
                     if (isOsRef)

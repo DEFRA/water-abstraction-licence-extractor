@@ -313,6 +313,11 @@ public static partial class SchemaConverter
                     FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
                         == FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber));
 
+            if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
+            {
+                found = allDocumentLinkedLicence.LicenceNumber == scrapedLicenceNumber;
+            }
+            
             if (!found && licenceHistory.Count > 0)
             {
                 found = licenceHistory
@@ -327,7 +332,7 @@ public static partial class SchemaConverter
             
             if (!found)
             {
-                //linkedLicences.Add(allDocumentLinkedLicence);
+                linkedLicences.Add(allDocumentLinkedLicence);
                 
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",

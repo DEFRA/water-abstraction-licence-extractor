@@ -993,6 +993,11 @@ public class PdfDataExtractorService(
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
                     }
+
+                    if (partialLine.Text.Contains("2/27/18/131"))
+                    {
+                        
+                    }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
                     {

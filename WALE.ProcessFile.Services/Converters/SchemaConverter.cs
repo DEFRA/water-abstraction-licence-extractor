@@ -1240,6 +1240,11 @@ public static partial class SchemaConverter
                 return "ReadInConjunction";
             }
             
+            if (text.Contains("The donor licence was", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "DonorLicence";
+            }
+            
             if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
                 || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
             {

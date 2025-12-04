@@ -37,11 +37,6 @@ public static partial class LicenceNumber
             {
                 continue;
             }
-
-            if (line.Text.Contains("/479"))
-            {
-                
-            }
             
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
@@ -270,7 +265,7 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var isPostcode = value.Length == 7 || value.Length == 8
+                    var isPostcode = (value.Length == 7 || value.Length == 8)
                         && char.IsUpper(value[0])
                         && value.Count(c => c == ' ') == 1
                         && value.Split(' ')[1].Length == 3;

@@ -322,6 +322,8 @@ public static partial class SchemaConverter
             
             if (!found)
             {
+                //linkedLicences.Add(allDocumentLinkedLicence);
+                
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",
                     allDocumentLinkedLicence);

@@ -1,3 +1,4 @@
+using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Models;
 
@@ -5,16 +6,32 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    public static string? ToZeroFormatting(string? formattedLicenceNumber)
+    public static string? ToZeroFormattingRemoveLeadingZeroes(string? formattedLicenceNumber)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {
             return formattedLicenceNumber;
         }
 
-        return formattedLicenceNumber
-            .Replace("/", string.Empty)
-            .Replace("-", string.Empty);
+        var licenceNumber = formattedLicenceNumber.Replace("-", "/");
+
+        var parts = licenceNumber.Split('/');
+        var sb = new StringBuilder();
+
+        foreach (var part in parts)
+        {
+            if (part.StartsWith('0'))
+            {
+                var partWithoutLeadingZero = part[1..];
+                sb.Append(partWithoutLeadingZero);
+                
+                continue;
+            }
+            
+            sb.Append(part);
+        }
+
+        return sb.ToString();
     }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)

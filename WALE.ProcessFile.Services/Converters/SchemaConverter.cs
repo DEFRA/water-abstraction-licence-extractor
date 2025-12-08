@@ -111,8 +111,11 @@ public static partial class SchemaConverter
 
             if (filenameParts[0].Length > 5 && !filenameParts[0].Contains('.') && filenameParts[0].Count(char.IsDigit) >= 3)
             {
-                fileNameLicenceNumber = filenameParts[0].Replace("-", string.Empty);
-                fileNameLicenceNumber = FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber);
+                fileNameLicenceNumber = filenameParts[0].Replace("-", "/");
+
+                fileNameLicenceNumber = fileNameLicenceNumber.Contains('/')
+                    ? FormattingHelper.PadLicenceNumber(fileNameLicenceNumber)
+                    : FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber);
 
                 if (!string.IsNullOrEmpty(fileNameLicenceNumber))
                 {
@@ -292,8 +295,8 @@ public static partial class SchemaConverter
                     liveLicenceNumbers);
             })
             .Where(linkedLicence =>
-                FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
-                != FormattingHelper.ToZeroFormatting(licenceNumber))
+                FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(linkedLicence.LicenceNumber)
+                != FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(licenceNumber))
             .ToList();
 
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(matches);
@@ -302,16 +305,16 @@ public static partial class SchemaConverter
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
             var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
-            if (FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber)
-                == FormattingHelper.ToZeroFormatting(licenceNumber))
+            if (FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber)
+                == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(licenceNumber))
             {
                 continue;
             }
             
             var found = linkedLicences
                 .Any(linkedLicence =>
-                    FormattingHelper.ToZeroFormatting(linkedLicence.LicenceNumber)
-                        == FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber));
+                    FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(linkedLicence.LicenceNumber)
+                        == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber));
 
             if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
             {
@@ -325,14 +328,14 @@ public static partial class SchemaConverter
                     {
                         var paddedLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(linkedLicence.LicenceNumber);
                         
-                        return FormattingHelper.ToZeroFormatting(paddedLinkedLicenceNumber)
-                            == FormattingHelper.ToZeroFormatting(paddedAllDocumentLinkedLicenceNumber);
+                        return FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedLinkedLicenceNumber)
+                            == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber);
                     });
             }
             
             if (!found)
             {
-                linkedLicences.Add(allDocumentLinkedLicence);
+                linkedLicences.Add(allDocumentLinkedLicence); // NOTE this line
                 
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",

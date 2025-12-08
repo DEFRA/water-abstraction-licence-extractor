@@ -467,6 +467,9 @@ public class TessaractOcrPdfTests
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        
+        // NOTE if looking for all linked licence numbers in the doucment, we will find the licence one in the
+        // header that is otherwise not found, as the label text is not read
     }
 
     [Fact]
@@ -1209,7 +1212,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, ExcludeGeneralList(resultList).Count); // Very old printing, hard to OCR
+        Assert.Equal(3, ExcludeGeneralList(resultList).Count); // Very old printing, hard to OCR
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
@@ -1236,7 +1239,11 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("8/37/4./303/3", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        //8/37/43/19
+        //8/37/43/34
     }
     
     [Fact(Skip = "CantLoadImage")]

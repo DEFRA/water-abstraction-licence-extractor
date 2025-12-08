@@ -910,6 +910,12 @@ public class PdfDataExtractorService(
                         throw new Exception("Infinite loop detected - coding error");
                     }
 
+                    
+                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "DocumentLicenceNumber")
+                    {
+                        
+                    }
+                    
                     previousPartialLine = partialLine;
                     
                     var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
@@ -950,12 +956,7 @@ public class PdfDataExtractorService(
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
                     
-                    if (partialLine.Text.Contains("2/26/30/023") && label.Name == "LinkedLicenceNumber")
-                    {
-                        
-                    }
-                    
-                    if (partialLine.Text.Contains("licence serial", StringComparison.InvariantCultureIgnoreCase))// && label.Name == "LinkedLicenceNumber")
+                    if (label.Name == "DocumentLicenceNumber")
                     {
                 
                     }

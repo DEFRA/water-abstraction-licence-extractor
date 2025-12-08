@@ -59,7 +59,8 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("8. Records[END_OF_LINE]"),
-                    new("9. Records[END_OF_LINE]"),                    
+                    new("9. Records[END_OF_LINE]"),
+                    new("PARTICULARS OF LICENCE[END_OF_LINE]"), // TODO - NOT NECESSARILY HERE, BUT WANTED TO FETCH IT
                     new("Records[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =

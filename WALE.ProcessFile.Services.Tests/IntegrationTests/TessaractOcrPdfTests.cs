@@ -462,18 +462,18 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
-        Assert.Equal("5/79/60/052", agreedSchemaLicence.LicenceNumber); // This is actually wrong
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Null(agreedSchemaLicence.LicenceNumber); 
+        //Assert.Empty(agreedSchemaLicence.LinkedLicences);
         
         // NOTE if looking for all linked licence numbers in the document, we will find the licence one in the
         // header that is otherwise not found, as the label text is not read
         
-        //Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences.First().LicenceNumber);
+        Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences.First().LicenceNumber);
     }
 
     [Fact]
@@ -1198,11 +1198,14 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("2/56/80/309/1", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("25/68/", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Fact]
@@ -1564,9 +1567,10 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("25/63/1/158", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
-        //Assert.Single(agreedSchemaLicence.LinkedLicences);
-        //Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        
+        // Poor OCR stops us finding the section (its in points)
     }
     
     [Fact]

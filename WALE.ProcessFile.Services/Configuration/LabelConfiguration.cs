@@ -202,7 +202,7 @@ public static class LabelConfiguration
         ];
     }
 
-    private static LabelToMatch GetLinkedLicenceAbstractionLimits()
+    private static LabelToMatch GetLinkedLicenceAbstractionAndOrPointsLimits()
     {
         return new()
         {
@@ -214,6 +214,7 @@ public static class LabelConfiguration
                 new("licence serial no. "),
                 new("licence serial number "),
                 new("licence serial numbers "),
+                new("serial nos"),
                 new("under this licence and licence"),
                 new("and licence "),
                 new("and under licence "),
@@ -687,6 +688,7 @@ public static class LabelConfiguration
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
+                    new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
                 ],
                 TextEnd =
@@ -945,7 +947,7 @@ public static class LabelConfiguration
                                         NextLinesToFetch = 10,
                                         DoNotTrimLines = true
                                     },
-                                    GetLinkedLicenceAbstractionLimits()
+                                    GetLinkedLicenceAbstractionAndOrPointsLimits()
                                 }
                             }
                         ]
@@ -1858,7 +1860,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    GetLinkedLicenceAbstractionLimits(),
+                    GetLinkedLicenceAbstractionAndOrPointsLimits(),
                     new()
                     {
                         Name = "LinkedLicenceFilename",

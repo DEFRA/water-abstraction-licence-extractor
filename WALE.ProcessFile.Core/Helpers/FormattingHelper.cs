@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    public static string? ToZeroFormattingRemoveLeadingZeroes(string? formattedLicenceNumber)
+    public static string? StripForComparison(string? formattedLicenceNumber)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {

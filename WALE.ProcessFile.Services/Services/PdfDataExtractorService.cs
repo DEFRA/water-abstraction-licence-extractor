@@ -911,7 +911,7 @@ public class PdfDataExtractorService(
                     }
 
                     
-                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "DocumentLicenceNumber")
+                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "LinkedLicenceNumber")
                     {
                         
                     }
@@ -1027,7 +1027,7 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (matchedLabel.Name == "DocumentLicenceNumber")
+                    if (matchedLabel.Name == "DocumentPointsAll")
                     {
                         
                     }

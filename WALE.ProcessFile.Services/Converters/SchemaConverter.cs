@@ -309,9 +309,7 @@ public static partial class SchemaConverter
                     deadLicenceNumbers,
                     liveLicenceNumbers);
             })
-            .Where(linkedLicence =>
-                FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(linkedLicence.LicenceNumber)
-                != FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(licenceNumber))
+            .Where(linkedLicence => !LicenceNumbersAreEqual(licenceNumber, linkedLicence.LicenceNumber))
             .ToList();
 
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(matches);
@@ -320,16 +318,14 @@ public static partial class SchemaConverter
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
             var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
-            if (FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber)
-                == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(licenceNumber))
+            if (LicenceNumbersAreEqual(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
             {
                 continue;
             }
             
             var found = linkedLicences
                 .Any(linkedLicence =>
-                    FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(linkedLicence.LicenceNumber)
-                        == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber));
+                    LicenceNumbersAreEqual(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber));
 
             if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
             {
@@ -342,15 +338,13 @@ public static partial class SchemaConverter
                     .Any(linkedLicence =>
                     {
                         var paddedLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(linkedLicence.LicenceNumber);
-                        
-                        return FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedLinkedLicenceNumber)
-                            == FormattingHelper.ToZeroFormattingRemoveLeadingZeroes(paddedAllDocumentLinkedLicenceNumber);
+                        return LicenceNumbersAreEqual(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber);
                     });
             }
             
             if (!found)
             {
-                //linkedLicences.Add(allDocumentLinkedLicence); // search this line
+                linkedLicences.Add(allDocumentLinkedLicence); // search this line
                 
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",
@@ -396,6 +390,27 @@ public static partial class SchemaConverter
         };
     }
 
+    private static bool LicenceNumbersAreEqual(string? licenceNumber1, string? licenceNumber2)
+    {
+        var licenceNumberStripped =
+            FormattingHelper.StripForComparison(licenceNumber1);
+
+        if (string.IsNullOrWhiteSpace(licenceNumberStripped))
+        {
+            return false;
+        }
+
+        var linkedLicenceNumberStripped =
+            FormattingHelper.StripForComparison(licenceNumber2);
+
+        if (string.IsNullOrWhiteSpace(linkedLicenceNumberStripped))
+        {
+            return false;
+        }
+
+        return licenceNumberStripped.Contains(linkedLicenceNumberStripped);
+    }
+    
     private static LinkedLicence ToLinkedLicence(
         string? linkedLicenceNumber,
         string? filename,

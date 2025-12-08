@@ -960,6 +960,11 @@ public class PdfDataExtractorService(
                 
                     }
                     
+                    if (partialLine.Text.Contains("2/26/32/369") && label.Name == "FurtherProvisionsLinkedLicenceNumber")
+                    {
+                        
+                    }
+                    
                     if (label.Text?.Any() == true)
                     {
                         nextLines ??= line.NextLines(lines, label);
@@ -1019,6 +1024,11 @@ public class PdfDataExtractorService(
                         {
                             matchedLabel.Text = [matchedStartText];
                         }
+                    }
+
+                    if (partialLine.Text.Contains("2/26/32/369") && matchedLabel.Name == "FurtherProvisionsLinkedLicenceNumber")
+                    {
+                        
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(
@@ -1539,10 +1549,14 @@ public class PdfDataExtractorService(
         
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
         {
+            var options = label.Text.First().RegularExpressionIsCaseInsensitive
+                ? RegexOptions.IgnoreCase
+                : RegexOptions.None;
+            
             var matches = Regex.Matches(
                 line.Text,
                 label.Text!.FirstOrDefault()!.Text,
-                RegexOptions.IgnoreCase);
+                options);
 
             foreach (var match in matches.AsQueryable())
             {

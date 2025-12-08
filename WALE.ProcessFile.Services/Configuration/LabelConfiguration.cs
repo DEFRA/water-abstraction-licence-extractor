@@ -8,7 +8,11 @@ public static class LabelConfiguration
 {
     private const string LicenceNumberLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
-        new(@"/Page \d* of \d*/") { IsRegularExpression = true };
+        new(@"/Page \d* of \d*/")
+        {
+            IsRegularExpression = true,
+            RegularExpressionIsCaseInsensitive = true
+        };
     private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
         new("708 506 506"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =

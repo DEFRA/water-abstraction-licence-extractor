@@ -19,6 +19,8 @@ public class TextToMatch(string text)
     public int InstanceNumber { get; init; } = 1;
     
     public bool IsRegularExpression { get; init; }
+    
+    public bool RegularExpressionIsCaseInsensitive { get; init; }
 
     public TextToMatch Clone(string textToSet)
     {
@@ -31,7 +33,8 @@ public class TextToMatch(string text)
             ColumnMustHave2SequentialNumbers = ColumnMustHave2SequentialNumbers,
             RemoveWholeLine = RemoveWholeLine,
             InstanceNumber = InstanceNumber,
-            IsRegularExpression = IsRegularExpression
+            IsRegularExpression = IsRegularExpression,
+            RegularExpressionIsCaseInsensitive = RegularExpressionIsCaseInsensitive
         };
     }
 }

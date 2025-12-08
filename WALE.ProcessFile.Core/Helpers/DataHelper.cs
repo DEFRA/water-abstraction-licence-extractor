@@ -129,14 +129,17 @@ public static partial class DataHelper
                 if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
                 {
                     var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
-
-                    if (Regex.IsMatch(returnStr, pattern, RegexOptions.IgnoreCase))
+                    var options = textToMatch.RegularExpressionIsCaseInsensitive
+                        ? RegexOptions.IgnoreCase
+                        : RegexOptions.None;
+                    
+                    if (Regex.IsMatch(returnStr, pattern, options))
                     {
                         returnStr = Regex.Replace(
                             returnStr,
                             pattern,
                             string.Empty,
-                            RegexOptions.IgnoreCase);
+                            options);
 
                         removesUsedList.Add(textToMatch.Text);
                     }

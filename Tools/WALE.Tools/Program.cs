@@ -2,13 +2,13 @@
 
 //const string workflow = "TestsForAiPrompts";
 //const string workflow = "GenerateAggregatesCsvForTesting";
-//const string workflow = "GenerateLinkedLicencesCsv";
-const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
+const string workflow = "GenerateLinkedLicencesCsv";
+//const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
 
 switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
-        const int processRunId1 = 792;
+        const int processRunId1 = 842;
         await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId1);
 
         break;

@@ -108,10 +108,11 @@ public static partial class SchemaConverter
         if (!string.IsNullOrEmpty(matchesResult.Filename))
         {
             var filenameParts = matchesResult.Filename!.Replace(" ", "_").Split('_');
-
-            if (filenameParts[0].Length > 5 && !filenameParts[0].Contains('.') && filenameParts[0].Count(char.IsDigit) >= 3)
+            var licenceNumberPart = filenameParts[0];
+            
+            if (licenceNumberPart.Length > 5 && !licenceNumberPart.Contains('.') && licenceNumberPart.Count(char.IsDigit) >= 3)
             {
-                fileNameLicenceNumber = filenameParts[0].Replace("-", "/");
+                fileNameLicenceNumber = licenceNumberPart.Replace("-", "/");
 
                 fileNameLicenceNumber = fileNameLicenceNumber.Contains('/')
                     ? FormattingHelper.PadLicenceNumber(fileNameLicenceNumber)
@@ -335,7 +336,7 @@ public static partial class SchemaConverter
             
             if (!found)
             {
-                linkedLicences.Add(allDocumentLinkedLicence); // NOTE this line
+                //linkedLicences.Add(allDocumentLinkedLicence); // search this line
                 
                 noneSchemaData.Add(
                     $"AdditionalLinkedLicence:{additionalLinkedLicenceCount++}",

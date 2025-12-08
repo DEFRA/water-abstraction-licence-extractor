@@ -109,8 +109,22 @@ public static partial class SchemaConverter
         {
             var filenameParts = matchesResult.Filename!.Replace(" ", "_").Split('_');
             var licenceNumberPart = filenameParts[0];
+            var isPartALicenceNumber = licenceNumberPart.Length > 5
+                && !licenceNumberPart.Contains('.')
+                && licenceNumberPart.Count(char.IsDigit) >= 3;
+
+            // Leave the below, we can't trust the bit in the filename for old files
             
-            if (licenceNumberPart.Length > 5 && !licenceNumberPart.Contains('.') && licenceNumberPart.Count(char.IsDigit) >= 3)
+            /*if (!isPartALicenceNumber)
+            {
+                licenceNumberPart = filenameParts[^1].Split('.')[0];
+                
+                isPartALicenceNumber = licenceNumberPart.Length > 5
+                    && !licenceNumberPart.Contains('.')
+                    && licenceNumberPart.Count(char.IsDigit) >= 3;
+            }*/
+            
+            if (isPartALicenceNumber)
             {
                 fileNameLicenceNumber = licenceNumberPart.Replace("-", "/");
 

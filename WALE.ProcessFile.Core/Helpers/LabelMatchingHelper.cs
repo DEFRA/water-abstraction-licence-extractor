@@ -85,7 +85,10 @@ public static class LabelMatchingHelper
 
             if (labelTextOption.IsRegularExpression)
             {
-                var matches = Regex.Matches(lineToCheck.Text, labelTextOption.Text);
+                var matches = Regex.Matches(
+                    lineToCheck.Text,
+                    labelTextOption.Text,
+                    RegexOptions.IgnoreCase);
                 
                 if (matches.Count > 0)
                 {

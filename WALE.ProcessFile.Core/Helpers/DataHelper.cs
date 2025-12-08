@@ -130,12 +130,13 @@ public static partial class DataHelper
                 {
                     var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
 
-                    if (Regex.IsMatch(returnStr, pattern))
+                    if (Regex.IsMatch(returnStr, pattern, RegexOptions.IgnoreCase))
                     {
                         returnStr = Regex.Replace(
                             returnStr,
                             pattern,
-                            string.Empty);
+                            string.Empty,
+                            RegexOptions.IgnoreCase);
 
                         removesUsedList.Add(textToMatch.Text);
                     }

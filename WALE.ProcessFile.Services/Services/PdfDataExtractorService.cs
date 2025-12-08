@@ -960,7 +960,7 @@ public class PdfDataExtractorService(
                 
                     }
                     
-                    if (partialLine.Text.Contains("2/26/32/369") && label.Name == "FurtherProvisionsLinkedLicenceNumber")
+                    if (partialLine.Text.Contains("FURTHER PROVISIONS") && label.Name == "DocumentLicenceNumber")
                     {
                         
                     }
@@ -1026,7 +1026,7 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (partialLine.Text.Contains("2/26/32/369") && matchedLabel.Name == "FurtherProvisionsLinkedLicenceNumber")
+                    if (matchedLabel.Name == "DocumentLicenceNumber")
                     {
                         
                     }

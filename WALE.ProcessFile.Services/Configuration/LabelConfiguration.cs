@@ -333,6 +333,8 @@ public static class LabelConfiguration
                 Name = "FurtherProvisionsAll",
                 TextStart =
                 [
+                    new("10. FURTHER PROVISIONS[END_OF_LINE]"),
+                    new("10 FURTHER PROVISIONS"),
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =

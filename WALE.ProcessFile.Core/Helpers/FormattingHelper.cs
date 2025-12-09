@@ -13,7 +13,10 @@ public static class FormattingHelper
             return formattedLicenceNumber;
         }
 
-        var licenceNumber = formattedLicenceNumber.Replace("-", "/");
+        var licenceNumber = formattedLicenceNumber
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
 
         var parts = licenceNumber.Split('/');
         var sb = new StringBuilder();

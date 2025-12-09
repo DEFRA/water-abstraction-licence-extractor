@@ -341,6 +341,11 @@ public static partial class SchemaConverter
                         return LicenceNumbersAreEqual(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber);
                     });
             }
+
+            if (FormattingHelper.StripForComparison(allDocumentLinkedLicence.LicenceNumber)!.Length < 4)
+            {
+                found = true;
+            }
             
             if (!found)
             {
@@ -1039,7 +1044,7 @@ public static partial class SchemaConverter
             .ToList();
     }
 
-    private static List<LinkedLicenceWithPageNumber> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
+    private static List<LinkedLicence> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
     {
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
@@ -1050,28 +1055,44 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var returnList = new List<LinkedLicenceWithPageNumber>();
+        var returnList = new List<LinkedLicence>();
 
         foreach (var generalLinkedLicenceNumber in generalLinkedLicenceNumbers)
         {
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
-            returnList.Add(new LinkedLicenceWithPageNumber
+            returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
                 ContainedIn =
                 [
                     new LinkedLicenceSection
                     {
-                        SectionName = LinkedLicenceSectionNames.Purposes,
+                        SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.PageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber)
                     }
-                ],
-                PageNumber = generalLinkedLicenceNumber.PageNumber
+                ]
             });
         }
         
         return returnList;
+    }
+
+    private static string GetUnknownSectionName(int pageNumber)
+    {
+        return pageNumber switch
+        {
+            1 => LinkedLicenceSectionNames.UnknownPage1,
+            2 => LinkedLicenceSectionNames.UnknownPage2,
+            3 => LinkedLicenceSectionNames.UnknownPage3,
+            4 => LinkedLicenceSectionNames.UnknownPage4,          
+            5 => LinkedLicenceSectionNames.UnknownPage5,
+            6 => LinkedLicenceSectionNames.UnknownPage6,
+            7 => LinkedLicenceSectionNames.UnknownPage7,
+            8 => LinkedLicenceSectionNames.UnknownPage8,
+            9 => LinkedLicenceSectionNames.UnknownPage9,
+            _ => LinkedLicenceSectionNames.Unknown
+        };
     }
     
     private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(List<LabelGroupResult> matches)

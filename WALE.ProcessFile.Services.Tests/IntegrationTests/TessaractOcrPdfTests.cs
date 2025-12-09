@@ -405,7 +405,7 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        //Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -455,8 +455,6 @@ public class TessaractOcrPdfTests
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.Null(licenceNumberResult); // TODO check if the other services can get it - Tesseract doesnt see it (apart from on the map page)
-        //Assert.True(licenceNumberResult.IsOcr);
-        //Assert.Equal("13/43/021/G/061", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -474,7 +472,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Null(agreedSchemaLicence.LicenceNumber); 
-        //Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         // NOTE if looking for all linked licence numbers in the document, we will find the licence one in the
         // header that is otherwise not found, as the label text is not read
@@ -784,8 +782,6 @@ public class TessaractOcrPdfTests
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.Null(licenceNumberResult); // For some reason Tesseract won't read the licence number from the box in the header its in
-        //Assert.True(licenceNumberResult.IsOcr);
-        //Assert.Equal("13/43/021/G/018", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -797,7 +793,7 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        //Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -844,7 +840,7 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        //Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();

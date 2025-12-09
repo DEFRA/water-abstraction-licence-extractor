@@ -80,7 +80,8 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
@@ -173,6 +174,8 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
@@ -256,6 +259,8 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
@@ -351,6 +356,8 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
@@ -403,6 +410,8 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 60,
@@ -1603,6 +1612,8 @@ public static class LabelConfiguration
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,

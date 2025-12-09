@@ -4658,7 +4658,7 @@ public class PdfPigNoOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12100074R01-LV2025040920270331", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
@@ -4703,7 +4703,7 @@ public class PdfPigNoOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12100073R01-LV2015040120270331", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);

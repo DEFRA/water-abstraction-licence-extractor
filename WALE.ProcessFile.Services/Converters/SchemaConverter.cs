@@ -556,7 +556,48 @@ public static partial class SchemaConverter
 
         if (explicitlyReferencedLimitsLicenceSet != null)
         {
-            returnList.Add(explicitlyReferencedLimitsLicenceSet);            
+            if (explicitlyReferencedLimitsLicenceSet.LicenceSetId == explicitlyReferencedLicenceSet?.LicenceSetId)
+            {
+                var oldSet = explicitlyReferencedLicenceSet;
+                var newSet = explicitlyReferencedLimitsLicenceSet;
+                
+                foreach (var newSetLicence in newSet.Licences)
+                {
+                    if (!oldSet.Licences
+                        .Select(l => l.LicenceNumber)
+                        .Contains(newSetLicence.LicenceNumber))
+                    {
+                        var updatedLicences = oldSet.Licences.ToList();
+                        updatedLicences.Add(newSetLicence);
+
+                        oldSet.Licences = updatedLicences.ToArray();
+                    }
+                }
+
+                if (newSet.AggregateSets != null)
+                {
+                    foreach (var newSetAggregateSet in newSet.AggregateSets!)
+                    {
+                        if (oldSet.AggregateSets?
+                            .Select(a => a.AggregateSetId)
+                            .Contains(newSetAggregateSet.AggregateSetId) != true)
+                        {
+                            var updatedAggregateSets = oldSet.AggregateSets?.ToList() ?? [];
+                            updatedAggregateSets.Add(newSetAggregateSet);
+
+                            oldSet.AggregateSets = updatedAggregateSets.ToArray();
+                        }
+                    }
+                }
+
+                var updatedTypes = oldSet.LicenceSetTypes.ToList();
+                updatedTypes.AddRange(newSet.LicenceSetTypes);
+                oldSet.LicenceSetTypes = updatedTypes.ToArray();
+            }
+            else
+            {
+                returnList.Add(explicitlyReferencedLimitsLicenceSet);                
+            }
         }
         
         foreach (var licence in allLicences)

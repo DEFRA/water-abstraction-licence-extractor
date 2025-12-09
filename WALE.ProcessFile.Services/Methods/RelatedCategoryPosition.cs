@@ -14,11 +14,6 @@ public static class RelatedCategoryPosition
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-        
-        var categoryItems = request.siblingMatches!
-            .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)
-            .OrderBy(match => match.LineNumber)
-            .ToList();
 
         var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
@@ -29,6 +24,11 @@ public static class RelatedCategoryPosition
         
         var modifiedLine = ary.Count > 0 ? ary[0] : null;
         
+        var categoryItems = request.siblingMatches!
+            .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)
+            .OrderBy(match => match.LineNumber)
+            .ToList();
+
         var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             request.previousLines,
@@ -44,10 +44,37 @@ public static class RelatedCategoryPosition
             true,
             out _,
             out _);
-
-        var matchedLabelLineNumbers = new List<int>();
-        var relevantCategoryItems = new List<LabelGroupResult>();
         
+        var returnList = new List<LabelGroupResult>();
+        
+        if (categoryItems.Count == 0)
+        {
+            var matchedValues = GetMatches(
+                request.label,
+                modifiedLine,
+                modifiedPreviousLines,
+                modifiedNextLines);
+
+            if (matchedValues.Count == 0)
+            {
+                return Task.FromResult(returnList);
+            }
+            
+            var labelGroupResult = request.labelGroupResult.Clone();
+            labelGroupResult.Text = matchedValues;
+            labelGroupResult.MatchedLabel = request.label;
+            
+            returnList.AddRange(FilterIntoFormat(
+                request,
+                labelGroupResult,
+                matchedValues,
+                false));
+            
+            return ProcessSubLabelsAsync(request, returnList); 
+        }
+        
+        var relevantCategoryItems = new List<LabelGroupResult>();
+        var matchedLabelLineNumbers = new List<int>();
         var lineStartsWithLabel = false;
         var valueBeforeLabel = false;
         
@@ -88,43 +115,13 @@ public static class RelatedCategoryPosition
         {
             matchedLabelLineNumber -= 1;
         }
+
+        var matches = GetMatches(
+            request.label,
+            modifiedLine,
+            modifiedPreviousLines,
+            modifiedNextLines);
         
-        var matches = new List<DocumentLine>();
-        List<DocumentLine> numberLines;
-        
-        foreach (var previousLine in modifiedPreviousLines.OrderByDescending(line => line.LineNumber))
-        {
-            foreach (var column in previousLine.Columns)
-            {
-                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], request.label, out numberLines))
-                {
-                    matches.AddRange(numberLines);
-                }                
-            }
-        }
-
-        if (modifiedLine != null)
-        {
-            foreach (var column in modifiedLine.Columns)
-            {
-                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], request.label, out numberLines))
-                {
-                    matches.AddRange(numberLines);
-                }
-            }
-        }
-
-        foreach (var nextLine in modifiedNextLines.OrderBy(line => line.LineNumber))
-        {
-            foreach (var column in nextLine.Columns)
-            {
-                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], request.label, out numberLines))
-                {
-                    matches.AddRange(numberLines);
-                }
-            }
-        }
-
         var allLines = new List<DocumentLine>();
         allLines.AddRange(modifiedPreviousLines);
         allLines.AddRange(modifiedNextLines);
@@ -172,8 +169,6 @@ public static class RelatedCategoryPosition
                     var diff = matchIndexEnd - labelIndexStart;
                     return Math.Abs(diff);
                 }).ToList();
-        
-        var returnList = new List<LabelGroupResult>();
         
         if (absoluteMatches.Count <= 0)
         {
@@ -234,5 +229,49 @@ public static class RelatedCategoryPosition
         }
 
         return ProcessSubLabelsAsync(request, returnList);
+    }
+
+    private static List<DocumentLine> GetMatches(
+        LabelToMatch label,
+        DocumentLine? modifiedLine,
+        List<DocumentLine> modifiedPreviousLines,
+        List<DocumentLine> modifiedNextLines)
+    {
+        var matches = new List<DocumentLine>();
+        
+        foreach (var previousLine in modifiedPreviousLines.OrderByDescending(line => line.LineNumber))
+        {
+            foreach (var column in previousLine.Columns)
+            {
+                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, out var numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }                
+            }
+        }
+
+        if (modifiedLine != null)
+        {
+            foreach (var column in modifiedLine.Columns)
+            {
+                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], label, out var numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }
+            }
+        }
+
+        foreach (var nextLine in modifiedNextLines.OrderBy(line => line.LineNumber))
+        {
+            foreach (var column in nextLine.Columns)
+            {
+                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], label, out var numberLines))
+                {
+                    matches.AddRange(numberLines);
+                }
+            }
+        }
+
+        return matches;
     }
 }

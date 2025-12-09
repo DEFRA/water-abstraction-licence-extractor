@@ -3,6 +3,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>31fd6360-ac7e-44e7-978a-c63210c06ad2</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

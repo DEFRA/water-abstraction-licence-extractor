@@ -66,6 +66,11 @@ public class NoOcrDatabaseTests
             [TestConfig.PdfFolder + fileName],
             0);
     }
+    
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
 
     [Fact]
     public async Task AddProcessRun()
@@ -100,7 +105,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, resultList.Count);
+        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

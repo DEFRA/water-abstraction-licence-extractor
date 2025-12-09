@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .][A-Z0-9]{1,5}([\/ .][0-9]{1,4})?([\/ .][0-9A-Z\*]{1,4})?([\/ .][0-9]{1,4})?([\/ .][0-9A-Z]{1,3})?[\/ .]?)|([A-Z0-9]{1,3}\/[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -57,6 +57,11 @@ public static partial class LicenceNumber
 
                 var columnText = column.Text;
 
+                if (columnText.Contains(". "))
+                {
+                    columnText = columnText.Replace(". ", $"{splitChar} ");
+                }
+                
                 if (columnText.Contains(" and"))
                 {
                     columnText = columnText.Replace(" and", splitChar);
@@ -116,9 +121,7 @@ public static partial class LicenceNumber
                     }
                     
                     // It's a date
-                    if (numberLine.Count(c => c == '/') == 2
-                        && DateTime.TryParse(numberLine, out var date)
-                        && date.Year is >= 1930 and <= 2100)
+                    if (Date.IsDate(numberLine))
                     {
                         continue;
                     }
@@ -152,7 +155,73 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var value = regexMatches[0].Value;
+                    var value = regexMatches[0].Value.Trim();
+
+                    if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    
+                    var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
+
+                    if (lengthBeforePeriod >= 10)
+                    {
+                        value = value.Split('.')[0];
+                    }
+                    
+                    var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
+
+                    if (lengthBeforeSpace >= 10)
+                    {
+                        value = value.Split(' ')[0];
+                    }
+                    
+                    // It's a date (check again)
+                    if (Date.IsDate(value))
+                    {
+                        continue;
+                    }
+
+                    var previousCharIsLetterCount = -1;
+                    var maxSequenceLength = 0;
+
+                    maxSequenceLength = value
+                        .Select(c =>
+                        {
+                            if (c == ' ' || c == '/' || c == '.')
+                            {
+                                return maxSequenceLength;
+                            }
+                            
+                            if (!char.IsLetter(c))
+                            {
+                                // ReSharper disable once AccessToModifiedClosure
+                                if (previousCharIsLetterCount + 1 > maxSequenceLength)
+                                {
+                                    maxSequenceLength = previousCharIsLetterCount + 1;
+                                }
+
+                                previousCharIsLetterCount = -1;
+                                return maxSequenceLength;
+                            }
+
+                            previousCharIsLetterCount += 1;
+
+                            if (previousCharIsLetterCount + 1 > maxSequenceLength)
+                            {
+                                maxSequenceLength = previousCharIsLetterCount + 1;
+                            }
+
+                            return maxSequenceLength;
+                        })
+                        .OrderByDescending(r => r)
+                        .First();
+                    
+                    if (maxSequenceLength >= 3)
+                    {
+                        continue;
+                    }
+                    
                     var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
                         || (value.Contains('/') && value.Contains(' '));
                         //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
@@ -196,7 +265,7 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var isPostcode = value.Length == 7 || value.Length == 8
+                    var isPostcode = (value.Length == 7 || value.Length == 8)
                         && char.IsUpper(value[0])
                         && value.Count(c => c == ' ') == 1
                         && value.Split(' ')[1].Length == 3;
@@ -219,7 +288,69 @@ public static partial class LicenceNumber
 
                     if (!isOsRef)
                     {
-                        isOsRef = value.Contains("NZ ") || value.Contains(" NZ");
+                        isOsRef =
+                            value.StartsWith("NZ ")
+                            || value.Contains(" NZ")
+                            || value.StartsWith("TA ")
+                            || value.Contains(" TA ")
+                            || value.StartsWith("SE ")
+                            || value.Contains(" SE ")
+                            || value.StartsWith("TF ")
+                            || value.Contains(" TF ")
+
+                            || value.StartsWith("A ")
+                            || value.StartsWith("B ")
+                            || value.StartsWith("C ")
+                            || value.StartsWith("D ")
+                            || value.StartsWith("E ")
+                            || value.StartsWith("F ")
+                            || value.StartsWith("G ")
+                            || value.StartsWith("H ")
+                            || value.StartsWith("I ")
+                            || value.StartsWith("J ")
+                            || value.StartsWith("K ")
+                            || value.StartsWith("L ")
+                            || value.StartsWith("M ")
+                            || value.StartsWith("N ")
+                            || value.StartsWith("O ")
+                            || value.StartsWith("P ")
+                            || value.StartsWith("Q ")
+                            || value.StartsWith("R ")
+                            || value.StartsWith("S ")
+                            || value.StartsWith("T ")
+                            || value.StartsWith("U ")
+                            || value.StartsWith("V ")
+                            || value.StartsWith("W ")
+                            || value.StartsWith("X ")
+                            || value.StartsWith("Y ")
+                            || value.StartsWith("Z ")
+                            
+                            || value.EndsWith(" A")
+                            || value.EndsWith(" B")
+                            || value.EndsWith(" C")
+                            || value.EndsWith(" D")
+                            || value.EndsWith(" E")
+                            || value.EndsWith(" F")
+                            || value.EndsWith(" G")
+                            || value.EndsWith(" H")
+                            || value.EndsWith(" I")
+                            || value.EndsWith(" J")
+                            || value.EndsWith(" K")
+                            || value.EndsWith(" L")
+                            || value.EndsWith(" M")
+                            || value.EndsWith(" N")
+                            || value.EndsWith(" O")
+                            || value.EndsWith(" P")
+                            || value.EndsWith(" Q")
+                            || value.EndsWith(" R")
+                            || value.EndsWith(" S")
+                            || value.EndsWith(" T")
+                            || value.EndsWith(" U")
+                            || value.EndsWith(" V")
+                            || value.EndsWith(" W")
+                            || value.EndsWith(" X")
+                            || value.EndsWith(" Y")
+                            || value.EndsWith(" Z");
                     }
                     
                     if (isOsRef)
@@ -244,11 +375,17 @@ public static partial class LicenceNumber
                         continue;
                     }
                     
+                    // Invalid end of a licence number (probably cut off)
+                    if (value?.EndsWith("/R") == true)
+                    {
+                        continue;
+                    }
+                    
                     var colText = FormattingHelper.TrimFormatting(
                         value,
                         true,
                         true);
-                        
+                    
                     var clonedColumn = new DocumentLineColumn(colText!);
                     newColumns.Clear();
                     newColumns.Add(clonedColumn);

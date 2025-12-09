@@ -70,6 +70,11 @@ public class TesseractAndAwsTextractOcrPdfTests
             0);
     }
     
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
+    
     [Fact]
     public async Task GetSomeFromTesseractAndSomeFromAwsTextract_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
@@ -81,7 +86,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -167,7 +172,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(9, ExcludeGeneralList(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -235,7 +240,7 @@ public class TesseractAndAwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -306,41 +311,41 @@ public class TesseractAndAwsTextractOcrPdfTests
     }
     
     [Theory]
-    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0)]
-    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 62", "02/06/1962", 6, 0)]
-    [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6, 0)]
-    [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6, 0)]
-    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0)]
-    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0)]
-    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0)]
-    [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 5, 0)]
-    [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0)]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0)]
-    [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0)]
-    [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0)]
-    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0)]
-    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 6, 0)]
-    [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY, 1966", "27/05/1966", 7, 0)]
-    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0)]
-    [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11th day of MAY, 19 66", "11/05/1966", 6, 0)]
-    [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 6, 0)]
-    [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967", "13/03/1967", 7, 0)]
-    [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14, 0)]
-    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH 19 66", "10/03/1966", 6, 0)]
-    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0)]
-    [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 12, 0)]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 12, 0)]
-    [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0)]
-    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 11, 0)]
-    [InlineData("12504120__Abstraction licence.PDF", "28/. 4/14", "28/04/2014", 12, 0)] // TODO looks a bit wrong
-    [InlineData("12401034__1-24-01-034 6099401.pdf", "7th day of JUNE, 1966", "07/06/1966", 4, 0)]
-    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0)]
-    [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 13, 0)]
-    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 12, 0)]
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 13, 0)] // Should be 2000 but impossible to tell in file, so fine
-    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0)]
-    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 5, 0)]
-    [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0)]
+    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0, "1/21/00/004")]
+    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 62", "02/06/1962", 6, 0, "1/21/00/052")]
+    [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6, 0, "1/21/00/065")]
+    [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 6, 0, "1/22/01/014")]
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, "1/22/01/021")]
+    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0, "1/22/01/023")]
+    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043")]
+    [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 5, 0, "1/22/03/007")]
+    [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045")]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, "1/22/03/120")]
+    [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 1, "1/22/05/021")]
+    [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, "1/22/05/044")]
+    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067")]
+    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 5, 0, "1/23/02/006")]
+    [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY, 1966", "27/05/1966", 7, 0, "1/23/02/044")]
+    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0, "1/23/02/207")]
+    [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11th day of MAY, 19 66", "11/05/1966", 6, 0, "1/23/03/008")]
+    [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 6, 0, "1/23/03/075")]
+    [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967", "13/03/1967", 7, 0, "1/22/02/009")]
+    [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14, 0, "1/23/03/142")]
+    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH 19 66", "10/03/1966", 6, 0, "1/24/05/035")]
+    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014")]
+    [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
+    [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 13, 0, "1/25/02/133")]
+    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 12, 0, "1/25/02/141")]
+    [InlineData("12504120__Abstraction licence.PDF", "28/. 4/14", "28/04/2014", 13, 0, "1/25/04/120")] // TODO looks a bit wrong
+    [InlineData("12401034__1-24-01-034 6099401.pdf", "7th day of JUNE, 1966", "07/06/1966", 4, 0, "1/24/01/034")]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, "1/25/02/023")]
+    [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 12, 0, "2/27/09/167")]
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 14, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
+    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 1, "2/27/12/298")]
+    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 5, 0, "2/27/09/141")]
+    [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001")]
     //12504178R01__Application type unknown Licence Issued (01.05.2007).pdf, "299 July'03", // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
     //22630110__Issued licence- 2-26-30-110 6075592.PDF, "299 July'03" // Skips word 'issue' in Azure AI frustratingly
     //12201021__Application New Licence Issued - [1966] - (1966).pdf, "28th day of July 1966" // Doesn't read JULY frustratingly
@@ -349,14 +354,15 @@ public class TesseractAndAwsTextractOcrPdfTests
         string expectedIssueDate,
         string expectedIssueDate2,
         int expectedResults,
-        int expectedLinkedLicenceCount)
+        int expectedLinkedLicenceCount,
+        string? expectedLicenceNumber)
     {
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, resultList.Count);
+        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -374,6 +380,7 @@ public class TesseractAndAwsTextractOcrPdfTests
             0);
 
         var licence = schemaData[0].Licences[0];
+        Assert.Equal(expectedLicenceNumber, licence.LicenceNumber);
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());

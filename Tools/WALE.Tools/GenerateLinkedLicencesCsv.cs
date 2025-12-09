@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Globalization;
 using CsvHelper;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Services.Services;
@@ -15,45 +13,44 @@ public static class GenerateLinkedLicencesCsv
         new SqlSeverReadService(KeyConfig.SqlConnectionString),
         new SqlSeverWriteService(KeyConfig.SqlConnectionString));
     
-    public static async Task GenerateCsvAsync()
+    public static async Task GenerateCsvAsync(int processRunId)
     {
         Console.WriteLine("Started generating linked licences csv");
 
-        var data = await GetDataAsync();
+        var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter($"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv");
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
-        await csv.WriteRecordsAsync((IEnumerable)data);
+        await csv.WriteRecordsAsync(data);
         Console.WriteLine("Finished generating linked licences csv");
     }
 
-    static async Task<List<LinkedLicencesCsvLine>> GetDataAsync()
+    private static async Task<List<LinkedLicencesCsvLine>> GetDataAsync(int processRunId)
     {
         var returnList = new List<LinkedLicencesCsvLine>();
+        const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var pdfFilePaths = FileHelper
-            .GetFiles(KeyConfig.PdfFolder)
-            .Select(FileHelper.GetFilenameWithoutExtension)
-            .OrderBy(fileName => fileName).ToList();
-
-        foreach (var pdfFilePath in pdfFilePaths)
+        var licences = await OutputService.GetLicencesAsync(processRunId);
+        
+        foreach (var licence in licences)
         {
-            var licence = await OutputService.GetLicenceAsync(pdfFilePath!);
-
-            if (licence == null)
+            if (string.IsNullOrEmpty(licence.Filename))
             {
-                Console.WriteLine($"Error - {pdfFilePath} not found");
                 continue;
             }
-
+            
             if (licence.LinkedLicences.Length == 0)
             {
+                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                    ? value.ToString()
+                    : null;
+                
                 returnList.Add(new LinkedLicencesCsvLine
                 {
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber,
-                    ScrapedLicenceNumber = (string)licence.NoneSchemaData["x"],
+                    ScrapedLicenceNumber = licenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = licence.LicenceFoundInList,
                     LicenceIsLive = licence.IsLiveLicence,
@@ -68,11 +65,15 @@ public static class GenerateLinkedLicencesCsv
             {
                 foreach (var fromSection in linkedLicence.ContainedIn!)
                 {
+                    var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                        ? value.ToString()
+                        : null;
+                    
                     returnList.Add(new LinkedLicencesCsvLine
                     {
                         Filename = licence.Filename,
                         LicenceNumber = licence.LicenceNumber,
-                        ScrapedLicenceNumber = (string)licence.NoneSchemaData["x"],
+                        ScrapedLicenceNumber = licenceNumber,
                         NaldLicenceNumber = licence.NaldLicenceNumber,
                         LicenceFoundInList = licence.LicenceFoundInList,
                         LicenceIsLive = licence.IsLiveLicence,
@@ -81,6 +82,7 @@ public static class GenerateLinkedLicencesCsv
                         LinkedLicenceNumber = linkedLicence.LicenceNumber,
                         NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
                         LinkedLicenceFromSection = fromSection.SectionName,
+                        LinkedLicenceLinkReason = fromSection.LinkReason,
                         LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
                         LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
                         LinkedLicenceIsDead = linkedLicence.IsDeadLicence,

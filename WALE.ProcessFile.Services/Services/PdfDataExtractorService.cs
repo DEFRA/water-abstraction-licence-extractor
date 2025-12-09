@@ -67,7 +67,8 @@ public class PdfDataExtractorService(
         }
 
         const bool notOcr = false;
-
+        const int minAverageLineLength = 15;
+        
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
             configuration.Labels,
@@ -133,9 +134,7 @@ public class PdfDataExtractorService(
         {
             pageNumber += 1;
             
-            var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
-
             var pageImages = page.Images.ToList();
             
             if (pageImages.Count > 10)
@@ -189,8 +188,24 @@ public class PdfDataExtractorService(
                     {
                         break;
                     }
+                    
+                    var containsTheWordMap = serviceImageLines
+                        .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
+                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase));
 
+                    if (containsTheWordMap)
+                    {
+                        break;
+                    }
+                    
                     var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
+                    
+                    // Short lines indicate it may be a map page,
+                    // no point processing that with the other services
+                    if (averageLineLength < minAverageLineLength)
+                    {
+                        break;
+                    }
                     
                     var allLinesSoFar = documentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
@@ -222,13 +237,6 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
-                        // Short lines indicate it may be a map page,
-                        // no point processing that with the other services
-                        if (averageLineLength < 20)
-                        {
-                            break;
-                        }
-                        
                         continue;
                     }
                     
@@ -269,19 +277,6 @@ public class PdfDataExtractorService(
                         breakPageLoop = true;
 
                         break;
-                    }
-
-                    // Short lines indicate it may be a map page,
-                    // no point processing that with the other services
-                    if (averageLineLength < 30)
-                    {
-                        var containsTheWordMap = serviceImageLines
-                            .Any(l => l.Text.Contains("Map ", StringComparison.InvariantCultureIgnoreCase));
-
-                        if (containsTheWordMap)
-                        {
-                            break;
-                        }
                     }
                 }
                 
@@ -340,6 +335,43 @@ public class PdfDataExtractorService(
         return returnResult;      
     }
 
+    private static int GetSubResultCount(LabelGroupResult match)
+    {
+        var subResultCount = 0;
+
+        foreach (var subResult in match.SubResults)
+        {
+            subResultCount += 1;
+
+            foreach (var subResult2 in subResult.SubResults)
+            {
+                subResultCount += 1;
+                                    
+                foreach (var subResult3 in subResult2.SubResults)
+                {
+                    subResultCount += 1;
+                                        
+                    foreach (var subResult4 in subResult3.SubResults)
+                    {
+                        subResultCount += 1;
+                                            
+                        foreach (var subResult5 in subResult4.SubResults)
+                        {
+                            subResultCount += 1;
+                                                
+                            foreach (var subResult6 in subResult5.SubResults)
+                            {
+                                subResultCount += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return subResultCount;
+    }
+
     private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
@@ -357,6 +389,25 @@ public class PdfDataExtractorService(
                 {
                     switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
                     {
+                        case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
+                            var subResultCount = GetSubResultCount(match);
+                            var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
+
+                            if (subResultCount >= alreadyFoundSubResultCount)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
                         case MultipleServiceMatchBehaviour.UseLastServiceResult:
                             match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
                             alreadyFound.AlternativeMatches = [];
@@ -667,7 +718,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (!LabelIsInDocument(label, documentLines, out _))
+                if (LabelIsInDocument(label, documentLines) == false)
                 {
                     continue;
                 }
@@ -915,6 +966,12 @@ public class PdfDataExtractorService(
                         throw new Exception("Infinite loop detected - coding error");
                     }
 
+                    
+                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "LinkedLicenceNumber")
+                    {
+                        
+                    }
+                    
                     previousPartialLine = partialLine;
                     
                     var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
@@ -954,6 +1011,16 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
+                    
+                    if (label.Name == "DocumentLicenceNumber")
+                    {
+                
+                    }
+                    
+                    if (partialLine.Text.Contains("FURTHER PROVISIONS") && label.Name == "DocumentLicenceNumber")
+                    {
+                        
+                    }
                     
                     if (label.Text?.Any() == true)
                     {
@@ -1016,14 +1083,14 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (matchedLabel.Name == "DateOfIssue")
+                    if (matchedLabel.Name == "RecordsLinkedLicenceNumber")
                     {
                         
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
+                    
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
                     
@@ -1539,39 +1606,62 @@ public class PdfDataExtractorService(
         
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
         {
-            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text);
-                
-            var position = line.Text.IndexOf(
-                matches[0].Value,
-                StringComparison.InvariantCultureIgnoreCase);
-
-            var beforeText = line.Text.Substring(0, position);
-            var beforeLabel = label.Clone();
-            beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
+            var options = label.Text.First().RegularExpressionIsCaseInsensitive
+                ? RegexOptions.IgnoreCase
+                : RegexOptions.None;
             
-            returnItems.Add(new TextAndLabel
-            {
-                Text = beforeText,
-                Label = beforeLabel
-            });
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = matches.FirstOrDefault()?.Value,
-                Label = label
-            });
+            var matches = Regex.Matches(
+                line.Text,
+                label.Text!.FirstOrDefault()!.Text,
+                options);
 
-            if (line.Text.Length > position + matches.FirstOrDefault()?.Value.Length + 1)
+            foreach (var match in matches.AsQueryable())
             {
-                var afterLabel = label.Clone();
-                var afterText = line.Text.Substring(position + matches.FirstOrDefault()!.Value.Length);
-                beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+                var value = match.Value;
+                var indexOnLine = line.Text.IndexOf(value, StringComparison.Ordinal);
+
+                if (indexOnLine > 0)
+                {
+                    var previousChar = line.Text[indexOnLine - 1];
+
+                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
+                    {
+                        continue;
+                    }
+                }
+
+                var position = line.Text.IndexOf(
+                    value,
+                    StringComparison.InvariantCultureIgnoreCase);
+
+                var beforeText = line.Text.Substring(0, position);
+                var beforeLabel = label.Clone();
+                beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
 
                 returnItems.Add(new TextAndLabel
                 {
-                    Text = afterText,
-                    Label = afterLabel
+                    Text = beforeText,
+                    Label = beforeLabel
                 });
+
+                returnItems.Add(new TextAndLabel
+                {
+                    Text = value,
+                    Label = label
+                });
+
+                if (line.Text.Length > position + value.Length + 1)
+                {
+                    var afterLabel = label.Clone();
+                    var afterText = line.Text.Substring(position + value.Length);
+                    beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                    returnItems.Add(new TextAndLabel
+                    {
+                        Text = afterText,
+                        Label = afterLabel
+                    });
+                }
             }
 
             return returnItems; 
@@ -1697,13 +1787,10 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private static bool LabelIsInDocument(
+    private static bool? LabelIsInDocument(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> lines,
-        out List<DocumentLine> matchedLines)
+        IReadOnlyList<DocumentLine> lines)
     {
-        matchedLines = [];
-        
         var labelText = label.Text!
             .Select(labelTextMatch =>
             {
@@ -1721,34 +1808,21 @@ public class PdfDataExtractorService(
                         .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
                 }
                 
-                return text;
-                
-                
+                return (labelTextMatch, text);
             })
             .ToList();
         
-        if (labelText.Any(text =>
-            text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Any(tuple =>
+            tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
-
-        foreach (var text in labelText)
-        {
-            foreach (var line in lines)
-            {
-                if (!line.Text.Contains(text, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    continue;
-                }
-                
-                matchedLines.Add(line);
-            }
-        }
         
-        return labelText.Any(text =>
+        var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
+
+        return isRegularExpression || labelText.Any(tuple =>
         {
-            return string.Join(',', lines.Select(line => line.Text)).Contains(text,
+            return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
                 StringComparison.InvariantCultureIgnoreCase);
         });
     }

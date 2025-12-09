@@ -1,6 +1,6 @@
 namespace WALE.Tools.Models;
 
-public class LinkedLicencesCsvLine
+public class UnknownSectionLinkedLicencesCsvLine
 {
     public string? Filename { get; set; }
     public string? LicenceNumber { get; set; }
@@ -14,15 +14,5 @@ public class LinkedLicencesCsvLine
     
     public bool LicenceFoundInList { get; set; }
     public string? LinkedLicenceNumber { get; set; }
-    public string? NaldLinkedLicenceNumber { get; set; }
-    public string? LinkedLicenceFromSection { get; set; }
-    
-    public string? LinkedLicenceLinkReason { get; set; }
-    public bool? LinkedLicenceIsLive { get; set; }
-    
-    public bool? LinkedLicenceIsDead { get; set; }
-    
-    public bool? LinkedLicenceIsImpoundment { get; set; }
-    
-    public bool LinkedLicenceFoundInList { get; set; }
+    public int PageNumber { get; set; }
 }

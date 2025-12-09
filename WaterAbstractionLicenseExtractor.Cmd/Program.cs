@@ -218,7 +218,9 @@ async Task ProgramAsync()
     await outputService.FinishProcessRunAsync(processRun);
     
     Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    Console.Write($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds");
+    Console.WriteLine($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+    
+    //Console.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
 
 Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
@@ -686,8 +688,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22632422__2-26-32-422 6937642")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(500).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22632154__2-26-32-154 6937561.PDF")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1).ToList();
     
     return pdfFilePaths.ToList();
 }

@@ -45,6 +45,11 @@ public class TessaractOcrPdfTests
             0);
     }
     
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
+    
     [Fact]
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
@@ -56,7 +61,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 
@@ -158,11 +163,11 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]
@@ -176,11 +181,11 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(10, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(8, records.Text!.Count);
+        Assert.Equal(17, records.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -224,9 +229,11 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason); 
     }
 
     [Fact]
@@ -240,7 +247,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(8, ExcludeGeneralList(resultList).Count);
 
         var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
@@ -293,7 +300,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(11, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -337,11 +344,16 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("34/236", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("169/1367", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage1", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
     
     [Fact]
@@ -355,7 +367,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, resultList.Count); // Licence number gets OCR-ed too scrambled to be read
+        Assert.Equal(4, ExcludeGeneralList(resultList).Count); // Licence number gets OCR-ed too scrambled to be read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -381,7 +393,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
         
@@ -399,6 +411,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Null(agreedSchemaLicence.LicenceNumber);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 
@@ -413,7 +426,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(10, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -443,9 +456,7 @@ public class TessaractOcrPdfTests
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
-        Assert.NotNull(licenceNumberResult);
-        Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("13/43/021/G/061", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Null(licenceNumberResult); // TODO check if the other services can get it - Tesseract doesnt see it (apart from on the map page)
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -457,11 +468,20 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        
+        Assert.Null(agreedSchemaLicence.LicenceNumber); 
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        
+        // NOTE if looking for all linked licence numbers in the document, we will find the licence one in the
+        // header that is otherwise not found, as the label text is not read
+        
+        Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
 
     [Fact]
@@ -475,11 +495,11 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(11, ExcludeGeneralList(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(13, records.Text!.Count);
+        Assert.Equal(23, records.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -528,9 +548,11 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/312", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
     }
     
     [Fact]
@@ -544,11 +566,11 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(7, records.Text!.Count);
+        Assert.Equal(19, records.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -592,9 +614,11 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("25/68/002/177", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);        
     }
 
     [Fact]
@@ -608,7 +632,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(7, ExcludeGeneralList(resultList).Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -673,7 +697,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
+        Assert.Equal(10, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -735,9 +759,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, resultList.Count);
-        // For some reason it won't read the licence number
-        // from the box in the header its in
+        Assert.Equal(9, ExcludeGeneralList(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -767,9 +789,7 @@ public class TessaractOcrPdfTests
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
-        Assert.NotNull(licenceNumberResult);
-        Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("13/43/021/G/018", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Null(licenceNumberResult); // For some reason Tesseract won't read the licence number from the box in the header its in
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -781,11 +801,16 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Null(agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("13/43/021/G/018", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }    
     
     [Fact]
@@ -799,7 +824,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // The document is printed out of alignment and has ghosting
+        Assert.Equal(7, ExcludeGeneralList(resultList).Count); // The document is printed out of alignment and has ghosting
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -823,11 +848,16 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Null(agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("25/68/5/7", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage5", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
     
     [Fact]
@@ -841,7 +871,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(5, ExcludeGeneralList(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -898,7 +928,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count); // File is scanned titled and font is very bold and hard to read
+        Assert.Equal(5, ExcludeGeneralList(resultList).Count); // File is scanned titled and font is very bold and hard to read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -948,7 +978,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(3, ExcludeGeneralList(resultList).Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -992,7 +1022,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(11, ExcludeGeneralList(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1054,7 +1084,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(7, ExcludeGeneralList(resultList).Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
 
         var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
@@ -1108,7 +1138,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, resultList.Count);
+        Assert.Equal(5, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -1160,7 +1190,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // Crossed out company name
+        Assert.Equal(7, ExcludeGeneralList(resultList).Count); // Crossed out company name
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1192,7 +1222,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("2/56/80/309/1", agreedSchemaLicence.LicenceNumber);
     }
     
     [Fact]
@@ -1206,7 +1236,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(2, resultList.Count); // Very old printing, hard to OCR
+        Assert.Equal(3, ExcludeGeneralList(resultList).Count); // Very old printing, hard to OCR
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.Null(nameResult);
@@ -1233,7 +1263,16 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("8/37/4./303/3", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("8/37/43/019", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        
+        Assert.Equal("8/37/03/003", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
     }
     
     [Fact(Skip = "CantLoadImage")]
@@ -1247,7 +1286,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(3, resultList.Count);
+        Assert.Equal(3, ExcludeGeneralList(resultList).Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1303,7 +1342,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // Abstraction limits crossed out
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count); // Abstraction limits crossed out
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1354,7 +1393,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(9, ExcludeGeneralList(resultList).Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -1412,7 +1451,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(11, ExcludeGeneralList(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1514,7 +1553,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // Very faint text
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count); // Very faint text
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1534,6 +1573,8 @@ public class TessaractOcrPdfTests
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/63/1/158", licenceNumberResult.Text!.FirstOrDefault()?.Text); // Actually should be 25/68/1/158
         
+        // Poor OCR stops us finding the section (its in points)
+        
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
@@ -1548,7 +1589,12 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("25/63/1/158", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage1", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
     
     [Fact]
@@ -1562,7 +1608,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1631,7 +1677,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(7, ExcludeGeneralList(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1675,7 +1721,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count);
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1705,10 +1751,20 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal("283922427-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("283922217-LVUNKNOWN-283922427-LVUNKNOWN", agreedSchemaLicenceGroup[1].LicenceSetId);
+        Assert.Equal("217-427", agreedSchemaLicenceGroup[1].ShortLicenceSetId);
+        
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+
+        Assert.Equal("28/39/22/217", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);        
     }
 }

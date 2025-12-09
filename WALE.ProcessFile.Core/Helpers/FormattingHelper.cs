@@ -1,3 +1,4 @@
+using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Models;
 
@@ -5,16 +6,42 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    public static string? ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    public static string? StripForComparison(string? formattedLicenceNumber)
+    {
+        if (string.IsNullOrEmpty(formattedLicenceNumber))
+        {
+            return formattedLicenceNumber;
+        }
+
+        var licenceNumber = formattedLicenceNumber
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
+
+        var parts = licenceNumber.Split('/');
+        var sb = new StringBuilder();
+
+        foreach (var part in parts)
+        {
+            if (part.StartsWith('0'))
+            {
+                var partWithoutLeadingZero = part[1..];
+                sb.Append(partWithoutLeadingZero);
+                
+                continue;
+            }
+            
+            sb.Append(part);
+        }
+
+        return sb.ToString();
+    }
+    
+    public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
     {
         if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
         {
             return noneSeperatedLicenceNumber;
-        }
-
-        if (noneSeperatedLicenceNumber.StartsWith("NE"))
-        {
-            // TODO something
         }
         
         return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
@@ -42,6 +69,19 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
+        if (licenceNumber.StartsWith('J'))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        if (licenceNumber.StartsWith('4'))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        if (licenceNumber.StartsWith('7'))
+        {
+            licenceNumber = '1' + licenceNumber[1..];
+        }
+        
         var numberOfSlashes = licenceNumber.Count(c => c == '/');
         
         if (numberOfSlashes is 1 or 2)
@@ -64,16 +104,56 @@ public static class FormattingHelper
             return noneSeperatedLicenceNumber;
         }
         
-        var section1 = noneSeperatedLicenceNumber[0];
-        var section2 = noneSeperatedLicenceNumber.Substring(1, 2);
+        var section1 = noneSeperatedLicenceNumber[0].ToString();
+
+        if (section1 == "J" || section1 == "4" || section1 == "7")
+        {
+            section1 = "1";
+        }
+
+        var section2StartPoint = 1;
+        var section2Length = 2;
+        
+        var section3StartPoint = 3;
+        var section3Length = 2;
+        
+        var section4StartPoint = 5;
+        
+        if (noneSeperatedLicenceNumber.StartsWith("NE"))
+        {
+            section1 = "NE";
+            
+            section2StartPoint += 1;
+            section2Length = 3;
+            
+            section3StartPoint += 2;
+            section3Length = 4;
+            
+            section4StartPoint += 4;
+        }
+        else if (noneSeperatedLicenceNumber.StartsWith("0"))
+        {
+            section1 = noneSeperatedLicenceNumber[1].ToString();
+            
+            section2StartPoint += 1;
+            section3StartPoint += 1;
+            section4StartPoint += 1;
+        }
+
+        if (noneSeperatedLicenceNumber.Length < 3)
+        {
+            return noneSeperatedLicenceNumber;
+        }
+        
+        var section2 = noneSeperatedLicenceNumber.Substring(section2StartPoint, section2Length);
 
         if (noneSeperatedLicenceNumber.Length < 5)
         {
             return $"{section1}/{section2}";
         }
         
-        var section3 = noneSeperatedLicenceNumber.Substring(3, 2);
-        var section4 = noneSeperatedLicenceNumber[5..];
+        var section3 = noneSeperatedLicenceNumber.Substring(section3StartPoint, section3Length);
+        var section4 = noneSeperatedLicenceNumber[section4StartPoint..];
         
         // Pad part 4 with zeroes (needs to have 3 digits)
         section4 = section4.Where(char.IsDigit).Count() switch
@@ -85,7 +165,43 @@ public static class FormattingHelper
 
         if (section4.Length > 3)
         {
-            section4 = section4[..3] + "/" + section4[3..];;
+            if (section4.StartsWith("S"))
+            {
+                var rest = section4[1..];
+                if (rest is ['0', _, _, _])
+                {
+                    rest = rest[1..];
+                }
+                
+                section4 = $"S/{rest}";
+            }
+            else
+            {
+                section4 = section4[..3] + "/" + section4[3..];   
+            }
+        }
+
+        if (section4.EndsWith("/A") || section4.EndsWith("/B") || section4.EndsWith("/C"))
+        {
+            section4 = section4
+                .Replace("/A", "A")
+                .Replace("/B", "B")
+                .Replace("/C", "C");                
+        }
+        
+        if (section4.Contains("R01") && !section4.Contains("/R01"))
+        {
+            var section4Parts = section4.Split('/');
+            var prePart = section4Parts[0];
+            var ro1Part = section4Parts[1];
+            
+            var r01Position = ro1Part.IndexOf("R01", StringComparison.Ordinal);
+            var preText = ro1Part[..r01Position];
+
+            prePart += preText;
+            ro1Part = ro1Part[r01Position..];
+
+            section4 = $"{prePart}/{ro1Part}";
         }
         
         return $"{section1}/{section2}/{section3}/{section4}";
@@ -122,7 +238,7 @@ public static class FormattingHelper
         if (parts.Length < 2)
         {
             return startsWithDigit && usesSlashes
-                ? ToNaldLicenceNumber(part1.Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber(part1.Replace("/", string.Empty))
                 : part1;
         }
         
@@ -136,7 +252,7 @@ public static class FormattingHelper
         if (parts.Length < 3)
         {
             return startsWithDigit && usesSlashes
-                ? ToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
                 : $"{part1}/{part2}";
         }
         
@@ -150,7 +266,7 @@ public static class FormattingHelper
         if (parts.Length < 4)
         {
             return startsWithDigit && usesSlashes
-                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
                 : $"{part1}/{part2}/{part3}";
         }
         
@@ -167,14 +283,14 @@ public static class FormattingHelper
         if (parts.Length < 5)
         {
             return startsWithDigit && usesSlashes
-                ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
                 : $"{part1}/{part2}/{part3}/{part4}";
         }
 
         var part5 = parts[4];
         
         return startsWithDigit && usesSlashes
-            ? ToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
+            ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
             : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     

@@ -59,6 +59,11 @@ public class AwsTextractOcrPdfTests
             [pdfFolder + fileName],
             0);
     }
+    
+    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
+    {
+        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
+    }
 
     [Fact]
     public async Task WhenA_ThenFoundCorrectly()
@@ -71,7 +76,7 @@ public class AwsTextractOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -188,18 +193,18 @@ public class AwsTextractOcrPdfTests
     }
     
     [Theory]
-    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4)] // Works in Tesseract+AI too
-    [InlineData("22630110__Issued licence- 2-26-30-110 6075592.PDF", "29/10/02", "29/10/2002", 13)] // Does better then Azure AI Vison - that skips word 'issue'
-    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 6)] // Does better then Azure AI Vison - that skips word 'JULY'
+    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0)] // Works in Tesseract+AI too
+    [InlineData("22630110__Issued licence- 2-26-30-110 6075592.PDF", "29/10/02", "29/10/2002", 14, 1)] // Does better then Azure AI Vison - that skips word 'issue'
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 65", "28/07/1965", 6, 0)] // Does better then Azure AI Vison - that skips word 'JULY'
     // EXAMPLE OF IMPOSSIBLE ONE "12504178R01__Application type unknown Licence Issued (01.05.2007).pdf", "299 July'03", "", 10 // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
-    public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults)
+    public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults, int expectedLinkedLicenceLength)
     {
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, resultList.Count);
+        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -217,7 +222,7 @@ public class AwsTextractOcrPdfTests
             0);
 
         var licence = schemaData[0].Licences[0];
-        Assert.Empty(licence.LinkedLicences);
+        Assert.Equal(expectedLinkedLicenceLength, licence.LinkedLicences.Length);
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());

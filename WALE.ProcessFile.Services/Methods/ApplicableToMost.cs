@@ -87,7 +87,7 @@ public static class ApplicableToMost
                 false,
                 out var removedLines);
 
-            if (DataHelper.IsCorruptedText(outputText))
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText))
             {
                 continue;
             }

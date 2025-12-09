@@ -477,7 +477,9 @@ public class TessaractOcrPdfTests
         // NOTE if looking for all linked licence numbers in the document, we will find the licence one in the
         // header that is otherwise not found, as the label text is not read
         
-        Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences.First().LicenceNumber);
+        Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
 
     [Fact]
@@ -1257,8 +1259,11 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("8/37/4./303/3", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Equal(1, agreedSchemaLicence.LinkedLicences.Length); // TODO really should be 2
+        Assert.Single(agreedSchemaLicence.LinkedLicences); // TODO really should be 2
         Assert.Equal("8/37/43/019", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        
         // Should also be 8/37/43/34
     }
     
@@ -1578,6 +1583,8 @@ public class TessaractOcrPdfTests
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("UnknownPage1", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         
         // Poor OCR stops us finding the section (its in points)
     }

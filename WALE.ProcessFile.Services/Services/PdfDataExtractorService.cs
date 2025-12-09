@@ -335,6 +335,43 @@ public class PdfDataExtractorService(
         return returnResult;      
     }
 
+    private static int GetSubResultCount(LabelGroupResult match)
+    {
+        var subResultCount = 0;
+
+        foreach (var subResult in match.SubResults)
+        {
+            subResultCount += 1;
+
+            foreach (var subResult2 in subResult.SubResults)
+            {
+                subResultCount += 1;
+                                    
+                foreach (var subResult3 in subResult2.SubResults)
+                {
+                    subResultCount += 1;
+                                        
+                    foreach (var subResult4 in subResult3.SubResults)
+                    {
+                        subResultCount += 1;
+                                            
+                        foreach (var subResult5 in subResult4.SubResults)
+                        {
+                            subResultCount += 1;
+                                                
+                            foreach (var subResult6 in subResult5.SubResults)
+                            {
+                                subResultCount += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return subResultCount;
+    }
+
     private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
@@ -352,6 +389,25 @@ public class PdfDataExtractorService(
                 {
                     switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
                     {
+                        case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
+                            var subResultCount = GetSubResultCount(match);
+                            var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
+
+                            if (subResultCount >= alreadyFoundSubResultCount)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
                         case MultipleServiceMatchBehaviour.UseLastServiceResult:
                             match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
                             alreadyFound.AlternativeMatches = [];
@@ -1027,7 +1083,7 @@ public class PdfDataExtractorService(
                         }
                     }
 
-                    if (matchedLabel.Name == "DocumentPointsAll")
+                    if (matchedLabel.Name == "RecordsLinkedLicenceNumber")
                     {
                         
                     }

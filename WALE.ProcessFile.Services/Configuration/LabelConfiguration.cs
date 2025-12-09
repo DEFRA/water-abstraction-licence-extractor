@@ -80,6 +80,7 @@ public static class LabelConfiguration
                     LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,

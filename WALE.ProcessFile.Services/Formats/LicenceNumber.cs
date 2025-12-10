@@ -232,7 +232,7 @@ public static partial class LicenceNumber
                     }
                     
                     // Its a value + unit
-                    if (value.Contains('.') && value.Contains("MI"))
+                    if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
                     {
                         continue;
                     }

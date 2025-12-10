@@ -516,7 +516,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Single(licenceSets);
         
         Assert.Equal("22630082-LV20081212", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
@@ -527,8 +527,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("2/26/30/082", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        
-        Assert.Equal("1.43M3/", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 }

@@ -92,8 +92,18 @@ public static partial class LicenceNumber
                     columnText = columnText.Replace(" (", splitChar);
                 }
                 
-                var subLines = columnText.Split(splitChar);
+                var slashSpacePos = columnText.IndexOf("/ ", StringComparison.Ordinal);
+                var isSlashSpaceDigit = slashSpacePos > 0
+                    && columnText.Length > slashSpacePos + 2 
+                    & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
 
+                if (isSlashSpaceDigit)
+                {
+                    columnText = columnText.Replace("/ ", "/");
+                }
+                
+                var subLines = columnText.Split(splitChar);
+                
                 foreach (var subLine in subLines)
                 {
                     var containsSplitter = subLine.Contains(' ')

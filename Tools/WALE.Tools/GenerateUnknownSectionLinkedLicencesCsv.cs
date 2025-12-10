@@ -48,7 +48,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 .Select(kvp =>
                 {
                     var json = kvp.Value.ToString()!;
-                    return JsonSerializer.Deserialize<LinkedLicenceWithPageNumber>(json, JsonHelper.GetSerializerOptions());
+                    return JsonSerializer.Deserialize<LinkedLicence>(json, JsonHelper.GetSerializerOptions());
                 })
                 .ToList();
             
@@ -74,7 +74,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     LicenceIsDead = licence.IsDeadLicence,
                     LicenceIsImpoundment = licence.IsImpoundmentLicence,
                     LinkedLicenceNumber = linkedLicence!.LicenceNumber,
-                    PageNumber = linkedLicence.PageNumber
+                    PageNumber = -1
                 });
             }
         }

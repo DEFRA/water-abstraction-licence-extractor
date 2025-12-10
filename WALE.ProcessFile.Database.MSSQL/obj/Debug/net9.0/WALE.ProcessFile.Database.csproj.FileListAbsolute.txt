@@ -1,0 +1,16 @@
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/bin/Debug/net9.0/WALE.ProcessFile.Database.deps.json
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/bin/Debug/net9.0/WALE.ProcessFile.Database.dll
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/bin/Debug/net9.0/WALE.ProcessFile.Database.pdb
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/bin/Debug/net9.0/WALE.ProcessFile.Core.dll
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/bin/Debug/net9.0/WALE.ProcessFile.Core.pdb
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.csproj.AssemblyReference.cache
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.AssemblyInfoInputs.cache
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.AssemblyInfo.cs
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.csproj.CoreCompileInputs.cache
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.sourcelink.json
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.Pro.04C65446.Up2Date
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.dll
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/refint/WALE.ProcessFile.Database.dll
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/WALE.ProcessFile.Database.pdb
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database/obj/Debug/net9.0/ref/WALE.ProcessFile.Database.dll

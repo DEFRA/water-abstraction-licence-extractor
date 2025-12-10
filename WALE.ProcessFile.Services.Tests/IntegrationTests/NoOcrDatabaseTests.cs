@@ -3,7 +3,6 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Database.Interfaces;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;

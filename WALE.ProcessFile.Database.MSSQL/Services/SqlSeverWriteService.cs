@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Database.Interfaces;
 
 namespace WALE.ProcessFile.Database.Services;
 

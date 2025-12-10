@@ -1,0 +1,1451 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "FluentMigrator/7.2.0": {
+        "type": "package",
+        "dependencies": {
+          "FluentMigrator.Abstractions": "7.2.0",
+          "Microsoft.Extensions.DependencyInjection": "9.0.7",
+          "Microsoft.Extensions.Options": "9.0.7"
+        },
+        "compile": {
+          "lib/netstandard2.0/FluentMigrator.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/FluentMigrator.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "FluentMigrator.Abstractions/7.2.0": {
+        "type": "package",
+        "dependencies": {
+          "System.ComponentModel.Annotations": "5.0.0",
+          "System.ValueTuple": "4.6.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/FluentMigrator.Abstractions.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/FluentMigrator.Abstractions.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "resource": {
+          "lib/netstandard2.0/de-DE/FluentMigrator.Abstractions.resources.dll": {
+            "locale": "de-DE"
+          }
+        }
+      },
+      "HarfBuzzSharp/7.3.0.3": {
+        "type": "package",
+        "dependencies": {
+          "HarfBuzzSharp.NativeAssets.Win32": "7.3.0.3",
+          "HarfBuzzSharp.NativeAssets.macOS": "7.3.0.3"
+        },
+        "compile": {
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/HarfBuzzSharp.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/osx/native/libHarfBuzzSharp.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          }
+        }
+      },
+      "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win-arm64/native/libHarfBuzzSharp.dll": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-x64/native/libHarfBuzzSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/libHarfBuzzSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection/9.0.7": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.7"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.7": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets": {}
+        }
+      },
+      "Microsoft.Extensions.Options/9.0.7": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.7",
+          "Microsoft.Extensions.Primitives": "9.0.7"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Options.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Options.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/Microsoft.Extensions.Options.targets": {}
+        }
+      },
+      "Microsoft.Extensions.Primitives/9.0.7": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Primitives.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Primitives.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Npgsql/10.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Npgsql.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Npgsql.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "PdfPig/0.1.10": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/UglyToad.PdfPig.Core.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Fonts.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Package.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokenization.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokens.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.dll": {
+            "related": ".Core.pdb;.Core.xml;.DocumentLayoutAnalysis.pdb;.DocumentLayoutAnalysis.xml;.Fonts.pdb;.Fonts.xml;.Package.pdb;.Package.xml;.pdb;.Tokenization.pdb;.Tokenization.xml;.Tokens.pdb;.Tokens.xml;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Core.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Fonts.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Package.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokenization.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokens.dll": {
+            "related": ".pdb;.xml"
+          },
+          "lib/net8.0/UglyToad.PdfPig.dll": {
+            "related": ".Core.pdb;.Core.xml;.DocumentLayoutAnalysis.pdb;.DocumentLayoutAnalysis.xml;.Fonts.pdb;.Fonts.xml;.Package.pdb;.Package.xml;.pdb;.Tokenization.pdb;.Tokenization.xml;.Tokens.pdb;.Tokens.xml;.xml"
+          }
+        }
+      },
+      "PdfPig.Filters.Dct.JpegLibrary/0.1.10.2": {
+        "type": "package",
+        "dependencies": {
+          "PdfPig": "0.1.10"
+        },
+        "compile": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "PdfPig.Filters.Jbig2.PdfboxJbig2/0.1.10.2": {
+        "type": "package",
+        "dependencies": {
+          "PdfPig": "0.1.10"
+        },
+        "compile": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "PdfPig.Filters.Jpx.OpenJpegDotNet/0.1.10.2": {
+        "type": "package",
+        "dependencies": {
+          "PdfPig": "0.1.10"
+        },
+        "compile": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll": {
+            "related": ".xml"
+          }
+        },
+        "contentFiles": {
+          "contentFiles/any/any/_._": {
+            "buildAction": "None",
+            "codeLanguage": "any",
+            "copyToOutput": false
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/linux-x64/native/libOpenJpegDotNetNative.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/osx-x64/native/libOpenJpegDotNetNative.dylib": {
+            "assetType": "native",
+            "rid": "osx-x64"
+          },
+          "runtimes/win-x64/native/OpenJpegDotNetNative.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/OpenJpegDotNetNative.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "PdfPig.Rendering.Skia/0.1.10.2": {
+        "type": "package",
+        "dependencies": {
+          "PdfPig": "0.1.10",
+          "PdfPig.Filters.Dct.JpegLibrary": "0.1.10.2",
+          "PdfPig.Filters.Jbig2.PdfboxJbig2": "0.1.10.2",
+          "PdfPig.Filters.Jpx.OpenJpegDotNet": "0.1.10.2",
+          "SkiaSharp": "2.88.9",
+          "SkiaSharp.HarfBuzz": "2.88.9"
+        },
+        "compile": {
+          "lib/net8.0/UglyToad.PdfPig.Rendering.Skia.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Rendering.Skia.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "SkiaSharp/2.88.9": {
+        "type": "package",
+        "dependencies": {
+          "SkiaSharp.NativeAssets.Win32": "2.88.9",
+          "SkiaSharp.NativeAssets.macOS": "2.88.9"
+        },
+        "compile": {
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SkiaSharp.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "SkiaSharp.HarfBuzz/2.88.9": {
+        "type": "package",
+        "dependencies": {
+          "HarfBuzzSharp": "7.3.0.3",
+          "SkiaSharp": "2.88.9"
+        },
+        "compile": {
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SkiaSharp.HarfBuzz.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "SkiaSharp.NativeAssets.macOS/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/osx/native/libSkiaSharp.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          }
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/2.88.9": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/_._": {}
+        },
+        "runtime": {
+          "lib/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win-arm64/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-x64/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "System.ComponentModel.Annotations/5.0.0": {
+        "type": "package",
+        "compile": {
+          "ref/netstandard2.1/System.ComponentModel.Annotations.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/System.ComponentModel.Annotations.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "System.ValueTuple/4.6.1": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
+        }
+      },
+      "WeCantSpell.Hunspell/5.2.1": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/WeCantSpell.Hunspell.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/WeCantSpell.Hunspell.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "WALE.ProcessFile.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "PdfPig": "0.1.10",
+          "PdfPig.Filters.Jbig2.PdfboxJbig2": "0.1.10.2",
+          "PdfPig.Rendering.Skia": "0.1.10.2",
+          "WeCantSpell.Hunspell": "5.2.1"
+        },
+        "compile": {
+          "bin/placeholder/WALE.ProcessFile.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/WALE.ProcessFile.Core.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "FluentMigrator/7.2.0": {
+      "sha512": "NfykPcbPk2ds23Pf8Ivj2QSoCS1Q1ZkPlqLLVh1qgI1T40bSmJ9xzBhig8OiDkYVOlJOK2rgZwtZkDqpN9LxQA==",
+      "type": "package",
+      "path": "fluentmigrator/7.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README-nuget.md",
+        "fluentmigrator.7.2.0.nupkg.sha512",
+        "fluentmigrator.nuspec",
+        "lib/net48/FluentMigrator.dll",
+        "lib/net48/FluentMigrator.pdb",
+        "lib/net48/FluentMigrator.xml",
+        "lib/netstandard2.0/FluentMigrator.dll",
+        "lib/netstandard2.0/FluentMigrator.pdb",
+        "lib/netstandard2.0/FluentMigrator.xml",
+        "logo.png"
+      ]
+    },
+    "FluentMigrator.Abstractions/7.2.0": {
+      "sha512": "zx1ZLmP7NU32pd0jOoPUCLtOyJ6oKCYp+fd+Rk1EpJ4g3KkMmrwBaWx1wAUR+uLRREkKVPu7Q8y/iHQq9LseZw==",
+      "type": "package",
+      "path": "fluentmigrator.abstractions/7.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README-nuget.md",
+        "fluentmigrator.abstractions.7.2.0.nupkg.sha512",
+        "fluentmigrator.abstractions.nuspec",
+        "lib/net48/FluentMigrator.Abstractions.dll",
+        "lib/net48/FluentMigrator.Abstractions.pdb",
+        "lib/net48/FluentMigrator.Abstractions.xml",
+        "lib/net48/de-DE/FluentMigrator.Abstractions.resources.dll",
+        "lib/netstandard2.0/FluentMigrator.Abstractions.dll",
+        "lib/netstandard2.0/FluentMigrator.Abstractions.pdb",
+        "lib/netstandard2.0/FluentMigrator.Abstractions.xml",
+        "lib/netstandard2.0/de-DE/FluentMigrator.Abstractions.resources.dll",
+        "logo.png"
+      ]
+    },
+    "HarfBuzzSharp/7.3.0.3": {
+      "sha512": "Hq+5+gx10coOvuRgB13KBwiWxJq1QeYuhtVLbA01ZCWaugOnolUahF44KvrQTUUHDNk/C7HB6SMaebsZeOdhgg==",
+      "type": "package",
+      "path": "harfbuzzsharp/7.3.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "harfbuzzsharp.7.3.0.3.nupkg.sha512",
+        "harfbuzzsharp.nuspec",
+        "lib/monoandroid1.0/HarfBuzzSharp.dll",
+        "lib/monoandroid1.0/HarfBuzzSharp.pdb",
+        "lib/monoandroid1.0/HarfBuzzSharp.xml",
+        "lib/net462/HarfBuzzSharp.dll",
+        "lib/net462/HarfBuzzSharp.pdb",
+        "lib/net462/HarfBuzzSharp.xml",
+        "lib/net6.0-android30.0/HarfBuzzSharp.dll",
+        "lib/net6.0-android30.0/HarfBuzzSharp.pdb",
+        "lib/net6.0-android30.0/HarfBuzzSharp.xml",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.dll",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.pdb",
+        "lib/net6.0-ios13.6/HarfBuzzSharp.xml",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.dll",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.pdb",
+        "lib/net6.0-maccatalyst13.5/HarfBuzzSharp.xml",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.dll",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.pdb",
+        "lib/net6.0-macos10.15/HarfBuzzSharp.xml",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.dll",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.pdb",
+        "lib/net6.0-tvos13.4/HarfBuzzSharp.xml",
+        "lib/net6.0/HarfBuzzSharp.dll",
+        "lib/net6.0/HarfBuzzSharp.pdb",
+        "lib/net6.0/HarfBuzzSharp.xml",
+        "lib/netcoreapp3.1/HarfBuzzSharp.dll",
+        "lib/netcoreapp3.1/HarfBuzzSharp.pdb",
+        "lib/netcoreapp3.1/HarfBuzzSharp.xml",
+        "lib/netstandard1.3/HarfBuzzSharp.dll",
+        "lib/netstandard1.3/HarfBuzzSharp.pdb",
+        "lib/netstandard1.3/HarfBuzzSharp.xml",
+        "lib/netstandard2.0/HarfBuzzSharp.dll",
+        "lib/netstandard2.0/HarfBuzzSharp.pdb",
+        "lib/netstandard2.0/HarfBuzzSharp.xml",
+        "lib/netstandard2.1/HarfBuzzSharp.dll",
+        "lib/netstandard2.1/HarfBuzzSharp.pdb",
+        "lib/netstandard2.1/HarfBuzzSharp.xml",
+        "lib/tizen40/HarfBuzzSharp.dll",
+        "lib/tizen40/HarfBuzzSharp.pdb",
+        "lib/tizen40/HarfBuzzSharp.xml",
+        "lib/uap10.0.10240/HarfBuzzSharp.dll",
+        "lib/uap10.0.10240/HarfBuzzSharp.pdb",
+        "lib/uap10.0.10240/HarfBuzzSharp.xml",
+        "lib/uap10.0.16299/HarfBuzzSharp.dll",
+        "lib/uap10.0.16299/HarfBuzzSharp.pdb",
+        "lib/uap10.0.16299/HarfBuzzSharp.xml",
+        "lib/xamarinios1.0/HarfBuzzSharp.dll",
+        "lib/xamarinios1.0/HarfBuzzSharp.pdb",
+        "lib/xamarinios1.0/HarfBuzzSharp.xml",
+        "lib/xamarinmac2.0/HarfBuzzSharp.dll",
+        "lib/xamarinmac2.0/HarfBuzzSharp.pdb",
+        "lib/xamarinmac2.0/HarfBuzzSharp.xml",
+        "lib/xamarintvos1.0/HarfBuzzSharp.dll",
+        "lib/xamarintvos1.0/HarfBuzzSharp.pdb",
+        "lib/xamarintvos1.0/HarfBuzzSharp.xml",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.dll",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.pdb",
+        "lib/xamarinwatchos1.0/HarfBuzzSharp.xml"
+      ]
+    },
+    "HarfBuzzSharp.NativeAssets.macOS/7.3.0.3": {
+      "sha512": "UAwIYnkbBTzBJv1Id8FijY/i8QiIepRemSXufU8fyzwWhYJdx4+ajG8yQUie5HW/uusbVLFSr26muSlJOFDgSw==",
+      "type": "package",
+      "path": "harfbuzzsharp.nativeassets.macos/7.3.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "build/net6.0-macos10.15/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "build/xamarinmac2.0/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net462/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net6.0-macos10.15/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "buildTransitive/xamarinmac2.0/HarfBuzzSharp.NativeAssets.macOS.targets",
+        "harfbuzzsharp.nativeassets.macos.7.3.0.3.nupkg.sha512",
+        "harfbuzzsharp.nativeassets.macos.nuspec",
+        "lib/net462/_._",
+        "lib/net6.0-macos10.15/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "lib/xamarinmac2.0/_._",
+        "runtimes/osx/native/libHarfBuzzSharp.dylib"
+      ]
+    },
+    "HarfBuzzSharp.NativeAssets.Win32/7.3.0.3": {
+      "sha512": "RPxRXD16KtSs8Yxr2RK9Qs7AwyN9MlpqZIYs0AvfaJwl7RAtVhC0+u2f2SKwX0uMYYd3O98Z+OBA1sj6aWVKQA==",
+      "type": "package",
+      "path": "harfbuzzsharp.nativeassets.win32/7.3.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/HarfBuzzSharp.NativeAssets.Win32.targets",
+        "buildTransitive/net462/HarfBuzzSharp.NativeAssets.Win32.targets",
+        "harfbuzzsharp.nativeassets.win32.7.3.0.3.nupkg.sha512",
+        "harfbuzzsharp.nativeassets.win32.nuspec",
+        "lib/net462/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "runtimes/win-arm64/native/libHarfBuzzSharp.dll",
+        "runtimes/win-x64/native/libHarfBuzzSharp.dll",
+        "runtimes/win-x86/native/libHarfBuzzSharp.dll"
+      ]
+    },
+    "Microsoft.Extensions.DependencyInjection/9.0.7": {
+      "sha512": "i05AYA91vgq0as84ROVCyltD2gnxaba/f1Qw2rG7mUsS0gv8cPTr1Gm7jPQHq7JTr4MJoQUcanLVs16tIOUJaQ==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencyinjection/9.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyInjection.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.targets",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.xml",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.xml",
+        "microsoft.extensions.dependencyinjection.9.0.7.nupkg.sha512",
+        "microsoft.extensions.dependencyinjection.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.7": {
+      "sha512": "iPK1FxbGFr2Xb+4Y+dTYI8Gupu9pOi8I3JPuPsrogUmEhe2hzZ9LpCmolMEBhVDo2ikcSr7G5zYiwaapHSQTew==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/9.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "microsoft.extensions.dependencyinjection.abstractions.9.0.7.nupkg.sha512",
+        "microsoft.extensions.dependencyinjection.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+      "sha512": "g0UfujELzlLbHoVG8kPKVBaW470Ewi+jnptGS9KUi6jcb+k2StujtK3m26DFSGGwQ/+bVgZfsWqNzlP6YOejvw==",
+      "type": "package",
+      "path": "microsoft.extensions.logging.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "analyzers/dotnet/roslyn3.11/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn3.11/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.0/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "buildTransitive/net461/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net462/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.logging.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Options/9.0.7": {
+      "sha512": "trJnF6cRWgR5uMmHpGoHmM1wOVFdIYlELlkO9zX+RfieK0321Y55zrcs4AaEymKup7dxgEN/uJU25CAcMNQRXw==",
+      "type": "package",
+      "path": "microsoft.extensions.options/9.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/Microsoft.Extensions.Options.SourceGeneration.resources.dll",
+        "buildTransitive/net461/Microsoft.Extensions.Options.targets",
+        "buildTransitive/net462/Microsoft.Extensions.Options.targets",
+        "buildTransitive/net8.0/Microsoft.Extensions.Options.targets",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Options.targets",
+        "buildTransitive/netstandard2.0/Microsoft.Extensions.Options.targets",
+        "lib/net462/Microsoft.Extensions.Options.dll",
+        "lib/net462/Microsoft.Extensions.Options.xml",
+        "lib/net8.0/Microsoft.Extensions.Options.dll",
+        "lib/net8.0/Microsoft.Extensions.Options.xml",
+        "lib/net9.0/Microsoft.Extensions.Options.dll",
+        "lib/net9.0/Microsoft.Extensions.Options.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Options.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Options.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.Options.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.Options.xml",
+        "microsoft.extensions.options.9.0.7.nupkg.sha512",
+        "microsoft.extensions.options.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Primitives/9.0.7": {
+      "sha512": "ti/zD9BuuO50IqlvhWQs9GHxkCmoph5BHjGiWKdg2t6Or8XoyAfRJiKag+uvd/fpASnNklfsB01WpZ4fhAe0VQ==",
+      "type": "package",
+      "path": "microsoft.extensions.primitives/9.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.Primitives.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Primitives.targets",
+        "lib/net462/Microsoft.Extensions.Primitives.dll",
+        "lib/net462/Microsoft.Extensions.Primitives.xml",
+        "lib/net8.0/Microsoft.Extensions.Primitives.dll",
+        "lib/net8.0/Microsoft.Extensions.Primitives.xml",
+        "lib/net9.0/Microsoft.Extensions.Primitives.dll",
+        "lib/net9.0/Microsoft.Extensions.Primitives.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Primitives.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Primitives.xml",
+        "microsoft.extensions.primitives.9.0.7.nupkg.sha512",
+        "microsoft.extensions.primitives.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Npgsql/10.0.0": {
+      "sha512": "xZAYhPOU2rUIFpV48xsqhCx9vXs6Y+0jX2LCoSEfDFYMw9jtAOUk3iQsCnDLrFIv9NT3JGMihn7nnuZsPKqJmA==",
+      "type": "package",
+      "path": "npgsql/10.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net10.0/Npgsql.dll",
+        "lib/net10.0/Npgsql.xml",
+        "lib/net8.0/Npgsql.dll",
+        "lib/net8.0/Npgsql.xml",
+        "lib/net9.0/Npgsql.dll",
+        "lib/net9.0/Npgsql.xml",
+        "npgsql.10.0.0.nupkg.sha512",
+        "npgsql.nuspec",
+        "postgresql.png"
+      ]
+    },
+    "PdfPig/0.1.10": {
+      "sha512": "9baMcYq7yL0QuaI0ZGq24EB5HY6oVa8ZhspEgYfo4gXpTLqk8RMIMlxtWr3mwuxguheIdscIFH2TN77y5y4L8g==",
+      "type": "package",
+      "path": "pdfpig/0.1.10",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/UglyToad.PdfPig.Core.dll",
+        "lib/net462/UglyToad.PdfPig.Core.pdb",
+        "lib/net462/UglyToad.PdfPig.Core.xml",
+        "lib/net462/UglyToad.PdfPig.DocumentLayoutAnalysis.dll",
+        "lib/net462/UglyToad.PdfPig.DocumentLayoutAnalysis.pdb",
+        "lib/net462/UglyToad.PdfPig.DocumentLayoutAnalysis.xml",
+        "lib/net462/UglyToad.PdfPig.Fonts.dll",
+        "lib/net462/UglyToad.PdfPig.Fonts.pdb",
+        "lib/net462/UglyToad.PdfPig.Fonts.xml",
+        "lib/net462/UglyToad.PdfPig.Package.dll",
+        "lib/net462/UglyToad.PdfPig.Package.pdb",
+        "lib/net462/UglyToad.PdfPig.Package.xml",
+        "lib/net462/UglyToad.PdfPig.Tokenization.dll",
+        "lib/net462/UglyToad.PdfPig.Tokenization.pdb",
+        "lib/net462/UglyToad.PdfPig.Tokenization.xml",
+        "lib/net462/UglyToad.PdfPig.Tokens.dll",
+        "lib/net462/UglyToad.PdfPig.Tokens.pdb",
+        "lib/net462/UglyToad.PdfPig.Tokens.xml",
+        "lib/net462/UglyToad.PdfPig.dll",
+        "lib/net462/UglyToad.PdfPig.pdb",
+        "lib/net462/UglyToad.PdfPig.xml",
+        "lib/net471/UglyToad.PdfPig.Core.dll",
+        "lib/net471/UglyToad.PdfPig.Core.pdb",
+        "lib/net471/UglyToad.PdfPig.Core.xml",
+        "lib/net471/UglyToad.PdfPig.DocumentLayoutAnalysis.dll",
+        "lib/net471/UglyToad.PdfPig.DocumentLayoutAnalysis.pdb",
+        "lib/net471/UglyToad.PdfPig.DocumentLayoutAnalysis.xml",
+        "lib/net471/UglyToad.PdfPig.Fonts.dll",
+        "lib/net471/UglyToad.PdfPig.Fonts.pdb",
+        "lib/net471/UglyToad.PdfPig.Fonts.xml",
+        "lib/net471/UglyToad.PdfPig.Package.dll",
+        "lib/net471/UglyToad.PdfPig.Package.pdb",
+        "lib/net471/UglyToad.PdfPig.Package.xml",
+        "lib/net471/UglyToad.PdfPig.Tokenization.dll",
+        "lib/net471/UglyToad.PdfPig.Tokenization.pdb",
+        "lib/net471/UglyToad.PdfPig.Tokenization.xml",
+        "lib/net471/UglyToad.PdfPig.Tokens.dll",
+        "lib/net471/UglyToad.PdfPig.Tokens.pdb",
+        "lib/net471/UglyToad.PdfPig.Tokens.xml",
+        "lib/net471/UglyToad.PdfPig.dll",
+        "lib/net471/UglyToad.PdfPig.pdb",
+        "lib/net471/UglyToad.PdfPig.xml",
+        "lib/net6.0/UglyToad.PdfPig.Core.dll",
+        "lib/net6.0/UglyToad.PdfPig.Core.pdb",
+        "lib/net6.0/UglyToad.PdfPig.Core.xml",
+        "lib/net6.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll",
+        "lib/net6.0/UglyToad.PdfPig.DocumentLayoutAnalysis.pdb",
+        "lib/net6.0/UglyToad.PdfPig.DocumentLayoutAnalysis.xml",
+        "lib/net6.0/UglyToad.PdfPig.Fonts.dll",
+        "lib/net6.0/UglyToad.PdfPig.Fonts.pdb",
+        "lib/net6.0/UglyToad.PdfPig.Fonts.xml",
+        "lib/net6.0/UglyToad.PdfPig.Package.dll",
+        "lib/net6.0/UglyToad.PdfPig.Package.pdb",
+        "lib/net6.0/UglyToad.PdfPig.Package.xml",
+        "lib/net6.0/UglyToad.PdfPig.Tokenization.dll",
+        "lib/net6.0/UglyToad.PdfPig.Tokenization.pdb",
+        "lib/net6.0/UglyToad.PdfPig.Tokenization.xml",
+        "lib/net6.0/UglyToad.PdfPig.Tokens.dll",
+        "lib/net6.0/UglyToad.PdfPig.Tokens.pdb",
+        "lib/net6.0/UglyToad.PdfPig.Tokens.xml",
+        "lib/net6.0/UglyToad.PdfPig.dll",
+        "lib/net6.0/UglyToad.PdfPig.pdb",
+        "lib/net6.0/UglyToad.PdfPig.xml",
+        "lib/net8.0/UglyToad.PdfPig.Core.dll",
+        "lib/net8.0/UglyToad.PdfPig.Core.pdb",
+        "lib/net8.0/UglyToad.PdfPig.Core.xml",
+        "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll",
+        "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.pdb",
+        "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.xml",
+        "lib/net8.0/UglyToad.PdfPig.Fonts.dll",
+        "lib/net8.0/UglyToad.PdfPig.Fonts.pdb",
+        "lib/net8.0/UglyToad.PdfPig.Fonts.xml",
+        "lib/net8.0/UglyToad.PdfPig.Package.dll",
+        "lib/net8.0/UglyToad.PdfPig.Package.pdb",
+        "lib/net8.0/UglyToad.PdfPig.Package.xml",
+        "lib/net8.0/UglyToad.PdfPig.Tokenization.dll",
+        "lib/net8.0/UglyToad.PdfPig.Tokenization.pdb",
+        "lib/net8.0/UglyToad.PdfPig.Tokenization.xml",
+        "lib/net8.0/UglyToad.PdfPig.Tokens.dll",
+        "lib/net8.0/UglyToad.PdfPig.Tokens.pdb",
+        "lib/net8.0/UglyToad.PdfPig.Tokens.xml",
+        "lib/net8.0/UglyToad.PdfPig.dll",
+        "lib/net8.0/UglyToad.PdfPig.pdb",
+        "lib/net8.0/UglyToad.PdfPig.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Core.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Core.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.Core.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.DocumentLayoutAnalysis.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.DocumentLayoutAnalysis.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Fonts.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Fonts.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.Fonts.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Package.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Package.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.Package.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokenization.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokenization.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokenization.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokens.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokens.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.Tokens.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.pdb",
+        "lib/netstandard2.0/UglyToad.PdfPig.xml",
+        "pdfpig.0.1.10.nupkg.sha512",
+        "pdfpig.nuspec",
+        "pdfpig.png"
+      ]
+    },
+    "PdfPig.Filters.Dct.JpegLibrary/0.1.10.2": {
+      "sha512": "6KFeRqNmZ2TsjS+SB2u23QYhifoWe6ZKwkp8pcFJp0Co1B/vEM4qxvKfOARn0ETfC4o9SCz2RiPOXmEKLUS9KA==",
+      "type": "package",
+      "path": "pdfpig.filters.dct.jpeglibrary/0.1.10.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll",
+        "lib/net462/UglyToad.PdfPig.Filters.Dct.JpegLibrary.xml",
+        "lib/net471/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll",
+        "lib/net471/UglyToad.PdfPig.Filters.Dct.JpegLibrary.xml",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.xml",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Dct.JpegLibrary.xml",
+        "pdfpig.filters.dct.jpeglibrary.0.1.10.2.nupkg.sha512",
+        "pdfpig.filters.dct.jpeglibrary.nuspec",
+        "pdfpig.png"
+      ]
+    },
+    "PdfPig.Filters.Jbig2.PdfboxJbig2/0.1.10.2": {
+      "sha512": "KLuBnkPOy0Hj/cXAjD6Ity12q16I02CVxWJWl1xfxaedgqFDR47SbeNwmG8Gyut/T9JVjK51honvyld6nDa2hg==",
+      "type": "package",
+      "path": "pdfpig.filters.jbig2.pdfboxjbig2/0.1.10.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll",
+        "lib/net462/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.xml",
+        "lib/net471/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll",
+        "lib/net471/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.xml",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.xml",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Jbig2.PdfboxJbig2.xml",
+        "pdfpig.filters.jbig2.pdfboxjbig2.0.1.10.2.nupkg.sha512",
+        "pdfpig.filters.jbig2.pdfboxjbig2.nuspec",
+        "pdfpig.png"
+      ]
+    },
+    "PdfPig.Filters.Jpx.OpenJpegDotNet/0.1.10.2": {
+      "sha512": "xcEkZFVDwRvM82r7txWwI+0iFnzExJdZ0pzVXuKx7w6SIh5IeIY/b7gzL9rLaq58zeR0c6haTROibHAQcykXAQ==",
+      "type": "package",
+      "path": "pdfpig.filters.jpx.openjpegdotnet/0.1.10.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "content/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "contentFiles/any/net462/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "contentFiles/any/net471/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "contentFiles/any/net6.0/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "contentFiles/any/net8.0/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "contentFiles/any/netstandard2.0/runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "lib/net462/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll",
+        "lib/net462/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.xml",
+        "lib/net471/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll",
+        "lib/net471/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.xml",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll",
+        "lib/net6.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.xml",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll",
+        "lib/net8.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Filters.Jpx.OpenJpeg.xml",
+        "pdfpig.filters.jpx.openjpegdotnet.0.1.10.2.nupkg.sha512",
+        "pdfpig.filters.jpx.openjpegdotnet.nuspec",
+        "pdfpig.png",
+        "runtimes/linux-x64/native/libOpenJpegDotNetNative.so",
+        "runtimes/osx-x64/native/libOpenJpegDotNetNative.dylib",
+        "runtimes/win-x64/native/OpenJpegDotNetNative.dll",
+        "runtimes/win-x86/native/OpenJpegDotNetNative.dll"
+      ]
+    },
+    "PdfPig.Rendering.Skia/0.1.10.2": {
+      "sha512": "LSYjwpLlwXdUU8ACz7GcJe4O6i0wOSIw/CMeMmp5AGOXsKUX4nns5QUzqOkgPgbAO682PJeWLffrM5zepWvfsA==",
+      "type": "package",
+      "path": "pdfpig.rendering.skia/0.1.10.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/UglyToad.PdfPig.Rendering.Skia.dll",
+        "lib/net462/UglyToad.PdfPig.Rendering.Skia.xml",
+        "lib/net471/UglyToad.PdfPig.Rendering.Skia.dll",
+        "lib/net471/UglyToad.PdfPig.Rendering.Skia.xml",
+        "lib/net6.0/UglyToad.PdfPig.Rendering.Skia.dll",
+        "lib/net6.0/UglyToad.PdfPig.Rendering.Skia.xml",
+        "lib/net8.0/UglyToad.PdfPig.Rendering.Skia.dll",
+        "lib/net8.0/UglyToad.PdfPig.Rendering.Skia.xml",
+        "lib/netstandard2.0/UglyToad.PdfPig.Rendering.Skia.dll",
+        "lib/netstandard2.0/UglyToad.PdfPig.Rendering.Skia.xml",
+        "pdfpig.png",
+        "pdfpig.rendering.skia.0.1.10.2.nupkg.sha512",
+        "pdfpig.rendering.skia.nuspec"
+      ]
+    },
+    "SkiaSharp/2.88.9": {
+      "sha512": "3MD5VHjXXieSHCleRLuaTXmL2pD0mB7CcOB1x2kA1I4bhptf4e3R27iM93264ZYuAq6mkUyX5XbcxnZvMJYc1Q==",
+      "type": "package",
+      "path": "skiasharp/2.88.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "interactive-extensions/dotnet/SkiaSharp.DotNet.Interactive.dll",
+        "lib/monoandroid1.0/SkiaSharp.dll",
+        "lib/monoandroid1.0/SkiaSharp.pdb",
+        "lib/monoandroid1.0/SkiaSharp.xml",
+        "lib/net462/SkiaSharp.dll",
+        "lib/net462/SkiaSharp.pdb",
+        "lib/net462/SkiaSharp.xml",
+        "lib/net6.0-android30.0/SkiaSharp.dll",
+        "lib/net6.0-android30.0/SkiaSharp.pdb",
+        "lib/net6.0-android30.0/SkiaSharp.xml",
+        "lib/net6.0-ios13.6/SkiaSharp.dll",
+        "lib/net6.0-ios13.6/SkiaSharp.pdb",
+        "lib/net6.0-ios13.6/SkiaSharp.xml",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.dll",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.pdb",
+        "lib/net6.0-maccatalyst13.5/SkiaSharp.xml",
+        "lib/net6.0-macos10.15/SkiaSharp.dll",
+        "lib/net6.0-macos10.15/SkiaSharp.pdb",
+        "lib/net6.0-macos10.15/SkiaSharp.xml",
+        "lib/net6.0-tizen7.0/SkiaSharp.dll",
+        "lib/net6.0-tizen7.0/SkiaSharp.pdb",
+        "lib/net6.0-tizen7.0/SkiaSharp.xml",
+        "lib/net6.0-tvos13.4/SkiaSharp.dll",
+        "lib/net6.0-tvos13.4/SkiaSharp.pdb",
+        "lib/net6.0-tvos13.4/SkiaSharp.xml",
+        "lib/net6.0/SkiaSharp.dll",
+        "lib/net6.0/SkiaSharp.pdb",
+        "lib/net6.0/SkiaSharp.xml",
+        "lib/netcoreapp3.1/SkiaSharp.dll",
+        "lib/netcoreapp3.1/SkiaSharp.pdb",
+        "lib/netcoreapp3.1/SkiaSharp.xml",
+        "lib/netstandard1.3/SkiaSharp.dll",
+        "lib/netstandard1.3/SkiaSharp.pdb",
+        "lib/netstandard1.3/SkiaSharp.xml",
+        "lib/netstandard2.0/SkiaSharp.dll",
+        "lib/netstandard2.0/SkiaSharp.pdb",
+        "lib/netstandard2.0/SkiaSharp.xml",
+        "lib/netstandard2.1/SkiaSharp.dll",
+        "lib/netstandard2.1/SkiaSharp.pdb",
+        "lib/netstandard2.1/SkiaSharp.xml",
+        "lib/tizen40/SkiaSharp.dll",
+        "lib/tizen40/SkiaSharp.pdb",
+        "lib/tizen40/SkiaSharp.xml",
+        "lib/uap10.0.10240/SkiaSharp.dll",
+        "lib/uap10.0.10240/SkiaSharp.pdb",
+        "lib/uap10.0.10240/SkiaSharp.xml",
+        "lib/uap10.0.16299/SkiaSharp.dll",
+        "lib/uap10.0.16299/SkiaSharp.pdb",
+        "lib/uap10.0.16299/SkiaSharp.xml",
+        "lib/xamarinios1.0/SkiaSharp.dll",
+        "lib/xamarinios1.0/SkiaSharp.pdb",
+        "lib/xamarinios1.0/SkiaSharp.xml",
+        "lib/xamarinmac2.0/SkiaSharp.dll",
+        "lib/xamarinmac2.0/SkiaSharp.pdb",
+        "lib/xamarinmac2.0/SkiaSharp.xml",
+        "lib/xamarintvos1.0/SkiaSharp.dll",
+        "lib/xamarintvos1.0/SkiaSharp.pdb",
+        "lib/xamarintvos1.0/SkiaSharp.xml",
+        "lib/xamarinwatchos1.0/SkiaSharp.dll",
+        "lib/xamarinwatchos1.0/SkiaSharp.pdb",
+        "lib/xamarinwatchos1.0/SkiaSharp.xml",
+        "skiasharp.2.88.9.nupkg.sha512",
+        "skiasharp.nuspec"
+      ]
+    },
+    "SkiaSharp.HarfBuzz/2.88.9": {
+      "sha512": "5lyjX04CSWTKFYMSNN6SMupV2qzYDr8W/u8S3ZEkr+Sg3kOi0YE06EOqG0tzn/YPBID89xam4L3rz3hUUKOGEQ==",
+      "type": "package",
+      "path": "skiasharp.harfbuzz/2.88.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "lib/net462/SkiaSharp.HarfBuzz.dll",
+        "lib/net462/SkiaSharp.HarfBuzz.pdb",
+        "lib/net462/SkiaSharp.HarfBuzz.xml",
+        "lib/net6.0/SkiaSharp.HarfBuzz.dll",
+        "lib/net6.0/SkiaSharp.HarfBuzz.pdb",
+        "lib/net6.0/SkiaSharp.HarfBuzz.xml",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.dll",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.pdb",
+        "lib/netcoreapp3.1/SkiaSharp.HarfBuzz.xml",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.dll",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.pdb",
+        "lib/netstandard1.3/SkiaSharp.HarfBuzz.xml",
+        "lib/netstandard2.0/SkiaSharp.HarfBuzz.dll",
+        "lib/netstandard2.0/SkiaSharp.HarfBuzz.pdb",
+        "lib/netstandard2.0/SkiaSharp.HarfBuzz.xml",
+        "lib/netstandard2.1/SkiaSharp.HarfBuzz.dll",
+        "lib/netstandard2.1/SkiaSharp.HarfBuzz.pdb",
+        "lib/netstandard2.1/SkiaSharp.HarfBuzz.xml",
+        "skiasharp.harfbuzz.2.88.9.nupkg.sha512",
+        "skiasharp.harfbuzz.nuspec"
+      ]
+    },
+    "SkiaSharp.NativeAssets.macOS/2.88.9": {
+      "sha512": "Nv5spmKc4505Ep7oUoJ5vp3KweFpeNqxpyGDWyeEPTX2uR6S6syXIm3gj75dM0YJz7NPvcix48mR5laqs8dPuA==",
+      "type": "package",
+      "path": "skiasharp.nativeassets.macos/2.88.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "build/net6.0-macos10.15/SkiaSharp.NativeAssets.macOS.targets",
+        "build/xamarinmac2.0/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net6.0-macos10.15/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/xamarinmac2.0/SkiaSharp.NativeAssets.macOS.targets",
+        "lib/net462/_._",
+        "lib/net6.0-macos10.15/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "lib/xamarinmac2.0/_._",
+        "runtimes/osx/native/libSkiaSharp.dylib",
+        "skiasharp.nativeassets.macos.2.88.9.nupkg.sha512",
+        "skiasharp.nativeassets.macos.nuspec"
+      ]
+    },
+    "SkiaSharp.NativeAssets.Win32/2.88.9": {
+      "sha512": "wb2kYgU7iy84nQLYZwMeJXixvK++GoIuECjU4ECaUKNuflyRlJKyiRhN1MAHswvlvzuvkrjRWlK0Za6+kYQK7w==",
+      "type": "package",
+      "path": "skiasharp.nativeassets.win32/2.88.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/SkiaSharp.NativeAssets.Win32.targets",
+        "buildTransitive/net462/SkiaSharp.NativeAssets.Win32.targets",
+        "lib/net462/_._",
+        "lib/net6.0/_._",
+        "lib/netcoreapp3.1/_._",
+        "lib/netstandard1.3/_._",
+        "runtimes/win-arm64/native/libSkiaSharp.dll",
+        "runtimes/win-x64/native/libSkiaSharp.dll",
+        "runtimes/win-x86/native/libSkiaSharp.dll",
+        "skiasharp.nativeassets.win32.2.88.9.nupkg.sha512",
+        "skiasharp.nativeassets.win32.nuspec"
+      ]
+    },
+    "System.ComponentModel.Annotations/5.0.0": {
+      "sha512": "dMkqfy2el8A8/I76n2Hi1oBFEbG1SfxD2l5nhwXV3XjlnOmwxJlQbYpJH4W51odnU9sARCSAgv7S3CyAFMkpYg==",
+      "type": "package",
+      "path": "system.componentmodel.annotations/5.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/net461/System.ComponentModel.Annotations.dll",
+        "lib/netcore50/System.ComponentModel.Annotations.dll",
+        "lib/netstandard1.4/System.ComponentModel.Annotations.dll",
+        "lib/netstandard2.0/System.ComponentModel.Annotations.dll",
+        "lib/netstandard2.1/System.ComponentModel.Annotations.dll",
+        "lib/netstandard2.1/System.ComponentModel.Annotations.xml",
+        "lib/portable-net45+win8/_._",
+        "lib/win8/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/net461/System.ComponentModel.Annotations.dll",
+        "ref/net461/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/System.ComponentModel.Annotations.dll",
+        "ref/netcore50/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/de/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/es/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/fr/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/it/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/ja/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/ko/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/ru/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/zh-hans/System.ComponentModel.Annotations.xml",
+        "ref/netcore50/zh-hant/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/System.ComponentModel.Annotations.dll",
+        "ref/netstandard1.1/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/de/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/es/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/fr/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/it/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/ja/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/ko/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/ru/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/zh-hans/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.1/zh-hant/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/System.ComponentModel.Annotations.dll",
+        "ref/netstandard1.3/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/de/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/es/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/fr/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/it/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/ja/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/ko/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/ru/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/zh-hans/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.3/zh-hant/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/System.ComponentModel.Annotations.dll",
+        "ref/netstandard1.4/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/de/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/es/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/fr/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/it/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/ja/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/ko/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/ru/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/zh-hans/System.ComponentModel.Annotations.xml",
+        "ref/netstandard1.4/zh-hant/System.ComponentModel.Annotations.xml",
+        "ref/netstandard2.0/System.ComponentModel.Annotations.dll",
+        "ref/netstandard2.0/System.ComponentModel.Annotations.xml",
+        "ref/netstandard2.1/System.ComponentModel.Annotations.dll",
+        "ref/netstandard2.1/System.ComponentModel.Annotations.xml",
+        "ref/portable-net45+win8/_._",
+        "ref/win8/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "system.componentmodel.annotations.5.0.0.nupkg.sha512",
+        "system.componentmodel.annotations.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
+    "System.ValueTuple/4.6.1": {
+      "sha512": "+RJT4qaekpZ7DDLhf+LTjq+E48jieKiY9ulJ+BoxKmZblIJfIJT8Ufcaa/clQqnYvWs8jugfGSMu8ylS0caG0w==",
+      "type": "package",
+      "path": "system.valuetuple/4.6.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "build/net471/System.ValueTuple.targets",
+        "buildTransitive/net461/System.ValueTuple.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net471/System.ValueTuple.targets",
+        "lib/net462/System.ValueTuple.dll",
+        "lib/net462/System.ValueTuple.xml",
+        "lib/net47/System.ValueTuple.dll",
+        "lib/net47/System.ValueTuple.xml",
+        "lib/net471/_._",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard2.0/_._",
+        "system.valuetuple.4.6.1.nupkg.sha512",
+        "system.valuetuple.nuspec"
+      ]
+    },
+    "WeCantSpell.Hunspell/5.2.1": {
+      "sha512": "i4cue7r2dvkcoIV6aQyW1czEprM6B7RNv2Efz1l9TFXp9zoFkymlypFlqvvqoZz1a01umCHOydUB97mvfyN5vA==",
+      "type": "package",
+      "path": "wecantspell.hunspell/5.2.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "icon.png",
+        "lib/net6.0/WeCantSpell.Hunspell.dll",
+        "lib/net6.0/WeCantSpell.Hunspell.xml",
+        "lib/net8.0/WeCantSpell.Hunspell.dll",
+        "lib/net8.0/WeCantSpell.Hunspell.xml",
+        "lib/netstandard2.0/WeCantSpell.Hunspell.dll",
+        "lib/netstandard2.0/WeCantSpell.Hunspell.xml",
+        "license.txt",
+        "readme.md",
+        "wecantspell.hunspell.5.2.1.nupkg.sha512",
+        "wecantspell.hunspell.nuspec"
+      ]
+    },
+    "WALE.ProcessFile.Core/1.0.0": {
+      "type": "project",
+      "path": "../WALE.ProcessFile.Core/WALE.ProcessFile.Core.csproj",
+      "msbuildProject": "../WALE.ProcessFile.Core/WALE.ProcessFile.Core.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "FluentMigrator >= 7.2.0",
+      "Npgsql >= 10.0.0",
+      "WALE.ProcessFile.Core >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "/Users/jamesbaylissdawson/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database.PostgreSQL/WALE.ProcessFile.Database.PostgreSQL.csproj",
+      "projectName": "WALE.ProcessFile.Database.PostgreSQL",
+      "projectPath": "/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database.PostgreSQL/WALE.ProcessFile.Database.PostgreSQL.csproj",
+      "packagesPath": "/Users/jamesbaylissdawson/.nuget/packages/",
+      "outputPath": "/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Database.PostgreSQL/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/Users/jamesbaylissdawson/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Core/WALE.ProcessFile.Core.csproj": {
+              "projectPath": "/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/WALE.ProcessFile.Core/WALE.ProcessFile.Core.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "FluentMigrator": {
+            "target": "Package",
+            "version": "[7.2.0, )"
+          },
+          "Npgsql": {
+            "target": "Package",
+            "version": "[10.0.0, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

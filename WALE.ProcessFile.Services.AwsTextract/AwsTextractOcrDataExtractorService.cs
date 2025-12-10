@@ -86,7 +86,7 @@ public class AwsTextractOcrDataExtractorService
             ? await _cacheService.GetOcrScreenshotTextAsync(request)
             : await _cacheService.GetOcrImageTextAsync(request);
         
-        if (false && pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
             var imageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
                 cacheFileText,

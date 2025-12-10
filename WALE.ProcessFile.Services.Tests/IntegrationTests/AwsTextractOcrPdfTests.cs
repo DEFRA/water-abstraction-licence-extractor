@@ -2,16 +2,17 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.AwsTextract;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-public class AwsTextractOcrPdfTests
+public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
+    : IClassFixture<SingletonAwsTextractFixture>
 {
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -20,11 +21,7 @@ public class AwsTextractOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new AwsTextractOcrDataExtractorService(
-                TestConfig.AwsAccessKey,
-                TestConfig.AwsSecretKey,
-                CacheService,
-                OutputService)
+            SingletonAwsTextractFixture.Instance
         },
         CacheService,
         OutputService,
@@ -34,11 +31,7 @@ public class AwsTextractOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new AwsTextractOcrDataExtractorService(
-                TestConfig.AwsAccessKey,
-                TestConfig.AwsSecretKey,
-                CacheService,
-                OutputService)
+            SingletonAwsTextractFixture.Instance
         },
         CacheService,
         OutputService,

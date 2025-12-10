@@ -1,6 +1,7 @@
 using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
@@ -413,7 +414,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _deadLicenceNumbers,
             _liveLicenceNumbers,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder,
+            TestConfig.PdfFolder3,
             0);
         
         Assert.NotNull(agreedSchemaLicenceGroup.First().Licences);
@@ -493,5 +494,41 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/22/271", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+    }
+    
+    [Fact]
+    public async Task WhenZ_B()
+    {
+        // Arrange
+        const string filename = "22630082__Application - New - Issued Licence 12.12.08 10739186.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        Assert.Equal(12, ExcludeGeneralList(resultFull.Matches!).Count);
+        
+        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
+            _liveLicenceNumbers,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            -1);
+        
+        Assert.Equal(2, licenceSets.Count);
+        
+        Assert.Equal("22630082-LV20081212", licenceSets[0].LicenceSetId);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+
+        var agreedSchemaLicenceGroup = licenceSets[0];
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Equal("2/26/30/082", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
+        
+        Assert.Null(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        
+        Assert.Equal("1.43M3/", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
 }

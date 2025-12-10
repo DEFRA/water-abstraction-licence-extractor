@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -376,7 +376,13 @@ public static partial class LicenceNumber
                     }
                     
                     // Invalid end of a licence number (probably cut off)
-                    if (value?.EndsWith("/R") == true)
+                    if (value.EndsWith("/R"))
+                    {
+                        continue;
+                    }
+                    
+                    // Invalid end of a licence number
+                    if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

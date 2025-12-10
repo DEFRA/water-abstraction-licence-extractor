@@ -34,7 +34,7 @@ public static class FormattingHelper
             sb.Append(part);
         }
 
-        return sb.ToString();
+        return sb.ToString().Replace("0", string.Empty);
     }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)

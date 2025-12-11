@@ -2183,7 +2183,8 @@ public static class LabelConfiguration
             [
                 LicenceNumberLine,
                 "discharge permit",
-                "discharge consent"
+                "discharge consent",
+                "drawing no."
             ]
         };
     }

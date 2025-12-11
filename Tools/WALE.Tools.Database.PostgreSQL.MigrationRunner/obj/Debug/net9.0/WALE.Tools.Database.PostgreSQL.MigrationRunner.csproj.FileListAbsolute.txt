@@ -243,3 +243,4 @@
 /Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/Tools/WALE.Tools.Database.PostgreSQL.MigrationRunner/bin/Debug/net9.0/runtimes/win-x86/native/libSkiaSharp.dll
 /Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/Tools/WALE.Tools.Database.PostgreSQL.MigrationRunner/bin/Debug/net9.0/WALE.ProcessFile.Core.dll
 /Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/Tools/WALE.Tools.Database.PostgreSQL.MigrationRunner/bin/Debug/net9.0/WALE.ProcessFile.Core.pdb
+/Users/jamesbaylissdawson/Code/water-abstraction-licence-extractor/Tools/WALE.Tools.Database.PostgreSQL.MigrationRunner/bin/Debug/net9.0/Dapper.dll

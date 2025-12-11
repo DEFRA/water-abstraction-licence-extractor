@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WALE.Tools.Database.PostgreSQL.MigrationRunner")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+241a364842cc6cdeb669c1ca952ad88cfe4fa9b4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+31a58e91c70f5b545610c5884da0668750e35287")]
 [assembly: System.Reflection.AssemblyProductAttribute("WALE.Tools.Database.PostgreSQL.MigrationRunner")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WALE.Tools.Database.PostgreSQL.MigrationRunner")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

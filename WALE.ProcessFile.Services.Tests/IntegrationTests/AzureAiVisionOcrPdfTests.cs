@@ -44,15 +44,32 @@ public class AzureAiVisionOcrPdfTests
         OutputService,
         TestConfig.PdfFolder2);
     
+    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new AzureAiVisionOcrDataExtractorService(
+                TestConfig.AiVisionEndpoint,
+                TestConfig.AiVisionKey,
+                CacheService,
+                OutputService)
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder3);
+    
     private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
     {
-        var pdfFolder = useMainPdfFolder ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
-        var service = useMainPdfFolder ? _pdfDataExtractor : _pdfDataExtractor2;
+        var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
+        if (number == 3) pdfFolder = TestConfig.PdfFolder3;
+        
+        var service = number == 1 ? _pdfDataExtractor : _pdfDataExtractor2;
+        if (number == 3) service = _pdfDataExtractor3;
         
         return service.GetMatchesAsync(
             pdfFolder + fileName,
@@ -75,7 +92,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, false);
+        var resultFull = await GetMatchesAsync(filename, 3);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -148,8 +165,8 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
-            _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);
@@ -197,7 +214,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, false);
+        var resultFull = await GetMatchesAsync(filename, 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -229,7 +246,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22632235__Application Renewal - Licence Issued - 11112024.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, false);
+        var resultFull = await GetMatchesAsync(filename, 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1530,7 +1547,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22713185__Non-Application Licence Documents (20.12.1996).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, false);
+        var resultFull = await GetMatchesAsync(filename, 2);
         Assert.Equal(10, ExcludeGeneralList(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
@@ -1560,7 +1577,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, false);
+        var resultFull = await GetMatchesAsync(filename, 2);
         Assert.Equal(6, ExcludeGeneralList(resultFull.Matches!).Count);
 
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(

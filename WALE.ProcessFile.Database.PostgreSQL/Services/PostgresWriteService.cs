@@ -13,9 +13,9 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO ProcessRun (Description, StartDateTimeUtc, NumberOfFiles) 
+                           INSERT INTO process_run (description, start_date_time_utc, number_of_files) 
                            VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles) 
-                           RETURNING ProcessRunId
+                           RETURNING process_run_id
                            """;
 
         processRun.ProcessRunId = await connection.ExecuteScalarAsync<int>(sql, new
@@ -32,9 +32,9 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO LicenceSet (SchemaLicenceSetId, ShortLicenceSetId, ProcessRunId, DateTimeUtc) 
+                           INSERT INTO licence_set (schema_licence_set_id, short_licence_set_id, process_run_id, date_time_utc) 
                            VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @ProcessRunId, @DateTimeUtc)
-                           RETURNING LicenceSetId
+                           RETURNING licence_set_id
                            """;
 
         return await connection.ExecuteScalarAsync<int>(sql, new
@@ -51,9 +51,9 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO Licence (Filename, LicenceNumber, Data, ProcessRunId, DateTimeUtc)
+                           INSERT INTO licence (filename, licence_number, data, process_run_id, date_time_utc)
                            VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING LicenceId
+                           RETURNING licence_id
                            """;
 
         return await connection.ExecuteScalarAsync<int>(sql, new
@@ -70,7 +70,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO Match (MatchesResultId, LabelName, LabelGroupName, Data)
+                           INSERT INTO match (matches_result_id, label_name, label_group_name, data)
                            VALUES (@MatchesResultId, @LabelName, @LabelGroupName, @Data)
                            """;
 
@@ -87,9 +87,9 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO MatchesResult (Filename, Data, ProcessRunId, DateTimeUtc)
+                           INSERT INTO matches_result (filename, data, process_run_id, date_time_utc)
                            VALUES (@Filename, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING MatchesResultId
+                           RETURNING matches_result_id
                            """;
 
         return await connection.ExecuteScalarAsync<int>(sql, new
@@ -106,7 +106,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO PageScreenshot (Filename, PageNumber, NoOcrServiceName, Data, DateTimeUtc, ProcessRunId)
+                           INSERT INTO page_screenshot (filename, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
                            VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
                            """;
         
@@ -126,7 +126,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO NoOcrPageTextCache (Filename, PageNumber, NoOcrServiceName, Data, ProcessRunId, DateTimeUtc)
+                           INSERT INTO no_ocr_page_text_cache (filename, page_number, no_ocr_service_name, data, process_run_id, date_time_utc)
                            VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
@@ -148,7 +148,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO NoOcrImagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc, ProcessRunId)
+                           INSERT INTO no_ocr_images_metadata_cache (filename, no_ocr_service_name, response, date_time_utc, process_run_id)
                            VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)
                            """;
         
@@ -167,7 +167,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO NoOcrPagesMetadataCache (Filename, NoOcrServiceName, Response, DateTimeUtc, ProcessRunId) 
+                           INSERT INTO no_ocr_pages_metadata_cache (filename, no_ocr_service_name, response, date_time_utc, process_run_id) 
                            VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)
                            """;
         await connection.ExecuteAsync(sql, new
@@ -188,7 +188,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO AllPagesText (Filename, NoOcrServiceName, Data, DateTimeUtc, ProcessRunId)
+                           INSERT INTO all_pages_text (filename, no_ocr_service_name, data, date_time_utc, process_run_id)
                            VALUES (@Filename, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
                            """;
 
@@ -208,7 +208,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO ImageOnPage (Filename, NoOcrServiceName, ImageNumber, PageNumber, Data, Extension, DateTimeUtc, ProcessRunId) 
+                           INSERT INTO image_on_page (filename, no_ocr_service_name, image_number, page_number, data, extension, date_time_utc, process_run_id) 
                            VALUES (@Filename, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Extension, @DateTimeUtc, @ProcessRunId)
                            """;
 
@@ -229,7 +229,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO OcrImageTextCache (Filename, OcrServiceName, ImageNumber, PageNumber, Data, ProcessRunId, DateTimeUtc)
+                           INSERT INTO ocr_image_text_cache (filename, ocr_service_name, image_number, page_number, data, process_run_id, date_time_utc)
                            VALUES (@Filename, @OcrServiceName, @ImageNumber, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
@@ -249,7 +249,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO OcrScreenshotTextCache (Filename, OcrServiceName, PageNumber, Data, ProcessRunId, DateTimeUtc) 
+                           INSERT INTO ocr_screenshot_text_cache (filename, ocr_service_name, page_number, data, process_run_id, date_time_utc) 
                            VALUES (@Filename, @OcrServiceName, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
@@ -268,11 +268,11 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM ImageOnPage;
-                           DELETE FROM NoOcrImagesMetadataCache;
-                           DELETE FROM NoOcrPagesMetadataCache;
-                           DELETE FROM NoOcrPageTextCache;
-                           DELETE FROM OcrImageTextCache;
+                           DELETE FROM image_on_page;
+                           DELETE FROM no_ocr_images_metadata_cache;
+                           DELETE FROM no_ocr_pages_metadata_cache;
+                           DELETE FROM no_ocr_page_text_cache;
+                           DELETE FROM ocr_image_text_cache;
                            """;
         
         await connection.ExecuteAsync(sql);
@@ -282,13 +282,13 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM AllPagesText WHERE Filename = @Filename;
-                           DELETE FROM ImageOnPage WHERE Filename = @Filename;
-                           DELETE FROM NoOcrImagesMetadataCache WHERE Filename = @Filename;
-                           DELETE FROM NoOcrPagesMetadataCache WHERE Filename = @Filename;
-                           DELETE FROM NoOcrPageTextCache WHERE Filename = @Filename;
-                           DELETE FROM OcrImageTextCache WHERE Filename = @Filename;
-                           DELETE FROM PageScreenshot WHERE Filename = @Filename;
+                           DELETE FROM all_pages_text WHERE filename = @Filename;
+                           DELETE FROM image_on_page WHERE filename = @Filename;
+                           DELETE FROM no_ocr_images_metadata_cache WHERE filename = @Filename;
+                           DELETE FROM no_ocr_pages_metadata_cache WHERE filename = @Filename;
+                           DELETE FROM no_ocr_page_text_cache WHERE filename = @Filename;
+                           DELETE FROM ocr_image_text_cache WHERE filename = @Filename;
+                           DELETE FROM page_screenshot WHERE filename = @Filename;
                            """;
         
         await connection.ExecuteAsync(sql, new
@@ -301,9 +301,9 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           UPDATE ProcessRun 
-                           SET EndDateTimeUtc = @EndDateTimeUtc 
-                           WHERE ProcessRunId = @ProcessRunId
+                           UPDATE process_run 
+                           SET end_date_time_utc = @EndDateTimeUtc 
+                           WHERE process_run_id = @ProcessRunId
                            """;
 
         await connection.ExecuteAsync(sql, new
@@ -317,11 +317,11 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           UPDATE LicenceSetLicence 
-                           SET LicenceId = @LicenceId 
-                           WHERE LicenceSetId = @LicenceSetId 
-                             AND LicenceNumber = @LicenceNumber 
-                             AND ProcessRunId = @ProcessRunId
+                           UPDATE licence_set_licence 
+                           SET licence_id = @LicenceId 
+                           WHERE licence_set_id = @LicenceSetId 
+                             AND licence_number = @LicenceNumber 
+                             AND process_run_id = @ProcessRunId
                            """;
 
         await connection.ExecuteAsync(sql, new
@@ -339,7 +339,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO LicenceSetLicence (LicenceSetId, LicenceId, LicenceNumber, LicenceVersionId, ProcessRunId, DateTimeUtc) 
+                           INSERT INTO licence_set_licence (licence_set_id, licence_id, licence_number, licence_version_id, process_run_id, date_time_utc) 
                            VALUES (@LicenceSetId, @LicenceId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)
                            """;
 
@@ -358,7 +358,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO LicenceSetType (LicenceSetId, LicenceSetType) 
+                           INSERT INTO licence_set_type (licence_set_id, licence_set_type) 
                            VALUES (@LicenceSetId, @LicenceSetType)
                            """;
 
@@ -373,7 +373,7 @@ public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO AggregateSet (LicenceSetId, SchemaAggregateSetId, Data, ProcessRunId, DateTimeUtc)
+                           INSERT INTO aggregate_set (licence_set_id, schema_aggregate_set_id, data, process_run_id, date_time_utc)
                            VALUES (@LicenceSetId, @SchemaAggregateSetId, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 

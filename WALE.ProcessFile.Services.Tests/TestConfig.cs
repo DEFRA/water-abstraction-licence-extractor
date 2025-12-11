@@ -230,4 +230,19 @@ public static class TestConfig
             return _sqlConnectionString;
         }
     }
+
+    private static string? _postgresConnectionString;
+    public static string PostgresConnectionString
+    {
+        get
+        {
+            if (_postgresConnectionString != null)
+            {
+                return _postgresConnectionString;
+            }
+            
+            _postgresConnectionString = Config["PostgresConnectionString"]!;
+            return _postgresConnectionString;
+        }
+    }
 }

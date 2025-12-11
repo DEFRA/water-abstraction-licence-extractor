@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
@@ -30,8 +31,12 @@ configBuilder.AddJsonFile("appsettings.Development.json");
 
 var config = configBuilder.Build();
 
-var cacheService = GetCacheService(config);
-var outputService = GetOutputService(config);
+var postgresDataSourceProvider = new PostgresDataSourceProvider(config.GetValue<string>("PostgresConnectionString")!);
+
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+var cacheService = GetCacheService(postgresDataSourceProvider);
+var outputService = GetOutputService(postgresDataSourceProvider);
+
 var indexLink = "list.html?showAll=true&processRunId=";
 
 app.MapGet("/process-run", async () =>
@@ -206,24 +211,20 @@ app.MapGet("/licenceSets", async (string filename) =>
 app.Run();
 return;
 
-static ICacheService GetCacheService(IConfiguration configuration)
+static ICacheService GetCacheService(PostgresDataSourceProvider dataSourceProvider)
 {
-    var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
-
-    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
-    var outputService = (ICacheService)new DatabaseCacheService(sqlReadService, sqlAddService);
+    var dataWriteService = new PostgresWriteService(dataSourceProvider);
+    var dataReadService = new PostgresReadService(dataSourceProvider);
+    var outputService = new DatabaseCacheService(dataReadService, dataWriteService);
     
     return outputService;
 }
 
-static IOutputService GetOutputService(IConfiguration configuration)
+static IOutputService GetOutputService(PostgresDataSourceProvider dataSourceProvider)
 {
-    var sqlConnectionString = configuration.GetValue<string>("SqlConnectionString")!;
-
-    var sqlAddService = new SqlSeverWriteService(sqlConnectionString);
-    var sqlReadService = new SqlSeverReadService(sqlConnectionString);
-    var outputService = (IOutputService)new DatabaseOutputService(sqlReadService, sqlAddService);
+    var dataWriteService = new PostgresWriteService(dataSourceProvider);
+    var dataReadService = new PostgresReadService(dataSourceProvider);
+    var outputService = new DatabaseOutputService(dataReadService, dataWriteService);
     
     return outputService;
 }

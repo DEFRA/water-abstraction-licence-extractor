@@ -17,10 +17,10 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Response 
-                           FROM NoOcrPagesMetadataCache 
-                           WHERE Filename = @Filename 
-                             AND NoOcrServiceName = @NoOcrServiceName
+                           SELECT response 
+                           FROM no_ocr_pages_metadata_cache 
+                           WHERE filename = @Filename 
+                             AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
 
@@ -35,11 +35,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM PageScreenshot 
-                           WHERE Filename = @Filename 
-                               AND NoOcrServiceName = @NoOcrServiceName 
-                               AND PageNumber = @PageNumber
+                           SELECT data 
+                           FROM page_screenshot 
+                           WHERE filename = @Filename 
+                               AND no_ocr_service_name = @NoOcrServiceName 
+                               AND page_number = @PageNumber
                            LIMIT 1;
                            """;
 
@@ -55,11 +55,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM NoOcrPageTextCache 
-                           WHERE Filename = @Filename 
-                             AND PageNumber = @PageNumber 
-                             AND NoOcrServiceName = @NoOcrServiceName
+                           SELECT data 
+                           FROM no_ocr_page_text_cache 
+                           WHERE filename = @Filename 
+                             AND page_number = @PageNumber 
+                             AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
 
@@ -75,10 +75,10 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM AllPagesText
-                           WHERE Filename = @Filename
-                             AND NoOcrServiceName = @NoOcrServiceName
+                           SELECT data 
+                           FROM all_pages_text
+                           WHERE filename = @Filename
+                             AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
 
@@ -93,10 +93,10 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Response 
-                           FROM NoOcrImagesMetadataCache
-                           WHERE Filename = @Filename 
-                             AND NoOcrServiceName = @NoOcrServiceName
+                           SELECT response 
+                           FROM no_ocr_images_metadata_cache
+                           WHERE filename = @Filename 
+                             AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
 
@@ -111,12 +111,12 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM OcrImageTextCache 
-                           WHERE Filename = @Filename 
-                             AND OcrServiceName = @OcrServiceName 
-                             AND PageNumber = @PageNumber 
-                             AND ImageNumber = @ImageNumber
+                           SELECT data 
+                           FROM ocr_image_text_cache 
+                           WHERE filename = @Filename 
+                             AND ocr_service_name = @OcrServiceName 
+                             AND page_number = @PageNumber 
+                             AND image_number = @ImageNumber
                            LIMIT 1;
                            """;
 
@@ -133,11 +133,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM OcrScreenshotTextCache 
-                           WHERE Filename = @Filename
-                             AND OcrServiceName = @OcrServiceName
-                             AND PageNumber = @PageNumber
+                           SELECT data 
+                           FROM ocr_screenshot_text_cache 
+                           WHERE filename = @Filename
+                             AND ocr_service_name = @OcrServiceName
+                             AND page_number = @PageNumber
                            LIMIT 1;
                            """;
 
@@ -153,13 +153,13 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM ImageOnPage 
-                           WHERE Filename = @Filename 
-                             AND NoOcrServiceName = @NoOcrServiceName 
-                             AND PageNumber = @PageNumber 
-                             AND ImageNumber = @ImageNumber 
-                             AND Extension = @Extension
+                           SELECT data 
+                           FROM image_on_page 
+                           WHERE filename = @Filename 
+                             AND no_ocr_service_name = @NoOcrServiceName 
+                             AND page_number = @PageNumber 
+                             AND image_number = @ImageNumber 
+                             AND extension = @Extension
                            LIMIT 1;
                            """;
 
@@ -177,10 +177,10 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT ImageNumber, Extension 
-                           FROM ImageOnPage 
-                           WHERE Filename = @Filename 
-                             AND PageNumber = @PageNumber
+                           SELECT image_number, extension 
+                           FROM image_on_page 
+                           WHERE filename = @Filename 
+                             AND page_number = @PageNumber
                            """;
 
         var results = await connection.QueryAsync<(int, string)>(sql, new
@@ -197,12 +197,12 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               ProcessRunId, 
-                               Description, 
-                               StartDateTimeUtc, 
-                               EndDateTimeUtc, 
-                               NumberOfFiles 
-                           FROM ProcessRun
+                               process_run_id, 
+                               description, 
+                               start_date_time_utc, 
+                               end_date_time_utc, 
+                               number_of_files 
+                           FROM process_run
                            """;
 
         return (await connection.QueryAsync<ProcessRun>(sql)).ToList();
@@ -213,16 +213,16 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               Licence.ProcessRunId, 
-                               ProcessRun.Description, 
-                               ProcessRun.StartDateTimeUtc, 
-                               ProcessRun.EndDateTimeUtc, 
-                               ProcessRun.NumberOfFiles 
-                           FROM Licence 
-                           JOIN ProcessRun 
-                               ON Licence.ProcessRunId = ProcessRun.ProcessRunId 
-                           WHERE Filename = @Filename 
-                           ORDER BY Licence.ProcessRunId DESC
+                               l.process_run_id, 
+                               pr.description, 
+                               pr.start_date_time_utc, 
+                               pr.end_date_time_utc, 
+                               pr.number_of_files 
+                           FROM licence l
+                           JOIN process_run pr
+                               ON l.process_run_id = pr.process_run_id 
+                           WHERE filename = @Filename 
+                           ORDER BY l.process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -236,9 +236,9 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data, LicenceId 
-                           FROM Licence 
-                           WHERE ProcessRunId = @ProcessRunId
+                           SELECT data, licence_id 
+                           FROM licence 
+                           WHERE process_run_id = @ProcessRunId
                            """;
 
         var results = await connection.QueryAsync<(string Data, int LicenceId)>(sql, new
@@ -259,11 +259,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               LicenceSetId, 
-                               ShortLicenceSetId, 
-                               SchemaLicenceSetId 
-                           FROM LicenceSet 
-                           WHERE ProcessRunId = @ProcessRunId
+                               licence_set_id, 
+                               short_licence_set_id, 
+                               schema_licence_set_id 
+                           FROM licence_set 
+                           WHERE process_run_id = @ProcessRunId
                            """;
 
         return (await connection.QueryAsync<LicenceSetTable>(sql, new
@@ -277,12 +277,12 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               LicenceSetId,
-                               ShortLicenceSetId, 
-                               SchemaLicenceSetId 
-                           FROM LicenceSet 
-                           WHERE ProcessRunId = @ProcessRunId 
-                             AND Filename = @Filename
+                               licence_set_id,
+                               short_licence_set_id, 
+                               schema_licence_set_id 
+                           FROM licence_set 
+                           WHERE process_run_id = @ProcessRunId 
+                             AND filename = @Filename
                            """;
 
         return (await connection.QueryAsync<LicenceSetTable>(sql, new
@@ -297,13 +297,13 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               LicenceId,
-                               LicenceNumber,
-                               LicenceVersionId,
-                               LicenceSetId,
-                               ProcessRunId
-                           FROM LicenceSetLicence 
-                           WHERE ProcessRunId = @ProcessRunId
+                               licence_id,
+                               licence_number,
+                               licence_version_id,
+                               licence_set_id,
+                               process_run_id
+                           FROM licence_set_licence 
+                           WHERE process_run_id = @ProcessRunId
                            """;
 
         return (await connection.QueryAsync<LicenceSetLicence>(sql, new
@@ -317,14 +317,14 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               LicenceId,
-                               LicenceNumber,
-                               LicenceVersionId,
-                               LicenceSetId,
-                               ProcessRunId
-                           FROM LicenceSetLicence 
-                           WHERE LicenceSetId = @LicenceSetId 
-                             AND ProcessRunId = @ProcessRunId
+                               licence_id,
+                               licence_number,
+                               licence_version_id,
+                               licence_set_id,
+                               process_run_id
+                           FROM licence_set_licence 
+                           WHERE licence_set_id = @LicenceSetId 
+                             AND process_run_id = @ProcessRunId
                            """;
         
         return (await connection.QueryAsync<LicenceSetLicence>(sql, new
@@ -338,9 +338,9 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT LicenceSetType 
-                           FROM LicenceSetType 
-                           WHERE LicenceSetId = @LicenceSetId
+                           SELECT licence_set_type 
+                           FROM licence_set_type 
+                           WHERE licence_set_id = @LicenceSetId
                            """;
 
         return (await connection.QueryAsync<int>(sql, new { LicenceSetId = licenceSetId }))
@@ -353,11 +353,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
-                            lst.LicenceSetId,
-                            lst.LicenceSetType
-                           FROM LicenceSetType lst
-                           JOIN LicenceSet ls on ls.LicenceSetId = lst.LicenceSetId
-                           WHERE ls.ProcessRunId = @ProcessRunId
+                            lst.licence_set_id,
+                            lst.licence_set_type
+                           FROM licence_set_type lst
+                           JOIN licence_set ls on ls.licence_set_id = lst.licence_set_id
+                           WHERE ls.process_run_id = @ProcessRunId
                            """;
 
         var results = await connection.QueryAsync<(int LicenceSetId, int LicenceSetType)>(
@@ -371,11 +371,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               AggregateSetId,
-                               SchemaAggregateSetId,
-                               Data 
-                           FROM AggregateSet 
-                           WHERE LicenceSetId = @LicenceSetId
+                               aggregate_set_id,
+                               schema_aggregate_set_id,
+                               data 
+                           FROM aggregate_set 
+                           WHERE licence_set_id = @LicenceSetId
                            """;
 
         // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
@@ -388,11 +388,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               AggregateSetId,
-                               SchemaAggregateSetId,
-                               Data 
-                           FROM AggregateSet 
-                           WHERE ProcessRunId = @ProcessRunId
+                               aggregate_set_id,
+                               schema_aggregate_set_id,
+                               data 
+                           FROM aggregate_set 
+                           WHERE process_run_id = @ProcessRunId
                            """;
         
         // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
@@ -404,11 +404,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               Data,
-                               LicenceId 
-                           FROM Licence
-                           WHERE Filename = @Filename 
-                           ORDER BY ProcessRunId DESC
+                               data,
+                               licence_id 
+                           FROM licence
+                           WHERE filename = @Filename 
+                           ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
         
@@ -428,11 +428,11 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               Data,
-                               LicenceId 
-                           FROM Licence
-                           WHERE LicenceNumber = @LicenceNumber 
-                             AND ProcessRunId = @ProcessRunId
+                               data,
+                               licence_id 
+                           FROM licence
+                           WHERE licence_number = @LicenceNumber 
+                             AND process_run_id = @ProcessRunId
                            LIMIT 1;
                            """;
         
@@ -456,10 +456,10 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT Data 
-                           FROM MatchesResult 
-                           WHERE Filename = @Filename 
-                           ORDER BY ProcessRunId DESC
+                           SELECT data 
+                           FROM matches_result 
+                           WHERE filename = @Filename 
+                           ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
         

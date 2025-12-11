@@ -282,6 +282,8 @@ ConfiguredServices ConfigureServices()
 
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new PostgresDataSourceProvider(postgresConnectionString);
+    
+    Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     

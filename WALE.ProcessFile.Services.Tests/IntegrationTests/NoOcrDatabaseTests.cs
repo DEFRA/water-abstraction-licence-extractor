@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Database.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
@@ -14,11 +15,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class NoOcrDatabaseTests
 {
-    private static readonly IDatabaseReadService ReadService =
-        new SqlSeverReadService(TestConfig.SqlConnectionString);
+    private static readonly PostgresDataSourceProvider PostgresDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(PostgresDataSourceProvider);
 
-    private static readonly IDatabaseWriteService WriteService =
-        new SqlSeverWriteService(TestConfig.SqlConnectionString);
+    private static IDatabaseWriteService WriteService =>
+        new PostgresWriteService(PostgresDataSourceProvider);
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
@@ -29,6 +33,11 @@ public class NoOcrDatabaseTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder);
+
+    public NoOcrDatabaseTests()
+    {
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    }
 
     private static Dictionary<string, string> FileLicenceMapping =>
         new()

@@ -1256,7 +1256,7 @@ public static partial class SchemaConverter
                         ContainedIn = [
                             new LinkedLicenceSection
                             {
-                                SectionName = LinkedLicenceSectionNames.Purposes,
+                                SectionName = LinkedLicenceSectionNames.Points,
                                 LinkReason = GetLinkReason(sections, linkedLicenceNumber)
                             }
                         ]

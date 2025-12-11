@@ -871,7 +871,7 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

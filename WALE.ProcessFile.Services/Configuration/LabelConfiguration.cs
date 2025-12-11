@@ -689,7 +689,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
-                    new("POINT OF ABSTRACTION")
+                    new("POINT OF ABSTRACTION[END_OF_COLUMN]")
                     {
                         ColumnMustStartWith = true,
                         IfMultiplePreferLast = true
@@ -697,6 +697,8 @@ public static class LabelConfiguration
                     new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
+                    new("Source of supply and place of abstraction") { IfMultiplePreferLast = true },
+                    new("Source(s) of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }

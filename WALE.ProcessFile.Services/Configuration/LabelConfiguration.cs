@@ -6,24 +6,6 @@ namespace WALE.ProcessFile.Services.Configuration;
 
 public static class LabelConfiguration
 {
-    private const string LicenceNumberLine = "Licence Serial No: ";
-    private static readonly TextToMatch PageNumberPattern =
-        new(@"/Page \d* of \d*/")
-        {
-            IsRegularExpression = true,
-            RegularExpressionIsCaseInsensitive = true
-        };
-    private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
-        new("708 506 506"); // Only this bit matches the pattern (excludes first number)
-    private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =
-        new("800 80 70 60"); // Only this bit matches the pattern (excludes first number)
-    private static readonly TextToMatch EnvironmentAgencyTelephone3Pattern =
-        new("345 988 1188"); // Only this bit matches the pattern (excludes first number)
-    private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
-        new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
-    private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
-    
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         return
@@ -123,26 +105,7 @@ public static class LabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                     },
-                    new()
-                    {
-                        Name = "RecordsLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ]
-                    }
+                    GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
                 ]
             }
         ];
@@ -181,26 +144,7 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    new()
-                    {
-                        Name = "AdditionalLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ]
-                    }
+                    GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
                 ]
             }
         ];
@@ -229,7 +173,8 @@ public static class LabelConfiguration
             MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
             SkipLineWhenContains =
             [
-                LicenceNumberLine
+                LicenceNumberLine,
+                "discharge permit"
             ],
             NextLinesToFetch = 10
         };
@@ -266,26 +211,7 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    new()
-                    {
-                        Name = "LicenceHistoryLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ]
-                    }
+                    GetLinkedLicenceNumber("LicenceHistoryLinkedLicenceNumber")
                 ]
             }
         ];
@@ -295,40 +221,7 @@ public static class LabelConfiguration
     {
         return
         [
-            new()
-            {
-                Name = "GeneralLinkedLicenceNumber",
-                Text =
-                [
-                    new(LicenceNumber.YorkshireRegexPatten)
-                    {
-                        IsRegularExpression = true
-                    }
-                ],
-                Format = LicenceNumber.Constant,
-                Position = LabelPosition.ActuallyLabel,
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                Remove =
-                [
-                    PageNumberPattern,
-                    EnvironmentAgencyTelephone1Pattern,
-                    EnvironmentAgencyTelephone2Pattern,
-                    EnvironmentAgencyTelephone3Pattern,
-                    EnvironmentAgencyTelephone4Pattern,
-                    new("0 250 500 1"),
-                    new("0 125 250 M"),
-                    new("0 170 340"),
-                    new("0 150 300")
-                    // TODO EXCLUDE consent to discharge reference
-                    // TODO some licence numbers have a space in where they should be slashes
-                ],
-                SkipLineWhenContains =
-                [
-                    LicenceNumberLine
-                ],
-            }
+            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber")
         ];
     }
     
@@ -363,26 +256,7 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    new()
-                    {
-                        Name = "FurtherProvisionsLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ]
-                    }
+                    GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
                 ]
             }
         ];
@@ -453,26 +327,7 @@ public static class LabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                     },
-                    new()
-                    {
-                        Name = "FCLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            LicenceNumberLine
-                        ],
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0
-                    }
+                    GetLinkedLicenceNumber("FCLinkedLicenceNumber")
                 ]
             }
         ];
@@ -1133,26 +988,7 @@ public static class LabelConfiguration
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
                                     },
-                                    new()
-                                    {
-                                        Name = "PurposeLinkedLicenceNumber",
-                                        Text =
-                                        [
-                                            new(LicenceNumber.YorkshireRegexPatten)
-                                            {
-                                                IsRegularExpression = true
-                                            }
-                                        ],
-                                        Format = LicenceNumber.Constant,
-                                        Position = LabelPosition.ActuallyLabel,
-                                        PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 0,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        SkipLineWhenContains =
-                                        [
-                                            LicenceNumberLine
-                                        ]
-                                    }
+                                    GetLinkedLicenceNumber("PurposeLinkedLicenceNumber")
                                 ]
                             }
                         ]
@@ -2313,4 +2149,59 @@ public static class LabelConfiguration
             }
         ];
     }
+    
+    private static LabelToMatch GetLinkedLicenceNumber(string labelName)
+    {
+        return new LabelToMatch
+        {
+            Name = labelName,
+            Text =
+            [
+                new(LicenceNumber.YorkshireRegexPatten)
+                {
+                    IsRegularExpression = true
+                }
+            ],
+            Format = LicenceNumber.Constant,
+            Position = LabelPosition.ActuallyLabel,
+            PreviousLinesToFetch = 0,
+            NextLinesToFetch = 0,
+            MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+            Remove =
+            [
+                PageNumberPattern,
+                EnvironmentAgencyTelephone1Pattern,
+                EnvironmentAgencyTelephone2Pattern,
+                EnvironmentAgencyTelephone3Pattern,
+                EnvironmentAgencyTelephone4Pattern,
+                new("0 250 500 1"),
+                new("0 125 250 M"),
+                new("0 170 340"),
+                new("0 150 300")
+            ],
+            SkipLineWhenContains =
+            [
+                LicenceNumberLine,
+                "discharge permit"
+            ]
+        };
+    }
+    
+    private const string LicenceNumberLine = "Licence Serial No: ";
+    private static readonly TextToMatch PageNumberPattern =
+        new(@"/Page \d* of \d*/")
+        {
+            IsRegularExpression = true,
+            RegularExpressionIsCaseInsensitive = true
+        };
+    private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
+        new("708 506 506"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =
+        new("800 80 70 60"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone3Pattern =
+        new("345 988 1188"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
+        new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch LicenceNumberInHeaderPattern =
+        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
 }

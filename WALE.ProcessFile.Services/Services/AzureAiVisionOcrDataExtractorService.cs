@@ -114,6 +114,8 @@ public class AzureAiVisionOcrDataExtractorService(
                         
                         return [];
                     }
+
+                    throw;
                 }
                 
                 if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))

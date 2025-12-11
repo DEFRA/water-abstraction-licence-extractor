@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -92,8 +92,18 @@ public static partial class LicenceNumber
                     columnText = columnText.Replace(" (", splitChar);
                 }
                 
-                var subLines = columnText.Split(splitChar);
+                var slashSpacePos = columnText.IndexOf("/ ", StringComparison.Ordinal);
+                var isSlashSpaceDigit = slashSpacePos > 0
+                    && columnText.Length > slashSpacePos + 2 
+                    & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
 
+                if (isSlashSpaceDigit)
+                {
+                    columnText = columnText.Replace("/ ", "/");
+                }
+                
+                var subLines = columnText.Split(splitChar);
+                
                 foreach (var subLine in subLines)
                 {
                     var containsSplitter = subLine.Contains(' ')
@@ -232,7 +242,7 @@ public static partial class LicenceNumber
                     }
                     
                     // Its a value + unit
-                    if (value.Contains('.') && value.Contains("MI"))
+                    if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
                     {
                         continue;
                     }
@@ -376,7 +386,13 @@ public static partial class LicenceNumber
                     }
                     
                     // Invalid end of a licence number (probably cut off)
-                    if (value?.EndsWith("/R") == true)
+                    if (value.EndsWith("/R"))
+                    {
+                        continue;
+                    }
+                    
+                    // Invalid end of a licence number
+                    if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

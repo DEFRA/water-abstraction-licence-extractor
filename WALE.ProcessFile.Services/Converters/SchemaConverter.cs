@@ -272,7 +272,7 @@ public static partial class SchemaConverter
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
         
         linkedLicences = linkedLicences
-            .GroupBy(linkedLicence => linkedLicence.LicenceNumber)
+            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber))
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
@@ -965,7 +965,9 @@ public static partial class SchemaConverter
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
             // Already found it
-            if (returnLicences.Any(returnLicence => returnLicence.LicenceNumber == linkedLicence.LicenceNumber))
+            if (returnLicences.Any(returnLicence =>
+                FormattingHelper.StripForComparison(returnLicence.LicenceNumber)
+                    == FormattingHelper.StripForComparison(linkedLicence.LicenceNumber)))
             {
                 continue;
             }
@@ -1254,7 +1256,7 @@ public static partial class SchemaConverter
                         ContainedIn = [
                             new LinkedLicenceSection
                             {
-                                SectionName = LinkedLicenceSectionNames.Purposes,
+                                SectionName = LinkedLicenceSectionNames.Points,
                                 LinkReason = GetLinkReason(sections, linkedLicenceNumber)
                             }
                         ]

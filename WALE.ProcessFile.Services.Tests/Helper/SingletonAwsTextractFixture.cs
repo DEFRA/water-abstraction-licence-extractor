@@ -9,7 +9,7 @@ public class SingletonAwsTextractFixture : IDisposable
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
-    public static AwsTextractOcrDataExtractorService Instance =>
+    public AwsTextractOcrDataExtractorService Instance =>
         AwsTextractOcrDataExtractorService.Instance(
             TestConfig.AwsAccessKey,
             TestConfig.AwsSecretKey,

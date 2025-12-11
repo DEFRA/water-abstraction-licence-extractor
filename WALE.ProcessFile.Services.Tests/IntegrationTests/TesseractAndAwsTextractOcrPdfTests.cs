@@ -12,6 +12,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[Collection("AWS Textract")]
 public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     : IClassFixture<SingletonAwsTextractFixture>
 {
@@ -24,7 +25,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         {
             new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
             new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
-            SingletonAwsTextractFixture.Instance
+            textractFixture.Instance
         },
         CacheService,
         OutputService,
@@ -36,7 +37,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         {
             new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
             new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
-            SingletonAwsTextractFixture.Instance
+            textractFixture.Instance
         },
         CacheService,
         OutputService,

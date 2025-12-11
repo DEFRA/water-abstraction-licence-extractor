@@ -11,8 +11,8 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[Collection("AWS Textract")]
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
-    : IClassFixture<SingletonAwsTextractFixture>
 {
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -21,7 +21,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            SingletonAwsTextractFixture.Instance
+            textractFixture.Instance
         },
         CacheService,
         OutputService,
@@ -31,7 +31,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            SingletonAwsTextractFixture.Instance
+            textractFixture.Instance
         },
         CacheService,
         OutputService,

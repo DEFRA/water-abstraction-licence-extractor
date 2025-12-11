@@ -2182,7 +2182,8 @@ public static class LabelConfiguration
             SkipLineWhenContains =
             [
                 LicenceNumberLine,
-                "discharge permit"
+                "discharge permit",
+                "discharge consent"
             ]
         };
     }

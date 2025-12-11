@@ -270,7 +270,7 @@ public static partial class SchemaConverter
         
         var licenceHistory = GetLicenceHistoryLinkedLicences(matches);
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
-        
+
         linkedLicences = linkedLicences
             .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber))
             .Select(linkedLicencesGroup =>
@@ -284,7 +284,7 @@ public static partial class SchemaConverter
                     {
                         continue;
                     }
-                    
+
                     var sectionItems = linkedLicence.ContainedIn;
 
                     foreach (var sectionItem in sectionItems)
@@ -293,7 +293,7 @@ public static partial class SchemaConverter
                         {
                             continue;
                         }
-                        
+
                         fromSection.Add(sectionItem);
                     }
                 }
@@ -309,23 +309,38 @@ public static partial class SchemaConverter
                     deadLicenceNumbers,
                     liveLicenceNumbers);
             })
-            .Where(linkedLicence => !LicenceNumbersAreEqual(licenceNumber, linkedLicence.LicenceNumber))
+            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber))
             .ToList();
 
+        var newLinkedLicences = new List<LinkedLicence>();
+
+        foreach (var linkedLicence in linkedLicences)
+        {
+            if (newLinkedLicences.Any(linkedLicence2 =>
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber)))
+            {
+                continue;
+            }
+            
+            newLinkedLicences.Add(linkedLicence);
+        }
+
+        linkedLicences = newLinkedLicences;
+        
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(matches);
         var additionalLinkedLicenceCount = 1;
         
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
             var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
-            if (LicenceNumbersAreEqual(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
+            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
             {
                 continue;
             }
             
             var found = linkedLicences
                 .Any(linkedLicence =>
-                    LicenceNumbersAreEqual(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber));
+                    LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber));
 
             if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
             {
@@ -338,11 +353,17 @@ public static partial class SchemaConverter
                     .Any(linkedLicence =>
                     {
                         var paddedLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(linkedLicence.LicenceNumber);
-                        return LicenceNumbersAreEqual(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber);
+                        return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber);
                     });
             }
 
             if (FormattingHelper.StripForComparison(allDocumentLinkedLicence.LicenceNumber)!.Length < 4)
+            {
+                found = true;
+            }
+            
+            if (linkedLicences.Any(linkedLicence2 =>
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, allDocumentLinkedLicence.LicenceNumber)))
             {
                 found = true;
             }
@@ -395,25 +416,29 @@ public static partial class SchemaConverter
         };
     }
 
-    private static bool LicenceNumbersAreEqual(string? licenceNumber1, string? licenceNumber2)
+    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2)
     {
-        var licenceNumberStripped =
+        var licenceNumberStripped1 =
             FormattingHelper.StripForComparison(licenceNumber1);
 
-        if (string.IsNullOrWhiteSpace(licenceNumberStripped))
+        if (string.IsNullOrWhiteSpace(licenceNumberStripped1))
         {
             return false;
         }
 
-        var linkedLicenceNumberStripped =
+        var licenceNumberStripped2 =
             FormattingHelper.StripForComparison(licenceNumber2);
 
-        if (string.IsNullOrWhiteSpace(linkedLicenceNumberStripped))
+        if (string.IsNullOrWhiteSpace(licenceNumberStripped2))
         {
             return false;
         }
+        
+        var only1HasR1 = (licenceNumberStripped1.Contains("R1") && !licenceNumberStripped2.Contains("R1"))
+            || (!licenceNumberStripped1.Contains("R1") && licenceNumberStripped2.Contains("R1"));
 
-        return licenceNumberStripped.Contains(linkedLicenceNumberStripped);
+        return !only1HasR1
+            && licenceNumberStripped1.Contains(licenceNumberStripped2);
     }
     
     private static LinkedLicence ToLinkedLicence(

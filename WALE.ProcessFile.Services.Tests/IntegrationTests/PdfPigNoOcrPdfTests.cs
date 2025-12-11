@@ -5177,8 +5177,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         
-        Assert.Equal("2/27/28/231", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("2/27/28/083", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal("27/28/0083", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);        
+        Assert.Equal("2/27/28/270", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("2/27/28/231", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("2/27/28/083", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);      
     }
 }

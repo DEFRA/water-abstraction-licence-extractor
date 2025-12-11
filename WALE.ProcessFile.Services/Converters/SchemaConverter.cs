@@ -159,7 +159,7 @@ public static partial class SchemaConverter
             }
         }
         
-        licenceNumber = FormattingHelper.PadLicenceNumber(licenceNumber);
+        licenceNumber = FormattingHelper.PadLicenceNumber(licenceNumber)?.ToUpper();
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,

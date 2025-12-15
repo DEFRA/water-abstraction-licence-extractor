@@ -216,21 +216,6 @@ public static class TestConfig
         }
     }
 
-    private static string? _sqlConnectionString;
-    public static string SqlConnectionString
-    {
-        get
-        {
-            if (_sqlConnectionString != null)
-            {
-                return _sqlConnectionString;
-            }
-            
-            _sqlConnectionString = Config["SqlConnectionString"]!;
-            return _sqlConnectionString;
-        }
-    }
-
     private static string? _postgresConnectionString;
     public static string PostgresConnectionString
     {

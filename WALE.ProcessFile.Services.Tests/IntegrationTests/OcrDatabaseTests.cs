@@ -3,8 +3,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -14,11 +13,22 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class OcrDatabaseTests
 {
-    private static readonly IDatabaseReadService ReadService = new SqlSeverReadService(TestConfig.SqlConnectionString);
-    private static readonly IDatabaseWriteService WriteService = new SqlSeverWriteService(TestConfig.SqlConnectionString);       
+    private static readonly PostgresDataSourceProvider PostgresDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(PostgresDataSourceProvider);
+
+    private static IDatabaseWriteService WriteService =>
+        new PostgresWriteService(PostgresDataSourceProvider);
     
     private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
+
+    public OcrDatabaseTests()
+    {
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),

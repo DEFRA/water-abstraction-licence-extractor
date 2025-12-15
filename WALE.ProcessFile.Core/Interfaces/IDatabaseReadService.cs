@@ -3,7 +3,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.OutputSchema.Table;
 
-namespace WALE.ProcessFile.Database.Interfaces;
+namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseReadService
 {

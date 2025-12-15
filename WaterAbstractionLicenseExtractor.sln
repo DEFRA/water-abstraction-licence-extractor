@@ -21,13 +21,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{083AE369
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools", "Tools\WALE.Tools\WALE.Tools.csproj", "{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Database", "WALE.ProcessFile.Database\WALE.ProcessFile.Database.csproj", "{C3AE7A1C-DAE6-4D17-A065-1CD25D052190}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Core", "WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj", "{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Web", "WALE.ProcessFile.Web\WALE.ProcessFile.Web.csproj", "{D6610C71-EFBD-4529-8503-321A05692319}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AwsTextract", "WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj", "{694B6A77-DB35-4393-902D-A3BDEBDC5541}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Database.PostgreSQL", "WALE.ProcessFile.Database.PostgreSQL\WALE.ProcessFile.Database.PostgreSQL.csproj", "{9DADA8B2-6995-4BCF-AF69-912E81FEAA99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools.Database.PostgreSQL.MigrationRunner", "Tools\WALE.Tools.Database.PostgreSQL.MigrationRunner\WALE.Tools.Database.PostgreSQL.MigrationRunner.csproj", "{67B5129F-0E4D-4429-96DD-9B2FF4AECD14}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,10 +61,6 @@ Global
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C3AE7A1C-DAE6-4D17-A065-1CD25D052190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3AE7A1C-DAE6-4D17-A065-1CD25D052190}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3AE7A1C-DAE6-4D17-A065-1CD25D052190}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3AE7A1C-DAE6-4D17-A065-1CD25D052190}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,9 +73,18 @@ Global
 		{694B6A77-DB35-4393-902D-A3BDEBDC5541}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{694B6A77-DB35-4393-902D-A3BDEBDC5541}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{694B6A77-DB35-4393-902D-A3BDEBDC5541}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A438B272-8652-4721-8951-906B4142FD5B} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}
+		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}
 	EndGlobalSection
 EndGlobal

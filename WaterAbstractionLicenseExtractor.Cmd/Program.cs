@@ -4,7 +4,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Helpers;
@@ -276,11 +276,15 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("ThumbnailImageDataPath");
     var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
         ?? throw new NullReferenceException("FullImageDataPath");
-    var sqlConnectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
-        ?? throw new NullReferenceException("SqlConnectionString");
+    var postgresConnectionString = Environment.GetEnvironmentVariable("PostgresConnectionString")
+        ?? throw new NullReferenceException("PostgresConnectionString");
+
+    // This provider should have singleton lifetime and be shared for proper connection pooling
+    var postgresDataSourceProvider = new PostgresDataSourceProvider(postgresConnectionString);
     
-    var databaseReadService = new SqlSeverReadService(sqlConnectionString);
-    var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
+    Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
+    var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);

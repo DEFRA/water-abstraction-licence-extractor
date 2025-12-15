@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Database.Interfaces;
+namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseWriteService
 {

@@ -1,4 +1,5 @@
 ﻿using FluentMigrator.Runner;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
@@ -10,11 +11,18 @@ return;
 
 static ServiceProvider CreateServices()
 {
+    var config = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .AddUserSecrets<Program>()
+        .Build();
+    
+    var dbConnectionString = config.GetConnectionString("PostgreSQL");
+    
     return new ServiceCollection()
         .AddFluentMigratorCore()
         .ConfigureRunner(rb => rb
             .AddPostgres()
-            .WithGlobalConnectionString("Host=localhost;Port=5432;Database=wale;Username=ea;Password=EnvironmentAgency1")
+            .WithGlobalConnectionString(dbConnectionString)
             .ScanIn(typeof(InitialSchema).Assembly).For.Migrations())
         .AddLogging(lb => lb.AddFluentMigratorConsole())
         .BuildServiceProvider(false);

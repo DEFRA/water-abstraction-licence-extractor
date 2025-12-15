@@ -78,7 +78,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WALE.ProcessFile.Database.MSSQL\WALE.ProcessFile.Database.MSSQL.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
     </ItemGroup>

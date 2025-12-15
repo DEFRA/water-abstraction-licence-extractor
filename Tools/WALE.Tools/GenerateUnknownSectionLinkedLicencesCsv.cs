@@ -4,7 +4,7 @@ using CsvHelper;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Database.Services;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Models;
 
@@ -12,9 +12,11 @@ namespace WALE.Tools;
 
 public static class GenerateUnknownSectionLinkedLicencesCsv
 {
+    private static readonly PostgresDataSourceProvider PostgresDataSourceProvider = new(KeyConfig.PostgresConnectionString);
+
     private static readonly IOutputService OutputService = new DatabaseOutputService(
-        new SqlSeverReadService(KeyConfig.SqlConnectionString),
-        new SqlSeverWriteService(KeyConfig.SqlConnectionString));
+        new PostgresReadService(PostgresDataSourceProvider),
+        new PostgresWriteService(PostgresDataSourceProvider));
     
     public static async Task GenerateCsvAsync(int processRunId)
     {

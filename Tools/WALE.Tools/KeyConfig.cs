@@ -151,19 +151,19 @@ public static class KeyConfig
         }
     }
 
-    private static string? _sqlConnectionString;
+    private static string? _postgresConnectionString;
 
-    public static string SqlConnectionString
+    public static string PostgresConnectionString
     {
         get
         {
-            if (_sqlConnectionString != null)
+            if (_postgresConnectionString != null)
             {
-                return _sqlConnectionString;
+                return _postgresConnectionString;
             }
             
-            _sqlConnectionString = Config["SqlConnectionString"]!;
-            return _sqlConnectionString;
+            _postgresConnectionString = Config["PostgresConnectionString"]!;
+            return _postgresConnectionString;
         }
     }
 }

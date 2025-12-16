@@ -21,8 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Areas\BFF\Controllers\" />
-      <Folder Include="Areas\BFF\Models\" />
       <Folder Include="Areas\Public\Controllers\" />
       <Folder Include="Areas\Public\Models\" />
     </ItemGroup>

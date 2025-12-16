@@ -2174,10 +2174,15 @@ public static class LabelConfiguration
                 EnvironmentAgencyTelephone2Pattern,
                 EnvironmentAgencyTelephone3Pattern,
                 EnvironmentAgencyTelephone4Pattern,
-                new("0 250 500 1"),
-                new("0 125 250 M"),
-                new("0 170 340"),
-                new("0 150 300")
+                new("0 0 0 0"), // Don't understand what this means, but it appears in some map
+                new("2 8 2 8"), // Don't understand what this means, but it appears in some map
+                new("4 2 4 2"), // Don't understand what this means, but it appears in some map
+                new("7 0 7 0"), // Don't understand what this means, but it appears in some map
+                new("0 250 500 1"), // Doubling scale
+                new("0 125 250 M"), // Doubling scale
+                new("0 170 340"), // Doubling scale
+                new("0 150 300"), // Doubling scale
+                new("0 425 850") // Doubling scale
             ],
             SkipLineWhenContains =
             [

@@ -5,13 +5,7 @@ using WALE.ProcessFile.Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .AddJsonFile("appsettings.Development.json", true)
-    .AddUserSecrets<Program>()
-    .Build();
-
-ConfigureServices(builder.Services, config);
+ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 

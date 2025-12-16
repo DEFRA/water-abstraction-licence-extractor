@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace WaterAbstractionLicenseExtractor.Api.Controllers;
+namespace WALE.Api.Controllers;
 
 [ApiController]
 public class PlaceholderController : Controller

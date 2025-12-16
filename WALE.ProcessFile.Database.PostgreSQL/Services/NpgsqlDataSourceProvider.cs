@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresDataSourceProvider(string connectionString)
+public class NpgsqlDataSourceProvider(string connectionString) : INpgsqlDataSourceProvider
 {
     public NpgsqlDataSource DataSource { get; } = NpgsqlDataSource.Create(connectionString);
 }

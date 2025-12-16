@@ -6,7 +6,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresWriteService(PostgresDataSourceProvider dataSourceProvider)
+public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseWriteService
 {
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)

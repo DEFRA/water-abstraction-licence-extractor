@@ -10,7 +10,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema.Table;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
+public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseReadService
 {
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)

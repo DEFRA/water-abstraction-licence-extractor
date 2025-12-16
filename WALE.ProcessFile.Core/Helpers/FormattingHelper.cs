@@ -34,7 +34,15 @@ public static class FormattingHelper
             sb.Append(part);
         }
 
-        return sb.ToString().Replace("0", string.Empty);
+        var str = sb.ToString();
+
+        if (str.EndsWith('0'))
+        {
+            var partWithoutTrailingZero = str[..^1];
+            return partWithoutTrailingZero.Replace("0", string.Empty) + "0";
+        }
+        
+        return str.Replace("0", string.Empty);
     }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)

@@ -396,11 +396,17 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-                    
+
                     var colText = FormattingHelper.TrimFormatting(
                         value,
                         true,
                         true);
+
+                    // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
+                    if (subLine.Contains($"{colText}-"))
+                    {
+                        continue;
+                    }
                     
                     var clonedColumn = new DocumentLineColumn(colText!);
                     newColumns.Clear();

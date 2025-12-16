@@ -191,8 +191,9 @@ public static class ApplicableToMost
                 // TODO can swap this out now for shared method in Base
 
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
+                var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                if (!isTableLine && LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();

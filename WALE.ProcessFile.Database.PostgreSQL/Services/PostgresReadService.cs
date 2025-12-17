@@ -276,13 +276,15 @@ public class PostgresReadService(PostgresDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               licence_set_id,
-                               short_licence_set_id, 
-                               schema_licence_set_id 
-                           FROM licence_set 
-                           WHERE process_run_id = @ProcessRunId 
-                             AND filename = @Filename
+                           SELECT DISTINCT
+                               ls.licence_set_id,
+                               ls.short_licence_set_id, 
+                               ls.schema_licence_set_id 
+                           FROM licence_set ls
+                           JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
+                           JOIN licence l on l.licence_id = lsl.licence_id AND l.filename = @Filename
+                           WHERE
+                               ls.process_run_id = @ProcessRunId
                            """;
 
         return (await connection.QueryAsync<LicenceSetTable>(sql, new

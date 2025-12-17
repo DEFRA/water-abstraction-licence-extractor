@@ -446,12 +446,15 @@ public static partial class SchemaConverter
         {
             return false;
         }
+
+        const string r1 = "R1";
         
-        var only1HasR1 = (licenceNumberStripped1.Contains("R1") && !licenceNumberStripped2.Contains("R1"))
-            || (!licenceNumberStripped1.Contains("R1") && licenceNumberStripped2.Contains("R1"));
+        var only1HasR1 = (licenceNumberStripped1.Contains(r1) && !licenceNumberStripped2.Contains(r1))
+            || (!licenceNumberStripped1.Contains(r1) && licenceNumberStripped2.Contains(r1));
 
         return !only1HasR1
-            && licenceNumberStripped1.Contains(licenceNumberStripped2);
+               && (licenceNumberStripped1.Contains(licenceNumberStripped2)
+                   || licenceNumberStripped2.Contains(licenceNumberStripped1));
     }
     
     private static LinkedLicence ToLinkedLicence(
@@ -1489,6 +1492,11 @@ public static partial class SchemaConverter
                 return "SubsequentAbstraction";
             }
             
+            if (text.Contains("re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ReAbstraction";
+            }
+            
             if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
                 && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
                 && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
@@ -1499,6 +1507,41 @@ public static partial class SchemaConverter
             if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
             {
                 return "AggregateCondition";
+            }
+            
+            if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ShallNotExceed";
+            }
+            
+            if (text.Contains("supporting", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "Supporting";
+            }
+            
+            if (text.Contains("original licence", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "OriginalLicence";
+            }
+            
+            if (text.Contains("transferred to this", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "TransferredToThis";
+            }
+            
+            if (text.Contains("coincident", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "Coincident";
+            }
+            
+            if (text.Contains("shall be supported", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ShallBeSupported";
+            }
+            
+            if (text.Contains("residual flow", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return "ResidualFlow";
             }
         }
 

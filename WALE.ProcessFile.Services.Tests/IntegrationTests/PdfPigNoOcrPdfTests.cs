@@ -4907,6 +4907,11 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal(10, agreedSchemaLicence.LinkedLicences.Length);
+        
+        Assert.Equal("1/25/04/009", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
     }
     
     [Fact]

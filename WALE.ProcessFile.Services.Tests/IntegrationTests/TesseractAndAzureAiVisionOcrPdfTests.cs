@@ -304,7 +304,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, 1)]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 14, 0, 1)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 12, 0, 1)]
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 1, 2)] // Should be 2000 but impossible to tell in file, so fine
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, 1)] // Should be 2000 but impossible to tell in file, so fine
     [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 1, 1)]
     [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9Th day of August 1990", "09/08/1990", 5, 0, 1)]
     [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH .19 66", "07/03/1966", 5, 1, 1)]
@@ -368,7 +368,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 14, 1, "2/26/32/370")] // Correct
     [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 14, 0, "2/27/06/035")] // Correct
     [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12, 0, "2/27/07/039")] // Correct
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 1, "1/25/06/023")] // Year incorrect - faint stamp, can't even read as a human
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, "1/25/06/023")] // Year incorrect - faint stamp, can't even read as a human
     [InlineData("22634080__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1997", "27/03/1997", 12, 0, "2/26/34/080")] // Correct
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 12, 0, "2/27/09/167")] // Incorrect - stamp is not amazing
     [InlineData("22715238__Non-Application Licence Document (05.03.2004).PDF", "5 MAR 2004", "05/03/2004", 14, 0, "2/27/15/238")] // Correct (I think - there is '-' in the stamp)
@@ -563,5 +563,41 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
         Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("503/10", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO - is this a valid licence number?
+    }
+    
+    [Fact]
+    public async Task WhenZ_ZA()
+    {
+        // Arrange
+        const string filename = "12202087__Non-Application Licence Document [Original Licence] (26112001).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        Assert.Equal(11, ExcludeGeneralList(resultFull.Matches!).Count);
+        
+        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
+            _liveLicenceNumbers,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            -1);
+        
+        Assert.Single(licenceSets);
+        
+        Assert.Equal("12202087-LV20011126", licenceSets[0].LicenceSetId);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+
+        var agreedSchemaLicenceGroup = licenceSets[0];
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Equal("1/22/02/087", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("1/22/02/087", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
+        
+        Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 }

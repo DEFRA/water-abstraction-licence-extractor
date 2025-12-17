@@ -14,14 +14,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class NoOcrDatabaseTests
 {
-    private static readonly PostgresDataSourceProvider PostgresDataSourceProvider =
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresConnectionString);
     
     private static IDatabaseReadService ReadService =>
-        new PostgresReadService(PostgresDataSourceProvider);
+        new PostgresReadService(NpgsqlDataSourceProvider);
 
     private static IDatabaseWriteService WriteService =>
-        new PostgresWriteService(PostgresDataSourceProvider);
+        new PostgresWriteService(NpgsqlDataSourceProvider);
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);

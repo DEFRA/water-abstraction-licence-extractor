@@ -12,11 +12,11 @@ namespace WALE.Tools;
 
 public static class GenerateUnknownSectionLinkedLicencesCsv
 {
-    private static readonly PostgresDataSourceProvider PostgresDataSourceProvider = new(KeyConfig.PostgresConnectionString);
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(KeyConfig.PostgresConnectionString);
 
     private static readonly IOutputService OutputService = new DatabaseOutputService(
-        new PostgresReadService(PostgresDataSourceProvider),
-        new PostgresWriteService(PostgresDataSourceProvider));
+        new PostgresReadService(NpgsqlDataSourceProvider),
+        new PostgresWriteService(NpgsqlDataSourceProvider));
     
     public static async Task GenerateCsvAsync(int processRunId)
     {

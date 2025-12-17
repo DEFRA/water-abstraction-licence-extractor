@@ -280,7 +280,7 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("PostgresConnectionString");
 
     // This provider should have singleton lifetime and be shared for proper connection pooling
-    var postgresDataSourceProvider = new PostgresDataSourceProvider(postgresConnectionString);
+    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
     
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);

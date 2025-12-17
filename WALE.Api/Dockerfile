@@ -13,4 +13,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "WaterAbstractionLicenseExtractor.Api.dll"]
+ENTRYPOINT ["dotnet", "WALE.Api.dll"]

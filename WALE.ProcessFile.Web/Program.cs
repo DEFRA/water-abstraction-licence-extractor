@@ -30,7 +30,7 @@ configBuilder.AddJsonFile("appsettings.Development.json");
 
 var config = configBuilder.Build();
 
-var postgresDataSourceProvider = new PostgresDataSourceProvider(config.GetValue<string>("PostgresConnectionString")!);
+var postgresDataSourceProvider = new NpgsqlDataSourceProvider(config.GetValue<string>("PostgresConnectionString")!);
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 var cacheService = GetCacheService(postgresDataSourceProvider);
@@ -210,7 +210,7 @@ app.MapGet("/licenceSets", async (string filename) =>
 app.Run();
 return;
 
-static ICacheService GetCacheService(PostgresDataSourceProvider dataSourceProvider)
+static ICacheService GetCacheService(INpgsqlDataSourceProvider dataSourceProvider)
 {
     var dataWriteService = new PostgresWriteService(dataSourceProvider);
     var dataReadService = new PostgresReadService(dataSourceProvider);
@@ -219,7 +219,7 @@ static ICacheService GetCacheService(PostgresDataSourceProvider dataSourceProvid
     return outputService;
 }
 
-static IOutputService GetOutputService(PostgresDataSourceProvider dataSourceProvider)
+static IOutputService GetOutputService(INpgsqlDataSourceProvider dataSourceProvider)
 {
     var dataWriteService = new PostgresWriteService(dataSourceProvider);
     var dataReadService = new PostgresReadService(dataSourceProvider);

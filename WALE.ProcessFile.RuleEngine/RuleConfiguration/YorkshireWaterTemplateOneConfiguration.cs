@@ -28,10 +28,7 @@ public static class YorkshireWaterTemplateOneConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new(".*Means of measurement or assessment of the quantity of water abstracted")
-                    {
-                    IsRegularExpression = true
-                    }
+                    new("Means of measurement or assessment of the quantity of water abstracted")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

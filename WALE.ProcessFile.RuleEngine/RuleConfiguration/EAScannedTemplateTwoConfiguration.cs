@@ -28,18 +28,9 @@ public static class EAScannedTemplateTwoConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Licence to abstract water")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Licence holders and successors")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Licence to abstract water"),
+                    new("Licence holders and successors"),
                     new("Means of (measurement) (assessment) of water abstracted")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

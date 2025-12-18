@@ -28,18 +28,9 @@ public static class NorthumbrianWaterTemplateOneConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Equivalent Gallonage Factor")
-                    {
-                    IsRegularExpression = true
-                    },
-                    new("Inland water and point where impounding is authorised")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Equivalent Gallonage Factor"),
+                    new("Inland water and point where impounding is authorised"),
                     new("Manner and extent of impounding")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

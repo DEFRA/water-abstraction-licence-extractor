@@ -28,22 +28,10 @@ public static class NationalRiverTemplateTwoConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Water Resources Act 1989")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Purpose for which water is to be used")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("The quantity of water authorised to be abstracted shall be")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Water Resources Act 1989"),
+                    new("Purpose for which water is to be used"),
+                    new("The quantity of water authorised to be abstracted shall be"),
                     new("Means of measurement or assessment")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

@@ -28,34 +28,13 @@ public static class EAScannedTemplateFourConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Licence Certificate")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Licence to abstract water")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Environment Act 1995")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Water Resources Act 1991")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Water Resources (Succession to Licences) Regulations 1969")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Water Resources (Licences) Regulations 1965")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Licence Certificate"),
+                    new("Licence to abstract water"),
+                    new("Environment Act 1995"),
+                    new("Water Resources Act 1991"),
+                    new("Water Resources (Succession to Licences) Regulations 1969"),
+                    new("Water Resources (Licences) Regulations 1965"),
                     new("Ordinary Licence Conditions")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

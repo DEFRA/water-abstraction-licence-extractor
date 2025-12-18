@@ -28,14 +28,8 @@ public static class EAScannedTemplateOneConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Full Licence to abstract water")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Full Licence to abstract water"),
                     new("Means of measurement of water abstracted")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

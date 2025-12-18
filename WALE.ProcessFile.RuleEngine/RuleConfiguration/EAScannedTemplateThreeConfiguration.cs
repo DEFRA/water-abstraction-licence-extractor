@@ -28,18 +28,9 @@ public static class EAScannedTemplateThreeConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Licence to abstract and impound water")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Licence holders and successors")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Licence to abstract and impound water"),
+                    new("Licence holders and successors"),
                     new("Point of abstraction and impoundment")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

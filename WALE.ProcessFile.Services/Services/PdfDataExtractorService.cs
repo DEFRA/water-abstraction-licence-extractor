@@ -1380,7 +1380,7 @@ public class PdfDataExtractorService(
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
         {
             var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text, RegexOptions.IgnoreCase);;
-                
+
             var position = line.Text.IndexOf(
                 matches[0].Value,
                 StringComparison.InvariantCultureIgnoreCase);

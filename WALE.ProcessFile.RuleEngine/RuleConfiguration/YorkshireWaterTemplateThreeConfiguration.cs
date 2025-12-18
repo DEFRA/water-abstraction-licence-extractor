@@ -28,14 +28,8 @@ public static class YorkshireWaterTemplateThreeConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Regulations 1965")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Regulations 1965"),
                     new("Water Act 1973")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

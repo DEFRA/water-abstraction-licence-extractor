@@ -28,10 +28,7 @@ public static class YorkshireWaterTemplateTwoConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new(".*MEANS OF MEASUREMENT OR ASSESSMENT")
-                    {
-                    IsRegularExpression = true
-                    }
+                    new("MEANS OF MEASUREMENT OR ASSESSMENT")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

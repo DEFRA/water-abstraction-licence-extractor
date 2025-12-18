@@ -28,34 +28,13 @@ public static class NationalRiverTemplateOneConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Water Resources Act 1991")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Point of abstraction")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Purpose of abstraction")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Land on which licence authorises use of water")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Period of abstraction")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Maximum quantity of water to be extracted during the specified period")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Water Resources Act 1991"),
+                    new("Point of abstraction"),
+                    new("Purpose of abstraction"),
+                    new("Land on which licence authorises use of water"),
+                    new("Period of abstraction"),
+                    new("Maximum quantity of water to be extracted during the specified period"),
                     new("Means of measurement of water abstracted")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

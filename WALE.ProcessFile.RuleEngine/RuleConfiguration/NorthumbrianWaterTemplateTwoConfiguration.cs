@@ -28,18 +28,9 @@ public static class NorthumbrianWaterTemplateTwoConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Fees and charges")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Reason for imposition of conditions")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Fees and charges"),
+                    new("Reason for imposition of conditions"),
                     new("Right of appeal")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

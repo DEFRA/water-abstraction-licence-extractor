@@ -28,26 +28,11 @@ public static class EADigitalTemplateOneConfiguration
                     {
                         IsRegularExpression = true
                     },
-                    new("Water Resources Licence To Abstract Water")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Full Licence to abstract water ")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Environment Act 1995")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Water Resources Act 1991 as amended by the Water Act 2003")
-                    {
-                        IsRegularExpression = true
-                    },
+                    new("Water Resources Licence To Abstract Water"),
+                    new("Full Licence to abstract water "),
+                    new("Environment Act 1995"),
+                    new("Water Resources Act 1991 as amended by the Water Act 2003"),
                     new("Water Resources (Abstraction and Impounding) Regulations 2006")
-                    {
-                        IsRegularExpression = true
-                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

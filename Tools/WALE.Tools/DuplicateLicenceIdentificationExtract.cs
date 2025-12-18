@@ -51,53 +51,67 @@ public static class DuplicateLicenceIdentificationExtract
         }
         else
         {
-            const int batchSize = 1;
-            var batches = groupedByPermitAndSize
-                .Select((file, index) => new { file, index })
-                .GroupBy(x => x.index / batchSize)
-                .Select(g => g.Select(x => x.file).ToList())
-                .ToList();
-
-            foreach (var batch in batches)
+            foreach (var group in groupedByPermitAndSize)
             {
-                var batchTasks = batch.Select(async group =>
+                try
                 {
-                    try
+                    // Step 3: Get the list of files for the current permit number
+                    var filesForPermit = group.ToList();
+
+                    // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
+                    var firstFile = filesForPermit
+                        ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
+                        ?.FirstOrDefault();
+                    if (firstFile != null)
                     {
-                        // Step 3: Get the list of files for the current permit number
-                        var filesForPermit = group.ToList();
+                        var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
 
-                        // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
-                        var firstFile = filesForPermit
-                            ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
-                            ?.FirstOrDefault();
-                        if (firstFile != null)
-                        {
-                            var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
-
-                            var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber);
-                            csvResults.AddRange(duplicateResults);
-                        }
+                        var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber);
+                        csvResults.AddRange(duplicateResults);
                     }
-                    catch (Exception ex)
-                    {
-                        // Log the error but continue processing other files
-                        Console.WriteLine($"Error processing file {group.Key}: {ex.Message}");
-                    }
-                });
-
-                // Wait for all tasks in the current batch to complete
-                await Task.WhenAll(batchTasks);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error but continue processing other files
+                    Console.WriteLine($"Error processing file {group.Key}: {ex.Message}");
+                }
             }
         }
         
 
-        var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.csv";
+        var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.xlsx";
         var fullPath = Path.Combine(OutputFolder, fileName);
-        await using var writer = new StreamWriter(fullPath);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        
+        // Create an excel file with the results
+        CreateExcelFileFromList(csvResults, fullPath);
+        // await using var writer = new StreamWriter(fullPath);
+        // await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        //
+        // await csv.WriteRecordsAsync(csvResults);
+    }
+    public static void CreateExcelFileFromList<T>(List<T> employees, string filePath)
+    {
+        // 2. Create a new Excel workbook
+        var workbook = new XLWorkbook();
 
-        await csv.WriteRecordsAsync(csvResults);
+        // 3. Add a new worksheet and insert the list data, including headers
+        // The 'true' argument in LoadFromCollection indicates that the first row is for headers
+        var worksheet = workbook.Worksheets.Add("All_Results");
+        worksheet.Cell(1, 1).InsertTable(employees);
+
+        // Optional: Adjust column widths to fit the contents
+        worksheet.Columns().AdjustToContents();
+
+        // 4. Save the workbook
+        try
+        {
+            workbook.SaveAs(filePath);
+            Console.WriteLine($"Excel file successfully created at: {filePath}");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error saving file: {ex.Message}");
+        }
     }
     private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
         (string FileName, string FilePath, bool FileExists, string FileUrl) mainFile,
@@ -290,7 +304,7 @@ public static class DuplicateLicenceIdentificationExtract
         try
         {
             // Compare with other files
-            var otherFiles = allFiles.Where(f => f.FileName != mainFile.FileName).ToList();
+            var otherFiles = allFiles.Where(f => f.FileUrl != mainFile.FileUrl).ToList();
             Console.WriteLine($"Comparing with {otherFiles.Count} other files");
 
             foreach (var otherFile in otherFiles)

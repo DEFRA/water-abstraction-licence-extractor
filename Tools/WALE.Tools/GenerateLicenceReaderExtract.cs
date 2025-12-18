@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Globalization;
 using CsvHelper;
 using Tesseract;
@@ -99,66 +100,87 @@ public static class GenerateLicenceReaderExtract
             .Select(x => x.Split('/').Last())
             .OrderBy(x => x).ToList();
 
-        var returnList = new List<LicenceReaderCsvLine>();
+        var returnList = new ConcurrentBag<LicenceReaderCsvLine>();
+        const int batchSize = 14;
 
-        foreach (var pdfFilePath in pdfFilePaths)
+        Console.WriteLine($"Found {pdfFilePaths.Count} PDF files to process");
+        Console.WriteLine($"Processing in parallel batches of {batchSize}...");
+
+        for (int i = 0; i < pdfFilePaths.Count; i += batchSize)
         {
-            try
+            var batch = pdfFilePaths.Skip(i).Take(batchSize).ToList();
+            var batchNumber = (i / batchSize) + 1;
+            var totalBatches = (int)Math.Ceiling((double)pdfFilePaths.Count / batchSize);
+
+            Console.WriteLine($"\n=== Processing Batch {batchNumber} of {totalBatches} ({batch.Count} files in parallel) ===");
+
+            // Create tasks for parallel processing
+            var batchTasks = batch.Select(async (pdfFilePath, index) =>
             {
-                Console.WriteLine($"Processing file: {pdfFilePath}");
-
-                // Check if file exists
-                var fullPath = KeyConfig.PdfFolder + pdfFilePath;
-                if (!File.Exists(fullPath))
+                try
                 {
-                    throw new FileNotFoundException($"PDF file not found: {fullPath}");
+                    var fileNumber = i + index + 1;
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Starting file: {pdfFilePath} (File {fileNumber} of {pdfFilePaths.Count})");
+
+                    // Check if file exists
+                    var fullPath = KeyConfig.PdfFolder + pdfFilePath;
+                    if (!File.Exists(fullPath))
+                    {
+                        throw new FileNotFoundException($"PDF file not found: {fullPath}");
+                    }
+
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] File exists, attempting to extract matches for {pdfFilePath}...");
+                    var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
+
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Matches extracted successfully, processing licence data for {pdfFilePath}...");
+
+                    // Extract licence number and date of issue from matches
+                    var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
+                    var dateOfIssue = SharedHelper.ExtractDateOfIssue(internalJson);
+
+                    // Extract permit number from filename (everything before first underscore)
+                    var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
+
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Extracted - File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
+
+                    returnList.Add(new LicenceReaderCsvLine
+                    {
+                        LicenceNumber = licenceNumber,
+                        PermitNumber = permitNumber,
+                        DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue)
+                    });
                 }
-
-                Console.WriteLine($"File exists, attempting to extract matches...");
-                var internalJson = await GetMatchesAsync(pdfFilePath, pdfDataExtractor);
-
-                Console.WriteLine($"Matches extracted successfully, processing licence data...");
-
-                // Extract licence number and date of issue from matches
-                var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
-                var dateOfIssue =  SharedHelper.ExtractDateOfIssue(internalJson);
-
-                // Extract permit number from filename (everything before first underscore)
-                var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
-
-                Console.WriteLine($"Extracted - Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
-
-                returnList.Add(new LicenceReaderCsvLine
+                catch (Exception ex)
                 {
-                    LicenceNumber = licenceNumber,
-                    PermitNumber = permitNumber,
-                    DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue)
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error processing file {pdfFilePath}:");
-                Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-                Console.WriteLine($"  Message: {ex.Message}");
-                Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Error processing file {pdfFilePath}:");
+                    Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
+                    Console.WriteLine($"  Message: {ex.Message}");
+                    Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
 
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
-                    Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
+                        Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+                    }
+
+                    // Add entry with filename but null values to track failed files
+                    returnList.Add(new LicenceReaderCsvLine
+                    {
+                        LicenceNumber = null,
+                        PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath),
+                        DateOfIssue = null
+                    });
                 }
+            }).ToArray();
 
-                // Add entry with filename but null values to track failed files
-                returnList.Add(new LicenceReaderCsvLine
-                {
-                    LicenceNumber = null,
-                    PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath),
-                    DateOfIssue = null
-                });
-            }
+            // Wait for all tasks in the batch to complete
+            await Task.WhenAll(batchTasks);
+
+            Console.WriteLine($"Completed batch {batchNumber} of {totalBatches}. Processed {returnList.Count} files so far.");
         }
 
-        return returnList;
+        Console.WriteLine($"\nCompleted processing all {pdfFilePaths.Count} files in {Math.Ceiling((double)pdfFilePaths.Count / batchSize)} parallel batches.");
+        return returnList.ToList().OrderBy(x => x.PermitNumber).ToList();
     }
 
     

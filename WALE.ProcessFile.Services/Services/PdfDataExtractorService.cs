@@ -508,7 +508,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (!LabelIsInDocument(label, documentLines, out _))
+                if (LabelIsInDocument(label, documentLines) == false)
                 {
                     continue;
                 }
@@ -795,6 +795,10 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
+                    if (label.Name == "Issuer")
+                    {
+                        
+                    }
                     
                     if (label.Text?.Any() == true)
                     {
@@ -1375,7 +1379,7 @@ public class PdfDataExtractorService(
         
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
         {
-            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text);
+            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text, RegexOptions.IgnoreCase);;
                 
             var position = line.Text.IndexOf(
                 matches[0].Value,
@@ -1422,6 +1426,12 @@ public class PdfDataExtractorService(
                 labelText.Text,
                 StringComparison.InvariantCultureIgnoreCase);
 
+            // if (labelText.IsRegularExpression)
+            // {
+            //     var matches = Regex.Matches(line.Text, labelText.Text, RegexOptions.IgnoreCase);;
+            //     index = matches.FirstOrDefault()?.Index ?? PositionConstants.PositionNotFound;
+            // }
+
             if (index > PositionConstants.PositionNotFound)
             {
                 labelTextPositionIndex = index;
@@ -1443,7 +1453,7 @@ public class PdfDataExtractorService(
         
         var textAfterLabel = FormattingHelper.TrimFormatting(
             line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
-        
+
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
@@ -1534,13 +1544,10 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private static bool LabelIsInDocument(
+    private static bool? LabelIsInDocument(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> lines,
-        out List<DocumentLine> matchedLines)
+        IReadOnlyList<DocumentLine> lines)
     {
-        matchedLines = [];
-        
         var labelText = label.Text!
             .Select(labelTextMatch =>
             {
@@ -1551,41 +1558,28 @@ public class PdfDataExtractorService(
                     text = text
                         .Replace(PositionConstants.EndOfLineMarker, string.Empty);
                 }
-                
+            
                 if (text.Contains(PositionConstants.EndOfColumnMarker))
                 {
                     text = text
                         .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
                 }
-                
-                return text;
-                
-                
+            
+                return (labelTextMatch, text);
             })
             .ToList();
-        
-        if (labelText.Any(text =>
-            text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+    
+        if (labelText.Any(tuple =>
+                tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
+    
+        var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
 
-        foreach (var text in labelText)
+        return isRegularExpression || labelText.Any(tuple =>
         {
-            foreach (var line in lines)
-            {
-                if (!line.Text.Contains(text, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    continue;
-                }
-                
-                matchedLines.Add(line);
-            }
-        }
-        
-        return labelText.Any(text =>
-        {
-            return string.Join(',', lines.Select(line => line.Text)).Contains(text,
+            return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
                 StringComparison.InvariantCultureIgnoreCase);
         });
     }

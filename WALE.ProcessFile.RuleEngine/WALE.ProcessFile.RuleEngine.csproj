@@ -10,4 +10,11 @@
         <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Rules\EADigitalTemplateRule.cs" />
+      <Compile Remove="Rules\NationRiverTemplateRule.cs" />
+      <Compile Remove="Rules\NorthumbrianWaterTemplateRule.cs" />
+      <Compile Remove="Rules\YorkshireWaterTemplateRule.cs" />
+    </ItemGroup>
+
 </Project>

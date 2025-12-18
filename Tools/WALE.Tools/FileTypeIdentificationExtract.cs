@@ -39,8 +39,13 @@ public static class FileTypeIdentificationExtract
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
+                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
                 new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
-                
+                new AzureAiVisionOcrDataExtractorService(
+                    KeyConfig.AiVisionEndpoint,
+                    KeyConfig.AiVisionKey,
+                    cacheService,
+                    outputService)
             },
             cacheService, 
             outputService,

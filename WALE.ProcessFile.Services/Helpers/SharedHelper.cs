@@ -113,6 +113,38 @@ public static class SharedHelper
 
         return null;
     }
+    public static string? ExtractIssuerName(MatchesResult matchesResult)
+    {
+        var dateOfIssueMatch = matchesResult.Matches?
+            .FirstOrDefault(m => m.LabelGroupName == "Issuer");
+
+        if (dateOfIssueMatch?.Text != null && dateOfIssueMatch.Text.Count > 0)
+        {
+            return string.Join(" ", dateOfIssueMatch.Text
+                    .SelectMany(line => line.Text)
+                    .Select(element => element))
+                .Trim()
+                .Replace(" ", "");
+        }
+
+        return null;
+    }
+    public static string? ExtractVariationName(MatchesResult matchesResult)
+    {
+        var dateOfIssueMatch = matchesResult.Matches?
+            .FirstOrDefault(m => m.LabelGroupName == "Variation");
+
+        if (dateOfIssueMatch?.Text != null && dateOfIssueMatch.Text.Count > 0)
+        {
+            return string.Join(" ", dateOfIssueMatch.Text
+                    .SelectMany(line => line.Text)
+                    .Select(element => element))
+                .Trim()
+                .Replace(" ", "");
+        }
+
+        return null;
+    }
 
     public static string? ExtractPermitNumberFromFilename(string filename)
     {

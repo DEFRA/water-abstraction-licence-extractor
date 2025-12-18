@@ -27,10 +27,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Models", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.RuleEngine", "WALE.ProcessFile.RuleEngine\WALE.ProcessFile.RuleEngine.csproj", "{04B41EFC-515C-4962-9464-C87D06CCF301}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WALE.PdfDataExtractor.NuGet", "WALE.PdfDataExtractor.NuGet\WALE.PdfDataExtractor.NuGet.csproj", "{7B8E6C4D-12A3-4567-8901-234567890ABC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		{7B8E6C4D-12A3-4567-8901-234567890ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B8E6C4D-12A3-4567-8901-234567890ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B8E6C4D-12A3-4567-8901-234567890ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B8E6C4D-12A3-4567-8901-234567890ABC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

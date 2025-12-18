@@ -27,7 +27,9 @@ public static class LabelConfiguration
             ("Additional", GetAdditional()),
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
-            ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers())
+            ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
+            ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
+            ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
         ];
     }
     
@@ -223,6 +225,70 @@ public static class LabelConfiguration
         return
         [
             GetLinkedLicenceNumber("GeneralLinkedLicenceNumber")
+        ];
+    }
+    
+    private static List<LabelToMatch> GetScheduleOfConditionsA()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "ScheduleOfConditionsA",
+                TextStart =
+                [
+                    new("SCHEDULE OF CONDITIONS A[END_OF_LINE]"),
+                    new("SCHEDULE OF CONDITIONS[END_OF_LINE]"),
+                ],
+                TextEnd =
+                [
+                    new("SCHEDULE OF CONDITIONS B[END_OF_LINE]"),
+                    new("ADDITIONAL INFORMATION") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true }
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1_000
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetScheduleOfConditionsB()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "ScheduleOfConditionsB",
+                TextStart =
+                [
+                    new("SCHEDULE OF CONDITIONS B[END_OF_LINE]")
+                ],
+                TextEnd =
+                [
+                    new("ADDITIONAL INFORMATION") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true }
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1_000
+            }
         ];
     }
     
@@ -726,7 +792,7 @@ public static class LabelConfiguration
                                         Name = "PointTable",
                                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                                         TextStart = [
-                                            new("Abstraction National Grid Location Description Map"),
+                                            new("Location Description Map"),
                                         ],
                                         TextEnd = [
                                             new("[END_OF_BLOCK]")

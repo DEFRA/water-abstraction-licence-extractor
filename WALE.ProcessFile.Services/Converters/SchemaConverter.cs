@@ -13,7 +13,7 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static partial class SchemaConverter
 {
-    public static int DiffCounter;
+    public static int FilenameDifferentCounter;
     
     private static Licence ToLicence(
         MatchesResult matchesResult,
@@ -27,6 +27,13 @@ public static partial class SchemaConverter
         {
             throw new Exception("No match object exists to convert");
         }
+
+        var noneSchemaData = new Dictionary<string, object>();
+        
+        var hasMultipleScheduleOfConditions = matches
+            .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
+
+        noneSchemaData.TryAdd("Features:MultipleScheduleOfConditions", hasMultipleScheduleOfConditions);
         
         var scrapedLicenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -93,8 +100,6 @@ public static partial class SchemaConverter
         var points = GetPoints(matches);
         var purposes = GetPurposes(matches);
         
-        var noneSchemaData = new Dictionary<string, object>();
-        
         var licenceNumber = scrapedLicenceNumber;
         
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
@@ -150,12 +155,12 @@ public static partial class SchemaConverter
             && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
         {
             var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
-            var diffCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
+            var characterDifferenceCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
 
-            if (diffCount <= 2)
+            if (characterDifferenceCount <= 2)
             {
                 licenceNumber = fileNameLicenceNumber;
-                DiffCounter += 1;
+                FilenameDifferentCounter += 1;
             }
         }
         
@@ -166,7 +171,8 @@ public static partial class SchemaConverter
             licenceNumber,
             licenceVersion.LicenceVersionId,
             points,
-            purposes);
+            purposes,
+            ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -1553,7 +1559,8 @@ public static partial class SchemaConverter
         string? licenceNumber,
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
-        PurposeOfAbstraction[] allPurposes)
+        PurposeOfAbstraction[] allPurposes,
+        ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -1583,6 +1590,21 @@ public static partial class SchemaConverter
             var limitPointTable = abstractionLimitPointSub.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
 
+            // NE0260034052 has one
+            const string featuresPointTableKey = "Features:PointTable";
+            
+            if (noneSchemaData.ContainsKey(featuresPointTableKey))
+            {
+                if (limitPointTable != null)
+                {
+                    noneSchemaData[featuresPointTableKey] = true;
+                }
+            }
+            else
+            {
+                noneSchemaData.Add(featuresPointTableKey, limitPointTable != null);
+            }
+            
             if (limitPointTable != null)
             {
                 var tableLines = limitPointTable.Text!;
@@ -1725,7 +1747,7 @@ public static partial class SchemaConverter
                     
             var limitPurposes = purposeConditionSub?.Count > 0 ?
                 purposeConditionSub.Select(pcs =>
-                    new Purpose { Id = pcs.Text!.First().Text }).ToList()
+                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
                     
             var pointCondition = siblings
@@ -1738,7 +1760,7 @@ public static partial class SchemaConverter
                     
             var limitPoints = pointConditionSub?.Count > 0 ?
                 pointConditionSub.Select(pcs =>
-                    new Point { Id = pcs.Text!.First().Text }).ToList()
+                    new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
 
             var dict = new Dictionary<string, int>();

@@ -53,11 +53,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             0);
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-
     [Fact]
     public async Task WhenA_ThenFoundCorrectly()
     {
@@ -69,11 +64,11 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(18, records.Text!.Count);
+        Assert.Equal(8, records.Text!.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -197,7 +192,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

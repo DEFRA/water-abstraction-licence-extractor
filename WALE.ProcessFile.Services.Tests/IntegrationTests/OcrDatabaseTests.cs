@@ -7,6 +7,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -62,11 +63,6 @@ public class OcrDatabaseTests
         await CacheService.ClearCacheAsync();
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-    
     [Fact]
     public async Task Uncached_Then_Changed()
     {
@@ -84,7 +80,7 @@ public class OcrDatabaseTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 

@@ -8,6 +8,7 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -74,11 +75,6 @@ public class NoOcrDatabaseTests
             0);
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-
     [Fact]
     public async Task AddProcessRun()
     {
@@ -112,7 +108,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

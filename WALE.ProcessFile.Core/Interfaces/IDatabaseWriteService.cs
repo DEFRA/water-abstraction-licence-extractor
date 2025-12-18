@@ -8,6 +8,8 @@ public interface IDatabaseWriteService
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
+
+    public Task UpdateLicenceAsync(int licenceId, string licenceData, string? pdfFilePath, int processRunId);
     
     public Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath, int processRunId);
 

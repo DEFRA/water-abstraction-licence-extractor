@@ -319,7 +319,9 @@
         }
       ],
       "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 249",
+        "Features:PointTable": false,
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
@@ -491,7 +493,9 @@
         }
       ],
       "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 247",
+        "Features:PointTable": false,
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
@@ -663,7 +667,9 @@
         }
       ],
       "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 248",
+        "Features:PointTable": false,
         "issuedToMatchType": "NearNextLineIsMatch",
         "issuedTo": "J \u0026 S Accessories Limited",
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",

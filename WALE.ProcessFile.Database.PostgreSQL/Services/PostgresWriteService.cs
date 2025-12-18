@@ -46,6 +46,29 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         });
     }
 
+    public async Task UpdateLicenceAsync(int licenceId, string licenceData, string? pdfFilePath, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE licence
+                           SET
+                               filename = @filename
+                               , data = @data
+                           WHERE
+                                licence_id = @licenceId
+                                AND process_run_id = @processRunId
+                           """;
+
+        await connection.ExecuteAsync(sql, new
+        {
+            Filename = pdfFilePath ?? "UNKNOWN",
+            LicenceId = licenceId,
+            Data = licenceData,
+            ProcessRunId = processRunId,
+            DateTimeUtc = DateTime.UtcNow
+        });
+    }
+    
     public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath,
         int processRunId)
     {

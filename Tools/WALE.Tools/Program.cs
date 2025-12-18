@@ -2,19 +2,20 @@
 
 //const string workflow = "TestsForAiPrompts";
 //const string workflow = "GenerateAggregatesCsvForTesting";
-const string workflow = "GenerateLinkedLicencesCsv";
+//const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
+const string workflow = "GenerateEALicenceFeaturesCsv";
+
+const int processRunId = 45;
 
 switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
-        const int processRunId1 = 9;
-        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId1);
+        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
 
         break;
     case "GenerateUnknownSectionLinkedLicencesCsv":
-        const int processRunId2 = 804;
-        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId2);
+        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
         
         break;
     case "GenerateAggregatesCsvForTesting":
@@ -22,5 +23,8 @@ switch (workflow)
         break;
     case "TestsForAiPrompts":
         await TestsForAiPrompts.TestsForAiPromptsAsync();
+        break;
+    case "GenerateEALicenceFeaturesCsv":
+        await GenerateEaLicenceFeaturesCsv.GenerateCsvAsync(processRunId);
         break;
 }

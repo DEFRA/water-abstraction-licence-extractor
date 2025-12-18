@@ -70,6 +70,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return -1;
     }
 
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
     {
         throw new NotImplementedException();

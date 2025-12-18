@@ -9,6 +9,7 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -80,11 +81,6 @@ public class PdfPigNoOcrPdfTests
             [pdfFolder + fileName],
             0);
     }
-
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
     
     [Fact]
     public async Task WhenX_NotCheckingAbstractionLimits_ThenFoundCorrectly_IncludesAgreedSchema()
@@ -97,7 +93,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
@@ -274,7 +270,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
@@ -484,7 +480,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(16, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -716,7 +712,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -905,7 +901,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1406,7 +1402,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1982,7 +1978,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2189,7 +2185,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(16, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2299,7 +2295,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
-        Assert.Equal(16, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2405,7 +2401,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -2648,7 +2644,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);        
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);        
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2739,7 +2735,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2831,7 +2827,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);        
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);        
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2922,7 +2918,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);        
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);        
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3044,7 +3040,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3137,7 +3133,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3225,7 +3221,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3353,7 +3349,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
@@ -4039,7 +4035,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceNumber = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
@@ -4085,7 +4081,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -4129,7 +4125,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -4168,7 +4164,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -4248,7 +4244,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -4394,7 +4390,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -4458,7 +4454,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4559,7 +4555,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(13, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(13, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4600,7 +4596,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4644,7 +4640,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4689,7 +4685,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4730,7 +4726,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4781,7 +4777,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(13, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(13, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4815,7 +4811,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4849,7 +4845,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(13, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(13, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4883,7 +4879,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(13, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(13, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4922,7 +4918,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5046,7 +5042,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5082,7 +5078,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5119,7 +5115,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5157,7 +5153,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(15, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5195,7 +5191,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5231,7 +5227,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5265,7 +5261,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5302,7 +5298,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(13, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(13, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5336,7 +5332,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5370,7 +5366,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(16, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(16, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5404,7 +5400,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(11, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(11, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5438,7 +5434,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5472,7 +5468,7 @@ public class PdfPigNoOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(12, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

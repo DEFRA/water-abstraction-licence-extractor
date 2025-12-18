@@ -3,6 +3,7 @@ using CsvHelper;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;

@@ -6,6 +6,7 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -45,11 +46,6 @@ public class AzureOpenAiOcrPdfTests
             0);
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-
     [Fact]
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
@@ -61,7 +57,7 @@ public class AzureOpenAiOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

@@ -64,11 +64,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             0);
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-    
     [Fact]
     public async Task GetSomeFromTesseractAndSomeFromAwsTextract_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
@@ -80,7 +75,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -166,7 +161,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(9, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -234,7 +229,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(6, ExcludeGeneralList(resultList).Count);
+        //Assert.Equal(6, GeneralHelper.ExcludeGeneralList(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -361,7 +356,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

@@ -1,5 +1,6 @@
 ﻿using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -65,7 +66,7 @@ async Task ProgramAsync()
     });
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
-    List<LicenceSet> allLicenceSets;
+    List<LicenceSet> allLicenceSetsTemporary;
     
     try
     {
@@ -97,8 +98,8 @@ async Task ProgramAsync()
                 var licenceSetsTask = await Task.WhenAny(scrapingTasks);
                 scrapingTasks.Remove(licenceSetsTask);
 
-                allLicenceSets = await licenceSetsTask;
-                licenceSetGroups.Add(allLicenceSets);   
+                allLicenceSetsTemporary = await licenceSetsTask;
+                licenceSetGroups.Add(allLicenceSetsTemporary);   
             }
         }
 
@@ -108,8 +109,8 @@ async Task ProgramAsync()
 
             foreach (var scrapingTask in scrapingTasks)
             {
-                allLicenceSets = await scrapingTask;
-                licenceSetGroups.Add(allLicenceSets);
+                allLicenceSetsTemporary = await scrapingTask;
+                licenceSetGroups.Add(allLicenceSetsTemporary);
             }
         }
 
@@ -124,9 +125,12 @@ async Task ProgramAsync()
         throw;
     }
 
+    var filenameContainsNE0260034052 = licenceSetGroups.Any(lsg =>
+        lsg.Any(ls => ls.Licences.Any(l => l.Filename?.IndexOf("NE0260034052", StringComparison.Ordinal) > -1)));
+    
     Console.WriteLine($"All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-    allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
@@ -140,6 +144,9 @@ async Task ProgramAsync()
     var completeNumber = 1;
 
     var savedLicenceNumbers = new Dictionary<string, int>();
+    var savedLicenceFilenames = new Dictionary<string, int>();
+    var notFoundSavedLicenceNumbers = new Dictionary<string, int>();
+    
     var savedLicenceSetIds = new HashSet<string>();
     
     foreach (var licenceSetGroup in licenceSetGroups)
@@ -154,14 +161,67 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                if (licenceLoop.LicenceNumber != null
-                    && !savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))
+                var filename = licenceLoop.Filename;
+                
+                if (filename?.IndexOf("NE0260034052", StringComparison.Ordinal) > -1)
                 {
-                    var loopLicenceId =
-                        await outputService.SaveLicenceAsync(licenceLoop, licenceLoop.Filename!,
+                    
+                }
+                
+                if (licenceLoop.LicenceNumber != null
+                    && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _)
+                        || (licenceLoop.Status == LicenceStatus.Ok && notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))))
+                {
+                    int loopLicenceId;
+                    var savedVersionIsNotFound =
+                        notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var existingLicenceId);
+                    
+                    if (savedVersionIsNotFound && licenceLoop.Status == LicenceStatus.Ok)
+                    {
+                        await outputService.UpdateLicenceAsync(
+                            licenceLoop,
+                            existingLicenceId,
+                            filename,
                             processRun.ProcessRunId);
+                        
+                        loopLicenceId = existingLicenceId;
+                    }
+                    else
+                    {
+                        loopLicenceId = await outputService.SaveLicenceAsync(
+                            licenceLoop,
+                            filename,
+                            processRun.ProcessRunId);
+                    }
 
-                    savedLicenceNumbers.Add(licenceLoop.LicenceNumber, loopLicenceId);
+                    savedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber, loopLicenceId);
+
+                    if (!string.IsNullOrWhiteSpace(filename))
+                    {
+                        savedLicenceFilenames.TryAdd(filename, loopLicenceId);
+                    }
+
+                    if (licenceLoop.Status == LicenceStatus.NotFound)
+                    {
+                        notFoundSavedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber, loopLicenceId);
+                    }
+                    else
+                    {
+                        notFoundSavedLicenceNumbers.Remove(licenceLoop.LicenceNumber);
+                    }
+
+                    licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
+                }
+                else if (licenceLoop.LicenceNumber == null
+                    && !string.IsNullOrEmpty(filename)
+                    && !savedLicenceFilenames.TryGetValue(filename, out _))
+                {
+                    var loopLicenceId = await outputService.SaveLicenceAsync(
+                        licenceLoop,
+                        filename,
+                        processRun.ProcessRunId);
+                    
+                    savedLicenceFilenames.Add(filename, loopLicenceId);
                     licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
                 }
                 
@@ -371,7 +431,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     Console.WriteLine($"Attempting {fileNumber} {fileName}...");
     var pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
     pdfDataExtractor.InUse = true;
-    
+
     try
     {
         var previouslyParsedPaths = new List<string>
@@ -384,7 +444,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             licenceMapping);
-        
+
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             lookupConfig,
@@ -409,7 +469,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         }
 
         Console.WriteLine($"Finished {fileNumber} {fileName}...");
-        
+
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             fileLicenceMapping,
@@ -419,13 +479,24 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfDataExtractor,
             pdfFolder,
             processRun.ProcessRunId);
-        
+
         return licenceSets;
+    }
+    catch (InvalidOperationException ioex)
+    {
+        if (ioex.Message.Contains("exists"))
+        {
+            return [];
+        }
+
+        throw;
     }
     catch (Exception ex)
     {
         // TODO log
-        return [];
+        //return [];
+
+        throw;
     }
     finally
     {
@@ -692,8 +763,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("22632154__2-26-32-154 6937561.PDF")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(1000).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0260034052")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10000).ToList();
     
     return pdfFilePaths.ToList();
 }

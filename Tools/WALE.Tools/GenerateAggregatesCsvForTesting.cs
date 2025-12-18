@@ -11,6 +11,7 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;

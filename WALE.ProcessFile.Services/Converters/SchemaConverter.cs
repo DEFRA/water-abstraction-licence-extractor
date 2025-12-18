@@ -13,7 +13,7 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static partial class SchemaConverter
 {
-    public static int DiffCounter;
+    public static int FilenameDifferentCounter;
     
     private static Licence ToLicence(
         MatchesResult matchesResult,
@@ -27,6 +27,13 @@ public static partial class SchemaConverter
         {
             throw new Exception("No match object exists to convert");
         }
+
+        var noneSchemaData = new Dictionary<string, object>();
+        
+        var hasMultipleScheduleOfConditions = matches
+            .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
+
+        noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
         
         var scrapedLicenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -89,11 +96,9 @@ public static partial class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches);
-        var points = GetPoints(matches);
+        var means = GetMeansOfAbstraction(matches, ref noneSchemaData);
+        var points = GetPoints(matches, ref noneSchemaData);
         var purposes = GetPurposes(matches);
-        
-        var noneSchemaData = new Dictionary<string, object>();
         
         var licenceNumber = scrapedLicenceNumber;
         
@@ -150,12 +155,12 @@ public static partial class SchemaConverter
             && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
         {
             var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
-            var diffCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
+            var characterDifferenceCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
 
-            if (diffCount <= 2)
+            if (characterDifferenceCount <= 2)
             {
                 licenceNumber = fileNameLicenceNumber;
-                DiffCounter += 1;
+                FilenameDifferentCounter += 1;
             }
         }
         
@@ -166,7 +171,8 @@ public static partial class SchemaConverter
             licenceNumber,
             licenceVersion.LicenceVersionId,
             points,
-            purposes);
+            purposes,
+            ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -1553,7 +1559,8 @@ public static partial class SchemaConverter
         string? licenceNumber,
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
-        PurposeOfAbstraction[] allPurposes)
+        PurposeOfAbstraction[] allPurposes,
+        ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -1583,6 +1590,19 @@ public static partial class SchemaConverter
             var limitPointTable = abstractionLimitPointSub.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
 
+            // NE0260034052 has one
+            if (noneSchemaData.ContainsKey(TemplateFeatures.LimitPointsTable))
+            {
+                if (limitPointTable != null)
+                {
+                    noneSchemaData[TemplateFeatures.LimitPointsTable] = true;
+                }
+            }
+            else
+            {
+                noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
+            }
+            
             if (limitPointTable != null)
             {
                 var tableLines = limitPointTable.Text!;
@@ -1725,7 +1745,7 @@ public static partial class SchemaConverter
                     
             var limitPurposes = purposeConditionSub?.Count > 0 ?
                 purposeConditionSub.Select(pcs =>
-                    new Purpose { Id = pcs.Text!.First().Text }).ToList()
+                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
                     
             var pointCondition = siblings
@@ -1738,7 +1758,7 @@ public static partial class SchemaConverter
                     
             var limitPoints = pointConditionSub?.Count > 0 ?
                 pointConditionSub.Select(pcs =>
-                    new Point { Id = pcs.Text!.First().Text }).ToList()
+                    new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
 
             var dict = new Dictionary<string, int>();
@@ -2076,7 +2096,7 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches)
+    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
     {
         var meansResult = matches.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction");
         var returnList = new List<MeanOfAbstraction>();
@@ -2093,6 +2113,22 @@ public static partial class SchemaConverter
                 .Text?
                 .Select(t => t.Text);
 
+            var meansPointTable = meanResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "MeanPointTable");
+
+            // NE0260034052 has one
+            if (noneSchemaData.ContainsKey(TemplateFeatures.MeansPointsTable))
+            {
+                if (meansPointTable != null)
+                {
+                    noneSchemaData[TemplateFeatures.MeansPointsTable] = true;
+                }
+            }
+            else
+            {
+                noneSchemaData.Add(TemplateFeatures.MeansPointsTable, meansPointTable != null);
+            }
+            
             var meanId = meanResult.SubResults.FirstOrDefault(
                 x => x.MatchedLabel?.Name == "MeanId");            
             
@@ -2140,7 +2176,7 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches)
+    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var returnList = new List<PointOfAbstraction>();
@@ -2195,9 +2231,22 @@ public static partial class SchemaConverter
                     };
                 }
                 
+                // NE0260034052 has one
                 var pointTable = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
 
+                if (noneSchemaData.ContainsKey(TemplateFeatures.PointsTable))
+                {
+                    if (pointTable != null)
+                    {
+                        noneSchemaData[TemplateFeatures.PointsTable] = true;
+                    }
+                }
+                else
+                {
+                    noneSchemaData.Add(TemplateFeatures.PointsTable, pointTable != null);
+                }
+                
                 if (pointTable != null)
                 {
                     var tableLines = pointTable.Text!;

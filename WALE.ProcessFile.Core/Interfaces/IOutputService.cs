@@ -22,6 +22,8 @@ public interface IOutputService
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
     public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId);
+
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId);
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
     

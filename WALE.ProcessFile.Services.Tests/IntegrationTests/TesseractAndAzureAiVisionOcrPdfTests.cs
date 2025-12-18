@@ -8,6 +8,7 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -70,11 +71,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0);
     }
     
-    private static List<LabelGroupResult> ExcludeGeneralList(List<LabelGroupResult> matches)
-    {
-        return matches.Where(m => m.LabelGroupName != "LinkedLicenceNumber").ToList();
-    }
-    
     [Fact]
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
@@ -86,7 +82,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(9, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -194,7 +190,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -324,7 +320,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -385,7 +381,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -436,7 +432,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, ExcludeGeneralList(resultList).Count);
+        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -504,7 +500,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(12, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -538,7 +534,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -574,7 +570,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(11, ExcludeGeneralList(resultFull.Matches!).Count);
+        Assert.Equal(11, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

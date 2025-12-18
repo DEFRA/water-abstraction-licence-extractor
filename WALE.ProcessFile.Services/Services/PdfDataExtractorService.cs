@@ -1082,11 +1082,6 @@ public class PdfDataExtractorService(
                             matchedLabel.Text = [matchedStartText];
                         }
                     }
-
-                    if (matchedLabel.Name == "RecordsLinkedLicenceNumber")
-                    {
-                        
-                    }
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));

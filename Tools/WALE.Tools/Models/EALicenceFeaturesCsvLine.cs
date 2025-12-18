@@ -5,5 +5,7 @@ public class EALicenceFeaturesCsvLine
     public string? Filename { get; set; }
     public string? LicenceNumber { get; set; }
     public bool HasPointTable { get; set; }
+    public bool HasMeansPointTable { get; set; }
+    public bool HasLimitsPointTable { get; set; }
     public bool HasMultipleSchedules { get; set; }    
 }

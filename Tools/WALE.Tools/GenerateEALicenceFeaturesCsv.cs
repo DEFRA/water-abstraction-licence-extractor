@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
@@ -47,13 +48,19 @@ public static class GenerateEaLicenceFeaturesCsv
                 
             }
             
-            var hasMultipleScheduleOfConditions = (bool)licence.NoneSchemaData["Features:MultipleScheduleOfConditions"];
-            var hasPointTable = licence.NoneSchemaData.TryGetValue("Features:PointTable", out var pointTableFeature)
-                && (bool)pointTableFeature;
+            var hasMultipleScheduleOfConditions = (bool)licence.NoneSchemaData[TemplateFeatures.MultipleScheduleOfConditions];
+            var hasPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.PointsTable, out var pointTableFeature1)
+                && (bool)pointTableFeature1;
+            
+            var hasMeansPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.MeansPointsTable, out var pointTableFeature2)
+                && (bool)pointTableFeature2;
+            
+            var hasLimitsPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.LimitPointsTable, out var pointTableFeature3)
+                && (bool)pointTableFeature3;
             
             var usesOcr = (string)licence.NoneSchemaData["ocr"] == "OCR";
 
-            if (usesOcr && !hasMultipleScheduleOfConditions && !hasPointTable)
+            if (usesOcr && !hasMultipleScheduleOfConditions && !hasPointsTable && !hasMeansPointsTable && !hasLimitsPointsTable)
             {
                 continue;
             }
@@ -67,7 +74,9 @@ public static class GenerateEaLicenceFeaturesCsv
             {
                 Filename = licence.Filename,
                 LicenceNumber = licence.LicenceNumber,
-                HasPointTable = hasPointTable,
+                HasPointTable = hasPointsTable,
+                HasLimitsPointTable = hasLimitsPointsTable,
+                HasMeansPointTable = hasMeansPointsTable,
                 HasMultipleSchedules = hasMultipleScheduleOfConditions,
             });
         }

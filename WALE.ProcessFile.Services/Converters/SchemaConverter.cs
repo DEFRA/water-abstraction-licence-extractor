@@ -33,7 +33,7 @@ public static partial class SchemaConverter
         var hasMultipleScheduleOfConditions = matches
             .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
 
-        noneSchemaData.TryAdd("Features:MultipleScheduleOfConditions", hasMultipleScheduleOfConditions);
+        noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
         
         var scrapedLicenceNumber = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
@@ -96,8 +96,8 @@ public static partial class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches);
-        var points = GetPoints(matches);
+        var means = GetMeansOfAbstraction(matches, ref noneSchemaData);
+        var points = GetPoints(matches, ref noneSchemaData);
         var purposes = GetPurposes(matches);
         
         var licenceNumber = scrapedLicenceNumber;
@@ -1591,18 +1591,16 @@ public static partial class SchemaConverter
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
 
             // NE0260034052 has one
-            const string featuresPointTableKey = "Features:PointTable";
-            
-            if (noneSchemaData.ContainsKey(featuresPointTableKey))
+            if (noneSchemaData.ContainsKey(TemplateFeatures.LimitPointsTable))
             {
                 if (limitPointTable != null)
                 {
-                    noneSchemaData[featuresPointTableKey] = true;
+                    noneSchemaData[TemplateFeatures.LimitPointsTable] = true;
                 }
             }
             else
             {
-                noneSchemaData.Add(featuresPointTableKey, limitPointTable != null);
+                noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
             }
             
             if (limitPointTable != null)
@@ -2098,7 +2096,7 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches)
+    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
     {
         var meansResult = matches.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction");
         var returnList = new List<MeanOfAbstraction>();
@@ -2115,6 +2113,22 @@ public static partial class SchemaConverter
                 .Text?
                 .Select(t => t.Text);
 
+            var meansPointTable = meanResult.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "MeanPointTable");
+
+            // NE0260034052 has one
+            if (noneSchemaData.ContainsKey(TemplateFeatures.MeansPointsTable))
+            {
+                if (meansPointTable != null)
+                {
+                    noneSchemaData[TemplateFeatures.MeansPointsTable] = true;
+                }
+            }
+            else
+            {
+                noneSchemaData.Add(TemplateFeatures.MeansPointsTable, meansPointTable != null);
+            }
+            
             var meanId = meanResult.SubResults.FirstOrDefault(
                 x => x.MatchedLabel?.Name == "MeanId");            
             
@@ -2162,7 +2176,7 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches)
+    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var returnList = new List<PointOfAbstraction>();
@@ -2217,9 +2231,22 @@ public static partial class SchemaConverter
                     };
                 }
                 
+                // NE0260034052 has one
                 var pointTable = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
 
+                if (noneSchemaData.ContainsKey(TemplateFeatures.PointsTable))
+                {
+                    if (pointTable != null)
+                    {
+                        noneSchemaData[TemplateFeatures.PointsTable] = true;
+                    }
+                }
+                else
+                {
+                    noneSchemaData.Add(TemplateFeatures.PointsTable, pointTable != null);
+                }
+                
                 if (pointTable != null)
                 {
                     var tableLines = pointTable.Text!;

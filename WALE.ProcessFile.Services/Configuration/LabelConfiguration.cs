@@ -1453,6 +1453,24 @@ public static class LabelConfiguration
                                 Format = "Text",
                                 PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 0
+                            },
+                            new()
+                            {
+                                Name = "MeanPointTable",
+                                Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                TextStart = [
+                                    new("Abstraction Point Depth (metres) Diameter (millimetres)"),
+                                    new("Abstraction Point Depth")
+                                ],
+                                TextEnd = [
+                                    new("4.[END_OF_LINE]"),
+                                    new("[END_OF_BLOCK]")
+                                ],
+                                Remove = [
+                                    new("Abstraction Point Depth (metres) Diameter (millimetres)")
+                                ],
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 10
                             }
                         ]
                     }
@@ -2199,6 +2217,7 @@ public static class LabelConfiguration
                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                         TextStart = [
                             new("Abstraction Hourly Daily quantity Yearly quantity Instantaneous rate"),
+                            new("Abstraction Point Hourly")
                         ],
                         TextEnd = [
                             new("6.2"),

@@ -42,11 +42,6 @@ public static class GenerateEaLicenceFeaturesCsv
             {
                 continue;
             }
-
-            if (licence.Filename.Contains("NE0260034052"))
-            {
-                
-            }
             
             var hasMultipleScheduleOfConditions = (bool)licence.NoneSchemaData[TemplateFeatures.MultipleScheduleOfConditions];
             var hasPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.PointsTable, out var pointTableFeature1)
@@ -60,16 +55,15 @@ public static class GenerateEaLicenceFeaturesCsv
             
             var usesOcr = (string)licence.NoneSchemaData["ocr"] == "OCR";
 
-            if (usesOcr && !hasMultipleScheduleOfConditions && !hasPointsTable && !hasMeansPointsTable && !hasLimitsPointsTable)
+            if (usesOcr
+                && !hasMultipleScheduleOfConditions
+                && !hasPointsTable
+                && !hasMeansPointsTable
+                && !hasLimitsPointsTable)
             {
                 continue;
             }
 
-            if (usesOcr)
-            {
-                
-            }
-            
             returnList.Add(new EALicenceFeaturesCsvLine
             {
                 Filename = licence.Filename,
@@ -77,7 +71,7 @@ public static class GenerateEaLicenceFeaturesCsv
                 HasPointTable = hasPointsTable,
                 HasLimitsPointTable = hasLimitsPointsTable,
                 HasMeansPointTable = hasMeansPointsTable,
-                HasMultipleSchedules = hasMultipleScheduleOfConditions,
+                HasMultipleSchedules = hasMultipleScheduleOfConditions
             });
         }
         

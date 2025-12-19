@@ -1,5 +1,6 @@
-using WALE.ProcessFile.Core.Helpers;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -19,7 +20,8 @@ public static partial class SchemaConverter
         MatchesResult matchesResult,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers)
+        HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData)
     {
         var matches = matchesResult.Matches;
 
@@ -96,11 +98,7 @@ public static partial class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches, ref noneSchemaData);
-        var points = GetPoints(matches, ref noneSchemaData);
-        var purposes = GetPurposes(matches);
-        
-        var licenceNumber = scrapedLicenceNumber;
+                var licenceNumber = scrapedLicenceNumber;
         
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
         {
@@ -165,6 +163,18 @@ public static partial class SchemaConverter
         }
         
         licenceNumber = FormattingHelper.PadLicenceNumber(licenceNumber)?.ToUpper();
+        
+        var means = GetMeansOfAbstraction(
+            matches,
+            ref noneSchemaData);
+        
+        var points = GetPoints(
+            matches,
+            licenceNumber,
+            naldData,
+            ref noneSchemaData);
+        
+        var purposes = GetPurposes(matches);
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -172,6 +182,7 @@ public static partial class SchemaConverter
             licenceVersion.LicenceVersionId,
             points,
             purposes,
+            naldData,
             ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
@@ -413,6 +424,26 @@ public static partial class SchemaConverter
             Individual = individual
         };
         
+         var naldVersionStartDateStr = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine1)
+            ? naldDataLine1.VersionStartDate
+            : null;
+
+        licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldVersionStartDateStr)
+            ? DateTime.Parse(naldVersionStartDateStr)
+            : null;
+
+        var naldVersionExpiryDateStr = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine2)
+            ? naldDataLine2.ExpiryDate
+            : null;
+
+        licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldVersionExpiryDateStr)
+            ? DateTime.Parse(naldVersionExpiryDateStr)
+            : null;
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -526,6 +557,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         int processRunId)
@@ -536,7 +568,8 @@ public static partial class SchemaConverter
             matchesResult,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
-            liveLicenceNumbers);
+            liveLicenceNumbers,
+            naldData);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
@@ -547,6 +580,7 @@ public static partial class SchemaConverter
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            naldData,
             pdfDataExtractorService,
             pdfFolder,
             previouslyParsedPaths,
@@ -921,6 +955,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
@@ -956,7 +991,8 @@ public static partial class SchemaConverter
                         matches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                         
                     returnLicences.Add(linkedLicence);   
                 }
@@ -1004,7 +1040,8 @@ public static partial class SchemaConverter
                         relatedFileMatches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                     
                     returnLicences.Add(licence);
                 }
@@ -1047,7 +1084,8 @@ public static partial class SchemaConverter
                 relatedFileMatches,
                 impoundmentLicenceNumbers,
                 deadLicenceNumbers,
-                liveLicenceNumbers);
+                liveLicenceNumbers,
+                naldData);
             
             returnLicences.Add(licence);
         }
@@ -1560,6 +1598,7 @@ public static partial class SchemaConverter
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
+        Dictionary<string, NaldData> naldData,
         ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
@@ -1841,7 +1880,7 @@ public static partial class SchemaConverter
                 PrimaryType = linkedLicenceNumbers.Count >= 1
                     ? PrimaryType.LicenceToLicence
                     : PrimaryType.InLicence,
-                NaldType = GetNaldType(),
+                NaldType = GetNaldType(naldData, licenceNumber),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
@@ -2176,7 +2215,11 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
+    private static PointOfAbstraction[] GetPoints(
+        List<LabelGroupResult> matches,
+        string? licenceNumber,
+        Dictionary<string, NaldData> naldData,
+        ref Dictionary<string, object> noneSchemaData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var returnList = new List<PointOfAbstraction>();
@@ -2261,7 +2304,8 @@ public static partial class SchemaConverter
                             Description = tableLine.Text,
                             Id = $"{number} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff
+                            TimeCutoff = timeCutoff,
+                            NaldId = GetNaldPointId(naldData, licenceNumber)
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2291,7 +2335,8 @@ public static partial class SchemaConverter
                     Description = description,
                     Id = number,
                     PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff
+                    TimeCutoff = timeCutoff,
+                    NaldId = GetNaldPointId(naldData, licenceNumber)
                 });
             }
         }
@@ -2299,6 +2344,19 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
+    private static string? GetNaldPointId(Dictionary<string, NaldData> naldData, string? licenceNumber)
+    {
+        var naldPoints = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            ? naldDataLine.Points
+            : null;
+
+        return naldPoints?.Count > 0
+            ? naldPoints[0].ToString()
+            : null;
+    }
+    
     private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches)
     {
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
@@ -2591,11 +2649,17 @@ public static partial class SchemaConverter
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }
-    
-    // ReSharper disable once IdentifierTypo
-    private static string? GetNaldType()
+    private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)
     {
-        return null;
+        var naldAggregateCondition = naldData.Count > 0
+            && !string.IsNullOrEmpty(licenceNumber)
+            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            ? naldDataLine.AggregateConditions
+            : null;
+
+        return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0].Condition)
+            ? naldAggregateCondition[0].Condition
+            : null;
     }
     
     public static List<LicenceSet> AddAdditionalLicenceSets(

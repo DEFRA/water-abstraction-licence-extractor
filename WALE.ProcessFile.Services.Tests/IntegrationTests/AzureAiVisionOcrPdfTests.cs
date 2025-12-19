@@ -63,6 +63,7 @@ public class AzureAiVisionOcrPdfTests
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> _naldData = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
     {
@@ -161,6 +162,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0);
@@ -227,6 +229,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
             0)).Last();
@@ -267,6 +270,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
             0)).Last();
@@ -358,6 +362,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -469,6 +474,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -596,6 +602,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -672,6 +679,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -698,6 +706,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -800,6 +809,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -913,6 +923,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -972,6 +983,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -1034,6 +1046,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -1073,6 +1086,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -1252,6 +1266,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -1484,6 +1499,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -1552,6 +1568,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);
@@ -1582,6 +1599,7 @@ public class AzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);

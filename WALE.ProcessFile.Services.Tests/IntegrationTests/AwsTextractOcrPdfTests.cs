@@ -167,6 +167,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             [],
             [],
+            [],
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
             0)).Last();
@@ -201,6 +202,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
+            [],
             [],
             [],
             [],

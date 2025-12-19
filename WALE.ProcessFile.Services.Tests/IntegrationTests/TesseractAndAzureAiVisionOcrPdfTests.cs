@@ -54,6 +54,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> _naldData = [];
     
     private static string PdfFolder => TestConfig.PdfFolder;
     
@@ -168,6 +169,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -257,6 +259,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -333,6 +336,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             [],
             [],
             [],
+            [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0);
@@ -348,6 +352,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder,
             0);
@@ -394,6 +399,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             [],
             [],
             [],
+            [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0);
@@ -409,6 +415,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0);
@@ -508,6 +515,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -542,6 +550,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -578,6 +587,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);

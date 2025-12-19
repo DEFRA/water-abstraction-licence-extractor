@@ -64,6 +64,7 @@ public class PdfPigNoOcrPdfTests
     private static readonly HashSet<string> LiveLicenceNumbers = [];    
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> NaldData = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
     {
@@ -213,6 +214,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -408,6 +410,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -675,6 +678,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -870,6 +874,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -1377,6 +1382,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -1907,6 +1913,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2166,6 +2173,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2271,6 +2279,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2373,6 +2382,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2516,6 +2526,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2717,6 +2728,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2809,6 +2821,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -2900,6 +2913,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3002,6 +3016,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3113,6 +3128,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3202,6 +3218,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3324,6 +3341,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3421,6 +3439,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -3465,6 +3484,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
@@ -3592,6 +3612,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3685,6 +3706,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3800,6 +3822,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3895,6 +3918,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -3968,6 +3992,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -4059,6 +4084,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -4108,6 +4134,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0)).Last();
@@ -4141,6 +4168,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);
@@ -4180,6 +4208,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);
@@ -4275,6 +4304,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);
@@ -4409,6 +4439,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0)).Last();
@@ -4462,6 +4493,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0);
@@ -4563,6 +4595,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             -1);
@@ -4604,6 +4637,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             -1);
@@ -4648,6 +4682,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4693,6 +4728,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4734,6 +4770,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4785,6 +4822,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4819,6 +4857,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4853,6 +4892,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4887,6 +4927,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -4926,6 +4967,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5050,6 +5092,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5086,6 +5129,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5123,6 +5167,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5161,6 +5206,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5199,6 +5245,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5235,6 +5282,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5269,6 +5317,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5306,6 +5355,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5340,6 +5390,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5374,6 +5425,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5408,6 +5460,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5442,6 +5495,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);
@@ -5476,6 +5530,7 @@ public class PdfPigNoOcrPdfTests
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1);

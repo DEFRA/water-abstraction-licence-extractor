@@ -320,11 +320,13 @@ function populateTable(filterField, filterValue, filterType, sortByField, sortAs
         for (let j = 0; j < item.linkedLicences.length; j++) {
             let linkedLicence = item.linkedLicences[j];
             let licenceNumber = linkedLicence.licenceNumber;
-            let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
-            let abstractionLimits = linkedLicence.fromSection.length >= 1 && linkedLicence.fromSection.indexOf("AbstractionLimits") > -1;
+            let backLink = linkedLicence.containedIn.length === 1
+                && linkedLicence.containedIn[0].sectionName.indexOf("ImplicitBackLink") > -1;
+            let abstractionLimits = linkedLicence.containedIn.length >= 1
+                && linkedLicence.containedIn.indexOf("AbstractionLimits") > -1;
             
             let styledLicenceNumber = backLink && false ? ("(" +linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
-            let text = backLink ? 'Implicit back link' : linkedLicence.fromSection[0];
+            let text = backLink ? 'Implicit back link' : linkedLicence.containedIn[0].sectionName;
             let color = backLink ? "#888" : "black";
             
             if (abstractionLimits) {

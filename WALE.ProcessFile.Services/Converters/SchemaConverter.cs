@@ -293,7 +293,7 @@ public static partial class SchemaConverter
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
-                var fromSection = new List<LinkedLicenceSection>();
+                var containedIn = new List<LinkedLicenceSection>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
                 {
@@ -306,12 +306,12 @@ public static partial class SchemaConverter
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (fromSection.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
                         {
                             continue;
                         }
 
-                        fromSection.Add(sectionItem);
+                        containedIn.Add(sectionItem);
                     }
                 }
 
@@ -321,7 +321,7 @@ public static partial class SchemaConverter
                     linkedLicenceNumber,
                     firstLinkedLicence.Filename,
                     firstLinkedLicence.Condition,
-                    fromSection.ToArray(),
+                    containedIn.ToArray(),
                     impoundmentLicenceNumbers,
                     deadLicenceNumbers,
                     liveLicenceNumbers);

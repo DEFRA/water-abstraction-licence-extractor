@@ -288,6 +288,29 @@ public static class JsOutputHelper
         //Console.WriteLine(message);
         outputStringBuilder.Append(message);
     }
+
+    private static object? GetValue(JsonElement? jsonElement, Type desiredType)
+    {
+        if (jsonElement == null)
+        {
+            return null;
+        }
+
+        switch (jsonElement.Value.ValueKind)
+        {
+            case JsonValueKind.String:
+                return jsonElement.Value.GetString();
+            case JsonValueKind.Number:
+                if (desiredType == typeof(int))
+                {
+                    return jsonElement.Value.GetInt32();
+                }
+
+                return jsonElement.Value.GetDouble();
+        }
+        
+        throw new NotImplementedException();
+    }
     
     private static T2? GetValueOrDefault<T, T2>(
         Dictionary<string, object> data,
@@ -303,10 +326,37 @@ public static class JsOutputHelper
 
         if (value is not JsonElement element)
         {
+            if (value.GetType() == typeof(JsonElement[]))
+            {
+                var ary = (JsonElement[])value;
+                var firstElement = ary.Length >= 1 ? ary.FirstOrDefault() : (JsonElement?)null;
+                
+                return (T2?)(GetValue(firstElement, typeof(T2)) ?? defaultValue);
+            }
+            
             if (value.GetType() == typeof(string[]))
             {
                 var ary = (string[])value;
                 return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
+            }
+            
+            if (value.GetType() == typeof(List<JsonElement>))
+            {
+                var list = (List<JsonElement>)value;
+                var firstElement = list.Count >= 1 ? list.FirstOrDefault() : (JsonElement?)null;
+                
+                return (T2?)(GetValue(firstElement, typeof(T2)) ?? (object?)defaultValue);
+            }
+            
+            if (value.GetType() == typeof(List<string>))
+            {
+                var list = (List<string>)value;
+                return (T2?)(list.FirstOrDefault() ?? (object?)defaultValue);
+            }
+
+            if (typeof(T2) == typeof(int) && value is double dblVal)
+            {
+                return (T2)(object)(int)dblVal;
             }
             
             return (T2)value;

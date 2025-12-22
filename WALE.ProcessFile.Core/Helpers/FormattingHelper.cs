@@ -63,6 +63,14 @@ public static class FormattingHelper
         {
             return licenceNumber;
         }
+        
+        licenceNumber = licenceNumber
+            .Replace("//", "/")
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
+
+        var origSectionLengths = licenceNumber.Split('/');
 
         licenceNumber = licenceNumber
             .Replace(".", string.Empty)
@@ -267,14 +275,38 @@ public static class FormattingHelper
                     }
                     else if (firstChar == '1')
                     {
-                        // NOTE - This is a guess at this point, as there is no other way of doing it
-                        
-                        // Part 3 - 12
-                        part3 = preRSection[..2];
-                        preRSection = preRSection[2..];
+                        if (origSectionLengths.Length >= 4)
+                        {
+                            if (origSectionLengths[2].Length == 2)
+                            {
+                                // Part 3 - 12
+                                part3 = preRSection[..2];
+                                preRSection = preRSection[2..];
 
-                        // Part 4 - 12
-                        part4 = "0" + preRSection[..2];
+                                // Part 4 - 12
+                                part4 = "0" + preRSection[..2];
+                            }
+                            else
+                            {
+                                // Part 3 - 1
+                                part3 = '0' + preRSection[..1];
+                                preRSection = preRSection[1..];
+
+                                // Part 4 - 123
+                                part4 = preRSection[..3];
+                            }
+                        }
+                        else
+                        {
+                            // NOTE - This is a guess at this point, as there is no other way of doing it
+                        
+                            // Part 3 - 12
+                            part3 = preRSection[..2];
+                            preRSection = preRSection[2..];
+
+                            // Part 4 - 12
+                            part4 = "0" + preRSection[..2];
+                        }
                     }
                     else
                     {

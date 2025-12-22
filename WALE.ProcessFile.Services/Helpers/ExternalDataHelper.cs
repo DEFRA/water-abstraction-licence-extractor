@@ -1,6 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
@@ -14,7 +15,7 @@ public static class ExternalDataHelper
             throw new NullReferenceException(nameof(naldDataReportPath));
         }
 
-        var processedLines = new Dictionary<string, NaldData>();
+        var returnList = new Dictionary<string, NaldData>();
 
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
@@ -55,8 +56,10 @@ public static class ExternalDataHelper
                 Ngr1 = line.Ngr1,
                 PointId = line.PointId
             };
+            
+            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
 
-            if (processedLines.TryGetValue(line.LicenceNo!, out var existingItem))
+            if (returnList.TryGetValue(stippedLicenceNumber, out var existingItem))
             {
                 if (lineCondition != null && existingItem.AggregateConditions
                     .All(existingCondition => existingCondition.ToString() != lineCondition.ToString()))
@@ -68,7 +71,7 @@ public static class ExternalDataHelper
                 {
                     existingItem.Points.Add(linePoint);
                 }
-
+                
                 continue;
             }
 
@@ -76,28 +79,29 @@ public static class ExternalDataHelper
                 ? new List<NaldDataAggregate>()
                 : [lineCondition];
 
-            processedLines.Add(
-                line.LicenceNo!,
-                new NaldData
-                {
-                    ExpiryDate = line.ExpiryDate,
-                    VersionStartDate = line.VersionStartDate,
-                    LicenceNumber = line.LicenceNo!,
-                    LicenceWideAnnualQty = line.LicenceWideAnnualQty,
-                    LicenceWideDailyQty = line.LicenceWideDailyQty,
-                    LicenceWideHourlyQty = line.LicenceWideHourlyQty,
-                    LicenceWideInstQty = line.LicenceWideInstQty,
-                    AggregateConditions = lineConditionsArray,
-                    Points = [linePoint],
-                });
+            var naldData = new NaldData
+            {
+                ExpiryDate = line.ExpiryDate,
+                VersionStartDate = line.VersionStartDate,
+                LicenceNumber = line.LicenceNo!,
+                LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
+                LicenceWideAnnualQty = line.LicenceWideAnnualQty,
+                LicenceWideDailyQty = line.LicenceWideDailyQty,
+                LicenceWideHourlyQty = line.LicenceWideHourlyQty,
+                LicenceWideInstQty = line.LicenceWideInstQty,
+                AggregateConditions = lineConditionsArray,
+                Points = [linePoint],
+            };
+            
+            returnList.Add(stippedLicenceNumber, naldData);
         }
 
-        return processedLines;
+        return returnList;
     }
 
     public static void AddNaldLimitReportData(
         string? naldDataReportPath,
-        Dictionary<string, NaldData> generalNaldData)
+        ref Dictionary<string, NaldData> generalNaldData)
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
         {
@@ -124,7 +128,8 @@ public static class ExternalDataHelper
                 continue;
             }
 
-            var existingData = generalNaldData[line.LicenceNo!];
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
+            var existingData = generalNaldData[strippedLicenceNumber];
 
             existingData.AggregateConditions.Add(new NaldDataAggregate
             {
@@ -135,37 +140,31 @@ public static class ExternalDataHelper
         }
     }
 
-    public static Dictionary<string, string> GetLicenceNumberMapping(
-        string? licenceNumberFileMappingFilePath)
+    public static Dictionary<string, string> GetLicenceNumberMappingFromFilenames(string? pdfFolderPath)
     {
-        if (string.IsNullOrEmpty(licenceNumberFileMappingFilePath))
+        if (string.IsNullOrEmpty(pdfFolderPath))
         {
-            throw new NullReferenceException(nameof(licenceNumberFileMappingFilePath));
+            throw new NullReferenceException(nameof(pdfFolderPath));
         }
 
         var returnMapping = new Dictionary<string, string>();
+        var filenames = FileHelper.GetFiles(pdfFolderPath).Select(filepath => filepath.Split('/').Last()).ToList();
 
-        var fileContents = File.Exists(licenceNumberFileMappingFilePath)
-            ? File.ReadAllText(licenceNumberFileMappingFilePath)
-                .Replace("\r", string.Empty)
-                .Split('\n')
-            : [];
-
-        var count = 0;
-        foreach (var line in fileContents)
+        foreach (var filename in filenames)
         {
-            if (count++ == 0)
+            var parts = filename.Split('_');
+            var licenceNumber = parts[0];
+
+            if (licenceNumber.Count(char.IsDigit) < 7)
             {
                 continue;
             }
-
-            var parts = line.Split(',');
-            var licenceNumber = parts[1];
-            var filename = parts[0].Split('/').Last();
-
-            if (!returnMapping.TryAdd(licenceNumber, filename))
+            
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            
+            if (!returnMapping.TryAdd(strippedLicenceNumber, filename))
             {
-                returnMapping[licenceNumber] = filename;
+                throw new Exception($"{filename} is a duplicate for {licenceNumber}");
             }
         }
 

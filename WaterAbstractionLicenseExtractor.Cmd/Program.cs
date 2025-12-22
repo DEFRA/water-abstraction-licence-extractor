@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Tesseract;
+﻿using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -53,8 +50,8 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
     
-    var licenceNumberMapping = ExternalDataHelper.GetLicenceNumberMapping(
-        services.FileMappingPath!);
+    var licenceNumberMapping = ExternalDataHelper.GetLicenceNumberMappingFromFilenames(
+        services.PdfFolderPath!);
     var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
         Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
     var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
@@ -65,7 +62,8 @@ async Task ProgramAsync()
         Environment.GetEnvironmentVariable("NaldDataPath"));
     
     ExternalDataHelper.AddNaldLimitReportData(
-        Environment.GetEnvironmentVariable("NaldLimitDataPath"), naldGeneralData);
+        Environment.GetEnvironmentVariable("NaldLimitDataPath"),
+        ref naldGeneralData);
     
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -98,7 +96,6 @@ async Task ProgramAsync()
                     naldGeneralData,
                     outputService,
                     pdfDataExtractors,
-                    licenceNumberMapping,
                     processRun));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
@@ -329,12 +326,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
         ?? throw new NullReferenceException("ReportTemplatePath");
-    var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
-        ?? throw new NullReferenceException("FileMappingPath");
     var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
         ?? throw new NullReferenceException("OutputFolder");
-    var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
-        ?? throw new NullReferenceException("CacheFolder");
     var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
         ?? throw new NullReferenceException("ListDataPath");
     var processRunsDataPath = Environment.GetEnvironmentVariable("ProcessRunsDataPath")
@@ -409,7 +402,6 @@ ConfiguredServices ConfigureServices()
         CacheService = cacheService,
         OutputService = outputService,
         PdfDataExtractorServices = pdfDataExtractors,
-        FileMappingPath = fileMappingPath,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
         RegenerateMappingJson = regenerateMappingJson,
@@ -437,7 +429,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     Dictionary<string, NaldData> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
-    Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
 {
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
@@ -486,7 +477,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
-            fileLicenceMapping,
+            licenceMapping,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
@@ -648,7 +639,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         
     ).ToList();*/
     //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0260034052")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
     
     return pdfFilePaths.ToList();
 }

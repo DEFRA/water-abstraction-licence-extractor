@@ -43,20 +43,20 @@ public class PdfPigNoOcrPdfTests
     private static Dictionary<string, string> FileLicenceMapping =>
         new()
         {
-            {
-                "25 68 001 247",
+            { 
+                FormattingHelper.StripForComparison("25 68 001 247")!,
                 "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"
             },
             {
-                "25 68 001 248",
+                FormattingHelper.StripForComparison("25 68 001 248")!,
                 "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"
             },
             {
-                "NE/026/0034/018",
+                FormattingHelper.StripForComparison("NE/026/0034/018")!,
                 "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"
             },
             {
-                "NE/026/0034/052",
+                FormattingHelper.StripForComparison("NE/026/0034/052")!,
                 "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"
             }
         };
@@ -4949,6 +4949,51 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/05/044", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/141", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/138", agreedSchemaLicence.LinkedLicences[3].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[3].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/128", agreedSchemaLicence.LinkedLicences[4].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[4].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[4].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/124", agreedSchemaLicence.LinkedLicences[5].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[5].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[5].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[5].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/125", agreedSchemaLicence.LinkedLicences[6].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[6].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[6].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[6].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/118", agreedSchemaLicence.LinkedLicences[7].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[7].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[7].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[7].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/03/031/R01", agreedSchemaLicence.LinkedLicences[8].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[8].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[8].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[8].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("1/25/04/107", agreedSchemaLicence.LinkedLicences[9].LicenceNumber);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[9].ContainedIn!);
+        Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[9].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.LinkedLicences[9].ContainedIn![0].LinkReason);
     }
     
     [Fact]
@@ -5097,7 +5142,7 @@ public class PdfPigNoOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("22722265-LV20160630", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);

@@ -98,7 +98,7 @@ public static partial class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-                var licenceNumber = scrapedLicenceNumber;
+        var licenceNumber = scrapedLicenceNumber;
         
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
         {
@@ -424,9 +424,11 @@ public static partial class SchemaConverter
             Individual = individual
         };
         
+        var stLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        
          var naldVersionStartDateStr = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDataLine1)
+            && !string.IsNullOrEmpty(stLicenceNumber)
+            && naldData.TryGetValue(stLicenceNumber, out var naldDataLine1)
             ? naldDataLine1.VersionStartDate
             : null;
 
@@ -435,8 +437,8 @@ public static partial class SchemaConverter
             : null;
 
         var naldVersionExpiryDateStr = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDataLine2)
+            && !string.IsNullOrEmpty(stLicenceNumber)
+            && naldData.TryGetValue(stLicenceNumber, out var naldDataLine2)
             ? naldDataLine2.ExpiryDate
             : null;
 
@@ -1014,7 +1016,9 @@ public static partial class SchemaConverter
                         continue;
                     }
                     
-                    if (!licenceNumberMapping.TryGetValue(licenceNumber!, out var relatedFileName))
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+                    
+                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var relatedFileName))
                     {
                         returnLicences.Add(new Licence
                         {
@@ -1050,15 +1054,17 @@ public static partial class SchemaConverter
         
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
+            var strippedLlNumber = FormattingHelper.StripForComparison(linkedLicence.LicenceNumber);
+            
             // Already found it
             if (returnLicences.Any(returnLicence =>
                 FormattingHelper.StripForComparison(returnLicence.LicenceNumber)
-                    == FormattingHelper.StripForComparison(linkedLicence.LicenceNumber)))
+                    == strippedLlNumber))
             {
                 continue;
             }
             
-            if (!licenceNumberMapping.TryGetValue(linkedLicence.LicenceNumber!, out var relatedFileName))
+            if (!licenceNumberMapping.TryGetValue(strippedLlNumber!, out var relatedFileName))
             {
                 returnLicences.Add(new Licence
                 {
@@ -2346,9 +2352,11 @@ public static partial class SchemaConverter
 
     private static string? GetNaldPointId(Dictionary<string, NaldData> naldData, string? licenceNumber)
     {
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        
         var naldPoints = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            && !string.IsNullOrEmpty(strippedLicenceNumber)
+            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
             ? naldDataLine.Points
             : null;
 
@@ -2651,9 +2659,11 @@ public static partial class SchemaConverter
     }
     private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)
     {
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        
         var naldAggregateCondition = naldData.Count > 0
-            && !string.IsNullOrEmpty(licenceNumber)
-            && naldData.TryGetValue(licenceNumber, out var naldDataLine)
+            && !string.IsNullOrEmpty(strippedLicenceNumber)
+            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
             ? naldDataLine.AggregateConditions
             : null;
 

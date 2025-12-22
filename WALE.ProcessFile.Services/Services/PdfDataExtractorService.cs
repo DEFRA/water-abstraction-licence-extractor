@@ -780,7 +780,9 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                if (!licenceNumberMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
+                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
+                
+                if (!licenceNumberMapping.TryGetValue(stripped!, out var relatedFileName))
                 {
                     // TODO this should log a warning
                     continue;

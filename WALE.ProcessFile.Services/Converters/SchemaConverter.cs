@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Configuration;
@@ -2311,7 +2310,7 @@ public static partial class SchemaConverter
                             Id = $"{number} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
-                            NaldId = GetNaldPointId(naldData, licenceNumber)
+                            NaldId = GetNaldPointId(naldData, licenceNumber, tableLine.Text)
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2342,7 +2341,7 @@ public static partial class SchemaConverter
                     Id = number,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
-                    NaldId = GetNaldPointId(naldData, licenceNumber)
+                    NaldId = GetNaldPointId(naldData, licenceNumber, description)
                 });
             }
         }
@@ -2350,19 +2349,36 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static string? GetNaldPointId(Dictionary<string, NaldData> naldData, string? licenceNumber)
+    private static string? GetNaldPointId(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber,
+        string description)
     {
         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
         
-        var naldPoints = naldData.Count > 0
+        var naldDataLine = naldData.Count > 0
             && !string.IsNullOrEmpty(strippedLicenceNumber)
-            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
-            ? naldDataLine.Points
+            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLineT)
+            ? naldDataLineT
             : null;
 
-        return naldPoints?.Count > 0
-            ? naldPoints[0].ToString()
-            : null;
+        if (naldDataLine?.Points.Count is null or 0)
+        {
+            return null;
+        }
+        
+        if (naldDataLine.Points.Count == 1)
+        {
+            return naldDataLine.Points[0].PointId.ToString();
+        }
+
+        // TODO
+        
+        return naldDataLine
+            .Points
+            .First(p => p.PointId != 0)
+            .PointId
+            .ToString();
     }
     
     private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches)

@@ -58,12 +58,12 @@ async Task ProgramAsync()
         Environment.GetEnvironmentVariable("DeadLicencesPath"));
     var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
         Environment.GetEnvironmentVariable("LiveLicencesPath"));
-    var naldGeneralData = ExternalDataHelper.GetNaldGeneralReportData(
+    var naldData = ExternalDataHelper.GetNaldGeneralReportData(
         Environment.GetEnvironmentVariable("NaldDataPath"));
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
-        ref naldGeneralData);
+        ref naldData);
     
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -93,7 +93,7 @@ async Task ProgramAsync()
                     impoundmentLicenceNumbers,
                     deadLicenceNumbers,
                     liveLicenceNumbers,
-                    naldGeneralData,
+                    naldData,
                     outputService,
                     pdfDataExtractors,
                     processRun));

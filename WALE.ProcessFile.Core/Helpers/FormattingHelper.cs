@@ -216,12 +216,24 @@ public static class FormattingHelper
                     }
                     else
                     {
-                        // Part 3 - 1
-                        part3 = "0" + first5Digits[..1];
-                        first5Digits = first5Digits[1..];
+                        if (origSectionLengths is [_, _, { Length: 2 }, _, ..])
+                        {
+                            // Part 3 - 12
+                            part3 = first5Digits[..2];
+                            first5Digits = first5Digits[2..];
 
-                        // Part 4 - 123
-                        part4 = first5Digits[..3];
+                            // Part 4 - 12
+                            part4 = "0" + first5Digits[..2];
+                        }
+                        else
+                        {
+                            // Part 3 - 1
+                            part3 = "0" + first5Digits[..1];
+                            first5Digits = first5Digits[1..];
+
+                            // Part 4 - 123
+                            part4 = first5Digits[..3];
+                        }
                     }
                 }
                 // 2/26/30-34

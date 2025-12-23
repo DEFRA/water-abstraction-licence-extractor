@@ -45,4 +45,11 @@ public class FormattingHelperTests
         var actual = FormattingHelper.FormatLicenceNumber("22708119");
         Assert.Equal("2/27/08/119", actual);
     }
+    
+    [Fact]
+    public void WhenX_Y_ThenX7()
+    {
+        var actual = FormattingHelper.FormatLicenceNumber("2/27/09/25");
+        Assert.Equal("2/27/09/025", actual);
+    }
 }

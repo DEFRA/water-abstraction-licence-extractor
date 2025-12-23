@@ -12,6 +12,6 @@ public class NaldDataAggregate
 
     public override string ToString()
     {
-        return $"{ConditionId}{Condition}{AnnualQty}{DailyQty}{HourlyQty}{InstQty}";
+        return $"{ConditionId}{Condition}{Type}{AnnualQty}{DailyQty}{HourlyQty}{InstQty}";
     }
 }

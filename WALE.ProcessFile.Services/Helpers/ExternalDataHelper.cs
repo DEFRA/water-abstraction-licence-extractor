@@ -51,14 +51,38 @@ public static class ExternalDataHelper
 
             var linePoint = new NaldDataPoint
             {
+                PointId = line.PointId,
                 PointName = line.PointName,
-                Ngr1Cartesian = line.Ngr1Cartesian,
-                Ngr1 = line.Ngr1,
-                PointId = line.PointId
+                Category = line.PointCategory,
+                PrimaryType = line.PrimaryPointType,
+                SecondaryType = line.SecondaryPointType,
+                Ngr1Cartesian = !string.IsNullOrWhiteSpace(line.Ngr1Cartesian) ? line.Ngr1Cartesian : null,
+                Ngr2Cartesian = !string.IsNullOrWhiteSpace(line.Ngr2Cartesian) ? line.Ngr2Cartesian : null,
+                Ngr3Cartesian = !string.IsNullOrWhiteSpace(line.Ngr3Cartesian) ? line.Ngr3Cartesian : null,
+                Ngr4Cartesian = !string.IsNullOrWhiteSpace(line.Ngr4Cartesian) ? line.Ngr4Cartesian : null,
+                Ngr1 = !string.IsNullOrWhiteSpace(line.Ngr1) ? line.Ngr1 : null,
+                Ngr2 = !string.IsNullOrWhiteSpace(line.Ngr2) ? line.Ngr2 : null,
+                Ngr3 = !string.IsNullOrWhiteSpace(line.Ngr3) ? line.Ngr3 : null,
+                Ngr4 = !string.IsNullOrWhiteSpace(line.Ngr4) ? line.Ngr4 : null
+            };
+            
+            var linePeriod = new NaldDataPeriod
+            {
+                PeriodStart = line.PeriodStart,
+                PeriodEnd = line.PeriodEnd
+            };
+            
+            var linePurpose = new NaldDataPurpose
+            {
+                PurposeId = line.PurposeId,
+                PurposeCode = line.PurposeCode,
+                PurposeUseCode = line.PurposeUseCode,
+                PurposeUseDescription = line.PurposeUseDescription
             };
             
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
 
+            // Find an existing line
             if (returnList.TryGetValue(stippedLicenceNumber, out var existingItem))
             {
                 if (lineCondition != null && existingItem.AggregateConditions
@@ -70,6 +94,16 @@ public static class ExternalDataHelper
                 if (existingItem.Points.All(existingPoint => existingPoint.ToString() != linePoint.ToString()))
                 {
                     existingItem.Points.Add(linePoint);
+                }
+                
+                if (existingItem.Purposes.All(existingPurpose => existingPurpose.ToString() != linePurpose.ToString()))
+                {
+                    existingItem.Purposes.Add(linePurpose);
+                }
+                
+                if (existingItem.Periods.All(existingPeriod => existingPeriod.ToString() != linePeriod.ToString()))
+                {
+                    existingItem.Periods.Add(linePeriod);
                 }
                 
                 continue;
@@ -91,6 +125,8 @@ public static class ExternalDataHelper
                 LicenceWideInstQty = line.LicenceWideInstQty,
                 AggregateConditions = lineConditionsArray,
                 Points = [linePoint],
+                Periods = [linePeriod],
+                Purposes = [linePurpose]
             };
             
             returnList.Add(stippedLicenceNumber, naldData);

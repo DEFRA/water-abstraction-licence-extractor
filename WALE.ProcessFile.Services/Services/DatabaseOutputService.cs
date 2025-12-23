@@ -179,7 +179,7 @@ public class DatabaseOutputService(
                 continue;
             }
 
-            var licenceTransformed = FormattingHelper.PadLicenceNumber(missingLicenceId.LicenceNumber)!;
+            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

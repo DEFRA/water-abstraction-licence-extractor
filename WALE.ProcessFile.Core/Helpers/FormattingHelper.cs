@@ -91,6 +91,7 @@ public static class FormattingHelper
             // 1/22/02/087 (12202087)
             // 1/22/2/43 (12202043 - 0 is padded in part 3 and part 4)
             // 1/24/4/016 (12404016 - 0 is padded in part 3)
+            // 1/22/03/131/1 ( - has the 1 at the end)
             
             // Part 1 - 1
             var part1 = remainingLicenceNumber[..1];
@@ -102,37 +103,32 @@ public static class FormattingHelper
 
             parts.Add(part1);
             parts.Add(part2);
-            
-            var splitOnR = remainingLicenceNumber.Split('R');
 
-            if (splitOnR.Length >= 2)
+            var splitAtChar5 = remainingLicenceNumber.Length >= 6 ? new[]
             {
-                splitOnR =
-                [
-                    splitOnR[0],
-                    'R' + splitOnR[1]
-                ];
-            }
+                remainingLicenceNumber[..5],
+                remainingLicenceNumber[5..]
+            } : [remainingLicenceNumber];
             
-            var preRSectionAll = splitOnR[0];
-            var preRSection = string.Join(string.Empty, preRSectionAll.Where(char.IsDigit).ToArray());
+            var first5 = splitAtChar5[0];
+            var first5Digits = string.Join(string.Empty, first5.Where(char.IsDigit).ToArray());
 
-            if (preRSectionAll != preRSection)
+            if (first5 != first5Digits)
             {
-                if (splitOnR.Length == 1)
+                if (splitAtChar5.Length == 1)
                 {
-                    splitOnR =
+                    splitAtChar5 =
                     [
-                        preRSection,
-                        preRSectionAll[preRSection.Length..]
+                        first5Digits,
+                        first5[first5Digits.Length..]
                     ];
                 }
                 else
                 {
-                    splitOnR =
+                    splitAtChar5 =
                     [
-                        preRSection,
-                        preRSectionAll[preRSection.Length..] + splitOnR[1]
+                        first5Digits,
+                        first5[first5Digits.Length..] + splitAtChar5[1]
                     ];
                 }
             }
@@ -140,22 +136,22 @@ public static class FormattingHelper
             // Part 3 - Is 1 or 2 long, NALD wants it as 2
             // Part 4 - 12 (if part 3 has length 1) or 123 (if part 3 has length 2, new) - NALD has as 123
             
-            if (preRSection.Length == 5)
+            if (first5Digits.Length == 5)
             {
                 // Part 3 - 12
-                var part3 = preRSection[..2];
-                preRSection = preRSection[2..];
+                var part3 = first5Digits[..2];
+                first5Digits = first5Digits[2..];
                 
                 // Part 4 - 123
-                var part4 = preRSection[..3];
+                var part4 = first5Digits[..3];
                 
                 parts.Add(part3);
                 parts.Add(part4);
             }
-            else if (preRSection.Length == 4)
+            else if (first5Digits.Length == 4)
             {
-                var firstChar = preRSection[0];
-                var secondChar = preRSection[1];
+                var firstChar = first5Digits[0];
+                var secondChar = first5Digits[1];
                 
                 string? part3;
                 string? part4;                
@@ -164,22 +160,22 @@ public static class FormattingHelper
                 if (firstChar is '4' or '5' or '6' or '7' or '8' or '9')
                 {
                     // Part 3 - 1
-                    part3 = "0" + preRSection[..1];
-                    preRSection = preRSection[1..];
+                    part3 = "0" + first5Digits[..1];
+                    first5Digits = first5Digits[1..];
                     
                     // Part 4 - 123
-                    part4 = preRSection[..3];
+                    part4 = first5Digits[..3];
                 }
                 else if (secondChar == '0')
                 {
                     // Second section is padded with 0, means the first section must not be
                     
                     // Part 3 - 1
-                    part3 = "0" + preRSection[..1];
-                    preRSection = preRSection[1..];
+                    part3 = "0" + first5Digits[..1];
+                    first5Digits = first5Digits[1..];
                     
                     // Part 4 - 123
-                    part4 = preRSection[..3];
+                    part4 = first5Digits[..3];
                 }
                 // 1/21/00, 1/22/01-06, 1/23/01-05, 1/24/01-05, 1/25/01-06
                 else if (part1 == "1"
@@ -188,68 +184,68 @@ public static class FormattingHelper
                     if (firstChar == '0')
                     {
                         // Part 3 - 1
-                        part3 = preRSection[..2];
-                        preRSection = preRSection[2..];
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
 
                         // Part 4 - 12
-                        part4 = "0" + preRSection[..2];
+                        part4 = "0" + first5Digits[..2];
                     }
                     else
                     {
                         // Part 3 - 1
-                        part3 = "0" + preRSection[..1];
-                        preRSection = preRSection[1..];
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
 
                         // Part 4 - 123
-                        part4 = preRSection[..3];
+                        part4 = first5Digits[..3];
                     }
                 }
                 // 2/27/19-29
                 else if (part1 == "2" && part2 == "27")
                 {
-                    var first2Digits = int.Parse(preRSection[..2]);
+                    var first2Digits = int.Parse(first5Digits[..2]);
 
                     if (first2Digits is >= 19 and <= 29)
                     {
                         // Part 3 - 12
-                        part3 = preRSection[..2];
-                        preRSection = preRSection[2..];
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
 
                         // Part 4 - 12
-                        part4 = "0" + preRSection[..2];
+                        part4 = "0" + first5Digits[..2];
                     }
                     else
                     {
                         // Part 3 - 1
-                        part3 = "0" + preRSection[..1];
-                        preRSection = preRSection[1..];
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
 
                         // Part 4 - 123
-                        part4 = preRSection[..3];
+                        part4 = first5Digits[..3];
                     }
                 }
                 // 2/26/30-34
                 else if (part1 == "2" && part2 == "26")
                 {
-                    var first2Digits = int.Parse(preRSection[..2]);
+                    var first2Digits = int.Parse(first5Digits[..2]);
 
                     if (first2Digits is >= 30 and <= 34)
                     {
                         // Part 3 - 12
-                        part3 = preRSection[..2];
-                        preRSection = preRSection[2..];
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
 
                         // Part 4 - 12
-                        part4 = "0" + preRSection[..2];
+                        part4 = "0" + first5Digits[..2];
                     }
                     else
                     {
                         // Part 3 - 1
-                        part3 = "0" + preRSection[..1];
-                        preRSection = preRSection[1..];
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
 
                         // Part 4 - 123
-                        part4 = preRSection[..3];
+                        part4 = first5Digits[..3];
                     }
                 }
                 // 2/27/1-18
@@ -258,20 +254,20 @@ public static class FormattingHelper
                     if (firstChar == '0')
                     {
                         // Part 3 - 12
-                        part3 = preRSection[..2];
-                        preRSection = preRSection[2..];
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
 
                         // Part 4 - 12
-                        part4 = "0" + preRSection[..2];
+                        part4 = "0" + first5Digits[..2];
                     }
                     else if (firstChar != '1')
                     {
                         // Part 3 - 1
-                        part3 = "0" + preRSection[..1];
-                        preRSection = preRSection[1..];
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
 
                         // Part 4 - 123
-                        part4 = preRSection[..3];
+                        part4 = first5Digits[..3];
                     }
                     else if (firstChar == '1')
                     {
@@ -280,20 +276,20 @@ public static class FormattingHelper
                             if (origSectionLengths[2].Length == 2)
                             {
                                 // Part 3 - 12
-                                part3 = preRSection[..2];
-                                preRSection = preRSection[2..];
+                                part3 = first5Digits[..2];
+                                first5Digits = first5Digits[2..];
 
                                 // Part 4 - 12
-                                part4 = "0" + preRSection[..2];
+                                part4 = "0" + first5Digits[..2];
                             }
                             else
                             {
                                 // Part 3 - 1
-                                part3 = '0' + preRSection[..1];
-                                preRSection = preRSection[1..];
+                                part3 = '0' + first5Digits[..1];
+                                first5Digits = first5Digits[1..];
 
                                 // Part 4 - 123
-                                part4 = preRSection[..3];
+                                part4 = first5Digits[..3];
                             }
                         }
                         else
@@ -301,11 +297,11 @@ public static class FormattingHelper
                             // NOTE - This is a guess at this point, as there is no other way of doing it
                         
                             // Part 3 - 12
-                            part3 = preRSection[..2];
-                            preRSection = preRSection[2..];
+                            part3 = first5Digits[..2];
+                            first5Digits = first5Digits[2..];
 
                             // Part 4 - 12
-                            part4 = "0" + preRSection[..2];
+                            part4 = "0" + first5Digits[..2];
                         }
                     }
                     else
@@ -321,14 +317,14 @@ public static class FormattingHelper
                 parts.Add(part3);
                 parts.Add(part4);
             }
-            else if (preRSection.Length == 3)
+            else if (first5Digits.Length == 3)
             {
                 // Part 3 - 1
-                var part3 = "0" + preRSection[..1];
-                preRSection = preRSection[1..];
+                var part3 = "0" + first5Digits[..1];
+                first5Digits = first5Digits[1..];
                 
                 // Part 4 - 12
-                var part4 = "0" + preRSection[..2];
+                var part4 = "0" + first5Digits[..2];
                 
                 parts.Add(part3);
                 parts.Add(part4);
@@ -336,7 +332,7 @@ public static class FormattingHelper
             
             // Part 5 (optional) - R01, RO2 etc...
             
-            var postRSection = splitOnR.Length > 1 ? splitOnR[1] : null;
+            var postRSection = splitAtChar5.Length > 1 ? splitAtChar5[1] : null;
         
             if (!string.IsNullOrEmpty(postRSection))
             {
@@ -397,6 +393,12 @@ public static class FormattingHelper
         {
             return true;
         }
+        
+        licenceNumber = licenceNumber
+            .Replace("/", string.Empty)
+            .Replace(".", string.Empty)
+            .Replace(" ", string.Empty)
+            .Replace("-", string.Empty);
 
         var firstThreeChars = licenceNumber[..3];
         return firstThreeChars is "121" or "122" or "123" or "124" or "125" or "226" or "227";
@@ -419,7 +421,7 @@ public static class FormattingHelper
         return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
     }
 
-    public static string? PadLicenceNumber(string? licenceNumber)
+    public static string? FormatLicenceNumber(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {

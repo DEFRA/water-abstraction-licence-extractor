@@ -9,6 +9,7 @@ import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders.tsx";
 import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
+import {useTotals} from "../utils/useTotals.ts";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
@@ -29,6 +30,8 @@ function ListPage() {
         toggleSort,
         filters
     } = useFiltering(outputList);
+
+    const totals = useTotals(filteredData);
 
     useEffect(() => {
         const fetchOutputList = async () => {
@@ -92,7 +95,7 @@ function ListPage() {
                             <LicencesTableRow item={item} key={index} data={filteredData} oddRow={index % 2 === 0}/>
                         ))}
                         </tbody>
-                        <tfoot><LicencesTableFooters/></tfoot>
+                        <tfoot><LicencesTableFooters totals={totals}/></tfoot>
                     </table>
                 </div>
             )}

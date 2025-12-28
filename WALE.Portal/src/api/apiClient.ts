@@ -1,5 +1,6 @@
 import {Client} from './generated/apiClient';
 
-export const waleApiClient = new Client("http://localhost:8080");
+export const waleApiBaseUrl = "http://localhost:8080";
+export const waleApiClient = new Client(waleApiBaseUrl);
 
 export default waleApiClient;

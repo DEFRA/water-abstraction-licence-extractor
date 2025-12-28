@@ -1,13 +1,124 @@
-import { useSearchParams } from 'react-router-dom';
+import {useSearchParams} from 'react-router-dom';
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {useState, useEffect} from 'react'
+import {waleApiClient} from '../api/apiClient';
+import LicencesTableHeaders from "../components/LicencesTableHeaders.tsx";
+import LicencesTableRow from "../components/LicencesTableRow.tsx";
+import LicencesTableFooters from "../components/LicencesTableFooters.tsx";
+import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders.tsx";
+import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
+import '../assets/liststyles.css'
+import {useFiltering} from "../utils/useFiltering.ts";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
     const processRunId = searchParams.get('processRunId');
-    
-    return(
-        <div>
-            <p>Selected process run ID = {processRunId}</p>
-        </div>);
+
+    const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets'>('licences');
+
+    const [showSingles, setShowSingles] = useState(false);
+
+    const {
+        filteredData,
+        applyFilter,
+        resetFiltersExcept,
+        toggleSort,
+        filters
+    } = useFiltering(outputList);
+
+    useEffect(() => {
+        const fetchOutputList = async () => {
+            try {
+                const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
+                setOutputList(listDataItems);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
+                console.error('Error fetching process runs:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOutputList();
+    }, [processRunId]);
+
+    if (loading) return <div className="container"><p>Loading...</p></div>;
+    if (error) return <div className="container error"><p>Error: {error}</p></div>;
+
+    return (
+        <>
+            <h1>
+                <a
+                    href="#"
+                    id="licencesLink"
+                    className={activeTab === 'licences' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('licences');
+                    }}>
+                    Licences
+                </a>
+                {' | '}
+                <a
+                    href="#"
+                    id="licenceSetsLink"
+                    className={activeTab === 'licenceSets' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('licenceSets');
+                    }}>
+                    Licence sets
+                </a>
+            </h1>
+
+            {activeTab === 'licences' && (
+                <div id="licences">
+                    <table id="licencesTable">
+                        <thead><LicencesTableHeaders
+                            data={outputList}
+                            onFilterChange={applyFilter}
+                            onResetFilters={resetFiltersExcept}
+                            onToggleSort={toggleSort}
+                            onToggleSingles={setShowSingles}
+                            filters={filters}
+                            showSingles={showSingles}
+                        /></thead>
+                        <tbody>
+                        {filteredData.map((item, index) => (
+                            <LicencesTableRow item={item} key={index} data={filteredData} oddRow={index % 2 === 0}/>
+                        ))}
+                        </tbody>
+                        <tfoot><LicencesTableFooters/></tfoot>
+                    </table>
+                </div>
+            )}
+
+            {activeTab === 'licenceSets' && (
+                <div id="licenceSets">
+                    <table>
+                        <thead><LicenceSetsTableHeaders/></thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot><LicenceSetsTableFooters/></tfoot>
+                    </table>
+                    <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
+                </div>
+            )}
+
+            <div id="iframeDivNUMBER" className="iframeDiv iframeDivTemplate">
+                <div id="iframeDivNUMBERHeader" className="iframeDivHeader">
+                    <a id="closeLinkNUMBER" className="closeLink" href="#">&#10006;</a>
+                    <a id="maximiseLinkNUMBER" className="maximiseLink" href="#">&#128470;</a>
+                    <a id="minimiseLinkNUMBER" className="minimiseLink" href="#">&#95;</a>
+                </div>
+
+                <iframe id="iframeNUMBER" className="iframe" src="about:blank"></iframe>
+            </div>
+        </>);
 }
 
 export default ListPage;

@@ -479,9 +479,13 @@ public static partial class SchemaConverter
         }
 
         const string r1 = "R1";
+        const string r01 = "R01";
+
+        var firstContainsR1 = licenceNumberStripped1.Contains(r1) || licenceNumberStripped1.Contains(r01);
+        var secondContainsR1 = licenceNumberStripped2.Contains(r1) || licenceNumberStripped2.Contains(r01);
         
-        var only1HasR1 = (licenceNumberStripped1.Contains(r1) && !licenceNumberStripped2.Contains(r1))
-            || (!licenceNumberStripped1.Contains(r1) && licenceNumberStripped2.Contains(r1));
+        var only1HasR1 = (firstContainsR1 && !secondContainsR1)
+            || (!firstContainsR1 && secondContainsR1);
 
         return !only1HasR1
                && (licenceNumberStripped1.Contains(licenceNumberStripped2)

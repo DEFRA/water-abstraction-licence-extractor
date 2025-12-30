@@ -1648,11 +1648,6 @@ public class PdfDataExtractorService(
                         Label = beforeLabel
                     });
 
-                    if (value.Contains("1/22/2/87"))
-                    {
-
-                    }
-
                     returnItems.Add(new TextAndLabel
                     {
                         ColumnsText = [value],

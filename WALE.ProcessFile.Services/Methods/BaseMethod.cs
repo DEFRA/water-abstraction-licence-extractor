@@ -105,7 +105,9 @@ public static class BaseMethod
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                        
+                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
                         {
                             continue;
                         }

@@ -28,7 +28,7 @@ public static class ApplicableToMost
             request.textBeforeAtAndAfterLabel = [
                 new()
                 {
-                    Text = request.label.Text?.FirstOrDefault()?.Text,
+                    ColumnsText = [request.label.Text?.FirstOrDefault()?.Text!],
                     Label = request.label
                 }
             ]!;
@@ -55,7 +55,7 @@ public static class ApplicableToMost
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
-            var text = item.Text;
+            var text = item.ColumnsText![0];
             
             var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
@@ -231,7 +231,9 @@ public static class ApplicableToMost
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                        
+                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
                         {
                             continue;
                         }

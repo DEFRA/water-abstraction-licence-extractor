@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class PointOfAbstraction : Point
 {
-    public string? NaldId { get; set; }
+    public NaldPointData? NaldData { get; set; }
 
     public string[]? PurposeIds { get; init; } = [];
     
@@ -14,7 +14,10 @@ public class PointOfAbstraction : Point
     {
         Description = string.Empty,
         Id = string.Empty,
-        NaldId = null,
+        NaldData = new NaldPointData
+        {
+            Id = "something"
+        },
         PurposeIds = [
             "4.1"
         ],

@@ -16,7 +16,7 @@ public static class AfterTextContainsAnotherMatch
         var returnListTop = new List<LabelGroupResult>();
 
         var afterText = request.textBeforeAtAndAfterLabel?
-            .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsBeforeTextToFind)?.Text;
+            .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsBeforeTextToFind)?.ColumnsText?[0];
 
         if (string.IsNullOrEmpty(afterText))
         {

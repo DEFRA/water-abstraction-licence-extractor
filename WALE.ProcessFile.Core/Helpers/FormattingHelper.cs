@@ -10,10 +10,16 @@ public static class FormattingHelper
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {
-            return formattedLicenceNumber;
+            return null;
+        }
+
+        if (IsNeLicenceNumber(formattedLicenceNumber))
+        {
+            return StripForComparison_NE(formattedLicenceNumber);
         }
 
         var licenceNumber = formattedLicenceNumber
+            .Replace("//", "/")
             .Replace(".", "/")
             .Replace(" ", "/")
             .Replace("-", "/");
@@ -44,6 +50,371 @@ public static class FormattingHelper
         
         return str.Replace("0", string.Empty);
     }
+
+    private static string? StripForComparison_NE(string? formattedLicenceNumber)
+    {
+        var licenceNumber = ToFullLicenceNumber_NE(formattedLicenceNumber);
+        return licenceNumber?.Replace("/", string.Empty);
+    }
+
+    private static string? ToFullLicenceNumber_NE(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return licenceNumber;
+        }
+        
+        licenceNumber = licenceNumber
+            .Replace("//", "/")
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
+
+        var origSectionLengths = licenceNumber.Split('/');
+
+        licenceNumber = licenceNumber
+            .Replace(".", string.Empty)
+            .Replace(" ", string.Empty)
+            .Replace("-", string.Empty)
+            .Replace("/", string.Empty);
+
+        var parts = new List<string>();
+        var remainingLicenceNumber = licenceNumber;
+        
+        // [1/2]/12/01/012
+        if (remainingLicenceNumber[0] == '1' || remainingLicenceNumber[0] == '2')
+        {
+            // Examples
+            // 2/27/29/31 (goes into NALD as 22729031 - 0 is padding to part 4)
+            // 2/27/29/059 (22729059)
+            // 2/27/28/285 (22728285)
+            // 1/22/02/087 (12202087)
+            // 1/22/2/43 (12202043 - 0 is padded in part 3 and part 4)
+            // 1/24/4/016 (12404016 - 0 is padded in part 3)
+            // 1/22/03/131/1 ( - has the 1 at the end)
+            
+            // Part 1 - 1
+            var part1 = remainingLicenceNumber[..1];
+            remainingLicenceNumber = remainingLicenceNumber[1..];
+            
+            // Part 2 - 12
+            var part2 = remainingLicenceNumber[..2];
+            remainingLicenceNumber = remainingLicenceNumber[2..];
+
+            parts.Add(part1);
+            parts.Add(part2);
+
+            var splitAtChar5 = remainingLicenceNumber.Length >= 6 ? new[]
+            {
+                remainingLicenceNumber[..5],
+                remainingLicenceNumber[5..]
+            } : [remainingLicenceNumber];
+            
+            var first5 = splitAtChar5[0];
+            var first5Digits = string.Join(string.Empty, first5.Where(char.IsDigit).ToArray());
+
+            if (first5 != first5Digits)
+            {
+                if (splitAtChar5.Length == 1)
+                {
+                    splitAtChar5 =
+                    [
+                        first5Digits,
+                        first5[first5Digits.Length..]
+                    ];
+                }
+                else
+                {
+                    splitAtChar5 =
+                    [
+                        first5Digits,
+                        first5[first5Digits.Length..] + splitAtChar5[1]
+                    ];
+                }
+            }
+            
+            // Part 3 - Is 1 or 2 long, NALD wants it as 2
+            // Part 4 - 12 (if part 3 has length 1) or 123 (if part 3 has length 2, new) - NALD has as 123
+            
+            if (first5Digits.Length == 5)
+            {
+                // Part 3 - 12
+                var part3 = first5Digits[..2];
+                first5Digits = first5Digits[2..];
+                
+                // Part 4 - 123
+                var part4 = first5Digits[..3];
+                
+                parts.Add(part3);
+                parts.Add(part4);
+            }
+            else if (first5Digits.Length == 4)
+            {
+                var firstChar = first5Digits[0];
+                var secondChar = first5Digits[1];
+                
+                string? part3;
+                string? part4;                
+                
+                // Definately needs padding as only valid range is 1-34 for this region
+                if (firstChar is '4' or '5' or '6' or '7' or '8' or '9')
+                {
+                    // Part 3 - 1
+                    part3 = "0" + first5Digits[..1];
+                    first5Digits = first5Digits[1..];
+                    
+                    // Part 4 - 123
+                    part4 = first5Digits[..3];
+                }
+                else if (secondChar == '0')
+                {
+                    // Second section is padded with 0, means the first section must not be
+                    
+                    // Part 3 - 1
+                    part3 = "0" + first5Digits[..1];
+                    first5Digits = first5Digits[1..];
+                    
+                    // Part 4 - 123
+                    part4 = first5Digits[..3];
+                }
+                // 1/21/00, 1/22/01-06, 1/23/01-05, 1/24/01-05, 1/25/01-06
+                else if (part1 == "1"
+                    && part2 is "21" or "22" or "23" or "24" or "25")
+                {
+                    if (firstChar == '0')
+                    {
+                        // Part 3 - 1
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
+
+                        // Part 4 - 12
+                        part4 = "0" + first5Digits[..2];
+                    }
+                    else
+                    {
+                        // Part 3 - 1
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
+
+                        // Part 4 - 123
+                        part4 = first5Digits[..3];
+                    }
+                }
+                // 2/27/19-29
+                else if (part1 == "2" && part2 == "27")
+                {
+                    var first2Digits = int.Parse(first5Digits[..2]);
+
+                    if (first2Digits is >= 19 and <= 29)
+                    {
+                        // Part 3 - 12
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
+
+                        // Part 4 - 12
+                        part4 = "0" + first5Digits[..2];
+                    }
+                    else
+                    {
+                        if (origSectionLengths is [_, _, { Length: 2 }, _, ..])
+                        {
+                            // Part 3 - 12
+                            part3 = first5Digits[..2];
+                            first5Digits = first5Digits[2..];
+
+                            // Part 4 - 12
+                            part4 = "0" + first5Digits[..2];
+                        }
+                        else
+                        {
+                            // Part 3 - 1
+                            part3 = "0" + first5Digits[..1];
+                            first5Digits = first5Digits[1..];
+
+                            // Part 4 - 123
+                            part4 = first5Digits[..3];
+                        }
+                    }
+                }
+                // 2/26/30-34
+                else if (part1 == "2" && part2 == "26")
+                {
+                    var first2Digits = int.Parse(first5Digits[..2]);
+
+                    if (first2Digits is >= 30 and <= 34)
+                    {
+                        // Part 3 - 12
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
+
+                        // Part 4 - 12
+                        part4 = "0" + first5Digits[..2];
+                    }
+                    else
+                    {
+                        // Part 3 - 1
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
+
+                        // Part 4 - 123
+                        part4 = first5Digits[..3];
+                    }
+                }
+                // 2/27/1-18
+                else if (part1 == "2" && part2 == "27")
+                {
+                    if (firstChar == '0')
+                    {
+                        // Part 3 - 12
+                        part3 = first5Digits[..2];
+                        first5Digits = first5Digits[2..];
+
+                        // Part 4 - 12
+                        part4 = "0" + first5Digits[..2];
+                    }
+                    else if (firstChar != '1')
+                    {
+                        // Part 3 - 1
+                        part3 = "0" + first5Digits[..1];
+                        first5Digits = first5Digits[1..];
+
+                        // Part 4 - 123
+                        part4 = first5Digits[..3];
+                    }
+                    else if (firstChar == '1')
+                    {
+                        if (origSectionLengths.Length >= 4)
+                        {
+                            if (origSectionLengths[2].Length == 2)
+                            {
+                                // Part 3 - 12
+                                part3 = first5Digits[..2];
+                                first5Digits = first5Digits[2..];
+
+                                // Part 4 - 12
+                                part4 = "0" + first5Digits[..2];
+                            }
+                            else
+                            {
+                                // Part 3 - 1
+                                part3 = '0' + first5Digits[..1];
+                                first5Digits = first5Digits[1..];
+
+                                // Part 4 - 123
+                                part4 = first5Digits[..3];
+                            }
+                        }
+                        else
+                        {
+                            // NOTE - This is a guess at this point, as there is no other way of doing it
+                        
+                            // Part 3 - 12
+                            part3 = first5Digits[..2];
+                            first5Digits = first5Digits[2..];
+
+                            // Part 4 - 12
+                            part4 = "0" + first5Digits[..2];
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Can't work it out (1)");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Can't work it out (2)");
+                }
+                
+                parts.Add(part3);
+                parts.Add(part4);
+            }
+            else if (first5Digits.Length == 3)
+            {
+                // Part 3 - 1
+                var part3 = "0" + first5Digits[..1];
+                first5Digits = first5Digits[1..];
+                
+                // Part 4 - 12
+                var part4 = "0" + first5Digits[..2];
+                
+                parts.Add(part3);
+                parts.Add(part4);
+            }
+            
+            // Part 5 (optional) - R01, RO2 etc...
+            
+            var postRSection = splitAtChar5.Length > 1 ? splitAtChar5[1] : null;
+        
+            if (!string.IsNullOrEmpty(postRSection))
+            {
+                parts.Add(postRSection);
+            }
+        }
+        else if (remainingLicenceNumber[0] is 'n' or 'N')
+        {
+            // Part 1 - NE
+            parts.Add(remainingLicenceNumber[..2]);
+            remainingLicenceNumber = remainingLicenceNumber[2..];
+            
+            // Part 2 - 000
+            parts.Add(remainingLicenceNumber[..3]);
+            remainingLicenceNumber = remainingLicenceNumber[3..];
+
+            if (remainingLicenceNumber.Length >= 7)
+            {
+                // Part 3 - 0000
+                parts.Add(remainingLicenceNumber[..4]);
+                remainingLicenceNumber = remainingLicenceNumber[4..];
+
+
+                // Part 4 - 000
+                parts.Add(remainingLicenceNumber[..3]);
+                remainingLicenceNumber = remainingLicenceNumber[3..];
+            }
+            else
+            {
+                // Part 3 - 000
+                parts.Add(remainingLicenceNumber[..3]);
+                remainingLicenceNumber = remainingLicenceNumber[3..];
+
+
+                // Part 4 - 000
+                parts.Add(remainingLicenceNumber[..3]);
+                remainingLicenceNumber = remainingLicenceNumber[3..];
+            }
+
+            // Part 5  Likely R01, but can be 1 and other stuff
+            if (!string.IsNullOrEmpty(remainingLicenceNumber))
+            {
+                parts.Add(remainingLicenceNumber);
+            }
+        }
+        
+        return string.Join('/', parts);
+    }
+    
+    private static bool IsNeLicenceNumber(string? licenceNumber)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return false;
+        }
+
+        if (licenceNumber[0] is 'n' or 'N')
+        {
+            return true;
+        }
+        
+        licenceNumber = licenceNumber
+            .Replace("/", string.Empty)
+            .Replace(".", string.Empty)
+            .Replace(" ", string.Empty)
+            .Replace("-", string.Empty);
+
+        var firstThreeChars = licenceNumber[..3];
+        return firstThreeChars is "121" or "122" or "123" or "124" or "125" or "226" or "227";
+    }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
     {
@@ -51,16 +422,30 @@ public static class FormattingHelper
         {
             return noneSeperatedLicenceNumber;
         }
+
+        if (IsNeLicenceNumber(noneSeperatedLicenceNumber))
+        {
+            return ToFullLicenceNumber_NE(noneSeperatedLicenceNumber);
+            //return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
+        }
         
+        // TODO some other way
         return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
     }
 
-    public static string? PadLicenceNumber(string? licenceNumber)
+    public static string? FormatLicenceNumber(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return licenceNumber;
         }
+        
+        if (IsNeLicenceNumber(licenceNumber))
+        {
+            return ToFullLicenceNumber_NE(licenceNumber);
+        }
+
+        licenceNumber = licenceNumber.Replace("//", "/");
 
         if (licenceNumber.StartsWith("NE"))
         {
@@ -102,7 +487,7 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
-        return Yorkshire1_PadLicenceNumber(licenceNumber);
+        return NOTYorkshire1_PadLicenceNumber(licenceNumber);
     }
 
     private static string? Yorkshire1_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
@@ -215,7 +600,7 @@ public static class FormattingHelper
         return $"{section1}/{section2}/{section3}/{section4}";
     }
 
-    private static string? Yorkshire1_PadLicenceNumber(string? licenceNumber)
+    private static string? NOTYorkshire1_PadLicenceNumber(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {

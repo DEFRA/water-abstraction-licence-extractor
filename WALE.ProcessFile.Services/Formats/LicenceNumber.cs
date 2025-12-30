@@ -401,7 +401,7 @@ public static partial class LicenceNumber
                         value,
                         true,
                         true);
-
+                    
                     // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
                     if (subLine.Contains($"{colText}-"))
                     {

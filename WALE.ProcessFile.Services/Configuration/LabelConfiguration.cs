@@ -174,11 +174,7 @@ public static class LabelConfiguration
             Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
             Format = LicenceNumber.Constant,
             MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
-            SkipLineWhenContains =
-            [
-                LicenceNumberLine,
-                "discharge permit"
-            ],
+            SkipLineWhenContains = NoneLicenceNumberSkips,
             NextLinesToFetch = 10
         };
     }
@@ -2264,23 +2260,31 @@ public static class LabelConfiguration
                 new("2 8 2 8"), // Don't understand what this means, but it appears in some map
                 new("4 2 4 2"), // Don't understand what this means, but it appears in some map
                 new("7 0 7 0"), // Don't understand what this means, but it appears in some map
+                new("0 250 500"), // Doubling scale
                 new("0 250 500 1"), // Doubling scale
                 new("0 125 250 M"), // Doubling scale
+                new("0 125 250"), // Doubling scale
+                new("0 170 340 M"), // Doubling scale
                 new("0 170 340"), // Doubling scale
+                new("0 150 300 M"), // Doubling scale
                 new("0 150 300"), // Doubling scale
+                new("0 425 850 M"), // Doubling scale
                 new("0 425 850") // Doubling scale
             ],
-            SkipLineWhenContains =
-            [
-                LicenceNumberLine,
-                "discharge permit",
-                "discharge consent",
-                "drawing no."
-            ]
+            SkipLineWhenContains = NoneLicenceNumberSkips
         };
     }
+
+    private static readonly string[] NoneLicenceNumberSkips =
+    [
+        LicenceNumberHeaderLine,
+        "discharge permit",
+        "discharge number",
+        "discharge consent",
+        "drawing no."
+    ];
     
-    private const string LicenceNumberLine = "Licence Serial No: ";
+    private const string LicenceNumberHeaderLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
         new(@"/Page \d* of \d*/")
         {
@@ -2296,5 +2300,5 @@ public static class LabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
         new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
+        new($"/^{LicenceNumberHeaderLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
 }

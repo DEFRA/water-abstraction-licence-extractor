@@ -129,6 +129,7 @@ public class AzureOpenAiOcrPdfTests
             [],
             [],
             [],
+            [],
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);

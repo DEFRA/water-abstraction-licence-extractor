@@ -10,8 +10,6 @@ public class ConfiguredServices
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; set; }
     
-    public string? FileMappingPath { get; set; }
-    
     public int MaxConcurrentScrapers { get; set; }
     
     public string? OutputFolder { get; set; }

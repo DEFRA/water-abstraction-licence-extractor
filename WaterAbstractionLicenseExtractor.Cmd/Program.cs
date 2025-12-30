@@ -29,7 +29,6 @@ async Task ProgramAsync()
     
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
-    var fileMappingPath = services.FileMappingPath!;
     
     if (services.RefreshCache)
     {
@@ -51,10 +50,20 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
     
-    var licenceNumberMapping = GetLicenceNumberMapping(fileMappingPath);
-    var impoundmentLicenceNumbers = GetImpoundmentLicenceNumbers();
-    var deadLicenceNumbers = GetDeadLicenceNumbers();
-    var liveLicenceNumbers = GetLiveLicenceNumbers();
+    var licenceNumberMapping = ExternalDataHelper.GetLicenceNumberMappingFromFilenames(
+        services.PdfFolderPath!);
+    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
+        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
+    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
+        Environment.GetEnvironmentVariable("DeadLicencesPath"));
+    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
+        Environment.GetEnvironmentVariable("LiveLicencesPath"));
+    var naldData = ExternalDataHelper.GetNaldGeneralReportData(
+        Environment.GetEnvironmentVariable("NaldDataPath"));
+    
+    ExternalDataHelper.AddNaldLimitReportData(
+        Environment.GetEnvironmentVariable("NaldLimitDataPath"),
+        ref naldData);
     
     var pdfPaths = GetPdfPaths(services.PdfFolderPath!);
     
@@ -76,17 +85,18 @@ async Task ProgramAsync()
         
         foreach (var pdfFilePath in pdfPaths)
         {
-            scrapingTasks.Add(ScrapeDocumentAsync(
-                pdfFilePath,
-                processCount++,
-                licenceNumberMapping,
-                impoundmentLicenceNumbers,
-                deadLicenceNumbers,
-                liveLicenceNumbers,
-                outputService,
-                pdfDataExtractors,
-                licenceNumberMapping,
-                processRun));
+            scrapingTasks.Add(
+                ScrapeDocumentAsync(
+                    pdfFilePath,
+                    processCount++,
+                    licenceNumberMapping,
+                    impoundmentLicenceNumbers,
+                    deadLicenceNumbers,
+                    liveLicenceNumbers,
+                    naldData,
+                    outputService,
+                    pdfDataExtractors,
+                    processRun));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -316,12 +326,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
         ?? throw new NullReferenceException("ReportTemplatePath");
-    var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
-        ?? throw new NullReferenceException("FileMappingPath");
     var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
         ?? throw new NullReferenceException("OutputFolder");
-    var cacheFolder = Environment.GetEnvironmentVariable("CacheFolder")
-        ?? throw new NullReferenceException("CacheFolder");
     var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
         ?? throw new NullReferenceException("ListDataPath");
     var processRunsDataPath = Environment.GetEnvironmentVariable("ProcessRunsDataPath")
@@ -396,7 +402,6 @@ ConfiguredServices ConfigureServices()
         CacheService = cacheService,
         OutputService = outputService,
         PdfDataExtractorServices = pdfDataExtractors,
-        FileMappingPath = fileMappingPath,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
         RegenerateMappingJson = regenerateMappingJson,
@@ -421,9 +426,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> impoundmentLicenceNumbers,
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
+    Dictionary<string, NaldData> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
-    Dictionary<string, string> fileLicenceMapping,
     ProcessRun processRun)
 {
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
@@ -472,10 +477,11 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
-            fileLicenceMapping,
+            licenceMapping,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            naldData,
             pdfDataExtractor,
             pdfFolder,
             processRun.ProcessRunId);
@@ -502,137 +508,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     {
         pdfDataExtractor.InUse = false;
     }
-}
-
-Dictionary<string, string> GetLicenceNumberMapping(string fileMappingPath)
-{
-    var returnMapping = new Dictionary<string, string>();
-
-    var fileContents = File.Exists(fileMappingPath)
-        ? File.ReadAllText(fileMappingPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-        var licenceNumber = parts[1];
-        var filename = parts[0].Split('/').Last();
-
-        if (!returnMapping.TryAdd(licenceNumber, filename))
-        {
-            returnMapping[licenceNumber] = filename;
-        }
-    }
-
-    return returnMapping;
-}
-
-HashSet<string> GetLiveLicenceNumbers()
-{
-    var liveLicencesPath = Environment.GetEnvironmentVariable("LiveLicencesPath")
-        ?? throw new NullReferenceException("LiveLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(liveLicencesPath)
-        ? File.ReadAllText(liveLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-
-        if (parts.Length < 3)
-        {
-            continue;
-        }
-
-        var licenceNumber = parts[2];
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
-}
-
-HashSet<string> GetDeadLicenceNumbers()
-{
-    var deadLicencesPath = Environment.GetEnvironmentVariable("DeadLicencesPath")
-        ?? throw new NullReferenceException("DeadLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(deadLicencesPath)
-        ? File.ReadAllText(deadLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-
-        if (parts.Length < 6)
-        {
-            continue;
-        }
-
-        var licenceNumber = parts[5];
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
-}
-
-HashSet<string> GetImpoundmentLicenceNumbers()
-{
-    var impoundmentLicencesPath = Environment.GetEnvironmentVariable("ImpoundmentLicencesPath")
-        ?? throw new NullReferenceException("ImpoundmentLicencesPath");
-
-    var returnList = new HashSet<string>();
-
-    var fileContents = File.Exists(impoundmentLicencesPath)
-        ? File.ReadAllText(impoundmentLicencesPath)
-            .Replace("\r", string.Empty)
-            .Split('\n')
-        : [];
-
-    var count = 0;
-    foreach (var line in fileContents)
-    {
-        if (count++ == 0)
-        {
-            continue;
-        }
-
-        var parts = line.Split(',');
-        var licenceNumber = parts[0];
-
-        returnList.Add(licenceNumber);
-    }
-
-    return returnList;
 }
 
 async Task MoveReportHtmlFilesAsync(
@@ -763,8 +638,8 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("NE0260034052")).ToList();
-    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(10000).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12203131")).ToList();
+    pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
     
     return pdfFilePaths.ToList();
 }

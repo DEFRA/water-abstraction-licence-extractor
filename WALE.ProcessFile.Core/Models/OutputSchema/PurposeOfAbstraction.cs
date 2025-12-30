@@ -4,8 +4,8 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class PurposeOfAbstraction : Purpose
 {
-    public string? NaldId { get; set; }
-
+    public NaldPurposeData? NaldData { get; set; }
+    
     public string[]? PointIds { get; set; } = [];
     
     public TimeCutoff? TimeCutoff { get; set; }
@@ -14,7 +14,10 @@ public class PurposeOfAbstraction : Purpose
     {
         Description = string.Empty,
         Id = string.Empty,
-        NaldId = null,
+        NaldData = new NaldPurposeData
+        {
+            Id = "TODO"
+        },
         PointIds = [
             "2.1"
         ],

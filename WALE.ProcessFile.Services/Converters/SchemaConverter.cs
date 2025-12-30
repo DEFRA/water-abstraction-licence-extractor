@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Core.Helpers;
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -19,7 +19,8 @@ public static partial class SchemaConverter
         MatchesResult matchesResult,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers)
+        HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData)
     {
         var matches = matchesResult.Matches;
 
@@ -96,16 +97,12 @@ public static partial class SchemaConverter
             OriginalIssueDate = dateOfOriginalIssue
         };
         
-        var means = GetMeansOfAbstraction(matches, ref noneSchemaData);
-        var points = GetPoints(matches, ref noneSchemaData);
-        var purposes = GetPurposes(matches);
-        
         var licenceNumber = scrapedLicenceNumber;
         
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
         {
             noneSchemaData.TryAdd("scrapedLicenceNumber", scrapedLicenceNumber);
-            licenceNumber = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
+            licenceNumber = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber);
         }
         
         string? fileNameLicenceNumber = null;
@@ -134,7 +131,7 @@ public static partial class SchemaConverter
                 fileNameLicenceNumber = licenceNumberPart.Replace("-", "/");
 
                 fileNameLicenceNumber = fileNameLicenceNumber.Contains('/')
-                    ? FormattingHelper.PadLicenceNumber(fileNameLicenceNumber)
+                    ? FormattingHelper.FormatLicenceNumber(fileNameLicenceNumber)
                     : FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber);
 
                 if (!string.IsNullOrEmpty(fileNameLicenceNumber))
@@ -152,9 +149,9 @@ public static partial class SchemaConverter
         // If they are similar, use the filename version of the licence number
         if (!string.IsNullOrEmpty(scrapedLicenceNumber)
             && !string.IsNullOrEmpty(fileNameLicenceNumber)
-            && FormattingHelper.PadLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
+            && FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
         {
-            var formattedScraped = FormattingHelper.PadLicenceNumber(scrapedLicenceNumber);
+            var formattedScraped = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber);
             var characterDifferenceCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
 
             if (characterDifferenceCount <= 2)
@@ -164,7 +161,22 @@ public static partial class SchemaConverter
             }
         }
         
-        licenceNumber = FormattingHelper.PadLicenceNumber(licenceNumber)?.ToUpper();
+        licenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumber)?.ToUpper();
+        
+        var means = GetMeansOfAbstraction(
+            matches,
+            ref noneSchemaData);
+        
+        var points = GetPoints(
+            matches,
+            licenceNumber,
+            naldData,
+            ref noneSchemaData);
+        
+        var purposes = GetPurposes(
+            matches,
+            licenceNumber,
+            naldData);
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -172,6 +184,7 @@ public static partial class SchemaConverter
             licenceVersion.LicenceVersionId,
             points,
             purposes,
+            naldData,
             ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
@@ -282,7 +295,7 @@ public static partial class SchemaConverter
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
-                var fromSection = new List<LinkedLicenceSection>();
+                var containedIn = new List<LinkedLicenceSection>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
                 {
@@ -295,22 +308,22 @@ public static partial class SchemaConverter
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (fromSection.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
                         {
                             continue;
                         }
 
-                        fromSection.Add(sectionItem);
+                        containedIn.Add(sectionItem);
                     }
                 }
 
-                var linkedLicenceNumber = FormattingHelper.PadLicenceNumber(firstLinkedLicence.LicenceNumber);
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber);
 
                 return ToLinkedLicence(
                     linkedLicenceNumber,
                     firstLinkedLicence.Filename,
                     firstLinkedLicence.Condition,
-                    fromSection.ToArray(),
+                    containedIn.ToArray(),
                     impoundmentLicenceNumbers,
                     deadLicenceNumbers,
                     liveLicenceNumbers);
@@ -338,7 +351,7 @@ public static partial class SchemaConverter
         
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
-            var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.PadLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
+            var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.FormatLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
             if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
             {
                 continue;
@@ -361,7 +374,7 @@ public static partial class SchemaConverter
                     .Any(lhLinkedLicence =>
                     {
                         var paddedLinkedLicenceNumber =
-                            FormattingHelper.PadLicenceNumber(lhLinkedLicence.LicenceNumber);
+                            FormattingHelper.FormatLicenceNumber(lhLinkedLicence.LicenceNumber);
                         
                         var lhLineNumber = lhLinkedLicence.ContainedIn!
                             .First(ci => ci.SectionName == "LicenceHistory").LineNumber;
@@ -413,6 +426,18 @@ public static partial class SchemaConverter
             Individual = individual
         };
         
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        
+        licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldDataLine?.VersionStartDate)
+            ? DateTime.Parse(naldDataLine.VersionStartDate)
+            : null;
+
+        licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
+            ? DateTime.Parse(naldDataLine.ExpiryDate)
+            : null;
+
+        licenceVersion.NaldVersionNumber = null; // TODO - Not in the current NALD report data we get
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -422,7 +447,7 @@ public static partial class SchemaConverter
             MeansOfAbstraction = means,
             Points = points,
             Purposes = purposes,
-            PeriodsOfAbstraction = GetPeriods(matches),
+            PeriodsOfAbstraction = GetPeriods(matches, licenceNumber, naldData),
             DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
@@ -454,9 +479,13 @@ public static partial class SchemaConverter
         }
 
         const string r1 = "R1";
+        const string r01 = "R01";
+
+        var firstContainsR1 = licenceNumberStripped1.Contains(r1) || licenceNumberStripped1.Contains(r01);
+        var secondContainsR1 = licenceNumberStripped2.Contains(r1) || licenceNumberStripped2.Contains(r01);
         
-        var only1HasR1 = (licenceNumberStripped1.Contains(r1) && !licenceNumberStripped2.Contains(r1))
-            || (!licenceNumberStripped1.Contains(r1) && licenceNumberStripped2.Contains(r1));
+        var only1HasR1 = (firstContainsR1 && !secondContainsR1)
+            || (!firstContainsR1 && secondContainsR1);
 
         return !only1HasR1
                && (licenceNumberStripped1.Contains(licenceNumberStripped2)
@@ -526,6 +555,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         int processRunId)
@@ -536,7 +566,8 @@ public static partial class SchemaConverter
             matchesResult,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
-            liveLicenceNumbers);
+            liveLicenceNumbers,
+            naldData);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
         
@@ -547,6 +578,7 @@ public static partial class SchemaConverter
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            naldData,
             pdfDataExtractorService,
             pdfFolder,
             previouslyParsedPaths,
@@ -921,6 +953,7 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
@@ -956,7 +989,8 @@ public static partial class SchemaConverter
                         matches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                         
                     returnLicences.Add(linkedLicence);   
                 }
@@ -969,7 +1003,7 @@ public static partial class SchemaConverter
                 foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
                 {
                     var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
-                    var licenceNumberTransformed = FormattingHelper.PadLicenceNumber(licenceNumber);
+                    var licenceNumberTransformed = FormattingHelper.FormatLicenceNumber(licenceNumber);
 
                     // Don't process ones we've already found
                     if (licenceNumberTransformed == primaryLicence.LicenceNumber
@@ -978,7 +1012,9 @@ public static partial class SchemaConverter
                         continue;
                     }
                     
-                    if (!licenceNumberMapping.TryGetValue(licenceNumber!, out var relatedFileName))
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+                    
+                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var relatedFileName))
                     {
                         returnLicences.Add(new Licence
                         {
@@ -1004,7 +1040,8 @@ public static partial class SchemaConverter
                         relatedFileMatches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
-                        liveLicenceNumbers);
+                        liveLicenceNumbers,
+                        naldData);
                     
                     returnLicences.Add(licence);
                 }
@@ -1013,15 +1050,17 @@ public static partial class SchemaConverter
         
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
+            var strippedLlNumber = FormattingHelper.StripForComparison(linkedLicence.LicenceNumber);
+            
             // Already found it
             if (returnLicences.Any(returnLicence =>
                 FormattingHelper.StripForComparison(returnLicence.LicenceNumber)
-                    == FormattingHelper.StripForComparison(linkedLicence.LicenceNumber)))
+                    == strippedLlNumber))
             {
                 continue;
             }
             
-            if (!licenceNumberMapping.TryGetValue(linkedLicence.LicenceNumber!, out var relatedFileName))
+            if (!licenceNumberMapping.TryGetValue(strippedLlNumber!, out var relatedFileName))
             {
                 returnLicences.Add(new Licence
                 {
@@ -1047,7 +1086,8 @@ public static partial class SchemaConverter
                 relatedFileMatches,
                 impoundmentLicenceNumbers,
                 deadLicenceNumbers,
-                liveLicenceNumbers);
+                liveLicenceNumbers,
+                naldData);
             
             returnLicences.Add(licence);
         }
@@ -1560,6 +1600,7 @@ public static partial class SchemaConverter
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
+        Dictionary<string, NaldData> naldData,
         ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
@@ -1841,7 +1882,7 @@ public static partial class SchemaConverter
                 PrimaryType = linkedLicenceNumbers.Count >= 1
                     ? PrimaryType.LicenceToLicence
                     : PrimaryType.InLicence,
-                NaldType = GetNaldType(),
+                NaldType = GetNaldType(naldData, licenceNumber),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
@@ -1989,7 +2030,10 @@ public static partial class SchemaConverter
         };
     }
     
-    private static PeriodOfAbstraction[] GetPeriods(List<LabelGroupResult> matches)
+    private static PeriodOfAbstraction[] GetPeriods(
+        List<LabelGroupResult> matches,
+        string? licenceNumber,
+        Dictionary<string, NaldData> naldData)
     {
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
@@ -2012,7 +2056,9 @@ public static partial class SchemaConverter
                 Description = periodResults.Text?.FirstOrDefault()?.Text,
                 Inclusive = true,
                 StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
-                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text
+                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
+                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
             });
         }
         
@@ -2089,7 +2135,9 @@ public static partial class SchemaConverter
                 EndDate = endDate,
                 TimeCutoff = timeCutoff,
                 PointIds = null, // TODO set purpose ids and point ids
-                PurposeIds = null // TODO set purpose ids and point ids
+                PurposeIds = null, // TODO set purpose ids and point ids
+                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text)
             });
         }
 
@@ -2176,7 +2224,11 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
     
-    private static PointOfAbstraction[] GetPoints(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
+    private static PointOfAbstraction[] GetPoints(
+        List<LabelGroupResult> matches,
+        string? licenceNumber,
+        Dictionary<string, NaldData> naldData,
+        ref Dictionary<string, object> noneSchemaData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
         var returnList = new List<PointOfAbstraction>();
@@ -2261,7 +2313,8 @@ public static partial class SchemaConverter
                             Description = tableLine.Text,
                             Id = $"{number} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff
+                            TimeCutoff = timeCutoff,
+                            NaldData = GetNaldPointData(naldData, licenceNumber, tableLine.Text)
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2291,7 +2344,8 @@ public static partial class SchemaConverter
                     Description = description,
                     Id = number,
                     PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff
+                    TimeCutoff = timeCutoff,
+                    NaldData = GetNaldPointData(naldData, licenceNumber, description)
                 });
             }
         }
@@ -2299,7 +2353,168 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches)
+    private static NaldData? GetNaldDataLine(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber)
+    {
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        
+        return naldData.Count > 0
+            && !string.IsNullOrEmpty(strippedLicenceNumber)
+            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
+                ? naldDataLine
+                : null;
+    }
+    
+    private static NaldPointData? GetNaldPointData(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber,
+        string? description)
+    {
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+
+        if (naldDataLine?.Points.Count is null or 0)
+        {
+            return null;
+        }
+
+        var points = naldDataLine.Points;
+        NaldDataPoint point;
+        
+        if (points.Count == 1)
+        {
+            point = points[0];
+        }
+        else
+        {
+            // TODO - Work out which point matches the description
+            
+            point = points
+                .First(p => p.PointId != 0);
+        }
+        
+        return new NaldPointData
+        {
+            Id = point.PointId.ToString(),
+            Category = point.Category,
+            Name = point.PointName,
+            NGR = new NaldPointNgr
+            {
+                NGR1 = point.Ngr1,
+                NGR2 = point.Ngr2,
+                NGR3 = point.Ngr3,
+                NGR4 = point.Ngr4
+            },
+            NGRCartesian = new NaldPointNgrCartesian
+            {
+                NGRCartesian1 = point.Ngr1Cartesian,
+                NGRCartesian2 = point.Ngr2Cartesian,
+                NGRCartesian3 = point.Ngr3Cartesian,
+                NGRCartesian4 = point.Ngr4Cartesian
+            },
+            PrimaryType = point.PrimaryType,
+            SecondaryType = point.SecondaryType
+        };
+    }
+    
+    private static NaldPurposeData? GetNaldPurposeData(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber,
+        string? description)
+    {
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+
+        if (naldDataLine?.Purposes.Count is null or 0)
+        {
+            return null;
+        }
+
+        var purposes = naldDataLine.Purposes;
+        NaldDataPurpose purpose;
+        
+        if (purposes.Count == 1)
+        {
+            purpose = purposes[0];
+        }
+        else
+        {
+            // TODO - Work out which purpose matches the description
+            
+            purpose = naldDataLine.Purposes
+                .First(p => p.PurposeId != 0);
+        }
+
+        return new NaldPurposeData
+        {
+            Id = purpose.PurposeId.ToString(),
+            Code = purpose.PurposeCode,
+            UseCode = purpose.PurposeUseCode,
+            UseDescription = purpose.PurposeUseDescription
+        };
+    }
+    
+    private static string? GetNaldPeriodStartDate(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber,
+        string? description)
+    {
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+
+        if (naldDataLine == null)
+        {
+            
+        }
+        
+        if (naldDataLine?.Periods.Count is null or 0)
+        {
+            return null;
+        }
+
+        var periods = naldDataLine.Periods;
+        
+        if (periods.Count == 1)
+        {
+            return periods[0].PeriodStart;
+        }
+
+        // TODO - Work out which period matches the description
+        
+        return periods
+            .First(p => !string.IsNullOrEmpty(p.PeriodStart))
+            .PeriodStart!
+            .ToString();
+    }
+    
+    private static string? GetNaldPeriodEndDate(
+        Dictionary<string, NaldData> naldData,
+        string? licenceNumber,
+        string? description)
+    {
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+
+        if (naldDataLine?.Periods.Count is null or 0)
+        {
+            return null;
+        }
+
+        var periods = naldDataLine.Periods;
+        
+        if (periods.Count == 1)
+        {
+            return periods[0].PeriodEnd;
+        }
+
+        // TODO - Work out which period matches the description
+        
+        return periods
+            .First(p => !string.IsNullOrEmpty(p.PeriodStart)).PeriodEnd!
+            .ToString();
+    }
+    
+    private static PurposeOfAbstraction[] GetPurposes(
+        List<LabelGroupResult> matches,
+        string? licenceNumber,
+        Dictionary<string, NaldData> naldData)
     {
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
@@ -2382,7 +2597,8 @@ public static partial class SchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 PointIds = pointIds,
-                                TimeCutoff = timeCutoff
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
                             });
                         }
 
@@ -2401,7 +2617,8 @@ public static partial class SchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 PointIds = pointIds,
-                                TimeCutoff = timeCutoff
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
                             });
                         }
 
@@ -2420,7 +2637,8 @@ public static partial class SchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 PointIds = pointIds,
-                                TimeCutoff = timeCutoff
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
                             });
                         }
 
@@ -2439,7 +2657,8 @@ public static partial class SchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 PointIds = pointIds,
-                                TimeCutoff = timeCutoff
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
                             });
                         }
 
@@ -2458,7 +2677,8 @@ public static partial class SchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 PointIds = pointIds,
-                                TimeCutoff = timeCutoff
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
                             });
                         }
 
@@ -2471,7 +2691,8 @@ public static partial class SchemaConverter
                     Id = number,
                     Description = description,
                     PointIds = pointIds,
-                    TimeCutoff = timeCutoff
+                    TimeCutoff = timeCutoff,
+                    NaldData = GetNaldPurposeData(naldData, licenceNumber, description)
                 });
             }
         }
@@ -2591,11 +2812,14 @@ public static partial class SchemaConverter
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }
-    
-    // ReSharper disable once IdentifierTypo
-    private static string? GetNaldType()
+    private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)
     {
-        return null;
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldAggregateCondition = naldDataLine?.AggregateConditions;
+
+        return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0].Condition)
+            ? naldAggregateCondition[0].Condition
+            : null;
     }
     
     public static List<LicenceSet> AddAdditionalLicenceSets(

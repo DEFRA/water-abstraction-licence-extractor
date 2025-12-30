@@ -88,9 +88,9 @@ public static partial class DataHelper
                 (includeLabelText && tuple.Label?.Position == LabelPosition.ActuallyLabel)
                     || tuple.Label?.Position is LabelPosition.LabelIsBeforeTextToFind
                         or LabelPosition.TextToFindIsBetweenLabels)
-            .OrderBy(x =>
+            .OrderBy(tuple =>
             {
-                return x.Label?.Position switch
+                return tuple.Label?.Position switch
                 {
                     LabelPosition.LabelIsAfterTextToFind => -2,
                     LabelPosition.ActuallyLabel => -1,
@@ -99,7 +99,7 @@ public static partial class DataHelper
                     _ => throw new ArgumentOutOfRangeException()
                 };
             })
-            .Select(x => x.Text)
+            .SelectMany(tuple => tuple.ColumnsText!)
             .ToArray();
         
         return string.Join(' ', beforeStuff);

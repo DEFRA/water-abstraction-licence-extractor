@@ -47,7 +47,7 @@ public class LabelToMatch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     public bool AutoCorrect { get; init; }
-    
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator

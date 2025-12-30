@@ -41,13 +41,16 @@ public static class LabelMatchingHelper
         
         foreach (var item in textBeforeAndAfterLabel)
         {
-            var text = item.Text!.Trim();
-            
-            if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(text)
-                && text != shortHyphen
-                && text != longHyphen)
+            foreach (var columnText in item.ColumnsText!)
             {
-                return true;
+                var text = columnText.Trim();
+            
+                if (!FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(text)
+                    && text != shortHyphen
+                    && text != longHyphen)
+                {
+                    return true;
+                }   
             }
         }
 

@@ -99,7 +99,7 @@ public static partial class DataHelper
                     _ => throw new ArgumentOutOfRangeException()
                 };
             })
-            .Select(x => x.Text)
+            .SelectMany(x => x.ColumnsText!)
             .ToArray();
         
         return string.Join(' ', beforeStuff);

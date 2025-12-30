@@ -83,7 +83,7 @@ public static class TextToFindIsBetweenLabels
         {
             var labelText = request.textBeforeAtAndAfterLabel?
                 .FirstOrDefault(x => x.Label?.Position == LabelPosition.ActuallyLabel)?
-                .Text;
+                .ColumnsText![0];
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {

@@ -5226,6 +5226,7 @@ public class PdfPigNoOcrPdfTests
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
+        Assert.Equal("2/27/08/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal("2/27/08/052", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
@@ -5269,10 +5270,10 @@ public class PdfPigNoOcrPdfTests
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
-        
-        Assert.Equal("2/27/28/270", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("2/27/28/231", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal("2/27/28/083", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);      
+
+        Assert.Equal("2/27/28/231", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("2/27/28/083", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("2/27/28/270", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
     }
     
     [Fact]

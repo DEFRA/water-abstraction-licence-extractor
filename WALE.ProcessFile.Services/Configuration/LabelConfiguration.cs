@@ -224,7 +224,7 @@ public static class LabelConfiguration
     {
         return
         [
-            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber")
+            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber", true)
         ];
     }
     
@@ -2236,7 +2236,9 @@ public static class LabelConfiguration
         ];
     }
     
-    private static LabelToMatch GetLinkedLicenceNumber(string labelName)
+    private static LabelToMatch GetLinkedLicenceNumber(
+        string labelName,
+        bool treatColumnsSeperatelyForBeforeAndAfterText = false)
     {
         return new LabelToMatch
         {
@@ -2252,6 +2254,7 @@ public static class LabelConfiguration
             Position = LabelPosition.ActuallyLabel,
             PreviousLinesToFetch = 0,
             NextLinesToFetch = 0,
+            TreatColumnsSeperatelyForBeforeAndAfterText = treatColumnsSeperatelyForBeforeAndAfterText,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             Remove =
             [

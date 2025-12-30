@@ -1586,176 +1586,190 @@ public class PdfDataExtractorService(
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
+
+        var pseudoColumns = label.TreatColumnsSeperatelyForBeforeAndAfterText
+            ? line.Columns.Select(c => c.Text).ToList()
+            : [line.Text];
         
-        var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
-            .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
-
-        if (label.Text == null || isStartOfBlock)
+        foreach (var columnText in pseudoColumns)
         {
-            returnItems.Add(new TextAndLabel
+            var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
+                .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
+
+            if (label.Text == null || isStartOfBlock)
             {
-                Text = line.Text,
-                Label = label
-            });
-            
-            return returnItems;
-        }
-        
-        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
-        {
-            var options = label.Text.First().RegularExpressionIsCaseInsensitive
-                ? RegexOptions.IgnoreCase
-                : RegexOptions.None;
-            
-            var matches = Regex.Matches(
-                line.Text,
-                label.Text!.FirstOrDefault()!.Text,
-                options);
-
-            foreach (var match in matches.AsQueryable())
-            {
-                var value = match.Value;
-                var indexOnLine = line.Text.IndexOf(value, StringComparison.Ordinal);
-
-                if (indexOnLine > 0)
-                {
-                    var previousChar = line.Text[indexOnLine - 1];
-
-                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
-                    {
-                        continue;
-                    }
-                }
-
-                var position = line.Text.IndexOf(
-                    value,
-                    StringComparison.InvariantCultureIgnoreCase);
-
-                var beforeText = line.Text.Substring(0, position);
-                var beforeLabel = label.Clone();
-                beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
-
                 returnItems.Add(new TextAndLabel
                 {
-                    Text = beforeText,
-                    Label = beforeLabel
-                });
-
-                returnItems.Add(new TextAndLabel
-                {
-                    Text = value,
+                    ColumnsText = [columnText],
                     Label = label
                 });
 
-                if (line.Text.Length > position + value.Length + 1)
+                return returnItems;
+            }
+
+            if (label.Text?.FirstOrDefault()?.IsRegularExpression == true &&
+                label.Position == LabelPosition.ActuallyLabel)
+            {
+                var options = label.Text.First().RegularExpressionIsCaseInsensitive
+                    ? RegexOptions.IgnoreCase
+                    : RegexOptions.None;
+
+                var matches = Regex.Matches(
+                    columnText,
+                    label.Text!.FirstOrDefault()!.Text,
+                    options);
+
+                foreach (var match in matches.AsQueryable())
                 {
-                    var afterLabel = label.Clone();
-                    var afterText = line.Text.Substring(position + value.Length);
-                    beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+                    var value = match.Value;
+                    var indexOnLine = columnText.IndexOf(value, StringComparison.Ordinal);
+
+                    if (indexOnLine > 0)
+                    {
+                        var previousChar = columnText[indexOnLine - 1];
+
+                        if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
+                        {
+                            continue;
+                        }
+                    }
+
+                    var position = columnText.IndexOf(
+                        value,
+                        StringComparison.InvariantCultureIgnoreCase);
+
+                    var beforeText = columnText.Substring(0, position);
+                    var beforeLabel = label.Clone();
+                    beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
 
                     returnItems.Add(new TextAndLabel
                     {
-                        Text = afterText,
-                        Label = afterLabel
+                        ColumnsText = [beforeText],
+                        Label = beforeLabel
                     });
+
+                    if (value.Contains("1/22/2/87"))
+                    {
+
+                    }
+
+                    returnItems.Add(new TextAndLabel
+                    {
+                        ColumnsText = [value],
+                        Label = label
+                    });
+
+                    if (columnText.Length > position + value.Length + 1)
+                    {
+                        var afterLabel = label.Clone();
+                        var afterText = columnText[(position + value.Length)..];
+                        beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                        returnItems.Add(new TextAndLabel
+                        {
+                            ColumnsText = [afterText],
+                            Label = afterLabel
+                        });
+                    }
+                }
+
+                return returnItems;
+            }
+
+            var labelTextPositionIndex = PositionConstants.PositionNotFound;
+            string? matchedLabelText = null;
+
+            foreach (var labelText in label.Text!)
+            {
+                var index = columnText.IndexOf(
+                    labelText.Text,
+                    StringComparison.InvariantCultureIgnoreCase);
+
+                if (index > PositionConstants.PositionNotFound)
+                {
+                    labelTextPositionIndex = index;
+                    matchedLabelText = labelText.Text;
+
+                    break;
                 }
             }
 
-            return returnItems; 
-        }
-        
-        var labelTextPositionIndex = PositionConstants.PositionNotFound;
-        string? matchedLabelText = null;
-
-        foreach (var labelText in label.Text!)
-        {
-            var index = line.Text.IndexOf(
-                labelText.Text,
-                StringComparison.InvariantCultureIgnoreCase);
-
-            if (index > PositionConstants.PositionNotFound)
+            if (labelTextPositionIndex == PositionConstants.PositionNotFound)
             {
-                labelTextPositionIndex = index;
-                matchedLabelText = labelText.Text;
-                
-                break;
+                return [];
             }
-        }
 
-        if (labelTextPositionIndex == PositionConstants.PositionNotFound)
-        {
-            return [];
-        }
-        
-        var textBeforeLabel = FormattingHelper.TrimFormatting(
-            line.Text[..labelTextPositionIndex], true, false);
+            var textBeforeLabel = FormattingHelper.TrimFormatting(
+                columnText[..labelTextPositionIndex], true, false);
 
-        var textAtLabel = matchedLabelText;
-        var textAfterLabel = FormattingHelper.TrimFormatting(
-            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
-        
-        if (!string.IsNullOrEmpty(textBeforeLabel)
-            && label.Position is LabelPosition.LabelIsAfterTextToFind
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.LabelIsInMiddleOfTextToFind
-                or LabelPosition.TextToFindIsBetweenLabels
-                or LabelPosition.ContractIsSuccession
-                or LabelPosition.RelatedCategoryPosition
-                or LabelPosition.ApplicableToMost                
-                or LabelPosition.Split)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = label.Position is
-                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.TextToFindIsBetweenLabels
-                ? LabelPosition.LabelIsAfterTextToFind
-                : label.Position;
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = textBeforeLabel.Trim(),
-                Label = returnLabel
-            });
-        }
+            var textAtLabel = matchedLabelText;
+            var textAfterLabel = FormattingHelper.TrimFormatting(
+                columnText[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
 
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = LabelPosition.ActuallyLabel;
-            
-            returnItems.Add(new TextAndLabel
+            if (!string.IsNullOrEmpty(textBeforeLabel)
+                && label.Position is LabelPosition.LabelIsAfterTextToFind
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                    or LabelPosition.LabelIsInMiddleOfTextToFind
+                    or LabelPosition.TextToFindIsBetweenLabels
+                    or LabelPosition.ContractIsSuccession
+                    or LabelPosition.RelatedCategoryPosition
+                    or LabelPosition.ApplicableToMost
+                    or LabelPosition.Split)
             {
-                Text = textAtLabel.Trim(),
-                Label = returnLabel
-            });
-        }
-        
-        if (!string.IsNullOrEmpty(textAfterLabel)
-            && label.Position is LabelPosition.LabelIsBeforeTextToFind
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.LabelIsInMiddleOfTextToFind
-                or LabelPosition.TextToFindIsBetweenLabels
-                or LabelPosition.ContractIsSuccession
-                or LabelPosition.RelatedCategoryPosition
-                or LabelPosition.ApplicableToMost
-                or LabelPosition.Split)
-        {
-            var returnLabel = label.Clone();
-            returnLabel.Position = label.Position is
-                LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
-                or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
-                or LabelPosition.TextToFindIsBetweenLabels
-                ? LabelPosition.LabelIsBeforeTextToFind
-                : label.Position;
-            
-            returnItems.Add(new TextAndLabel
+                var returnLabel = label.Clone();
+                returnLabel.Position = label.Position is
+                    LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                    or LabelPosition.TextToFindIsBetweenLabels
+                    ? LabelPosition.LabelIsAfterTextToFind
+                    : label.Position;
+
+                returnItems.Add(new TextAndLabel
+                {
+                    ColumnsText = [textBeforeLabel.Trim()],
+                    Label = returnLabel
+                });
+            }
+
+            if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
             {
-                Text = textAfterLabel.Trim(),
-                Label = returnLabel
-            });
+                var returnLabel = label.Clone();
+                returnLabel.Position = LabelPosition.ActuallyLabel;
+
+                returnItems.Add(new TextAndLabel
+                {
+                    ColumnsText = [textAtLabel.Trim()],
+                    Label = returnLabel
+                });
+            }
+
+            if (!string.IsNullOrEmpty(textAfterLabel)
+                && label.Position is LabelPosition.LabelIsBeforeTextToFind
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                    or LabelPosition.LabelIsInMiddleOfTextToFind
+                    or LabelPosition.TextToFindIsBetweenLabels
+                    or LabelPosition.ContractIsSuccession
+                    or LabelPosition.RelatedCategoryPosition
+                    or LabelPosition.ApplicableToMost
+                    or LabelPosition.Split)
+            {
+                var returnLabel = label.Clone();
+                returnLabel.Position = label.Position is
+                    LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                    or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter
+                    or LabelPosition.TextToFindIsBetweenLabels
+                    ? LabelPosition.LabelIsBeforeTextToFind
+                    : label.Position;
+
+
+                returnItems.Add(new TextAndLabel
+                {
+                    ColumnsText = [textAfterLabel.Trim()],
+                    Label = returnLabel
+                });
+            }
         }
 
         return returnItems;

@@ -147,7 +147,8 @@ public static class GenerateLicenceReaderExtract
                     {
                         LicenceNumber = licenceNumber,
                         PermitNumber = permitNumber,
-                        DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue)
+                        DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue), 
+                        FileName = pdfFilePath
                     });
                 }
                 catch (Exception ex)

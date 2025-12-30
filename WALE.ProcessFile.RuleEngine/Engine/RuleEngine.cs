@@ -48,7 +48,7 @@ public class RuleEngine<T> : IRuleEngine<T>
 
         lock (_lock)
         {
-            foreach (var rule in _rules)
+            foreach (var rule in _rules.OrderBy(r => r.Priority))
             {
                 if (rule.CanApply(content))
                 {

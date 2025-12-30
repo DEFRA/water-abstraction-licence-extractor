@@ -14,7 +14,7 @@ switch (workflow)
     case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be uses in Live Licence Identification
         await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync();
         break;
-    case "DuplicateLicenceIdentificationExtract": // We don't run any more
+    case "DuplicateLicenceIdentificationExtract": // We don't run anymore
         await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync();
         break;
     case "DuplicateLicenceIdentificationExtractBySize": // Identify duplicates by file size

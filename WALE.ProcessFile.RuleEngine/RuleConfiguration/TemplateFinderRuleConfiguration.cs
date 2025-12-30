@@ -3,35 +3,31 @@ using WALE.ProcessFile.Models.Enums;
 
 namespace WALE.ProcessFile.RuleEngine.RuleConfiguration;
 
-public static class NorthumbrianWaterTemplateOneConfiguration
+public static class TemplateFinderRuleConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         return
         [
-            ("Included", GetIncludedLabels()),
-            ("Excluded", GetExcludedLabels()),
-            ("Variation", GetVariationLabels()),
+            ("EALabel", GetEALabels()),
+            ("SplitLabels", GetSplitLabels()),
+            ("NationalRivers", GetNationalRiversLabels()),
         ];
     }
-    private static List<LabelToMatch> GetIncludedLabels()
+    private static List<LabelToMatch> GetEALabels()
     {
         return
         [
             new LabelToMatch
             {
-                Name = "Included",
+                Name = "EALabel",
                 Format = "Text",
                 Text =
                 [
-                    new(".*Northumbrian.* Water.* Authority")
+                    new("Environment.* Agency")
                     {
                         IsRegularExpression = true
-                    },
-                    new("Equivalent Gallonage Factor"),
-                    new("Inland water and point where impounding is authorised"),
-                    new("Manner and extent of impounding")
-                ],
+                    }    ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
@@ -40,25 +36,29 @@ public static class NorthumbrianWaterTemplateOneConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetExcludedLabels()
+    private static List<LabelToMatch> GetSplitLabels()
     {
         return
         [
             new LabelToMatch
             {
-                Name = "Issuer",
+                Name = "SplitLabels",
                 Format = "Text",
                 Text =
                 [
-                    new("Fees and charges")
+                    new(".*Yorkshire.* Water Authority")
                     {
                         IsRegularExpression = true
                     },
-                    new("Reason for imposition of conditions")
+                    new(".*Yorkshire.* River.* Authority")
                     {
                         IsRegularExpression = true
                     },
-                    new("Right of appeal")
+                    new(".*Northumbrian.* Water.* Authority")
+                    {
+                        IsRegularExpression = true
+                    },
+                    new(".*Northumbrian.* River.* Authority")
                     {
                         IsRegularExpression = true
                     }
@@ -71,22 +71,24 @@ public static class NorthumbrianWaterTemplateOneConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetVariationLabels()
+    private static List<LabelToMatch> GetNationalRiversLabels()
     {
         return
         [
             new LabelToMatch
             {
-                Name = "Variation",
+                Name = "NationalRivers",
                 Format = "Text",
-                Text = 
+                Text =
                 [
-                    new("Variation"),
-                    new("Superseded"),
+                    new(".*National.* River.* Authority")
+                    {
+                        IsRegularExpression = true
+                    }    
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost,
+                Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
             }
         ];

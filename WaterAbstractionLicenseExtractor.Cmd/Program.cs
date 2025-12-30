@@ -638,7 +638,7 @@ IReadOnlyList<string> GetPdfPaths(string pdfFolderPath)
         ||x.Contains("12303075")
         
     ).ToList();*/
-    pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12203131")).ToList();
+    //pdfFilePaths = pdfFilePaths.Where(x => x.Contains("12203131")).ToList();
     pdfFilePaths = pdfFilePaths.OrderBy(x => x).Skip(0).Take(100).ToList();
     
     return pdfFilePaths.ToList();

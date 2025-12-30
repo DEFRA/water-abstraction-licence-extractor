@@ -1618,8 +1618,8 @@ public class PdfDataExtractorService(
 
             foreach (var match in matches.AsQueryable())
             {
-                var value = match.Value;
-                var positionIndexOnLine = lineText.IndexOf(value, StringComparison.Ordinal);
+                var regexValue = match.Value;
+                var positionIndexOnLine = lineText.IndexOf(regexValue, StringComparison.Ordinal);
 
                 if (positionIndexOnLine > 0)
                 {
@@ -1632,9 +1632,9 @@ public class PdfDataExtractorService(
                 }
 
                 var valueStartPositionOnLine = lineText.IndexOf(
-                    value,
+                    regexValue,
                     StringComparison.InvariantCultureIgnoreCase);
-                var valueEndPositionOnLine = valueStartPositionOnLine + value.Length;
+                var valueEndPositionOnLine = valueStartPositionOnLine + regexValue.Length;
 
                 var beforeColumns = new List<string>();
                 var valueColumns = new List<string>();
@@ -1644,27 +1644,35 @@ public class PdfDataExtractorService(
                 
                 foreach (var lineColumn in lineColumns)
                 {
-                    var totalLengthSoFarExcludingThisColumn = beforeColumns.Sum(bc => 1 + bc.Length)
+                    var totalLengthSoFarExcludingThisColumn =
+                        beforeColumns.Sum(bc => 1 + bc.Length)
                         + valueColumns.Sum(vc => 1 + vc.Length)
                         + afterColumns.Sum(ac => 1 + ac.Length);
                     
-                    var totalLengthSoFarIncludingThisColumn = lineColumn.Length + totalLengthSoFarExcludingThisColumn;
+                    var totalLengthSoFarIncludingThisColumn = lineColumn.Length
+                        + totalLengthSoFarExcludingThisColumn;
                     
                     // Our value starts at or past the end of this column
                     if (valueStartPositionOnLine >= totalLengthSoFarIncludingThisColumn)
                     {
-                        beforeColumns.Add(lineColumn);
+                        if (!string.IsNullOrWhiteSpace(lineColumn))
+                        {
+                            beforeColumns.Add(lineColumn);
+                        }
                     }
                     // We've seen past the point of the value now
                     else if (totalLengthSoFarExcludingThisColumn > valueEndPositionOnLine)
                     {
-                        afterColumns.Add(lineColumn);
+                        if (!string.IsNullOrWhiteSpace(lineColumn))
+                        {
+                            afterColumns.Add(lineColumn);
+                        }
                     }
                     // Our value starts before the end of this column (partial)
                     else if (valueStartPositionOnLine < totalLengthSoFarIncludingThisColumn)
                     {
                         var newPos = valueStartPositionOnLine - totalLengthBeforeThisColumn;
-                        var cutoffLength = value.Length;
+                        var cutoffLength = regexValue.Length;
                         
                         if (newPos < 0)
                         {
@@ -1678,17 +1686,24 @@ public class PdfDataExtractorService(
                             beforeColumns.Add(beforeText);
                         }
 
-                        var v = lineColumn[newPos..];
+                        var val = lineColumn[newPos..];
                         
-                        if (v.Length > cutoffLength)
+                        if (val.Length > cutoffLength)
                         {
-                            var a = v[cutoffLength..];
-                            afterColumns.Add(a);
-                            
-                            v = v[..cutoffLength];
+                            var afterText = val[cutoffLength..];
+
+                            if (!string.IsNullOrWhiteSpace(afterText))
+                            {
+                                afterColumns.Add(afterText);
+                            }
+
+                            val = val[..cutoffLength];
                         }
-                        
-                        valueColumns.Add(v);
+
+                        if (!string.IsNullOrWhiteSpace(val))
+                        {
+                            valueColumns.Add(val);
+                        }
                     }
 
                     totalLengthBeforeThisColumn = totalLengthSoFarIncludingThisColumn + 1;

@@ -220,7 +220,7 @@ public static class LabelConfiguration
     {
         return
         [
-            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber", true)
+            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber")
         ];
     }
     
@@ -2232,9 +2232,7 @@ public static class LabelConfiguration
         ];
     }
     
-    private static LabelToMatch GetLinkedLicenceNumber(
-        string labelName,
-        bool treatColumnsSeperatelyForBeforeAndAfterText = false)
+    private static LabelToMatch GetLinkedLicenceNumber(string labelName)
     {
         return new LabelToMatch
         {
@@ -2250,7 +2248,6 @@ public static class LabelConfiguration
             Position = LabelPosition.ActuallyLabel,
             PreviousLinesToFetch = 0,
             NextLinesToFetch = 0,
-            TreatColumnsSeperatelyForBeforeAndAfterText = treatColumnsSeperatelyForBeforeAndAfterText,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             Remove =
             [
@@ -2263,10 +2260,15 @@ public static class LabelConfiguration
                 new("2 8 2 8"), // Don't understand what this means, but it appears in some map
                 new("4 2 4 2"), // Don't understand what this means, but it appears in some map
                 new("7 0 7 0"), // Don't understand what this means, but it appears in some map
+                new("0 250 500"), // Doubling scale
                 new("0 250 500 1"), // Doubling scale
                 new("0 125 250 M"), // Doubling scale
+                new("0 125 250"), // Doubling scale
+                new("0 170 340 M"), // Doubling scale
                 new("0 170 340"), // Doubling scale
+                new("0 150 300 M"), // Doubling scale
                 new("0 150 300"), // Doubling scale
+                new("0 425 850 M"), // Doubling scale
                 new("0 425 850") // Doubling scale
             ],
             SkipLineWhenContains = NoneLicenceNumberSkips

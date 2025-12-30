@@ -3,9 +3,10 @@ import type {LinkedLicence, OutputListDataItem} from "../api/generated/apiClient
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
     data: OutputListDataItem[];
+    onOpenReport: (filename: string) => void;
 }
 
-export function LinkedLicencesListItem({linkedLicence, data}: LinkedLicencesListItemProps) {
+export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: LinkedLicencesListItemProps) {
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.fromSection.length === 1 && linkedLicence.fromSection[0].indexOf("ImplicitBackLink") > -1;
     let abstractionLimits = linkedLicence.fromSection.length >= 1 && linkedLicence.fromSection.indexOf("AbstractionLimits") > -1;
@@ -24,11 +25,10 @@ export function LinkedLicencesListItem({linkedLicence, data}: LinkedLicencesList
         return (
             <li title={text}>
                 <a style={{color}}
-                   href={'#'}
-                   // href={getLicenceReportUrl(linkedFilename)}
+                   href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       // openIframe(linkedFilename);
+                       onOpenReport(linkedFilename);
                    }}>{styledLicenceNumber}
                 </a>
             </li>

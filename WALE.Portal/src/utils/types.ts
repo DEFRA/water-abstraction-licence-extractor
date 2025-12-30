@@ -24,3 +24,12 @@ export interface SortConfig {
     field: OutputListDataItemKey;
     ascending: boolean;
 }
+
+export interface ReportModal {
+    id: number;
+    type: 'report' | 'licenceSet';
+    filename: string;
+    licenceSetId?: string;
+    position: { top: number; left: number };
+    size: { width: string; height: string };
+}

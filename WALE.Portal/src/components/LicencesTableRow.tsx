@@ -9,9 +9,11 @@ interface OutputItemTableRowProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
     oddRow: boolean;
+    onOpenReport: (filename: string) => void;
+    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
 }
 
-function LicencesTableRow({item, data, oddRow}: OutputItemTableRowProps) {
+function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -21,10 +23,10 @@ function LicencesTableRow({item, data, oddRow}: OutputItemTableRowProps) {
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>
             </td>
-            <td><a href={'report.html?filename=${item.filename}'}
+            <td><a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       // openIframe(item.filename);
+                       onOpenReport(item.filename!);
                    }}>{item.filename}</a>
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>{dashesIfNullOrEmpty(item.licenceNumber)}</td>
@@ -38,10 +40,17 @@ function LicencesTableRow({item, data, oddRow}: OutputItemTableRowProps) {
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
             <td>
-                <LinkedLicencesList item={item} data={data} />
+                <LinkedLicencesList 
+                    item={item} 
+                    data={data} 
+                    onOpenReport={onOpenReport}
+                />
             </td>
             <td className='licenceSetTd'>
-                <LicenceSetsList item={item}/>
+                <LicenceSetsList 
+                    item={item} 
+                    onOpenLicenceSetReport={onOpenLicenceSetReport}
+                />
                 <span className='noLicenceSetsShowing'>--</span>
             </td>
             <td>{item.status}</td>

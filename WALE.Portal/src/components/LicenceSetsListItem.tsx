@@ -3,9 +3,10 @@ import type {LicenceSet} from "../api/generated/apiClient.ts";
 interface LicenceSetsListItemProps {
     filename: string | undefined;
     licenceSet: LicenceSet;
+    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
 }
 
-export function LicenceSetsListItem({filename, licenceSet}: LicenceSetsListItemProps) {
+export function LicenceSetsListItem({filename, licenceSet, onOpenLicenceSetReport}: LicenceSetsListItemProps) {
     let licenceSetId = licenceSet.licenceSetId;
     let shortLicenceSetId = licenceSet.shortLicenceSetId;
 
@@ -38,11 +39,10 @@ export function LicenceSetsListItem({filename, licenceSet}: LicenceSetsListItemP
             <span className='lsId' title={licenceSetId + " " + licenceSet.licenceSetType}>
                 <a
                     style={{color}}
-                    //href={getLicenceSetReportUrl(filename, licenceSetId)}
-                    href={filename}
+                    href="#"
                     onClick={(e) => {
                         e.preventDefault();
-                        // openIframeSet(filename, licenceSetId);
+                        onOpenLicenceSetReport(filename!, licenceSetId!);
                     }}>
                     {shortLicenceSetId}
                 </a>

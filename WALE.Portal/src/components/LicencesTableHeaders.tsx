@@ -26,7 +26,7 @@ export function LicencesTableHeaders({
     // Generate unique issuers for dropdown
     const uniqueIssuers = useMemo(() => {
         const issuers = new Set(data.map(item => item.issuer).filter(Boolean));
-        return ['All', 'populated', 'empty', ...Array.from(issuers).sort()];
+        return ['All', ...Array.from(issuers).sort()];
     }, [data]);
 
     // Generate unique years for dropdown
@@ -36,7 +36,7 @@ export function LicencesTableHeaders({
                 .map(item => item.issueDate?.split('-')[0])
                 .filter(year => year && parseInt(year) >= 1900)
         );
-        return ['All', 'populated', 'empty', ...Array.from(years).sort().reverse()];
+        return ['All', ...Array.from(years).sort().reverse()];
     }, [data]);
 
     // Generate unique license sets for dropdown
@@ -49,7 +49,7 @@ export function LicencesTableHeaders({
                 }
             });
         });
-        return ['All', 'NoneSingle', ...Array.from(sets).sort()];
+        return ['All', ...Array.from(sets).sort()];
     }, [data]);
 
     const handleSort = (field: OutputListDataItemKey) => {

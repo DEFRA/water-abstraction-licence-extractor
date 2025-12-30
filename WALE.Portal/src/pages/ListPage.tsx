@@ -10,6 +10,8 @@ import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
+import {useReportModals} from "../utils/useReportModals.ts";
+import {ReportModalContainer} from "../components/ReportModalContainer.tsx";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
@@ -48,6 +50,16 @@ function ListPage() {
 
         fetchOutputList();
     }, [processRunId]);
+
+    const {
+        modals,
+        openReport,
+        openLicenceSetReport,
+        closeModal,
+        updateModalPosition,
+        maximizeModal,
+        minimizeModal
+    } = useReportModals();
 
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
@@ -92,7 +104,13 @@ function ListPage() {
                         /></thead>
                         <tbody>
                         {filteredData.map((item, index) => (
-                            <LicencesTableRow item={item} key={index} data={filteredData} oddRow={index % 2 === 0}/>
+                            <LicencesTableRow
+                                item={item} 
+                                key={index} 
+                                data={filteredData} 
+                                oddRow={index % 2 === 0}
+                                onOpenReport={openReport}
+                            />
                         ))}
                         </tbody>
                         <tfoot><LicencesTableFooters totals={totals}/></tfoot>
@@ -112,15 +130,13 @@ function ListPage() {
                 </div>
             )}
 
-            <div id="iframeDivNUMBER" className="iframeDiv iframeDivTemplate">
-                <div id="iframeDivNUMBERHeader" className="iframeDivHeader">
-                    <a id="closeLinkNUMBER" className="closeLink" href="#">&#10006;</a>
-                    <a id="maximiseLinkNUMBER" className="maximiseLink" href="#">&#128470;</a>
-                    <a id="minimiseLinkNUMBER" className="minimiseLink" href="#">&#95;</a>
-                </div>
-
-                <iframe id="iframeNUMBER" className="iframe" src="about:blank"></iframe>
-            </div>
+            <ReportModalContainer
+                modals={modals}
+                onClose={closeModal}
+                onMaximize={maximizeModal}
+                onMinimize={minimizeModal}
+                onPositionChange={updateModalPosition}
+            />
         </>);
 }
 

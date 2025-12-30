@@ -147,7 +147,35 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                    new()
+                    {
+                        Name = "AdditionalPoint",
+                        TextStart = [
+                            new("Abstraction period details[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Would you like") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                        ]
+                    }
                 ]
             }
         ];

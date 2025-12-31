@@ -8,6 +8,7 @@ public static class GeneralTeststHelper
     {
         return matches.Where(m =>
             m.LabelGroupName != "LinkedLicenceNumber"
+            && m.LabelGroupName != "ReasonsForConditions"
             && m.LabelGroupName != "ScheduleOfConditionsA"
             && m.LabelGroupName != "ScheduleOfConditionsB").ToList();
     }

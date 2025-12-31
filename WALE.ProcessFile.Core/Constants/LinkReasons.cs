@@ -25,4 +25,5 @@ public static class LinkReasons
     public const string Coincident = "Coincident";
     public const string ShallBeSupported = "ShallBeSupported";
     public const string ResidualFlow = "ResidualFlow";
+    public const string LapsedLicence = "LapsedLicence";
 }

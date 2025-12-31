@@ -1161,7 +1161,7 @@ public static partial class SchemaConverter
         
         return additional
             .SubResults
-            .SelectMany(subResult => subResult.SubResults)
+            .SelectMany(point => point.SubResults)
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
             .Select(linkedLicenceNumber => new LinkedLicence
             {
@@ -1170,13 +1170,28 @@ public static partial class SchemaConverter
                     new LinkedLicenceSection
                     {
                         SectionName = LinkedLicenceSectionNames.AdditionalInformation,
-                        LinkReason = GetLinkReason([additional], linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                        LinkReason = GetLinkReason(
+                            [GetParent(additional, linkedLicenceNumber)],
+                            linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LineNumber,
                         PageNumber = linkedLicenceNumber.PageNumber
                     }
                 ]
             })
             .ToList();
+    }
+
+    private static LabelGroupResult GetParent(LabelGroupResult root, LabelGroupResult child)
+    {
+        foreach (var item1 in root.SubResults)
+        {
+            if (item1.SubResults.Any(item2 => item2 == child))
+            {
+                return item1;
+            }
+        }
+
+        throw new Exception("Cannot find parent");
     }
 
     private static List<LinkedLicence> GetAllDocumentLinkedLicences(List<LabelGroupResult> matches)
@@ -1382,6 +1397,7 @@ public static partial class SchemaConverter
         
         return records
             .SubResults
+            .SelectMany(subResult => subResult.SubResults)
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "RecordsLinkedLicenceNumber")
             .Select(linkedLicenceNumber => new LinkedLicence
             {
@@ -1415,7 +1431,9 @@ public static partial class SchemaConverter
             .Where(sub => sub.MatchedLabel?.Name == "FurtherConditionsPoint")
             .ToList();
         
-        return furtherConditions.SubResults
+        return furtherConditions
+            .SubResults
+            .SelectMany(subResult => subResult.SubResults)
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
             .Select(linkedLicenceNumber => new LinkedLicence
             {
@@ -1441,7 +1459,9 @@ public static partial class SchemaConverter
             return [];
         }
         
-        return furtherProvisions.SubResults
+        return furtherProvisions
+            .SubResults
+            .SelectMany(subResult => subResult.SubResults)
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FurtherProvisionsLinkedLicenceNumber")
             .Select(linkedLicenceNumber => new LinkedLicence
             {
@@ -1468,11 +1488,10 @@ public static partial class SchemaConverter
                 continue;
             }
             
-            // TODO split down Additional information by heading to get this level of reasoning
-            /*if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
+            if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
             {
-                return "LapsedLicence";
-            }*/
+                return LinkReasons.LapsedLicence;
+            }
             
             if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
             {

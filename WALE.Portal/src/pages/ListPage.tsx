@@ -110,6 +110,7 @@ function ListPage() {
                                 data={filteredData} 
                                 oddRow={index % 2 === 0}
                                 onOpenReport={openReport}
+                                onOpenLicenceSetReport={openLicenceSetReport}
                             />
                         ))}
                         </tbody>

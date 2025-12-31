@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProcessRunsPage from "./pages/ProcessRunsPage.tsx";
 import ListPage from "./pages/ListPage.tsx";
-//import './assets/styles.css';
 
 function App() {
     return (

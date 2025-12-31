@@ -130,6 +130,11 @@ public static class LabelConfiguration
                 ],
                 TextEnd =
                 [
+                    new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
+                    new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =

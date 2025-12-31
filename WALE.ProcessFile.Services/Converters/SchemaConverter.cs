@@ -286,6 +286,7 @@ public static partial class SchemaConverter
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches));
         linkedLicences.AddRange(GetPurposesLinkedLicences(matches));
         linkedLicences.AddRange(GetPointsLinkedLicences(matches));
+        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(matches));
         
         var licenceHistory = GetLicenceHistoryLinkedLicences(matches);
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
@@ -309,6 +310,13 @@ public static partial class SchemaConverter
                     foreach (var sectionItem in sectionItems)
                     {
                         if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        {
+                            continue;
+                        }
+
+                        // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
+                        if (containedIn.Any(fs => fs.LineNumber == sectionItem.LineNumber
+                            && fs.PageNumber == sectionItem.PageNumber))
                         {
                             continue;
                         }
@@ -1180,6 +1188,38 @@ public static partial class SchemaConverter
             })
             .ToList();
     }
+    
+    private static List<LinkedLicence> GetReasonsForConditionsLinkedLicences(List<LabelGroupResult> matches)
+    {
+        var reasonsForConditions = matches
+            .FirstOrDefault(result => result.LabelGroupName == "ReasonsForConditions");
+
+        if (reasonsForConditions == null)
+        {
+            return [];
+        }
+        
+        return reasonsForConditions
+            .SubResults
+            .SelectMany(point => point.SubResults)
+            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "ReasonsForConditionsLinkedLicenceNumber")
+            .Select(linkedLicenceNumber => new LinkedLicence
+            {
+                LicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text,
+                ContainedIn = [
+                    new LinkedLicenceSection
+                    {
+                        SectionName = LinkedLicenceSectionNames.ReasonsForConditions,
+                        LinkReason = GetLinkReason(
+                            [GetParent(reasonsForConditions, linkedLicenceNumber)],
+                            linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                        LineNumber = linkedLicenceNumber.LineNumber,
+                        PageNumber = linkedLicenceNumber.PageNumber
+                    }
+                ]
+            })
+            .ToList();
+    }
 
     private static LabelGroupResult GetParent(LabelGroupResult root, LabelGroupResult child)
     {
@@ -1257,7 +1297,8 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var returnList = licenceHistorySection.SubResults
+        var returnList = licenceHistorySection
+            .SubResults
             .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "LicenceHistoryLinkedLicenceNumber")
             .Select(linkedLicenceNumber =>
             {
@@ -1271,7 +1312,7 @@ public static partial class SchemaConverter
                         new LinkedLicenceSection
                         {
                             SectionName = LinkedLicenceSectionNames.LicenceHistory,
-                            LinkReason = GetLinkReason([licenceHistorySection], lln), // TODO
+                            LinkReason = GetLinkReason([licenceHistorySection], lln), // We haven't split licence history into sections like the others
                             LineNumber = linkedLicenceNumber.LineNumber,
                             PageNumber = linkedLicenceNumber.PageNumber
                         }

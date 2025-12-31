@@ -88,8 +88,8 @@ public static class TemplateIdentificationExtract
             .OrderBy(x => x).ToList();
 
         var returnList = new List<TemplateFinderInput>();
-        var templateFinderInput = (await ReadTemplateReaderInput());//.Take(100);
-           // .Where(x => x.PermitNumber.Equals("12100010")).ToList();
+        var templateFinderInput = (await ReadTemplateReaderInput()) //;//.Take(100);
+            .Where(x => x.PermitNumber.Equals("22722086")).ToList(); //12206039 
 
         // Create the TemplateTypeIdentifierService
         var templateTypeService = new TemplateTypeIdentifierService(pdfDataExtractor);

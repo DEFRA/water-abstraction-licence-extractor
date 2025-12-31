@@ -61,7 +61,9 @@ public class FileTypeIdentifierService
         var excludeTerms = new[] { "letter", "WR51", "determination" };
 
         // Filter out excluded files
-        var filteredFiles = files.Where(file =>
+        var filteredFiles = files
+           // .Where(f => f.Contains("53113g0080__visit sheet 1998 7535765"))
+            .Where(file =>
         {
             var fileName = Path.GetFileName(file).ToLowerInvariant();
             return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));

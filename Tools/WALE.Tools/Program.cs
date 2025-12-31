@@ -1,7 +1,7 @@
 ﻿using WALE.Tools;
 
 //const string workflow = "TestsForAiPrompts";
-const string workflow = "TemplateFinderExtract";
+const string workflow = "FileTypeIdentificationExtract";
 
 switch (workflow)
 {

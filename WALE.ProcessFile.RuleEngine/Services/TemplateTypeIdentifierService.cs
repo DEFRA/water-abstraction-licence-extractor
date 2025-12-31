@@ -57,5 +57,9 @@ public class TemplateTypeIdentifierService
         _ruleEngine.AddRule(new EAScannedWithoutSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithoutSplitTemplateConfigurationRule());
+        _ruleEngine.AddRule(new YorkshireWaterTemplateConfigurationRule());
+        _ruleEngine.AddRule(new YorkshireRiverTemplateConfigurationRule());
+        _ruleEngine.AddRule(new NorthumbrianWaterTemplateConfigurationRule());
+        _ruleEngine.AddRule(new NorthumbrianRiverTemplateConfigurationRule());
     }
 }

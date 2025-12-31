@@ -1271,7 +1271,7 @@ public static partial class SchemaConverter
                         new LinkedLicenceSection
                         {
                             SectionName = LinkedLicenceSectionNames.LicenceHistory,
-                            LinkReason = GetLinkReason([licenceHistorySection], lln),
+                            LinkReason = GetLinkReason([licenceHistorySection], lln), // TODO
                             LineNumber = linkedLicenceNumber.LineNumber,
                             PageNumber = linkedLicenceNumber.PageNumber
                         }
@@ -1293,12 +1293,6 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var sections = purposeSection
-            .SubResults
-            .Where(ps => ps.MatchedLabel?.Name == "PurposePointGroup")
-            .SelectMany(ppg => ppg.SubResults.Where(ppgs => ppgs.MatchedLabel?.Name == "Purpose"))
-            .ToList();
-
         var returnList = new List<LinkedLicence>();
 
         foreach (var purposePointGroup in purposeSection.SubResults)
@@ -1319,7 +1313,9 @@ public static partial class SchemaConverter
                             new LinkedLicenceSection
                             {
                                 SectionName = LinkedLicenceSectionNames.Purposes,
-                                LinkReason = GetLinkReason(sections, linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                                LinkReason = GetLinkReason(
+                                    [GetParent(purposePointGroup, linkedLicenceNumber)],
+                                    linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                                 LineNumber = linkedLicenceNumber.LineNumber,
                                 PageNumber = linkedLicenceNumber.PageNumber
                             }
@@ -1342,12 +1338,6 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var sections = pointsSection
-            .SubResults
-            .Where(ps => ps.MatchedLabel?.Name == "PointPurposeGroup")
-            .SelectMany(ppg => ppg.SubResults.Where(ppgs => ppgs.MatchedLabel?.Name == "Point"))
-            .ToList();
-
         var returnList = new List<LinkedLicence>();
 
         foreach (var pointPurposeGroup in pointsSection.SubResults)
@@ -1368,7 +1358,9 @@ public static partial class SchemaConverter
                             new LinkedLicenceSection
                             {
                                 SectionName = LinkedLicenceSectionNames.Points,
-                                LinkReason = GetLinkReason(sections, linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                                LinkReason = GetLinkReason(
+                                    [GetParent(pointPurposeGroup, linkedLicenceNumber)],
+                                    linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                                 LineNumber = linkedLicenceNumber.LineNumber,
                                 PageNumber = linkedLicenceNumber.PageNumber
                             }
@@ -1391,10 +1383,6 @@ public static partial class SchemaConverter
             return [];
         }
 
-        var sections = records.SubResults
-            .Where(sub => sub.MatchedLabel?.Name == "RecordPoint")
-            .ToList();
-        
         return records
             .SubResults
             .SelectMany(subResult => subResult.SubResults)
@@ -1407,7 +1395,7 @@ public static partial class SchemaConverter
                     {
                         SectionName = LinkedLicenceSectionNames.Records,
                         LinkReason = GetLinkReason(
-                            sections.Count > 0 ? sections : [records],
+                            [GetParent(records, linkedLicenceNumber)],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LineNumber,
                         PageNumber = linkedLicenceNumber.PageNumber
@@ -1426,10 +1414,6 @@ public static partial class SchemaConverter
         {
             return [];
         }
-
-        var sections = furtherConditions.SubResults
-            .Where(sub => sub.MatchedLabel?.Name == "FurtherConditionsPoint")
-            .ToList();
         
         return furtherConditions
             .SubResults
@@ -1441,7 +1425,9 @@ public static partial class SchemaConverter
                 ContainedIn = [new LinkedLicenceSection
                 {
                     SectionName = LinkedLicenceSectionNames.FurtherConditions,
-                    LinkReason = GetLinkReason(sections, linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                    LinkReason = GetLinkReason(
+                        [GetParent(furtherConditions, linkedLicenceNumber)],
+                        linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                     LineNumber = linkedLicenceNumber.LineNumber,
                     PageNumber = linkedLicenceNumber.PageNumber
                 }]
@@ -1469,7 +1455,9 @@ public static partial class SchemaConverter
                 ContainedIn = [new LinkedLicenceSection
                 {
                     SectionName = LinkedLicenceSectionNames.FurtherProvisions,
-                    LinkReason = GetLinkReason([furtherProvisions], linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                    LinkReason = GetLinkReason(
+                        [GetParent(furtherProvisions, linkedLicenceNumber)],
+                        linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                     LineNumber = linkedLicenceNumber.LineNumber,
                     PageNumber = linkedLicenceNumber.PageNumber
                 }]

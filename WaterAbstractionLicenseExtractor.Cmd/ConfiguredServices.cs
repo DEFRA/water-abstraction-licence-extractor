@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WaterAbstractionLicenseExtractor.Cmd;
 
@@ -9,8 +9,6 @@ public class ConfiguredServices
     public ICacheService? CacheService { get; set; }
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; set; }
-    
-    public string? FileMappingPath { get; set; }
     
     public int MaxConcurrentScrapers { get; set; }
     

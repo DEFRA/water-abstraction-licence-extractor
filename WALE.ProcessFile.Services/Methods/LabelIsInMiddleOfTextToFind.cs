@@ -1,9 +1,9 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -28,7 +28,7 @@ public static class LabelIsInMiddleOfTextToFind
 
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLine.Text!));
+            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLine.ColumnsText![0]));
             
             inputLines.Add(clonedLine);
 
@@ -38,7 +38,7 @@ public static class LabelIsInMiddleOfTextToFind
                 
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLine.Text!));
+                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLine.ColumnsText![0]));
                 
                 inputLines.Add(clonedLine);
             }

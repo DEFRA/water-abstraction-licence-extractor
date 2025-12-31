@@ -1,11 +1,12 @@
 using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -21,7 +22,14 @@ public class AzureAiVisionOcrDataExtractorService(
     private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
+        GetTextLinesFromImageAsync(
+            string imageReference,
+            string pdfFilepath,
+            int pageNumber,
+            int imageNumber,
+            PdfDocument pdfDocument,
+            int processRunId,
+            string noOcrServiceName)
     {
         var isPageScreenshot = imageReference.StartsWith("Screenshot");
         
@@ -106,6 +114,8 @@ public class AzureAiVisionOcrDataExtractorService(
                         
                         return [];
                     }
+
+                    throw;
                 }
                 
                 if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
@@ -113,7 +123,7 @@ public class AzureAiVisionOcrDataExtractorService(
                     throw;
                 }
                 
-                var bytes = await cacheService.SaveDeflatedImageAsync(
+                var bytes = await cacheService.DeflateImageAsync(
                     request.Filepath,
                     request.ImageNumber,
                     request.PageNumber,
@@ -174,10 +184,17 @@ public class AzureAiVisionOcrDataExtractorService(
             })
             .ToList();
         
-        const int lineHeight = 23;
-        const int wordGap = 150;
-        
-        return OcrHelper.Group(returnLinesInFormat, pageNumber, lineHeight, wordGap);
+        const int horizontalColumnGap = 150;
+        const int minFontSize = 15;
+        const int considerableOverlapAmount = 19;
+
+        return OcrHelper.Group(
+            returnLinesInFormat,
+            true,
+            pageNumber,
+            horizontalColumnGap,
+            minFontSize,
+            considerableOverlapAmount);
     }
 
     private static DocumentLineWord WordToDocumentLineWord(Word word)
@@ -191,7 +208,8 @@ public class AzureAiVisionOcrDataExtractorService(
                 word.BoundingBox[1] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[2] ?? PositionConstants.UnknownCoordinate, 
                 word.BoundingBox[5] ?? PositionConstants.UnknownCoordinate, 
-                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate));
+                word.BoundingBox[0] ?? PositionConstants.UnknownCoordinate),
+            null);
     }
     
     private static IEnumerable<(string, IList<Word>)> ToPageLines(ReadResult page)

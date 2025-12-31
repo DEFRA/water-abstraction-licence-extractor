@@ -1,24 +1,28 @@
-using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Database.Services;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Models.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
+using WALE.ProcessFile.Services.Tests.Helper;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class NoOcrDatabaseTests
 {
-    private static readonly IDatabaseReadService ReadService =
-        new SqlSeverReadService(TestConfig.SqlConnectionString);
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
 
-    private static readonly IDatabaseWriteService WriteService =
-        new SqlSeverWriteService(TestConfig.SqlConnectionString);
+    private static IDatabaseWriteService WriteService =>
+        new PostgresWriteService(NpgsqlDataSourceProvider);
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
@@ -29,6 +33,11 @@ public class NoOcrDatabaseTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder);
+
+    public NoOcrDatabaseTests()
+    {
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    }
 
     private static Dictionary<string, string> FileLicenceMapping =>
         new()
@@ -54,6 +63,7 @@ public class NoOcrDatabaseTests
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly Dictionary<string, NaldData> _naldData = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
@@ -65,7 +75,7 @@ public class NoOcrDatabaseTests
             [TestConfig.PdfFolder + fileName],
             0);
     }
-
+    
     [Fact]
     public async Task AddProcessRun()
     {
@@ -99,7 +109,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, resultList.Count);
+        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -221,6 +231,7 @@ public class NoOcrDatabaseTests
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,
+            _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);

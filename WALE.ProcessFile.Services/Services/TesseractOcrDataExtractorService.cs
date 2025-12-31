@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Tesseract;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -18,7 +18,14 @@ public class TesseractOcrDataExtractorService(
     public string Name => $"TesseractOcr-{pageSegMode}";
 
     public async Task<IReadOnlyList<DocumentLine>>
-        GetTextLinesFromImageAsync(string imageReference, string pdfFilepath, int pageNumber, int imageNumber, PdfDocument pdfDocument, int processRunId)
+        GetTextLinesFromImageAsync(
+            string imageReference,
+            string pdfFilepath,
+            int pageNumber,
+            int imageNumber,
+            PdfDocument pdfDocument,
+            int processRunId,
+            string noOcrServiceName)
     {
         var isPageScreenshot = imageReference.StartsWith("Screenshot");
         
@@ -46,59 +53,33 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            Pix? ocrImage;
+            byte[]? bytes;
 
-            try
+            if (isPageScreenshot)
             {
-                byte[]? bytes;
-
-                if (isPageScreenshot)
-                {
-                    bytes = await outputService.GetPageScreenshotDataAsync(
-                        pageNumber,
-                        PdfDataExtractorService.Name,
-                        pdfFilepath);
-                }
-                else
-                {
-                    bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-                    {
-                        PageNumber = pageNumber,
-                        ImageNumber = imageNumber,
-                        Filepath = pdfFilepath,
-                        NoOcrServiceName = PdfDataExtractorService.Name,
-                        Extension = FileHelper.GetImageExtension(imageReference)
-                    });
-                }
-
-                if (bytes == null)
-                {
-                    throw new Exception("Image was not found");
-                }
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
+                bytes = await outputService.GetPageScreenshotDataAsync(
+                    pageNumber,
+                    PdfDataExtractorService.Name,
+                    pdfFilepath);
             }
-            catch (Exception ex)
+            else
             {
-                if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+                bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
                 {
-                    throw;
-                }
-
-                if (!ex.Message.Contains("Failed to load image from memory."))
-                {
-                    throw;
-                }
-
-                var bytes = await cacheService.SaveDeflatedImageAsync(
-                    request.Filepath,
-                    request.ImageNumber,
-                    request.PageNumber,
-                    request.ProcessRunId,
-                    FileHelper.GetImageExtension(imageReference));
-                
-                ocrImage = Pix.LoadFromMemory(bytes);
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    Filepath = pdfFilepath,
+                    NoOcrServiceName = PdfDataExtractorService.Name,
+                    Extension = FileHelper.GetImageExtension(imageReference)
+                });
             }
+
+            if (bytes == null)
+            {
+                throw new Exception("Image was not found");
+            }
+            
+            var ocrImage = Pix.LoadFromMemory(bytes);
 
             try
             {
@@ -119,10 +100,26 @@ public class TesseractOcrDataExtractorService(
             }
         }
         
+        const int horizontalColumnGap = 200;
+        const int minFontSize = 15;
+        const int maxPercentHeightDiff = 0;
+
         const int lineHeight = 21;
-        const int wordGap = 200;
-        
-        return OcrHelper.Group(returnLines, pageNumber, lineHeight, wordGap);
+        const int maxNegativeDiffBetweenWordTop = -100;
+        const int maxPositiveDiffBetweenWordTop = 100;
+        const int considerableOverlapAmount = 3; // TODO check and tweak
+
+        return OcrHelper.Group(
+            returnLines,
+            false,
+            pageNumber,
+            horizontalColumnGap,
+            minFontSize,
+            considerableOverlapAmount,
+            lineHeight,
+            maxPercentHeightDiff,
+            maxNegativeDiffBetweenWordTop,
+            maxPositiveDiffBetweenWordTop);
     }
 
     private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)
@@ -201,7 +198,8 @@ public class TesseractOcrDataExtractorService(
                         coordinates.X2,
                         coordinates.Y2,
                         coordinates.X1
-                    )));
+                    ),
+                    null));
             } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
             returnLines.Add(new LineAndWords { Text = line, Words = words });

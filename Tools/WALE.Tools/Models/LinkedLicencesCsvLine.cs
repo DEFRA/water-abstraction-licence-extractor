@@ -16,6 +16,8 @@ public class LinkedLicencesCsvLine
     public string? LinkedLicenceNumber { get; set; }
     public string? NaldLinkedLicenceNumber { get; set; }
     public string? LinkedLicenceFromSection { get; set; }
+    
+    public string? LinkedLicenceLinkReason { get; set; }
     public bool? LinkedLicenceIsLive { get; set; }
     
     public bool? LinkedLicenceIsDead { get; set; }

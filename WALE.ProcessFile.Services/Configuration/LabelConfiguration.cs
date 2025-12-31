@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
@@ -25,7 +25,11 @@ public static class LabelConfiguration
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
-            ("LicenceHistory", GetLicenceHistory())
+            ("LicenceHistory", GetLicenceHistory()),
+            ("FurtherProvisions", GetFurtherProvisions()),
+            ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
+            ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
+            ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
         ];
     }
     
@@ -39,24 +43,30 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("8. Records[END_OF_LINE]"),
-                    new("9. Records[END_OF_LINE]"),                    
+                    new("9. Records[END_OF_LINE]"),
+                    new("PARTICULARS OF LICENCE[END_OF_LINE]"), // TODO - NOT NECESSARILY HERE, BUT WANTED TO FETCH IT
                     new("Records[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
                     new("9. Further conditions"),
+                    new("9. Further provisions"),
                     new("10. Further conditions"),
+                    new("10. Further provisions"),                    
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
@@ -64,24 +74,41 @@ public static class LabelConfiguration
                 [
                     new()
                     {
-                        Name = "RecordsLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
+                      Name = "RecordPoint",
+                        TextStart = [
+                            new("8.1"),
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("[START_OF_BLOCK]")
                         ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
+                        TextEnd = [
+                            new("8.2"),
+                            new("8.3"),
+                            new("8.4"),
+                            new("8.5"),
+                            new("8.6"),
+                            new("8.7"),
+                            new("8.8"),
+                            new("8.9"),
+                            new("8.10"),
+                            new("8.11"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
                         PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            new("Licence Serial No: ")
-                        ]
-                    }
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
+                    GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
                 ]
             }
         ];
@@ -109,38 +136,47 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    new()
-                    {
-                        Name = "AdditionalLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            new("Licence Serial No: ")
-                        ]
-                    }
+                    GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
                 ]
             }
         ];
+    }
+
+    private static LabelToMatch GetLinkedLicenceAbstractionAndOrPointsLimits()
+    {
+        return new()
+        {
+            Name = "LinkedLicenceNumber",
+            Text =
+            [
+                new("licence number "),
+                new("licence serial no "),
+                new("licence serial no. "),
+                new("licence serial number "),
+                new("licence serial numbers "),
+                new("serial nos"),
+                new("under this licence and licence"),
+                new("and licence "),
+                new("and under licence "),
+                new("and under license ") // spelling mistake in licence                                    
+            ],
+            Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+            Format = LicenceNumber.Constant,
+            MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+            SkipLineWhenContains = NoneLicenceNumberSkips,
+            NextLinesToFetch = 10
+        };
     }
     
     private static List<LabelToMatch> GetLicenceHistory()
@@ -163,35 +199,127 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    new()
-                    {
-                        Name = "LicenceHistoryLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
-                        ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            new("Licence Serial No: ")
-                        ]
-                    }
+                    GetLinkedLicenceNumber("LicenceHistoryLinkedLicenceNumber")
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetGeneralLinkedLicenceNumbers()
+    {
+        return
+        [
+            GetLinkedLicenceNumber("GeneralLinkedLicenceNumber")
+        ];
+    }
+    
+    private static List<LabelToMatch> GetScheduleOfConditionsA()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "ScheduleOfConditionsA",
+                TextStart =
+                [
+                    new("SCHEDULE OF CONDITIONS A[END_OF_LINE]"),
+                    new("SCHEDULE OF CONDITIONS[END_OF_LINE]"),
+                ],
+                TextEnd =
+                [
+                    new("SCHEDULE OF CONDITIONS B[END_OF_LINE]"),
+                    new("ADDITIONAL INFORMATION") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true }
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1_000
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetScheduleOfConditionsB()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "ScheduleOfConditionsB",
+                TextStart =
+                [
+                    new("SCHEDULE OF CONDITIONS B[END_OF_LINE]")
+                ],
+                TextEnd =
+                [
+                    new("ADDITIONAL INFORMATION") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true }
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1_000
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetFurtherProvisions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "FurtherProvisionsAll",
+                TextStart =
+                [
+                    new("10. FURTHER PROVISIONS[END_OF_LINE]"),
+                    new("10 FURTHER PROVISIONS"),
+                    new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("Reasons For Conditions") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
                 ]
             }
         ];
@@ -215,10 +343,12 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 60,
@@ -226,24 +356,41 @@ public static class LabelConfiguration
                 [
                     new()
                     {
-                        Name = "FCLinkedLicenceNumber",
-                        Text =
-                        [
-                            new(LicenceNumber.YorkshireRegexPatten)
-                            {
-                                IsRegularExpression = true
-                            }
+                        Name = "FurtherConditionsPoint",
+                        TextStart = [
+                            new("9.1"),
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("[START_OF_BLOCK]")
                         ],
-                        Format = LicenceNumber.Constant,
-                        Position = LabelPosition.ActuallyLabel,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                        SkipLineWhenContains =
-                        [
-                            new("Licence Serial No: ")
+                        TextEnd = [
+                            new("9.2"),
+                            new("9.3"),
+                            new("9.4"),
+                            new("9.5"),
+                            new("9.6"),
+                            new("9.7"),
+                            new("9.8"),
+                            new("9.9"),
+                            new("9.10"),
+                            new("9.11"),
+                            new("[END_OF_BLOCK]")
                         ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
                         PreviousLinesToFetch = 0,
-                        NextLinesToFetch = 0
-                    }
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
+                    GetLinkedLicenceNumber("FCLinkedLicenceNumber")
                 ]
             }
         ];
@@ -327,12 +474,13 @@ public static class LabelConfiguration
                 PreviousLinesToFetch = 1,
                 NextLinesToFetch = 1,
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
                 IgnoreMatchIfContains = [
                     "Date effective"
-                ],
+                ]
             },
             new LabelToMatch
             {
@@ -369,7 +517,8 @@ public static class LabelConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost
+                Position = LabelPosition.ApplicableToMost,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
             }
         ];
     }
@@ -389,6 +538,7 @@ public static class LabelConfiguration
                     new("Date of original issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -413,6 +563,7 @@ public static class LabelConfiguration
                     new("Date effective")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -436,6 +587,7 @@ public static class LabelConfiguration
                     new("Date of expiry ...")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -455,7 +607,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("2. POINT OF ABSTRACTION") { IfMultiplePreferLast = true },
-                    new("POINT OF ABSTRACTION")
+                    new("POINT OF ABSTRACTION[END_OF_COLUMN]")
                     {
                         ColumnMustStartWith = true,
                         IfMultiplePreferLast = true
@@ -463,18 +615,23 @@ public static class LabelConfiguration
                     new("2. POINT(S) OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("2. POINTS OF ABSTRACTION") { IfMultiplePreferLast = true },
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
+                    new("Source of supply and place of abstraction") { IfMultiplePreferLast = true },
+                    new("Source(s) of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
+                    new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
+                    new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
                 ],
                 TextEnd =
                 [
                     new("MEANS OF ABSTRACTION"),
                     new("MEAN OF ABSTRACTION"),
+                    new("Land(s) on which water is authorised to be used"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -631,7 +788,7 @@ public static class LabelConfiguration
                                         Name = "PointTable",
                                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                                         TextStart = [
-                                            new("Abstraction National Grid Location Description Map"),
+                                            new("Location Description Map"),
                                         ],
                                         TextEnd = [
                                             new("[END_OF_BLOCK]")
@@ -719,7 +876,8 @@ public static class LabelConfiguration
                                         PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 10,
                                         DoNotTrimLines = true
-                                    }
+                                    },
+                                    GetLinkedLicenceAbstractionAndOrPointsLimits()
                                 }
                             }
                         ]
@@ -761,8 +919,8 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 IgnoreMatchIfContains = [
                     "You can find our forms"
@@ -855,11 +1013,6 @@ public static class LabelConfiguration
                                 IncludeStartLabelText = true,
                                 Format = "Text",
                                 MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
-                                //Remove = [
-                                //    new(@"/Page \d* of \d*/"),
-                                //    new("/Licence Serial No: [A-Z0-9/]*/")
-                                //    /* TODO add flag to include parent removes */
-                                //],
                                 SubLabels =
                                 [
                                     new()
@@ -898,26 +1051,7 @@ public static class LabelConfiguration
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text"
                                     },
-                                    new()
-                                    {
-                                        Name = "PurposeLinkedLicenceNumber",
-                                        Text =
-                                        [
-                                            new(LicenceNumber.YorkshireRegexPatten)
-                                            {
-                                                IsRegularExpression = true
-                                            }
-                                        ],
-                                        Format = LicenceNumber.Constant,
-                                        Position = LabelPosition.ActuallyLabel,
-                                        PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 0,
-                                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
-                                        SkipLineWhenContains =
-                                        [
-                                            new("Licence Serial No: ")
-                                        ]
-                                    }
+                                    GetLinkedLicenceNumber("PurposeLinkedLicenceNumber")
                                 ]
                             }
                         ]
@@ -950,6 +1084,7 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
@@ -1314,6 +1449,24 @@ public static class LabelConfiguration
                                 Format = "Text",
                                 PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 0
+                            },
+                            new()
+                            {
+                                Name = "MeanPointTable",
+                                Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                TextStart = [
+                                    new("Abstraction Point Depth (metres) Diameter (millimetres)"),
+                                    new("Abstraction Point Depth")
+                                ],
+                                TextEnd = [
+                                    new("4.[END_OF_LINE]"),
+                                    new("[END_OF_BLOCK]")
+                                ],
+                                Remove = [
+                                    new("Abstraction Point Depth (metres) Diameter (millimetres)")
+                                ],
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 10
                             }
                         ]
                     }
@@ -1339,6 +1492,7 @@ public static class LabelConfiguration
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),
+                    new("G. QUANTITY OF WATER AUTHORISED TO BE"), // TODO hack
                     new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("The quantity of water authorised to be abstracted shall be") { IfMultiplePreferLast = true }
@@ -1371,12 +1525,14 @@ public static class LabelConfiguration
                 ],
                 Remove =
                 [
-                    new(@"/Page \d* of \d*/"),
-                    new("/Licence Serial No: [A-Z0-9\\/\\. ]{3,16}/")
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
                 ],
                 CanGoOverPageBoundary = true,
                 Position = LabelPosition.TextToFindIsBetweenLabels,
                 MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 PreviousLinesToFetch = 3,
                 NextLinesToFetch = 200,
                 MinimumSubMatches = 1,
@@ -1635,27 +1791,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    new()
-                    {
-                        Name = "LinkedLicenceNumber",
-                        Text =
-                        [
-                            new("licence number "),
-                            new("licence serial number "),
-                            new("licence serial numbers "),
-                            new("under this licence and licence"),
-                            new("and licence "),
-                            new("and under licence "),
-                            new("and under license ") // spelling mistake in licence                                    
-                        ],
-                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                        Format = LicenceNumber.Constant,
-                        MultipleBehaviour = MultipleBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
-                        SkipLineWhenContains =
-                        [
-                            new("Licence Serial No: ")
-                        ]
-                    },
+                    GetLinkedLicenceAbstractionAndOrPointsLimits(),
                     new()
                     {
                         Name = "LinkedLicenceFilename",
@@ -2016,7 +2152,10 @@ public static class LabelConfiguration
                     {
                         Name = "InTotalValue",
                         CategoryName = "PerValue",
-                        Text = [new("in total")],
+                        Text = [
+                            new("in total"),
+                            new("total annual quantity")
+                        ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",
                         RelatedName = "InTotalUnits",
@@ -2025,6 +2164,16 @@ public static class LabelConfiguration
                         [
                             "abstracted in total"
                         ],
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
                         IgnoreMatchIfContains =
                         [
                             "(1)",
@@ -2032,7 +2181,7 @@ public static class LabelConfiguration
                             "(111)"
                         ],
                         PreviousLinesToFetch = 1,
-                        NextLinesToFetch = 1,
+                        NextLinesToFetch = 3,
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
@@ -2064,6 +2213,7 @@ public static class LabelConfiguration
                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                         TextStart = [
                             new("Abstraction Hourly Daily quantity Yearly quantity Instantaneous rate"),
+                            new("Abstraction Point Hourly")
                         ],
                         TextEnd = [
                             new("6.2"),
@@ -2081,4 +2231,74 @@ public static class LabelConfiguration
             }
         ];
     }
+    
+    private static LabelToMatch GetLinkedLicenceNumber(string labelName)
+    {
+        return new LabelToMatch
+        {
+            Name = labelName,
+            Text =
+            [
+                new(LicenceNumber.YorkshireRegexPatten)
+                {
+                    IsRegularExpression = true
+                }
+            ],
+            Format = LicenceNumber.Constant,
+            Position = LabelPosition.ActuallyLabel,
+            PreviousLinesToFetch = 0,
+            NextLinesToFetch = 0,
+            MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+            Remove =
+            [
+                PageNumberPattern,
+                EnvironmentAgencyTelephone1Pattern,
+                EnvironmentAgencyTelephone2Pattern,
+                EnvironmentAgencyTelephone3Pattern,
+                EnvironmentAgencyTelephone4Pattern,
+                new("0 0 0 0"), // Don't understand what this means, but it appears in some map
+                new("2 8 2 8"), // Don't understand what this means, but it appears in some map
+                new("4 2 4 2"), // Don't understand what this means, but it appears in some map
+                new("7 0 7 0"), // Don't understand what this means, but it appears in some map
+                new("0 250 500"), // Doubling scale
+                new("0 250 500 1"), // Doubling scale
+                new("0 125 250 M"), // Doubling scale
+                new("0 125 250"), // Doubling scale
+                new("0 170 340 M"), // Doubling scale
+                new("0 170 340"), // Doubling scale
+                new("0 150 300 M"), // Doubling scale
+                new("0 150 300"), // Doubling scale
+                new("0 425 850 M"), // Doubling scale
+                new("0 425 850") // Doubling scale
+            ],
+            SkipLineWhenContains = NoneLicenceNumberSkips
+        };
+    }
+
+    private static readonly string[] NoneLicenceNumberSkips =
+    [
+        LicenceNumberHeaderLine,
+        "discharge permit",
+        "discharge number",
+        "discharge consent",
+        "drawing no."
+    ];
+    
+    private const string LicenceNumberHeaderLine = "Licence Serial No: ";
+    private static readonly TextToMatch PageNumberPattern =
+        new(@"/Page \d* of \d*/")
+        {
+            IsRegularExpression = true,
+            RegularExpressionIsCaseInsensitive = true
+        };
+    private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
+        new("708 506 506"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =
+        new("800 80 70 60"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone3Pattern =
+        new("345 988 1188"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
+        new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
+    private static readonly TextToMatch LicenceNumberInHeaderPattern =
+        new($"/^{LicenceNumberHeaderLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
 }

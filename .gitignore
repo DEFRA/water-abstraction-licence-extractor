@@ -1,29 +1,31 @@
+# Build outputs
+bin/
+obj/
 *.dll
 *.pdb
 *.cache
-*.xml
 *.deps.json
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+*.DotSettings.user
+
+# IDE
+.idea/
 .DS_Store
-WaterAbstractionLicenseExtractor.sln.DotSettings.user
+
+# Application settings
 launchSettings.json
 local.settings.json
-/WALE.ProcessFile.AzureFunction.BlobTrigger/bin
-/WALE.ProcessFile.AzureFunction.BlobTrigger/obj
-/WALE.ProcessFile.AzureFunction.ServiceBusTrigger/bin
-/WALE.ProcessFile.AzureFunction.ServiceBusTrigger/obj
-/WALE.ProcessFile.Services/bin
-/WALE.ProcessFile.Services/obj
-/WALE.ProcessFile.Services.Tests/bin
-/WALE.ProcessFile.Services.Tests/obj
-/WaterAbstractionLicenseExtractor.Cmd/bin
-/WaterAbstractionLicenseExtractor.Cmd/obj
+appsettings.Development.json
+
+# Documentation
+*.xml
+
+# Project-specific
 licence-number-filename-map.csv
-/Tools/WALE.Tools/bin
-/Tools/WALE.Tools/obj
-WALE.ProcessFile.Database/bin
-WALE.ProcessFile.Database/obj
-WALE.ProcessFile.Models/bin
-WALE.ProcessFile.Models/obj
-WALE.ProcessFile.Web/bin
-WALE.ProcessFile.Web/obj
-WALE.ProcessFile.Web/appsettings.Development.json

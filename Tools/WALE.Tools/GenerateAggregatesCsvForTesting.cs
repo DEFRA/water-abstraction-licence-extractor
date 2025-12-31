@@ -2,14 +2,16 @@ using System.Collections;
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.OutputSchema;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;
@@ -22,6 +24,7 @@ public static class GenerateAggregatesCsvForTesting
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> LiveLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
+    private static readonly Dictionary<string, NaldData> NaldData = [];
     private static readonly int ProcessRunId = -1;
     
     public static async Task GenerateCsvForTestingAsync()
@@ -90,6 +93,7 @@ public static class GenerateAggregatesCsvForTesting
                 ImpoundmentLicenceNumbers,
                 DeadLicenceNumbers,
                 LiveLicenceNumbers,
+                NaldData,
                 pdfDataExtractor,
                 KeyConfig.PdfFolder,
                 ProcessRunId
@@ -134,6 +138,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -148,6 +153,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -162,6 +168,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -176,6 +183,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -190,6 +198,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -204,6 +213,7 @@ public static class GenerateAggregatesCsvForTesting
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
             LiveLicenceNumbers,
+            NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);

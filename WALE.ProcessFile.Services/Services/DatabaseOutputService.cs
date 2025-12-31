@@ -1,12 +1,11 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using SkiaSharp;
 using UglyToad.PdfPig.Graphics.Colors;
-using WALE.ProcessFile.Database.Interfaces;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -93,6 +92,14 @@ public class DatabaseOutputService(
         }
     }
 
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    {
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
+        
+        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, pdfFilename, processRunId);
+    }
+    
     public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
@@ -172,7 +179,7 @@ public class DatabaseOutputService(
                 continue;
             }
 
-            var licenceTransformed = FormattingHelper.PadLicenceNumber(missingLicenceId.LicenceNumber)!;
+            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
@@ -205,9 +212,51 @@ public class DatabaseOutputService(
         return databaseReadService.GetMatchesResult(filename);
     }
     
-    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
-        return databaseReadService.GetLicencesAsync(processRunId);
+        var licences = await databaseReadService.GetLicencesAsync(processRunId);
+
+        foreach (var licence in licences)
+        {
+            var newNoneSchemaData = new Dictionary<string, object>();
+            
+            foreach (var kvp in licence.NoneSchemaData)
+            {
+                object? value;
+                
+                if (kvp.Value is JsonElement jsonElement)
+                {
+                    value = jsonElement.ValueKind switch
+                    {
+                        JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
+                        JsonValueKind.Number => jsonElement.GetDouble(),
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.String => jsonElement.GetString(),
+                        JsonValueKind.Object => jsonElement.GetRawText(),
+                        _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
+                    };
+                }
+                else if (kvp.Value is int intValue)
+                {
+                    value = intValue;
+                }
+                else if (kvp.Value is string strValue)
+                {
+                    value = strValue;
+                }
+                else
+                {
+                    throw new Exception($"Unknown type - {kvp.Value.GetType().Name}");
+                }
+                
+                newNoneSchemaData.Add(kvp.Key, value!);
+            }
+
+            licence.NoneSchemaData = newNoneSchemaData;
+        }
+        
+        return licences;
     }
 
     public async Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)

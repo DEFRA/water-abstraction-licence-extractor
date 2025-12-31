@@ -1,225 +1,692 @@
 {
-  "licenceSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-  "aggregateSets" : [ {
-    "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-    "aggregates" : [ {
-      "id" : "2568001249LV20190619-LLPO-2568001247-2568001248",
-      "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-      "licenceNumber" : "25 68 001 249",
-      "licenceVersionId" : "LV20190619",
-      "primaryType" : "licenceToLicence",
-      "subType" : "pointToPoint",
-      "purposes" : [ ],
-      "points" : [ ],
-      "linkedLicences" : [ {
-        "licenceNumber" : "25 68 001 247"
-      }, {
-        "licenceNumber" : "25 68 001 248"
-      } ],
-      "limits" : [ {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ]
-    }, {
-      "id" : "2568001247LV20190619-LLPO-2568001248-2568001249",
-      "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-      "licenceNumber" : "25 68 001 247",
-      "licenceVersionId" : "LV20190619",
-      "primaryType" : "licenceToLicence",
-      "subType" : "pointToPoint",
-      "purposes" : [ ],
-      "points" : [ ],
-      "linkedLicences" : [ {
-        "licenceNumber" : "25 68 001 248"
-      }, {
-        "licenceNumber" : "25 68 001 249"
-      } ],
-      "limits" : [ {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ]
-    }, {
-      "id" : "2568001248LV20190619-LLPO-2568001247-2568001249",
-      "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-      "licenceNumber" : "25 68 001 248",
-      "licenceVersionId" : "LV20190619",
-      "primaryType" : "licenceToLicence",
-      "subType" : "pointToPoint",
-      "purposes" : [ ],
-      "points" : [ ],
-      "linkedLicences" : [ {
-        "licenceNumber" : "25 68 001 247"
-      }, {
-        "licenceNumber" : "25 68 001 249"
-      } ],
-      "limits" : [ {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ]
-    } ]
-  } ],
-  "licences" : [ {
-    "licenceNumber" : "25 68 001 249",
-    "filename" : "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf",
-    "licenceVersion" : {
-      "licenceVersionId" : "LV20190619",
-      "effectiveDate" : "2019-06-19T00:00:00",
-      "issueDate" : "2019-06-19T00:00:00",
-      "originalIssueDate" : "1995-05-09T00:00:00"
+  "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+  "shortLicenceSetId": "247-248-249",
+  "licenceSetTypes": [
+    "allLicencesExplicitlyReferencedAnywhere",
+    "allLicencesExplicitlyReferencedInLimits"
+  ],
+  "aggregateSets": [
+    {
+      "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
+      "aggregates": [
+        {
+          "id": "2568001249-LV20190619-LL-2568001247-2568001248",
+          "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
+          "licenceNumber": "25/68/001/249",
+          "licenceVersionId": "LV20190619",
+          "primaryType": "licenceToLicence",
+          "linkedLicences": [
+            {
+              "licenceNumber": "25 68 001 247",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            },
+            {
+              "licenceNumber": "25 68 001 248",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            }
+          ],
+          "limits": [
+            {
+              "isAverage": false,
+              "periodType": "perDay",
+              "value": 475,
+              "units": "cubic metres"
+            },
+            {
+              "isAverage": false,
+              "periodType": "perYear",
+              "value": 173453,
+              "units": "cubic metres"
+            }
+          ]
+        },
+        {
+          "id": "2568001247-LV20190619-LL-2568001248-2568001249",
+          "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
+          "licenceNumber": "25/68/001/247",
+          "licenceVersionId": "LV20190619",
+          "primaryType": "licenceToLicence",
+          "linkedLicences": [
+            {
+              "licenceNumber": "25 68 001 248",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            },
+            {
+              "licenceNumber": "25 68 001 249",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            }
+          ],
+          "limits": [
+            {
+              "isAverage": false,
+              "periodType": "perDay",
+              "value": 475,
+              "units": "cubic metres"
+            },
+            {
+              "isAverage": false,
+              "periodType": "perYear",
+              "value": 173453,
+              "units": "cubic metres"
+            }
+          ]
+        },
+        {
+          "id": "2568001248-LV20190619-LL-2568001247-2568001249",
+          "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
+          "licenceNumber": "25/68/001/248",
+          "licenceVersionId": "LV20190619",
+          "primaryType": "licenceToLicence",
+          "linkedLicences": [
+            {
+              "licenceNumber": "25 68 001 247",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            },
+            {
+              "licenceNumber": "25 68 001 249",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "containedIn": [
+                {
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "AggregateCondition",
+                  "lineNumber": 111,
+                  "pageNumber": 4
+                }
+              ],
+              "licenceFoundInList": false
+            }
+          ],
+          "limits": [
+            {
+              "isAverage": false,
+              "periodType": "perDay",
+              "value": 475,
+              "units": "cubic metres"
+            },
+            {
+              "isAverage": false,
+              "periodType": "perYear",
+              "value": 173453,
+              "units": "cubic metres"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "licences": [
+    {
+      "id": "2568001249-LV20190619",
+      "status": "ok",
+      "licenceNumber": "25/68/001/249",
+      "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf",
+      "licenceVersion": {
+        "licenceVersionId": "LV20190619",
+        "effectiveDate": "2019-06-19T00:00:00",
+        "issueDate": "2019-06-19T00:00:00",
+        "issuer": "Environment Agency",
+        "originalIssueDate": "1995-05-09T00:00:00"
+      },
+      "points": [
+        {
+          "id": "2.1",
+          "description": "At National Grid Reference SJ 5179 4988"
+        }
+      ],
+      "purposes": [
+        {
+          "id": "4.1",
+          "description": "Fish farm and fishery"
+        }
+      ],
+      "periodsOfAbstraction": [
+        {
+          "id": "5.1",
+          "description": "All year",
+          "periodType": "perYear",
+          "startDate": "All year",
+          "inclusive": false
+        }
+      ],
+      "meansOfAbstraction": [
+        {
+          "id": "3.1",
+          "description": "A gravity fed pipeline and a pump"
+        }
+      ],
+      "abstractionLimits": {
+        "individual": [
+          {
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perHour",
+                "value": 20,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ],
+        "aggregates": [
+          {
+            "id": "2568001249-LV20190619-LL-2568001247-2568001248",
+            "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
+            "licenceNumber": "25/68/001/249",
+            "licenceVersionId": "LV20190619",
+            "primaryType": "licenceToLicence",
+            "linkedLicences": [
+              {
+                "licenceNumber": "25 68 001 247",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              },
+              {
+                "licenceNumber": "25 68 001 248",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              }
+            ],
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ]
+      },
+      "linkedLicences": [
+        {
+          "licenceNumber": "25/68/001/247",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        {
+          "licenceNumber": "25/68/001/248",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        }
+      ],
+      "licenceSets": [
+        {
+          "licenceSetId": "2568001249-LV20190619",
+          "licenceSetType": "singleLicenceOnly"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+        }
+      ],
+      "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
+        "scrapedLicenceNumber": "25 68 001 249",
+        "Features:MeansPointsTable": false,
+        "Features:PointsTable": false,
+        "Features:LimitPointsTable": false,
+        "issuedToMatchType": "NearNextLineIsMatch",
+        "issuedTo": "J \u0026 S Accessories Limited",
+        "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
+        "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
+        "issuedToCertainty": 99,
+        "ocr": "NoOCR",
+        "servicesUsed": [
+          "PdfPig"
+        ]
+      },
+      "licenceFoundInList": false
     },
-    "abstractionLimits" : {
-      "individual" : [ {
-        "periodType" : "perHour",
-        "value" : 20,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ],
-      "aggregates" : [ {
-        "id" : "2568001249LV20190619-LLPO-2568001247-2568001248",
-        "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-        "licenceNumber" : "25 68 001 249",
-        "licenceVersionId" : "LV20190619",
-        "primaryType" : "licenceToLicence",
-        "subType" : "pointToPoint",
-        "purposes" : [ ],
-        "points" : [ ],
-        "linkedLicences" : [ {
-          "licenceNumber" : "25 68 001 247"
-        }, {
-          "licenceNumber" : "25 68 001 248"
-        } ],
-        "limits" : [ {
-          "periodType" : "perDay",
-          "value" : 475,
-          "units" : "cubic metres"
-        }, {
-          "periodType" : "perYear",
-          "value" : 173453,
-          "units" : "cubic metres"
-        } ]
-      } ]
+    {
+      "id": "2568001247-LV20190619",
+      "status": "ok",
+      "licenceNumber": "25/68/001/247",
+      "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+      "licenceVersion": {
+        "licenceVersionId": "LV20190619",
+        "effectiveDate": "2019-06-19T00:00:00",
+        "issueDate": "2019-06-19T00:00:00",
+        "issuer": "Environment Agency",
+        "originalIssueDate": "1995-05-09T00:00:00"
+      },
+      "points": [
+        {
+          "id": "2.1",
+          "description": "At National Grid Reference SJ 5158 5029"
+        }
+      ],
+      "purposes": [
+        {
+          "id": "4.1",
+          "description": "Fish farm and fishery"
+        }
+      ],
+      "periodsOfAbstraction": [
+        {
+          "id": "5.1",
+          "description": "All year",
+          "periodType": "perYear",
+          "startDate": "All year",
+          "inclusive": false
+        }
+      ],
+      "meansOfAbstraction": [
+        {
+          "id": "3.1",
+          "description": "A gravity fed pipeline and a pump"
+        }
+      ],
+      "abstractionLimits": {
+        "individual": [
+          {
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perHour",
+                "value": 20,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ],
+        "aggregates": [
+          {
+            "id": "2568001247-LV20190619-LL-2568001248-2568001249",
+            "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
+            "licenceNumber": "25/68/001/247",
+            "licenceVersionId": "LV20190619",
+            "primaryType": "licenceToLicence",
+            "linkedLicences": [
+              {
+                "licenceNumber": "25 68 001 248",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              },
+              {
+                "licenceNumber": "25 68 001 249",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              }
+            ],
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ]
+      },
+      "linkedLicences": [
+        {
+          "licenceNumber": "25/68/001/248",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        {
+          "licenceNumber": "25/68/001/249",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        }
+      ],
+      "licenceSets": [
+        {
+          "licenceSetId": "2568001249-LV20190619",
+          "licenceSetType": "singleLicenceOnly"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+        }
+      ],
+      "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
+        "scrapedLicenceNumber": "25 68 001 247",
+        "Features:MeansPointsTable": false,
+        "Features:PointsTable": false,
+        "Features:LimitPointsTable": false,
+        "issuedToMatchType": "NearNextLineIsMatch",
+        "issuedTo": "J \u0026 S Accessories Limited",
+        "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
+        "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
+        "issuedToCertainty": 99,
+        "ocr": "NoOCR",
+        "servicesUsed": [
+          "PdfPig"
+        ]
+      },
+      "licenceFoundInList": false
     },
-    "purposes" : [ ],
-    "points" : [ ]
-  }, {
-    "licenceNumber" : "25 68 001 247",
-    "licenceVersion" : {
-      "licenceVersionId" : "LV20190619",
-      "effectiveDate" : "2019-06-19T00:00:00",
-      "issueDate" : "2019-06-19T00:00:00",
-      "originalIssueDate" : "1995-05-09T00:00:00"
-    },
-    "abstractionLimits" : {
-      "individual" : [ {
-        "periodType" : "perHour",
-        "value" : 20,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ],
-      "aggregates" : [ {
-        "id" : "2568001247LV20190619-LLPO-2568001248-2568001249",
-        "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-        "licenceNumber" : "25 68 001 247",
-        "licenceVersionId" : "LV20190619",
-        "primaryType" : "licenceToLicence",
-        "subType" : "pointToPoint",
-        "purposes" : [ ],
-        "points" : [ ],
-        "linkedLicences" : [ {
-          "licenceNumber" : "25 68 001 248"
-        }, {
-          "licenceNumber" : "25 68 001 249"
-        } ],
-        "limits" : [ {
-          "periodType" : "perDay",
-          "value" : 475,
-          "units" : "cubic metres"
-        }, {
-          "periodType" : "perYear",
-          "value" : 173453,
-          "units" : "cubic metres"
-        } ]
-      } ]
-    },
-    "purposes" : [ ],
-    "points" : [ ]
-  }, {
-    "licenceNumber" : "25 68 001 248",
-    "licenceVersion" : {
-      "licenceVersionId" : "LV20190619",
-      "effectiveDate" : "2019-06-19T00:00:00",
-      "issueDate" : "2019-06-19T00:00:00",
-      "originalIssueDate" : "1995-05-09T00:00:00"
-    },
-    "abstractionLimits" : {
-      "individual" : [ {
-        "periodType" : "perHour",
-        "value" : 20,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perDay",
-        "value" : 475,
-        "units" : "cubic metres"
-      }, {
-        "periodType" : "perYear",
-        "value" : 173453,
-        "units" : "cubic metres"
-      } ],
-      "aggregates" : [ {
-        "id" : "2568001248LV20190619-LLPO-2568001247-2568001249",
-        "aggregateSetId" : "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-        "licenceNumber" : "25 68 001 248",
-        "licenceVersionId" : "LV20190619",
-        "primaryType" : "licenceToLicence",
-        "subType" : "pointToPoint",
-        "purposes" : [ ],
-        "points" : [ ],
-        "linkedLicences" : [ {
-          "licenceNumber" : "25 68 001 247"
-        }, {
-          "licenceNumber" : "25 68 001 249"
-        } ],
-        "limits" : [ {
-          "periodType" : "perDay",
-          "value" : 475,
-          "units" : "cubic metres"
-        }, {
-          "periodType" : "perYear",
-          "value" : 173453,
-          "units" : "cubic metres"
-        } ]
-      } ]
-    },
-    "purposes" : [ ],
-    "points" : [ ]
-  } ]
+    {
+      "id": "2568001248-LV20190619",
+      "status": "ok",
+      "licenceNumber": "25/68/001/248",
+      "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+      "licenceVersion": {
+        "licenceVersionId": "LV20190619",
+        "effectiveDate": "2019-06-19T00:00:00",
+        "issueDate": "2019-06-19T00:00:00",
+        "issuer": "Environment Agency",
+        "originalIssueDate": "1995-05-09T00:00:00"
+      },
+      "points": [
+        {
+          "id": "2.1",
+          "description": "At National Grid Reference SJ 5168 5015"
+        }
+      ],
+      "purposes": [
+        {
+          "id": "4.1",
+          "description": "Fish farm and fishery"
+        }
+      ],
+      "periodsOfAbstraction": [
+        {
+          "id": "5.1",
+          "description": "All year",
+          "periodType": "perYear",
+          "startDate": "All year",
+          "inclusive": false
+        }
+      ],
+      "meansOfAbstraction": [
+        {
+          "id": "3.1",
+          "description": "A gravity fed pipeline and a pump"
+        }
+      ],
+      "abstractionLimits": {
+        "individual": [
+          {
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perHour",
+                "value": 20,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ],
+        "aggregates": [
+          {
+            "id": "2568001248-LV20190619-LL-2568001247-2568001249",
+            "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
+            "licenceNumber": "25/68/001/248",
+            "licenceVersionId": "LV20190619",
+            "primaryType": "licenceToLicence",
+            "linkedLicences": [
+              {
+                "licenceNumber": "25 68 001 247",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              },
+              {
+                "licenceNumber": "25 68 001 249",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "containedIn": [
+                  {
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "AggregateCondition",
+                    "lineNumber": 111,
+                    "pageNumber": 4
+                  }
+                ],
+                "licenceFoundInList": false
+              }
+            ],
+            "limits": [
+              {
+                "isAverage": false,
+                "periodType": "perDay",
+                "value": 475,
+                "units": "cubic metres"
+              },
+              {
+                "isAverage": false,
+                "periodType": "perYear",
+                "value": 173453,
+                "units": "cubic metres"
+              }
+            ]
+          }
+        ]
+      },
+      "linkedLicences": [
+        {
+          "licenceNumber": "25/68/001/247",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        },
+        {
+          "licenceNumber": "25/68/001/249",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "containedIn": [
+            {
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
+            }
+          ],
+          "licenceFoundInList": false
+        }
+      ],
+      "licenceSets": [
+        {
+          "licenceSetId": "2568001249-LV20190619",
+          "licenceSetType": "singleLicenceOnly"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+        },
+        {
+          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+        }
+      ],
+      "noneSchemaData": {
+        "Features:MultipleScheduleOfConditions": false,
+        "scrapedLicenceNumber": "25 68 001 248",
+        "Features:MeansPointsTable": false,
+        "Features:PointsTable": false,
+        "Features:LimitPointsTable": false,
+        "issuedToMatchType": "NearNextLineIsMatch",
+        "issuedTo": "J \u0026 S Accessories Limited",
+        "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
+        "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
+        "issuedToCertainty": 99,
+        "ocr": "NoOCR",
+        "servicesUsed": [
+          "PdfPig"
+        ]
+      },
+      "licenceFoundInList": false
+    }
+  ]
 }

@@ -1,5 +1,5 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Interfaces;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Models;
 

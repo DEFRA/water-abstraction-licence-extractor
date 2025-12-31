@@ -1,7 +1,7 @@
 using System.Globalization;
 using CsvHelper;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
@@ -9,8 +9,6 @@ namespace WALE.ProcessFile.Services.Formats;
 public static class CompanyName
 {
     public const string Constant = "CompanyName";
-
-    public static readonly List<string> CompanyWords = ["trading as"];
 
     public static bool AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
@@ -89,7 +87,7 @@ public static class CompanyName
                 }
                 
                 // It's only the company suffix with nothing else
-                if (CompanySuffixes.Any(companySuffix =>
+                if (CompanyNameHelper.CompanySuffixes.Any(companySuffix =>
                         companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     newColumns.Add(column);
@@ -194,7 +192,7 @@ public static class CompanyName
         }
 
         var parts = lineText.Split(' ');
-        var looksLikeNameWithInitials = parts.Length is 2 or 3 or 4
+        var looksLikeNameWithInitials = parts.Length >= 2
             && parts.First().Length is 1 or 2
             && parts.First().All(char.IsLetter)
             && (parts.Length == 2 || (parts[1].Length is 1 or 2 && parts[1].All(char.IsLetter)))
@@ -213,7 +211,7 @@ public static class CompanyName
             lineText,
             out var delimiter);
         
-        if (StartsWithCompanyOrPersonalPrefix(lineText)
+        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText)
             || ContainsCompanyOrPersonalWord(lineText)
             || containsDelimitter)
         {
@@ -248,36 +246,6 @@ public static class CompanyName
         return false;
     }
     
-    public static bool StartsWithCompanyOrPersonalPrefix(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-        
-        return Prefixes
-            .Any(prefix => text.StartsWith(prefix,
-                StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    public static bool EndsWithCompanyOrPersonalSuffix(string? text)
-    {
-        if (text == null)
-        {
-            return false;
-        }
-        
-        return CompanySuffixes
-            .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    public static bool MayBeInitials(string word)
-    {
-        return word.Length is 2
-               && word.All(char.IsUpper);
-    }
-    
     private static bool ContainsCompanyOrPersonalWord(string? text)
     {
         if (text == null)
@@ -297,7 +265,7 @@ public static class CompanyName
             }
         }
         
-        return CompanyWords
+        return CompanyNameHelper.CompanyWords
             .Any(companyWord => text.Contains(companyWord,
                 StringComparison.InvariantCultureIgnoreCase));
     }
@@ -314,7 +282,7 @@ public static class CompanyName
         }
 
         string? delimiterLoop = null;
-        var found = CompanySuffixes
+        var found = CompanyNameHelper.CompanySuffixes
             .Any(companySuffix =>
             {
                 var contains = text.Contains(companySuffix,
@@ -403,29 +371,6 @@ public static class CompanyName
         " street"
     ];
     
-    private static readonly List<string> CompanySuffixes =
-    [
-        " agency",
-        " limited",
-        " charities",
-        " ltd",
-        " plc",
-        " school",
-        " corporation",
-        " university",
-        " and sons",
-        " water board",
-        " users",
-        " estate",
-        " quarry",
-        " nurseries",
-        " esq.", // Personal suffix
-        " esq",
-        " and son",
-        " and partners",
-        " farms"
-    ];
-    
     private static readonly List<string> FirstNameAvoidWords =
     [
         "the", // Too generic
@@ -446,21 +391,5 @@ public static class CompanyName
         "you", //  Is it a name?
         "thames", // River
         "fee"
-    ];
-    
-    private static readonly List<string> Prefixes =
-    [
-        "department ",
-        "university ",
-        "mr ",
-        "mr. ",
-        "mrs ",
-        "mrs. ",
-        "miss ",
-        "miss. ",
-        "lord ",
-        "lord. ",
-        "lady ",
-        "lady. "
     ];
 }

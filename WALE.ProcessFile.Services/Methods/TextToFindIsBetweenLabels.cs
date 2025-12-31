@@ -1,10 +1,10 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -83,7 +83,7 @@ public static class TextToFindIsBetweenLabels
         {
             var labelText = request.textBeforeAtAndAfterLabel?
                 .FirstOrDefault(x => x.Label?.Position == LabelPosition.ActuallyLabel)?
-                .Text;
+                .ColumnsText![0];
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {

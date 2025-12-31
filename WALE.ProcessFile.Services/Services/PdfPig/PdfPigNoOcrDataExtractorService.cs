@@ -1,12 +1,12 @@
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
-using PdfDocument = WALE.ProcessFile.Services.Models.PdfDocument;
 
 namespace WALE.ProcessFile.Services.Services.PdfPig;
 
@@ -303,9 +303,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         lineNumber++,
                         pageNumber,
                         [new(string.Empty, [])],
-                        firstLine.BoundingBox.Bottom + blankLineGap,
-                        bottomRounded + blankLineGap,
-                        PositionConstants.UnknownCoordinate);
+                        firstLine.BoundingBox.Top,
+                        firstLine.BoundingBox.Right,
+                        firstLine.BoundingBox.Bottom,
+                        firstLine.BoundingBox.Left);
 
                     resultList.Add(documentLineToAdd);
                 }
@@ -334,7 +335,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     columnToAddTo.Words.Add(new DocumentLineWord(
                         word.Text,
                         null,
-                        DocumentLineWordCoordinatesHelper.Convert(word.BoundingBox)
+                        DocumentLineWordCoordinatesHelper.Convert(word.BoundingBox),
+                        "Digital"
                     ));
 
                     previousWord2 = word;
@@ -349,8 +351,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     lineNumber++,
                     pageNumber,
                     columns,
+                    firstLine.BoundingBox.Top,
+                    firstLine.BoundingBox.Right,
                     firstLine.BoundingBox.Bottom,
-                    bottomRounded,
                     firstLine.BoundingBox.Left);
 
                 resultList.Add(documentLine);

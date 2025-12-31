@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
@@ -16,7 +16,7 @@ public static class Number
         matchedLines = [];
         
         var matched = false;
-        var returnLines = new List<string>();
+        var returnLines = new List<(string Text, DocumentLine OriginalLine)>();
 
         var firstLine = linesList.FirstOrDefault();
         
@@ -48,11 +48,11 @@ public static class Number
 
                 if (word == $"({numberLineDbl})")
                 {
-                    returnLines.Add($"({numberLineDbl})");
+                    returnLines.Add(($"({numberLineDbl})", line));
                 }
                 else
                 {
-                    returnLines.Add(numberLineDbl + string.Empty);   
+                    returnLines.Add((numberLineDbl + string.Empty, line));   
                 }
 
                 if (!matched)
@@ -70,25 +70,26 @@ public static class Number
             return matched;
         }
         
-        foreach (var tempLine in returnLines)
+        foreach (var returnLine in returnLines)
         {
-            if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(tempLine, label))
+            if (label != null && LabelMatchingHelper.ShouldSkipResultAsForbidden(returnLine.Text, label))
             {
                 continue;
             }
             
             var columns = new List<DocumentLineColumn>
             {
-                new(tempLine,[])
+                new(returnLine.Text,[])
             };
 
             var documentLine = new DocumentLine(
                 lineNumber,
                 pageNumber,
                 columns,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate,
-                PositionConstants.UnknownCoordinate);
+                returnLine.OriginalLine.Top,
+                returnLine.OriginalLine.Right,
+                returnLine.OriginalLine.Bottom,
+                returnLine.OriginalLine.Left);
 
             matchedLines.Add(documentLine);
         }

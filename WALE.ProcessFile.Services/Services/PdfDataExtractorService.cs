@@ -1,17 +1,20 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tesseract;
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Constants;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
+using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -64,7 +67,8 @@ public class PdfDataExtractorService(
         }
 
         const bool notOcr = false;
-
+        const int minAverageLineLength = 15;
+        
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
             configuration.Labels,
@@ -130,18 +134,20 @@ public class PdfDataExtractorService(
         {
             pageNumber += 1;
             
-            var pageImageNumberDict = new Dictionary<string, int>();
             var breakPageLoop = false;
-
             var pageImages = page.Images.ToList();
             
             if (pageImages.Count > 10)
             {
                 pageImages = [page.ImageReference!];
             }
+
+            var pageImageNumber = 0;
             
             foreach (var imageReference in pageImages)
             {
+                pageImageNumber += 1;
+                
                 // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
                 
                 var breakImageLoop = false;
@@ -157,10 +163,6 @@ public class PdfDataExtractorService(
                         returnResult.ServicesUsed.Add(ocrService.Name);
                     }
 
-                    pageImageNumberDict.TryAdd(ocrService.Name, 1);
-                    var pageImageNumber = pageImageNumberDict[ocrService.Name];
-                    pageImageNumberDict[ocrService.Name] = pageImageNumber + 1;
-                    
                     try
                     {
                         serviceImageLines =
@@ -170,14 +172,15 @@ public class PdfDataExtractorService(
                                 pageNumber,
                                 pageImageNumber,
                                 pdfDocument,
-                                processRunId)).ToList();
+                                processRunId,
+                                Name)).ToList();
                     }
                     catch (Exception ex)
                     {
-                        serviceImageLines = [];
-                        
                         Console.WriteLine(ex);
+                        
                         // TODO proper logging somewhere
+                        throw;
                     }
 
                     // No lines found, no point processing that with the other services
@@ -185,8 +188,24 @@ public class PdfDataExtractorService(
                     {
                         break;
                     }
+                    
+                    var containsTheWordMap = serviceImageLines
+                        .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
+                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase));
 
+                    if (containsTheWordMap)
+                    {
+                        break;
+                    }
+                    
                     var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
+                    
+                    // Short lines indicate it may be a map page,
+                    // no point processing that with the other services
+                    if (averageLineLength < minAverageLineLength)
+                    {
+                        break;
+                    }
                     
                     var allLinesSoFar = documentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
@@ -218,13 +237,6 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
-                        // Short lines indicate it may be a map page,
-                        // no point processing that with the other services
-                        if (averageLineLength < 20)
-                        {
-                            break;
-                        }
-                        
                         continue;
                     }
                     
@@ -266,44 +278,11 @@ public class PdfDataExtractorService(
 
                         break;
                     }
-
-                    // Short lines indicate it may be a map page,
-                    // no point processing that with the other services
-                    if (averageLineLength < 30)
-                    {
-                        var containsTheWordMap = serviceImageLines
-                            .Any(l => l.Text.Contains("Map ", StringComparison.InvariantCultureIgnoreCase));
-
-                        if (containsTheWordMap)
-                        {
-                            break;
-                        }
-                    }
                 }
-
-                var uniqueServiceMatches = new List<LabelGroupResult>();
-
-                foreach (var kvp in serviceMatchesDict.OrderBy(x => x.Key.HasDirectCost)) // TODO should be OrderByDescending
-                {
-                    var serviceMatches = kvp.Value;
-
-                    foreach (var match in serviceMatches)
-                    {
-                        var alreadyFound = uniqueServiceMatches
-                            .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
-
-                        if (alreadyFound != null)
-                        {
-                            uniqueServiceMatches.Remove(alreadyFound);
-                        }
-
-                        uniqueServiceMatches.Add(match);
-                    }
-                }
-                
-                // TODO something here to use all 3 of them
                 
                 documentLines.AddRange(serviceImageLines);
+
+                var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
@@ -354,6 +333,237 @@ public class PdfDataExtractorService(
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
+    }
+
+    private static int GetSubResultCount(LabelGroupResult match)
+    {
+        var subResultCount = 0;
+
+        foreach (var subResult in match.SubResults)
+        {
+            subResultCount += 1;
+
+            foreach (var subResult2 in subResult.SubResults)
+            {
+                subResultCount += 1;
+                                    
+                foreach (var subResult3 in subResult2.SubResults)
+                {
+                    subResultCount += 1;
+                                        
+                    foreach (var subResult4 in subResult3.SubResults)
+                    {
+                        subResultCount += 1;
+                                            
+                        foreach (var subResult5 in subResult4.SubResults)
+                        {
+                            subResultCount += 1;
+                                                
+                            foreach (var subResult6 in subResult5.SubResults)
+                            {
+                                subResultCount += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return subResultCount;
+    }
+
+    private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    {
+        var uniqueServiceMatches = new List<LabelGroupResult>();
+
+        foreach (var kvp in serviceMatchesDict.OrderBy(service => service.Key.HasDirectCost))
+        {
+            var serviceMatches = kvp.Value;
+
+            foreach (var match in serviceMatches)
+            {
+                var alreadyFound = uniqueServiceMatches
+                    .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
+
+                if (alreadyFound != null)
+                {
+                    switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
+                    {
+                        case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
+                            var subResultCount = GetSubResultCount(match);
+                            var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
+
+                            if (subResultCount >= alreadyFoundSubResultCount)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
+                            var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                            var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                            if (newValue.Length >= existingValue.Length)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
+                            var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                            var existingDocumentLine = new DocumentLine
+                            {
+                                Columns = [
+                                    new()
+                                    {
+                                        Text = existingLicenceNumber,
+                                        Words = [new(
+                                            existingLicenceNumber,
+                                            null,
+                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                            null)]
+                                    }
+                                ]
+                            };
+                            
+                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                                [existingDocumentLine],
+                                new LabelToMatch(),
+                                alreadyFound.IsOcr,
+                                out var existingLicenceNumberOutput);
+
+                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
+                            var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
+                            var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
+                            var existingValueLength = existingLicenceNumber.Length;
+                            
+                            var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
+                            var newDocumentLine = new DocumentLine
+                            {
+                                Columns = [
+                                    new()
+                                    {
+                                        Text = newLicenceNumber,
+                                        Words = [new(
+                                            newLicenceNumber,
+                                            null,
+                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                            null)]
+                                    }
+                                ]
+                            };
+                            
+                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                                [newDocumentLine],
+                                new LabelToMatch(),
+                                alreadyFound.IsOcr,
+                                out var newLicenceNumberOutput);
+
+                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
+                            var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
+                            var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
+                            var newValueLength = newLicenceNumber.Length;
+
+                            if (newValueLength > existingValueLength
+                                || newValueNumberOfDigits > existingValueNumberOfDigits
+                                || newValueNumberOfParts > existingValueNumberOfParts)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
+                        case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
+                            var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                            var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                            if (existingDate == null)
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else if (newDate == null)
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                            else
+                            {
+                                var existingDateHasDayField = existingDate.Value.Day > 1;
+                                var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
+                                var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
+                                
+                                var newDateHasDayField = newDate.Value.Day > 1;
+                                var newDateIsPost1911 = newDate.Value.Year >= 1911;
+                                var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
+                                
+                                if (newDateHasDayField && newDateIsPost1911
+                                    && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                                {
+                                    match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                    alreadyFound.AlternativeMatches = [];
+                                    match.AlternativeMatches.Add(alreadyFound);
+
+                                    uniqueServiceMatches.Remove(alreadyFound);
+                                    uniqueServiceMatches.Add(match);
+                                }
+                                else
+                                {
+                                    alreadyFound.AlternativeMatches.Add(match);
+                                }
+                            }
+                            
+                            break;
+                        default:
+                            throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
+                    }
+                    
+                    continue;
+                }
+
+                uniqueServiceMatches.Add(match);
+            }
+        }
+
+        return uniqueServiceMatches;
     }
     
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, int processRunId)
@@ -570,7 +780,9 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                if (!licenceNumberMapping.TryGetValue(licenceNumber.Text, out var relatedFileName))
+                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
+                
+                if (!licenceNumberMapping.TryGetValue(stripped!, out var relatedFileName))
                 {
                     // TODO this should log a warning
                     continue;
@@ -620,7 +832,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
 
-    private bool ProcessMatchAll(
+    private bool NotMatchedAll(
         DocumentLine line,
         DocumentLine lineForPosition,
         LabelToMatch label,
@@ -756,6 +968,12 @@ public class PdfDataExtractorService(
                         throw new Exception("Infinite loop detected - coding error");
                     }
 
+                    
+                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "LinkedLicenceNumber")
+                    {
+                        
+                    }
+                    
                     previousPartialLine = partialLine;
                     
                     var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
@@ -795,7 +1013,13 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
-                    if (label.Name == "Issuer")
+                    
+                    if (label.Name == "DocumentLicenceNumber")
+                    {
+                
+                    }
+                    
+                    if (partialLine.Text.Contains("FURTHER PROVISIONS") && label.Name == "DocumentLicenceNumber")
                     {
                         
                     }
@@ -845,7 +1069,7 @@ public class PdfDataExtractorService(
                         previousLines ??= line.PreviousLines(lines, label);
                         nextLines ??= line.NextLines(lines, label);
 
-                        if (ProcessMatchAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
+                        if (NotMatchedAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
                         {
                             partialLine = null;
                             continue;
@@ -863,7 +1087,7 @@ public class PdfDataExtractorService(
                     
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
-
+                    
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
                     
@@ -1362,6 +1586,9 @@ public class PdfDataExtractorService(
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
+
+        var lineColumns = line.Columns.Select(c => c.Text).ToList();
+        var lineText = line.Text;
         
         var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
             .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
@@ -1370,73 +1597,166 @@ public class PdfDataExtractorService(
         {
             returnItems.Add(new TextAndLabel
             {
-                Text = line.Text,
+                ColumnsText = lineColumns,
                 Label = label
             });
-            
+
             return returnItems;
         }
-        
-        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true && label.Position == LabelPosition.ActuallyLabel)
+
+        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true &&
+            label.Position == LabelPosition.ActuallyLabel)
         {
-            var matches = Regex.Matches(line.Text, label.Text!.FirstOrDefault()!.Text, RegexOptions.IgnoreCase);;
+            var options = label.Text.First().RegularExpressionIsCaseInsensitive
+                ? RegexOptions.IgnoreCase
+                : RegexOptions.None;
 
-            var position = line.Text.IndexOf(
-                matches[0].Value,
-                StringComparison.InvariantCultureIgnoreCase);
+            var matches = Regex.Matches(
+                lineText,
+                label.Text!.FirstOrDefault()!.Text,
+                options);
 
-            var beforeText = line.Text.Substring(0, position);
-            var beforeLabel = label.Clone();
-            beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
-            
-            returnItems.Add(new TextAndLabel
+            foreach (var match in matches.AsQueryable())
             {
-                Text = beforeText,
-                Label = beforeLabel
-            });
-            
-            returnItems.Add(new TextAndLabel
-            {
-                Text = matches.FirstOrDefault()?.Value,
-                Label = label
-            });
+                var regexValue = match.Value;
+                var positionIndexOnLine = lineText.IndexOf(regexValue, StringComparison.Ordinal);
 
-            if (line.Text.Length > position + matches.FirstOrDefault()?.Value.Length + 1)
-            {
-                var afterLabel = label.Clone();
-                var afterText = line.Text.Substring(position + matches.FirstOrDefault()!.Value.Length);
-                beforeLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+                if (positionIndexOnLine > 0)
+                {
+                    var previousChar = lineText[positionIndexOnLine - 1];
 
+                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
+                    {
+                        continue;
+                    }
+                }
+
+                var valueStartPositionOnLine = lineText.IndexOf(
+                    regexValue,
+                    StringComparison.InvariantCultureIgnoreCase);
+                var valueEndPositionOnLine = valueStartPositionOnLine + regexValue.Length;
+
+                var beforeColumns = new List<string>();
+                var valueColumns = new List<string>();
+                var afterColumns = new List<string>();
+                
+                var totalLengthBeforeThisColumn = 0;
+                
+                foreach (var lineColumn in lineColumns)
+                {
+                    var totalLengthSoFarExcludingThisColumn =
+                        beforeColumns.Sum(bc => 1 + bc.Length)
+                        + valueColumns.Sum(vc => 1 + vc.Length)
+                        + afterColumns.Sum(ac => 1 + ac.Length);
+                    
+                    var totalLengthSoFarIncludingThisColumn = lineColumn.Length
+                        + totalLengthSoFarExcludingThisColumn;
+                    
+                    // Our value starts at or past the end of this column
+                    if (valueStartPositionOnLine >= totalLengthSoFarIncludingThisColumn)
+                    {
+                        if (!string.IsNullOrWhiteSpace(lineColumn))
+                        {
+                            beforeColumns.Add(lineColumn);
+                        }
+                    }
+                    // We've seen past the point of the value now
+                    else if (totalLengthSoFarExcludingThisColumn > valueEndPositionOnLine)
+                    {
+                        if (!string.IsNullOrWhiteSpace(lineColumn))
+                        {
+                            afterColumns.Add(lineColumn);
+                        }
+                    }
+                    // Our value starts before the end of this column (partial)
+                    else if (valueStartPositionOnLine < totalLengthSoFarIncludingThisColumn)
+                    {
+                        var newPos = valueStartPositionOnLine - totalLengthBeforeThisColumn;
+                        var cutoffLength = regexValue.Length;
+                        
+                        if (newPos < 0)
+                        {
+                            cutoffLength += newPos;
+                            newPos = 0;
+                        }
+
+                        var beforeText = lineColumn[..newPos];
+                        if (!string.IsNullOrWhiteSpace(beforeText))
+                        {
+                            beforeColumns.Add(beforeText);
+                        }
+
+                        var val = lineColumn[newPos..];
+                        
+                        if (val.Length > cutoffLength)
+                        {
+                            var afterText = val[cutoffLength..];
+
+                            if (!string.IsNullOrWhiteSpace(afterText))
+                            {
+                                afterColumns.Add(afterText);
+                            }
+
+                            val = val[..cutoffLength];
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(val))
+                        {
+                            valueColumns.Add(val);
+                        }
+                    }
+
+                    totalLengthBeforeThisColumn = totalLengthSoFarIncludingThisColumn + 1;
+                }
+
+                if (beforeColumns.Count > 1 || !string.IsNullOrWhiteSpace(beforeColumns.FirstOrDefault()))
+                {
+                    var beforeLabel = label.Clone();
+                    beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
+                    
+                    returnItems.Add(new TextAndLabel
+                    {
+                        ColumnsText = beforeColumns,
+                        Label = beforeLabel
+                    });
+                }
+                
                 returnItems.Add(new TextAndLabel
                 {
-                    Text = afterText,
-                    Label = afterLabel
+                    ColumnsText = valueColumns,
+                    Label = label
                 });
+
+                if (afterColumns.Count > 1 || !string.IsNullOrWhiteSpace(afterColumns.FirstOrDefault()))
+                {
+                    var afterLabel = label.Clone();
+                    afterLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
+
+                    returnItems.Add(new TextAndLabel
+                    {
+                        ColumnsText = afterColumns,
+                        Label = afterLabel
+                    });
+                }
             }
 
-            return returnItems; 
+            return returnItems;
         }
-        
+
         var labelTextPositionIndex = PositionConstants.PositionNotFound;
         string? matchedLabelText = null;
 
         foreach (var labelText in label.Text!)
         {
-            var index = line.Text.IndexOf(
+            var index = lineText.IndexOf(
                 labelText.Text,
                 StringComparison.InvariantCultureIgnoreCase);
-
-            // if (labelText.IsRegularExpression)
-            // {
-            //     var matches = Regex.Matches(line.Text, labelText.Text, RegexOptions.IgnoreCase);;
-            //     index = matches.FirstOrDefault()?.Index ?? PositionConstants.PositionNotFound;
-            // }
 
             if (index > PositionConstants.PositionNotFound)
             {
                 labelTextPositionIndex = index;
                 matchedLabelText = labelText.Text;
-                
+
                 break;
             }
         }
@@ -1445,14 +1765,13 @@ public class PdfDataExtractorService(
         {
             return [];
         }
-        
+
         var textBeforeLabel = FormattingHelper.TrimFormatting(
-            line.Text[..labelTextPositionIndex], true, false);
+            lineText[..labelTextPositionIndex], true, false);
 
         var textAtLabel = matchedLabelText;
-        
         var textAfterLabel = FormattingHelper.TrimFormatting(
-            line.Text[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
+            lineText[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
 
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
@@ -1462,7 +1781,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.TextToFindIsBetweenLabels
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
-                or LabelPosition.ApplicableToMost                
+                or LabelPosition.ApplicableToMost
                 or LabelPosition.Split)
         {
             var returnLabel = label.Clone();
@@ -1472,10 +1791,10 @@ public class PdfDataExtractorService(
                 or LabelPosition.TextToFindIsBetweenLabels
                 ? LabelPosition.LabelIsAfterTextToFind
                 : label.Position;
-            
+
             returnItems.Add(new TextAndLabel
             {
-                Text = textBeforeLabel.Trim(),
+                ColumnsText = [textBeforeLabel.Trim()],
                 Label = returnLabel
             });
         }
@@ -1484,14 +1803,14 @@ public class PdfDataExtractorService(
         {
             var returnLabel = label.Clone();
             returnLabel.Position = LabelPosition.ActuallyLabel;
-            
+
             returnItems.Add(new TextAndLabel
             {
-                Text = textAtLabel.Trim(),
+                ColumnsText = [textAtLabel.Trim()],
                 Label = returnLabel
             });
         }
-        
+
         if (!string.IsNullOrEmpty(textAfterLabel)
             && label.Position is LabelPosition.LabelIsBeforeTextToFind
                 or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
@@ -1510,10 +1829,11 @@ public class PdfDataExtractorService(
                 or LabelPosition.TextToFindIsBetweenLabels
                 ? LabelPosition.LabelIsBeforeTextToFind
                 : label.Position;
-            
+
+
             returnItems.Add(new TextAndLabel
             {
-                Text = textAfterLabel.Trim(),
+                ColumnsText = [textAfterLabel.Trim()],
                 Label = returnLabel
             });
         }
@@ -1558,23 +1878,23 @@ public class PdfDataExtractorService(
                     text = text
                         .Replace(PositionConstants.EndOfLineMarker, string.Empty);
                 }
-            
+                
                 if (text.Contains(PositionConstants.EndOfColumnMarker))
                 {
                     text = text
                         .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
                 }
-            
+                
                 return (labelTextMatch, text);
             })
             .ToList();
-    
+        
         if (labelText.Any(tuple =>
-                tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+            tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
         {
             return true;
         }
-    
+        
         var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
 
         return isRegularExpression || labelText.Any(tuple =>

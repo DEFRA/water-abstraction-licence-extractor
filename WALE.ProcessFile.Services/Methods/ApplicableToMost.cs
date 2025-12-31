@@ -1,10 +1,10 @@
-using WALE.ProcessFile.Models;
-using WALE.ProcessFile.Models.Enums;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Models.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
+using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -28,7 +28,7 @@ public static class ApplicableToMost
             request.textBeforeAtAndAfterLabel = [
                 new()
                 {
-                    Text = request.label.Text?.FirstOrDefault()?.Text,
+                    ColumnsText = [request.label.Text?.FirstOrDefault()?.Text!],
                     Label = request.label
                 }
             ]!;
@@ -55,14 +55,30 @@ public static class ApplicableToMost
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
-            var text = item.Text;
+            var text = item.ColumnsText![0];
             
             var labelGroupResult = request.labelGroupResult;
             labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
             labelGroupResult.MatchedLabel = matchedLabel;
             
             var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
+            var labelText = matchedLabel.Text?.FirstOrDefault()?.Text;
+
+            var columnTextOnly = matchedLabel.Name == "CompanyName"; // TODO make it a flag in config
             
+            if (columnTextOnly && labelText != null)
+            {
+                var column = request.line!.Columns
+                    .FirstOrDefault(c =>
+                        c.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
+
+                if (column != null)
+                {
+                    t = column.Text[(column.Text.IndexOf(labelText, StringComparison.Ordinal) + labelText.Length)..]
+                        .Trim();
+                }
+            }
+
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(
                 matchedLabel,
@@ -71,7 +87,7 @@ public static class ApplicableToMost
                 false,
                 out var removedLines);
 
-            if (DataHelper.IsCorruptedText(outputText))
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText))
             {
                 continue;
             }
@@ -175,8 +191,9 @@ public static class ApplicableToMost
                 // TODO can swap this out now for shared method in Base
 
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
+                var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                if (!isTableLine && LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -214,7 +231,9 @@ public static class ApplicableToMost
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        if (request.licenceNumberMapping?.TryGetValue(licenceNumberLine.Text, out var relatedFileName) != true)
+                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                        
+                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
                         {
                             continue;
                         }

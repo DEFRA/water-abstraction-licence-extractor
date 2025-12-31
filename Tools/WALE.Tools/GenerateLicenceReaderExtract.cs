@@ -1,16 +1,14 @@
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Globalization;
-using CsvHelper;
 using Tesseract;
-using WALE.ProcessFile.Database.Services;
-using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
@@ -24,10 +22,11 @@ public static class GenerateLicenceReaderExtract
 
     public static async Task GenerateLicenceReaderExtractAsync()
     {
-        var sqlConnectionString = KeyConfig.SqlConnectionString;
+        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
     
-        var databaseReadService = new SqlSeverReadService(sqlConnectionString);
-        var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
+        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
         var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);

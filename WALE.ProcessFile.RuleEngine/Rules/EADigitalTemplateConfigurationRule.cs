@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
 using WALE.ProcessFile.Services.Configuration;

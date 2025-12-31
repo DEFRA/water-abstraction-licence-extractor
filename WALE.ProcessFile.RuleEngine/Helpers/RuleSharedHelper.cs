@@ -1,10 +1,8 @@
-using System.Text.Json;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.RuleEngine.Helpers;
 
-public static class SharedHelper
+public static class RuleSharedHelper
 {
     
     public static string? DateFormatConsistent(string? input)

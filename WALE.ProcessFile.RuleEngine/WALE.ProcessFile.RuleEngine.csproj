@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -15,6 +15,12 @@
       <Compile Remove="Rules\NationRiverTemplateRule.cs" />
       <Compile Remove="Rules\NorthumbrianWaterTemplateRule.cs" />
       <Compile Remove="Rules\YorkshireWaterTemplateRule.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="WALE.ProcessFile.Services">
+        <HintPath>..\Tools\WALE.Tools\bin\Debug\net9.0\WALE.ProcessFile.Services.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

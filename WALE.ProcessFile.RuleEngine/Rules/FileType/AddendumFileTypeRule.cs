@@ -1,7 +1,7 @@
-using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.RuleEngine.Helpers;
 
 namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 
@@ -33,8 +33,8 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
             MatchedTerms = matchedTerms?.SelectMany(m => m.Text?.Select(t => t.Text))?.ToList(),
-            DateOfIssue = SharedHelper.DateFormatConsistent(SharedHelper.ExtractDateOfIssue(content)),
-            LicenceNumber = SharedHelper.ExtractLicenceNumber(content),
+            DateOfIssue = RuleSharedHelper.DateFormatConsistent(RuleSharedHelper.ExtractDateOfIssue(content)),
+            LicenceNumber = RuleSharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>
             {
                 ["MatchCount"] = matchedTerms?.Count ?? 0

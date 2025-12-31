@@ -16,7 +16,7 @@ docker run -d \
  -e POSTGRES_USER=ea \
  -e POSTGRES_DB=wale \
  -p 5432:5432 \
- -v postgres-data:/var/lib/postgresql/data \
+ -v postgres-data:/var/lib/postgresql \
  postgres:18
 ```
 

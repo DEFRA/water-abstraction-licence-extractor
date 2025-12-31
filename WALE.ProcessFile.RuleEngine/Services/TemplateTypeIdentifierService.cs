@@ -1,13 +1,11 @@
-using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Engine;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
 using WALE.ProcessFile.RuleEngine.RuleConfiguration;
 using WALE.ProcessFile.RuleEngine.Rules;
-using WALE.ProcessFile.RuleEngine.Rules.FileType;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.RuleEngine.Services;
 

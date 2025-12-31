@@ -1,18 +1,12 @@
-using System.Collections;
-using System.Globalization;
+
 using ClosedXML.Excel;
-using CsvHelper;
 using Tesseract;
-using WALE.ProcessFile.Database.Services;
-using WALE.ProcessFile.Models;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Interfaces;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
-using WALE.Tools.Helpers;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;
@@ -20,18 +14,18 @@ namespace WALE.Tools;
 public static class TemplateIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly string CacheFolder = KeyConfig.CacheFolder;
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
 
     public static async Task GenerateTemplateFinderResult()
     {
-        var sqlConnectionString = KeyConfig.SqlConnectionString;
+        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
     
-        var databaseReadService = new SqlSeverReadService(sqlConnectionString);
-        var databaseAddService = new SqlSeverWriteService(sqlConnectionString);
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
+        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
         var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>

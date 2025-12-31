@@ -166,4 +166,20 @@ public static class KeyConfig
             return _postgresConnectionString;
         }
     }
+
+    private static string? _pdfFolderForDuplicates;
+
+    public static string PdfFolderForDuplicates
+    {
+        get
+        {
+            if (_pdfFolderForDuplicates != null)
+            {
+                return _pdfFolderForDuplicates;
+            }
+            
+            _postgresConnectionString = Config["PdfFolderForDuplicates"]!;
+            return _postgresConnectionString;
+        }
+    }
 }

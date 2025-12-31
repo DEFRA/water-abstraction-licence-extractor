@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using ClosedXML.Excel;
 using CsvHelper;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools;

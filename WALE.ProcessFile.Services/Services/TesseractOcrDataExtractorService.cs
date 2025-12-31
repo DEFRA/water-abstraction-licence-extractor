@@ -39,14 +39,14 @@ public class TesseractOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = isPageScreenshot
+        var cacheText = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
         
-        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheText))
         {
             var imageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
-                cacheFileText,
+                cacheText,
                 JsonHelper.GetSerializerOptions());
             
             returnLines.AddRange(imageLines!);

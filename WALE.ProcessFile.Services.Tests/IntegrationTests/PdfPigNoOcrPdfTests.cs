@@ -890,7 +890,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal("AdditionalInformation", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("SubsequentAbstraction", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         Assert.Equal("Purposes", primaryLicence.LinkedLicences[0].ContainedIn![3].SectionName);
         Assert.Equal("CompensatoryDischargeCondition", primaryLicence.LinkedLicences[0].ContainedIn![3].LinkReason);        
     }
@@ -2397,7 +2397,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal("AdditionalInformation", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("ReadInConjunction", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("AggregateConditions", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
     }
     
     [Fact]
@@ -3036,7 +3036,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("36/134", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
-        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("LapsedLicence", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         
         Assert.Equal("SO/042/0036/024", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
@@ -4231,7 +4231,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
         Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
 
@@ -4239,7 +4239,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences[2].ContainedIn!.Length);
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
@@ -4288,15 +4288,18 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("9. FURTHER CONDITIONS", furtherConditions.Text?.FirstOrDefault()?.Text);
         Assert.Equal(36, furtherConditions.Text!.Count);
 
-        Assert.Equal(8, furtherConditions.SubResults.Count);
+        Assert.Equal(4, furtherConditions.SubResults.Count);
         Assert.Equal("9.1 (i) No abstraction shall take place unless the Licence Holder has installed a", furtherConditions.SubResults[0].Text!.First().Text);
+
         Assert.Equal("9.2 No abstraction shall take place when the flow in the Back Delfin as gauged", furtherConditions.SubResults[1].Text!.First().Text);
+        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[1].SubResults[0].Text!.First().Text);
+        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[1].SubResults[1].Text!.First().Text);
+        
         Assert.Equal("9.3 Abstraction shall not exceed 2,000 cubic metres per day when the flow in the", furtherConditions.SubResults[2].Text!.First().Text);
+        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[2].SubResults[0].Text!.First().Text);
+        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[2].SubResults[1].Text!.First().Text);
+        
         Assert.Equal("9.4 The minimum value for the quantity of water authorised to be abstracted", furtherConditions.SubResults[3].Text!.First().Text);
-        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[4].Text!.First().Text);
-        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[5].Text!.First().Text);
-        Assert.Equal("NE/026/0034/052", furtherConditions.SubResults[6].Text!.First().Text);
-        Assert.Equal("NE/026/0034/053", furtherConditions.SubResults[7].Text!.First().Text);
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4386,12 +4389,12 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences[2].ContainedIn!.Length);
@@ -4426,12 +4429,13 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(records);
         Assert.Equal(12, records.Text!.Count);
 
-        Assert.Equal(5, records.SubResults.Count);
+        Assert.Equal(3, records.SubResults.Count);
         Assert.Equal("8.1 The Licence Holder shall take and record readings of the meter specified in", records.SubResults[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("2/27/18/158/R01", records.SubResults[0].SubResults[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("2/27/18/117/R01", records.SubResults[0].SubResults[1].Text!.FirstOrDefault()!.Text);
+        
         Assert.Equal("8.2 The Licence Holder shall send a copy of the record or summary data from it to", records.SubResults[1].Text!.FirstOrDefault()!.Text);
         Assert.Equal("8.3 Each record shall be kept and be made available during all reasonable", records.SubResults[2].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("2/27/18/158/R01", records.SubResults[3].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("2/27/18/117/R01", records.SubResults[4].Text!.FirstOrDefault()!.Text);
         
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4561,7 +4565,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("AdditionalInformation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences[2].ContainedIn!.Length);

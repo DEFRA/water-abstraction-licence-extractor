@@ -25,6 +25,7 @@ public static class LabelConfiguration
             ("Records", GetRecords()),
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
+            ("ReasonsForConditions", GetReasonsForConditions()),
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
@@ -106,9 +107,78 @@ public static class LabelConfiguration
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 30,
                         IncludeStartLabelText = true,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
-                    },
-                    GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+
+        private static List<LabelToMatch> GetReasonsForConditions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "ReasonsForConditionsAll",
+                TextStart =
+                [
+                    new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
+                    new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Would you like to find out") { LineMustStartWith = true },
+                    new("Map accompanying licence number"),
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "ReasonsForConditionsPoint",
+                        TextStart = [
+                            new("Abstraction period details[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Would you like") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber")
+                        ]
+                    }
                 ]
             }
         ];
@@ -147,7 +217,46 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                    new()
+                    {
+                        Name = "AdditionalPoint",
+                        TextStart = [
+                            new("Abstraction period details[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Screening[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Associated abstraction and impoundment licence[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water Vole[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Hands off Flow notification[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("Abstraction period details[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Metering[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Screening[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Associated abstraction and impoundment licence[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water Vole[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Hands off Flow notification[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Abstraction Reform[END_OF_LINE]") { LineMustStartWith = true },
+                            new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Water efficiency note[END_OF_LINE]") { LineMustStartWith = true },
+                            new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
+                            new("Would you like") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                        ]
+                    }
                 ]
             }
         ];
@@ -319,7 +428,48 @@ public static class LabelConfiguration
                 NextLinesToFetch = 100,
                 SubLabels = 
                 [
-                    GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
+                    new()
+                    {
+                        Name = "FurtherProvisionsPoint",
+                        TextStart = [
+                            new("10.1"),
+                            new("10.2"),
+                            new("10.3"),
+                            new("10.4"),
+                            new("10.5"),
+                            new("10.6"),
+                            new("10.7"),
+                            new("10.8"),
+                            new("10.9"),
+                            new("10.10"),
+                            new("1)") { LineMustStartWith = true },
+                            new("2)") { LineMustStartWith = true },
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("10.2"),
+                            new("10.3"),
+                            new("10.4"),
+                            new("10.5"),
+                            new("10.6"),
+                            new("10.7"),
+                            new("10.8"),
+                            new("10.9"),
+                            new("10.10"),
+                            new("10.11"),
+                            new("2)") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
+                        ]
+                    }
                 ]
             }
         ];
@@ -388,9 +538,11 @@ public static class LabelConfiguration
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 30,
                         IncludeStartLabelText = true,
-                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
-                    },
-                    GetLinkedLicenceNumber("FCLinkedLicenceNumber")
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("FCLinkedLicenceNumber")
+                        ]
+                    }
                 ]
             }
         ];

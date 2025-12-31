@@ -228,11 +228,9 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason); 
     }
 
     [Fact]
@@ -552,11 +550,9 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/312", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
     }
     
     [Fact]

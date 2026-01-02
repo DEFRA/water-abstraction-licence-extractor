@@ -23,8 +23,10 @@ public class PdfDataExtractorService(
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
     ICacheService cacheService,
     IOutputService outputService,
-    string pdfFolderPath) : IPdfDataExtractorService
+    string pdfFolderPath,
+    int id = -1) : IPdfDataExtractorService
 {
+    public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
     

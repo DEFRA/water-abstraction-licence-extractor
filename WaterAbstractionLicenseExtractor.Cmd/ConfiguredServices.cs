@@ -36,5 +36,7 @@ public class ConfiguredServices
     
     public string? FullImageDataPath { get; set; }
     
+    public string? FileMappingPath { get; set; }
+    
     public bool RefreshCache{ get; set; }
 }

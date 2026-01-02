@@ -11,11 +11,15 @@ public class TesseractOcrDataExtractorService(
     string dataPath,
     PageSegMode pageSegMode,
     ICacheService cacheService,
-    IOutputService outputService)
+    IOutputService outputService,
+    int id = -1)
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => false;
     public string Name => $"TesseractOcr-{pageSegMode}";
+    public int Id { get; set; } = id;
+    
+    private TesseractEngine? _engine;
 
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -27,9 +31,6 @@ public class TesseractOcrDataExtractorService(
             int processRunId,
             string noOcrServiceName)
     {
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
-        
-        var returnLines = new List<LineAndWords>();
         var request = new OcrServiceImageTextCacheRequest
         {
             PageNumber = pageNumber,
@@ -39,14 +40,19 @@ public class TesseractOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheText = isPageScreenshot
+        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var returnLines = new List<LineAndWords>();
+        
+        var cachedJson = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
+
+        cachedJson = null;
         
-        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheText))
+        if (pdfDocument.FromCache && !string.IsNullOrEmpty(cachedJson))
         {
             var imageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
-                cacheText,
+                cachedJson,
                 JsonHelper.GetSerializerOptions());
             
             returnLines.AddRange(imageLines!);
@@ -79,17 +85,8 @@ public class TesseractOcrDataExtractorService(
                 throw new Exception("Image was not found");
             }
             
-            var ocrImage = Pix.LoadFromMemory(bytes);
-
-            try
-            {
-                returnLines = await Task.Run(() => GetDataFromTesseract(ocrImage));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
+            returnLines = GetDataFromTesseract(bytes);
+            
             if (isPageScreenshot)
             {
                 await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);                
@@ -121,27 +118,68 @@ public class TesseractOcrDataExtractorService(
             maxNegativeDiffBetweenWordTop,
             maxPositiveDiffBetweenWordTop);
     }
+    
+    private TesseractEngine GetEngine()
+    {
+        if (_engine != null)
+        {
+            return _engine;
+        }
+        
+        _engine = new TesseractEngine(dataPath, "eng");
+        _engine.SetVariable("tessedit_parallelize", "0");
 
-    private List<LineAndWords> GetDataFromTesseract(Pix ocrImage)
+        return _engine;
+    }
+    
+    private List<LineAndWords> GetDataFromTesseract(byte[] bytes)
     {
         try
         {
-            //  TODO - check dimensions are more then X and Y or its pointless
-            TesseractEngine tesseractEngine = new(dataPath, "eng");
-            tesseractEngine.SetVariable("tessedit_parallelize", "1");
-                    
-            var page = tesseractEngine.Process(ocrImage, pageSegMode);
+            var ocrImage = Pix.LoadFromMemory(bytes);
+            
+            const int minHeight = 200;
+            const int minWidth = 200;
 
+            if (minHeight > ocrImage.Height || minWidth > ocrImage.Width)
+            {
+                return [];
+            }
+            
+            var tesseractEngine = GetEngine();
+
+            Page? page = null;
+            
             // ReSharper disable once AccessToDisposedClosure
-            var task = Task.Run(() => GetTextLinesFromPageAsync(page));
+            var task = Task.Run(() =>
+            {
+                //var dtProcessStart = DateTime.Now;
+                page = tesseractEngine.Process(ocrImage, pageSegMode);
+                //var tsProcess = (DateTime.Now - dtProcessStart).TotalMilliseconds;
+                
+                //var dtIterateStart = DateTime.Now;
+                var textLines = GetTextLinesFromPageAsync(page);
+                //var tsIterate = (DateTime.Now - dtIterateStart).TotalMilliseconds;
+                
+                return textLines;
+            });
                 
             const int maxExecutionTimeMs = 30_000;
             var isCompletedSuccessfully = task.Wait(TimeSpan.FromMilliseconds(maxExecutionTimeMs));
 
+            page?.Dispose();
+            
+            if (!isCompletedSuccessfully)
+            {
+                tesseractEngine.Dispose();
+                _engine = null;
+            }
+            
             return !isCompletedSuccessfully ? [] : task.Result;
         }
         catch (Exception e)
         {
+            throw;
             //Console.SetOut(TextWriter.Null);
             
             Console.WriteLine(e);
@@ -149,7 +187,7 @@ public class TesseractOcrDataExtractorService(
         }
     }
 
-    private List<LineAndWords> GetTextLinesFromPageAsync(Page page)
+    private static List<LineAndWords> GetTextLinesFromPageAsync(Page page)
     {
         try
         {
@@ -161,7 +199,8 @@ public class TesseractOcrDataExtractorService(
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return [];
+            throw;
+            //return [];
         }
     }
 
@@ -178,15 +217,20 @@ public class TesseractOcrDataExtractorService(
                 continue;
             }
 
+            var dtLineStart = DateTime.Now;
             var line = new string(lineText
                 .Where(ch => ch != '\n')
                 .ToArray());
+            var tsLine = (DateTime.Now - dtLineStart).TotalMilliseconds;
 
             var words = new List<DocumentLineWord?>();
 
             do
             {
+                var dtWordStart = DateTime.Now;
                 var wordText = iterator.GetText(PageIteratorLevel.Word);
+                var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
+                
                 var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
                 iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
 

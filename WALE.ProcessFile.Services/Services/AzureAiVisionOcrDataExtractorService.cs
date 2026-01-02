@@ -14,12 +14,14 @@ public class AzureAiVisionOcrDataExtractorService(
     string endpoint,
     string key,
     ICacheService cacheService,
-    IOutputService outputService) : IOcrDataExtractorService
+    IOutputService outputService,
+    int id = -1) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
     public string Name => "AzureAiVisionOcr";
+    public int Id { get; set; } = id;
 
-    private readonly ComputerVisionClient _client = Authenticate(endpoint, key);
+    private readonly ComputerVisionClient _client = CreateClient(endpoint, key);
 
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -223,7 +225,7 @@ public class AzureAiVisionOcrDataExtractorService(
         return pageLines.Select(line => (line.Text, line.Words));
     }
     
-    private static ComputerVisionClient Authenticate(string endpoint, string key)
+    private static ComputerVisionClient CreateClient(string endpoint, string key)
     {
         return new ComputerVisionClient(
             new ApiKeyServiceClientCredentials(key))

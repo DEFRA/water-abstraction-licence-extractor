@@ -67,9 +67,7 @@ async Task ProgramAsync()
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
         ref naldData);
     
-    var filesAndMapping = GetFilesAndMapping(services);
-    var files = filesAndMapping.FilepathsWithLicenceNumbers;
-    
+    var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services);
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
@@ -85,7 +83,6 @@ async Task ProgramAsync()
         var processCount = 1;
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
-        List<LicenceSet> allLicenceSetsTemporary;
         var extractorLock = new Lock();
         
         foreach (var pdfFilePath in files)
@@ -94,7 +91,7 @@ async Task ProgramAsync()
                 ScrapeDocumentAsync(
                     pdfFilePath.Key,
                     processCount++,
-                    filesAndMapping.LicenceNumbersWithFilenames,
+                    licenceNumbersWithFilenames,
                     impoundmentLicenceNumbers,
                     deadLicenceNumbers,
                     liveLicenceNumbers,
@@ -114,19 +111,31 @@ async Task ProgramAsync()
                 var licenceSetsTask = await Task.WhenAny(scrapingTasks);
                 scrapingTasks.Remove(licenceSetsTask);
 
-                allLicenceSetsTemporary = await licenceSetsTask;
-                licenceSetGroups.Add(allLicenceSetsTemporary);   
+                var scrapeResultLicenceSets = await licenceSetsTask;
+
+                if (scrapeResultLicenceSets.Count == 0)
+                {
+                    throw new Exception("An empty licence set was returned");
+                }
+
+                licenceSetGroups.Add(scrapeResultLicenceSets);
             }
         }
 
-        if (scrapingTasks.Any())
+        if (scrapingTasks.Count != 0)
         {
             await Task.WhenAll(scrapingTasks);
 
             foreach (var scrapingTask in scrapingTasks)
             {
-                allLicenceSetsTemporary = await scrapingTask;
-                licenceSetGroups.Add(allLicenceSetsTemporary);
+                var scrapeResultLicenceSets = await scrapingTask;
+
+                if (scrapeResultLicenceSets.Count == 0)
+                {
+                    throw new Exception("An empty licence set was returned");
+                }
+                
+                licenceSetGroups.Add(scrapeResultLicenceSets);
             }
         }
 
@@ -176,20 +185,15 @@ async Task ProgramAsync()
             {
                 var filename = licenceLoop.Filename;
                 
-                if (filename?.IndexOf("NE0260034052", StringComparison.Ordinal) > -1)
-                {
-                    
-                }
-                
                 if (licenceLoop.LicenceNumber != null
                     && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _)
                         || (licenceLoop.Status == LicenceStatus.Ok && notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))))
                 {
                     int loopLicenceId;
-                    var savedVersionIsNotFound =
+                    var savedVersionIsStatusNotFound =
                         notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var existingLicenceId);
                     
-                    if (savedVersionIsNotFound && licenceLoop.Status == LicenceStatus.Ok)
+                    if (savedVersionIsStatusNotFound && licenceLoop.Status == LicenceStatus.Ok)
                     {
                         await outputService.UpdateLicenceAsync(
                             licenceLoop,
@@ -244,13 +248,8 @@ async Task ProgramAsync()
 
                 var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
                 
-                foreach (var kvp in licenceSetsLoop)
+                foreach (var kvp in licenceSetsLoop.Where(kvp => !savedLicenceSetIds.Contains(kvp.Key)))
                 {
-                    if (savedLicenceSetIds.Contains(kvp.Key))
-                    {
-                        continue;
-                    }
-                    
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
@@ -262,7 +261,7 @@ async Task ProgramAsync()
             }
         }
 
-        var licence = licenceSetGroup.First().Licences.First();
+        var licence = licenceSetGroup[0].Licences.First();
         var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
 
         var outputLine = JsOutputHelper.ToOutputLine(
@@ -430,7 +429,6 @@ ConfiguredServices ConfigureServices()
     };
 }
 
-
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
@@ -505,23 +503,12 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFolder,
             processRun.ProcessRunId);
 
-        return licenceSets;
-    }
-    catch (InvalidOperationException ioex)
-    {
-        if (ioex.Message.Contains("exists"))
+        if (licenceSets.Count == 0)
         {
-            return [];
+            
         }
-
-        throw;
-    }
-    catch (Exception ex)
-    {
-        // TODO log
-        //return [];
-
-        throw;
+        
+        return licenceSets;
     }
     finally
     {
@@ -605,7 +592,7 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        .Take(30)
+        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;
@@ -619,6 +606,11 @@ async Task MoveReportHtmlFilesAsync(
     
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+    var filesInFolder = Directory
+        .GetFiles(pdfFolderPath)
+        .Select(path => path.Split('/').Last())
+        .ToList();
     
     using (var stream = File.Open(mappingFilePath, FileMode.Open, FileAccess.Read))
     {
@@ -657,6 +649,11 @@ async Task MoveReportHtmlFilesAsync(
                 else
                 {
                     permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
+                }
+
+                if (!filesInFolder.Contains(destinationFileName))
+                {
+                    continue;
                 }
                 
                 filenames.Add(pdfFolderPath + destinationFileName, permitNumber);

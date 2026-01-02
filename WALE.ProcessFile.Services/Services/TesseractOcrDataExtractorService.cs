@@ -215,19 +215,19 @@ public class TesseractOcrDataExtractorService(
                 continue;
             }
 
-            var dtLineStart = DateTime.Now;
+            //var dtLineStart = DateTime.Now;
             var line = new string(lineText
                 .Where(ch => ch != '\n')
                 .ToArray());
-            var tsLine = (DateTime.Now - dtLineStart).TotalMilliseconds;
+            //var tsLine = (DateTime.Now - dtLineStart).TotalMilliseconds;
 
             var words = new List<DocumentLineWord?>();
 
             do
             {
-                var dtWordStart = DateTime.Now;
+                //var dtWordStart = DateTime.Now;
                 var wordText = iterator.GetText(PageIteratorLevel.Word);
-                var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
+                //var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
                 
                 var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
                 iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
@@ -252,6 +252,7 @@ public class TesseractOcrDataExtractorService(
     
     public void Dispose()
     {
+        _engine?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

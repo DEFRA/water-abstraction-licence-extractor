@@ -49,18 +49,17 @@ public class AggregateSet
 
         var outputSb = new StringBuilder();
         
-        foreach (var licence in licencesAlphabetical)
+        foreach (var (key, licenceVersionId) in licencesAlphabetical)
         {
             if (outputSb.Length > 0)
             {
                 outputSb.Append('-');
             }
 
-            var licenceNumber = licence.Key
+            var licenceNumber = key
                 .Replace(" ", string.Empty)
                 .Replace("/", string.Empty);
 
-            var licenceVersionId = licence.Value;
             outputSb.Append($"{licenceNumber}-{licenceVersionId}");
         }
 

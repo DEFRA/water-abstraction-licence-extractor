@@ -316,7 +316,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         
         await connection.ExecuteAsync(sql, new
         {
-            Filename = pdfFilename.Split('.')[0],
+            Filename = pdfFilename.Split('.')[0]
         });
     }
 
@@ -352,7 +352,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             licenceSetLicence.LicenceSetId,
             licenceSetLicence.LicenceId,
             licenceSetLicence.LicenceNumber,
-            licenceSetLicence.ProcessRunId,
+            licenceSetLicence.ProcessRunId
         });
     }
 

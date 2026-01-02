@@ -47,7 +47,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             Filename = fileName,
             NoOcrServiceName = noOcrServiceName,
-            PageNumber = pageNumber,
+            PageNumber = pageNumber
         });
     }
 
@@ -145,7 +145,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             Filename = request.Filepath,
             request.OcrServiceName,
-            request.PageNumber,
+            request.PageNumber
         });
     }
 
@@ -186,7 +186,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         var results = await connection.QueryAsync<(int, string)>(sql, new
         {
             Filename = request.Filepath,
-            request.PageNumber,
+            request.PageNumber
         });
 
         return results.ToList();

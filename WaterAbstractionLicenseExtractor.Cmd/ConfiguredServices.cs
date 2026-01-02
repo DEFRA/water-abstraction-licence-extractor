@@ -6,37 +6,37 @@ public class ConfiguredServices
 {
     public IOutputService? OutputService { get; set; }
     
-    public ICacheService? CacheService { get; set; }
+    public ICacheService? CacheService { get; init; }
     
-    public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; set; }
+    public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
     
-    public int MaxConcurrentScrapers { get; set; }
+    public int MaxConcurrentScrapers { get; init; }
     
-    public string? OutputFolder { get; set; }
+    public string? OutputFolder { get; init; }
     
-    public bool RegenerateMappingJson { get; set; }
+    public bool RegenerateMappingJson { get; init; }
     
-    public string? PdfFolderPath { get; set; }
+    public string? PdfFolderPath { get; init; }
     
-    public string? ReportTemplatePath { get; set; }
+    public string? ReportTemplatePath { get; init; }
     
-    public bool LoadAiJs { get; set; }
+    public bool LoadAiJs { get; init; }
     
-    public string? ListDataPath { get; set; }
+    public string? ListDataPath { get; init; }
     
-    public string? ProcessRunsDataPath { get; set; }
+    public string? ProcessRunsDataPath { get; init; }
     
-    public string? InternalDataPath { get; set; }
+    public string? InternalDataPath { get; init; }
     
-    public string? LicenceDataPath { get; set; }
+    public string? LicenceDataPath { get; init; }
     
-    public string? LicenceSetsDataPath { get; set; }
+    public string? LicenceSetsDataPath { get; init; }
     
-    public string? ThumbnailImageDataPath { get; set; }
+    public string? ThumbnailImageDataPath { get; init; }
     
-    public string? FullImageDataPath { get; set; }
+    public string? FullImageDataPath { get; init; }
     
-    public string? FileMappingPath { get; set; }
+    public string? FileMappingPath { get; init; }
     
-    public bool RefreshCache{ get; set; }
+    public bool RefreshCache{ get; init; }
 }

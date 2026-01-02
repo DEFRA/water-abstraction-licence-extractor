@@ -636,7 +636,7 @@ public class PdfDataExtractorService(
                     pdfDocument.PdfFilePath,
                     extension);
                 
-                metadataPage.Images.Add(imageReference!);
+                metadataPage.Images.Add(imageReference);
             }
         }
 
@@ -693,7 +693,7 @@ public class PdfDataExtractorService(
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
-        IReadOnlyList<DocumentLine> documentLines,
+        List<DocumentLine> documentLines,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
@@ -834,7 +834,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
 
-    private bool NotMatchedAll(
+    private static bool NotMatchedAll(
         DocumentLine line,
         DocumentLine lineForPosition,
         LabelToMatch label,
@@ -1297,7 +1297,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
     
-    private async Task<ExpressionResult> ProcessExpressionResultAsync(
+    private static async Task<ExpressionResult> ProcessExpressionResultAsync(
         Func<FunctionInputModel, Task<List<LabelGroupResult>>> expression,
         FunctionInputModel request,
         DocumentLine partialLine,
@@ -1419,7 +1419,7 @@ public class PdfDataExtractorService(
         };
     }
     
-    private Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
+    private static Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
         GetRelevantLookupExpressions(LabelToMatch label)
     {
         var expressions = new List<(
@@ -1583,7 +1583,7 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
-    private static IEnumerable<TextAndLabel> GetLineBeforeAtAndAfterText(
+    private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
@@ -1843,7 +1843,7 @@ public class PdfDataExtractorService(
         return returnItems;
     }
     
-    private static IReadOnlyList<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
     {
         var newLines = lines.ToList();
 
@@ -1855,7 +1855,7 @@ public class PdfDataExtractorService(
         return newLines;
     }
     
-    private static IReadOnlyList<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines)
     {
         return lines
             .Select((line, index) => new DocumentLineWrapped

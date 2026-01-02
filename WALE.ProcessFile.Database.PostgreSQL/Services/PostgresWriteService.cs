@@ -3,6 +3,7 @@ using Npgsql;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
@@ -18,12 +19,16 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            RETURNING process_run_id
                            """;
 
-        processRun.ProcessRunId = await connection.ExecuteScalarAsync<int>(sql, new
-        {
-            processRun.Description,
-            processRun.StartDateTimeUtc,
-            processRun.NumberOfFiles
-        });
+        processRun.ProcessRunId = await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRun.Description,
+                processRun.StartDateTimeUtc,
+                processRun.NumberOfFiles
+            });
 
         return processRun;
     }
@@ -37,13 +42,16 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            RETURNING licence_set_id
                            """;
 
-        return await connection.ExecuteScalarAsync<int>(sql, new
-        {
-            SchemaLicenceSetId = licenceSetId,
-            ShortLicenceSetId = shortLicenceSetId,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new {
+                SchemaLicenceSetId = licenceSetId,
+                ShortLicenceSetId = shortLicenceSetId,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task UpdateLicenceAsync(int licenceId, string licenceData, string? pdfFilePath, int processRunId)
@@ -59,14 +67,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                                 AND process_run_id = @processRunId
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = pdfFilePath ?? "UNKNOWN",
-            LicenceId = licenceId,
-            Data = licenceData,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilePath ?? "UNKNOWN",
+                LicenceId = licenceId,
+                Data = licenceData,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
     
     public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath,
@@ -79,14 +91,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            RETURNING licence_id
                            """;
 
-        return await connection.ExecuteScalarAsync<int>(sql, new
-        {
-            Filename = pdfFilePath ?? "UNKNOWN",
-            LicenceNumber = licenceNumber,
-            Data = licenceData,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new {
+                Filename = pdfFilePath ?? "UNKNOWN",
+                LicenceNumber = licenceNumber,
+                Data = licenceData,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data)
@@ -97,13 +112,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@MatchesResultId, @LabelName, @LabelGroupName, @Data)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            MatchesResultId = matchesResultId,
-            LabelName = labelName,
-            LabelGroupName = labelGroupName,
-            Data = data
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                MatchesResultId = matchesResultId,
+                LabelName = labelName,
+                LabelGroupName = labelGroupName,
+                Data = data
+            });
     }
 
     public async Task<int> SaveMatchesResultAsync(string matchesResult, string pdfFilePath, int processRunId)
@@ -115,13 +134,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            RETURNING matches_result_id
                            """;
 
-        return await connection.ExecuteScalarAsync<int>(sql, new
-        {
-            Filename = pdfFilePath,
-            Data = matchesResult,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilePath,
+                Data = matchesResult,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
@@ -133,15 +156,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
                            """;
         
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = pdfFilename,
-            PageNumber = pageNumber,
-            NoOcrServiceName = noOcrServiceName,
-            Data = data,
-            DateTimeUtc = DateTime.UtcNow,
-            ProcessRunId = processRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilename,
+                PageNumber = pageNumber,
+                NoOcrServiceName = noOcrServiceName,
+                Data = data,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request,
@@ -153,15 +180,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @PageNumber, @NoOcrServiceName, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = request.Filepath,
-            request.PageNumber,
-            request.NoOcrServiceName,
-            Data = pageLines,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.PageNumber,
+                request.NoOcrServiceName,
+                Data = pageLines,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
         
         return request;
     }
@@ -175,14 +206,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)
                            """;
         
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = request.Filepath,
-            request.NoOcrServiceName,
-            Response = imagesMetadataStr,
-            DateTimeUtc = DateTime.UtcNow,
-            ProcessRunId = processRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+        new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName,
+                Response = imagesMetadataStr,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request,
@@ -193,14 +228,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            INSERT INTO no_ocr_pages_metadata_cache (filename, no_ocr_service_name, response, date_time_utc, process_run_id) 
                            VALUES (@Filename, @NoOcrServiceName, @Response, @DateTimeUtc, @ProcessRunId)
                            """;
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = request.Filepath,
-            request.NoOcrServiceName,
-            Response = dataStr,
-            DateTimeUtc = DateTime.UtcNow,
-            ProcessRunId = processRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName,
+                Response = dataStr,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
         
         return request;
     }
@@ -215,14 +254,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = pdfFilename,
-            NoOcrServiceName = noOcrServiceName,
-            Data = documentLinesStr,
-            DateTimeUtc = DateTime.UtcNow,
-            ProcessRunId = processRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilename,
+                NoOcrServiceName = noOcrServiceName,
+                Data = documentLinesStr,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
     }
 
     public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
@@ -235,17 +278,21 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Extension, @DateTimeUtc, @ProcessRunId)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = pdfFilePath,
-            NoOcrServiceName = noOcrServiceName,
-            Data = bytes,
-            ImageNumber = imageNumber,
-            PageNumber = pageNumber,
-            Extension = extension,
-            DateTimeUtc = DateTime.UtcNow,
-            ProcessRunId = processRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilePath,
+                NoOcrServiceName = noOcrServiceName,
+                Data = bytes,
+                ImageNumber = imageNumber,
+                PageNumber = pageNumber,
+                Extension = extension,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
     }
 
     public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
@@ -256,16 +303,20 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @OcrServiceName, @ImageNumber, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = request.Filepath,
-            request.OcrServiceName,
-            Data = data,
-            request.ImageNumber,
-            request.PageNumber,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                Data = data,
+                request.ImageNumber,
+                request.PageNumber,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
@@ -276,15 +327,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@Filename, @OcrServiceName, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = request.Filepath,
-            request.OcrServiceName,
-            Data = data,
-            request.PageNumber,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                Data = data,
+                request.PageNumber,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task ClearCacheAsync()
@@ -297,8 +352,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM no_ocr_page_text_cache;
                            DELETE FROM ocr_image_text_cache;
                            """;
-        
-        await connection.ExecuteAsync(sql);
+
+        await ExecuteAsync(connection, sql, 0);
     }
 
     public async Task ClearCacheAsync(string pdfFilename)
@@ -314,10 +369,14 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM page_screenshot WHERE filename = @Filename;
                            """;
         
-        await connection.ExecuteAsync(sql, new
-        {
-            Filename = pdfFilename.Split('.')[0]
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilename.Split('.')[0]
+            });
     }
 
     public async Task UpdateProcessRunAsync(ProcessRun processRun)
@@ -329,11 +388,15 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE process_run_id = @ProcessRunId
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            processRun.ProcessRunId,
-            EndDateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRun.ProcessRunId,
+                EndDateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
@@ -347,13 +410,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND process_run_id = @ProcessRunId
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            licenceSetLicence.LicenceSetId,
-            licenceSetLicence.LicenceId,
-            licenceSetLicence.LicenceNumber,
-            licenceSetLicence.ProcessRunId
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                licenceSetLicence.LicenceSetId,
+                licenceSetLicence.LicenceId,
+                licenceSetLicence.LicenceNumber,
+                licenceSetLicence.ProcessRunId
+            });
     }
 
     public async Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber,
@@ -366,15 +433,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@LicenceSetId, @LicenceId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            LicenceSetId = licenceSetId,
-            LicenceId = licenceId,
-            LicenceNumber = licenceNumber ?? "UNKNOWN",
-            LicenceVersionId = licenceVersionId,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSetId = licenceSetId,
+                LicenceId = licenceId,
+                LicenceNumber = licenceNumber ?? "UNKNOWN",
+                LicenceVersionId = licenceVersionId,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
 
     public async Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId)
@@ -385,11 +456,15 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@LicenceSetId, @LicenceSetType)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            LicenceSetId = licenceSetId,
-            LicenceSetType = licenceSetType
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSetId = licenceSetId,
+                LicenceSetType = licenceSetType
+            });
     }
 
     public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
@@ -400,16 +475,66 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            VALUES (@LicenceSetId, @SchemaAggregateSetId, @Data, @ProcessRunId, @DateTimeUtc)
                            """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            LicenceSetId = licenceSetId,
-            SchemaAggregateSetId = aggregateSetId,
-            Data = data,
-            ProcessRunId = processRunId,
-            DateTimeUtc = DateTime.UtcNow
-        });
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSetId = licenceSetId,
+                SchemaAggregateSetId = aggregateSetId,
+                Data = data,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
     }
+    
+    private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            return await connection.ExecuteScalarAsync<int>(sql, param);
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
 
+            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            return await ExecuteScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
+    
+    private async Task ExecuteAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            await connection.ExecuteAsync(sql, param);
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            await ExecuteAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
+    
     private NpgsqlConnection GetPostgresConnection()
         => dataSourceProvider.DataSource.CreateConnection();
 }

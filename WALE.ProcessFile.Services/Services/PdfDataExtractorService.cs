@@ -82,11 +82,12 @@ public class PdfDataExtractorService(
 
         var isTextFile = documentLines.Count >= 100;
 
-        // If it's a text file, we don't need to go off and do image lookups
+        // If it's a text file (in some circumstances), we don't need to go off and do image lookups
         if (isTextFile)
         {
             var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
             
+            // There are no images
             if (image1Reference == null)
             {
                 returnResult.Matches = labelGroupMatches;
@@ -111,6 +112,7 @@ public class PdfDataExtractorService(
             var image = Pix.LoadFromMemory(bytes);
             const int minWidthOrHeight = 2000;
 
+            // Image is too small to care about
             if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
             {
                 returnResult.Matches = labelGroupMatches;

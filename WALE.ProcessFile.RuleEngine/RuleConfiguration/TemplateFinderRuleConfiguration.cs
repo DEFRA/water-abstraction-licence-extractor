@@ -16,6 +16,9 @@ public static class TemplateFinderRuleConfiguration
             ("YorkshireRiver", GetYorkshireRiverLabels()),
             ("NorthumbrianWater", GetNorthumbrianWaterLabels()),
             ("GetNorthumbrianRiverLabels", GetNorthumbrianRiverLabels()),
+            ("NRAModern1", GetNRAModern1Labels()),
+            ("NRAModern2", GetNRAModern2Labels()),
+            ("NRAOld", GetNRAOldLabels()),
         ];
     }
     private static List<LabelToMatch> GetEALabels()
@@ -177,6 +180,123 @@ public static class TemplateFinderRuleConfiguration
                 Text =
                 [
                     new(".*National.* River.* Authority")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetNRAModern1Labels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Region",
+                Format = "Text",
+                Text =
+                [
+                    new("Northumbrian & Yorkshire Region")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Licence",
+                Format = "Text",
+                Text =
+                [
+                    new("Licence Serial")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetNRAModern2Labels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Region",
+                Format = "Text",
+                Text =
+                [
+                    new("Yorkshire Region")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Licence",
+                Format = "Text",
+                Text =
+                [
+                    new("Serial No")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetNRAOldLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Region",
+                Format = "Text",
+                Text =
+                [
+                    new("Northumbrian Region")
+                    {
+                        IsRegularExpression = true
+                    }    
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Licence",
+                Format = "Text",
+                Text =
+                [
+                    new("Licence No")
                     {
                         IsRegularExpression = true
                     }    

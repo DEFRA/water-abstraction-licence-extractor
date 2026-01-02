@@ -22,7 +22,7 @@ public class YorkshireRiverTemplateConfigurationRule : IRule<TemplateFinderResul
         return new TemplateFinderResult
         {
             TemplateType = RuleName,
-            Template = "NRA"
+            Template = RuleName
         };
     }
 }

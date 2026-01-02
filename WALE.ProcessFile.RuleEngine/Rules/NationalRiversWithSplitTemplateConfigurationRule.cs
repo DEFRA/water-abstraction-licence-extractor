@@ -12,6 +12,7 @@ public class NationalRiversWithSplitTemplateConfigurationRule : IRule<TemplateFi
 
     public bool CanApply(MatchesResult content)
     {
+        
         return content.Matches?
             .Where(m => m.LabelGroupName == "NationalRivers")?.Any() == true && content.Matches?
             .Where(m => m.LabelGroupName == "SplitLabels")?.Any() == true;

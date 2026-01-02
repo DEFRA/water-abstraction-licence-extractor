@@ -22,7 +22,7 @@ public class NorthumbrianWaterTemplateConfigurationRule : IRule<TemplateFinderRe
         return new TemplateFinderResult
         {
             TemplateType = RuleName,
-            Template = "NRA"
+            Template = RuleName
         };
     }
 }

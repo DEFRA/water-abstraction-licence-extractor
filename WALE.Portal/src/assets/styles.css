@@ -1,0 +1,230 @@
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 14pt;
+}
+
+#leftCol {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#left-cell, #right-cell {
+  height: 100%;
+}
+
+#left-cell {
+  position: relative;
+  float: left;
+  width: 50%;
+  resize: horizontal;
+  overflow: auto;
+}
+
+#right-cell {
+  border-left: 3px solid #EEE;
+  float: none;
+  overflow: hidden;
+}
+
+#iframeParent {
+  position: absolute;
+  top: 45px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: scroll;
+}
+
+#jsonPath {
+  display: none;
+}
+
+#dataOutput {
+  overflow: scroll;
+}
+
+#jsonPath, #pdf-images {
+  width: 100%;
+}
+
+#pdf-images img {
+  width: 100%;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 -1px 20px;
+}
+
+ul li {
+  position: relative;
+  display: inline-block;
+  margin: 0 10px 0 0;
+  padding: 5px 10px;
+  border: 1px solid #000;
+  border-bottom: 0;
+  background-color: #FFF;
+  z-index: 10;
+}
+
+#rightPdf {
+  position:relative;
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
+}
+
+#rightPdf ul li a {
+  text-decoration: none;
+}
+
+dl {
+  margin: 0;
+}
+
+dl a {
+  text-decoration: none;
+}
+
+.viewSelected {
+  background-color: slategrey;
+  text-decoration: none;
+  color: #FFF;
+  cursor: none;
+}
+
+#leftDetails {
+  width: 100%;
+  height: 100vh;
+  overflow: auto
+}
+
+#licenceNumberTxtDiv {
+  position: absolute;
+  top: 30%;
+  margin-top: -20px;
+  left: 50%;
+  margin-left: -275px;
+  width: 500px;
+  font-size: 30px;
+}
+
+#licenceNumberTxt {
+  font-size: 30px;
+  width: 100%;
+}
+
+#licenceHolderTxt {
+  font-size: 30px;
+  width: 100%;
+}
+
+#backButton {
+  font-size: 20pt;
+  display: none;
+}
+
+#continueButton {
+  font-size: 20pt;
+}
+
+#back-continue-area {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+}
+
+#licenceHolderTxtDiv {
+  position: absolute;
+  top: 30%;
+  margin-top: -20px;
+  left: 50%;
+  margin-left: -275px;
+  width: 500px;
+  font-size: 30px;
+  display: none;
+}
+
+#view-edit {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+}
+
+#propertiesNew {
+  display: none;
+  height: 95vh;
+  position: relative;
+}
+
+#leftDetails::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+#leftDetails::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.selectedTab {
+  font-weight: bold;
+}
+
+.default-hidden { display: none; }
+.show-all .default-hidden { display: block; }
+#textOutput {
+  font-family: monospace;
+}
+
+#jsonNewPath, #jsonSetPath, #jsonAiPath, #jsonPath, #text {
+  display: none;
+}
+
+.ul-links {
+  margin-bottom: 15px;
+}
+
+#leftCol.half .ul-links li a {
+  font-size: 12px;
+}
+
+@media only screen and (max-width: 1500px) {
+  .ul-links li a {
+    font-size: 12px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 10px;
+  }
+}
+
+@media only screen and (max-width: 1200px) {
+  .ul-links li a {
+    font-size: 11px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 9px;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .ul-links li a {
+    font-size: 10px;
+  }
+
+  #leftCol.half .ul-links li a {
+    font-size: 8px;
+  }
+}

@@ -1,12 +1,14 @@
 import {JSONPath} from "jsonpath-plus";
-import type {ReportData} from "../utils/types.ts";
+import AbstractionLimits from "./AbstractionLimits.tsx";
+import type {MatchesResult} from "../api/generated/apiClient.ts";
 
 interface OverviewContentProps {
-    reportData: ReportData;
+    reportData: MatchesResult;
     onJumpToPage: (pageNumber: number) => void;
+    onOpenLinkedLicence: (filename: string) => void;
 }
 
-export function OverviewContent({ reportData, onJumpToPage }: OverviewContentProps) {
+export function OverviewContent({ reportData, onJumpToPage, onOpenLinkedLicence }: OverviewContentProps) {
     const getText = (dataToUse: any, path: string): string | null => {
         try {
             const results = JSONPath({ path, json: dataToUse });
@@ -77,10 +79,11 @@ export function OverviewContent({ reportData, onJumpToPage }: OverviewContentPro
                                     </a>
                                 </dt>
                                 <dd>
-                                    {/* TODO: Add abstraction limits rendering here */}
-                                    <p style={{ fontStyle: 'italic', color: '#666' }}>
-                                        Abstraction limits rendering not yet implemented
-                                    </p>
+                                    <AbstractionLimits
+                                        reportData={reportData}
+                                        onJumpToPage={onJumpToPage}
+                                        onOpenLinkedLicence={onOpenLinkedLicence}
+                                    />
                                 </dd>
                             </div>
                         );

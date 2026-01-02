@@ -1,5 +1,5 @@
-import { ReportContent } from './ReportContent';
-import { LicenceSetReportContent } from './LicenceSetReportContent';
+import {ReportContent} from './ReportContent';
+import {LicenceSetReportContent} from './LicenceSetReportContent';
 import {DraggableModal} from "./DraggableModal.tsx";
 import type {ReportModal} from "../utils/types.ts";
 
@@ -9,6 +9,7 @@ interface ReportModalContainerProps {
     onMaximize: (id: number) => void;
     onMinimize: (id: number) => void;
     onPositionChange: (id: number, position: { top: number; left: number }) => void;
+    onOpenLinkedLicence: (filename: string) => void;
 }
 
 export function ReportModalContainer({
@@ -16,7 +17,8 @@ export function ReportModalContainer({
                                          onClose,
                                          onMaximize,
                                          onMinimize,
-                                         onPositionChange
+                                         onPositionChange,
+                                         onOpenLinkedLicence
                                      }: ReportModalContainerProps) {
     return (
         <>
@@ -32,7 +34,7 @@ export function ReportModalContainer({
                     onPositionChange={(pos) => onPositionChange(modal.id, pos)}
                 >
                     {modal.type === 'report' ? (
-                        <ReportContent filename={modal.filename} />
+                        <ReportContent filename={modal.filename} onOpenLinkedLicence={onOpenLinkedLicence} />
                     ) : (
                         <LicenceSetReportContent
                             filename={modal.filename}

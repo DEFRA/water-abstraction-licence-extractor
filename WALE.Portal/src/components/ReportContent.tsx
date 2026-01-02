@@ -11,12 +11,13 @@ import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClien
 interface ReportContentProps {
     filename: string;
     hideBackLink?: boolean;
+    onOpenLinkedLicence: (filename: string) => void;
 }
 
 type TabType = 'overview' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text';
 type ViewType = 1 | 2;
 
-export function ReportContent({ filename, hideBackLink = true }: ReportContentProps) {
+export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicence }: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -281,6 +282,7 @@ export function ReportContent({ filename, hideBackLink = true }: ReportContentPr
                                 <OverviewContent
                                     reportData={reportData}
                                     onJumpToPage={jumpToPage}
+                                    onOpenLinkedLicence={onOpenLinkedLicence}
                                 />
                             </div>
                         )}

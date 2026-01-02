@@ -35,7 +35,9 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         {
             policy.WithOrigins(
                     "http://localhost:5173",  // Vite dev server
-                    "http://localhost:3000"   // Docker/production portal
+                    "http://localhost:3000",   // Docker/production portal
+                    "http://localhost:8080",
+                    "http://localhost"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()

@@ -185,7 +185,7 @@ export function LicencesTableHeaders({
                         value={filters['issueDate']?.value ?? 'all'}
                         onChange={onFilterChange}
                         onReset={() => onResetFilters('issueDate')}
-                        options={uniqueYears.map(y => ({ value: y, label: y }))}
+                        options={uniqueYears.map(y => ({ value: y!, label: y! }))}
                     />
                 </td>
                 <td>
@@ -196,7 +196,7 @@ export function LicencesTableHeaders({
                         value={filters['issuer']?.value ?? 'all'}
                         onChange={onFilterChange}
                         onReset={() => onResetFilters('issuer')}
-                        options={uniqueIssuers.map(i => ({ value: i, label: i }))}
+                        options={uniqueIssuers.map(i => ({ value: i!, label: i! }))}
                     />
                 </td>
                 <td>

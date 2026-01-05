@@ -13,7 +13,7 @@ public static class PopulateCachedImageWidthAndHeights
     {
         Console.WriteLine("Started populating image width and heights");
 
-        var list = await GetDataAsync();
+        var list = await GetBatchOfImagesAsync();
         var totalUpdated = 0;
 
         while (list.Count > 0)
@@ -23,7 +23,7 @@ public static class PopulateCachedImageWidthAndHeights
             
             Console.WriteLine($"Updated 100 - Total {totalUpdated}");
             
-            list = await GetDataAsync();
+            list = await GetBatchOfImagesAsync();
         }
 
         Console.WriteLine("Finished populating image width and heights");
@@ -58,7 +58,7 @@ public static class PopulateCachedImageWidthAndHeights
             });
     }
     
-    private static async Task<List<(int Id, byte[] Bytes)>> GetDataAsync()
+    private static async Task<List<(int Id, byte[] Bytes)>> GetBatchOfImagesAsync()
     {
         const string sql = 
             @"SELECT

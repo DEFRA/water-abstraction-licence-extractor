@@ -117,7 +117,34 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
+        
+        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
+
+        var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
+        files = files.Where(f => f.StartsWith("page-") && f.Contains("-image-")).ToList();
+        
+        var returnList = new List<(int pageNumber, int imageNumber, string extension, int width, int height)>();
+
+        foreach (var filename in files)
+        {
+            var extensionParts = filename.Split('.');
+            var extension = extensionParts[1];
+            
+            var topLevelParts = extensionParts[0].Split('+');
+            var width = topLevelParts.Length >= 3 ? Convert.ToInt32(topLevelParts[1]) : throw new Exception("Filename doesnt have width component");
+            var height = topLevelParts.Length >= 3 ? Convert.ToInt32(topLevelParts[2]) : throw new Exception("Filename doesnt have height component");
+            
+            var parts = topLevelParts[0].Split("-image-");
+            var pageNumber = int.Parse(parts[0].Replace("page-", string.Empty));
+            
+            var imageNumber = int.Parse(parts[1]);
+
+            returnList.Add((pageNumber, imageNumber, extension, width, height));
+        }
+
+        return Task.FromResult(returnList);
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
@@ -137,8 +164,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             request.ImageNumber!.Value,
             request.Filepath!,
             request.Extension!);
+
+        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last();
+
+        var directory = filePath[..^filePath.Split('/').Last().Length];
+        var matchingFile = Directory
+            .GetFiles(directory)
+            .Select(x => x.Split('/').Last())
+            .First(x => x.StartsWith($"{fileNameWithoutExtension}+") && x.EndsWith($".{request.Extension}"));
         
-        return await File.ReadAllBytesAsync(filePath);
+        return await File.ReadAllBytesAsync($"{directory}/{matchingFile}");
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(

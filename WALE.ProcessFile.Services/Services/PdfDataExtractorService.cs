@@ -80,46 +80,40 @@ public class PdfDataExtractorService(
             previouslyParsedPaths,
             processRunId);
 
+        var allImagesInDocument = await cacheService.GetImagesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                Filepath =  pdfFilePath,
+                NoOcrServiceName = Name
+            });
+        
         var isTextFile = documentLines.Count >= 100;
 
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
         {
-            var imagesInTextFileCount = imagesMetadata
-                .Pages
-                .Sum(page => page.Images.Count);
-
             // There are no images
-            if (imagesInTextFileCount == 0)
+            if (allImagesInDocument.Count == 0)
             {
                 returnResult.Matches = labelGroupMatches;
                 return returnResult;
             }
 
-            var allImages = await cacheService.GetImagesAsync(
-                new OcrServiceImageDataCacheRequest
-                {
-                    Filepath =  pdfFilePath,
-                    NoOcrServiceName = Name
-                });
-
             var anyImageLargeEnoughToBePageScan = true;
 
-            for (var pageNumberIndex = 1; pageNumberIndex <= imagesMetadata.Pages.Count; pageNumberIndex++)
+            for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
             {
                 var page = imagesMetadata.Pages[pageNumberIndex];
-
-                for (var imageNumberIndex = 1; imageNumberIndex <= page.Images.Count; imageNumberIndex++)
+                var pageNumber = pageNumberIndex + 1;
+                
+                for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
                 {
-                    var imagesOnPage = allImages
-                        .Where(i => i.pageNumber == pageNumberIndex)
-                        .ToList();
+                    var imageNumber = imageNumberIndex + 1;
+                    var image = allImagesInDocument
+                        .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
 
-                    var im = imagesOnPage
-                        .FirstOrDefault(i => i.imageNumber == imageNumberIndex);
-
-                    if (!IsPageScan(im.width, im.height))
+                    if (!IsPageScan(image.width, image.height))
                     {
                         continue;
                     }
@@ -153,41 +147,31 @@ public class PdfDataExtractorService(
         returnResult.ScannedFile = true;
         documentLines = [];
         
-        var pageNumber = 0;
-        
-        foreach (var page in imagesMetadata.Pages)
+        for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
         {
-            pageNumber += 1;
+            var page = imagesMetadata.Pages[pageNumberIndex];
+            var pageNumber = pageNumberIndex + 1;
             
             var breakPageLoop = false;
-            var pageImages = page.Images.ToList();
             
-            if (pageImages.Count > 10)
+            // To do - this is old and now shouldnt be needed
+            /*if (pageImages.Count > 10)
             {
                 pageImages = [page.ImageReference!];
-            }
+            }*/
 
-            var pageImageNumber = 0;
-            
-            foreach (var imageReference in pageImages)
+            for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
             {
-                pageImageNumber += 1;
+                var imageReference = page.Images[imageNumberIndex];
+                var imageNumber = imageNumberIndex + 1;
                 
-                // TODO, DB should know the width and height, we shouldnt need to get bytes
-                /*var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-                {
-                    PageNumber = pageNumber,
-                    ImageNumber = pageImageNumber,
-                    Filepath = pdfFilePath,
-                    NoOcrServiceName = Name,
-                    Extension = FileHelper.GetImageExtension(imageReference)
-                });
+                var image = allImagesInDocument
+                    .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
                 
-                // Check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
-                if (bytes != null && !IsPageScan(bytes))
+                if (!IsPageScan(image.width, image.height))
                 {
                     continue;
-                }*/
+                }
                 
                 var breakImageLoop = false;
 
@@ -209,7 +193,7 @@ public class PdfDataExtractorService(
                                 imageReference,
                                 pdfFilePath,
                                 pageNumber,
-                                pageImageNumber,
+                                imageNumber,
                                 pdfDocument,
                                 processRunId,
                                 Name)).ToList();
@@ -376,8 +360,8 @@ public class PdfDataExtractorService(
 
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
-        const int minWidth = 2000;
-        const int minHeightWhenWidthEnough = 800;
+        const int minWidth = 1800;
+        const int minHeightWhenWidthEnough = 100;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -386,8 +370,8 @@ public class PdfDataExtractorService(
             return true;
         }
 
-        const int minHeight = 2000;
-        const int minWidthWhenHeightEnough = 800;
+        const int minHeight = 1800;
+        const int minWidthWhenHeightEnough = 100;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;

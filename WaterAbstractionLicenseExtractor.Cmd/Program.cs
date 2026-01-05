@@ -592,7 +592,7 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        .Take(2000)
+        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

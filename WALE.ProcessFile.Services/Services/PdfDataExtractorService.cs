@@ -82,44 +82,67 @@ public class PdfDataExtractorService(
 
         var isTextFile = documentLines.Count >= 100;
 
-        // If it's a text file (in some circumstances), we don't need to go off and do image lookups
+        // If it's a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
         {
-            var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
-            
+            var imagesInTextFileCount = imagesMetadata
+                .Pages
+                .Sum(page => page.Images.Count);
+
             // There are no images
-            if (image1Reference == null)
+            if (imagesInTextFileCount == 0)
             {
                 returnResult.Matches = labelGroupMatches;
                 return returnResult;
             }
-            
-            var bytes = await cacheService.GetImageBytesAsync(
-                new OcrServiceImageDataCacheRequest
+
+            var anyTooLarge = true;
+            var pageNumberLoop = 1;
+
+            foreach (var page in imagesMetadata.Pages)
+            {
+                var imageNumberLoop = 1;
+                
+                foreach (var imageReference in page.Images)
                 {
-                    PageNumber = 1,
-                    ImageNumber = 1,
-                    Filepath = pdfFilePath,
-                    NoOcrServiceName = Name,
-                    Extension = FileHelper.GetImageExtension(image1Reference)
-                });
+                    var bytes = await cacheService.GetImageBytesAsync(
+                        new OcrServiceImageDataCacheRequest
+                        {
+                            PageNumber = pageNumberLoop,
+                            ImageNumber = imageNumberLoop++,
+                            Filepath = pdfFilePath,
+                            NoOcrServiceName = Name,
+                            Extension = FileHelper.GetImageExtension(imageReference)
+                        });
 
-            if (bytes == null)
-            {
-                throw new Exception("Image was not found");
-            }
+                    if (bytes == null)
+                    {
+                        continue;
+                    }
 
-            var image = Pix.LoadFromMemory(bytes);
-            const int minWidthOrHeight = 2000;
+                    var image = Pix.LoadFromMemory(bytes);
+                    const int minWidthOrHeight = 2000;
 
-            // Image is too small to care about
-            if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
-            {
-                returnResult.Matches = labelGroupMatches;
-                return returnResult;
+                    // Image is too small to care about
+                    if (image.Width < minWidthOrHeight && image.Height < minWidthOrHeight)
+                    {
+                        continue;
+                    }
+
+                    anyTooLarge = true;
+                    break;
+                }
+
+                if (!anyTooLarge)
+                {
+                    returnResult.Matches = labelGroupMatches;
+                    return returnResult;
+                }
+
+                pageNumberLoop += 1;
             }
         }
-        
+
         var unmatchedLabelLookups =
             GetUnmatchedLabels(configuration.Labels, labelGroupMatches, false);
         

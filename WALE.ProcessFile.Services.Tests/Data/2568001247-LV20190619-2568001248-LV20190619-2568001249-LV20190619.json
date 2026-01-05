@@ -329,7 +329,7 @@
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
         "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
         "issuedToCertainty": 99,
-        "ocr": "NoOCR",
+        "ocr": "OCR",
         "servicesUsed": [
           "PdfPig"
         ]
@@ -505,7 +505,7 @@
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
         "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
         "issuedToCertainty": 99,
-        "ocr": "NoOCR",
+        "ocr": "OCR",
         "servicesUsed": [
           "PdfPig"
         ]
@@ -681,7 +681,7 @@
         "issuedToMatchedLabelText": "(\u0022the Licence Holder\u0022)",
         "issuedToMatchLabelPosition": "LabelIsInMiddleOfTextToFind",
         "issuedToCertainty": 99,
-        "ocr": "NoOCR",
+        "ocr": "OCR",
         "servicesUsed": [
           "PdfPig"
         ]

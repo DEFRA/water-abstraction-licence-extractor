@@ -4,7 +4,7 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "GenerateEALicenceFeaturesCsv";
+const string workflow = "PopulateCachedImageWidthAndHeights";
 
 const int processRunId = 45;
 
@@ -26,5 +26,8 @@ switch (workflow)
         break;
     case "GenerateEALicenceFeaturesCsv":
         await GenerateEaLicenceFeaturesCsv.GenerateCsvAsync(processRunId);
+        break;
+    case "PopulateCachedImageWidthAndHeights":
+        await PopulateCachedImageWidthAndHeights.PopulateWidthAndHeightsAsync();
         break;
 }

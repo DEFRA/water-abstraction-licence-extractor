@@ -30,7 +30,8 @@ public interface ICacheService
     
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
 
-    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request);
+    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
@@ -42,8 +43,16 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
 
-    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
-        int pageNumber, string extension, int processRunId);
+    public Task SaveImageOnPageAsync(
+        byte[] bytes,
+        int width,
+        int height,
+        string pdfFilePath,
+        string noOcrServiceName,
+        int imageNumber,
+        int pageNumber,
+        string extension,
+        int processRunId);
 
     public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension);
     

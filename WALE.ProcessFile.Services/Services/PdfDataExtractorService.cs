@@ -82,7 +82,8 @@ public class PdfDataExtractorService(
 
         var isTextFile = documentLines.Count >= 100;
 
-        // If it's a text file (and there are no big images), we don't need to go off and do image lookups
+        // Some PDFs have a text component but are mainly scans (not sure how this has come about)
+        // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
         {
             var imagesInTextFileCount = imagesMetadata
@@ -96,50 +97,47 @@ public class PdfDataExtractorService(
                 return returnResult;
             }
 
-            var anyTooLarge = true;
-            var pageNumberLoop = 1;
-
-            foreach (var page in imagesMetadata.Pages)
-            {
-                var imageNumberLoop = 1;
-                
-                foreach (var imageReference in page.Images)
+            var allImages = await cacheService.GetImagesAsync(
+                new OcrServiceImageDataCacheRequest
                 {
-                    var bytes = await cacheService.GetImageBytesAsync(
-                        new OcrServiceImageDataCacheRequest
-                        {
-                            PageNumber = pageNumberLoop,
-                            ImageNumber = imageNumberLoop++,
-                            Filepath = pdfFilePath,
-                            NoOcrServiceName = Name,
-                            Extension = FileHelper.GetImageExtension(imageReference)
-                        });
+                    Filepath =  pdfFilePath,
+                    NoOcrServiceName = Name
+                });
 
-                    if (bytes == null)
+            var anyImageLargeEnoughToBePageScan = true;
+
+            for (var pageNumberIndex = 1; pageNumberIndex <= imagesMetadata.Pages.Count; pageNumberIndex++)
+            {
+                var page = imagesMetadata.Pages[pageNumberIndex];
+
+                for (var imageNumberIndex = 1; imageNumberIndex <= page.Images.Count; imageNumberIndex++)
+                {
+                    var imagesOnPage = allImages
+                        .Where(i => i.pageNumber == pageNumberIndex)
+                        .ToList();
+
+                    var im = imagesOnPage
+                        .FirstOrDefault(i => i.imageNumber == imageNumberIndex);
+
+                    if (!IsPageScan(im.width, im.height))
                     {
                         continue;
                     }
 
-                    var image = Pix.LoadFromMemory(bytes);
-                    const int minWidthOrHeight = 2000;
-
-                    // Image is too small to care about
-                    if (image.Width < minWidthOrHeight && image.Height < minWidthOrHeight)
-                    {
-                        continue;
-                    }
-
-                    anyTooLarge = true;
+                    anyImageLargeEnoughToBePageScan = true;
                     break;
                 }
-
-                if (!anyTooLarge)
+                
+                if (anyImageLargeEnoughToBePageScan)
                 {
-                    returnResult.Matches = labelGroupMatches;
-                    return returnResult;
+                    break;
                 }
-
-                pageNumberLoop += 1;
+            }
+            
+            if (!anyImageLargeEnoughToBePageScan)
+            {
+                returnResult.Matches = labelGroupMatches;
+                return returnResult;
             }
         }
 
@@ -175,7 +173,21 @@ public class PdfDataExtractorService(
             {
                 pageImageNumber += 1;
                 
-                // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
+                // TODO, DB should know the width and height, we shouldnt need to get bytes
+                /*var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = pageNumber,
+                    ImageNumber = pageImageNumber,
+                    Filepath = pdfFilePath,
+                    NoOcrServiceName = Name,
+                    Extension = FileHelper.GetImageExtension(imageReference)
+                });
+                
+                // Check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
+                if (bytes != null && !IsPageScan(bytes))
+                {
+                    continue;
+                }*/
                 
                 var breakImageLoop = false;
 
@@ -360,6 +372,25 @@ public class PdfDataExtractorService(
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
+    }
+
+    private static bool IsPageScan(int imageWidth, int imageHeight)
+    {
+        const int minWidth = 2000;
+        const int minHeightWhenWidthEnough = 800;
+
+        var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
+
+        if (wideEnough)
+        {
+            return true;
+        }
+
+        const int minHeight = 2000;
+        const int minWidthWhenHeightEnough = 800;
+
+        var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
+        return tallEnough;
     }
 
     private static int GetSubResultCount(LabelGroupResult match)

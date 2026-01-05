@@ -15,6 +15,8 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
         string returnExtension;
         byte[]? bytes;
+
+        Pix? pix = null;
         
         try
         {
@@ -24,7 +26,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                 
                 try
                 {
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
@@ -35,7 +37,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
                     returnExtension = jpgExtension;
                     bytes = Deflate(bytes);
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
             }
             else if (imageData.TryGetBytesAsMemory(out var bytesMemory))
@@ -45,7 +47,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
                 try
                 {
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
@@ -56,7 +58,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
                     returnExtension = jpgExtension;
                     bytes = Deflate(bytes);
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
             }
             else
@@ -72,7 +74,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
 
                 try
                 {
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
@@ -82,7 +84,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                     }
 
                     bytes = Deflate(bytes);
-                    _ = Pix.LoadFromMemory(bytes);
+                    pix = Pix.LoadFromMemory(bytes);
                 }
             }
         }
@@ -96,7 +98,17 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             return null;
         }
         
-        await cacheService.SaveImageOnPageAsync(bytes, folderPath, PdfDataExtractorService.Name, imageNumber, pageNumber, returnExtension, processRunId);
+        await cacheService.SaveImageOnPageAsync(
+            bytes,
+            pix.Width,
+            pix.Height,
+            folderPath,
+            PdfDataExtractorService.Name,
+            imageNumber,
+            pageNumber,
+            returnExtension,
+            processRunId);
+        
         return returnExtension;
     }
 

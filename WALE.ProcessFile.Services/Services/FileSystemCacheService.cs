@@ -114,16 +114,27 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         throw new NotImplementedException();
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
+        if (request.PageNumber == null)
+        {
+            throw new ArgumentNullException(nameof(request.PageNumber));
+        }
+        
+        if (request.ImageNumber == null)
+        {
+            throw new ArgumentNullException(nameof(request.ImageNumber));
+        }
+        
         var filePath = await GetImageReferenceAsync(
-            request.PageNumber,
-            request.ImageNumber,
+            request.PageNumber!.Value,
+            request.ImageNumber!.Value,
             request.Filepath!,
             request.Extension!);
         
@@ -160,7 +171,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
         await File.WriteAllBytesAsync(filePath, bytes);

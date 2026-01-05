@@ -206,17 +206,24 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT image_number, extension 
+                           SELECT
+                                page_number
+                                , image_number
+                                , extension
+                                , width
+                                , height
                            FROM image_on_page 
-                           WHERE filename = @Filename 
-                             AND page_number = @PageNumber
+                           WHERE
+                               (filename = @Filename or @Filename is null)
+                                AND (page_number = @PageNumber or @PageNumber is null)
                            """;
 
-        var results = await QueryAsync<(int, string)>(
+        var results = await QueryAsync<(int, int, string, int, int)>(
             connection,
             sql,
             0,

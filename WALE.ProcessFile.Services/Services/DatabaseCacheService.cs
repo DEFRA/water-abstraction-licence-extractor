@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Tesseract;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -70,7 +71,8 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrScreenshotTextAsync(request);
     }
 
-    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseReadService.GetImagesAsync(request);
@@ -161,10 +163,10 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
-    public Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        return databaseWriteService.SaveImageOnPageAsync(bytes, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+        return databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
     }
     
     public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId,  string extension)
@@ -183,8 +185,12 @@ public class DatabaseCacheService(
         }
         
         var deflatedBytes = PdfPigNoOcrImageService.Deflate(bytAry);
+        var pix = Pix.LoadFromMemory(deflatedBytes);
+        
         await databaseWriteService.SaveImageOnPageAsync(
             deflatedBytes,
+            pix.Width,
+            pix.Height,
             pdfFilePath, 
             PdfDataExtractorService.Name,
             imageNumber,

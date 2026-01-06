@@ -82,14 +82,23 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         return await File.ReadAllTextAsync(outputFilename);
     }
-    
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
+
+    public Task<string> GetImageReferenceAsync(
+        int pageNumber,
+        int imageNumber,
+        string pdfFilePath,
+        string extension,
+        int? width = null,
+        int? height = null)
     {
         var fileCacheFolder= GetFolderPath(pdfFilePath);
         var outputFolderFull = $"{fileCacheFolder}/{PdfDataExtractorService.Name}/Images";
         Directory.CreateDirectory(outputFolderFull);
 
-        var outputFilename = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
+        var outputFilename = width.HasValue ?
+            $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}+{width}+{height}.{extension}"
+            : $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
+        
         return Task.FromResult(outputFilename);
     }
 
@@ -208,7 +217,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
+        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     

@@ -153,16 +153,16 @@ public class PdfDataExtractorService(
             var pageNumber = pageNumberIndex + 1;
             
             var breakPageLoop = false;
+            var pageImages = page.Images.ToList();
             
-            // To do - this is old and now shouldnt be needed
-            /*if (pageImages.Count > 10)
+            if (pageImages.Count > 10)
             {
                 pageImages = [page.ImageReference!];
-            }*/
+            }
 
-            for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
+            for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
             {
-                var imageReference = page.Images[imageNumberIndex];
+                var imageReference = pageImages[imageNumberIndex];
                 var imageNumber = imageNumberIndex + 1;
                 
                 var image = allImagesInDocument

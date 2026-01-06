@@ -53,7 +53,13 @@ public class DatabaseCacheService(
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
     
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
+    public Task<string> GetImageReferenceAsync(
+        int pageNumber,
+        int imageNumber,
+        string pdfFilePath,
+        string extension,
+        int? width = null,
+        int? height = null)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");

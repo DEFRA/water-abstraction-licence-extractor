@@ -24,7 +24,9 @@ public interface ICacheService
         int pageNumber,
         int imageNumber,
         string pdfFilePath,
-        string extension);
+        string extension,
+        int? width = null,
+        int? height = null);
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     

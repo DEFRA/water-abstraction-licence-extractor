@@ -1,4 +1,5 @@
 import type {LicenceSet} from "../api/generated/apiClient.ts";
+import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListItemProps {
     filename: string | undefined;
@@ -10,11 +11,13 @@ export function LicenceSetsListItem({filename, licenceSet, onOpenLicenceSetRepor
     let licenceSetId = licenceSet.licenceSetId;
     let shortLicenceSetId = licenceSet.shortLicenceSetId;
 
-    let backLink = licenceSet.licenceSetType === "allLicencesImplicitlyReferencedInLimits";
-    let abstractionLimits = licenceSet.licenceSetType === "allLicencesExplicitlyReferencedInLimits";
-    let mixed = licenceSet.licenceSetType === "allLicencesIncludingImplicitlyReferenced";
-    let fullyEncompassedIn = licenceSet.licenceSetType === "fullyEncompassedIn";
-    let partiallyEncompassedIn = licenceSet.licenceSetType === "partiallyEncompassedIn";
+    const licenceSetType = getLicenceSetTypeClass(licenceSet.licenceSetType);
+
+    let backLink = licenceSetType === "allLicencesImplicitlyReferencedInLimits";
+    let abstractionLimits = licenceSetType === "allLicencesExplicitlyReferencedInLimits";
+    let mixed = licenceSetType === "allLicencesIncludingImplicitlyReferenced";
+    let fullyEncompassedIn = licenceSetType === "fullyEncompassedIn";
+    let partiallyEncompassedIn = licenceSetType === "partiallyEncompassedIn";
 
     let color = backLink ? "#AAA" : "black";
 
@@ -35,8 +38,8 @@ export function LicenceSetsListItem({filename, licenceSet, onOpenLicenceSetRepor
     }
 
     return (
-        <li className={licenceSet.licenceSetType}>
-            <span className='lsId' title={licenceSetId + " " + licenceSet.licenceSetType}>
+        <li className={licenceSetType}>
+            <span className='lsId' title={licenceSetId + " " + licenceSetType}>
                 <a
                     style={{color}}
                     href="#"

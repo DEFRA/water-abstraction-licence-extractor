@@ -11,9 +11,10 @@ interface OutputItemTableRowProps {
     oddRow: boolean;
     onOpenReport: (filename: string) => void;
     onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    showSingles: boolean;
 }
 
-function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport}: OutputItemTableRowProps) {
+function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -50,8 +51,8 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}
+                    showSingles={showSingles}
                 />
-                <span className='noLicenceSetsShowing'>--</span>
             </td>
             <td>{item.status}</td>
         </tr>

@@ -760,7 +760,9 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (LabelIsInDocument(label, documentLines) == false)
+                var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
+                
+                if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
                     continue;
                 }
@@ -1009,12 +1011,6 @@ public class PdfDataExtractorService(
                     {
                         throw new Exception("Infinite loop detected - coding error");
                     }
-
-                    
-                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "LinkedLicenceNumber")
-                    {
-                        
-                    }
                     
                     previousPartialLine = partialLine;
                     
@@ -1055,16 +1051,6 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
-                    
-                    if (label.Name == "DocumentLicenceNumber")
-                    {
-                
-                    }
-                    
-                    if (partialLine.Text.Contains("FURTHER PROVISIONS") && label.Name == "DocumentLicenceNumber")
-                    {
-                        
-                    }
                     
                     if (label.Text?.Any() == true)
                     {
@@ -1906,7 +1892,7 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private static bool? LabelIsInDocument(
+    private static bool LabelIsInDocument(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines)
     {
@@ -1937,9 +1923,7 @@ public class PdfDataExtractorService(
             return true;
         }
         
-        var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
-
-        return isRegularExpression || labelText.Any(tuple =>
+        return labelText.Any(tuple =>
         {
             return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
                 StringComparison.InvariantCultureIgnoreCase);

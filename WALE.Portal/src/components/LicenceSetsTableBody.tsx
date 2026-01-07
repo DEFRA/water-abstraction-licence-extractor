@@ -26,8 +26,21 @@ export function LicenceSetsTableBody({data, onOpenReport, onOpenLicenceSetReport
     const [hierarchicalData, setHierarchicalData] = useState<ExtendedLicenceSet[]>([]);
     
     useEffect(() => {
-        const licenceSets: ExtendedLicenceSet[] = [];
-        // ... existing logic to populate licenceSets ...
+        const allLicenceSets = data.flatMap(item => item.licenceSets || []);
+        const uniqueLicenceSetIds = new Set<string>();
+        const licenceSets: ExtendedLicenceSet[] = allLicenceSets
+            .filter(ls => {
+                if (ls.licenceSetId && !uniqueLicenceSetIds.has(ls.licenceSetId)) {
+                    uniqueLicenceSetIds.add(ls.licenceSetId);
+                    return true;
+                }
+                return false;
+            })
+            .map(ls => Object.assign(ls, {
+                descendants: [],
+                ancestors: []
+            }) as ExtendedLicenceSet);
+
         setHierarchy(licenceSets);
         setHierarchicalData(licenceSets);
     }, [data]);

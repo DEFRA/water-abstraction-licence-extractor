@@ -117,15 +117,3 @@ h1 a.selected {
 .partiallyEncompassedIn {
   color: hotpink;
 }
-
-body .singleLicenceOnly {
-  display: none;
-}
-
-body.singles .singleLicenceOnly {
-  display: list-item;
-}
-
-.noLicenceSetsShowing {
-  display: none;
-}

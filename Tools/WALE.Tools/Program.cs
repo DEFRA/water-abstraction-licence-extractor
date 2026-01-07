@@ -4,7 +4,7 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "TemplateFinderExtract";
+const string workflow = "UpdateCachedImageWidthAndHeightsFilenames";
 
 const int processRunId = 45;
 
@@ -12,11 +12,9 @@ switch (workflow)
 {
     case "GenerateLinkedLicencesCsv":
         await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
-
         break;
     case "GenerateUnknownSectionLinkedLicencesCsv":
         await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
-        
         break;
     case "GenerateAggregatesCsvForTesting":
         await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync();
@@ -27,19 +25,10 @@ switch (workflow)
     case "GenerateEALicenceFeaturesCsv":
         await GenerateEaLicenceFeaturesCsv.GenerateCsvAsync(processRunId);
         break;
-    case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be uses in Live Licence Identification
-        await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync();
+    case "PopulateCachedImageWidthAndHeights":
+        await PopulateCachedImageWidthAndHeights.PopulateWidthAndHeightsAsync();
         break;
-    case "DuplicateLicenceIdentificationExtract": // We don't run anymore
-        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync();
-        break;
-    case "DuplicateLicenceIdentificationExtractBySize": // Identify duplicates by file size
-        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(false);
-        break;
-    case "FileTypeIdentificationExtract": // Version File Type Identification
-        await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
-        break;
-    case "TemplateFinderExtract":
-        await TemplateIdentificationExtract.GenerateTemplateFinderResult();
-        break;
+    case "UpdateCachedImageWidthAndHeightsFilenames":
+        await UpdateCachedImageWidthAndHeightsFilenames.PopulateWidthAndHeightsAsync();
+        break;    
 }

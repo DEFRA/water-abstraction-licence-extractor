@@ -82,14 +82,23 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         return await File.ReadAllTextAsync(outputFilename);
     }
-    
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension)
+
+    public Task<string> GetImageReferenceAsync(
+        int pageNumber,
+        int imageNumber,
+        string pdfFilePath,
+        string extension,
+        int? width = null,
+        int? height = null)
     {
         var fileCacheFolder= GetFolderPath(pdfFilePath);
         var outputFolderFull = $"{fileCacheFolder}/{PdfDataExtractorService.Name}/Images";
         Directory.CreateDirectory(outputFolderFull);
 
-        var outputFilename = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
+        var outputFilename = width.HasValue ?
+            $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}+{width}+{height}.{extension}"
+            : $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.{extension}";
+        
         return Task.FromResult(outputFilename);
     }
 
@@ -114,20 +123,66 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
+        
+        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
+
+        var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
+        files = files.Where(f => f.StartsWith("page-") && f.Contains("-image-")).ToList();
+        
+        var returnList = new List<(int pageNumber, int imageNumber, string extension, int width, int height)>();
+
+        foreach (var filename in files)
+        {
+            var extensionParts = filename.Split('.');
+            var extension = extensionParts[1];
+            
+            var topLevelParts = extensionParts[0].Split('+');
+            var width = topLevelParts.Length >= 3 ? Convert.ToInt32(topLevelParts[1]) : throw new Exception("Filename doesnt have width component");
+            var height = topLevelParts.Length >= 3 ? Convert.ToInt32(topLevelParts[2]) : throw new Exception("Filename doesnt have height component");
+            
+            var parts = topLevelParts[0].Split("-image-");
+            var pageNumber = int.Parse(parts[0].Replace("page-", string.Empty));
+            
+            var imageNumber = int.Parse(parts[1]);
+
+            returnList.Add((pageNumber, imageNumber, extension, width, height));
+        }
+
+        return Task.FromResult(returnList);
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
+        if (request.PageNumber == null)
+        {
+            throw new ArgumentNullException(nameof(request.PageNumber));
+        }
+        
+        if (request.ImageNumber == null)
+        {
+            throw new ArgumentNullException(nameof(request.ImageNumber));
+        }
+        
         var filePath = await GetImageReferenceAsync(
-            request.PageNumber,
-            request.ImageNumber,
+            request.PageNumber!.Value,
+            request.ImageNumber!.Value,
             request.Filepath!,
             request.Extension!);
+
+        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last();
+
+        var directory = filePath[..^filePath.Split('/').Last().Length];
+        var matchingFile = Directory
+            .GetFiles(directory)
+            .Select(x => x.Split('/').Last())
+            .First(x => x.StartsWith($"{fileNameWithoutExtension}+") && x.EndsWith($".{request.Extension}"));
         
-        return await File.ReadAllBytesAsync(filePath);
+        return await File.ReadAllBytesAsync($"{directory}/{matchingFile}");
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
@@ -160,9 +215,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension);
+        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     

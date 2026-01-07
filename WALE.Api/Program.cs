@@ -16,6 +16,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowPortal");
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.Run();
@@ -26,6 +28,22 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     services.AddControllers();
     services.AddOpenApi();
     services.AddHealthChecks();
+
+    services.AddCors(options =>
+    {
+        options.AddPolicy("AllowPortal", policy =>
+        {
+            policy.WithOrigins(
+                    "http://localhost:5173",  // Vite dev server
+                    "http://localhost:3000",   // Docker/production portal
+                    "http://localhost:8080",
+                    "http://localhost"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+    });
 
     var dbConnectionString = config.GetConnectionString("PostgreSQL")
                              ?? throw new InvalidOperationException("PostgreSQL connection string not configured");

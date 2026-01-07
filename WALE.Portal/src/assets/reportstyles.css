@@ -1,0 +1,210 @@
+#container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#leftCol {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+#leftCol.half {
+    width: 50%;
+}
+
+#left-cell {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: #fafafa;
+}
+
+#right-cell {
+    flex: 1;
+    overflow-y: auto;
+    border-left: 1px solid #ddd;
+    background-color: white;
+}
+
+#rightPdf {
+    padding: 20px;
+}
+
+#iframeParent {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+#pdf-images img {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.leftDetails {
+    max-width: 800px;
+}
+
+#view-edit {
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+#view-edit a {
+    text-decoration: none;
+    color: #666;
+}
+
+#view-edit a.viewSelected {
+    font-weight: bold;
+    color: #000;
+}
+
+.ul-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    display: flex;
+    gap: 15px;
+    border-bottom: 2px solid #ddd;
+}
+
+.ul-links li {
+    margin: 0;
+}
+
+.ul-links a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+
+.ul-links a.selectedTab {
+    color: #000;
+    font-weight: bold;
+    border-bottom-color: #007bff;
+}
+
+#properties dt {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+#properties dd {
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+#properties dl dl {
+    margin-left: 20px;
+}
+
+#propertiesNew {
+    padding: 20px;
+}
+
+#propertiesNew label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#propertiesNew input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#licenceNumberTxtDiv,
+#licenceHolderTxtDiv {
+    margin-bottom: 20px;
+}
+
+#back-continue-area {
+    margin-top: 20px;
+}
+
+#back-continue-area button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#back-continue-area button:hover {
+    background-color: #0056b3;
+}
+
+.default-hidden {
+    display: none;
+}
+
+#jsonNewPath,
+#jsonSetPath,
+#jsonAiPath,
+#jsonPath,
+#text {
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+#text {
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+h1 {
+    font-size: 14pt;
+}
+
+#leftCol {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#left-cell, #right-cell {
+    height: 100%;
+}
+
+#left-cell {
+    position: relative;
+    float: left;
+    width: 50%;
+    resize: horizontal;
+    overflow: auto;
+}
+
+#right-cell {
+    border-left: 3px solid #EEE;
+    float: none;
+    overflow: hidden;
+}
+
+#rightPdf {
+    position:relative;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+}
+
+#iframeParent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: scroll;
+}

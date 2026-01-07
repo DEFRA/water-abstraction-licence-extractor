@@ -374,17 +374,22 @@ public static class FormattingHelper
             }
             else
             {
-                // Part 3 - 000
-                parts.Add(remainingLicenceNumber[..3]);
-                remainingLicenceNumber = remainingLicenceNumber[3..];
+                if (remainingLicenceNumber.Length >= 3)
+                {
+                    // Part 3 - 000
+                    parts.Add(remainingLicenceNumber[..3]);
+                    remainingLicenceNumber = remainingLicenceNumber[3..];
+                }
 
-
-                // Part 4 - 000
-                parts.Add(remainingLicenceNumber[..3]);
-                remainingLicenceNumber = remainingLicenceNumber[3..];
+                if (remainingLicenceNumber.Length >= 3)
+                {
+                    // Part 4 - 000
+                    parts.Add(remainingLicenceNumber[..3]);
+                    remainingLicenceNumber = remainingLicenceNumber[3..];
+                }
             }
 
-            // Part 5  Likely R01, but can be 1 and other stuff
+            // Part 5 - Likely R01, but can be 1 and other stuff
             if (!string.IsNullOrEmpty(remainingLicenceNumber))
             {
                 parts.Add(remainingLicenceNumber);

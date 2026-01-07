@@ -1,3 +1,6 @@
+# ====================
+# .NET
+# ====================
 # Build outputs
 bin/
 obj/
@@ -29,3 +32,38 @@ appsettings.Development.json
 
 # Project-specific
 licence-number-filename-map.csv
+
+# ====================
+# Node / React (WALE.Portal)
+# ====================
+# Dependencies
+WALE.Portal/node_modules/
+
+# Build outputs
+WALE.Portal/dist/
+WALE.Portal/dist-ssr/
+WALE.Portal/build/
+
+# Local env files
+WALE.Portal/.env.local
+WALE.Portal/.env.*.local
+
+# Editor directories and files
+WALE.Portal/.vscode/*
+!WALE.Portal/.vscode/extensions.json
+WALE.Portal/.idea
+WALE.Portal/*.suo
+WALE.Portal/*.ntvs*
+WALE.Portal/*.njsproj
+WALE.Portal/*.sln
+WALE.Portal/*.sw?
+
+# Logs
+WALE.Portal/npm-debug.log*
+WALE.Portal/yarn-debug.log*
+WALE.Portal/yarn-error.log*
+WALE.Portal/pnpm-debug.log*
+WALE.Portal/lerna-debug.log*
+
+# Testing
+WALE.Portal/coverage/

@@ -23,7 +23,8 @@ public interface IDatabaseReadService
 
     Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request);
+    Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     

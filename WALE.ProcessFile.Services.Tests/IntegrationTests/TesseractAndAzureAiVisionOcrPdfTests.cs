@@ -606,4 +606,54 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
+    
+    [Fact]
+    public async Task Template_Test1()
+    {
+        // Arrange
+        const string fileName = "22712213__Non-Application Licence Document (16.05.1984).PDF";
+
+        // Act
+        var resultFull = await _pdfDataExtractor3.GetMatchesAsync(
+            TestConfig.PdfFolder3 + fileName,
+            new LookupConfiguration(
+                GetYorkshireLabels(),
+                _fileLicenceMapping),
+            [TestConfig.PdfFolder3 + fileName],
+            0);
+
+        Assert.Single(resultFull.Matches!);
+    }
+    
+    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetYorkshireLabels()
+    {
+        return
+        [
+            ("YorkshireRiverGroup", GetYorkshireRiverLabels()),
+        ];
+    }
+    
+    private static List<LabelToMatch> GetYorkshireRiverLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "YorkshireRiver",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Yorkshire.* River.* Authority")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true,
+            }
+        ];
+    }
 }

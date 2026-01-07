@@ -291,9 +291,8 @@ public static class OcrHelper
                     
                     double nextLineSiblingXDiff = int.MaxValue;
 
-                    foreach (var nextLineWordTuple in allNextLineWords)
+                    foreach (var (documentLineColumn, nextLineWord) in allNextLineWords)
                     {
-                        var nextLineWord = nextLineWordTuple.Word;
                         double d;
 
                         if (nextLineWord.Coordinates.Right < word.Coordinates.Left)
@@ -310,7 +309,7 @@ public static class OcrHelper
                             nextLineSiblingXDiff = d;
                             
                             nextLineClosestSibling = nextLineWord;
-                            nextLineColumnClosestSibling = nextLineWordTuple.Column;
+                            nextLineColumnClosestSibling = documentLineColumn;
                         }
                     }
                     

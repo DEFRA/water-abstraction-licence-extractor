@@ -68,7 +68,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
         });
 
         var pageImagesUnique = pageImages
-            .GroupBy(pi => pi.imageNumber)
+            .GroupBy(pi => new { pi.pageNumber, pi.imageNumber })
             .Select(pi => pi.Last())
             .OrderBy(pi => pi.imageNumber)
             .Select(pi => new PageImage

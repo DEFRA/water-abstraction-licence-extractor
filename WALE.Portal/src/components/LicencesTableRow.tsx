@@ -30,7 +30,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                        onOpenReport(item.filename!);
                    }}>{item.filename}</a>
             </td>
-            <td id={dashesIfNullOrEmpty(item.licenceNumber)}>{dashesIfNullOrEmpty(item.licenceNumber)}</td>
+            <td id={dashesIfNullOrEmpty(item.licenceNumber)} dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>

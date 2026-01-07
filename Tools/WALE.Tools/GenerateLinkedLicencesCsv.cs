@@ -66,32 +66,32 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                foreach (var fromSection in linkedLicence.ContainedIn!)
+                var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName ));
+                var linkReasons = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.LinkReason));
+                
+                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                    ? value.ToString()
+                    : null;
+                
+                returnList.Add(new LinkedLicencesCsvLine
                 {
-                    var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                        ? value.ToString()
-                        : null;
-                    
-                    returnList.Add(new LinkedLicencesCsvLine
-                    {
-                        Filename = licence.Filename,
-                        LicenceNumber = licence.LicenceNumber,
-                        ScrapedLicenceNumber = licenceNumber,
-                        NaldLicenceNumber = licence.NaldLicenceNumber,
-                        LicenceFoundInList = licence.LicenceFoundInList,
-                        LicenceIsLive = licence.IsLiveLicence,
-                        LicenceIsDead = licence.IsDeadLicence,
-                        LicenceIsImpoundment = licence.IsImpoundmentLicence,
-                        LinkedLicenceNumber = linkedLicence.LicenceNumber,
-                        NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
-                        LinkedLicenceFromSection = fromSection.SectionName,
-                        LinkedLicenceLinkReason = fromSection.LinkReason,
-                        LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
-                        LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
-                        LinkedLicenceIsDead = linkedLicence.IsDeadLicence,
-                        LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence
-                    });
-                }
+                    Filename = licence.Filename,
+                    LicenceNumber = licence.LicenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
+                    NaldLicenceNumber = licence.NaldLicenceNumber,
+                    LicenceFoundInList = licence.LicenceFoundInList,
+                    LicenceIsLive = licence.IsLiveLicence,
+                    LicenceIsDead = licence.IsDeadLicence,
+                    LicenceIsImpoundment = licence.IsImpoundmentLicence,
+                    LinkedLicenceNumber = linkedLicence.LicenceNumber,
+                    NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
+                    LinkedLicenceFromSection = fromSections,
+                    LinkedLicenceLinkReason = linkReasons,
+                    LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
+                    LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
+                    LinkedLicenceIsDead = linkedLicence.IsDeadLicence,
+                    LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence
+                });
             }
         }
 

@@ -2,11 +2,11 @@
 
 //const string workflow = "TestsForAiPrompts";
 //const string workflow = "GenerateAggregatesCsvForTesting";
-//const string workflow = "GenerateLinkedLicencesCsv";
+const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "UpdateCachedImageWidthAndHeightsFilenames";
+//const string workflow = "UpdateCachedImageWidthAndHeightsFilenames";
 
-const int processRunId = 45;
+const int processRunId = 336;
 
 switch (workflow)
 {

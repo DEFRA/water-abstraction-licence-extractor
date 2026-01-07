@@ -184,7 +184,10 @@ public static class ExternalDataHelper
         }
 
         var returnMapping = new Dictionary<string, string>();
-        var filenames = FileHelper.GetFiles(pdfFolderPath).Select(filepath => filepath.Split('/').Last()).ToList();
+        var filenames = FileHelper.GetRelevantFilesInFolder(pdfFolderPath)
+            .Keys
+            .Select(filepath => filepath.Split('/').Last())
+            .ToList();
 
         foreach (var filename in filenames)
         {

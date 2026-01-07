@@ -23,8 +23,10 @@ public class PdfDataExtractorService(
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
     ICacheService cacheService,
     IOutputService outputService,
-    string pdfFolderPath) : IPdfDataExtractorService
+    string pdfFolderPath,
+    int id = -1) : IPdfDataExtractorService
 {
+    public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
     public static string Name => "PdfPig";
     
@@ -78,44 +80,61 @@ public class PdfDataExtractorService(
             previouslyParsedPaths,
             processRunId);
 
+        var allImagesInDocument = await cacheService.GetImagesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                Filepath =  pdfFilePath,
+                NoOcrServiceName = Name
+            });
+        
         var isTextFile = documentLines.Count >= 100;
 
-        // If it's a text file, we don't need to go off and do image lookups
+        // Some PDFs have a text component but are mainly scans (not sure how this has come about)
+        // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
         {
-            var image1Reference = imagesMetadata.Pages.First().Images.FirstOrDefault();
-            
-            if (image1Reference == null)
+            // There are no images
+            if (allImagesInDocument.Count == 0)
             {
                 returnResult.Matches = labelGroupMatches;
                 return returnResult;
             }
-            
-            var bytes = await cacheService.GetImageBytesAsync(
-                new OcrServiceImageDataCacheRequest
-                {
-                    PageNumber = 1,
-                    ImageNumber = 1,
-                    Filepath = pdfFilePath,
-                    NoOcrServiceName = Name,
-                    Extension = FileHelper.GetImageExtension(image1Reference)
-                });
 
-            if (bytes == null)
+            var anyImageLargeEnoughToBePageScan = true;
+
+            for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
             {
-                throw new Exception("Image was not found");
+                var page = imagesMetadata.Pages[pageNumberIndex];
+                var pageNumber = pageNumberIndex + 1;
+                
+                for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
+                {
+                    var imageNumber = imageNumberIndex + 1;
+                    var image = allImagesInDocument
+                        .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
+
+                    if (!IsPageScan(image.width, image.height))
+                    {
+                        continue;
+                    }
+
+                    anyImageLargeEnoughToBePageScan = true;
+                    break;
+                }
+                
+                if (anyImageLargeEnoughToBePageScan)
+                {
+                    break;
+                }
             }
-
-            var image = Pix.LoadFromMemory(bytes);
-            const int minWidthOrHeight = 2000;
-
-            if (minWidthOrHeight > image.Width || minWidthOrHeight > image.Height)
+            
+            if (!anyImageLargeEnoughToBePageScan)
             {
                 returnResult.Matches = labelGroupMatches;
                 return returnResult;
             }
         }
-        
+
         var unmatchedLabelLookups =
             GetUnmatchedLabels(configuration.Labels, labelGroupMatches, false);
         
@@ -128,11 +147,10 @@ public class PdfDataExtractorService(
         returnResult.ScannedFile = true;
         documentLines = [];
         
-        var pageNumber = 0;
-        
-        foreach (var page in imagesMetadata.Pages)
+        for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
         {
-            pageNumber += 1;
+            var page = imagesMetadata.Pages[pageNumberIndex];
+            var pageNumber = pageNumberIndex + 1;
             
             var breakPageLoop = false;
             var pageImages = page.Images.ToList();
@@ -142,13 +160,18 @@ public class PdfDataExtractorService(
                 pageImages = [page.ImageReference!];
             }
 
-            var pageImageNumber = 0;
-            
-            foreach (var imageReference in pageImages)
+            for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
             {
-                pageImageNumber += 1;
+                var imageReference = pageImages[imageNumberIndex];
+                var imageNumber = imageNumberIndex + 1;
                 
-                // TODO check dimensions and if tiny don't process (Azure AI vision cant cope with it for example)
+                var image = allImagesInDocument
+                    .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
+                
+                if (!IsPageScan(image.width, image.height))
+                {
+                    continue;
+                }
                 
                 var breakImageLoop = false;
 
@@ -170,7 +193,7 @@ public class PdfDataExtractorService(
                                 imageReference,
                                 pdfFilePath,
                                 pageNumber,
-                                pageImageNumber,
+                                imageNumber,
                                 pdfDocument,
                                 processRunId,
                                 Name)).ToList();
@@ -333,6 +356,25 @@ public class PdfDataExtractorService(
 
         returnResult.Matches = labelGroupMatches;
         return returnResult;      
+    }
+
+    private static bool IsPageScan(int imageWidth, int imageHeight)
+    {
+        const int minWidth = 1800;
+        const int minHeightWhenWidthEnough = 100;
+
+        var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
+
+        if (wideEnough)
+        {
+            return true;
+        }
+
+        const int minHeight = 1800;
+        const int minWidthWhenHeightEnough = 100;
+
+        var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
+        return tallEnough;
     }
 
     private static int GetSubResultCount(LabelGroupResult match)
@@ -634,7 +676,7 @@ public class PdfDataExtractorService(
                     pdfDocument.PdfFilePath,
                     extension);
                 
-                metadataPage.Images.Add(imageReference!);
+                metadataPage.Images.Add(imageReference);
             }
         }
 
@@ -691,7 +733,7 @@ public class PdfDataExtractorService(
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
-        IReadOnlyList<DocumentLine> documentLines,
+        List<DocumentLine> documentLines,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
@@ -718,7 +760,9 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                if (LabelIsInDocument(label, documentLines) == false)
+                var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
+                
+                if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
                     continue;
                 }
@@ -832,7 +876,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
 
-    private bool NotMatchedAll(
+    private static bool NotMatchedAll(
         DocumentLine line,
         DocumentLine lineForPosition,
         LabelToMatch label,
@@ -967,12 +1011,6 @@ public class PdfDataExtractorService(
                     {
                         throw new Exception("Infinite loop detected - coding error");
                     }
-
-                    
-                    if (partialLine.Text.Contains("Serial", StringComparison.InvariantCultureIgnoreCase) && label.Name == "LinkedLicenceNumber")
-                    {
-                        
-                    }
                     
                     previousPartialLine = partialLine;
                     
@@ -1013,16 +1051,6 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
-                    
-                    if (label.Name == "DocumentLicenceNumber")
-                    {
-                
-                    }
-                    
-                    if (partialLine.Text.Contains("FURTHER PROVISIONS") && label.Name == "DocumentLicenceNumber")
-                    {
-                        
-                    }
                     
                     if (label.Text?.Any() == true)
                     {
@@ -1295,7 +1323,7 @@ public class PdfDataExtractorService(
         return returnList;
     }
     
-    private async Task<ExpressionResult> ProcessExpressionResultAsync(
+    private static async Task<ExpressionResult> ProcessExpressionResultAsync(
         Func<FunctionInputModel, Task<List<LabelGroupResult>>> expression,
         FunctionInputModel request,
         DocumentLine partialLine,
@@ -1417,7 +1445,7 @@ public class PdfDataExtractorService(
         };
     }
     
-    private Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
+    private static Dictionary<LabelPosition, Func<FunctionInputModel, Task<List<LabelGroupResult>>>>
         GetRelevantLookupExpressions(LabelToMatch label)
     {
         var expressions = new List<(
@@ -1581,7 +1609,7 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
-    private static IEnumerable<TextAndLabel> GetLineBeforeAtAndAfterText(
+    private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
@@ -1841,7 +1869,7 @@ public class PdfDataExtractorService(
         return returnItems;
     }
     
-    private static IReadOnlyList<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
     {
         var newLines = lines.ToList();
 
@@ -1853,7 +1881,7 @@ public class PdfDataExtractorService(
         return newLines;
     }
     
-    private static IReadOnlyList<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines)
     {
         return lines
             .Select((line, index) => new DocumentLineWrapped
@@ -1864,7 +1892,7 @@ public class PdfDataExtractorService(
             .ToList();
     }
     
-    private static bool? LabelIsInDocument(
+    private static bool LabelIsInDocument(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines)
     {
@@ -1895,9 +1923,7 @@ public class PdfDataExtractorService(
             return true;
         }
         
-        var isRegularExpression = labelText.Any(tuple => tuple.labelTextMatch.IsRegularExpression);
-
-        return isRegularExpression || labelText.Any(tuple =>
+        return labelText.Any(tuple =>
         {
             return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
                 StringComparison.InvariantCultureIgnoreCase);

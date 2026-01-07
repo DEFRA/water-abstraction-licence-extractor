@@ -1582,6 +1582,62 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
+    
+    [Fact]
+    public async Task When_PurposeHasSubPointsInIt33_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "2671309044__Application type unknown Licence Issued (30102002).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 2);
+        Assert.Equal(11, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
+            _liveLicenceNumbers,
+            _naldData,
+            _pdfDataExtractor2,
+            TestConfig.PdfFolder2,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
+        
+        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task When_PurposeHasSubPointsInIt44_ThenNowGetsThem()
+    {
+        // Arrange
+        const string filename = "2671311013__Non-Application Licence Document (09.01.1985).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 2);
+        Assert.Equal(5, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _impoundmentLicenceNumbers,
+            _deadLicenceNumbers,
+            _liveLicenceNumbers,
+            _naldData,
+            _pdfDataExtractor2,
+            TestConfig.PdfFolder2,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
+        
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+    }
 
     [Fact]
     public async Task When_LinkedLicenceLooksSuspect_ThenNowGetsThem()

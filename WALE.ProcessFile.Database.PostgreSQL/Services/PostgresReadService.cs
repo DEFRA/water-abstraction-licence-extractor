@@ -7,6 +7,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.OutputSchema.Table;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
@@ -24,7 +25,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
         {
             Filename = request.Filepath,
             request.NoOcrServiceName
@@ -43,12 +48,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<byte[]>(sql, new
-        {
-            Filename = fileName,
-            NoOcrServiceName = noOcrServiceName,
-            PageNumber = pageNumber,
-        });
+        return await QuerySingleOrDefaultAsync<byte[]>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = fileName,
+                NoOcrServiceName = noOcrServiceName,
+                PageNumber = pageNumber
+            });
     }
 
     public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
@@ -63,12 +72,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
-        {
-            Filename = request.Filepath,
-            request.PageNumber,
-            request.NoOcrServiceName
-        });
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.PageNumber,
+                request.NoOcrServiceName
+            });
     }
 
     public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)
@@ -82,11 +95,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
-        {
-            Filename = pdfFilename,
-            NoOcrServiceName = noOcrServiceName
-        });
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = pdfFilename,
+                NoOcrServiceName = noOcrServiceName
+            });
     }
 
     public async Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request)
@@ -100,11 +117,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
-        {
-            Filename = request.Filepath,
-            request.NoOcrServiceName
-        });
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName
+            });
     }
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
@@ -120,13 +141,17 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
-        {
-            Filename = request.Filepath,
-            request.OcrServiceName,
-            request.PageNumber,
-            request.ImageNumber
-        });
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber,
+                request.ImageNumber
+            });
     }
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
@@ -141,12 +166,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<string>(sql, new
-        {
-            Filename = request.Filepath,
-            request.OcrServiceName,
-            request.PageNumber,
-        });
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber
+            });
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
@@ -163,31 +192,46 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<byte[]>(sql, new
-        {
-            Filename = request.Filepath,
-            request.NoOcrServiceName,
-            request.PageNumber,
-            request.ImageNumber,
-            request.Extension
-        });
+        return await QuerySingleOrDefaultAsync<byte[]>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName,
+                request.PageNumber,
+                request.ImageNumber,
+                request.Extension
+            });
     }
 
-    public async Task<List<(int imageNumber, string extension)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT image_number, extension 
+                           SELECT
+                                page_number
+                                , image_number
+                                , extension
+                                , width
+                                , height
                            FROM image_on_page 
-                           WHERE filename = @Filename 
-                             AND page_number = @PageNumber
+                           WHERE
+                               (filename = @Filename or @Filename is null)
+                                AND (page_number = @PageNumber or @PageNumber is null)
                            """;
 
-        var results = await connection.QueryAsync<(int, string)>(sql, new
-        {
-            Filename = request.Filepath,
-            request.PageNumber,
-        });
+        var results = await QueryAsync<(int, int, string, int, int)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.PageNumber
+            });
 
         return results.ToList();
     }
@@ -205,7 +249,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM process_run
                            """;
 
-        return (await connection.QueryAsync<ProcessRun>(sql)).ToList();
+        return (await QueryAsync<ProcessRun>(
+            connection,
+            sql,
+            0)).ToList();
     }
 
     public async Task<ProcessRun?> GetMostRecentProcessRunAsync(string filename)
@@ -226,10 +273,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        return await connection.QuerySingleOrDefaultAsync<ProcessRun>(sql, new
-        {
-            Filename = filename
-        });
+        return await QuerySingleOrDefaultAsync<ProcessRun>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = filename
+            });
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)
@@ -241,15 +292,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE process_run_id = @ProcessRunId
                            """;
 
-        var results = await connection.QueryAsync<(string Data, int LicenceId)>(sql, new
-        {
-            ProcessRunId = processRunId
-        });
+        var results = await QueryAsync<(string Data, int LicenceId)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
 
         return results.Select(r =>
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
             licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+            
             return licence;
         }).ToList();
     }
@@ -266,10 +322,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE process_run_id = @ProcessRunId
                            """;
 
-        return (await connection.QueryAsync<LicenceSetTable>(sql, new
-        {
-            ProcessRunId = processRunId
-        })).ToList();
+        return (await QueryAsync<LicenceSetTable>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            })).ToList();
     }
 
     public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(string filename, int processRunId)
@@ -287,11 +347,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ls.process_run_id = @ProcessRunId
                            """;
 
-        return (await connection.QueryAsync<LicenceSetTable>(sql, new
-        {
-            ProcessRunId = processRunId,
-            Filename = filename
-        })).ToList();
+        return (await QueryAsync<LicenceSetTable>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Filename = filename
+            })).ToList();
     }
 
     public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId)
@@ -308,10 +372,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE process_run_id = @ProcessRunId
                            """;
 
-        return (await connection.QueryAsync<LicenceSetLicence>(sql, new
-        {
-            ProcessRunId = processRunId
-        })).ToList();
+        return (await QueryAsync<LicenceSetLicence>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            })).ToList();
     }
 
     public async Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId)
@@ -329,11 +397,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND process_run_id = @ProcessRunId
                            """;
         
-        return (await connection.QueryAsync<LicenceSetLicence>(sql, new
-        {
-            ProcessRunId = processRunId,
-            LicenceSetId = licenceSetId
-        })).ToList();
+        return (await QueryAsync<LicenceSetLicence>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                LicenceSetId = licenceSetId
+            })).ToList();
     }
 
     public async Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId)
@@ -345,7 +417,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE licence_set_id = @LicenceSetId
                            """;
 
-        return (await connection.QueryAsync<int>(sql, new { LicenceSetId = licenceSetId }))
+        return (await QueryAsync<int>(
+                connection,
+                sql,
+                0,
+                new { LicenceSetId = licenceSetId }))
             .Select(x => (LicenceSetType)x)
             .ToArray();
     }
@@ -362,8 +438,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE ls.process_run_id = @ProcessRunId
                            """;
 
-        var results = await connection.QueryAsync<(int LicenceSetId, int LicenceSetType)>(
-            sql, new { ProcessRunId = processRunId });
+        var results = await QueryAsync<(int LicenceSetId, int LicenceSetType)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
         
         return results.Select(r => (r.LicenceSetId, (LicenceSetType)r.LicenceSetType)).ToList();
     }
@@ -414,7 +493,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
         
-        var result = await connection.QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(sql, new { Filename = filename });
+        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+            connection,
+            sql,
+            0,
+            new { Filename = filename });
         if (result == null)
         {
             return null;
@@ -438,11 +521,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
         
-        var result = await connection.QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(sql, new
-        {
-            LicenceNumber = licenceNumber,
-            ProcessRunId = processRunId
-        });
+        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceNumber = licenceNumber,
+                ProcessRunId = processRunId
+            });
         
         if (result == null)
         {
@@ -465,13 +552,63 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
         
-        var result = await connection.QuerySingleOrDefaultAsync<string>(sql, new { Filename = filename });
+        var result =  await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new { Filename = filename });
 
         return result == null 
             ? null 
             : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
     }
 
+    private async Task<T?> QuerySingleOrDefaultAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            return await connection.QuerySingleOrDefaultAsync<T>(sql, param);
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
+    
+    private async Task<IEnumerable<T>> QueryAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            return await connection.QueryAsync<T>(sql, param);
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
+    
     private NpgsqlConnection GetPostgresConnection()
         => dataSourceProvider.DataSource.CreateConnection();
 

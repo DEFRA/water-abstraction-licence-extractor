@@ -60,8 +60,8 @@ async Task ProgramAsync()
         Environment.GetEnvironmentVariable("DeadLicencesPath"));
     var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
         Environment.GetEnvironmentVariable("LiveLicencesPath"));
-    var naldData = ExternalDataHelper.GetNaldGeneralReportData(
-        Environment.GetEnvironmentVariable("NaldDataPath"));
+    var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
+        Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"));
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),

@@ -8,7 +8,7 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class ExternalDataHelper
 {
-    public static Dictionary<string, NaldData> GetNaldGeneralReportData(string? naldDataReportPath)
+    public static Dictionary<string, NaldData> GetNaldAbstractionLicencesData(string? naldDataReportPath)
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
         {
@@ -29,19 +29,19 @@ public static class ExternalDataHelper
         using var reader = new StreamReader(naldDataReportPath);
         using var csv = new CsvReader(reader, config);
 
-        var lines = csv.GetRecords<NaldGeneralDataLine>().ToList();
+        var lines = csv.GetRecords<NaldAbstractionLicencesDataLine>().ToList();
 
         foreach (var line in lines)
         {
             var lineCondition = new NaldDataAggregate
             {
                 Type = "General",
-                Condition = line.Condition,
+                /*Condition = line.Condition,
                 ConditionId = line.ConditionId,
                 AnnualQty = line.LicenceWideAnnualQty,
                 DailyQty = line.LicenceWideDailyQty,
                 HourlyQty = line.LicenceWideHourlyQty,
-                InstQty = line.LicenceWideInstQty
+                InstQty = line.LicenceWideInstQty*/
             };
 
             if (string.IsNullOrEmpty(lineCondition.Condition) || lineCondition.Condition == "-")
@@ -51,7 +51,7 @@ public static class ExternalDataHelper
 
             var linePoint = new NaldDataPoint
             {
-                PointId = line.PointId,
+                /*PointId = line.PointId,
                 PointName = line.PointName,
                 Category = line.PointCategory,
                 PrimaryType = line.PrimaryPointType,
@@ -63,21 +63,21 @@ public static class ExternalDataHelper
                 Ngr1 = !string.IsNullOrWhiteSpace(line.Ngr1) ? line.Ngr1 : null,
                 Ngr2 = !string.IsNullOrWhiteSpace(line.Ngr2) ? line.Ngr2 : null,
                 Ngr3 = !string.IsNullOrWhiteSpace(line.Ngr3) ? line.Ngr3 : null,
-                Ngr4 = !string.IsNullOrWhiteSpace(line.Ngr4) ? line.Ngr4 : null
+                Ngr4 = !string.IsNullOrWhiteSpace(line.Ngr4) ? line.Ngr4 : null*/
             };
             
             var linePeriod = new NaldDataPeriod
             {
-                PeriodStart = line.PeriodStart,
-                PeriodEnd = line.PeriodEnd
+                /*PeriodStart = line.PeriodStart,
+                PeriodEnd = line.PeriodEnd*/
             };
             
             var linePurpose = new NaldDataPurpose
             {
-                PurposeId = line.PurposeId,
+                /*PurposeId = line.PurposeId,
                 PurposeCode = line.PurposeCode,
                 PurposeUseCode = line.PurposeUseCode,
-                PurposeUseDescription = line.PurposeUseDescription
+                PurposeUseDescription = line.PurposeUseDescription*/
             };
             
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
@@ -115,7 +115,7 @@ public static class ExternalDataHelper
 
             var naldData = new NaldData
             {
-                ExpiryDate = line.ExpiryDate,
+                /*ExpiryDate = line.ExpiryDate,
                 VersionStartDate = line.VersionStartDate,
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
@@ -126,7 +126,7 @@ public static class ExternalDataHelper
                 AggregateConditions = lineConditionsArray,
                 Points = [linePoint],
                 Periods = [linePeriod],
-                Purposes = [linePurpose]
+                Purposes = [linePurpose]*/
             };
             
             returnList.Add(stippedLicenceNumber, naldData);

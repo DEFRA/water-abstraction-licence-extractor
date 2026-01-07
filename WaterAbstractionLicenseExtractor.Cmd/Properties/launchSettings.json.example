@@ -13,7 +13,7 @@
         "LiveLicencesPath": "",
         "ImpoundmentLicencesPath": "",
         "DeadLicencesPath": "",
-        "NaldDataPath": "",
+        "NaldAbsLicencesDataPath": "",
         "NaldLimitDataPath": "",
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",

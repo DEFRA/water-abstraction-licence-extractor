@@ -33,8 +33,10 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new("Environment.* Agency")
                     {
-                        IsRegularExpression = true
-                    }    ],
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }   
+                ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
@@ -55,7 +57,8 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*Yorkshire.* Water Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -78,7 +81,8 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*Yorkshire.* River.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -100,7 +104,8 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*Northumbrian.* Water.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -123,7 +128,8 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*Northumbrian.* River.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -146,19 +152,23 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*Yorkshire.* Water Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     },
                     new(".*Yorkshire.* River.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     },
                     new(".*Northumbrian.* Water.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     },
                     new(".*Northumbrian.* River.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -181,7 +191,8 @@ public static class TemplateFinderRuleConfiguration
                 [
                     new(".*National.* River.* Authority")
                     {
-                        IsRegularExpression = true
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
                     }    
                 ],
                 PreviousLinesToFetch = 0,
@@ -202,10 +213,11 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Northumbrian & Yorkshire Region")
+                    new(".*Northumbria.* Yorkshire.* Region.*")
                     {
-                        IsRegularExpression = true
-                    }    
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -218,10 +230,10 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Licence Serial")
-                    {
-                        IsRegularExpression = true
-                    }    
+                    new(".*Licence.* Serial.*")   {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -241,10 +253,11 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Yorkshire Region")
+                    new(".*Yorkshire.* Region.*")   
                     {
-                        IsRegularExpression = true
-                    }    
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -257,10 +270,10 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Serial No")
-                    {
-                        IsRegularExpression = true
-                    }    
+                    new(".*Serial.* .*No.*")   {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -280,10 +293,11 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Northumbrian Region")
+                    new(".*Northumbria.* .*Region.*")
                     {
-                        IsRegularExpression = true
-                    }    
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -296,10 +310,11 @@ public static class TemplateFinderRuleConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Licence No")
+                    new(".*Licence.* .*No.*")   
                     {
-                        IsRegularExpression = true
-                    }    
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

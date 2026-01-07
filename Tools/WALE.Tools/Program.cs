@@ -4,7 +4,7 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "FileTypeIdentificationExtract";
+const string workflow = "TemplateFinderExtract";
 
 const int processRunId = 45;
 

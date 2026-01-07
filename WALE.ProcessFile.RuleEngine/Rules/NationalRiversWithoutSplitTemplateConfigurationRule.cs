@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.RuleEngine.Helpers;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
 
@@ -19,10 +20,11 @@ public class NationalRiversWithoutSplitTemplateConfigurationRule : IRule<Templat
 
     public TemplateFinderResult Apply(MatchesResult content)
     {
+        var secondaryTemplate = RuleSharedHelper.DetermineSecondaryTemplate(content);
         return new TemplateFinderResult
         {
             TemplateType = RuleName,
-            Template = "NRA"
+            Template = "NRA" + secondaryTemplate
         };
     }
 }

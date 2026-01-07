@@ -4,6 +4,33 @@ namespace WALE.ProcessFile.RuleEngine.Helpers;
 
 public static class RuleSharedHelper
 {
+
+    private static readonly Dictionary<string, string> TemplateMapping = new()
+    {
+        { "NRAModern1", "Modern 1" },
+        { "NRAModern2", "Modern 2" },
+        { "NRAOld", "Old" }
+    };
+    public static string DetermineSecondaryTemplate(MatchesResult matches)
+    {
+        if (matches == null) return string.Empty;
+
+        foreach (var (labelGroupName, templateName) in TemplateMapping)
+        {
+            if (HasRequiredLabels(matches, labelGroupName))
+                return templateName;
+        }
+
+        return string.Empty;
+    }
+
+    private static bool HasRequiredLabels(MatchesResult matches, string labelGroupName)
+    {
+        var groupMatches = matches.Matches?.Where(m => m.LabelGroupName == labelGroupName).ToList();
+
+        return groupMatches.Any(c => c.MatchedLabel?.Name == "Region");// &&
+               //groupMatches.Any(c => c.MatchedLabel?.Name == "Licence");
+    }
     
     public static string? DateFormatConsistent(string? input)
     {

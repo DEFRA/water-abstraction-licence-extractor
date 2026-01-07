@@ -364,10 +364,10 @@ public class DatabaseOutputService(
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+        using var data = image?.Encode(SKEncodedImageFormat.Jpeg, quality);
         
         await using var stream = new MemoryStream();
-        data.SaveTo(stream);
+        data?.SaveTo(stream);
         
         await stream.FlushAsync();
 

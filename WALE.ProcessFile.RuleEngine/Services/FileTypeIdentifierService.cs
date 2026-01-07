@@ -28,6 +28,31 @@ public class FileTypeIdentifierService
     }
 
     /// <summary>
+    /// Gets the page count of a PDF file without full processing
+    /// </summary>
+    /// <param name="filePath">The path to the PDF file</param>
+    /// <returns>The number of pages in the PDF</returns>
+    public async Task<int> GetPageCountAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException($"File not found: {filePath}");
+
+        return await Task.Run(() =>
+        {
+            try
+            {
+                var pdfDocument = new PdfDocument(filePath, false);
+                return pdfDocument.Pages.Count;
+            }
+            catch (Exception)
+            {
+                // If we can't read the PDF, return 0 to exclude it
+                return 0;
+            }
+        });
+    }
+
+    /// <summary>
     /// Identifies the file type based on the content of a file using OCR when needed
     /// </summary>
     /// <param name="filePath">The path to the file</param>
@@ -57,7 +82,18 @@ public class FileTypeIdentifierService
         var files = Directory.GetFiles(directoryPath, searchPattern, SearchOption.TopDirectoryOnly).Distinct();
 
         // Define terms to exclude
-        var excludeTerms = new[] { "letter", "WR51", "determination" };
+        var excludeTerms = new[]
+        {
+            "letter", 
+            "WR51", 
+            "determination", 
+            "warning of further restrictions",
+            "Environment Act 2028 - Booklet",
+            "invoice",
+            "inspection report",
+            "technical report",
+            "tech report"
+        };
 
         // Filter out excluded files
         var filteredFiles = files
@@ -68,6 +104,61 @@ public class FileTypeIdentifierService
             return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));
         }).ToList();
 
+        // Filter files by page count (less than 25 pages) - parallel processing
+        var pageCountFilteredFiles = new List<string>();
+        Console.WriteLine($"Checking page counts for {filteredFiles.Count} files...");
+        var pageCountStart = DateTime.Now;
+
+        // Process page count checks in parallel batches
+        const int pageCountBatchSize = 20;
+        var pageCountBatches = filteredFiles
+            .Select((file, index) => new { file, index })
+            .GroupBy(x => x.index / pageCountBatchSize)
+            .Select(g => g.Select(x => x.file).ToList())
+            .ToList();
+
+        for (int batchIndex = 0; batchIndex < pageCountBatches.Count; batchIndex++)
+        {
+            var batch = pageCountBatches[batchIndex];
+            var batchPosition = batchIndex + 1;
+            Console.WriteLine($"Checking page counts for batch {batchPosition}/{pageCountBatches.Count} ({batch.Count} files)...");
+
+            var pageCountTasks = batch.Select(async file =>
+            {
+                try
+                {
+                    var pageCount = await GetPageCountAsync(file);
+                    if (pageCount > 0 && pageCount < 25)
+                    {
+                        return new { File = file, PageCount = pageCount, Include = true };
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Filtered out {Path.GetFileName(file)} - {pageCount} pages");
+                        return new { File = file, PageCount = pageCount, Include = false };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error getting page count for {Path.GetFileName(file)}: {ex.Message}");
+                    return new { File = file, PageCount = 0, Include = false };
+                }
+            });
+
+            var batchResults = await Task.WhenAll(pageCountTasks);
+
+            // Add files that passed the filter
+            foreach (var result in batchResults.Where(r => r.Include))
+            {
+                pageCountFilteredFiles.Add(result.File);
+            }
+        }
+
+        var pageCountDuration = (DateTime.Now - pageCountStart).TotalSeconds;
+        Console.WriteLine($"Page count filtering completed in {pageCountDuration:F2} seconds");
+        Console.WriteLine($"Processing {pageCountFilteredFiles.Count} files (filtered from {filteredFiles.Count} based on page count < 25)");
+        filteredFiles = pageCountFilteredFiles;
+
         // Process files in batches of 10
         const int batchSize = 10;
         var batches = filteredFiles
@@ -76,8 +167,11 @@ public class FileTypeIdentifierService
             .Select(g => g.Select(x => x.file).ToList())
             .ToList();
 
-        foreach (var batch in batches)
+        for (int batchIndex = 0; batchIndex < batches.Count; batchIndex++)
         {
+            var batch = batches[batchIndex];
+            var batchPosition = batchIndex + 1;
+            Console.WriteLine($"Processing batch {batchPosition}/{batches.Count} ({batch.Count} files)...");
             var batchTasks = batch.Select(async file =>
             {
                 try

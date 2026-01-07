@@ -25,7 +25,6 @@ public static class TemplateIdentificationExtract
     
         var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
@@ -38,7 +37,7 @@ public static class TemplateIdentificationExtract
                     cacheService,
                     outputService)
             },
-            cacheService,
+            cacheService, 
             outputService,
             KeyConfig.PdfFolder);
 
@@ -78,12 +77,13 @@ public static class TemplateIdentificationExtract
         var pdfFilePaths = Directory
             .GetFiles(KeyConfig.PdfFolder)
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+           // .Where(fileName => fileName.Contains("Application Formal Variation Issued Licence - [1995] - (25.01.1995).pdf"))
             .Select(x => x.Split('/').Last())
             .OrderBy(x => x).ToList();
 
         var returnList = new List<TemplateFinderInput>();
         var templateFinderInput = (await ReadTemplateReaderInput()) //;//.Take(100);
-            .Where(x => x.PermitNumber.Equals("22722086")).ToList(); //12206039 
+            .ToList(); //12206039 
 
         // Create the TemplateTypeIdentifierService
         var templateTypeService = new TemplateTypeIdentifierService(pdfDataExtractor);

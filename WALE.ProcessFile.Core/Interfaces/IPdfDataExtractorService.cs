@@ -5,6 +5,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IPdfDataExtractorService
 {
+    public int Id { get; set; }
     public bool InUse { get; set; }
     
     public Task<MatchesResult> GetMatchesAsync(

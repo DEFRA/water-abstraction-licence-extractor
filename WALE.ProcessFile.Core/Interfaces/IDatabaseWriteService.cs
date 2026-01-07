@@ -28,8 +28,16 @@ public interface IDatabaseWriteService
    
     Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId);
 
-    Task SaveImageOnPageAsync(byte[] bytes, string pdfFilePath, string noOcrServiceName, int imageNumber,
-        int pageNumber, string extension, int processRunId);
+    Task SaveImageOnPageAsync(
+        byte[] bytes,
+        int width,
+        int height,
+        string pdfFilePath,
+        string noOcrServiceName,
+        int imageNumber,
+        int pageNumber,
+        string extension,
+        int processRunId);
 
     Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
     

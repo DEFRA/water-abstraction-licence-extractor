@@ -35,7 +35,7 @@ public static class FileHelper
         return returnString.Trim();
     }
 
-    public static IEnumerable<string> GetFiles(string folder)
+    public static Dictionary<string, string?> GetRelevantFilesInFolder(string folder)
     {
         return Directory
             .GetFiles(folder)
@@ -43,7 +43,8 @@ public static class FileHelper
             .Where(fileName => !fileName.Contains("WR179"))
             .Where(fileName => !fileName.Contains("Warning", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName => !fileName.Contains("Determination", StringComparison.InvariantCultureIgnoreCase))
-            .Where(fileName => !fileName.Contains("Compliance", StringComparison.InvariantCultureIgnoreCase));
+            .Where(fileName => !fileName.Contains("Compliance", StringComparison.InvariantCultureIgnoreCase))
+            .ToDictionary(k => k, string? (_) => null);
     }
     
     public static string GetImageExtension(string imageReference)

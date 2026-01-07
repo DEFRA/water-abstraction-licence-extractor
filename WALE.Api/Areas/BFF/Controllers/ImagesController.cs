@@ -58,7 +58,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PageImage>>> PageImages([FromQuery] string filename,
-        [FromQuery] int pageNumber)
+        [FromQuery] int? pageNumber)
     {
         var pageImages = await cacheService.GetImagesAsync(new OcrServiceImageDataCacheRequest
         {
@@ -68,15 +68,17 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
         });
 
         var pageImagesUnique = pageImages
-            .GroupBy(pi => pi.imageNumber)
+            .GroupBy(pi => new { pi.pageNumber, pi.imageNumber })
             .Select(pi => pi.Last())
             .OrderBy(pi => pi.imageNumber)
             .Select(pi => new PageImage
             {
-                PageNumber = pageNumber,
+                PageNumber = pi.pageNumber,
                 ImageNumber = pi.imageNumber,
                 Extension = pi.extension,
-                FileName = filename
+                FileName = filename,
+                Width = pi.width,
+                Height = pi.height
             });
         
         return Ok(pageImagesUnique);

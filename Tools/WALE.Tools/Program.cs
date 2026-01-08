@@ -4,7 +4,8 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "UpdateCachedImageWidthAndHeightsFilenames";
+//const string workflow = "UpdateCachedImageWidthAndHeightsFilenames";
+const string workflow = "ImportNaldData";
 
 const int processRunId = 45;
 
@@ -31,4 +32,7 @@ switch (workflow)
     case "UpdateCachedImageWidthAndHeightsFilenames":
         await UpdateCachedImageWidthAndHeightsFilenames.PopulateWidthAndHeightsAsync();
         break;    
+    case "ImportNaldData":
+        await ImportNaldData.ImportAsync();
+        break;
 }

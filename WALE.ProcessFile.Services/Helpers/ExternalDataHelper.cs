@@ -19,11 +19,7 @@ public static class ExternalDataHelper
 
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            HasHeaderRecord = false,
-            ShouldSkipRecord = row =>
-                string.IsNullOrEmpty(row.Row[0])
-                || row.Row[0] == "Region"
-                || row.Row[0] != "North East Region"
+            HasHeaderRecord = true
         };
 
         using var reader = new StreamReader(naldDataReportPath);
@@ -81,9 +77,10 @@ public static class ExternalDataHelper
             };
             
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
+            var key = line.FgacRegionCode + "|" + stippedLicenceNumber;
 
             // Find an existing line
-            if (returnList.TryGetValue(stippedLicenceNumber, out var existingItem))
+            if (returnList.TryGetValue(key, out var existingItem))
             {
                 if (lineCondition != null && existingItem.AggregateConditions
                     .All(existingCondition => existingCondition.ToString() != lineCondition.ToString()))
@@ -115,27 +112,28 @@ public static class ExternalDataHelper
 
             var naldData = new NaldData
             {
-                /*ExpiryDate = line.ExpiryDate,
-                VersionStartDate = line.VersionStartDate,
+                Id = line.Id,
+                ExpiryDate = line.ExpiryDate,
+                //VersionStartDate = line.VersionStartDate,
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
-                LicenceWideAnnualQty = line.LicenceWideAnnualQty,
+                /*LicenceWideAnnualQty = line.LicenceWideAnnualQty,
                 LicenceWideDailyQty = line.LicenceWideDailyQty,
                 LicenceWideHourlyQty = line.LicenceWideHourlyQty,
-                LicenceWideInstQty = line.LicenceWideInstQty,
+                LicenceWideInstQty = line.LicenceWideInstQty,*/
                 AggregateConditions = lineConditionsArray,
                 Points = [linePoint],
                 Periods = [linePeriod],
-                Purposes = [linePurpose]*/
+                Purposes = [linePurpose]
             };
             
-            returnList.Add(stippedLicenceNumber, naldData);
+            returnList.Add(key, naldData);
         }
 
         return returnList;
     }
 
-    public static void AddNaldLimitReportData(
+    public static void AddNaldAbstractionLicencePurposeData(
         string? naldDataReportPath,
         ref Dictionary<string, NaldData> generalNaldData)
     {
@@ -146,16 +144,13 @@ public static class ExternalDataHelper
 
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            HasHeaderRecord = false,
-            ShouldSkipRecord = row =>
-                string.IsNullOrEmpty(row.Row[0])
-                || row.Row[0] == "Licence No."
+            HasHeaderRecord = true
         };
 
         using var reader = new StreamReader(naldDataReportPath);
         using var csv = new CsvReader(reader, config);
 
-        var lines = csv.GetRecords<NaldLimitDataLine>().ToList();
+        var lines = csv.GetRecords<NaldPurposeDataLine>().ToList();
 
         foreach (var line in lines)
         {

@@ -3,6 +3,8 @@
 ## Pre-reqs
 
 - Have Brew installed
+- Install npm (can do via Brew)
+- Install dotnet
 - Run the following to install Tesseract;
 
 ```brew install tesseract```

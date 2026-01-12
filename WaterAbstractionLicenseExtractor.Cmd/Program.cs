@@ -63,8 +63,8 @@ async Task ProgramAsync()
     var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
         Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"));
     
-    ExternalDataHelper.AddNaldLimitReportData(
-        Environment.GetEnvironmentVariable("NaldLimitDataPath"),
+    ExternalDataHelper.AddNaldAbstractionLicencePurposeData(
+        Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
         ref naldData);
     
     var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services);

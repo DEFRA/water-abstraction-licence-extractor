@@ -42,13 +42,16 @@ public static class FormattingHelper
 
         var str = sb.ToString();
 
-        if (str.EndsWith('0'))
+        // Commented out 12-01-2026 as it makes these the same 4/29/10/*G/0010 and 4/29/10/*G/0100
+        
+        /*if (str.EndsWith('0'))
         {
             var partWithoutTrailingZero = str[..^1];
             return partWithoutTrailingZero.Replace("0", string.Empty) + "0";
-        }
-        
-        return str.Replace("0", string.Empty);
+        }*/
+
+        // Commented out 12-01-2026 as it makes these the same 6/33/02/*G/0103 and 6/33/02/*G/0013
+        return str;// str.Replace("0", string.Empty);
     }
 
     private static string? StripForComparison_NE(string? formattedLicenceNumber)

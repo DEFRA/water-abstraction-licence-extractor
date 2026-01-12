@@ -2,6 +2,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldData
 {
+    public string? Id { get; set; }
     public string? LicenceNumber { get; set; }
     
     public string? LicenceIdCharsAndDigitsOnly { get; set; }

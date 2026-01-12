@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+<!-- Note: Add the following package reference to your .csproj file if not already present -->
+<!-- <PackageReference Include="EPPlus" Version="7.0.0" /> -->
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>

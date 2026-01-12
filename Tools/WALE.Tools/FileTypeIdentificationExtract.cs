@@ -34,23 +34,31 @@ public static class FileTypeIdentificationExtract
     
         var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-        var pdfDataExtractor = new PdfDataExtractorService(
-            new PdfPigNoOcrDataExtractorService(),
-            new List<IOcrDataExtractorService>
-            {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
-                new AzureAiVisionOcrDataExtractorService(
-                    KeyConfig.AiVisionEndpoint,
-                    KeyConfig.AiVisionKey,
-                    cacheService,
-                    outputService)
-            },
-            cacheService, 
-            outputService,
-            KeyConfig.PdfFolder);
 
-        var fileTypeService = new FileTypeIdentifierService(pdfDataExtractor);
+        // Create 10 instances of PdfDataExtractorService for parallel processing
+        var pdfDataExtractors = new List<IPdfDataExtractorService>();
+        for (int i = 0; i < 10; i++)
+        {
+            var pdfDataExtractor = new PdfDataExtractorService(
+                new PdfPigNoOcrDataExtractorService(),
+                new List<IOcrDataExtractorService>
+                {
+                    new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
+                    new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                    new AzureAiVisionOcrDataExtractorService(
+                        KeyConfig.AiVisionEndpoint,
+                        KeyConfig.AiVisionKey,
+                        cacheService,
+                        outputService)
+                },
+                cacheService, 
+                outputService,
+                KeyConfig.PdfFolder);
+
+            pdfDataExtractors.Add(pdfDataExtractor);
+        }
+
+        var fileTypeService = new FileTypeIdentifierService(pdfDataExtractors);
 
         // Process all files in the output folder
         var labels = LicenceReaderConfiguration.GetLabels();

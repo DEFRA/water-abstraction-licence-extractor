@@ -10,63 +10,10 @@ public static class LicenceReaderConfiguration
     {
         return
         [
-            ("Company", GetCompanyNameLabels()),
             ("LicenceNumber", GetLicenceNumberLabels()),
             ("DateOfIssue", GetDateOfIssueLabels()),
             ("Licence Header", GetHeaderLabels()),
-            ("Addendum", GetAddendumLabels()),
-            ("Issuer", GetIssuerLabels()),
-            ("Variation", GetVariationLabels()),
-        ];
-    }
-    private static List<LabelToMatch> GetIssuerLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "Issuer",
-                Format = "Text",
-                Text =
-                [
-                    new("Water Resources Act 1991 as amended by")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new("Yorkshire.* River Authority")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new(".*Yorkshire.* Water Authority")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new(".*Northumbrian.* River.* Authority")
-                    {
-                    IsRegularExpression = true
-                    },
-                    new(".*Northumbrian.* Water.* Authority")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new(".*National.* River.* Authority")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new(".*National.* Water.* Authority")
-                    {
-                        IsRegularExpression = true
-                    },
-                    new(".*Environment.* Agency")
-                    {
-                        IsRegularExpression = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
+            ("Addendum", GetAddendumLabels())
         ];
     }
     private static List<LabelToMatch> GetAddendumLabels()
@@ -89,25 +36,6 @@ public static class LicenceReaderConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetVariationLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "Variation",
-                Format = "Text",
-                Text = 
-                [
-                    new("Variation"),
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
     
     private static List<LabelToMatch> GetHeaderLabels()
     {
@@ -225,83 +153,4 @@ public static class LicenceReaderConfiguration
         ];
     }
 
-    private static List<LabelToMatch> GetCompanyNameLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Licensee"),
-                    new("\"hereby licence\""),
-                    new("\"hereby license\""),
-                    new("\"hereby licenge\""),
-                    new("hereby licence ..."),
-                    new("authority hereby licence"),
-                    new("authority hereby license"),
-                    new("authority hereby licenge"),
-                    new("hereby grant a licence to"),
-                    new("(hereinafter referred to as \"the Authority\")")
-                ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
-                Format = "CompanyName",
-                IgnoreMatchIfContains = [
-                    "source of supply",
-                    "abstract water"
-                ]
-            },
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("(hereinafter referred to as \"The Licence Holder\")"),
-                    new("(hereinafter referred to as \"The Licence Holder\" )"),
-                    new("( hereinafter referred to as \"The Licence Holder\" )"),
-                    new("( hereinafter referred to as \"The Licence Holder\")"),
-                    new("(hereinafter referred to as \" The Licence Holder \")"),
-                    new("(hereinafter referred to as \"The Licence Holder)"),
-                    new("is hereby licensed")
-                ],
-                Position = LabelPosition.LabelIsAfterTextToFind,
-                Format = "CompanyName",
-                PreviousLinesToFetch = 7,
-                IgnoreMatchIfContains = [
-                    "source of supply",
-                    "abstract water"
-                ]
-            },
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("(\"the Licence Holder\")"),
-                    new("(the Licence Holder\")"),
-                    new("\"the Licence Holder\""),
-                    new("'the Licence Holder\""),
-                    new("\"the Licence Holder'")
-                ],
-                Position = LabelPosition.LabelIsInMiddleOfTextToFind,
-                Format = "CompanyName",
-                PreviousLinesToFetch = 2,
-                NextLinesToFetch = 4,
-                IgnoreMatchIfContains = [
-                    "source of supply",
-                    "abstract water"
-                ]
-            },
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Succession to licence"),
-                    new("as amended by")
-                ],
-                Position = LabelPosition.ContractIsSuccession,
-                Format = "CompanyName",
-                MatchAllText = true,
-                Name = "IsSuccession"
-            }
-        ];
-    }
 }

@@ -12,6 +12,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -62,6 +63,12 @@ async Task ProgramAsync()
         Environment.GetEnvironmentVariable("LiveLicencesPath"));
     var naldData = ExternalDataHelper.GetNaldGeneralReportData(
         Environment.GetEnvironmentVariable("NaldDataPath"));
+
+    var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
+
+    // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
+    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
+    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList());
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
@@ -183,6 +190,12 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
+                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
+                if (linkedLicences.Any())
+                {
+                    licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
+                }
+
                 var filename = licenceLoop.Filename;
                 
                 if (licenceLoop.LicenceNumber != null
@@ -410,6 +423,7 @@ ConfiguredServices ConfigureServices()
     {
         CacheService = cacheService,
         OutputService = outputService,
+        DatabaseReadService = databaseReadService,
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
@@ -503,11 +517,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFolder,
             processRun.ProcessRunId);
 
-        if (licenceSets.Count == 0)
-        {
-            
-        }
-        
         return licenceSets;
     }
     finally

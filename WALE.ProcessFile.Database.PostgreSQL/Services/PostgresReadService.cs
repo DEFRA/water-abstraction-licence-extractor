@@ -563,6 +563,33 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
     }
 
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               lic."LIC_NO" AS LicenceNumber,
+                               lc."PARAM1" AS Param1,
+                               lc."PARAM2" AS Param2,
+                               lc."TEXT" AS Text,
+                               lic."NOTES" AS Notes,
+                               lic."FGAC_REGION_CODE" AS RegionCode
+                           FROM nald."NALD_ABS_LICENCES" lic
+                           LEFT JOIN nald."NALD_LIC_CONDITIONS" lc ON lic."ID" = lc."AABP_ID" AND lc."ACIN_CODE" = 'AGG'
+                           WHERE lc."PARAM1" IS NOT NULL 
+                              OR lc."PARAM2" IS NOT NULL 
+                              OR lc."TEXT" IS NOT NULL 
+                              OR lic."NOTES" IS NOT NULL;
+                           """;
+        
+        var result = await QueryAsync<NaldLinkedLicenceRawData>(
+            connection,
+            sql,
+            0);
+        
+        return result.ToList();
+    }
+
     private async Task<T?> QuerySingleOrDefaultAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

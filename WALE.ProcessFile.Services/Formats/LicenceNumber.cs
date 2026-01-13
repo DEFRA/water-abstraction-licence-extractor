@@ -11,8 +11,10 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"\b([A-Z0-9]{1,3}[\/ .]{1,2}[0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})([\/ .]{0,2}[0-9A-Z&\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
+    // TODO find James' one
+    
     private static readonly string[] PrefixesToExclude =
     [
         "NT ",
@@ -119,7 +121,11 @@ public static partial class LicenceNumber
 
                     if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
                     {
-                        numberLine = numberLine.Replace(" ", string.Empty);
+                        var firstSlash = numberLine.IndexOf('/');
+                        var part1 = numberLine[..firstSlash];
+                        var part2 = numberLine.Length > firstSlash ? numberLine.Substring(firstSlash) : null;
+                        
+                        numberLine = part1 + part2?.Replace(" ", string.Empty);
                     }
 
                     var regexMatches = LicenceNumbersRegex().Matches(numberLine);

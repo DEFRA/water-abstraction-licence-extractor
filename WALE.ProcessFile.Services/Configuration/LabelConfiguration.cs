@@ -2446,7 +2446,7 @@ public static class LabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
         new("708 506 506"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch EnvironmentAgencyTelephone2Pattern =
-        new("800 80 70 60"); // Only this bit matches the pattern (excludes first number)
+        new("80 70 60"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch EnvironmentAgencyTelephone3Pattern =
         new("345 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =

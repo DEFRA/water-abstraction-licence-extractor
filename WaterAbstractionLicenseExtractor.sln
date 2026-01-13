@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools.Database.Postgre
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Api", "WALE.Api\WALE.Api.csproj", "{735C29A5-8D49-45C7-9542-A5845FD71747}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.RemoteExecutor", "Microsoft.DotNet.RemoteExecutor \Microsoft.DotNet.RemoteExecutor.csproj", "{0329202C-55F8-4B5F-8280-FF8DE3BDA987}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0329202C-55F8-4B5F-8280-FF8DE3BDA987}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0329202C-55F8-4B5F-8280-FF8DE3BDA987}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0329202C-55F8-4B5F-8280-FF8DE3BDA987}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0329202C-55F8-4B5F-8280-FF8DE3BDA987}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A438B272-8652-4721-8951-906B4142FD5B} = {6CBE5D57-AB6E-49DE-B8F7-2C47866C3063}

@@ -42,22 +42,16 @@ public static partial class LicenceNumber
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
-        var anyMatchFound = false;
         var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
 
         foreach (var line in lines.Where(l => l != null))
         {
-            var newColumns = new List<DocumentLineColumn>();
-
             foreach (var column in line!.Columns)
             {
-                var anyMatchFoundForColumn = false;
-
                 if (string.IsNullOrEmpty(column.Text)
                     || !column.Text.Any(char.IsDigit)
                     || DataHelper.IsCorruptedText(column.Text))
                 {
-                    newColumns.Add(column);
                     continue;
                 }
 
@@ -238,54 +232,35 @@ public static partial class LicenceNumber
                         }
                     }
 
-                    var shortLimit = value.Contains('/') ? 5 : 6;
-                    var veryShort = value.Length < shortLimit;
-                    if (veryShort)
+                    if (value.Length < (value.Contains('/') ? 5 : 6))
                     {
                         continue;
                     }
 
-                    var totalDigits = value.Count(char.IsDigit);
-
-                    if (totalDigits < 4)
+                    if (value.Count(char.IsDigit) < 4)
                     {
                         continue;
                     }
 
-                    var isPostcode = (value.Length == 7 || value.Length == 8)
-                                     && char.IsUpper(value[0])
-                                     && value.Count(c => c == ' ') == 1
-                                     && value.Split(' ')[1].Length == 3;
-
-                    if (isPostcode)
+                    if (IsPostcode(value))
                     {
                         continue;
                     }
 
-                    var atLeastOneDigit = value.Any(char.IsDigit);
-                    if (!atLeastOneDigit)
-                    {
-                        continue;
-                    }
-                    
                     if (IsOsRef(value))
                     {
                         continue;
                     }
 
-                    var noCharSlashOrDot = value.All(c => c != '/')
-                                           && value.All(c => c != '.')
-                                           && !value.Any(char.IsLetter);
-
-                    if (noCharSlashOrDot && value.Split(' ').Length < 3)
+                    if (value.All(c => c != '/')
+                        && value.All(c => c != '.')
+                        && !value.Any(char.IsLetter)
+                        && value.Split(' ').Length < 3)
                     {
                         continue;
                     }
 
-                    var excludedPrefixFound = PrefixesToExclude.Any(prefixToExclude =>
-                        value.StartsWith(prefixToExclude));
-
-                    if (excludedPrefixFound)
+                    if (PrefixesToExclude.Any(prefix => value.StartsWith(prefix)))
                     {
                         continue;
                     }
@@ -313,31 +288,27 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var clonedColumn = new DocumentLineColumn(colText!);
-                    newColumns.Clear();
-                    newColumns.Add(clonedColumn);
-
-                    var clonedLine = line.Clone(newColumns);
-                    matchedLines.Add(clonedLine);
-
-                    newColumns = [];
-                    anyMatchFoundForColumn = true;
-                    anyMatchFound = true;
+                    // Passed all checks so add a clone of the line containing only the matched text
+                    matchedLines.Add(line.Clone([new DocumentLineColumn(colText!)]));
+                    
+                    if (findSingleResult)
+                    {
+                        return true;
+                    }
                 }
-
-                if (!anyMatchFoundForColumn)
-                {
-                    newColumns.Add(column);
-                }
-            }
-
-            if (findSingleResult && anyMatchFound)
-            {
-                return true;
             }
         }
 
-        return anyMatchFound;
+        return matchedLines.Count > 0;
+    }
+
+    private static bool IsPostcode(string value)
+    {
+        var isPostcode = (value.Length == 7 || value.Length == 8)
+                         && char.IsUpper(value[0])
+                         && value.Count(c => c == ' ') == 1
+                         && value.Split(' ')[1].Length == 3;
+        return isPostcode;
     }
 
     private static bool IsOsRef(string value)
@@ -417,7 +388,7 @@ public static partial class LicenceNumber
 
     [GeneratedRegex(YorkshireRegexPatten)]
     private static partial Regex LicenceNumbersRegex();
-    
+
     [GeneratedRegex(@"/ (?=\d)")]
     private static partial Regex SlashSpaceDigitRegex();
 }

@@ -47,7 +47,6 @@ public static partial class LicenceNumber
 
         foreach (var line in lines.Where(l => l != null))
         {
-            var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
 
             foreach (var column in line!.Columns)
@@ -323,7 +322,6 @@ public static partial class LicenceNumber
 
                     newColumns = [];
                     anyMatchFoundForColumn = true;
-                    anyMatchFoundForLine = true;
                     anyMatchFound = true;
                 }
 
@@ -333,12 +331,7 @@ public static partial class LicenceNumber
                 }
             }
 
-            if (!anyMatchFoundForLine)
-            {
-                continue;
-            }
-
-            if (findSingleResult)
+            if (findSingleResult && anyMatchFound)
             {
                 return anyMatchFound;
             }

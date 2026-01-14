@@ -14,7 +14,7 @@ public static partial class LicenceNumber
         @"\b([A-Z0-9]{1,3}[\/ .]{1,2}[0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})([\/ .]{0,2}[0-9A-Z&\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
 
     // TODO find James' one
-    
+
     private static readonly string[] PrefixesToExclude =
     [
         "NT ",
@@ -30,7 +30,8 @@ public static partial class LicenceNumber
             return [];
         }
 
-        var result = AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }], new LabelToMatch(), false, out var outList);
+        var result = AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
+            new LabelToMatch(), false, out var outList);
         return result ? outList.Select(x => x.Text).ToList() : [];
     }
 
@@ -44,17 +45,12 @@ public static partial class LicenceNumber
         var anyMatchFound = false;
         var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
 
-        foreach (var line in lines)
+        foreach (var line in lines.Where(l => l != null))
         {
-            if (line == null)
-            {
-                continue;
-            }
-
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
 
-            foreach (var column in line.Columns)
+            foreach (var column in line!.Columns)
             {
                 var anyMatchFoundForColumn = false;
 
@@ -68,52 +64,17 @@ public static partial class LicenceNumber
 
                 const string splitChar = ",";
 
-                var columnText = column.Text;
+                var columnText = column.Text
+                    .Replace(". ", $"{splitChar} ")
+                    .Replace(" and", splitChar)
+                    .Replace(" for", splitChar)
+                    .Replace(" shall", splitChar)
+                    .Replace(" under", splitChar)
+                    .Replace(" from", splitChar)
+                    .Replace(" (", splitChar);
 
-                if (columnText.Contains(". "))
-                {
-                    columnText = columnText.Replace(". ", $"{splitChar} ");
-                }
-
-                if (columnText.Contains(" and"))
-                {
-                    columnText = columnText.Replace(" and", splitChar);
-                }
-
-                if (columnText.Contains(" for"))
-                {
-                    columnText = columnText.Replace(" for", splitChar);
-                }
-
-                if (columnText.Contains(" shall"))
-                {
-                    columnText = columnText.Replace(" shall", splitChar);
-                }
-
-                if (columnText.Contains(" under"))
-                {
-                    columnText = columnText.Replace(" under", splitChar);
-                }
-
-                if (columnText.Contains(" from"))
-                {
-                    columnText = columnText.Replace(" from", splitChar);
-                }
-
-                if (columnText.Contains(" ("))
-                {
-                    columnText = columnText.Replace(" (", splitChar);
-                }
-
-                var slashSpacePos = columnText.IndexOf("/ ", StringComparison.Ordinal);
-                var isSlashSpaceDigit = slashSpacePos > 0
-                                        && columnText.Length > slashSpacePos + 2
-                                        & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
-
-                if (isSlashSpaceDigit)
-                {
-                    columnText = columnText.Replace("/ ", "/");
-                }
+                columnText = SlashSpaceDigitRegex()
+                    .Replace(columnText, "/");
 
                 var subLines = columnText.Split(splitChar);
 
@@ -135,7 +96,7 @@ public static partial class LicenceNumber
                         var firstSlash = numberLine.IndexOf('/');
                         var part1 = numberLine[..firstSlash];
                         var part2 = numberLine.Length > firstSlash ? numberLine.Substring(firstSlash) : null;
-                        
+
                         numberLine = part1 + part2?.Replace(" ", string.Empty);
                     }
 
@@ -458,4 +419,7 @@ public static partial class LicenceNumber
 
     [GeneratedRegex(YorkshireRegexPatten)]
     private static partial Regex LicenceNumbersRegex();
+    
+    [GeneratedRegex(@"/ (?=\d)")]
+    private static partial Regex SlashSpaceDigitRegex();
 }

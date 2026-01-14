@@ -268,78 +268,8 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-
-                    var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
-                                  && value[2] == ' '
-                                  && value.All(c => c != '/')
-                                  && value.All(c => c != '.');
-
-                    if (!isOsRef)
-                    {
-                        isOsRef =
-                            value.StartsWith("NZ ")
-                            || value.Contains(" NZ")
-                            || value.StartsWith("TA ")
-                            || value.Contains(" TA ")
-                            || value.StartsWith("SE ")
-                            || value.Contains(" SE ")
-                            || value.StartsWith("TF ")
-                            || value.Contains(" TF ")
-                            || value.StartsWith("A ")
-                            || value.StartsWith("B ")
-                            || value.StartsWith("C ")
-                            || value.StartsWith("D ")
-                            || value.StartsWith("E ")
-                            || value.StartsWith("F ")
-                            || value.StartsWith("G ")
-                            || value.StartsWith("H ")
-                            || value.StartsWith("I ")
-                            || value.StartsWith("J ")
-                            || value.StartsWith("K ")
-                            || value.StartsWith("L ")
-                            || value.StartsWith("M ")
-                            || value.StartsWith("N ")
-                            || value.StartsWith("O ")
-                            || value.StartsWith("P ")
-                            || value.StartsWith("Q ")
-                            || value.StartsWith("R ")
-                            || value.StartsWith("S ")
-                            || value.StartsWith("T ")
-                            || value.StartsWith("U ")
-                            || value.StartsWith("V ")
-                            || value.StartsWith("W ")
-                            || value.StartsWith("X ")
-                            || value.StartsWith("Y ")
-                            || value.StartsWith("Z ")
-                            || value.EndsWith(" A")
-                            || value.EndsWith(" B")
-                            || value.EndsWith(" C")
-                            || value.EndsWith(" D")
-                            || value.EndsWith(" E")
-                            || value.EndsWith(" F")
-                            || value.EndsWith(" G")
-                            || value.EndsWith(" H")
-                            || value.EndsWith(" I")
-                            || value.EndsWith(" J")
-                            || value.EndsWith(" K")
-                            || value.EndsWith(" L")
-                            || value.EndsWith(" M")
-                            || value.EndsWith(" N")
-                            || value.EndsWith(" O")
-                            || value.EndsWith(" P")
-                            || value.EndsWith(" Q")
-                            || value.EndsWith(" R")
-                            || value.EndsWith(" S")
-                            || value.EndsWith(" T")
-                            || value.EndsWith(" U")
-                            || value.EndsWith(" V")
-                            || value.EndsWith(" W")
-                            || value.EndsWith(" X")
-                            || value.EndsWith(" Y")
-                            || value.EndsWith(" Z");
-                    }
-
-                    if (isOsRef)
+                    
+                    if (IsOsRef(value))
                     {
                         continue;
                     }
@@ -415,6 +345,81 @@ public static partial class LicenceNumber
         }
 
         return anyMatchFound;
+    }
+
+    private static bool IsOsRef(string value)
+    {
+        var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
+                      && value[2] == ' '
+                      && value.All(c => c != '/')
+                      && value.All(c => c != '.');
+
+        if (!isOsRef)
+        {
+            isOsRef =
+                value.StartsWith("NZ ")
+                || value.Contains(" NZ")
+                || value.StartsWith("TA ")
+                || value.Contains(" TA ")
+                || value.StartsWith("SE ")
+                || value.Contains(" SE ")
+                || value.StartsWith("TF ")
+                || value.Contains(" TF ")
+                || value.StartsWith("A ")
+                || value.StartsWith("B ")
+                || value.StartsWith("C ")
+                || value.StartsWith("D ")
+                || value.StartsWith("E ")
+                || value.StartsWith("F ")
+                || value.StartsWith("G ")
+                || value.StartsWith("H ")
+                || value.StartsWith("I ")
+                || value.StartsWith("J ")
+                || value.StartsWith("K ")
+                || value.StartsWith("L ")
+                || value.StartsWith("M ")
+                || value.StartsWith("N ")
+                || value.StartsWith("O ")
+                || value.StartsWith("P ")
+                || value.StartsWith("Q ")
+                || value.StartsWith("R ")
+                || value.StartsWith("S ")
+                || value.StartsWith("T ")
+                || value.StartsWith("U ")
+                || value.StartsWith("V ")
+                || value.StartsWith("W ")
+                || value.StartsWith("X ")
+                || value.StartsWith("Y ")
+                || value.StartsWith("Z ")
+                || value.EndsWith(" A")
+                || value.EndsWith(" B")
+                || value.EndsWith(" C")
+                || value.EndsWith(" D")
+                || value.EndsWith(" E")
+                || value.EndsWith(" F")
+                || value.EndsWith(" G")
+                || value.EndsWith(" H")
+                || value.EndsWith(" I")
+                || value.EndsWith(" J")
+                || value.EndsWith(" K")
+                || value.EndsWith(" L")
+                || value.EndsWith(" M")
+                || value.EndsWith(" N")
+                || value.EndsWith(" O")
+                || value.EndsWith(" P")
+                || value.EndsWith(" Q")
+                || value.EndsWith(" R")
+                || value.EndsWith(" S")
+                || value.EndsWith(" T")
+                || value.EndsWith(" U")
+                || value.EndsWith(" V")
+                || value.EndsWith(" W")
+                || value.EndsWith(" X")
+                || value.EndsWith(" Y")
+                || value.EndsWith(" Z");
+        }
+
+        return isOsRef;
     }
 
     [GeneratedRegex(YorkshireRegexPatten)]

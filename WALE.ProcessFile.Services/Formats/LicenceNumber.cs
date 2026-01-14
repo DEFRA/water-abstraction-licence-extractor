@@ -43,260 +43,267 @@ public static partial class LicenceNumber
     {
         matchedLines = [];
 
+        // Flatten and validate columns
         var columnsToProcess = lines
             .Where(l => l != null)
-            .SelectMany(l => l!.Columns.Select(c => (l, Column: c)))
-            .Where(x => !string.IsNullOrEmpty(x.Column.Text)
-                        && x.Column.Text.Any(char.IsDigit)
-                        && !DataHelper.IsCorruptedText(x.Column.Text));
+            .SelectMany(l => l!.Columns.Select(c => (Line: l, Column: c)))
+            .Where(x => IsValidColumnForProcessing(x.Column));
 
-        foreach (var (line, column) in columnsToProcess)
+        // Flatten and validate sublines
+        var subLinesToProcess = columnsToProcess
+            .SelectMany(x => GetColumnSubLines(x.Column).Select(subLine => (x.Line, x.Column, subLine)))
+            .Where(x => IsValidSubLine(x.subLine, x.Column));
+
+        foreach (var (line, _, subLine) in subLinesToProcess)
         {
-            const string splitChar = ",";
+            var numberLine = subLine;
 
-            var columnText = column.Text
-                .Replace(". ", $"{splitChar} ")
-                .Replace(" and", splitChar)
-                .Replace(" for", splitChar)
-                .Replace(" shall", splitChar)
-                .Replace(" under", splitChar)
-                .Replace(" from", splitChar)
-                .Replace(" (", splitChar);
-
-            columnText = SlashSpaceDigitRegex()
-                .Replace(columnText, "/");
-
-            var subLines = columnText.Split(splitChar);
-
-            foreach (var subLine in subLines)
+            if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
             {
-                var containsSplitter = subLine.Contains(' ')
-                                       || column.Text.Contains('/')
-                                       || column.Text.Contains('.');
+                var firstSlash = numberLine.IndexOf('/');
+                var part1 = numberLine[..firstSlash];
+                var part2 = numberLine.Length > firstSlash ? numberLine.Substring(firstSlash) : null;
 
-                if (!containsSplitter || subLine.Length < 4)
+                numberLine = part1 + part2?.Replace(" ", string.Empty);
+            }
+
+            var regexMatches = LicenceNumbersRegex().Matches(numberLine);
+            var isMatch = regexMatches.Count >= 1;
+
+            if (!isMatch)
+            {
+                continue;
+            }
+
+            // It's a date
+            if (Date.IsDate(numberLine))
+            {
+                continue;
+            }
+
+            var numberLineWithSlashes = numberLine;
+
+            // No slashes, 1 dot - is invalid format (its probably a decimal number
+            if (!numberLineWithSlashes.Contains('/') && numberLineWithSlashes.Count(c => c == '.') == 1)
+            {
+                continue;
+            }
+
+            if (numberLineWithSlashes.Contains(' '))
+            {
+                numberLineWithSlashes = numberLineWithSlashes.Replace(" ", "/");
+            }
+
+            if (numberLineWithSlashes.Contains('.'))
+            {
+                numberLineWithSlashes = numberLineWithSlashes.Replace(".", "/");
+            }
+
+            var enoughPartsWithNumbers = numberLineWithSlashes
+                .Split('/')
+                .Count(section => section.Any(char.IsDigit)) >= 2;
+
+            isMatch = enoughPartsWithNumbers;
+
+            if (!isMatch)
+            {
+                continue;
+            }
+
+            var value = regexMatches[0].Value.Trim();
+
+            if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
+
+            var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
+
+            if (lengthBeforePeriod >= 10)
+            {
+                value = value.Split('.')[0];
+            }
+
+            var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
+
+            if (lengthBeforeSpace >= 10)
+            {
+                value = value.Split(' ')[0];
+            }
+
+            // It's a date (check again)
+            if (Date.IsDate(value))
+            {
+                continue;
+            }
+
+            var previousCharIsLetterCount = -1;
+            var maxSequenceLength = 0;
+
+            maxSequenceLength = value
+                .Select(c =>
                 {
-                    continue;
-                }
-
-                var numberLine = subLine;
-
-                if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
-                {
-                    var firstSlash = numberLine.IndexOf('/');
-                    var part1 = numberLine[..firstSlash];
-                    var part2 = numberLine.Length > firstSlash ? numberLine.Substring(firstSlash) : null;
-
-                    numberLine = part1 + part2?.Replace(" ", string.Empty);
-                }
-
-                var regexMatches = LicenceNumbersRegex().Matches(numberLine);
-                var isMatch = regexMatches.Count >= 1;
-
-                if (!isMatch)
-                {
-                    continue;
-                }
-
-                // It's a date
-                if (Date.IsDate(numberLine))
-                {
-                    continue;
-                }
-
-                var numberLineWithSlashes = numberLine;
-
-                // No slashes, 1 dot - is invalid format (its probably a decimal number
-                if (!numberLineWithSlashes.Contains('/') && numberLineWithSlashes.Count(c => c == '.') == 1)
-                {
-                    continue;
-                }
-
-                if (numberLineWithSlashes.Contains(' '))
-                {
-                    numberLineWithSlashes = numberLineWithSlashes.Replace(" ", "/");
-                }
-
-                if (numberLineWithSlashes.Contains('.'))
-                {
-                    numberLineWithSlashes = numberLineWithSlashes.Replace(".", "/");
-                }
-
-                var enoughPartsWithNumbers = numberLineWithSlashes
-                    .Split('/')
-                    .Count(section => section.Any(char.IsDigit)) >= 2;
-
-                isMatch = enoughPartsWithNumbers;
-
-                if (!isMatch)
-                {
-                    continue;
-                }
-
-                var value = regexMatches[0].Value.Trim();
-
-                if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    continue;
-                }
-
-                var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
-
-                if (lengthBeforePeriod >= 10)
-                {
-                    value = value.Split('.')[0];
-                }
-
-                var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
-
-                if (lengthBeforeSpace >= 10)
-                {
-                    value = value.Split(' ')[0];
-                }
-
-                // It's a date (check again)
-                if (Date.IsDate(value))
-                {
-                    continue;
-                }
-
-                var previousCharIsLetterCount = -1;
-                var maxSequenceLength = 0;
-
-                maxSequenceLength = value
-                    .Select(c =>
+                    if (c == ' ' || c == '/' || c == '.')
                     {
-                        if (c == ' ' || c == '/' || c == '.')
-                        {
-                            return maxSequenceLength;
-                        }
+                        return maxSequenceLength;
+                    }
 
-                        if (!char.IsLetter(c))
-                        {
-                            // ReSharper disable once AccessToModifiedClosure
-                            if (previousCharIsLetterCount + 1 > maxSequenceLength)
-                            {
-                                maxSequenceLength = previousCharIsLetterCount + 1;
-                            }
-
-                            previousCharIsLetterCount = -1;
-                            return maxSequenceLength;
-                        }
-
-                        previousCharIsLetterCount += 1;
-
+                    if (!char.IsLetter(c))
+                    {
+                        // ReSharper disable once AccessToModifiedClosure
                         if (previousCharIsLetterCount + 1 > maxSequenceLength)
                         {
                             maxSequenceLength = previousCharIsLetterCount + 1;
                         }
 
+                        previousCharIsLetterCount = -1;
                         return maxSequenceLength;
-                    })
-                    .OrderByDescending(r => r)
-                    .First();
-
-                if (maxSequenceLength >= 3)
-                {
-                    continue;
-                }
-
-                var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
-                                                  || (value.Contains('/') && value.Contains(' '));
-                //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
-
-                if (hasInvalidComboOfSeperators)
-                {
-                    continue;
-                }
-
-                // Its a value + unit
-                if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
-                {
-                    continue;
-                }
-
-                var sections = value.Split('/');
-
-                // Last bit is too long - its because of a space near the end
-                if (sections.Length == 4 && sections.Last().Length == 4)
-                {
-                    var valueWithoutLastChar = value[..^1];
-                    var valueEndingWithSpace = $"{valueWithoutLastChar} ";
-
-                    if (subLine.Contains(valueEndingWithSpace))
-                    {
-                        value = valueWithoutLastChar;
                     }
-                }
 
-                if (value.Length < (value.Contains('/') ? 5 : 6))
+                    previousCharIsLetterCount += 1;
+
+                    if (previousCharIsLetterCount + 1 > maxSequenceLength)
+                    {
+                        maxSequenceLength = previousCharIsLetterCount + 1;
+                    }
+
+                    return maxSequenceLength;
+                })
+                .OrderByDescending(r => r)
+                .First();
+
+            if (maxSequenceLength >= 3)
+            {
+                continue;
+            }
+
+            var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
+                                              || (value.Contains('/') && value.Contains(' '));
+            //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
+
+            if (hasInvalidComboOfSeperators)
+            {
+                continue;
+            }
+
+            // Its a value + unit
+            if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
+            {
+                continue;
+            }
+
+            var sections = value.Split('/');
+
+            // Last bit is too long - its because of a space near the end
+            if (sections.Length == 4 && sections.Last().Length == 4)
+            {
+                var valueWithoutLastChar = value[..^1];
+                var valueEndingWithSpace = $"{valueWithoutLastChar} ";
+
+                if (subLine.Contains(valueEndingWithSpace))
                 {
-                    continue;
+                    value = valueWithoutLastChar;
                 }
+            }
 
-                if (value.Count(char.IsDigit) < 4)
-                {
-                    continue;
-                }
+            if (value.Length < (value.Contains('/') ? 5 : 6))
+            {
+                continue;
+            }
 
-                if (IsPostcode(value))
-                {
-                    continue;
-                }
+            if (value.Count(char.IsDigit) < 4)
+            {
+                continue;
+            }
 
-                if (IsOsRef(value))
-                {
-                    continue;
-                }
+            if (IsPostcode(value))
+            {
+                continue;
+            }
 
-                if (value.All(c => c != '/')
-                    && value.All(c => c != '.')
-                    && !value.Any(char.IsLetter)
-                    && value.Split(' ').Length < 3)
-                {
-                    continue;
-                }
+            if (IsOsRef(value))
+            {
+                continue;
+            }
 
-                if (PrefixesToExclude.Any(prefix => value.StartsWith(prefix)))
-                {
-                    continue;
-                }
+            if (value.All(c => c != '/')
+                && value.All(c => c != '.')
+                && !value.Any(char.IsLetter)
+                && value.Split(' ').Length < 3)
+            {
+                continue;
+            }
 
-                // Invalid end of a licence number (probably cut off)
-                if (value.EndsWith("/R"))
-                {
-                    continue;
-                }
+            if (PrefixesToExclude.Any(prefix => value.StartsWith(prefix)))
+            {
+                continue;
+            }
 
-                // Invalid end of a licence number
-                if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    continue;
-                }
+            // Invalid end of a licence number (probably cut off)
+            if (value.EndsWith("/R"))
+            {
+                continue;
+            }
 
-                var colText = FormattingHelper.TrimFormatting(
-                    value,
-                    true,
-                    true);
+            // Invalid end of a licence number
+            if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
 
-                // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
-                if (subLine.Contains($"{colText}-"))
-                {
-                    continue;
-                }
+            var colText = FormattingHelper.TrimFormatting(
+                value,
+                true,
+                true);
 
-                // Passed all checks so add a clone of the line containing only the matched text
-                matchedLines.Add(line.Clone([new DocumentLineColumn(colText!)]));
+            // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
+            if (subLine.Contains($"{colText}-"))
+            {
+                continue;
+            }
 
-                // Exit early if we're looking for a single instance match
-                if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
-                {
-                    return true;
-                }
+            // Passed all checks so add a clone of the line containing only the matched text
+            matchedLines.Add(line.Clone([new DocumentLineColumn(colText!)]));
+
+            // Exit early if we're looking for a single instance match
+            if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+            {
+                return true;
             }
         }
 
         return matchedLines.Count > 0;
+    }
+
+    private static bool IsValidColumnForProcessing(DocumentLineColumn column) =>
+        !string.IsNullOrEmpty(column.Text)
+        && column.Text.Any(char.IsDigit)
+        && !DataHelper.IsCorruptedText(column.Text);
+
+    private static bool IsValidSubLine(string subLine, DocumentLineColumn column) =>
+        subLine.Length >= 4
+        && (subLine.Contains(' ')
+            || column.Text.Contains('/')
+            || column.Text.Contains('.'));
+
+    private static string[] GetColumnSubLines(DocumentLineColumn column)
+    {
+        const string splitChar = ",";
+
+        var columnText = column.Text
+            .Replace(". ", $"{splitChar} ")
+            .Replace(" and", splitChar)
+            .Replace(" for", splitChar)
+            .Replace(" shall", splitChar)
+            .Replace(" under", splitChar)
+            .Replace(" from", splitChar)
+            .Replace(" (", splitChar);
+
+        columnText = SlashSpaceDigitRegex()
+            .Replace(columnText, "/");
+
+        var subLines = columnText.Split(splitChar);
+        return subLines;
     }
 
     private static bool IsPostcode(string value)

@@ -333,7 +333,7 @@ public static partial class LicenceNumber
 
             if (findSingleResult && anyMatchFound)
             {
-                return anyMatchFound;
+                return true;
             }
         }
 

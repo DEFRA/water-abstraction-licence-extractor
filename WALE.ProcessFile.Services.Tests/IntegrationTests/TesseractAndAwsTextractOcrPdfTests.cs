@@ -23,8 +23,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(PageSegMode.SparseTextOsd, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(PageSegMode.Auto, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             textractFixture.Instance
         },
         CacheService,
@@ -35,8 +35,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(PageSegMode.SparseTextOsd, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(PageSegMode.Auto, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             textractFixture.Instance
         },
         CacheService,
@@ -76,7 +76,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -163,7 +163,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -360,7 +360,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

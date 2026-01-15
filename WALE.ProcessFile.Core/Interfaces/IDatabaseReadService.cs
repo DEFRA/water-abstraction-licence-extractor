@@ -20,6 +20,10 @@ public interface IDatabaseReadService
     Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
+    
+    Task<string?> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+    
+    Task<string?> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     

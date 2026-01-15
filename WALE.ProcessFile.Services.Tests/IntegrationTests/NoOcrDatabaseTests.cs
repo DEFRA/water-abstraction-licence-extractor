@@ -109,7 +109,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

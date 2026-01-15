@@ -22,8 +22,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(PageSegMode.SparseTextOsd, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(PageSegMode.Auto, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
                 TestConfig.AiVisionKey,
@@ -38,8 +38,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(PageSegMode.SparseTextOsd, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(PageSegMode.Auto, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
                 TestConfig.AiVisionKey,
@@ -83,7 +83,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -192,7 +192,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -323,7 +323,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -386,7 +386,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -439,7 +439,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -507,7 +507,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -542,7 +542,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -579,7 +579,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3);
-        Assert.Equal(11, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -623,6 +623,20 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0);
 
         Assert.Single(resultFull.Matches!);
+    }
+    
+    [Fact]
+    public async Task A3_B466_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "83743S0057__8-37-43-S-0057Plans.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Empty(resultList);  
     }
     
     private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetYorkshireLabels()

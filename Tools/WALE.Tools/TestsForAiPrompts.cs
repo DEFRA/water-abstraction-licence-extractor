@@ -527,11 +527,11 @@ public static class TestsForAiPrompts
         List<List<SKBitmap>> pageImageGroups)
     {
         var tesseractOcr = new TesseractOcrDataExtractorService(
-            KeyConfig.TesseractPrefix
-                ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
             PageSegMode.SparseTextOsd,
             new FileSystemCacheService("Cache/"),
-            new FileSystemOutputService("Output/"));
+            KeyConfig.DotnetPath,
+            KeyConfig.TesseractExeName,
+            KeyConfig.TesseractExeDirectory);
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",

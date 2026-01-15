@@ -57,7 +57,7 @@ public class AzureOpenAiOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -82,7 +82,7 @@ public class AzureOpenAiOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);

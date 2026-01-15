@@ -35,8 +35,8 @@ public class OcrDatabaseTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService),
+            new TesseractOcrDataExtractorService(PageSegMode.SparseTextOsd, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(PageSegMode.Auto, CacheService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
         },
         CacheService,
         OutputService,
@@ -80,7 +80,7 @@ public class OcrDatabaseTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 

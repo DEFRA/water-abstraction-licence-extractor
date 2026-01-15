@@ -1,12 +1,34 @@
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
-public static partial class LicenceNumber
+public partial class LicenceNumber : ILicenceNumberService
 {
+    private readonly IDatabaseReadService? _databaseReadService;
+
+    public LicenceNumber(IDatabaseReadService? databaseReadService = null)
+    {
+        _databaseReadService = databaseReadService;
+        // Perform any initialization here if needed
+    }
+
+    private static ILicenceNumberService? _instance;
+    public static ILicenceNumberService Instance
+    {
+        get => _instance ?? throw new InvalidOperationException("LicenceNumber.Instance must be initialized before use.");
+        set => _instance = value;
+    }
+
+    public async Task InitializeAsync()
+    {
+        // Perform initialization that requires _databaseReadService
+        await Task.CompletedTask;
+    }
+
     public const string Constant = "LicenceNumber";
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
@@ -25,17 +47,31 @@ public static partial class LicenceNumber
 
     public static List<string> FindLicenceNumbers(string? text)
     {
+        return Instance.FindLicenceNumbers(text);
+    }
+
+    List<string> ILicenceNumberService.FindLicenceNumbers(string? text)
+    {
         if (string.IsNullOrEmpty(text))
         {
             return [];
         }
 
-        var result = AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
+        var result = ((ILicenceNumberService)this).AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
             new LabelToMatch(), false, out var outList);
         return result ? outList.Select(x => x.Text).ToList() : [];
     }
 
     public static bool AnyIsLicenceNumber(
+        IEnumerable<DocumentLine?> lines,
+        LabelToMatch label,
+        bool isOcr,
+        out List<DocumentLine> matchedLines)
+    {
+        return Instance.AnyIsLicenceNumber(lines, label, isOcr, out matchedLines);
+    }
+
+    bool ILicenceNumberService.AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr,

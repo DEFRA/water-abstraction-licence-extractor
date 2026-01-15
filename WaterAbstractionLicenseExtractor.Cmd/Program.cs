@@ -26,7 +26,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = ConfigureServices();
+    var services = await ConfigureServicesAsync();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -327,7 +327,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-ConfiguredServices ConfigureServices()
+async Task<ConfiguredServices> ConfigureServicesAsync()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));
@@ -368,6 +368,9 @@ ConfiguredServices ConfigureServices()
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+
+    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
+    await LicenceNumber.Instance.InitializeAsync();
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);

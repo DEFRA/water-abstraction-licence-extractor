@@ -361,15 +361,23 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("PostgresConnectionString");
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
         ?? throw new NullReferenceException("FileMappingPath");
-
+    var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
+        ?? throw new NullReferenceException("DotnetPath");
+    var tesseractExeName = Environment.GetEnvironmentVariable("TesseractExeName")
+        ?? throw new NullReferenceException("TesseractExeName");
+    var tesseractExeDirectory = Environment.GetEnvironmentVariable("TesseractExeDirectory")
+        ?? throw new NullReferenceException("TesseractExeDirectory");
+    var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+        ?? throw new NullReferenceException("TESSDATA_PREFIX");
+    
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
-    
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -380,19 +388,23 @@ ConfiguredServices ConfigureServices()
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
-            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            tessDataPrefix,
             PageSegMode.SparseTextOsd,
             cacheService,
             outputService,
+            dotnetPath,
+            tesseractExeName,
+            tesseractExeDirectory,
             id);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
-            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            tessDataPrefix,
             PageSegMode.Auto,
             cacheService,
             outputService,
+            dotnetPath,
+            tesseractExeName,
+            tesseractExeDirectory,            
             id);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
@@ -597,7 +609,7 @@ async Task MoveReportHtmlFilesAsync(
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
         .ToDictionary(filePath => filePath.Key, k => k.Value);*/
-    
+
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)

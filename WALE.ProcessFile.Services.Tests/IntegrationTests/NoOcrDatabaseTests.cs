@@ -24,7 +24,7 @@ public class NoOcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
@@ -109,7 +109,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

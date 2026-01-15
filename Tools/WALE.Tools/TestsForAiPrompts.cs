@@ -531,7 +531,10 @@ public static class TestsForAiPrompts
                 ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
             PageSegMode.SparseTextOsd,
             new FileSystemCacheService("Cache/"),
-            new FileSystemOutputService("Output/"));
+            new FileSystemOutputService("Output/"),
+            KeyConfig.DotnetPath,
+            KeyConfig.TesseractExeName,
+            KeyConfig.TesseractExeDirectory);
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",

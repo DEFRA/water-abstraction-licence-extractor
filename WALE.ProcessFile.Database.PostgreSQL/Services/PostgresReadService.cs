@@ -177,6 +177,56 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.PageNumber
             });
     }
+    
+    public async Task<string?> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data 
+                           FROM ocr_temporary_image_text_cache 
+                           WHERE filename = @Filename 
+                             AND ocr_service_name = @OcrServiceName 
+                             AND page_number = @PageNumber 
+                             AND image_number = @ImageNumber
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber,
+                request.ImageNumber
+            });
+    }
+
+    public async Task<string?> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data 
+                           FROM ocr_temporary_screenshot_text_cache 
+                           WHERE filename = @Filename
+                             AND ocr_service_name = @OcrServiceName
+                             AND page_number = @PageNumber
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber
+            });
+    }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {

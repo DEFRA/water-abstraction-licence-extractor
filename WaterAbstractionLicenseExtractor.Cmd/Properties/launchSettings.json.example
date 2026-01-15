@@ -28,7 +28,10 @@
         "LicenceDataPath": "filename + '/licence.jsonp'",
         "LicenceSetsDataPath": "filename + '/licence-sets.jsonp'",
         "ThumbnailImageDataPath": "''",
-        "FullImageDataPath": "''"
+        "FullImageDataPath": "''",
+        "DotnetPath": "/usr/local/share/dotnet/dotnet",
+        "TesseractExeName": "WALE.ProcessFile.Services.TesseractExe.dll",
+        "TesseractExeDirectory": "[Fill in]"
       }
     }
   }

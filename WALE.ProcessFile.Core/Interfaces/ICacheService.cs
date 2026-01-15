@@ -6,9 +6,11 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface ICacheService
 {
-    bool UsesDatabase { get; set; }
+    public bool UsesDatabase { get; set; }
     
-    string? CacheFolder { get; set; }
+    public string? CacheFolder { get; set; }
+    
+    public string? ConnectionString { get; set; }
     
     public Task SetupAsync();
 

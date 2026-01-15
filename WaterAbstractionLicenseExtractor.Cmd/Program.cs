@@ -354,6 +354,8 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("TesseractExeName");
     var tesseractExeDirectory = Environment.GetEnvironmentVariable("TesseractExeDirectory")
         ?? throw new NullReferenceException("TesseractExeDirectory");
+    var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+        ?? throw new NullReferenceException("TESSDATA_PREFIX");
     
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
@@ -362,7 +364,7 @@ ConfiguredServices ConfigureServices()
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -373,16 +375,20 @@ ConfiguredServices ConfigureServices()
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
+            tessDataPrefix,
             PageSegMode.SparseTextOsd,
             cacheService,
+            outputService,
             dotnetPath,
             tesseractExeName,
             tesseractExeDirectory,
             id);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
+            tessDataPrefix,
             PageSegMode.Auto,
             cacheService,
+            outputService,
             dotnetPath,
             tesseractExeName,
             tesseractExeDirectory,            

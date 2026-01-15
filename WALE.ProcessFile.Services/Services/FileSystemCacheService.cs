@@ -15,6 +15,8 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public string? CacheFolder { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
+    public string? ConnectionString { get; set; } = null;
+
     public Task SetupAsync()
     {
         Directory.CreateDirectory(CacheFolder!);
@@ -142,8 +144,6 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             .GetFiles(directory)
             .Select(x => x.Split('/').Last())
             .ToList();
-
-        Console.WriteLine(files.Count);
         
         var matchingFile = files
             .FirstOrDefault(x => x.StartsWith($"{fileNameWithoutExtension}+") && x.EndsWith($".{request.Extension}"));

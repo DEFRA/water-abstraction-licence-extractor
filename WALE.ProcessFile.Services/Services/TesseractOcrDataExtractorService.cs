@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
 using Tesseract;
 using WALE.ProcessFile.Core.Helpers;
@@ -11,8 +10,10 @@ using WALE.ProcessFile.Services.Enums;
 namespace WALE.ProcessFile.Services.Services;
 
 public class TesseractOcrDataExtractorService(
+    string tessDataPath,
     PageSegMode pageSegMode,
     ICacheService cacheService,
+    IOutputService outputService,
     string dotnetPath,
     string tesseractExeName,
     string tesseractExeDirectory,
@@ -48,7 +49,7 @@ public class TesseractOcrDataExtractorService(
         var cachedJson = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
-
+        
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cachedJson))
         {
             var imageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
@@ -68,7 +69,7 @@ public class TesseractOcrDataExtractorService(
                 processRunId,
                 cacheService.UsesDatabase);
 
-            if (externalProcessRanOk == ProcessResult.TransientError)
+            if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
             {
                 // TODO - Log
                 
@@ -128,13 +129,28 @@ public class TesseractOcrDataExtractorService(
         bool isDbBased)
     {
         var fileMode = isDbBased ? "Database" : "File";
-        var arguments = $"{tesseractExeName} {pageSegMode} {fileMode} {pageNumber} {imageNumber} \"{imageReference}\" \"{pdfFilePath}\" {isPageScreenshot} {processRunId} \"{cacheService.CacheFolder}\"";
+        var argumentsList = string.Join(" ", new List<string>
+        {
+            tesseractExeName,
+            pageSegMode.ToString(),
+            fileMode,
+            pageNumber.ToString(),
+            imageNumber.ToString(),
+            $"\"{imageReference}\"",
+            $"\"{pdfFilePath}\"",
+            isPageScreenshot.ToString(),
+            processRunId.ToString(),
+            $"\"{cacheService.CacheFolder}\"",
+            $"\"{outputService.OutputFolder}\"",
+            $"\"{tessDataPath}\"",
+            $"\"{cacheService.ConnectionString ?? "N/A"}\""
+        });
         
         var proc = Process.Start(
             new ProcessStartInfo
             {
                 WorkingDirectory = tesseractExeDirectory,
-                Arguments = arguments,
+                Arguments = argumentsList,
                 FileName = dotnetPath,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -165,7 +181,7 @@ public class TesseractOcrDataExtractorService(
                 var exceptionMessage = line[line.IndexOf(errorPrefix, StringComparison.Ordinal)..];
                 Console.WriteLine($"ERROR - External process gave error '{exceptionMessage}'");
                 
-                return ProcessResult.TransientError;
+                return ProcessResult.UnknownOrTransientError;
             }
             
             Console.WriteLine(line);
@@ -179,7 +195,7 @@ public class TesseractOcrDataExtractorService(
         Console.WriteLine($"ERROR - External process errored with exit code {proc.ExitCode}");
         // TODO - Log error
         
-        return ProcessResult.TransientError;
+        return ProcessResult.UnknownOrTransientError;
     }
 
     public void Dispose()

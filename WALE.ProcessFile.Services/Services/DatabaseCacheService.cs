@@ -11,11 +11,14 @@ namespace WALE.ProcessFile.Services.Services;
 
 public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService) : ICacheService
+    IDatabaseWriteService databaseWriteService,
+    string connectionString) : ICacheService
 {
     public bool UsesDatabase { get; set; } = true;
 
     public string? CacheFolder { get; set; } = null;
+
+    public string? ConnectionString { get; set; } = connectionString;
 
     public Task SetupAsync()
     {

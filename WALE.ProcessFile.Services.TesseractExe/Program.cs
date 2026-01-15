@@ -8,31 +8,19 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using TesseractOcrDataExtractorService = WALE.ProcessFile.Services.TesseractExe.TesseractOcrDataExtractorService;
 
-// NOTE - Following lines are just for debugging
-/*args = [
-    "SparseTextOsd", // Tesseract mode
-    "Database", // DB or file
-    //"2", // Page number
-    "1", // Page number
-    "1", // Image number
-    //"ImageReference-83743S0057__8-37-43-S-0057Plans-png-2-1", // Image reference (for extension)
-    "ImageReference-83743S0057__8-37-43-S-0057Plans-png-1-1", // Image reference (for extension)
-    "83743S0057__8-37-43-S-0057Plans", // PDF filename (without .pdf)
-    "false", // Is page screenshot
-    "500", // processRunId
-    "Cache/"
-];*/
-
-const bool writeDebugLogs = true;
+var writeDebugLogs = true;
 
 try
 {
+    var configuration = GetConfiguration();
+    writeDebugLogs = configuration.GetValue<bool>("writeDebugLogs");
+    
     await WriteLogFileIfDebugModeAsync(
         "Started.txt",
         $"{typeof(Program).Assembly.GetName().Name} started - " + string.Join(' ', args),
         writeDebugLogs);
 
-    if (args.Length < 9)
+    if (args.Length < 12)
     {
         throw new Exception("Not enough arguments provided");
     }
@@ -46,13 +34,19 @@ try
     var isPageScreenshot = bool.Parse(args[6]);
     var processRunId = int.Parse(args[7]);
     var cacheFolder = args[8];
+    var outputFolder = args[9];
+    var tessdataPrefix = args[10];
+    var postgresConnectionString = args[11];
 
     var isFileMode = bytesMode.Equals("file", StringComparison.InvariantCultureIgnoreCase);
     
     var (outputService, cacheService, tesseractService) = GetServices(
         isFileMode,
         pageSegMode,
-        cacheFolder);
+        cacheFolder,
+        outputFolder,
+        tessdataPrefix,
+        postgresConnectionString);
 
     byte[]? imageBytes;
 
@@ -129,27 +123,27 @@ static IConfiguration GetConfiguration()
 }
 
 static (IOutputService OutputService, ICacheService CacheService, TesseractOcrDataExtractorService TesseractService)
-    GetServices(bool isFileMode, PageSegMode pageSegMode, string cacheFolder)
+    GetServices(
+        bool isFileMode,
+        PageSegMode pageSegMode,
+        string cacheFolder,
+        string outputFolder,
+        string tessDataPath,
+        string postgresConnectionString)
 {
-    var configuration = GetConfiguration();
-    var tessDataPath = configuration.GetValue<string>("TESSDATA_PREFIX");
     if (string.IsNullOrEmpty(tessDataPath))
-        throw new NullReferenceException("TESSDATA_PREFIX");
+        throw new NullReferenceException(tessDataPath);
     
     var tesseractService = new TesseractOcrDataExtractorService(tessDataPath, pageSegMode);
     
     if (isFileMode)
     {
-        var outputFolder = configuration.GetValue<string>("OutputFolder")
-            ?? throw new NullReferenceException("OutputFolder");
-        
         var fileOutputService = new FileSystemOutputService(outputFolder);
         var fileCacheService = new FileSystemCacheService(cacheFolder);
         
         return (fileOutputService, fileCacheService, tesseractService);
     }
     
-    var postgresConnectionString = configuration.GetValue<string>("PostgresConnectionString");
     if (string.IsNullOrEmpty(postgresConnectionString))
         throw new NullReferenceException("PostgresConnectionString");
     
@@ -160,7 +154,7 @@ static (IOutputService OutputService, ICacheService CacheService, TesseractOcrDa
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
     var dbOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-    var dbCacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+    var dbCacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
     
     return (dbOutputService, dbCacheService, tesseractService);
 }

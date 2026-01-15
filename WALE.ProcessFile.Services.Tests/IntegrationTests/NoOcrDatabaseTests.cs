@@ -24,7 +24,7 @@ public class NoOcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(

@@ -14,8 +14,6 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseReadService
 {
-    public string? ConnectionString { get; set; } = dataSourceProvider.DataSource.ConnectionString;
-
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();

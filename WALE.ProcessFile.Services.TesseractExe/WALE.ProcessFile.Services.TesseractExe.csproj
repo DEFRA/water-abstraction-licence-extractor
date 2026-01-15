@@ -20,12 +20,10 @@
     </ItemGroup>
     
     <ItemGroup>
-      <None Remove="TempData\page-2.jpg" />
       <None Remove="appsettings.json" />
       <Content Include="appsettings.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-        <None Remove="appsettings.Developments.json" />
       <Content Include="appsettings.Development.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

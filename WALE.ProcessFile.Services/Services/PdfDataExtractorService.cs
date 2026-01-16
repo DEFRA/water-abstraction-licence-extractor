@@ -223,6 +223,7 @@ public class PdfDataExtractorService(
 
                     if (containsTheWordMap)
                     {
+                        serviceImageLines = [];
                         break;
                     }
                     
@@ -232,6 +233,7 @@ public class PdfDataExtractorService(
                     // no point processing that with the other services
                     if (averageLineLength < minAverageLineLength)
                     {
+                        serviceImageLines = [];                        
                         break;
                     }
                     
@@ -483,6 +485,10 @@ public class PdfDataExtractorService(
                             uniqueServiceMatches.Add(match);
                             
                             break;
+                        case MultipleServiceMatchBehaviour.UseFirstServiceResult:
+                            alreadyFound.AlternativeMatches.Add(alreadyFound);
+                            
+                            break;                        
                         case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
                             var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
                             newValue = string.Join(' ', match.Text!.Select(m => m.Text));
@@ -519,12 +525,6 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [existingDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var existingLicenceNumberOutput);
-
                             var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
                             var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
                             var existingValueLength = existingLicenceNumber.Length;
@@ -545,12 +545,6 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [newDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var newLicenceNumberOutput);
-
                             var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
                             var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
                             var newValueLength = newLicenceNumber.Length;
@@ -784,14 +778,14 @@ public class PdfDataExtractorService(
             {
                 var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
                 
+                if (label.Text?.Count > 0 && label.Text[0].Text == "Licence ")
+                {
+                    
+                }
+                
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
                     continue;
-                }
-
-                if (labelGroupName == "LinkedLicenceNumber")
-                {
-                    
                 }
                 
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(

@@ -1237,11 +1237,23 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFirstServiceResult,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
                 NextLinesToFetch = 1
+            },
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Hampshire Ref")
+                ],
+                Position = LabelPosition.LabelIsAfterTextToFind,
+                Format = LicenceNumber.Constant,
+                Name = "DocumentLicenceNumberHampshire",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0
             }
         ];
     }

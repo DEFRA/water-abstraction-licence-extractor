@@ -1266,7 +1266,7 @@ public class TessaractOcrPdfTests
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("8/37/4.3/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("8/37/43/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var issuer = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.Equal("Essex River Authority", issuer!.Text!.FirstOrDefault()?.Text);
@@ -1286,7 +1286,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal("8/37/4./303/3", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("8/37/43/033", agreedSchemaLicence.LicenceNumber);
         
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("8/37/43/019", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

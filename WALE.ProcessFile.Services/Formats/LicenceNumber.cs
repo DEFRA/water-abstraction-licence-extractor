@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"\b[0-9A-Z*&/.]{1,15}/[0-9]{2}[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
+        @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
     private static readonly string[] PrefixesToExclude =
     [

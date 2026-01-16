@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"\b[0-9A-Z*&/.]{1,15}/[0-9]{2}[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -47,6 +47,11 @@ public static partial class LicenceNumber
             if (line == null)
             {
                 continue;
+            }
+
+            if (line.Text.Contains("Serial"))
+            {
+                
             }
 
             var anyMatchFoundForLine = false;
@@ -126,11 +131,11 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var numberLine = subLine;
+                    var numberLine = subLine.Trim();
 
                     if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
                     {
-                        numberLine = numberLine.Replace(" ", string.Empty);
+                        //numberLine = numberLine.Replace(" ", string.Empty);
                     }
 
                     var regexMatches = LicenceNumbersRegex().Matches(numberLine);
@@ -243,14 +248,14 @@ public static partial class LicenceNumber
                         continue;
                     }
 
-                    var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
+                    /*var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
                                                       || (value.Contains('/') && value.Contains(' '));
                     //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
 
                     if (hasInvalidComboOfSeperators)
                     {
                         continue;
-                    }
+                    }*/
 
                     // Its a value + unit
                     if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))

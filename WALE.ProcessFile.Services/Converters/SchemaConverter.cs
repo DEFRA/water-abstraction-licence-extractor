@@ -1249,6 +1249,12 @@ public static partial class SchemaConverter
 
         foreach (var generalLinkedLicenceNumber in generalLinkedLicenceNumbers)
         {
+            // Ignore matches near the top of the first page
+            if (generalLinkedLicenceNumber is { PageNumber: 1, LineNumber: <= 3 })
+            {
+                continue;
+            }
+            
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
             returnList.Add(new LinkedLicence

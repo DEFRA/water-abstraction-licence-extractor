@@ -206,6 +206,11 @@ public class PdfDataExtractorService(
                         throw;
                     }
 
+                    if (pageNumber == 3)
+                    {
+                        
+                    }
+                    
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)
                     {
@@ -429,8 +434,27 @@ public class PdfDataExtractorService(
 
                 if (alreadyFound != null)
                 {
+                    string? newValue;
+                    
                     switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
                     {
+                        case MultipleServiceMatchBehaviour.UseAllUnique:
+                            var multipleAlreadyFound = uniqueServiceMatches
+                                .Where(x => x.LabelGroupName == match.LabelGroupName)
+                                .ToList();
+
+                            var existingValues = multipleAlreadyFound
+                                .Select(af => string.Join(' ', af.Text!.Select(m => m.Text)))
+                                .ToList();
+                            
+                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                            if (!existingValues.Contains(newValue))
+                            {
+                                uniqueServiceMatches.Add(match);
+                            }
+                            
+                            break;
                         case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
                             var subResultCount = GetSubResultCount(match);
                             var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
@@ -461,7 +485,7 @@ public class PdfDataExtractorService(
                             break;
                         case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
                             var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
 
                             if (newValue.Length >= existingValue.Length)
                             {
@@ -501,7 +525,6 @@ public class PdfDataExtractorService(
                                 alreadyFound.IsOcr,
                                 out var existingLicenceNumberOutput);
 
-                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
                             var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
                             var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
                             var existingValueLength = existingLicenceNumber.Length;
@@ -528,7 +551,6 @@ public class PdfDataExtractorService(
                                 alreadyFound.IsOcr,
                                 out var newLicenceNumberOutput);
 
-                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
                             var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
                             var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
                             var newValueLength = newLicenceNumber.Length;
@@ -765,6 +787,11 @@ public class PdfDataExtractorService(
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
                     continue;
+                }
+
+                if (labelGroupName == "LinkedLicenceNumber")
+                {
+                    
                 }
                 
                 var labelGroupMatch = await FindLabelGroupMatchesInLinesAsync(

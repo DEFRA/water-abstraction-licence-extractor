@@ -181,7 +181,6 @@ public class AzureAiVisionOcrDataExtractorService(
         var returnLinesInFormat = returnLines
             .Select(l => new LineAndWords
             {
-                Text = l.Text,
                 Words = l.Words.Select(WordToDocumentLineWord).ToList()!
             })
             .ToList();

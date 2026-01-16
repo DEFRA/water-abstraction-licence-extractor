@@ -97,7 +97,11 @@ public class TesseractOcrDataExtractorService(
                     null));
             } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
 
-            returnLines.Add(new LineAndWords { Text = line, Words = words });
+            returnLines.Add(
+                new LineAndWords
+                {
+                    Words = words
+                });
         } while (iterator.Next(PageIteratorLevel.TextLine));
         
         return returnLines;

@@ -29,6 +29,7 @@ public static class LabelConfiguration
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
+            
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
             ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
         ];
@@ -1240,7 +1241,7 @@ public static class LabelConfiguration
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
-                NextLinesToFetch = 0
+                NextLinesToFetch = 1
             }
         ];
     }
@@ -2401,6 +2402,7 @@ public static class LabelConfiguration
             PreviousLinesToFetch = 0,
             NextLinesToFetch = 0,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+            MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
             Remove =
             [
                 PageNumberPattern,

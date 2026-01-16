@@ -1,10 +1,128 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WeCantSpell.Hunspell;
 
 namespace WALE.ProcessFile.Core.Helpers;
 
 public static class AutoCorrectHelper
 {
+    public static void RemoveSpacesAroundSlashes(IReadOnlyList<LineAndWords> returnLines)
+    {
+        foreach (var returnLine in returnLines)
+        {
+            if (returnLine.Text?.Contains('/') != true)
+            {
+                continue;
+            }
+            
+            var originalText = returnLine.Text;
+            var newText = RemoveSpacesAroundSlashes(returnLine.Text);
+
+            if (newText == originalText)
+            {
+                continue;
+            }
+            
+            var newWords = new List<DocumentLineWord?>();
+            var wordTexts = newText!.Split(' ');
+
+            foreach (var wordText in wordTexts)
+            {
+                var wordBefore = returnLine.Words!.FirstOrDefault(x => x!.Text == wordText)
+                    ?? returnLine.Words!.FirstOrDefault(w => wordText.StartsWith(w!.Text));
+
+                var newWord = new DocumentLineWord(
+                    wordText,
+                    wordBefore!.OcrConfidence,
+                    wordBefore.Coordinates,
+                    wordBefore.HandwrittenOrTyped)
+                {
+                    Autocorrected = true
+                };
+
+                newWords.Add(newWord);
+            }
+
+            returnLine.Words = newWords;
+        }
+    }
+    
+    public static void RemoveSpacesAroundSlashes(IReadOnlyList<DocumentLine> returnLines)
+    {
+        foreach (var returnLine in returnLines)
+        {
+            foreach (var column in returnLine.Columns)
+            {
+                if (column.Text.Contains('/') != true)
+                {
+                    continue;
+                }
+
+                var originalText = column.Text;
+                var newText = RemoveSpacesAroundSlashes(column.Text);
+
+                if (newText == originalText)
+                {
+                    continue;
+                }
+
+                var newWords = new List<DocumentLineWord>();
+                var wordTexts = newText!.Split(' ');
+
+                foreach (var wordText in wordTexts)
+                {
+                    var wordBefore = column.Words.FirstOrDefault(x => x.Text == wordText)
+                        ?? column.Words.FirstOrDefault(w => wordText.StartsWith(w.Text));
+
+                    var newWord = new DocumentLineWord(
+                        wordText,
+                        wordBefore!.OcrConfidence,
+                        wordBefore.Coordinates,
+                        wordBefore.HandwrittenOrTyped)
+                    {
+                        Autocorrected = true
+                    };
+
+                    newWords.Add(newWord);
+                }
+
+                column.Words = newWords;
+                column.Text = string.Join(' ', newWords.Select(w => w.Text));
+            }
+        }
+    }
+
+    private static string? RemoveSpacesAroundSlashes(string? wordText)
+    {
+        if (wordText == null)
+        {
+            return null;
+        }
+        
+        if (wordText.Contains("/ 0")) wordText = wordText.Replace("/ 0", "/0");
+        if (wordText.Contains("/ 1")) wordText = wordText.Replace("/ 1", "/1");
+        if (wordText.Contains("/ 2")) wordText = wordText.Replace("/ 2", "/2");
+        if (wordText.Contains("/ 3")) wordText = wordText.Replace("/ 3", "/3");
+        if (wordText.Contains("/ 4")) wordText = wordText.Replace("/ 4", "/4");
+        if (wordText.Contains("/ 5")) wordText = wordText.Replace("/ 5", "/5");
+        if (wordText.Contains("/ 6")) wordText = wordText.Replace("/ 6", "/6");
+        if (wordText.Contains("/ 7")) wordText = wordText.Replace("/ 7", "/7");
+        if (wordText.Contains("/ 8")) wordText = wordText.Replace("/ 8", "/8");
+        if (wordText.Contains("/ 9")) wordText = wordText.Replace("/ 9", "/9");
+        if (wordText.Contains("0 /")) wordText = wordText.Replace("0 /", "0/");
+        if (wordText.Contains("1 /")) wordText = wordText.Replace("1 /", "1/");
+        if (wordText.Contains("2 /")) wordText = wordText.Replace("2 /", "2/");
+        if (wordText.Contains("3 /")) wordText = wordText.Replace("3 /", "3/");
+        if (wordText.Contains("4 /")) wordText = wordText.Replace("4 /", "4/");
+        if (wordText.Contains("5 /")) wordText = wordText.Replace("5 /", "5/");
+        if (wordText.Contains("6 /")) wordText = wordText.Replace("6 /", "6/");
+        if (wordText.Contains("7 /")) wordText = wordText.Replace("7 /", "7/");
+        if (wordText.Contains("8 /")) wordText = wordText.Replace("8 /", "8/");
+        if (wordText.Contains("9 /")) wordText = wordText.Replace("9 /", "9/");
+
+        return wordText;
+    }
+    
     public static DocumentLineWord? ReplaceSomeSpecialCharacters(DocumentLineWord? word)
     {
         if (word == null)
@@ -14,7 +132,7 @@ public static class AutoCorrectHelper
         
         var wordText = word.Text;
 
-        while (wordText.Contains(" ."))
+        while (wordText.Contains(" .")) // TODO can this ever ben found at a word level?
         {
             wordText = wordText.Replace(" .", ".");
         }
@@ -29,7 +147,7 @@ public static class AutoCorrectHelper
             wordText = wordText.Replace("ᵗʰ", "th");
         }
 
-        word.Text = wordText.Trim();
+        word.Text = wordText!.Trim();
 
         if (word.Text == ".")
         {

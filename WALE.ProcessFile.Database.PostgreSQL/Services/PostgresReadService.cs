@@ -177,6 +177,56 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.PageNumber
             });
     }
+    
+    public async Task<string?> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data 
+                           FROM ocr_temporary_image_text_cache 
+                           WHERE filename = @Filename 
+                             AND ocr_service_name = @OcrServiceName 
+                             AND page_number = @PageNumber 
+                             AND image_number = @ImageNumber
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber,
+                request.ImageNumber
+            });
+    }
+
+    public async Task<string?> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data 
+                           FROM ocr_temporary_screenshot_text_cache 
+                           WHERE filename = @Filename
+                             AND ocr_service_name = @OcrServiceName
+                             AND page_number = @PageNumber
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                request.PageNumber
+            });
+    }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
@@ -561,6 +611,33 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result == null 
             ? null 
             : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+    }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               lic."LIC_NO" AS LicenceNumber,
+                               lc."PARAM1" AS Param1,
+                               lc."PARAM2" AS Param2,
+                               lc."TEXT" AS Text,
+                               lic."NOTES" AS Notes,
+                               lic."FGAC_REGION_CODE" AS RegionCode
+                           FROM nald."NALD_ABS_LICENCES" lic
+                           LEFT JOIN nald."NALD_LIC_CONDITIONS" lc ON lic."ID" = lc."AABP_ID" AND lc."ACIN_CODE" = 'AGG'
+                           WHERE lc."PARAM1" IS NOT NULL 
+                              OR lc."PARAM2" IS NOT NULL 
+                              OR lc."TEXT" IS NOT NULL 
+                              OR lic."NOTES" IS NOT NULL;
+                           """;
+        
+        var result = await QueryAsync<NaldLinkedLicenceRawData>(
+            connection,
+            sql,
+            0);
+        
+        return result.ToList();
     }
 
     private async Task<T?> QuerySingleOrDefaultAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)

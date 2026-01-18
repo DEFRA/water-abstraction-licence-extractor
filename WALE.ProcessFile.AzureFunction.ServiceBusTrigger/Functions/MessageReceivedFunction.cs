@@ -49,6 +49,15 @@ public class MessageReceivedFunction(
         var aiVisionEndpoint = configuration["AiVisionEndpoint"];
         if (string.IsNullOrEmpty(aiVisionEndpoint)) throw new Exception($"{nameof(aiVisionEndpoint)} is missing");
         
+        var dotnetPath = configuration["DotnetPath"];
+        if (string.IsNullOrEmpty(dotnetPath)) throw new Exception($"{nameof(dotnetPath)} is missing");
+        
+        var tesseractExeName = configuration["TesseractExeName"];
+        if (string.IsNullOrEmpty(tesseractExeName)) throw new Exception($"{nameof(tesseractExeName)} is missing");
+        
+        var tesseractExeDirectory = configuration["TesseractExeDirectory"];
+        if (string.IsNullOrEmpty(tesseractExeDirectory)) throw new Exception($"{nameof(tesseractExeDirectory)} is missing");
+        
         var fileName = Encoding.UTF8.GetString(message.Body);
         var pdfFilePath = $"{pdfFolderPath}/{fileName}";
         
@@ -62,7 +71,7 @@ public class MessageReceivedFunction(
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService, outputService),
+                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService, outputService, dotnetPath, tesseractExeName, tesseractExeDirectory),
                 new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey, cacheService, outputService),
             ],
             cacheService,

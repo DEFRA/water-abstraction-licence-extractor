@@ -2512,6 +2512,258 @@ export interface IMeanOfAbstraction {
     [key: string]: any;
 }
 
+export class NaldPointData implements INaldPointData {
+    id?: string | undefined;
+    primaryType?: string | undefined;
+    secondaryType?: string | undefined;
+    name?: string | undefined;
+    category?: string | undefined;
+    ngr?: NaldPointNgr | undefined;
+    ngrCartesian?: NaldPointNgrCartesian | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: INaldPointData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.primaryType = _data["primaryType"];
+            this.secondaryType = _data["secondaryType"];
+            this.name = _data["name"];
+            this.category = _data["category"];
+            this.ngr = _data["ngr"] ? NaldPointNgr.fromJS(_data["ngr"]) : undefined as any;
+            this.ngrCartesian = _data["ngrCartesian"] ? NaldPointNgrCartesian.fromJS(_data["ngrCartesian"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): NaldPointData {
+        data = typeof data === 'object' ? data : {};
+        let result = new NaldPointData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["primaryType"] = this.primaryType;
+        data["secondaryType"] = this.secondaryType;
+        data["name"] = this.name;
+        data["category"] = this.category;
+        data["ngr"] = this.ngr ? this.ngr.toJSON() : undefined as any;
+        data["ngrCartesian"] = this.ngrCartesian ? this.ngrCartesian.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface INaldPointData {
+    id?: string | undefined;
+    primaryType?: string | undefined;
+    secondaryType?: string | undefined;
+    name?: string | undefined;
+    category?: string | undefined;
+    ngr?: NaldPointNgr | undefined;
+    ngrCartesian?: NaldPointNgrCartesian | undefined;
+
+    [key: string]: any;
+}
+
+export class NaldPointNgr implements INaldPointNgr {
+    ngR1?: string | undefined;
+    ngR2?: string | undefined;
+    ngR3?: string | undefined;
+    ngR4?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: INaldPointNgr) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.ngR1 = _data["ngR1"];
+            this.ngR2 = _data["ngR2"];
+            this.ngR3 = _data["ngR3"];
+            this.ngR4 = _data["ngR4"];
+        }
+    }
+
+    static fromJS(data: any): NaldPointNgr {
+        data = typeof data === 'object' ? data : {};
+        let result = new NaldPointNgr();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["ngR1"] = this.ngR1;
+        data["ngR2"] = this.ngR2;
+        data["ngR3"] = this.ngR3;
+        data["ngR4"] = this.ngR4;
+        return data;
+    }
+}
+
+export interface INaldPointNgr {
+    ngR1?: string | undefined;
+    ngR2?: string | undefined;
+    ngR3?: string | undefined;
+    ngR4?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class NaldPointNgrCartesian implements INaldPointNgrCartesian {
+    ngrCartesian1?: string | undefined;
+    ngrCartesian2?: string | undefined;
+    ngrCartesian3?: string | undefined;
+    ngrCartesian4?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: INaldPointNgrCartesian) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.ngrCartesian1 = _data["ngrCartesian1"];
+            this.ngrCartesian2 = _data["ngrCartesian2"];
+            this.ngrCartesian3 = _data["ngrCartesian3"];
+            this.ngrCartesian4 = _data["ngrCartesian4"];
+        }
+    }
+
+    static fromJS(data: any): NaldPointNgrCartesian {
+        data = typeof data === 'object' ? data : {};
+        let result = new NaldPointNgrCartesian();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["ngrCartesian1"] = this.ngrCartesian1;
+        data["ngrCartesian2"] = this.ngrCartesian2;
+        data["ngrCartesian3"] = this.ngrCartesian3;
+        data["ngrCartesian4"] = this.ngrCartesian4;
+        return data;
+    }
+}
+
+export interface INaldPointNgrCartesian {
+    ngrCartesian1?: string | undefined;
+    ngrCartesian2?: string | undefined;
+    ngrCartesian3?: string | undefined;
+    ngrCartesian4?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class NaldPurposeData implements INaldPurposeData {
+    id?: string | undefined;
+    code?: string | undefined;
+    useCode?: string | undefined;
+    useDescription?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: INaldPurposeData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.code = _data["code"];
+            this.useCode = _data["useCode"];
+            this.useDescription = _data["useDescription"];
+        }
+    }
+
+    static fromJS(data: any): NaldPurposeData {
+        data = typeof data === 'object' ? data : {};
+        let result = new NaldPurposeData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["code"] = this.code;
+        data["useCode"] = this.useCode;
+        data["useDescription"] = this.useDescription;
+        return data;
+    }
+}
+
+export interface INaldPurposeData {
+    id?: string | undefined;
+    code?: string | undefined;
+    useCode?: string | undefined;
+    useDescription?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class OutputListDataItem implements IOutputListDataItem {
     imagePath?: string | undefined;
     filename?: string | undefined;
@@ -2721,6 +2973,8 @@ export class PageImage implements IPageImage {
     extension!: string;
     pageNumber!: number;
     imageNumber!: number;
+    width!: number;
+    height!: number;
 
     [key: string]: any;
 
@@ -2743,6 +2997,8 @@ export class PageImage implements IPageImage {
             this.extension = _data["extension"];
             this.pageNumber = _data["pageNumber"];
             this.imageNumber = _data["imageNumber"];
+            this.width = _data["width"];
+            this.height = _data["height"];
         }
     }
 
@@ -2763,6 +3019,8 @@ export class PageImage implements IPageImage {
         data["extension"] = this.extension;
         data["pageNumber"] = this.pageNumber;
         data["imageNumber"] = this.imageNumber;
+        data["width"] = this.width;
+        data["height"] = this.height;
         return data;
     }
 }
@@ -2772,6 +3030,8 @@ export interface IPageImage {
     extension: string;
     pageNumber: number;
     imageNumber: number;
+    width: number;
+    height: number;
 
     [key: string]: any;
 }
@@ -2907,7 +3167,8 @@ export interface IPdfPageProvider {
 export class PeriodOfAbstraction implements IPeriodOfAbstraction {
     id?: string | undefined;
     description?: string | undefined;
-    naldId?: string | undefined;
+    naldPeriodStart?: string | undefined;
+    naldPeriodEnd?: string | undefined;
     pointIds?: string[] | undefined;
     purposeIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -2935,7 +3196,8 @@ export class PeriodOfAbstraction implements IPeriodOfAbstraction {
             }
             this.id = _data["id"];
             this.description = _data["description"];
-            this.naldId = _data["naldId"];
+            this.naldPeriodStart = _data["naldPeriodStart"];
+            this.naldPeriodEnd = _data["naldPeriodEnd"];
             if (Array.isArray(_data["pointIds"])) {
                 this.pointIds = [] as any;
                 for (let item of _data["pointIds"])
@@ -2969,7 +3231,8 @@ export class PeriodOfAbstraction implements IPeriodOfAbstraction {
         }
         data["id"] = this.id;
         data["description"] = this.description;
-        data["naldId"] = this.naldId;
+        data["naldPeriodStart"] = this.naldPeriodStart;
+        data["naldPeriodEnd"] = this.naldPeriodEnd;
         if (Array.isArray(this.pointIds)) {
             data["pointIds"] = [];
             for (let item of this.pointIds)
@@ -2992,7 +3255,8 @@ export class PeriodOfAbstraction implements IPeriodOfAbstraction {
 export interface IPeriodOfAbstraction {
     id?: string | undefined;
     description?: string | undefined;
-    naldId?: string | undefined;
+    naldPeriodStart?: string | undefined;
+    naldPeriodEnd?: string | undefined;
     pointIds?: string[] | undefined;
     purposeIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -3057,7 +3321,7 @@ export interface IPoint {
 }
 
 export class PointOfAbstraction implements IPointOfAbstraction {
-    naldId?: string | undefined;
+    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
@@ -3080,7 +3344,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldId = _data["naldId"];
+            this.naldData = _data["naldData"] ? NaldPointData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["purposeIds"])) {
                 this.purposeIds = [] as any;
                 for (let item of _data["purposeIds"])
@@ -3105,7 +3369,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldId"] = this.naldId;
+        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.purposeIds)) {
             data["purposeIds"] = [];
             for (let item of this.purposeIds)
@@ -3119,7 +3383,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
 }
 
 export interface IPointOfAbstraction {
-    naldId?: string | undefined;
+    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
@@ -3245,7 +3509,7 @@ export interface IPurpose {
 }
 
 export class PurposeOfAbstraction implements IPurposeOfAbstraction {
-    naldId?: string | undefined;
+    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
@@ -3268,7 +3532,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldId = _data["naldId"];
+            this.naldData = _data["naldData"] ? NaldPurposeData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["pointIds"])) {
                 this.pointIds = [] as any;
                 for (let item of _data["pointIds"])
@@ -3293,7 +3557,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldId"] = this.naldId;
+        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.pointIds)) {
             data["pointIds"] = [];
             for (let item of this.pointIds)
@@ -3307,7 +3571,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
 }
 
 export interface IPurposeOfAbstraction {
-    naldId?: string | undefined;
+    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;

@@ -7,6 +7,7 @@ import LicencesTableRow from "../components/LicencesTableRow.tsx";
 import LicencesTableFooters from "../components/LicencesTableFooters.tsx";
 import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders.tsx";
 import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
+import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody.tsx";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
@@ -24,6 +25,8 @@ function ListPage() {
     const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
+
+    const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
 
     const {
         filteredData,
@@ -111,6 +114,7 @@ function ListPage() {
                                 oddRow={index % 2 === 0}
                                 onOpenReport={openReport}
                                 onOpenLicenceSetReport={openLicenceSetReport}
+                                showSingles={showSingles}
                             />
                         ))}
                         </tbody>
@@ -123,9 +127,13 @@ function ListPage() {
                 <div id="licenceSets">
                     <table>
                         <thead><LicenceSetsTableHeaders/></thead>
-                        <tbody>
-                        </tbody>
-                        <tfoot><LicenceSetsTableFooters/></tfoot>
+                        <LicenceSetsTableBody 
+                            data={filteredData} 
+                            onOpenReport={openReport} 
+                            onOpenLicenceSetReport={openLicenceSetReport} 
+                            onTotalsCalculated={setLicenceSetsTotals}
+                        />
+                        <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
                     </table>
                     <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
                 </div>

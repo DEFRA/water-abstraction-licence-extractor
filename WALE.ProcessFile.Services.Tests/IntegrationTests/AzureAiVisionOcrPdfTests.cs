@@ -93,7 +93,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var period = resultList
             .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
@@ -216,7 +216,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -249,7 +249,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);
@@ -290,7 +290,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -382,7 +382,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -494,7 +494,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -622,7 +622,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(nameResult);
@@ -730,7 +730,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
@@ -836,7 +836,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -946,7 +946,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1019,7 +1019,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.StartsWith("Northumbrian Water Authority", issuer.Text?.FirstOrDefault()?.Text);
         
         // Assert
-        Assert.Equal(7, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1069,7 +1069,7 @@ public class AzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1560,7 +1560,7 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(10, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1591,7 +1591,7 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(11, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1619,7 +1619,7 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(5, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1647,7 +1647,7 @@ public class AzureAiVisionOcrPdfTests
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2);
-        Assert.Equal(6, GeneralTeststHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
 
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

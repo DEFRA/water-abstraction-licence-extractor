@@ -64,7 +64,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -193,7 +193,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

@@ -11,9 +11,10 @@ interface OutputItemTableRowProps {
     oddRow: boolean;
     onOpenReport: (filename: string) => void;
     onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    showSingles: boolean;
 }
 
-function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport}: OutputItemTableRowProps) {
+function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -29,7 +30,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                        onOpenReport(item.filename!);
                    }}>{item.filename}</a>
             </td>
-            <td id={dashesIfNullOrEmpty(item.licenceNumber)}>{dashesIfNullOrEmpty(item.licenceNumber)}</td>
+            <td id={dashesIfNullOrEmpty(item.licenceNumber)} dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
@@ -50,8 +51,8 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}
+                    showSingles={showSingles}
                 />
-                <span className='noLicenceSetsShowing'>--</span>
             </td>
             <td>{item.status}</td>
         </tr>

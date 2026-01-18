@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { JSONPath } from 'jsonpath-plus';
+import {useState, useEffect, useRef} from 'react';
+import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
@@ -7,6 +7,7 @@ import {OverviewContent} from "./OverviewContent.tsx";
 import {getImageUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";
+import LicenceImages from "./LicenceImages.tsx";
 
 interface ReportContentProps {
     filename: string;
@@ -14,10 +15,10 @@ interface ReportContentProps {
     onOpenLinkedLicence: (filename: string) => void;
 }
 
-type TabType = 'overview' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text';
+type TabType = 'overview' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 type ViewType = 1 | 2;
 
-export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicence }: ReportContentProps) {
+export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +90,7 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
 
     const getMatches = (dataToUse: any, path: string): any[] => {
         try {
-            const results = JSONPath({ path, json: dataToUse });
+            const results = JSONPath({path, json: dataToUse});
             return results || [];
         } catch {
             return [];
@@ -121,15 +122,15 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
     };
 
     if (loading) {
-        return <div style={{ padding: '20px' }}>Loading report...</div>;
+        return <div style={{padding: '20px'}}>Loading report...</div>;
     }
 
     if (error) {
-        return <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>;
+        return <div style={{padding: '20px', color: 'red'}}>Error: {error}</div>;
     }
 
     if (!reportData) {
-        return <div style={{ padding: '20px' }}>No report data available</div>;
+        return <div style={{padding: '20px'}}>No report data available</div>;
     }
 
     return (
@@ -236,18 +237,30 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
                                     Text
                                 </a>
                             </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    className={activeTab === 'images' ? 'selectedTab' : ''}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setActiveTab('images');
+                                    }}
+                                >
+                                    Images
+                                </a>
+                            </li>
                         </ul>
 
                         {/* Tab Content */}
                         {activeTab === 'json-new' && reportData2 && (
                             <div id="jsonNewPath">
-                                <JsonView src={reportData2} collapsed={1} theme="default" />
+                                <JsonView src={reportData2} collapsed={1} theme="default"/>
                             </div>
                         )}
 
                         {activeTab === 'json-set' && licenceSetsData && (
                             <div id="jsonSetPath">
-                                <JsonView src={licenceSetsData} collapsed={1} theme="default" />
+                                <JsonView src={licenceSetsData} collapsed={1} theme="default"/>
                             </div>
                         )}
 
@@ -263,7 +276,7 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
 
                         {activeTab === 'json' && (
                             <div id="jsonPath">
-                                <JsonView src={reportData} collapsed={1} theme="default" />
+                                <JsonView src={reportData} collapsed={1} theme="default"/>
                             </div>
                         )}
 
@@ -274,6 +287,12 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
                     //     __html: textData.replaceAll('\n', '<br/>\n')
                     // }}
                 />
+                            </div>
+                        )}
+                        
+                        {activeTab === 'images' && (
+                            <div id="images">
+                                <LicenceImages filename={filename} />
                             </div>
                         )}
 
@@ -291,10 +310,10 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
                             <div id="propertiesNew">
                                 <div
                                     id="licenceNumberTxtDiv"
-                                    style={{ visibility: showLicenceHolder ? 'hidden' : 'visible' }}
+                                    style={{visibility: showLicenceHolder ? 'hidden' : 'visible'}}
                                 >
                                     <label htmlFor="licenceNumberTxt">Licence number</label>
-                                    <br />
+                                    <br/>
                                     <input
                                         type="text"
                                         id="licenceNumberTxt"
@@ -306,10 +325,10 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
                                 <div
                                     id="licenceHolderTxtDiv"
                                     className="default-hidden"
-                                    style={{ visibility: showLicenceHolder ? 'visible' : 'hidden' }}
+                                    style={{visibility: showLicenceHolder ? 'visible' : 'hidden'}}
                                 >
                                     <label htmlFor="licenceHolderTxt">Licence holder</label>
-                                    <br />
+                                    <br/>
                                     <input
                                         type="text"
                                         id="licenceHolderTxt"
@@ -354,7 +373,7 @@ export function ReportContent({ filename, hideBackLink = true, onOpenLinkedLicen
 
                         <div id="iframeParent" ref={iframeParentRef}>
                             <div id="pdf-images">
-                                {Array.from({ length: reportData.numberOfPages! }, (_, i) => i + 1).map(
+                                {Array.from({length: reportData.numberOfPages!}, (_, i) => i + 1).map(
                                     (pageNum) => (
                                         <img
                                             key={pageNum}

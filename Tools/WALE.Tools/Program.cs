@@ -46,4 +46,7 @@ switch (workflow)
     case "TemplateFinderExtract":
         await TemplateIdentificationExtract.GenerateTemplateFinderResult("Anglian");
         break;
+    case "ImportNaldData":
+        await ImportNaldData.ImportAsync();
+        break;
 }

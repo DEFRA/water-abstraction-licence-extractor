@@ -182,4 +182,68 @@ public static class KeyConfig
             return _postgresConnectionString;
         }
     }
+
+    private static string? _naldDataDumpFolder;
+
+    public static string NaldDataDumpFolder
+    {
+        get
+        {
+            if (_naldDataDumpFolder != null)
+            {
+                return _naldDataDumpFolder;
+            }
+
+            _naldDataDumpFolder = Config["NaldDataDumpFolder"]!;
+            return _naldDataDumpFolder;
+        }
+    }
+    
+    private static string? _dotnetPath;
+
+    public static string DotnetPath
+    {
+        get
+        {
+            if (_dotnetPath != null)
+            {
+                return _dotnetPath;
+            }
+
+            _dotnetPath = Config["DotnetPath"]!;
+            return _dotnetPath;
+        }
+    }
+    
+    private static string? _tesseractExeName;
+
+    public static string TesseractExeName
+    {
+        get
+        {
+            if (_tesseractExeName != null)
+            {
+                return _tesseractExeName;
+            }
+
+            _tesseractExeName = Config["TesseractExeName"]!;
+            return _tesseractExeName;
+        }
+    }
+    
+    private static string? _tesseractExeDirectory;
+
+    public static string TesseractExeDirectory
+    {
+        get
+        {
+            if (_tesseractExeDirectory != null)
+            {
+                return _tesseractExeDirectory;
+            }
+
+            _tesseractExeDirectory = Config["TesseractExeDirectory"]!;
+            return _tesseractExeDirectory;
+        }
+    }
 }

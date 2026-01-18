@@ -10,6 +10,8 @@ namespace WALE.ProcessFile.Services.Services;
 
 public class FileSystemOutputService(string outputFolder) : IOutputService
 {
+    public string? OutputFolder { get; set; } = outputFolder.StartsWith('/') ? outputFolder : Path.GetFullPath(outputFolder);
+    
     public Task SetupAsync()
     {
         Directory.CreateDirectory(outputFolder);

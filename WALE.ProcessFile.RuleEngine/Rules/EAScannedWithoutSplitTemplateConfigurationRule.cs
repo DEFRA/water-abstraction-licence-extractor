@@ -9,13 +9,14 @@ public class EAScannedWithoutSplitTemplateConfigurationRule : IRule<TemplateFind
 {
     private readonly List<(string LabelGroupName, List<LabelToMatch> Labels)> _configuration;
     public string RuleName => $"EA-Scanned";
+    public string Region { get; set; }
     public int Priority => 3;
 
     public bool CanApply(MatchesResult content)
     {
         return content.Matches?
             .Where(m => m.LabelGroupName == "EALabel")?.Any() == true && content.Matches?
-            .Where(m => m.LabelGroupName == "SplitLabels")?.Any() == false;
+            .Where(m => m.LabelGroupName == $"{Region}SplitLabels")?.Any() == false;
     }
 
     public TemplateFinderResult Apply(MatchesResult content)

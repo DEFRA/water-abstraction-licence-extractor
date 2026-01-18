@@ -10,26 +10,13 @@ public static class TemplateFinderRuleConfiguration
         return
         [
             ("EALabel", GetEALabels()),
-            ("SplitLabels", GetSplitLabels()),
+            ("NESplitLabels", GetSplitLabels()),
             ("AnglianSplitLabels", GetAnglianSplitLabels()),
-            ("AnglianWater", GetAnglianWaterLabels()),
-            ("AnglianDivisions", GetAnglianDivisionsLabels()),
-            ("LincolnWater", GetLincolnWaterLabels()),
-            ("LincolnshireRiver", GetLincolnshireRiverLabels()),
-            ("WellandNeneRiver", GetWellandNeneRiverLabels()),
-            ("EastSuffolkNorfolkRiver", GetEastSuffolkNorfolkRiverLabels()),
-            ("EssexRiver", GetEssexRiverLabels()),
-            ("GreatOuseRiver", GetGreatOuseRiverLabels()),
-            ("GenericRiverAuthority", GetGenericRiverAuthorityLabels()),
             ("NationalRivers", GetNationalRiversLabels()),
-            ("YorkshireWater", GetYorkshireWaterLabels()),
-            ("YorkshireRiver", GetYorkshireRiverLabels()),
-            ("NorthumbrianWater", GetNorthumbrianWaterLabels()),
-            ("GetNorthumbrianRiverLabels", GetNorthumbrianRiverLabels()),
-            ("NRAModern1", GetNRAModern1Labels()),
-            ("NRAModern2", GetNRAModern2Labels()),
-            ("NRAAnglianModern1", GetNRAAnglianModern1Labels()),
-            ("NRAAnglianModern2", GetNRAAnglianModern2Labels()),
+            ("NENRAModern1", GetNRAModern1Labels()),
+            ("NENRAModern2", GetNRAModern2Labels()),
+            ("AnglianNRAModern1", GetNRAAnglianModern1Labels()),
+            ("AnglianNRAModern2", GetNRAAnglianModern2Labels()),
             ("NRAOld", GetNRAOldLabels()),
         ];
     }
@@ -57,108 +44,13 @@ public static class TemplateFinderRuleConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetYorkshireWaterLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "YorkshireWater",
-                Format = "Text",
-                Text =
-                [
-                    new(".*Yorkshire.* Water Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetYorkshireRiverLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "YorkshireRiver",
-                Format = "Text",
-                Text =
-                [
-                    new(".*Yorkshire.* River.* Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-    private static List<LabelToMatch> GetNorthumbrianWaterLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "NorthumbrianWater",
-                Format = "Text",
-                Text =
-                [
-                    new(".*Northumbrian.* Water.* Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetNorthumbrianRiverLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "NorthumbrianRiverLabels",
-                Format = "Text",
-                Text =
-                [
-                    new(".*Northumbrian.* River.* Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-    
     private static List<LabelToMatch> GetSplitLabels()
     {
         return
         [
             new LabelToMatch
             {
-                Name = "SplitLabels",
+                Name = "Yorkshire Water Authority",
                 Format = "Text",
                 Text =
                 [
@@ -166,17 +58,53 @@ public static class TemplateFinderRuleConfiguration
                     {
                         IsRegularExpression = true,
                         RegularExpressionIsCaseInsensitive = true
-                    },
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Yorkshire River Authority",
+                Format = "Text",
+                Text =
+                [
                     new(".*Yorkshire.* River.* Authority")
                     {
                         IsRegularExpression = true,
                         RegularExpressionIsCaseInsensitive = true
-                    },
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Northumbrian Water Authority",
+                Format = "Text",
+                Text =
+                [
                     new(".*Northumbrian.* Water.* Authority")
                     {
                         IsRegularExpression = true,
                         RegularExpressionIsCaseInsensitive = true
-                    },
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Northumbrian River Authority",
+                Format = "Text",
+                Text =
+                [
                     new(".*Northumbrian.* River.* Authority")
                     {
                         IsRegularExpression = true,
@@ -342,111 +270,7 @@ public static class TemplateFinderRuleConfiguration
         [
             new LabelToMatch
             {
-                Name = "AnglianSplitLabels",
-                Format = "Text",
-                Text =
-                [
-                    new(".*Anglian.*Water.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*NORFOLK.*AND.*SUFFOLK.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*LINCOLN.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*LINCOLNSHIRE.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*NORWICH.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Great.*Ouse.*River.*Division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Colchester.*division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*N\\.R\\.A.*UNIT")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Cambridge.*Division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*WELLAND.*AND.*NENE.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Lincoln.*Water.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Lincolnshire.*River.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Welland.*and.*Nene.*River.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Oundle.*division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*East.*Suffolk.*and.*Norfolk.*River.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Essex.*River.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Great.*Ouse.*River.*Authority")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetAnglianWaterLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "AnglianWater",
+                Name = "Anglian Water Authority",
                 Format = "Text",
                 Text =
                 [
@@ -460,66 +284,14 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetAnglianDivisionsLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "AnglianDivisions",
+                Name = "Nofolk And Suffolk River Division",
                 Format = "Text",
                 Text =
                 [
                     new(".*NORFOLK.*AND.*SUFFOLK.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*LINCOLN.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*LINCOLNSHIRE.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*NORWICH.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Great.*Ouse.*River.*Division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Colchester.*division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*N\\.R\\.A.*UNIT")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Cambridge.*Division")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*WELLAND.*AND.*NENE.*RIVER.*DIVISION")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    },
-                    new(".*Oundle.*division")
                     {
                         IsRegularExpression = true,
                         RegularExpressionIsCaseInsensitive = true
@@ -529,17 +301,146 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetLincolnWaterLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "LincolnWater",
+                Name = "lincoln Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*LINCOLN DIVISION")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Lincolnshire River Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*LINCOLNSHIRE.*RIVER.*DIVISION")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Norwich Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*NORWICH.*DIVISION")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Great Ouse River Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Great.*Ouse.*River.*Division")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Colchester Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Colchester.*division")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "NRA Unit",
+                Format = "Text",
+                Text =
+                [
+                    new(".*N\\.R\\.A.*UNIT")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Cambridge Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Cambridge.*Division")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Welland And Nene River Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*WELLAND.*AND.*NENE.*RIVER.*DIVISION")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Lincoln Water Authority",
                 Format = "Text",
                 Text =
                 [
@@ -553,17 +454,10 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetLincolnshireRiverLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "LincolnshireRiver",
+                Name = "Lincolnshire River Authority",
                 Format = "Text",
                 Text =
                 [
@@ -577,17 +471,10 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetWellandNeneRiverLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "WellandNeneRiver",
+                Name = "Welland and Nene River Authority",
                 Format = "Text",
                 Text =
                 [
@@ -601,17 +488,27 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetEastSuffolkNorfolkRiverLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "EastSuffolkNorfolkRiver",
+                Name = "Oundle Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Oundle.*division")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "East Suffolk and Norfolk River Authority",
                 Format = "Text",
                 Text =
                 [
@@ -625,17 +522,10 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetEssexRiverLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "EssexRiver",
+                Name = "Essex River Authority",
                 Format = "Text",
                 Text =
                 [
@@ -649,17 +539,10 @@ public static class TemplateFinderRuleConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ActuallyLabel,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetGreatOuseRiverLabels()
-    {
-        return
-        [
+            },
             new LabelToMatch
             {
-                Name = "GreatOuseRiver",
+                Name = "Great Ouse River Authority",
                 Format = "Text",
                 Text =
                 [
@@ -676,31 +559,6 @@ public static class TemplateFinderRuleConfiguration
             }
         ];
     }
-
-    private static List<LabelToMatch> GetGenericRiverAuthorityLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "GenericRiverAuthority",
-                Format = "Text",
-                Text =
-                [
-                    new("^River\\s+Authority$")
-                    {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
-                IncludeStartLabelText = true
-            }
-        ];
-    }
-
     private static List<LabelToMatch> GetNRAAnglianModern1Labels()
     {
         return

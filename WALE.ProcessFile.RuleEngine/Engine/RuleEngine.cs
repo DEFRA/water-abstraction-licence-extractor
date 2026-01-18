@@ -31,13 +31,14 @@ public class RuleEngine<T> : IRuleEngine<T>
     }
 
     /// <inheritdoc />
-    public bool RemoveRule(string ruleName)
+    public void SetRegion(string region)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(ruleName);
-
         lock (_lock)
         {
-            return _rules.RemoveAll(r => r.RuleName.Equals(ruleName, StringComparison.OrdinalIgnoreCase)) > 0;
+            foreach (var rule in _rules)
+            {
+                rule.Region = region;
+            }
         }
     }
 

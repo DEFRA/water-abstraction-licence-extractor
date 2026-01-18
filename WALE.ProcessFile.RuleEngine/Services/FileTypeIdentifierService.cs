@@ -112,6 +112,12 @@ public class FileTypeIdentifierService
         public string ProcessedDate { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty; // "Success" or "Error"
+        public string IdentifiedByRule { get; set; } = string.Empty;
+        public List<string> MatchedTerms { get; set; }
+    
+        public string? DateOfIssue { get; set; }
+        public string? LicenceNumber { get; set; }
+        public long FileSize { get; set; }
     }
 
     /// <summary>
@@ -297,7 +303,11 @@ public class FileTypeIdentifierService
                     result = new FileTypeResult 
                     { 
                         FileType = record.FileType, 
-                        Confidence = record.Confidence 
+                        Confidence = record.Confidence,
+                        MatchedTerms = record.MatchedTerms,
+                        IdentifiedByRule = record.IdentifiedByRule ?? string.Empty,
+                        DateOfIssue = record.DateOfIssue ?? string.Empty,
+                        LicenceNumber = record.LicenceNumber ?? string.Empty
                     };
                 }
                 results[record.FilePath] = result;
@@ -373,7 +383,7 @@ public class FileTypeIdentifierService
     /// <param name="directoryPath">The directory path</param>
     /// <param name="newResults">New results to append</param>
     /// <param name="allResults">All results including previously processed</param>
-    private void WriteResultsToCsv(string directoryPath, Dictionary<string, FileTypeResult?> newResults, Dictionary<string, FileTypeResult?> allResults)
+    private void WriteResultsToCsv(string directoryPath, Dictionary<string, FileTypeResult?> newResults)
     {
         var csvPath = GetCsvFilePath(directoryPath);
 
@@ -407,7 +417,10 @@ public class FileTypeIdentifierService
                     Confidence = kvp.Value?.Confidence ?? 0.0,
                     ProcessedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     Status = "Success",
-                    ErrorMessage = string.Empty
+                    ErrorMessage = string.Empty,
+                    IdentifiedByRule = kvp.Value?.IdentifiedByRule ?? string.Empty,
+                    DateOfIssue = kvp.Value?.DateOfIssue ?? string.Empty,
+                    LicenceNumber = kvp.Value?.LicenceNumber ?? string.Empty,
                 };
                 csv.WriteRecord(record);
                 csv.NextRecord();
@@ -456,7 +469,8 @@ public class FileTypeIdentifierService
             "tech report",
             "83743S0057__8-37-43-S-0057Plans.pdf",
             "73412s0067__Scanned licence file plans upto 2012 8977701.pdf",
-            "AN0330053090R01__Application Renewal Licence Issued - [Issued 18 10 2024] - 11 10 2024"
+            "AN0330053090R01__Application Renewal Licence Issued - [Issued 18 10 2024] - 11 10 2024",
+            "43004s0022__4-30-04-S-0022 6084539.PDF"
         };
 
         // Filter out excluded files and already processed files
@@ -695,7 +709,7 @@ public class FileTypeIdentifierService
                     {
                         if (batchResultsDict.Count > 0)
                         {
-                            WriteResultsToCsv(directoryPath, batchResultsDict, results);
+                            WriteResultsToCsv(directoryPath, batchResultsDict);
                             batchResultsDict.Clear();
                         }
                         if (batchErrorsDict.Count > 0)
@@ -716,7 +730,7 @@ public class FileTypeIdentifierService
             {
                 if (batchResultsDict.Count > 0)
                 {
-                    WriteResultsToCsv(directoryPath, batchResultsDict, results);
+                    WriteResultsToCsv(directoryPath, batchResultsDict);
                 }
 
                 if (batchErrorsDict.Count > 0)

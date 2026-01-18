@@ -4,7 +4,7 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "GenerateLicenceReaderExtract";
+const string workflow = "TemplateFinderExtract";
 
 const int processRunId = 45;
 
@@ -40,10 +40,10 @@ switch (workflow)
     case "DuplicateLicenceIdentificationExtractBySize": // Identify duplicates by file size
         await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(false);
         break;
-    case "FileTypeIdentificationExtract": // Version File Type Identification
-        await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
-        break;
+    // case "FileTypeIdentificationExtract": // Version File Type Identification
+    //     await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
+    //     break;
     case "TemplateFinderExtract":
-        await TemplateIdentificationExtract.GenerateTemplateFinderResult();
+        await TemplateIdentificationExtract.GenerateTemplateFinderResult("Anglian");
         break;
 }

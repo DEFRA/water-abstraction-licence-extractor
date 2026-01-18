@@ -15,11 +15,10 @@ public interface IRuleEngine<T>
     void AddRule(IRule<T> rule);
 
     /// <summary>
-    /// Removes a rule from the engine
+    /// Sets the region for the rule engine.
     /// </summary>
-    /// <param name="ruleName">The name of the rule to remove</param>
-    /// <returns>True if the rule was removed, false if it wasn't found</returns>
-    bool RemoveRule(string ruleName);
+    /// <param name="region">The region for teh rule</param>
+    void SetRegion(string region);
 
     /// <summary>
     /// Evaluates content against all rules and returns the result from the first applicable rule

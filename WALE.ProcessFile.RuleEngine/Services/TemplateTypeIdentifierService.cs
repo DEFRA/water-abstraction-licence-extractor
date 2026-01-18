@@ -21,11 +21,11 @@ public class TemplateTypeIdentifierService
     /// Initializes a new instance of FileTypeIdentifierService with PDF extractor service
     /// </summary>
     /// <param name="pdfExtractorService">PDF extractor service with OCR support</param>
-    public TemplateTypeIdentifierService(IPdfDataExtractorService pdfExtractorService)
+    public TemplateTypeIdentifierService(IPdfDataExtractorService pdfExtractorService, string region)
     {
         _ruleEngine = new RuleEngine<TemplateFinderResult>();
         _pdfExtractorService = pdfExtractorService ?? throw new ArgumentNullException(nameof(pdfExtractorService));
-        InitializeDefaultRules();
+        InitializeDefaultRules(region);
     }
     
     public async Task<TemplateFinderResult?> IdentifyTemplateTypeAsync(string filePath)
@@ -48,16 +48,14 @@ public class TemplateTypeIdentifierService
 
         return null; // No configuration matched
     }
-    private void InitializeDefaultRules()
+    private void InitializeDefaultRules(string region)
     {
         _ruleEngine.AddRule(new EADigitalTemplateConfigurationRule());
         _ruleEngine.AddRule(new EAScannedWithSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new EAScannedWithoutSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithoutSplitTemplateConfigurationRule());
-        _ruleEngine.AddRule(new YorkshireWaterTemplateConfigurationRule());
-        _ruleEngine.AddRule(new YorkshireRiverTemplateConfigurationRule());
-        _ruleEngine.AddRule(new NorthumbrianWaterTemplateConfigurationRule());
-        _ruleEngine.AddRule(new NorthumbrianRiverTemplateConfigurationRule());
+        _ruleEngine.AddRule(new DivisionalTemplateConfigurationRule());
+        _ruleEngine.SetRegion(region);
     }
 }

@@ -9,6 +9,7 @@ public class EADigitalTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
     private readonly List<(string LabelGroupName, List<LabelToMatch> Labels)> _configuration;
     public string RuleName => $"EA-Digital";
+    public string Region { get; set; }
     public int Priority => 1;
 
     public bool CanApply(MatchesResult content)

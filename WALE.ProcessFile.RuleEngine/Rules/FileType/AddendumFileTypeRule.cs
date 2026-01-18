@@ -11,6 +11,7 @@ namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 public class AddendumFileTypeRule : IRule<FileTypeResult>
 {
     public string RuleName => "AddendumFileType";
+    public string Region { get; set; }
     public int Priority => 100;
 
     private readonly string[] _addendumTerms = { "Please keep this addendum with" };

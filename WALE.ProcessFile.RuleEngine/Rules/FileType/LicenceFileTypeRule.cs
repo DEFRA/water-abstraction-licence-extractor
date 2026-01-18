@@ -11,6 +11,7 @@ namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 public class LicenceFileTypeRule : IRule<FileTypeResult>
 {
     public string RuleName => "LicenceFileType";
+    public string Region { get; set; }
     public int Priority => 100;
     public bool CanApply(MatchesResult content)
     {

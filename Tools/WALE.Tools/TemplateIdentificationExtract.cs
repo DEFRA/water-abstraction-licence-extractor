@@ -14,34 +14,95 @@ namespace WALE.Tools;
 public static class TemplateIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
+    private static readonly object CsvLock = new object();
 
-    public static async Task GenerateTemplateFinderResult()
+    private static string GetCsvFilePath()
     {
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
-    
-        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-    
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-        var pdfDataExtractor = new PdfDataExtractorService(
-            new PdfPigNoOcrDataExtractorService(),
-            new List<IOcrDataExtractorService>
-            {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
-                new AzureAiVisionOcrDataExtractorService(
-                    KeyConfig.AiVisionEndpoint,
-                    KeyConfig.AiVisionKey,
-                    cacheService,
-                    outputService)
-            },
-            cacheService, 
-            outputService,
-            KeyConfig.PdfFolder);
+        return Path.Combine(KeyConfig.PdfFolder, $"Template_Finder_Results_{DateTime.Today:yyyyMMdd}.csv");
+    }
 
-        var data = await GetTemplateFinderDataAsync(pdfDataExtractor);
+    private static HashSet<string> ReadProcessedFiles()
+    {
+        var csvFilePath = GetCsvFilePath();
+        var processedFiles = new HashSet<string>();
+
+        if (!File.Exists(csvFilePath))
+        {
+            return processedFiles;
+        }
+
+        try
+        {
+            var lines = File.ReadAllLines(csvFilePath);
+            // Skip header row
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var parts = lines[i].Split(',');
+                if (parts.Length > 0)
+                {
+                    // Use PermitNumber as the unique identifier
+                    var permitNumber = parts[0].Trim('"');
+                    if (!string.IsNullOrEmpty(permitNumber))
+                    {
+                        processedFiles.Add(permitNumber);
+                    }
+                }
+            }
+
+            Console.WriteLine($"Found {processedFiles.Count} already processed files in CSV");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading processed files from CSV: {ex.Message}");
+        }
+
+        return processedFiles;
+    }
+
+    private static void AppendResultToCsv(TemplateFinderInput result)
+    {
+        var csvFilePath = GetCsvFilePath();
+
+        lock (CsvLock)
+        {
+            try
+            {
+                var fileExists = File.Exists(csvFilePath);
+
+                using var writer = new StreamWriter(csvFilePath, append: true);
+
+                // Write header if file doesn't exist
+                if (!fileExists)
+                {
+                    writer.WriteLine("PermitNumber,DateOfIssue,SignatureDate,FileUrl,FileName,NaldIssueNumber,Header,NumberOfPages,TemplateType,Template");
+                }
+
+                // Write the result row
+                var line = $"\"{EscapeCsv(result.PermitNumber)}\",\"{EscapeCsv(result.DateOfIssue)}\",\"{EscapeCsv(result.SignatureDate)}\",\"{EscapeCsv(result.FileUrl)}\",\"{EscapeCsv(result.FileName)}\",\"{EscapeCsv(result.NaldIssueNumber)}\",\"{EscapeCsv(result.Header)}\",{result.NumberOfPages},\"{EscapeCsv(result.TemplateType)}\",\"{EscapeCsv(result.Template)}\"";
+                writer.WriteLine(line);
+                writer.Flush();
+
+                Console.WriteLine($"Saved result to CSV: {result.PermitNumber}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error writing to CSV: {ex.Message}");
+            }
+        }
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        // Escape quotes by doubling them
+        return value.Replace("\"", "\"\"");
+    }
+
+    public static async Task GenerateTemplateFinderResult(string region)
+    {
+        var data = await GetTemplateFinderDataAsync(region);
 
         var fileName = $"Template_Finder-{DateTime.Today:yyyyMMdd}.xlsx";
         var fullPath = Path.Combine(OutputFolder, fileName);
@@ -72,48 +133,110 @@ public static class TemplateIdentificationExtract
         }
     }
 
-    static async Task<List<TemplateFinderInput>> GetTemplateFinderDataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<TemplateFinderInput>> GetTemplateFinderDataAsync(
+        string region)
     {
-        var pdfFilePaths = Directory
+        var returnList = new List<TemplateFinderInput>();
+
+        // Get all PDF files from the folder
+        var allPdfFiles = Directory
             .GetFiles(KeyConfig.PdfFolder)
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-           // .Where(fileName => fileName.Contains("Application Formal Variation Issued Licence - [1995] - (25.01.1995).pdf"))
             .Select(x => x.Split('/').Last())
-            .OrderBy(x => x).ToList();
+            .OrderBy(x => x)
+            .ToList();
 
-        var returnList = new List<TemplateFinderInput>();
-        var templateFinderInput = (await ReadTemplateReaderInput()) //;//.Take(100);
-            .ToList(); //12206039 
+        // Read already processed files
+        var processedFiles = ReadProcessedFiles();
 
-        // Create the TemplateTypeIdentifierService
-        var templateTypeService = new TemplateTypeIdentifierService(pdfDataExtractor);
+        // Create file entries from PDF files and filter out already processed ones
+        var filesToProcess = allPdfFiles
+            .Select(fileName =>
+            {
+                // Extract permit number from filename (format: PermitNumber - rest.pdf)
+                var permitNumber = fileName.Split('-').FirstOrDefault()?.Trim() ?? fileName;
+                return new { FileName = fileName, PermitNumber = permitNumber };
+            })
+            .Where(x => !processedFiles.Contains(x.PermitNumber))
+            .Select(x => new TemplateFinderInput
+            {
+                PermitNumber = x.PermitNumber,
+                FileName = x.FileName,
+                DateOfIssue = string.Empty,
+                SignatureDate = string.Empty,
+                FileUrl = string.Empty,
+                NaldIssueNumber = string.Empty
+            })
+            .ToList();
+
+        Console.WriteLine($"Total PDF files: {allPdfFiles.Count}, Already processed: {processedFiles.Count}, Remaining: {filesToProcess.Count}");
+
+        if (filesToProcess.Count == 0)
+        {
+            Console.WriteLine("All files have been processed!");
+            return returnList;
+        }
 
         // Group files into batches of 15
         const int batchSize = 15;
-        var batches = templateFinderInput
+        var batches = filesToProcess
             .Select((templateFile, index) => new { templateFile, index })
             .GroupBy(x => x.index / batchSize)
             .Select(g => g.Select(x => x.templateFile).ToList())
             .ToList();
 
-        Console.WriteLine($"Processing {templateFinderInput.Count()} files in {batches.Count} batches of {batchSize}");
+        Console.WriteLine($"Processing {filesToProcess.Count} files in {batches.Count} batches of {batchSize}");
+
+        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
+        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
 
         foreach (var batch in batches)
         {
             Console.WriteLine($"Processing batch with {batch.Count} files...");
 
-            var batchTasks = batch.Select(async templateFile =>
+            // Create a separate pdfDataExtractor for each file in the batch
+            var pdfDataExtractors = new List<PdfDataExtractorService>();
+            var templateTypeServices = new List<TemplateTypeIdentifierService>();
+
+            for (int i = 0; i < batch.Count; i++)
             {
-                var pdfFilePath = pdfFilePaths.FirstOrDefault(p => p.StartsWith(templateFile.PermitNumber)
-                && p.Contains(templateFile.FileName));
-                if (pdfFilePath == null) return null;
+                var extractor = new PdfDataExtractorService(
+                    new PdfPigNoOcrDataExtractorService(),
+                    new List<IOcrDataExtractorService>
+                    {
+                        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
+                        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                        new AzureAiVisionOcrDataExtractorService(
+                            KeyConfig.AiVisionEndpoint,
+                            KeyConfig.AiVisionKey,
+                            cacheService,
+                            outputService)
+                    },
+                    cacheService,
+                    outputService,
+                    KeyConfig.PdfFolder);
+
+                pdfDataExtractors.Add(extractor);
+                templateTypeServices.Add(new TemplateTypeIdentifierService(extractor, region));
+            }
+
+            var batchTasks = batch.Select((templateFile, index) => Task.Run(async () =>
+            {
+                var templateTypeService = templateTypeServices[index];
+
+                var pdfFileName = templateFile.FileName;
+                if (string.IsNullOrEmpty(pdfFileName)) return null;
 
                 try
                 {
-                    Console.WriteLine($"Processing file: {pdfFilePath}");
+                    Console.WriteLine($"Processing file: {pdfFileName}");
 
                     // Check if file exists
-                    var fullPath = KeyConfig.PdfFolder + pdfFilePath;
+                    var fullPath = Path.Combine(KeyConfig.PdfFolder, pdfFileName);
                     if (!File.Exists(fullPath))
                     {
                         throw new FileNotFoundException($"PDF file not found: {fullPath}");
@@ -125,11 +248,12 @@ public static class TemplateIdentificationExtract
                     // The service will use configurations from RuleConfiguration folder internally
                     var templateResult = await templateTypeService.IdentifyTemplateTypeAsync(fullPath);
 
-                    Console.WriteLine($"Template identification completed successfully for {pdfFilePath}");
+                    Console.WriteLine($"Template identification completed successfully for {pdfFileName}");
 
+                    TemplateFinderInput result;
                     if (templateResult != null)
                     {
-                        return new TemplateFinderInput
+                        result = new TemplateFinderInput
                         {
                             PermitNumber = templateFile.PermitNumber,
                             DateOfIssue = templateFile.DateOfIssue,
@@ -146,7 +270,7 @@ public static class TemplateIdentificationExtract
                     else
                     {
                         // Fallback for unidentified templates
-                        return new TemplateFinderInput
+                        result = new TemplateFinderInput
                         {
                             PermitNumber = templateFile.PermitNumber,
                             DateOfIssue = templateFile.DateOfIssue,
@@ -160,10 +284,14 @@ public static class TemplateIdentificationExtract
                             Template = "Unknown"
                         };
                     }
+
+                    // Save result to CSV immediately
+                    AppendResultToCsv(result);
+                    return result;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing file {pdfFilePath}:");
+                    Console.WriteLine($"Error processing file {pdfFileName}:");
                     Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
                     Console.WriteLine($"  Message: {ex.Message}");
                     Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
@@ -175,7 +303,7 @@ public static class TemplateIdentificationExtract
                     }
 
                     // Return a failed result for tracking
-                    return new TemplateFinderInput
+                    var errorResult = new TemplateFinderInput
                     {
                         PermitNumber = templateFile.PermitNumber,
                         DateOfIssue = templateFile.DateOfIssue,
@@ -186,10 +314,14 @@ public static class TemplateIdentificationExtract
                         Header = "Error",
                         NumberOfPages = 0,
                         TemplateType = "Error",
-                        Template = "Error"
+                        Template = $"Error: {ex.Message}"
                     };
+
+                    // Save error result to CSV immediately
+                    AppendResultToCsv(errorResult);
+                    return errorResult;
                 }
-            });
+            }));
 
             // Process batch concurrently and collect results
             var batchResults = await Task.WhenAll(batchTasks);

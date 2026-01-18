@@ -9,6 +9,8 @@ public static class RuleSharedHelper
     {
         { "NRAModern1", "Modern 1" },
         { "NRAModern2", "Modern 2" },
+        { "AnglianNRAModern1", "Anglian Modern 1" },
+        { "AnglianNRAModern2", "Anglian Modern 2" },
         { "NRAOld", "Old" }
     };
     public static string DetermineSecondaryTemplate(MatchesResult matches)

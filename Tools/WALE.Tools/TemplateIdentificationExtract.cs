@@ -191,8 +191,11 @@ public static class TemplateIdentificationExtract
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, KeyConfig.PostgresConnectionString);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var dotnetPath = KeyConfig.DotnetPath;
+        var tesseractExeName = KeyConfig.TesseractExeName;
+        var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
 
         foreach (var batch in batches)
         {
@@ -208,8 +211,24 @@ public static class TemplateIdentificationExtract
                     new PdfPigNoOcrDataExtractorService(),
                     new List<IOcrDataExtractorService>
                     {
-                        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
-                        new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                        new TesseractOcrDataExtractorService(
+                            KeyConfig.TesseractPrefix, 
+                            PageSegMode.SparseTextOsd, 
+                            cacheService, 
+                            outputService,
+                            dotnetPath, 
+                            tesseractExeName, 
+                            tesseractExeDirectory, 
+                            i + 1),
+                        new TesseractOcrDataExtractorService(
+                            KeyConfig.TesseractPrefix, 
+                            PageSegMode.Auto, 
+                            cacheService, 
+                            outputService,
+                            dotnetPath, 
+                            tesseractExeName, 
+                            tesseractExeDirectory, 
+                            i + 1),
                         new AzureAiVisionOcrDataExtractorService(
                             KeyConfig.AiVisionEndpoint,
                             KeyConfig.AiVisionKey,

@@ -27,12 +27,15 @@ public static class FileTypeIdentificationExtract
     {
         Console.WriteLine("Starting file type identification...");
         var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
+        var dotnetPath = KeyConfig.DotnetPath;
+        var tesseractExeName = KeyConfig.TesseractExeName;
+        var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
     
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, KeyConfig.PostgresConnectionString);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
 
         // Create 10 instances of PdfDataExtractorService for parallel processing
@@ -43,8 +46,24 @@ public static class FileTypeIdentificationExtract
                 new PdfPigNoOcrDataExtractorService(),
                 new List<IOcrDataExtractorService>
                 {
-                    new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
-                    new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                    new TesseractOcrDataExtractorService(
+                        KeyConfig.TesseractPrefix, 
+                        PageSegMode.SparseTextOsd, 
+                        cacheService, 
+                        outputService,
+                        dotnetPath, 
+                        tesseractExeName, 
+                        tesseractExeDirectory,
+                        i + 1),
+                    new TesseractOcrDataExtractorService(
+                        KeyConfig.TesseractPrefix, 
+                        PageSegMode.Auto, 
+                        cacheService, 
+                        outputService,
+                        dotnetPath, 
+                        tesseractExeName, 
+                        tesseractExeDirectory,
+                        i + 1),
                     new AzureAiVisionOcrDataExtractorService(
                         KeyConfig.AiVisionEndpoint,
                         KeyConfig.AiVisionKey,

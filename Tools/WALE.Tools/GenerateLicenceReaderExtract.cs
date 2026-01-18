@@ -151,20 +151,40 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static PdfDataExtractorService CreatePdfDataExtractorService(NpgsqlDataSourceProvider postgresDataSourceProvider)
+    private static PdfDataExtractorService CreatePdfDataExtractorService(
+        NpgsqlDataSourceProvider postgresDataSourceProvider, int id)
     {
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, KeyConfig.PostgresConnectionString);
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var dotnetPath = KeyConfig.DotnetPath;
+        var tesseractExeName = KeyConfig.TesseractExeName;
+        var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
 
         return new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             new List<IOcrDataExtractorService>
             {
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.SparseTextOsd, cacheService, outputService),
-                new TesseractOcrDataExtractorService(KeyConfig.TesseractPrefix, PageSegMode.Auto, cacheService, outputService),
+                new TesseractOcrDataExtractorService(
+                    KeyConfig.TesseractPrefix, 
+                    PageSegMode.SparseTextOsd, 
+                    cacheService, 
+                    outputService,
+                    dotnetPath, 
+                    tesseractExeName, 
+                    tesseractExeDirectory,
+                    id),
+                new TesseractOcrDataExtractorService(
+                    KeyConfig.TesseractPrefix,
+                    PageSegMode.Auto, 
+                    cacheService, 
+                    outputService,
+                    dotnetPath, 
+                    tesseractExeName, 
+                    tesseractExeDirectory, 
+                    id),
                 new AzureAiVisionOcrDataExtractorService(
                     KeyConfig.AiVisionEndpoint,
                     KeyConfig.AiVisionKey,
@@ -187,7 +207,7 @@ public static class GenerateLicenceReaderExtract
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         for (int i = 0; i < batchSize; i++)
         {
-            pdfDataExtractors.Add(CreatePdfDataExtractorService(postgresDataSourceProvider));
+            pdfDataExtractors.Add(CreatePdfDataExtractorService(postgresDataSourceProvider, i + 1));
         }
 
         var data = await GetLicenceReaderDataAsync(pdfDataExtractors);

@@ -68,7 +68,7 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
     {
         // Identify all separator characters (non-alphanumeric)
         var allSeparators = licenceNumber.Where(c => !char.IsLetterOrDigit(c)).Distinct().ToList();
-        
+
         // If there are dots AND other separators, split on anything that is not alphanumeric or a dot,
         // otherwise just split on non-alphanumerics - to support correct segmentation of "1.2.3.4" vs. "1/2/3.1/4"
         var regex = allSeparators.Contains('.') && allSeparators.Count > 1
@@ -150,15 +150,32 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
                 continue;
             }
 
-            
-
-            // Passed all checks so add a clone of the line containing only the matched text
-            matchedLines.Add(line.Clone([new DocumentLineColumn(colText!)]));
-
-            // Exit early if we're looking for a single instance match
-            if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+            foreach (Match match in licenceNumberCandidates)
             {
-                return true;
+                var candidateText = match.Value;
+                var normalizedCandidate = NormalizeLicenceNumber(candidateText);
+
+                if (_licenceIndex == null || !_licenceIndex.TryGetValue(normalizedCandidate, out var entries))
+                {
+                    continue;
+                }
+
+                var candidateSegments = ExtractSegments(candidateText);
+
+                foreach (var entry in entries)
+                {
+                    if (candidateSegments.SequenceEqual(entry.Segments))
+                    {
+                        // Passed all checks so add a clone of the line containing the matched NALD licence number
+                        matchedLines.Add(line.Clone([new DocumentLineColumn(entry.NaldLicence.LicenceNumber)]));
+
+                        // Exit early if we're looking for a single instance match
+                        if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                        {
+                            return true;
+                        }
+                    }
+                }
             }
         }
 

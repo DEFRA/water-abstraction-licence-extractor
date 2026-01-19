@@ -92,11 +92,11 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var pdfFilePath in files)
+        foreach (var (filePath, _) in files)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
-                    pdfFilePath.Key,
+                    filePath,
                     processCount++,
                     licenceNumbersWithFilenames,
                     impoundmentLicenceNumbers,
@@ -458,7 +458,7 @@ ConfiguredServices ConfigureServices()
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
-    Dictionary<string, string> licenceMapping,
+    Dictionary<string, DmsFileData> licenceMapping,
     HashSet<string> impoundmentLicenceNumbers,
     HashSet<string> deadLicenceNumbers,
     HashSet<string> liveLicenceNumbers,
@@ -598,7 +598,7 @@ async Task MoveReportHtmlFilesAsync(
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
     GetFilesAndMapping(ConfiguredServices services)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
@@ -619,11 +619,11 @@ async Task MoveReportHtmlFilesAsync(
     return filesAndMapping;
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
     GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath)
 {
-    var mappingFile = new Dictionary<string, string>();
-    var filenames = new Dictionary<string, string>();
+    var filenames = new Dictionary<string, DmsFileData>();
+    var mappingFile = new Dictionary<string, DmsFileData>();
     
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -676,9 +676,17 @@ async Task MoveReportHtmlFilesAsync(
                 {
                     continue;
                 }
+
+                var dmsFileData = new DmsFileData
+                {
+                    DestinationFileName = destinationFileName,
+                    NaldLicenceRef = (string)row["NALD Licence Ref"],
+                    PermitNumber = permitNumber,
+                    DmsPath = (string)row["FullPath"]
+                };
                 
-                filenames.Add(pdfFolderPath + destinationFileName, permitNumber);
-                mappingFile.Add(permitNumber, destinationFileName);
+                filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
+                mappingFile.Add(permitNumber, dmsFileData);
             }
         }
     }

@@ -20,7 +20,7 @@ public static class GenerateAggregatesCsvForTesting
 {
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
+    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> LiveLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];

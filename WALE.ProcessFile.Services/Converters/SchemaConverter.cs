@@ -559,7 +559,7 @@ public static partial class SchemaConverter
     
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
-        Dictionary<string, string> licenceNumbersMapping,
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
@@ -957,7 +957,7 @@ public static partial class SchemaConverter
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         MatchesResult matchesResult,
         Licence primaryLicence,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
@@ -1022,7 +1022,7 @@ public static partial class SchemaConverter
                     
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
                     
-                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var relatedFileName))
+                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
                     {
                         returnLicences.Add(new Licence
                         {
@@ -1033,13 +1033,15 @@ public static partial class SchemaConverter
                         continue;
                     }
 
-                    if (!relatedFileName.Contains('/'))
+                    var destinationFileName = dmsFileData.DestinationFileName!;
+
+                    if (!destinationFileName.Contains('/'))
                     {
-                        relatedFileName = $"{pdfFolder}{relatedFileName}";
+                        destinationFileName = $"{pdfFolder}{destinationFileName}";
                     }
                     
                     var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                        relatedFileName,
+                        destinationFileName,
                         new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                         previouslyParsedPaths,
                         processRunId);
@@ -1068,7 +1070,7 @@ public static partial class SchemaConverter
                 continue;
             }
             
-            if (!licenceNumberMapping.TryGetValue(strippedLlNumber!, out var relatedFileName))
+            if (!licenceNumberMapping.TryGetValue(strippedLlNumber!, out var dmsFileData))
             {
                 returnLicences.Add(new Licence
                 {
@@ -1079,13 +1081,15 @@ public static partial class SchemaConverter
                 continue;
             }
             
-            if (!relatedFileName.Contains('/'))
+            var destinationFileName = dmsFileData.DestinationFileName!;
+            
+            if (!destinationFileName.Contains('/'))
             {
-                relatedFileName = $"{pdfFolder}{relatedFileName}";
+                destinationFileName = $"{pdfFolder}{destinationFileName}";
             }
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                relatedFileName,
+                destinationFileName,
                 new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
                 previouslyParsedPaths,
                 processRunId);

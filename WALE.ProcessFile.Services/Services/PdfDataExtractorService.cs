@@ -753,7 +753,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -828,7 +828,7 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -847,21 +847,21 @@ public class PdfDataExtractorService(
             {
                 var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
                 
-                if (!licenceNumberMapping.TryGetValue(stripped!, out var relatedFileName))
+                if (!licenceNumberMapping.TryGetValue(stripped!, out var dmsFileData))
                 {
                     // TODO this should log a warning
                     continue;
                 }
                 
-                relatedFileName = $"{pdfFolderPath}{relatedFileName}";
+                var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
                 
-                if (previouslyParsedPaths.Contains(relatedFileName))
+                if (previouslyParsedPaths.Contains(destinationFilePath))
                 {
                     continue;
                 }
 
-                previouslyParsedPaths.Add(relatedFileName);
-                pathsToFetch.Add(relatedFileName);
+                previouslyParsedPaths.Add(destinationFilePath);
+                pathsToFetch.Add(destinationFilePath);
             }
         }
 
@@ -1002,7 +1002,7 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -1568,7 +1568,7 @@ public class PdfDataExtractorService(
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {

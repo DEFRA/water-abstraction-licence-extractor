@@ -40,41 +40,41 @@ public class PdfPigNoOcrPdfTests
         OutputService,
         TestConfig.PdfFolder3);
     
-    private static Dictionary<string, string> FileLicenceMapping =>
+    private static Dictionary<string, DmsFileData> FileLicenceMapping =>
         new()
         {
             { 
                 FormattingHelper.StripForComparison("25 68 001 247")!,
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
             },
             {
                 FormattingHelper.StripForComparison("25 68 001 248")!,
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
             },
             {
                 FormattingHelper.StripForComparison("NE/026/0034/018")!,
-                "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"
+                new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
             },
             {
                 FormattingHelper.StripForComparison("NE/026/0034/052")!,
-                "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"
+                new DmsFileData { DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf" }
             }
         };
     
-    private static Dictionary<string, string> FileLicenceMappingWithout52 =>
+    private static Dictionary<string, DmsFileData> FileLicenceMappingWithout52 =>
         new()
         {
             { 
                 FormattingHelper.StripForComparison("25 68 001 247")!,
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
             },
             {
                 FormattingHelper.StripForComparison("25 68 001 248")!,
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
             },
             {
                 FormattingHelper.StripForComparison("NE/026/0034/018")!,
-                "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"
+                new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
             }
         };
     

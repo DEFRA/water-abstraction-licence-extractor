@@ -37,7 +37,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         OutputService,
         TestConfig.PdfFolder3);
 
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() { { "", "" } };
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
     {

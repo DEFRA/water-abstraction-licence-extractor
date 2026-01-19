@@ -31,7 +31,7 @@ public class AzureOpenAiOcrPdfTests
         OutputService,
         TestConfig.PdfFolder);
     
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
     

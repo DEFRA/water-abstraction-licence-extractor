@@ -43,7 +43,7 @@ public class OcrDatabaseTests
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -583,6 +584,33 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            """;
         
         var result = await QueryAsync<NaldLinkedLicenceRawData>(
+            connection,
+            sql,
+            0);
+        
+        return result.ToList();
+    }
+
+    public async Task<List<NaldLicence>> GetNaldLicencesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               "LIC_NO" AS LicenceNumber,
+                               "FGAC_REGION_CODE" AS RegionCode,
+                               "ID" AS Id,
+                               0 AS Type
+                           FROM nald."NALD_ABS_LICENCES"
+                           UNION ALL
+                           SELECT 
+                               "LIC_NO" AS LicenceNumber,
+                               "FGAC_REGION_CODE" AS RegionCode,
+                               "ID" AS Id,
+                               1 AS Type
+                           FROM nald."NALD_IMP_LICENCES";
+                           """;
+        
+        var result = await QueryAsync<NaldLicence>(
             connection,
             sql,
             0);

@@ -55,4 +55,6 @@ public interface IDatabaseReadService
     Task<MatchesResult?> GetMatchesResult(string filename);
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
+
+    Task<List<NaldLicence>> GetNaldLicencesAsync();
 }

@@ -205,11 +205,6 @@ public class PdfDataExtractorService(
                         // TODO proper logging somewhere
                         throw;
                     }
-
-                    if (pageNumber == 3)
-                    {
-                        
-                    }
                     
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)

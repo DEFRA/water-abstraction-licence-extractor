@@ -20,6 +20,8 @@ public static partial class SchemaConverter
         HashSet<string> impoundmentLicenceNumbers,
         HashSet<string> deadLicenceNumbers,
         HashSet<string> liveLicenceNumbers,
+        DmsFileData? dmsFileData,
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
         Dictionary<string, NaldData> naldData)
     {
         var matches = matchesResult.Matches;
@@ -35,12 +37,8 @@ public static partial class SchemaConverter
             .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
-        
-        var scrapedLicenceNumber = matches
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
+
+        var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
 
         var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
             .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
@@ -185,6 +183,7 @@ public static partial class SchemaConverter
             points,
             purposes,
             naldData,
+            licenceNumbersMapping,
             ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
@@ -449,6 +448,7 @@ public static partial class SchemaConverter
         return new Licence
         {
             Filename = matchesResult.Filename,
+            DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumber,
             NaldLicenceNumber = naldLicenceNumber,
             LicenceVersion = licenceVersion,
@@ -463,8 +463,7 @@ public static partial class SchemaConverter
             IsDeadLicence = isDeadLicence,
             IsImpoundmentLicence = isImpoundmentLicence,
             IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound,
-            DmsPath = null
+            LicenceFoundInList = isFound
         };
     }
 
@@ -569,12 +568,21 @@ public static partial class SchemaConverter
         int processRunId)
     {
         var returnList = new List<LicenceSet>();
+
+        var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber);
+
+        var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+            ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+            : null;
         
         var primaryLicence = ToLicence(
             matchesResult,
             impoundmentLicenceNumbers,
             deadLicenceNumbers,
             liveLicenceNumbers,
+            dmsFileData,
+            licenceNumbersMapping,
             naldData);
         
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
@@ -993,11 +1001,21 @@ public static partial class SchemaConverter
                 foreach (var linkedLicenceData in linkedLicencesData)
                 {
                     var matches = ToMatchesResult(linkedLicenceData);
+                    
+                    var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber);
+                    
+                    var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                        ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
+                        : null;
+                    
                     var linkedLicence = ToLicence(
                         matches,
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
                         liveLicenceNumbers,
+                        dmsFileData,
+                        licenceNumberMapping,
                         naldData);
                         
                     returnLicences.Add(linkedLicence);   
@@ -1051,6 +1069,8 @@ public static partial class SchemaConverter
                         impoundmentLicenceNumbers,
                         deadLicenceNumbers,
                         liveLicenceNumbers,
+                        dmsFileData,
+                        licenceNumberMapping,
                         naldData);
                     
                     returnLicences.Add(licence);
@@ -1099,6 +1119,8 @@ public static partial class SchemaConverter
                 impoundmentLicenceNumbers,
                 deadLicenceNumbers,
                 liveLicenceNumbers,
+                dmsFileData,
+                licenceNumberMapping,
                 naldData);
             
             returnLicences.Add(licence);
@@ -1661,6 +1683,7 @@ public static partial class SchemaConverter
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
         Dictionary<string, NaldData> naldData,
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
         ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
@@ -1815,9 +1838,17 @@ public static partial class SchemaConverter
                         .FirstOrDefault()?
                         .Text;
 
+                    var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber);
+                    
+                    var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                        ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+                        : null;
+                    
                     return new LinkedLicence
                     {
-                        LicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text,
+                        LicenceNumber = scrapedLicenceNumber,
+                        DmsPath = dmsFileData?.DmsPath,
                         Filename = linkedLicenceFilename,
                         Condition = condition,
                         ContainedIn = [
@@ -2959,6 +2990,17 @@ public static partial class SchemaConverter
         }
 
         return returnList;
+    }
+    
+    private static string? GetScrapedLicenceNumber(MatchesResult matches)
+    {
+        var scrapedLicenceNumber = matches.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+
+        return scrapedLicenceNumber;
     }
 
     private static List<LicenceSetReference> AddEncompassingLicenceSets(

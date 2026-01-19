@@ -30,7 +30,16 @@ public class TessaractOcrPdfTests
     
     private static string PdfFolder => TestConfig.PdfFolder;
 
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
+    {
+        {
+            "283928312", new DmsFileData
+            {
+                DmsPath = "ABC",
+                DestinationFileName = "DEF"
+            }
+        }
+    };
     private readonly HashSet<string> _liveLicenceNumbers = [];
     private readonly HashSet<string> _deadLicenceNumbers = [];
     private readonly HashSet<string> _impoundmentLicenceNumbers = [];
@@ -225,6 +234,10 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("28/39/28/0312", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("ABC", agreedSchemaLicence.DmsPath);
+        
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -539,7 +552,7 @@ public class TessaractOcrPdfTests
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
+            [],
             _impoundmentLicenceNumbers,
             _deadLicenceNumbers,
             _liveLicenceNumbers,

@@ -45,7 +45,11 @@ public class PdfPigNoOcrPdfTests
         {
             { 
                 FormattingHelper.StripForComparison("25 68 001 247")!,
-                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
+                new DmsFileData
+                {
+                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                    DmsPath = "Something to look for"
+                }
             },
             {
                 FormattingHelper.StripForComparison("25 68 001 248")!,
@@ -81,7 +85,7 @@ public class PdfPigNoOcrPdfTests
     private static readonly HashSet<string> LiveLicenceNumbers = [];    
     private static readonly HashSet<string> DeadLicenceNumbers = [];
     private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
-    private readonly Dictionary<string, NaldData> NaldData = [];
+    private static readonly Dictionary<string, NaldData> NaldData = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1, int fileLicenceMapping = 1)
     {
@@ -2552,8 +2556,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
         
         Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
+        Assert.Null(agreedSchemaLicenceGroup.Licences[0].DmsPath);
         Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
+        Assert.Equal("Something to look for", agreedSchemaLicenceGroup.Licences[1].DmsPath);
         Assert.Equal("25/68/001/248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
+        Assert.Null(agreedSchemaLicenceGroup.Licences[2].DmsPath);
         
         Assert.Equal("2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
             agreedSchemaLicenceGroup.LicenceSetId);

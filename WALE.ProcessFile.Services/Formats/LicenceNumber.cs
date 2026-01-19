@@ -49,11 +49,6 @@ public static partial class LicenceNumber
                 continue;
             }
 
-            if (line.Text.Contains("Serial"))
-            {
-                
-            }
-
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
 

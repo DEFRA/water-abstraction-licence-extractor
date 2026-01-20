@@ -154,7 +154,7 @@ public static class Split
             request.label,
             leftPartLines);
         
-        var results = FilterIntoFormat(request, leftPartResult, leftPartLines, false);
+        var results = await FilterIntoFormatAsync(request, leftPartResult, leftPartLines, false);
 
         rightPartLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
@@ -174,7 +174,7 @@ public static class Split
                 request.label,
                 rightPartLines);
             
-            results.AddRange(FilterIntoFormat(request, rightPartResult, rightPartLines, false));
+            results.AddRange(await FilterIntoFormatAsync(request, rightPartResult, rightPartLines, false));
         }
         
         return await ProcessSubLabelsAsync(request, results);

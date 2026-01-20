@@ -6,7 +6,7 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
-public partial class LicenceNumber(IDatabaseReadService? databaseReadService = null) : ILicenceNumberService
+public partial class LicenceNumber : ILicenceNumberService
 {
     private static ILicenceNumberService? _instance;
 
@@ -17,16 +17,19 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
         set => _instance = value;
     }
 
-    private Dictionary<string, List<LicenceIndexEntry>>? _licenceIndex;
+    private readonly Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>> _licenceIndex;
 
-    public async Task InitializeAsync()
+    public LicenceNumber(IDatabaseReadService databaseReadService)
     {
-        if (databaseReadService != null)
+        ArgumentNullException.ThrowIfNull(databaseReadService);
+        _licenceIndex = new Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>>(async () =>
         {
             var licences = await databaseReadService.GetNaldLicencesAsync();
-            _licenceIndex = BuildIndex(licences);
-        }
+            return BuildIndex(licences);
+        });
     }
+
+    private Task<Dictionary<string, List<LicenceIndexEntry>>> GetLicenceIndexAsync() => _licenceIndex.Value;
 
     private class LicenceIndexEntry
     {
@@ -95,40 +98,38 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
     public const string YorkshireRegexPatten =
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    public static List<string> FindLicenceNumbers(string? text)
+    public static Task<List<string>> FindLicenceNumbersAsync(string? text)
     {
-        return Instance.FindLicenceNumbers(text);
+        return Instance.FindLicenceNumbersAsync(text);
     }
 
-    List<string> ILicenceNumberService.FindLicenceNumbers(string? text)
+    async Task<List<string>> ILicenceNumberService.FindLicenceNumbersAsync(string? text)
     {
         if (string.IsNullOrEmpty(text))
         {
             return [];
         }
 
-        var result = ((ILicenceNumberService)this).AnyIsLicenceNumber(
+        var (success, matchedLines) = await ((ILicenceNumberService)this).AnyIsLicenceNumberAsync(
             [new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
-            new LabelToMatch(), false, out var outList);
-        return result ? outList.Select(x => x.Text).ToList() : [];
+            new LabelToMatch(), false);
+        return success ? matchedLines.Select(x => x.Text).ToList() : [];
     }
 
-    public static bool AnyIsLicenceNumber(
+    public static Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isOcr,
-        out List<DocumentLine> matchedLines)
+        bool isOcr)
     {
-        return Instance.AnyIsLicenceNumber(lines, label, isOcr, out matchedLines);
+        return Instance.AnyIsLicenceNumberAsync(lines, label, isOcr);
     }
 
-    bool ILicenceNumberService.AnyIsLicenceNumber(
+    async Task<(bool Success, List<DocumentLine> MatchedLines)> ILicenceNumberService.AnyIsLicenceNumberAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isOcr,
-        out List<DocumentLine> matchedLines)
+        bool isOcr)
     {
-        matchedLines = [];
+        var matchedLines = new List<DocumentLine>();
 
         // Flatten and validate columns
         var columnsToProcess = lines
@@ -140,6 +141,8 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
         var subLinesToProcess = columnsToProcess
             .SelectMany(x => GetColumnSubLines(x.Column).Select(subLine => (x.Line, x.Column, subLine)))
             .Where(x => IsValidSubLine(x.subLine, x.Column));
+
+        var licenceIndex = await GetLicenceIndexAsync();
 
         foreach (var (line, _, subLine) in subLinesToProcess)
         {
@@ -155,7 +158,7 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
                 var candidateText = match.Value;
                 var normalizedCandidate = NormalizeLicenceNumber(candidateText);
 
-                if (_licenceIndex == null || !_licenceIndex.TryGetValue(normalizedCandidate, out var entries))
+                if (!licenceIndex.TryGetValue(normalizedCandidate, out var entries))
                 {
                     continue;
                 }
@@ -172,14 +175,14 @@ public partial class LicenceNumber(IDatabaseReadService? databaseReadService = n
                         // Exit early if we're looking for a single instance match
                         if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                         {
-                            return true;
+                            return (true, matchedLines);
                         }
                     }
                 }
             }
         }
 
-        return matchedLines.Count > 0;
+        return (matchedLines.Count > 0, matchedLines);
     }
 
     private static bool IsValidColumnForProcessing(DocumentLineColumn column) =>

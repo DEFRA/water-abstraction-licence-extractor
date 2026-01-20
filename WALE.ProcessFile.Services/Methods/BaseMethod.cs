@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class BaseMethod
 {
-    public static List<LabelGroupResult> FilterIntoFormat(
+    public static async Task<List<LabelGroupResult>> FilterIntoFormatAsync(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
@@ -81,41 +81,47 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumber.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    var (success, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    if (success)
                     {
-                        if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                        licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
+
+                        foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            continue;
+                            if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                            {
+                                continue;
+                            }
+
+                            labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                            returnList.Add(labelGroupResult);
                         }
-                        
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        returnList.Add(labelGroupResult);
                     }
                 }
                 
                 break;
             case LicenceNumberFilename.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines2))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    var (success, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    if (success)
                     {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
-                        
-                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
+                        var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
+
+                        foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            continue;
+                            var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+
+                            if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
+                            {
+                                continue;
+                            }
+
+                            licenceNumberLine.Columns[0].Text = relatedFileName!;
+                            labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+
+                            returnList.Add(labelGroupResult);
                         }
-
-                        licenceNumberLine.Columns[0].Text = relatedFileName!;
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-
-                        returnList.Add(labelGroupResult);
                     }
                 }
                 

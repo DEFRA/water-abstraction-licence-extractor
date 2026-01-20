@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class LabelIsInMiddleOfTextToFind
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -54,13 +54,13 @@ public static class LabelIsInMiddleOfTextToFind
             out _,
             out var removedLines);
         
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);
+        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedLines, false);
 
         foreach (var item in returnList)
         {
             FormattingHelper.RemoveRemoves(item, removedLines);
         }
         
-        return ProcessSubLabelsAsync(request, returnList);
+        return await ProcessSubLabelsAsync(request, returnList);
     }
 }

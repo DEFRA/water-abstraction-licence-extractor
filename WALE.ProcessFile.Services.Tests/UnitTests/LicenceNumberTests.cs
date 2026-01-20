@@ -5,6 +5,13 @@ namespace WALE.ProcessFile.Services.Tests.UnitTests;
 
 public class LicenceNumberTests
 {
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenDatabaseReadServiceIsNull()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new LicenceNumber(null!));
+    }
+
     [Theory]
     [InlineData("12/34/56/78", "12345678")]
     [InlineData("AA/12/34/56", "AA123456")]

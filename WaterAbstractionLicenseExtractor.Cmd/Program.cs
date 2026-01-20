@@ -68,7 +68,7 @@ async Task ProgramAsync()
 
     // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
-    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList());
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList());
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
@@ -190,7 +190,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
+                var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
                 if (linkedLicences.Any())
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -370,7 +370,6 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
     LicenceNumber.Instance = new LicenceNumber(databaseReadService);
-    await LicenceNumber.Instance.InitializeAsync();
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);

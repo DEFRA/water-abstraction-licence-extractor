@@ -4,11 +4,9 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface ILicenceNumberService
 {
-    Task InitializeAsync();
-    List<string> FindLicenceNumbers(string? text);
-    bool AnyIsLicenceNumber(
+    Task<List<string>> FindLicenceNumbersAsync(string? text);
+    Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isOcr,
-        out List<DocumentLine> matchedLines);
+        bool isOcr);
 }

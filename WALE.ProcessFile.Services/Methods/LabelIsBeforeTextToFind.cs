@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class LabelIsBeforeTextToFind
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -27,7 +27,7 @@ public static class LabelIsBeforeTextToFind
             out _,
             out var removedLines);
 
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedNextLines, false);
+        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedNextLines, false);
         
         foreach (var item in returnList)
         {
@@ -48,6 +48,6 @@ public static class LabelIsBeforeTextToFind
             newReturnList.Add(item);
         }
         
-        return ProcessSubLabelsAsync(request, newReturnList);
+        return await ProcessSubLabelsAsync(request, newReturnList);
     }
 }

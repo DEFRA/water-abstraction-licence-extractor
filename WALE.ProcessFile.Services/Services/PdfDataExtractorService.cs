@@ -305,7 +305,7 @@ public class PdfDataExtractorService(
                 
                 documentLines.AddRange(serviceImageLines);
 
-                var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
+                var uniqueServiceMatches = await GetUniqueServiceMatchesAsync(serviceMatchesDict);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
@@ -414,7 +414,7 @@ public class PdfDataExtractorService(
         return subResultCount;
     }
 
-    private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    private static async Task<List<LabelGroupResult>> GetUniqueServiceMatchesAsync(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
 
@@ -495,11 +495,10 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                            var (existingValueIsValidLicenceNumber, existingLicenceNumberOutput) = await LicenceNumber.AnyIsLicenceNumberAsync(
                                 [existingDocumentLine],
                                 new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var existingLicenceNumberOutput);
+                                alreadyFound.IsOcr);
 
                             var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
                             var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
@@ -522,11 +521,10 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
+                            var (newValueIsValidLicenceNumber, newLicenceNumberOutput) = await LicenceNumber.AnyIsLicenceNumberAsync(
                                 [newDocumentLine],
                                 new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var newLicenceNumberOutput);
+                                alreadyFound.IsOcr);
 
                             var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
                             var newValueNumberOfParts = newLicenceNumber.Split('/').Length;

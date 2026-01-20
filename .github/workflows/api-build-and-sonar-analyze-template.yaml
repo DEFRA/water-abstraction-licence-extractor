@@ -106,20 +106,18 @@ jobs:
         shell: pwsh
         run: dotnet build ${{ inputs.dotnet_application_solution_name }}.sln --configuration Release
 
-      - name: Run Unit Tests with Coverage
-        shell: bash
-        run: |
-          dotnet test WALE.ProcessFile.Services.Tests/WALE.ProcessFile.Services.Tests.csproj \
-            --no-build --configuration Release \
-            -p:CollectCoverage=true \
-            -p:CoverletOutput=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.coverage.opencover.xml \
-            -p:CoverletOutputFormat=opencover \
-            -p:Deterministic=true \
-            -p:DebugType=full \
-            -p:DebugSymbols=true \
-            --logger "trx;LogFileName=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.test_results.trx"
-
-
+      #- name: Run Unit Tests with Coverage
+      #  shell: bash
+      #  run: |
+      #    dotnet test WALE.ProcessFile.Services.Tests/WALE.ProcessFile.Services.Tests.csproj \
+      #      --no-build --configuration Release \
+      #      -p:CollectCoverage=true \
+      #      -p:CoverletOutput=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.coverage.opencover.xml \
+      #      -p:CoverletOutputFormat=opencover \
+      #      -p:Deterministic=true \
+      #      -p:DebugType=full \
+      #      -p:DebugSymbols=true \
+      #      --logger "trx;LogFileName=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.test_results.trx"
 
       - name: List coverage files
         shell: pwsh

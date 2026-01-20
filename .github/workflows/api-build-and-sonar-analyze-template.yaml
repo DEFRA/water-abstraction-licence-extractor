@@ -96,7 +96,7 @@ jobs:
             /d:sonar.cs.vstest.reportsPaths="TestResults/*.test_results.trx" `
             /d:sonar.branch.name="${{ github.ref_name }}" `
             /d:sonar.verbose=true `
-            /d:sonar.exclusions="**/wwwroot/**" `
+            /d:sonar.exclusions="**/wwwroot/**,**/tessdata/**" `
             /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs,**/tessdata/**"
 
       - name: Restore NuGet packages

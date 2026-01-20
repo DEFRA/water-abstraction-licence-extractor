@@ -31,7 +31,7 @@ public class AzureOpenAiOcrPdfTests
         OutputService,
         TestConfig.PdfFolder);
     
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
     
@@ -126,9 +126,7 @@ public class AzureOpenAiOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor,
             TestConfig.PdfFolder,

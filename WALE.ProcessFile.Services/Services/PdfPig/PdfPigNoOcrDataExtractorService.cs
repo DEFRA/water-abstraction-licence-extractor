@@ -263,7 +263,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         Word? previousWord = null;
         var lineIndex = 0;
         
-        return orderedPageWords
+        var returnList = orderedPageWords
             .GroupBy(word =>
             {
                 previousWord ??= word;
@@ -287,7 +287,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(lineWords =>
             {
                 var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
-                var bottomRounded = lineWords.Key;
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -359,6 +358,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 return resultList;
             })
         .ToList();
+
+        AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
+        return returnList;
     }
     
     private static async Task<IReadOnlyList<TextBlock>> GetPageLinesAsync(Page page)

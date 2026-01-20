@@ -18,6 +18,8 @@ public static class OcrHelper
         int maxNegativeDiffBetweenWordTopLegacyFlowOnly = -1,
         int maxPositiveDiffBetweenWordTopLegacyFlowOnly = -1)
     {
+        AutoCorrectHelper.RemoveSpacesAroundSlashes(returnLines);
+        
         if (!useNewProcessingFlow)
         {
             return GroupLegacyFlow(
@@ -534,7 +536,7 @@ public static class OcrHelper
                     }
                  
                     var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
-                    var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
+                    var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
                     var percentOfPrevious = previousOkWord != null ?
                         GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
                         : null;

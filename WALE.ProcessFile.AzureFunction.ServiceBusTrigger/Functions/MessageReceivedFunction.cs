@@ -9,6 +9,7 @@ using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
@@ -66,7 +67,7 @@ public class MessageReceivedFunction(
             pdfFilePath
         };
         
-        var fileLicenceMapping = new Dictionary<string, string>();
+        var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),

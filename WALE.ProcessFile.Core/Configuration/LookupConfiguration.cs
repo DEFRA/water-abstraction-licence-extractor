@@ -4,9 +4,9 @@ namespace WALE.ProcessFile.Core.Configuration;
 
 public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
-    Dictionary<string, string> licenceNumberMapping)
+    Dictionary<string, DmsFileData> licenceNumberMapping)
 {
-    public Dictionary<string, string> LicenceNumberMapping { get; } = licenceNumberMapping;
+    public Dictionary<string, DmsFileData> LicenceNumberMapping { get; } = licenceNumberMapping;
 
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
 }

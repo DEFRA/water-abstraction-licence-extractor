@@ -40,9 +40,12 @@ public class TessaractOcrPdfTests
             }
         }
     };
-    private readonly HashSet<string> _liveLicenceNumbers = [];
-    private readonly HashSet<string> _deadLicenceNumbers = [];
-    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
+    {
+        LiveLicences = [],
+        DeadLicences = [],
+        ImpoundmentLicences = []
+    };
     private readonly Dictionary<string, NaldData> _naldData = [];
 
     private Task<MatchesResult> GetMatchesAsync(string fileName)
@@ -162,9 +165,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -222,9 +223,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -287,9 +286,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -356,9 +353,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -417,9 +412,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -479,9 +472,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -553,9 +544,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -622,9 +611,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -693,9 +680,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -759,9 +744,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -820,9 +803,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -868,9 +849,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -931,9 +910,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -982,9 +959,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1022,9 +997,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1090,9 +1063,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1145,9 +1116,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1198,9 +1167,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1245,9 +1212,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1287,9 +1252,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1348,9 +1311,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1405,9 +1366,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1464,9 +1423,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1524,9 +1481,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1568,9 +1523,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1619,9 +1572,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1689,9 +1640,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1739,9 +1688,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,
@@ -1788,9 +1735,7 @@ public class TessaractOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined,
             TestConfig.PdfFolder,

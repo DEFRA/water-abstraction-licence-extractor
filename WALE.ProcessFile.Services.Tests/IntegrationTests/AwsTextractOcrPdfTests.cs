@@ -164,9 +164,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
@@ -203,9 +201,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,

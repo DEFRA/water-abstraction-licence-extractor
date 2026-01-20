@@ -17,9 +17,7 @@ public static partial class SchemaConverter
     
     private static Licence ToLicence(
         MatchesResult matchesResult,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         Dictionary<string, NaldData> naldData)
@@ -119,9 +117,7 @@ public static partial class SchemaConverter
             purposes,
             naldData,
             licenceNumbersMapping,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
@@ -180,9 +176,7 @@ public static partial class SchemaConverter
 
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
             licenceNumber,
-            impoundmentLicenceNumbers,
-            liveLicenceNumbers,
-            deadLicenceNumbers);
+            naldLicenceStatusData);
         
         var naldLicenceNumber = (string?)null;
         
@@ -196,15 +190,15 @@ public static partial class SchemaConverter
             .SelectMany(x => x.LinkedLicences!)
             .ToList();
 
-        linkedLicences.AddRange(GetRecordsLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetPurposesLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetPointsLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
-        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping));
+        linkedLicences.AddRange(GetRecordsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetPointsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
         
-        var licenceHistory = GetLicenceHistoryLinkedLicences(matches, impoundmentLicenceNumbers, deadLicenceNumbers, liveLicenceNumbers, licenceNumbersMapping);
+        var licenceHistory = GetLicenceHistoryLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping);
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
         linkedLicences = linkedLicences
@@ -248,9 +242,7 @@ public static partial class SchemaConverter
                     firstLinkedLicence.Filename,
                     firstLinkedLicence.Condition,
                     containedIn.ToArray(),
-                    impoundmentLicenceNumbers,
-                    deadLicenceNumbers,
-                    liveLicenceNumbers,
+                    naldLicenceStatusData,
                     licenceNumbersMapping);
             })
             .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber))
@@ -273,9 +265,7 @@ public static partial class SchemaConverter
 
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(
             matches,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             licenceNumbersMapping);
        
         var additionalLinkedLicenceCount = 1;
@@ -401,22 +391,20 @@ public static partial class SchemaConverter
 
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
         string? licenceNumber,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers)
+        NaldLicenceStatusData naldLicenceStatusData)
     {
         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
         
-        var isLiveLicence = liveLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? liveLicenceNumbers.Contains(strippedLicenceNumber)
+        var isLiveLicence = naldLicenceStatusData.LiveLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
+            ? naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber)
             : (bool?)null;
         
-        var isDeadLicence = deadLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? deadLicenceNumbers.Contains(strippedLicenceNumber)
+        var isDeadLicence = naldLicenceStatusData.DeadLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
+            ? naldLicenceStatusData.DeadLicences.Contains(strippedLicenceNumber)
             : (bool?)null;
 
-        var isImpoundmentLicence = impoundmentLicenceNumbers.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? impoundmentLicenceNumbers.Contains(strippedLicenceNumber)
+        var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
+            ? naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber)
             : (bool?)null;
 
         var isFound = isDeadLicence == true
@@ -463,16 +451,12 @@ public static partial class SchemaConverter
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
             linkedLicenceNumber,
-            impoundmentLicenceNumbers,
-            liveLicenceNumbers,
-            deadLicenceNumbers);
+            naldLicenceStatusData);
         
         var naldLicenceNumber = (string?)null;
         
@@ -505,9 +489,7 @@ public static partial class SchemaConverter
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
@@ -524,9 +506,7 @@ public static partial class SchemaConverter
         
         var primaryLicence = ToLicence(
             matchesResult,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             dmsFileData,
             licenceNumbersMapping,
             naldData);
@@ -537,9 +517,7 @@ public static partial class SchemaConverter
             matchesResult,
             primaryLicence,
             licenceNumbersMapping,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             naldData,
             pdfDataExtractorService,
             pdfFolder,
@@ -651,9 +629,7 @@ public static partial class SchemaConverter
             AddMissingBackLinks(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
-                impoundmentLicenceNumbers,
-                deadLicenceNumbers,
-                liveLicenceNumbers,
+                naldLicenceStatusData,
                 licenceNumbersMapping);
 
             var newLicenceSetIds = new List<LicenceSetReference>
@@ -693,9 +669,7 @@ public static partial class SchemaConverter
     private static List<LicenceSet> AddMissingBackLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var returnList = new List<LicenceSet>();
@@ -748,9 +722,7 @@ public static partial class SchemaConverter
                                     LineNumber = -1,
                                     PageNumber = -1,
                                 }],
-                                impoundmentLicenceNumbers,
-                                deadLicenceNumbers,
-                                liveLicenceNumbers,
+                                naldLicenceStatusData,
                                 licenceNumbersMapping)
                         };
 
@@ -915,9 +887,7 @@ public static partial class SchemaConverter
         MatchesResult matchesResult,
         Licence primaryLicence,
         Dictionary<string, DmsFileData> licenceNumberMapping,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, NaldData> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
@@ -960,9 +930,7 @@ public static partial class SchemaConverter
                     
                     var linkedLicence = ToLicence(
                         matches,
-                        impoundmentLicenceNumbers,
-                        deadLicenceNumbers,
-                        liveLicenceNumbers,
+                        naldLicenceStatusData,
                         dmsFileData,
                         licenceNumberMapping,
                         naldData);
@@ -1015,9 +983,7 @@ public static partial class SchemaConverter
 
                     var licence = ToLicence(
                         relatedFileMatches,
-                        impoundmentLicenceNumbers,
-                        deadLicenceNumbers,
-                        liveLicenceNumbers,
+                        naldLicenceStatusData,
                         dmsFileData,
                         licenceNumberMapping,
                         naldData);
@@ -1065,9 +1031,7 @@ public static partial class SchemaConverter
                     
             var licence = ToLicence(
                 relatedFileMatches,
-                impoundmentLicenceNumbers,
-                deadLicenceNumbers,
-                liveLicenceNumbers,
+                naldLicenceStatusData,
                 dmsFileData,
                 licenceNumberMapping,
                 naldData);
@@ -1108,9 +1072,7 @@ public static partial class SchemaConverter
 
     private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var additional = matches
@@ -1131,9 +1093,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1169,9 +1129,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetReasonsForConditionsLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var reasonsForConditions = matches
@@ -1192,9 +1150,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1243,9 +1199,7 @@ public static partial class SchemaConverter
 
     private static List<LinkedLicence> GetAllDocumentLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var generalLinkedLicenceNumbers = matches
@@ -1271,9 +1225,7 @@ public static partial class SchemaConverter
             
             var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                 linkedLicenceNumber,
-                impoundmentLicenceNumbers,
-                liveLicenceNumbers,
-                deadLicenceNumbers);
+                naldLicenceStatusData);
 
             var strippedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber);
     
@@ -1325,9 +1277,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var licenceHistorySection = matches
@@ -1349,9 +1299,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1387,9 +1335,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetPurposesLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var purposeSection = matches
@@ -1419,9 +1365,7 @@ public static partial class SchemaConverter
                 
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                             licenceNumber,
-                            impoundmentLicenceNumbers,
-                            liveLicenceNumbers,
-                            deadLicenceNumbers);
+                            naldLicenceStatusData);
 
                         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1461,9 +1405,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetPointsLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var pointsSection = matches
@@ -1493,9 +1435,7 @@ public static partial class SchemaConverter
                 
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                             licenceNumber,
-                            impoundmentLicenceNumbers,
-                            liveLicenceNumbers,
-                            deadLicenceNumbers);
+                            naldLicenceStatusData);
 
                         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1535,9 +1475,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetRecordsLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var records = matches
@@ -1558,9 +1496,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
                 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
                     
@@ -1596,9 +1532,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var furtherConditions = matches
@@ -1619,9 +1553,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1657,9 +1589,7 @@ public static partial class SchemaConverter
     
     private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(
         List<LabelGroupResult> matches,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var furtherProvisions = matches
@@ -1680,9 +1610,7 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    impoundmentLicenceNumbers,
-                    liveLicenceNumbers,
-                    deadLicenceNumbers);
+                    naldLicenceStatusData);
 
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
     
@@ -1862,9 +1790,7 @@ public static partial class SchemaConverter
         PurposeOfAbstraction[] allPurposes,
         Dictionary<string, NaldData> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
@@ -2024,9 +1950,7 @@ public static partial class SchemaConverter
                     
                     var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                         licenceNumber,
-                        impoundmentLicenceNumbers,
-                        liveLicenceNumbers,
-                        deadLicenceNumbers);
+                        naldLicenceStatusData);
                     
                     var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                         ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -3106,9 +3030,7 @@ public static partial class SchemaConverter
     
     public static List<LicenceSet> AddAdditionalLicenceSets(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        HashSet<string> impoundmentLicenceNumbers,
-        HashSet<string> deadLicenceNumbers,
-        HashSet<string> liveLicenceNumbers,
+        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {        
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
@@ -3116,9 +3038,7 @@ public static partial class SchemaConverter
         distinctLicenceSets.AddRange(AddMissingBackLinks(
             licenceSetGroups,
             true,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             licenceNumbersMapping));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);

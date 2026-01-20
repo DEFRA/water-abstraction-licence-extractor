@@ -51,9 +51,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         TestConfig.PdfFolder3);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
-    private readonly HashSet<string> _liveLicenceNumbers = [];
-    private readonly HashSet<string> _deadLicenceNumbers = [];
-    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
+    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
+    {
+        LiveLicences = [],
+        DeadLicences = [],
+        ImpoundmentLicences = []
+    };
     private readonly Dictionary<string, NaldData> _naldData = [];
     
     private static string PdfFolder => TestConfig.PdfFolder;
@@ -166,9 +169,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
@@ -256,9 +257,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
@@ -333,9 +332,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            _naldLicenceStatusData,
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
@@ -349,9 +346,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder,
@@ -396,9 +391,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            _naldLicenceStatusData,
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
@@ -412,9 +405,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
@@ -512,9 +503,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
@@ -547,9 +536,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
@@ -583,9 +570,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,

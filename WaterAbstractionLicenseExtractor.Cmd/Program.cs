@@ -54,13 +54,17 @@ async Task ProgramAsync()
         services.LicenceSetsDataPath!,
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
+
+    var naldLicenceStatusData = new NaldLicenceStatusData
+    {
+        LiveLicences = ExternalDataHelper.GetLiveLicenceNumbers(
+            Environment.GetEnvironmentVariable("LiveLicencesPath")),
+        DeadLicences = ExternalDataHelper.GetDeadLicenceNumbers(
+            Environment.GetEnvironmentVariable("DeadLicencesPath")),
+        ImpoundmentLicences = ExternalDataHelper.GetImpoundmentLicenceNumbers(
+            Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"))
+    };
     
-    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
-        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
-    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
-        Environment.GetEnvironmentVariable("DeadLicencesPath"));
-    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
-        Environment.GetEnvironmentVariable("LiveLicencesPath"));
     var naldData = ExternalDataHelper.GetNaldGeneralReportData(
         Environment.GetEnvironmentVariable("NaldDataPath"));
 
@@ -99,9 +103,7 @@ async Task ProgramAsync()
                     filePath,
                     processCount++,
                     licenceNumbersWithFilenames,
-                    impoundmentLicenceNumbers,
-                    deadLicenceNumbers,
-                    liveLicenceNumbers,
+                    naldLicenceStatusData,
                     naldData,
                     outputService,
                     pdfDataExtractors,
@@ -161,9 +163,7 @@ async Task ProgramAsync()
     
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
-        impoundmentLicenceNumbers,
-        deadLicenceNumbers,
-        liveLicenceNumbers,
+        naldLicenceStatusData,
         licenceNumbersWithFilenames);
     
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -460,9 +460,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
     Dictionary<string, DmsFileData> licenceMapping,
-    HashSet<string> impoundmentLicenceNumbers,
-    HashSet<string> deadLicenceNumbers,
-    HashSet<string> liveLicenceNumbers,
+    NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, NaldData> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
@@ -522,9 +520,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             licenceMapping,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
             pdfFolder,

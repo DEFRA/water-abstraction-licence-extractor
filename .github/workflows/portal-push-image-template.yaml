@@ -1,0 +1,201 @@
+name: push image template
+on:
+  workflow_call:
+    inputs:
+      IMAGE_VERSION:
+        required: false
+        type: string
+      repository:
+         description: "docker repository name"
+         required: true
+         type: string
+      dev_image_version_release:
+        description: "dev image version release"
+        required: true
+        type: boolean
+      environment:  
+        description: "Optional environment name"
+        required: false
+        type: string  
+      tag_short_description:   
+        description: "Short description for the git tag"
+        required: true
+        type: string  
+  
+    secrets:
+      AWS_ENV_REGION:
+        required: true
+      AWS_ENV_ACCOUNT:
+        required: true
+      AWS_ENV_ROLE:
+        required: true
+
+env:
+  REPOSITORY: ${{ inputs.repository }}
+jobs:
+  push-image:
+    name: Push Docker Image
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || '' }} 
+    permissions:
+      id-token: write
+      contents: write
+    
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Compose image tag
+        id: imgtag
+        shell: bash
+        run: |
+          if [ "${{ inputs.dev_image_version_release }}" = "false" ]; then
+             # Fetch tags
+            git fetch --tags
+            # get latest tag
+            latest_tag=$(git describe --tags "$(git rev-list --tags --max-count=1)" 2>/dev/null || echo "")
+
+            # Default if no tag found
+            if [ -z "$latest_tag" ]; then
+              latest_tag="v0.0.0"
+            fi
+            echo "Latest Git Tag: $latest_tag"
+            sha="${GITHUB_SHA::8}"
+            echo "sha = $sha"
+            image_tag="${latest_tag}-dev-${sha}"
+            echo "image_tag = $image_tag"
+          else
+            image_tag="v${{ github.event.inputs.DEVIMAGEVERSION }}"
+          fi
+          echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
+      - name: Print Docker image tag
+        shell: bash
+        run: |
+          echo "Image Tag: ${{ steps.imgtag.outputs.image_tag }}"
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_ENV_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ENV_ACCOUNT }}:role/${{
+            secrets.AWS_ENV_ROLE }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          flavor: |
+            latest=false
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.REPOSITORY }}
+          tags: |
+            type=semver,priority=900,pattern={{raw}}
+            type=raw,priority=800,value=${{steps.imgtag.outputs.image_tag }}
+          labels: |
+            org.opencontainers.image.licenses=OGL-UK-3.0
+
+      - name: Build and push Docker image manually
+        run: |
+          IMAGE_TAG="${{ steps.imgtag.outputs.image_tag }}"
+          IMAGE_NAME="${{ steps.login-ecr.outputs.registry }}/${{ env.REPOSITORY }}"
+          
+          GIT_COMMIT="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}"
+          GIT_URL="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.source'] }}"
+          GIT_TITLE="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}"
+          GIT_VERSION="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}"
+          GIT_CREATED="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}"
+          GIT_DESCRIPTION="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.description'] }}"
+          GIT_LICENSE="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.licenses'] }}"
+
+          echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
+          docker build \
+            --file ./Dockerfile \
+            --build-arg GIT_COMMIT="$GIT_COMMIT" \
+            --label org.opencontainers.image.source="$GIT_URL" \
+            --label org.opencontainers.image.revision="$GIT_COMMIT" \
+            --label org.opencontainers.image.title="$GIT_TITLE" \
+            --label org.opencontainers.image.version="$GIT_VERSION" \
+            --label org.opencontainers.image.created="$GIT_CREATED" \
+            --label org.opencontainers.image.description="$GIT_DESCRIPTION" \
+            --label org.opencontainers.image.licenses="$GIT_LICENSE" \
+            --tag "$IMAGE_NAME:$IMAGE_TAG" \
+            .
+
+          echo "Pushing Docker image..."
+          docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+      - name: Generate job summary
+        id: summary
+        run: >
+          {
+            echo "### Docker Image details"
+            echo "The tag is **${{steps.imgtag.outputs.image_tag }}**"
+            echo "| Label      | Value |"
+            echo "| ---------- | ----- |"
+            echo "| created    | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }} |"
+            echo "| description| ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.description'] }} |"
+            echo "| licenses   | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.licenses'] }} |"
+            echo "| revision   | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} |"
+            echo "| source     | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.source'] }} |"
+            echo "| title      | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }} |"
+            echo "| url        | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.url'] }} |"
+            echo "| version    | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }} |"
+          } >> $GITHUB_STEP_SUMMARY
+      - name: Run container locally
+        run: |
+          image_tag=${{steps.imgtag.outputs.image_tag }}
+          docker build -t bst:$image_tag .
+          echo "Running local image: $image_tag"
+          docker run -d --name test-container -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=local bst:$image_tag
+      - name: Wait for service to start
+        run: >
+          echo "Waiting for the service to start..."
+
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health || echo "000")
+            echo "HTTP Status: $STATUS"
+            if [ "$STATUS" -eq 200 ]; then
+              echo "Service is healthy..."
+              break
+            fi
+            echo "--- Last 5 log lines from container ---"
+            docker logs test-container --tail 5 || true
+            echo "---------------------------------------"
+            sleep 3
+          done
+      - name: Test application response
+        run: |
+          curl -i http://localhost:8080/health
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm -f test-container
+
+
+      - name: Create and push git tag
+        if: ${{ inputs.dev_image_version_release == true }}
+        env:
+          IMAGE_TAG: ${{ steps.imgtag.outputs.image_tag }}
+          TAG_MESSAGE: ${{ inputs.tag_short_description }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create the tag only if it doesn't already exist
+          if git ls-remote --tags origin | grep -q "refs/tags/$IMAGE_TAG"; then
+            echo "Tag $IMAGE_TAG already exists. error..."
+            exit 1
+          else
+            echo "Creating and pushing tag $IMAGE_TAG"
+            git tag -a "$IMAGE_TAG" -m "$TAG_MESSAGE"
+            git push origin "$IMAGE_TAG"
+          fi    

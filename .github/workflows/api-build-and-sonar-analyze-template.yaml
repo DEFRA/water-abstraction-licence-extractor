@@ -99,6 +99,8 @@ jobs:
             /d:sonar.exclusions="**/wwwroot/**" `
             /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs"
 
+      - name: Install Tesseract
+        run: sudo apt install tesseract-ocr
       - name: Restore NuGet packages
         shell: pwsh
         run: dotnet restore ${{ inputs.dotnet_application_solution_name }}.sln

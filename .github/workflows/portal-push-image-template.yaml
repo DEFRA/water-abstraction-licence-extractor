@@ -1,4 +1,4 @@
-name: push image template
+name: Portal - Push image template
 on:
   workflow_call:
     inputs:

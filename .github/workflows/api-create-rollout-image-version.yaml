@@ -1,4 +1,4 @@
-name: Create rollout Image Version and Push ECR
+name: API - Create rollout Image Version and Push ECR
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: build and sonar analyze template
+name: API - Build and sonar analyze template
 on:
   workflow_call:
     inputs:

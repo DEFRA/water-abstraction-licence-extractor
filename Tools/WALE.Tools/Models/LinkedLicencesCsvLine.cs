@@ -3,9 +3,15 @@ namespace WALE.Tools.Models;
 public class LinkedLicencesCsvLine
 {
     public string? Filename { get; set; }
+    
+    public string? DmsPath { get; set; }
+    
     public string? LicenceNumber { get; set; }
+    
     public string? ScrapedLicenceNumber { get; set; }
+    
     public string? NaldLicenceNumber { get; set; }
+    
     public bool? LicenceIsLive { get; set; }
     
     public bool? LicenceIsDead { get; set; }
@@ -13,11 +19,17 @@ public class LinkedLicencesCsvLine
     public bool? LicenceIsImpoundment { get; set; }
     
     public bool LicenceFoundInList { get; set; }
+    
     public string? LinkedLicenceNumber { get; set; }
-    public string? NaldLinkedLicenceNumber { get; set; }
+    
+    public string? LinkedLicenceFilename { get; set; }
+    
+    public string? LinkedLicenceDmsPath { get; set; }
+    
     public string? LinkedLicenceFromSection { get; set; }
     
     public string? LinkedLicenceLinkReason { get; set; }
+    
     public bool? LinkedLicenceIsLive { get; set; }
     
     public bool? LinkedLicenceIsDead { get; set; }

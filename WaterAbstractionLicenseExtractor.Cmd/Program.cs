@@ -163,7 +163,8 @@ async Task ProgramAsync()
         licenceSetGroups,
         impoundmentLicenceNumbers,
         deadLicenceNumbers,
-        liveLicenceNumbers);
+        liveLicenceNumbers,
+        licenceNumbersWithFilenames);
     
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
@@ -613,7 +614,7 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        .Take(100)
+        //.Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

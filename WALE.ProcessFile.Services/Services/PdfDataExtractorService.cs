@@ -450,6 +450,13 @@ public class PdfDataExtractorService(
                             {
                                 uniqueServiceMatches.Add(match);
                             }
+                            else
+                            {
+                                var existingItem = uniqueServiceMatches
+                                    .First(x => x.LabelGroupName == match.LabelGroupName);
+                                
+                                existingItem.AlternativeMatches.Add(match);
+                            }
                             
                             break;
                         case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
@@ -481,7 +488,8 @@ public class PdfDataExtractorService(
                             
                             break;
                         case MultipleServiceMatchBehaviour.UseFirstServiceResult:
-                            alreadyFound.AlternativeMatches.Add(alreadyFound);
+                            alreadyFound.AlternativeMatches.Add(match);
+                            match.AlternativeMatches = [];
                             
                             break;                        
                         case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:

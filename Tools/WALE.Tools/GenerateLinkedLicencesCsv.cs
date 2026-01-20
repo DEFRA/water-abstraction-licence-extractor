@@ -52,6 +52,7 @@ public static class GenerateLinkedLicencesCsv
                 returnList.Add(new LinkedLicencesCsvLine
                 {
                     Filename = licence.Filename,
+                    DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
                     LicenceNumber = licence.LicenceNumber,
                     ScrapedLicenceNumber = licenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
@@ -75,6 +76,7 @@ public static class GenerateLinkedLicencesCsv
                     returnList.Add(new LinkedLicencesCsvLine
                     {
                         Filename = licence.Filename,
+                        DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
                         LicenceNumber = licence.LicenceNumber,
                         ScrapedLicenceNumber = licenceNumber,
                         NaldLicenceNumber = licence.NaldLicenceNumber,
@@ -83,7 +85,8 @@ public static class GenerateLinkedLicencesCsv
                         LicenceIsDead = licence.IsDeadLicence,
                         LicenceIsImpoundment = licence.IsImpoundmentLicence,
                         LinkedLicenceNumber = linkedLicence.LicenceNumber,
-                        NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
+                        LinkedLicenceFilename = linkedLicence.Filename,
+                        LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath) ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")" : null,
                         LinkedLicenceFromSection = fromSection.SectionName,
                         LinkedLicenceLinkReason = fromSection.LinkReason,
                         LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,

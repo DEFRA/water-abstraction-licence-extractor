@@ -106,7 +106,8 @@ public static class GenerateAggregatesCsvForTesting
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            LiveLicenceNumbers,
+            []);
 
         foreach (var licenceSets in licenceSetGroups)
         {
@@ -225,7 +226,8 @@ public static class GenerateAggregatesCsvForTesting
             licenceSetGroups,
             ImpoundmentLicenceNumbers,
             DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            LiveLicenceNumbers,
+            []);
         
         return
         [

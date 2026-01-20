@@ -67,34 +67,34 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                foreach (var fromSection in linkedLicence.ContainedIn!)
+                var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName));
+                var linkReasons = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.LinkReason));
+                
+                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                    ? value.ToString()
+                    : null;
+                
+                returnList.Add(new LinkedLicencesCsvLine
                 {
-                    var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                        ? value.ToString()
-                        : null;
-                    
-                    returnList.Add(new LinkedLicencesCsvLine
-                    {
-                        Filename = licence.Filename,
-                        DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
-                        LicenceNumber = licence.LicenceNumber,
-                        ScrapedLicenceNumber = licenceNumber,
-                        NaldLicenceNumber = licence.NaldLicenceNumber,
-                        LicenceFoundInList = licence.LicenceFoundInList,
-                        LicenceIsLive = licence.IsLiveLicence,
-                        LicenceIsDead = licence.IsDeadLicence,
-                        LicenceIsImpoundment = licence.IsImpoundmentLicence,
-                        LinkedLicenceNumber = linkedLicence.LicenceNumber,
-                        LinkedLicenceFilename = linkedLicence.Filename,
-                        LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath) ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")" : null,
-                        LinkedLicenceFromSection = fromSection.SectionName,
-                        LinkedLicenceLinkReason = fromSection.LinkReason,
-                        LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
-                        LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
-                        LinkedLicenceIsDead = linkedLicence.IsDeadLicence,
-                        LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence
-                    });
-                }
+                    Filename = licence.Filename,
+                    DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
+                    LicenceNumber = licence.LicenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
+                    NaldLicenceNumber = licence.NaldLicenceNumber,
+                    LicenceFoundInList = licence.LicenceFoundInList,
+                    LicenceIsLive = licence.IsLiveLicence,
+                    LicenceIsDead = licence.IsDeadLicence,
+                    LicenceIsImpoundment = licence.IsImpoundmentLicence,
+                    LinkedLicenceNumber = linkedLicence.LicenceNumber,
+                    LinkedLicenceFilename = linkedLicence.Filename,
+                    LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath) ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")" : null,
+                    LinkedLicenceFromSection = fromSections,
+                    LinkedLicenceLinkReason = linkReasons,
+                    LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
+                    LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
+                    LinkedLicenceIsDead = linkedLicence.IsDeadLicence,
+                    LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence
+                });
             }
         }
 

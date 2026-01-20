@@ -1,4 +1,4 @@
-name: push image template
+name: API - Push image template
 on:
   workflow_call:
     inputs:

@@ -114,9 +114,10 @@ jobs:
           GIT_DESCRIPTION="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.description'] }}"
           GIT_LICENSE="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.licenses'] }}"
 
+          cd "WALE.Api"
           echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
           docker build \
-            --file ./WALE.Api/Dockerfile \
+            --file ./Dockerfile \
             --build-arg GIT_COMMIT="$GIT_COMMIT" \
             --label org.opencontainers.image.source="$GIT_URL" \
             --label org.opencontainers.image.revision="$GIT_COMMIT" \

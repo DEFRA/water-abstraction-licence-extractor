@@ -54,13 +54,17 @@ async Task ProgramAsync()
         services.LicenceSetsDataPath!,
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
+
+    var naldLicenceStatusData = new NaldLicenceStatusData
+    {
+        LiveLicences = ExternalDataHelper.GetLiveLicenceNumbers(
+            Environment.GetEnvironmentVariable("LiveLicencesPath")),
+        DeadLicences = ExternalDataHelper.GetDeadLicenceNumbers(
+            Environment.GetEnvironmentVariable("DeadLicencesPath")),
+        ImpoundmentLicences = ExternalDataHelper.GetImpoundmentLicenceNumbers(
+            Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"))
+    };
     
-    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
-        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
-    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
-        Environment.GetEnvironmentVariable("DeadLicencesPath"));
-    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
-        Environment.GetEnvironmentVariable("LiveLicencesPath"));
     var naldData = ExternalDataHelper.GetNaldGeneralReportData(
         Environment.GetEnvironmentVariable("NaldDataPath"));
 
@@ -92,16 +96,14 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var pdfFilePath in files)
+        foreach (var (filePath, _) in files)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
-                    pdfFilePath.Key,
+                    filePath,
                     processCount++,
                     licenceNumbersWithFilenames,
-                    impoundmentLicenceNumbers,
-                    deadLicenceNumbers,
-                    liveLicenceNumbers,
+                    naldLicenceStatusData,
                     naldData,
                     outputService,
                     pdfDataExtractors,
@@ -161,9 +163,8 @@ async Task ProgramAsync()
     
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
-        impoundmentLicenceNumbers,
-        deadLicenceNumbers,
-        liveLicenceNumbers);
+        naldLicenceStatusData,
+        licenceNumbersWithFilenames);
     
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
@@ -361,17 +362,25 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
         ?? throw new NullReferenceException("PostgresConnectionString");
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
         ?? throw new NullReferenceException("FileMappingPath");
-
+    var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
+        ?? throw new NullReferenceException("DotnetPath");
+    var tesseractExeName = Environment.GetEnvironmentVariable("TesseractExeName")
+        ?? throw new NullReferenceException("TesseractExeName");
+    var tesseractExeDirectory = Environment.GetEnvironmentVariable("TesseractExeDirectory")
+        ?? throw new NullReferenceException("TesseractExeDirectory");
+    var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
+        ?? throw new NullReferenceException("TESSDATA_PREFIX");
+    
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
-    
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
     LicenceNumber.Instance = new LicenceNumber(databaseReadService);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService);
+    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -382,19 +391,23 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
         var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
-            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            tessDataPrefix,
             PageSegMode.SparseTextOsd,
             cacheService,
             outputService,
+            dotnetPath,
+            tesseractExeName,
+            tesseractExeDirectory,
             id);
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
-            Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                ?? throw new NullReferenceException("TESSDATA_PREFIX"),
+            tessDataPrefix,
             PageSegMode.Auto,
             cacheService,
             outputService,
+            dotnetPath,
+            tesseractExeName,
+            tesseractExeDirectory,            
             id);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
@@ -448,10 +461,8 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int fileNumber,
-    Dictionary<string, string> licenceMapping,
-    HashSet<string> impoundmentLicenceNumbers,
-    HashSet<string> deadLicenceNumbers,
-    HashSet<string> liveLicenceNumbers,
+    Dictionary<string, DmsFileData> licenceMapping,
+    NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, NaldData> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
@@ -511,9 +522,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             licenceMapping,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
             pdfFolder,
@@ -588,7 +597,7 @@ async Task MoveReportHtmlFilesAsync(
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
     GetFilesAndMapping(ConfiguredServices services)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
@@ -599,7 +608,7 @@ async Task MoveReportHtmlFilesAsync(
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
         .ToDictionary(filePath => filePath.Key, k => k.Value);*/
-    
+
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
@@ -609,11 +618,11 @@ async Task MoveReportHtmlFilesAsync(
     return filesAndMapping;
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
     GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath)
 {
-    var mappingFile = new Dictionary<string, string>();
-    var filenames = new Dictionary<string, string>();
+    var filenames = new Dictionary<string, DmsFileData>();
+    var mappingFile = new Dictionary<string, DmsFileData>();
     
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -666,9 +675,17 @@ async Task MoveReportHtmlFilesAsync(
                 {
                     continue;
                 }
+
+                var dmsFileData = new DmsFileData
+                {
+                    DestinationFileName = destinationFileName,
+                    NaldLicenceRef = (string)row["NALD Licence Ref"],
+                    PermitNumber = permitNumber,
+                    DmsPath = (string)row["FullPath"]
+                };
                 
-                filenames.Add(pdfFolderPath + destinationFileName, permitNumber);
-                mappingFile.Add(permitNumber, destinationFileName);
+                filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
+                mappingFile.Add(permitNumber, dmsFileData);
             }
         }
     }

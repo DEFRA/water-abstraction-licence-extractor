@@ -2,7 +2,7 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Tests.Helper;
 
-public static class GeneralTeststHelper
+public static class GeneralTestsHelper
 {
     public static List<LabelGroupResult> ExcludeSomeMatches(List<LabelGroupResult> matches)
     {

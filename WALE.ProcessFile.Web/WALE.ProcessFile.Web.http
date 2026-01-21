@@ -1,6 +1,0 @@
-@WALE.ProcessFile.Web_HostAddress = http://localhost:5090
-
-GET {{WALE.ProcessFile.Web_HostAddress}}/list/
-Accept: application/json
-
-###

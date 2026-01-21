@@ -74,6 +74,10 @@
         <Content Update="Templates\process-runs-template.html">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <None Update="configs">
+            <!-- Exclude the file from analysis -->
+            <SonarQubeExclude>true</SonarQubeExclude>
+        </None>
     </ItemGroup>
 
     <ItemGroup>

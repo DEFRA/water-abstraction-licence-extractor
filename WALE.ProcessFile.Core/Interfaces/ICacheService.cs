@@ -6,19 +6,19 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface ICacheService
 {
+    public bool UsesDatabase { get; set; }
+    
+    public string? CacheFolder { get; set; }
+    
+    public string? ConnectionString { get; set; }
+    
     public Task SetupAsync();
 
     public Task ClearCacheAsync(string pdfFilename);
     
     public Task ClearCacheAsync();
     
-    public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
-    
-    public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
-
-    public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
-    
-    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
+    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
@@ -27,23 +27,29 @@ public interface ICacheService
         string extension,
         int? width = null,
         int? height = null);
+    
+    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
+    
+    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request);
+    
+    public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
+    
+    public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
+    
+    public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
+    
+    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
 
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
-
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
-        GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
-    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
+    Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request);
     
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
-        NoOcrServiceMetadataCacheRequest request,
-        List<Dictionary<string, object>> pagesMetadata);
-    
-    public Task SaveNoOcrImagesMetadata(
-        NoOcrServiceMetadataCacheRequest request,
-        ImageMetadata imagesMetadata);
+    Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
+        OcrServiceImageTextCacheRequest request);
 
     public Task SaveImageOnPageAsync(
         byte[] bytes,
@@ -55,8 +61,14 @@ public interface ICacheService
         int pageNumber,
         string extension,
         int processRunId);
-
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension);
+    
+    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+        NoOcrServiceMetadataCacheRequest request,
+        List<Dictionary<string, object>> pagesMetadata);
+    
+    public Task SaveNoOcrImagesMetadata(
+        NoOcrServiceMetadataCacheRequest request,
+        ImageMetadata imagesMetadata);
     
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
@@ -75,6 +87,14 @@ public interface ICacheService
         string pageLines);
     
     public Task SaveOcrScreenshotTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines);
+
+    Task SaveTemporaryOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines);
+    
+    Task SaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines);
 }

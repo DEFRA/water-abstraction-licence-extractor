@@ -350,6 +350,53 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 DateTimeUtc = DateTime.UtcNow
             });
     }
+    
+    public async Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO ocr_temporary_image_text_cache (filename, ocr_service_name, image_number, page_number, data, process_run_id, date_time_utc)
+                           VALUES (@Filename, @OcrServiceName, @ImageNumber, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                Data = data,
+                request.ImageNumber,
+                request.PageNumber,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
+    public async Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO ocr_temporary_screenshot_text_cache (filename, ocr_service_name, page_number, data, process_run_id, date_time_utc) 
+                           VALUES (@Filename, @OcrServiceName, @PageNumber, @Data, @ProcessRunId, @DateTimeUtc)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.OcrServiceName,
+                Data = data,
+                request.PageNumber,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
 
     public async Task ClearCacheAsync()
     {

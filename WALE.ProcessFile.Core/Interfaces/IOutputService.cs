@@ -5,6 +5,8 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IOutputService
 {
+    public string? OutputFolder { get; set; }
+    
     public Task SetupAsync();
     
     public Task<string> GetPageScreenshotReferenceAsync(

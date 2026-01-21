@@ -112,12 +112,12 @@ public static class BaseMethod
                         {
                             var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
 
-                            if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
+                            if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
                             {
                                 continue;
                             }
 
-                            licenceNumberLine.Columns[0].Text = relatedFileName!;
+                            licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
                             labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
 
                             returnList.Add(labelGroupResult);

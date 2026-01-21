@@ -1,17 +1,22 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Tesseract;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.Enums;
 
 namespace WALE.ProcessFile.Services.Services;
 
 public class TesseractOcrDataExtractorService(
-    string dataPath,
+    string tessDataPath,
     PageSegMode pageSegMode,
     ICacheService cacheService,
     IOutputService outputService,
+    string dotnetPath,
+    string tesseractExeName,
+    string tesseractExeDirectory,
     int id = -1)
     : IOcrDataExtractorService, IDisposable
 {
@@ -19,8 +24,6 @@ public class TesseractOcrDataExtractorService(
     public string Name => $"TesseractOcr-{pageSegMode}";
     public int Id { get; set; } = id;
     
-    private TesseractEngine? _engine;
-
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
@@ -39,10 +42,10 @@ public class TesseractOcrDataExtractorService(
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
-        
+
         var isPageScreenshot = imageReference.StartsWith("Screenshot");
         var returnLines = new List<LineAndWords>();
-        
+
         var cachedJson = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
@@ -52,49 +55,48 @@ public class TesseractOcrDataExtractorService(
             var imageLines = JsonSerializer.Deserialize<List<LineAndWords>>(
                 cachedJson,
                 JsonHelper.GetSerializerOptions());
-            
+
             returnLines.AddRange(imageLines!);
         }
         else
         {
-            byte[]? bytes;
+            var externalProcessRanOk = await RunSeparateTesseractProcessAsync(
+                pageNumber,
+                imageNumber,
+                imageReference,
+                pdfFilepath,
+                isPageScreenshot,
+                processRunId,
+                cacheService.UsesDatabase);
 
-            if (isPageScreenshot)
+            if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
             {
-                bytes = await outputService.GetPageScreenshotDataAsync(
-                    pageNumber,
-                    PdfDataExtractorService.Name,
-                    pdfFilepath);
+                // TODO - Log
+                
+                // Don't cache, should work next time
+            }
+            else if (externalProcessRanOk == ProcessResult.RepeatableError)
+            {
+                // Never going to get a result back
+                
+                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
+                await cacheService.SaveOcrImageTextAsync(request, returnLines);
             }
             else
             {
-                bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                if (isPageScreenshot)
                 {
-                    PageNumber = pageNumber,
-                    ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
-                    NoOcrServiceName = PdfDataExtractorService.Name,
-                    Extension = FileHelper.GetImageExtension(imageReference)
-                });
-            }
-
-            if (bytes == null)
-            {
-                throw new Exception("Image was not found");
-            }
-            
-            returnLines = GetDataFromTesseract(bytes);
-            
-            if (isPageScreenshot)
-            {
-                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);                
-            }
-            else
-            {
-                await cacheService.SaveOcrImageTextAsync(request, returnLines);                
+                    returnLines = await cacheService.GetTemporaryOcrScreenshotTextAsync(request);
+                    await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
+                }
+                else
+                {
+                    returnLines = await cacheService.GetTemporaryOcrImageTextAsync(request);
+                    await cacheService.SaveOcrImageTextAsync(request, returnLines);
+                }
             }
         }
-        
+
         const int horizontalColumnGap = 200;
         const int minFontSize = 15;
         const int maxPercentHeightDiff = 0;
@@ -117,142 +119,87 @@ public class TesseractOcrDataExtractorService(
             maxPositiveDiffBetweenWordTop);
     }
     
-    private TesseractEngine GetEngine()
+    private async Task<ProcessResult> RunSeparateTesseractProcessAsync(
+        int pageNumber,
+        int imageNumber,
+        string imageReference,
+        string pdfFilePath,
+        bool isPageScreenshot,
+        int processRunId,
+        bool isDbBased)
     {
-        if (_engine != null)
+        var fileMode = isDbBased ? "Database" : "File";
+        var argumentsList = string.Join(" ", new List<string>
         {
-            return _engine;
-        }
+            tesseractExeName,
+            pageSegMode.ToString(),
+            fileMode,
+            pageNumber.ToString(),
+            imageNumber.ToString(),
+            $"\"{imageReference}\"",
+            $"\"{pdfFilePath}\"",
+            isPageScreenshot.ToString(),
+            processRunId.ToString(),
+            $"\"{cacheService.CacheFolder}\"",
+            $"\"{outputService.OutputFolder}\"",
+            $"\"{tessDataPath}\"",
+            $"\"{cacheService.ConnectionString ?? "N/A"}\""
+        });
         
-        _engine = new TesseractEngine(dataPath, "eng");
-        _engine.SetVariable("tessedit_parallelize", "0");
-
-        return _engine;
-    }
-    
-    private List<LineAndWords> GetDataFromTesseract(byte[] bytes)
-    {
-        try
-        {
-            var ocrImage = Pix.LoadFromMemory(bytes);
-            
-            const int minHeight = 200;
-            const int minWidth = 200;
-
-            if (minHeight > ocrImage.Height || minWidth > ocrImage.Width)
+        var proc = Process.Start(
+            new ProcessStartInfo
             {
-                return [];
-            }
-            
-            var tesseractEngine = GetEngine();
-
-            Page? page = null;
-            
-            // ReSharper disable once AccessToDisposedClosure
-            var task = Task.Run(() =>
-            {
-                //var dtProcessStart = DateTime.Now;
-                page = tesseractEngine.Process(ocrImage, pageSegMode);
-                //var tsProcess = (DateTime.Now - dtProcessStart).TotalMilliseconds;
-                
-                //var dtIterateStart = DateTime.Now;
-                var textLines = GetTextLinesFromPageAsync(page);
-                //var tsIterate = (DateTime.Now - dtIterateStart).TotalMilliseconds;
-                
-                return textLines;
+                WorkingDirectory = tesseractExeDirectory,
+                Arguments = argumentsList,
+                FileName = dotnetPath,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
             });
-                
-            const int maxExecutionTimeMs = 30_000;
-            var isCompletedSuccessfully = task.Wait(TimeSpan.FromMilliseconds(maxExecutionTimeMs));
+        
+        await proc!.WaitForExitAsync();
 
-            page?.Dispose();
+        while (!proc.StandardError.EndOfStream)
+        {
+            var line = await proc.StandardError.ReadLineAsync();
+            const string errorPrefix = "\"Error: ";
             
-            if (!isCompletedSuccessfully)
+            if (line?.StartsWith(errorPrefix, StringComparison.Ordinal) == true)
             {
-                tesseractEngine.Dispose();
-                _engine = null;
+                var repeatableErrors = new List<string>
+                {
+                    "Assert failed"
+                };
+
+                if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
+                {
+                    return ProcessResult.RepeatableError;
+                }
+                
+                proc.Kill();
+
+                var exceptionMessage = line[line.IndexOf(errorPrefix, StringComparison.Ordinal)..];
+                Console.WriteLine($"ERROR - External process gave error '{exceptionMessage}'");
+                
+                return ProcessResult.UnknownOrTransientError;
             }
             
-            return !isCompletedSuccessfully ? [] : task.Result;
+            Console.WriteLine(line);
         }
-        catch (Exception e)
-        {
-            throw;
-            //Console.SetOut(TextWriter.Null);
-            
-            Console.WriteLine(e);
-            return [];
-        }
-    }
-
-    private static List<LineAndWords> GetTextLinesFromPageAsync(Page page)
-    {
-        try
-        {
-            using var iterator = page.GetIterator();
-            iterator.Begin();
-
-            return ToPageLines(iterator);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-            //return [];
-        }
-    }
-
-    private static List<LineAndWords> ToPageLines(ResultIterator? iterator)
-    {
-        var returnLines = new List<LineAndWords>();
         
-        do
+        if (proc.ExitCode == 0)
         {
-            var lineText = iterator!.GetText(PageIteratorLevel.TextLine);
-
-            if (lineText == null)
-            {
-                continue;
-            }
-
-            //var dtLineStart = DateTime.Now;
-            var line = new string(lineText
-                .Where(ch => ch != '\n')
-                .ToArray());
-            //var tsLine = (DateTime.Now - dtLineStart).TotalMilliseconds;
-
-            var words = new List<DocumentLineWord?>();
-
-            do
-            {
-                //var dtWordStart = DateTime.Now;
-                var wordText = iterator.GetText(PageIteratorLevel.Word);
-                //var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
-                
-                var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
-                iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);
-
-                words.Add(new DocumentLineWord(
-                    wordText,
-                    wordConfidence,
-                    new DocumentLineWordCoordinates(
-                        coordinates.Y1,
-                        coordinates.X2,
-                        coordinates.Y2,
-                        coordinates.X1
-                    ),
-                    null));
-            } while (iterator.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
-
-            returnLines.Add(new LineAndWords { Text = line, Words = words });
-        } while (iterator.Next(PageIteratorLevel.TextLine));
+            return ProcessResult.Ok;
+        }
         
-        return returnLines;
+        Console.WriteLine($"ERROR - External process errored with exit code {proc.ExitCode}");
+        // TODO - Log error
+        
+        return ProcessResult.UnknownOrTransientError;
     }
-    
+
     public void Dispose()
     {
-        _engine?.Dispose();
-        GC.SuppressFinalize(this);
+        // TODO release managed resources here
     }
 }

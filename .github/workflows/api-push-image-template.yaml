@@ -116,7 +116,7 @@ jobs:
 
           echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
           docker build \
-            --file ./Dockerfile \
+            --file ./Wale.Api/Dockerfile \
             --build-arg GIT_COMMIT="$GIT_COMMIT" \
             --label org.opencontainers.image.source="$GIT_URL" \
             --label org.opencontainers.image.revision="$GIT_COMMIT" \

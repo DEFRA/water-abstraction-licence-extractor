@@ -88,7 +88,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/03/0853", licenceNumber.Text?.FirstOrDefault()?.Text); // NOTE - Tesseract gets this wrong
+        Assert.Equal("14/46/003/0853", licenceNumber.Text?.FirstOrDefault()?.Text); // NOTE - Tesseract gets this wrong
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -124,7 +124,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber").ToList();
         Assert.Single(linkedLicences);
-        Assert.Equal("14/46/03/0852", linkedLicences[0].Text!.First().Text);
+        Assert.Equal("14/46/003/0852", linkedLicences[0].Text!.First().Text);
 
         var linkedLicenceFilenames =
             section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceFilename");
@@ -186,7 +186,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
-        Assert.Equal("14/46/03/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("14/46/003/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);

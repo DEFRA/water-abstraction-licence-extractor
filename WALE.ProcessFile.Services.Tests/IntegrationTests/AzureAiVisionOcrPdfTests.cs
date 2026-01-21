@@ -755,7 +755,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("14/46/03/0853", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("14/46/003/0853", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -777,7 +777,7 @@ public class AzureAiVisionOcrPdfTests
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber").ToList();
         Assert.Single(linkedLicences);
-        Assert.Equal("14/46/03/0852", linkedLicences[0].Text!.First().Text);
+        Assert.Equal("14/46/003/0852", linkedLicences[0].Text!.First().Text);
         
         var linkedLicenceFilenames = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceFilename");
         Assert.Empty(linkedLicenceFilenames);
@@ -818,7 +818,7 @@ public class AzureAiVisionOcrPdfTests
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("14/46/03/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("14/46/003/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);        
@@ -972,7 +972,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("14/46/003/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1033,7 +1033,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("1/21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("1/21/00/010", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1364,7 +1364,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text); // TODO should be 2/27/29/12
+        Assert.Equal("2/27/29/012", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         var company = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(company);

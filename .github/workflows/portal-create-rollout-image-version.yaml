@@ -33,7 +33,7 @@ jobs:
     uses: ./.github/workflows/portal-push-image-template.yaml
     with:
       IMAGE_VERSION: ${{ github.event.inputs.DEVIMAGEVERSION }}
-      repository: wradi-portal
+      repository: wli/wradi-portal
       dev_image_version_release: true
       tag_short_description: ${{ github.event.inputs.tag_short_description }}
     secrets:  

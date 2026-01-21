@@ -33,7 +33,7 @@ jobs:
     uses: ./.github/workflows/api-push-image-template.yaml
     with:
       IMAGE_VERSION: ${{ github.event.inputs.DEVIMAGEVERSION }}
-      repository: wradi-api
+      repository: wli/wradi-api
       dev_image_version_release: true
       tag_short_description: ${{ github.event.inputs.tag_short_description }}
     secrets:  

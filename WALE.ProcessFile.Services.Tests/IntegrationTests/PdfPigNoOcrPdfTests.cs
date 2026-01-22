@@ -3499,7 +3499,7 @@ public class PdfPigNoOcrPdfTests
 
         Assert.Equal("SW/047/0051/003", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
         Assert.Equal("15/47/013/S/020", agreedSchemaLicenceGroup.Licences[1].LicenceNumber);
-        Assert.Equal("15/47/052/I/001", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
+        Assert.Equal("15/47/52/I/1", agreedSchemaLicenceGroup.Licences[2].LicenceNumber);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal("SW0470051003-LV2023020720380331", agreedSchemaLicence.Id);

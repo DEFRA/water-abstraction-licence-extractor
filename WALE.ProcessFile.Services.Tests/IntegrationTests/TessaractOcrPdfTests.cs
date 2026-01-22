@@ -96,7 +96,7 @@ public class TessaractOcrPdfTests
         
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/003/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
+        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -132,7 +132,7 @@ public class TessaractOcrPdfTests
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber").ToList();
         Assert.Single(linkedLicences);
-        Assert.Equal("14/46/003/0852", linkedLicences[0].Text!.First().Text);
+        Assert.Equal("14/46/03/0852", linkedLicences[0].Text!.First().Text);
         
         var linkedLicenceFilenames = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceFilename");
         Assert.Empty(linkedLicenceFilenames);
@@ -231,7 +231,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("28/39/28/0312", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("28/39/28/312", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -247,7 +247,7 @@ public class TessaractOcrPdfTests
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
-        Assert.Equal("28/39/28/0312", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("28/39/28/312", agreedSchemaLicence.LicenceNumber);
         Assert.Equal("ABC", agreedSchemaLicence.DmsPath);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -688,7 +688,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("03/074", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("3/074", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -918,7 +918,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("06/076", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("6/076", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1171,7 +1171,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("28/39/22/0271", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("28/39/22/271", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         // Abstraction limits come out of OCR all scrambled
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -1372,7 +1372,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("29/38/01/0008", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("29/38/1/8", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         // Abstraction limitscrossed out
         
@@ -1489,7 +1489,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("28/39/38/0035", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("28/39/38/35", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1648,7 +1648,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("8/36/19/*S/0130", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("8/36/19/S/130", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1741,7 +1741,7 @@ public class TessaractOcrPdfTests
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("28/39/22/0427", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("28/39/22/427", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         // Name cannot be found as its stricken through (should be 'Barry Ball')
         

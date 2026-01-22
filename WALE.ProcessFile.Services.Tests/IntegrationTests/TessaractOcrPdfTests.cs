@@ -247,12 +247,12 @@ public class TessaractOcrPdfTests
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
-        Assert.Equal("28/39/28/312", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("28/39/28/0312", agreedSchemaLicence.LicenceNumber);
         Assert.Equal("ABC", agreedSchemaLicence.DmsPath);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
-        Assert.Equal("28/39/28/0507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("28/39/28/507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -1755,17 +1755,17 @@ public class TessaractOcrPdfTests
             0);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Equal("2839220427-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("0427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
-        Assert.Equal("2839220217-LVUNKNOWN-2839220427-LVUNKNOWN", agreedSchemaLicenceGroup[1].LicenceSetId);
-        Assert.Equal("0217-0427", agreedSchemaLicenceGroup[1].ShortLicenceSetId);
+        Assert.Equal("283922427-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("283922217-LVUNKNOWN-283922427-LVUNKNOWN", agreedSchemaLicenceGroup[1].LicenceSetId);
+        Assert.Equal("217-427", agreedSchemaLicenceGroup[1].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
-        Assert.Equal("28/39/22/0217", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("28/39/22/217", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);        

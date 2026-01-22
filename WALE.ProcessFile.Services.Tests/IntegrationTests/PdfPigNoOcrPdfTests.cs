@@ -312,7 +312,7 @@ public class PdfPigNoOcrPdfTests
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
-        Assert.Equal(2, history.Text!.Count);
+        Assert.Equal(4, history.Text!.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2334,7 +2334,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(31, additionalInformation.Text!.Count);
+        Assert.Equal(32, additionalInformation.Text!.Count);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -2770,11 +2770,11 @@ public class PdfPigNoOcrPdfTests
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(10, records.Text!.Count);
+        Assert.Equal(11, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(42, additionalInformation.Text!.Count);
+        Assert.Equal(43, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -2951,11 +2951,11 @@ public class PdfPigNoOcrPdfTests
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(11, records.Text!.Count);
+        Assert.Equal(13, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(62, additionalInformation.Text!.Count);
+        Assert.Equal(65, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -2975,7 +2975,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(24, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(25, abstractionLimitsSection.Text!.Count);
 
         Assert.Equal(3, abstractionLimitsSection.SubResults.Count);
 
@@ -3187,7 +3187,7 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(25, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(27, abstractionLimitsSection.Text!.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -4187,7 +4187,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(35, additionalInformation.Text!.Count);
+        Assert.Equal(36, additionalInformation.Text!.Count);
 
         var licenceGroups = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -4271,7 +4271,7 @@ public class PdfPigNoOcrPdfTests
         var furtherConditions = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
         Assert.NotNull(furtherConditions);
         Assert.Equal("9. FURTHER CONDITIONS", furtherConditions.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(36, furtherConditions.Text!.Count);
+        Assert.Equal(39, furtherConditions.Text!.Count);
 
         Assert.Equal(4, furtherConditions.SubResults.Count);
         Assert.Equal("9.1 (i) No abstraction shall take place unless the Licence Holder has installed a", furtherConditions.SubResults[0].Text!.First().Text);

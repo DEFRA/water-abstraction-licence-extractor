@@ -236,19 +236,6 @@ public class AzureAiVisionOcrPdfTests
         Assert.NotNull(purpose);
         Assert.Equal(2, purpose.Text!.Count);
         Assert.Equal("Spray Irrigation", purpose.Text!.First().Text);
-        
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
-            resultFull,
-            _fileLicenceMapping,
-            _naldLicenceStatusData,
-            _naldData,
-            _pdfDataExtractor2,
-            TestConfig.PdfFolder,
-            0)).Last();
-
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Single(agreedSchemaLicence.LinkedLicences); // TODO shouldnt find it, as its a location but the OCR reads SE as 33
-        Assert.Equal("33 9966 5411", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Fact]

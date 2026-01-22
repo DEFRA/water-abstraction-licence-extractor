@@ -6,6 +6,8 @@ public class ConfiguredServices
 {
     public IOutputService? OutputService { get; set; }
     
+    public IDatabaseReadService? DatabaseReadService { get; set; }
+
     public ICacheService? CacheService { get; init; }
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }

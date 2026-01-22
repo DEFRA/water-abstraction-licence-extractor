@@ -205,7 +205,7 @@ public class PdfDataExtractorService(
                         // TODO proper logging somewhere
                         throw;
                     }
-
+                    
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)
                     {
@@ -218,6 +218,7 @@ public class PdfDataExtractorService(
 
                     if (containsTheWordMap)
                     {
+                        serviceImageLines = [];
                         break;
                     }
                     
@@ -227,6 +228,7 @@ public class PdfDataExtractorService(
                     // no point processing that with the other services
                     if (averageLineLength < minAverageLineLength)
                     {
+                        serviceImageLines = [];                        
                         break;
                     }
                     
@@ -429,8 +431,34 @@ public class PdfDataExtractorService(
 
                 if (alreadyFound != null)
                 {
+                    string? newValue;
+                    
                     switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
                     {
+                        case MultipleServiceMatchBehaviour.UseAllUnique:
+                            var multipleAlreadyFound = uniqueServiceMatches
+                                .Where(x => x.LabelGroupName == match.LabelGroupName)
+                                .ToList();
+
+                            var existingValues = multipleAlreadyFound
+                                .Select(af => string.Join(' ', af.Text!.Select(m => m.Text)))
+                                .ToList();
+                            
+                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                            if (!existingValues.Contains(newValue))
+                            {
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                var existingItem = uniqueServiceMatches
+                                    .First(x => x.LabelGroupName == match.LabelGroupName);
+                                
+                                existingItem.AlternativeMatches.Add(match);
+                            }
+                            
+                            break;
                         case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
                             var subResultCount = GetSubResultCount(match);
                             var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
@@ -459,9 +487,14 @@ public class PdfDataExtractorService(
                             uniqueServiceMatches.Add(match);
                             
                             break;
+                        case MultipleServiceMatchBehaviour.UseFirstServiceResult:
+                            alreadyFound.AlternativeMatches.Add(match);
+                            match.AlternativeMatches = [];
+                            
+                            break;                        
                         case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
                             var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
 
                             if (newValue.Length >= existingValue.Length)
                             {
@@ -495,13 +528,6 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [existingDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var existingLicenceNumberOutput);
-
-                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
                             var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
                             var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
                             var existingValueLength = existingLicenceNumber.Length;
@@ -522,13 +548,6 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [newDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var newLicenceNumberOutput);
-
-                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
                             var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
                             var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
                             var newValueLength = newLicenceNumber.Length;
@@ -737,7 +756,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -761,6 +780,11 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
+                
+                if (label.Text?.Count > 0 && label.Text[0].Text == "Licence ")
+                {
+                    
+                }
                 
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
@@ -807,7 +831,7 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -826,21 +850,21 @@ public class PdfDataExtractorService(
             {
                 var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
                 
-                if (!licenceNumberMapping.TryGetValue(stripped!, out var relatedFileName))
+                if (!licenceNumberMapping.TryGetValue(stripped!, out var dmsFileData))
                 {
                     // TODO this should log a warning
                     continue;
                 }
                 
-                relatedFileName = $"{pdfFolderPath}{relatedFileName}";
+                var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
                 
-                if (previouslyParsedPaths.Contains(relatedFileName))
+                if (previouslyParsedPaths.Contains(destinationFilePath))
                 {
                     continue;
                 }
 
-                previouslyParsedPaths.Add(relatedFileName);
-                pathsToFetch.Add(relatedFileName);
+                previouslyParsedPaths.Add(destinationFilePath);
+                pathsToFetch.Add(destinationFilePath);
             }
         }
 
@@ -981,7 +1005,7 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
@@ -1547,7 +1571,7 @@ public class PdfDataExtractorService(
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int processRunId)
     {

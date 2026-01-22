@@ -237,7 +237,9 @@ public static class ExternalDataHelper
             }
 
             var licenceNumber = parts[2];
-            returnList.Add(licenceNumber);
+
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            returnList.Add(strippedLicenceNumber);
         }
 
         return returnList;
@@ -275,7 +277,9 @@ public static class ExternalDataHelper
             }
 
             var licenceNumber = parts[5];
-            returnList.Add(licenceNumber);
+
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            returnList.Add(strippedLicenceNumber);
         }
 
         return returnList;
@@ -307,8 +311,9 @@ public static class ExternalDataHelper
 
             var parts = line.Split(',');
             var licenceNumber = parts[0];
-
-            returnList.Add(licenceNumber);
+            
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            returnList.Add(strippedLicenceNumber);
         }
 
         return returnList;

@@ -43,6 +43,10 @@ public interface IDatabaseWriteService
     
     Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
     
+    Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
+    
+    Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
+    
     Task ClearCacheAsync();
     
     Task ClearCacheAsync(string pdfFilename);

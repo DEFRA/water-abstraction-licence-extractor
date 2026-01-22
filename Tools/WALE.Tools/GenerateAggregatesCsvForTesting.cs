@@ -20,10 +20,7 @@ public static class GenerateAggregatesCsvForTesting
 {
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
-    private static readonly HashSet<string> DeadLicenceNumbers = [];
-    private static readonly HashSet<string> LiveLicenceNumbers = [];
-    private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
+    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
     private static readonly Dictionary<string, NaldData> NaldData = [];
     private static readonly int ProcessRunId = -1;
     
@@ -84,15 +81,15 @@ public static class GenerateAggregatesCsvForTesting
         var returnList = new List<AggregatesCsvLine>();
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
+        var naldLicenceStatusData = new NaldLicenceStatusData();
+        
         foreach (var pdfFilePath in pdfFilePaths)
         {
             var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
             var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
                 internalJson,
                 FileLicenceMapping,
-                ImpoundmentLicenceNumbers,
-                DeadLicenceNumbers,
-                LiveLicenceNumbers,
+                naldLicenceStatusData,
                 NaldData,
                 pdfDataExtractor,
                 KeyConfig.PdfFolder,
@@ -104,9 +101,8 @@ public static class GenerateAggregatesCsvForTesting
 
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            naldLicenceStatusData,
+            []);
 
         foreach (var licenceSets in licenceSetGroups)
         {
@@ -130,14 +126,13 @@ public static class GenerateAggregatesCsvForTesting
     static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+        var naldLicenceStatusData = new NaldLicenceStatusData();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
@@ -150,9 +145,7 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets2 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
@@ -165,9 +158,7 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets3 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
@@ -180,10 +171,8 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets4 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -195,10 +184,8 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets5 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -210,10 +197,8 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets6 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
             ProcessRunId);
@@ -223,9 +208,8 @@ public static class GenerateAggregatesCsvForTesting
         
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            naldLicenceStatusData,
+            []);
         
         return
         [
@@ -234,7 +218,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file1.Filename,
                 LicenceNumber = file1.LicenceNumber,
                 HasAggregate = file1.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file1.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file1,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets1,  JsonHelper.GetSerializerOptions()),
@@ -244,7 +228,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file2.Filename,
                 LicenceNumber = file2.LicenceNumber,
                 HasAggregate = file2.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file2.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file2,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets2,  JsonHelper.GetSerializerOptions())
@@ -254,7 +238,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file3.Filename,
                 LicenceNumber = file3.LicenceNumber,
                 HasAggregate = file3.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file3.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file3,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets3,  JsonHelper.GetSerializerOptions())
@@ -264,7 +248,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file4.Filename,
                 LicenceNumber = file4.LicenceNumber,
                 HasAggregate = file4.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file4.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file4,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets4,  JsonHelper.GetSerializerOptions())
@@ -274,7 +258,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file5.Filename,
                 LicenceNumber = file5.LicenceNumber,
                 HasAggregate = file5.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file5.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file5,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets5,  JsonHelper.GetSerializerOptions())
@@ -284,7 +268,7 @@ public static class GenerateAggregatesCsvForTesting
                 Filename = file6.Filename,
                 LicenceNumber = file6.LicenceNumber,
                 HasAggregate = file6.AbstractionLimits.Aggregates?.Length > 0,
-                AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates),
+                AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file6.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
                 Data = JsonSerializer.Serialize(file6,  JsonHelper.GetSerializerOptions()),
                 LicenceSets = JsonSerializer.Serialize(licenceSets6,  JsonHelper.GetSerializerOptions())

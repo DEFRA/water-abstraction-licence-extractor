@@ -12,6 +12,8 @@ public class DatabaseOutputService(
     IDatabaseReadService databaseReadService,
     IDatabaseWriteService databaseWriteService) : IOutputService
 {
+    public string? OutputFolder { get; set; } = null;
+    
     public Task SetupAsync()
     {
         // Nothing to do in this case

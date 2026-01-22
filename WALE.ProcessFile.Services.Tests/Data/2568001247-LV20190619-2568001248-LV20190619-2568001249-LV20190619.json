@@ -27,7 +27,8 @@
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "licenceFoundInList": false,
+              "dmsPath": "Something to look for"
             },
             {
               "licenceNumber": "25 68 001 248",
@@ -125,7 +126,8 @@
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "licenceFoundInList": false,
+              "dmsPath": "Something to look for"
             },
             {
               "licenceNumber": "25 68 001 249",
@@ -243,7 +245,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "licenceFoundInList": false,
+                "dmsPath": "Something to look for"
               },
               {
                 "licenceNumber": "25 68 001 248",
@@ -510,7 +513,8 @@
           "PdfPig"
         ]
       },
-      "licenceFoundInList": false
+      "licenceFoundInList": false,
+      "dmsPath": "Something to look for"
     },
     {
       "id": "2568001248-LV20190619",
@@ -595,7 +599,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "licenceFoundInList": false,
+                "dmsPath": "Something to look for"
               },
               {
                 "licenceNumber": "25 68 001 249",

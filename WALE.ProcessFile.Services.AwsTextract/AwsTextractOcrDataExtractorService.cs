@@ -245,7 +245,6 @@ public class AwsTextractOcrDataExtractorService
                 }!
             };
 
-            line.Text = string.Join(" ", line.Words.Select(w => w!.Text));
             returnList.Add(line);
         }
 

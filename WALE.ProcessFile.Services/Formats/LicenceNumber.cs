@@ -11,7 +11,7 @@ public static partial class LicenceNumber
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
     private static readonly string[] PrefixesToExclude =
     [
@@ -20,7 +20,18 @@ public static partial class LicenceNumber
         "NY ",
         "NGR "
     ];
-    
+
+    public static List<string> FindLicenceNumbers(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return [];
+        }
+
+        var result = AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }], new LabelToMatch(), false, out var outList);
+        return result ? outList.Select(x => x.Text).ToList() : [];
+    }
+
     public static bool AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
@@ -30,21 +41,21 @@ public static partial class LicenceNumber
         matchedLines = [];
         var anyMatchFound = false;
         var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
-        
+
         foreach (var line in lines)
         {
             if (line == null)
             {
                 continue;
             }
-            
+
             var anyMatchFoundForLine = false;
             var newColumns = new List<DocumentLineColumn>();
-            
+
             foreach (var column in line.Columns)
             {
                 var anyMatchFoundForColumn = false;
-                
+
                 if (string.IsNullOrEmpty(column.Text)
                     || !column.Text.Any(char.IsDigit)
                     || DataHelper.IsCorruptedText(column.Text))
@@ -61,81 +72,81 @@ public static partial class LicenceNumber
                 {
                     columnText = columnText.Replace(". ", $"{splitChar} ");
                 }
-                
+
                 if (columnText.Contains(" and"))
                 {
                     columnText = columnText.Replace(" and", splitChar);
                 }
-                
+
                 if (columnText.Contains(" for"))
                 {
                     columnText = columnText.Replace(" for", splitChar);
                 }
-                
+
                 if (columnText.Contains(" shall"))
                 {
                     columnText = columnText.Replace(" shall", splitChar);
                 }
-                
+
                 if (columnText.Contains(" under"))
                 {
                     columnText = columnText.Replace(" under", splitChar);
                 }
-                
+
                 if (columnText.Contains(" from"))
                 {
                     columnText = columnText.Replace(" from", splitChar);
                 }
-                
+
                 if (columnText.Contains(" ("))
                 {
                     columnText = columnText.Replace(" (", splitChar);
                 }
-                
+
                 var slashSpacePos = columnText.IndexOf("/ ", StringComparison.Ordinal);
                 var isSlashSpaceDigit = slashSpacePos > 0
-                    && columnText.Length > slashSpacePos + 2 
-                    & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
+                                        && columnText.Length > slashSpacePos + 2
+                                        & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
 
                 if (isSlashSpaceDigit)
                 {
                     columnText = columnText.Replace("/ ", "/");
                 }
-                
+
                 var subLines = columnText.Split(splitChar);
-                
+
                 foreach (var subLine in subLines)
                 {
                     var containsSplitter = subLine.Contains(' ')
-                       || column.Text.Contains('/')
-                       || column.Text.Contains('.');
+                                           || column.Text.Contains('/')
+                                           || column.Text.Contains('.');
 
                     if (!containsSplitter || subLine.Length < 4)
                     {
                         continue;
                     }
-                    
-                    var numberLine = subLine;
+
+                    var numberLine = subLine.Trim();
 
                     if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
                     {
-                        numberLine = numberLine.Replace(" ", string.Empty);
+                        //numberLine = numberLine.Replace(" ", string.Empty);
                     }
 
                     var regexMatches = LicenceNumbersRegex().Matches(numberLine);
                     var isMatch = regexMatches.Count >= 1;
-                        
+
                     if (!isMatch)
                     {
                         continue;
                     }
-                    
+
                     // It's a date
                     if (Date.IsDate(numberLine))
                     {
                         continue;
                     }
-                    
+
                     var numberLineWithSlashes = numberLine;
 
                     // No slashes, 1 dot - is invalid format (its probably a decimal number
@@ -143,12 +154,12 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-                    
+
                     if (numberLineWithSlashes.Contains(' '))
                     {
                         numberLineWithSlashes = numberLineWithSlashes.Replace(" ", "/");
                     }
-                    
+
                     if (numberLineWithSlashes.Contains('.'))
                     {
                         numberLineWithSlashes = numberLineWithSlashes.Replace(".", "/");
@@ -157,7 +168,7 @@ public static partial class LicenceNumber
                     var enoughPartsWithNumbers = numberLineWithSlashes
                         .Split('/')
                         .Count(section => section.Any(char.IsDigit)) >= 2;
-                    
+
                     isMatch = enoughPartsWithNumbers;
 
                     if (!isMatch)
@@ -171,21 +182,21 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-                    
+
                     var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
 
                     if (lengthBeforePeriod >= 10)
                     {
                         value = value.Split('.')[0];
                     }
-                    
+
                     var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
 
                     if (lengthBeforeSpace >= 10)
                     {
                         value = value.Split(' ')[0];
                     }
-                    
+
                     // It's a date (check again)
                     if (Date.IsDate(value))
                     {
@@ -202,7 +213,7 @@ public static partial class LicenceNumber
                             {
                                 return maxSequenceLength;
                             }
-                            
+
                             if (!char.IsLetter(c))
                             {
                                 // ReSharper disable once AccessToModifiedClosure
@@ -226,27 +237,27 @@ public static partial class LicenceNumber
                         })
                         .OrderByDescending(r => r)
                         .First();
-                    
+
                     if (maxSequenceLength >= 3)
                     {
                         continue;
                     }
-                    
-                    var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
-                        || (value.Contains('/') && value.Contains(' '));
-                        //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
+
+                    /*var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
+                                                      || (value.Contains('/') && value.Contains(' '));
+                    //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
 
                     if (hasInvalidComboOfSeperators)
                     {
                         continue;
-                    }
-                    
+                    }*/
+
                     // Its a value + unit
                     if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
                     {
                         continue;
                     }
-                    
+
                     var sections = value.Split('/');
 
                     // Last bit is too long - its because of a space near the end
@@ -254,7 +265,7 @@ public static partial class LicenceNumber
                     {
                         var valueWithoutLastChar = value[..^1];
                         var valueEndingWithSpace = $"{valueWithoutLastChar} ";
-                        
+
                         if (subLine.Contains(valueEndingWithSpace))
                         {
                             value = valueWithoutLastChar;
@@ -267,7 +278,7 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-                    
+
                     var totalDigits = value.Count(char.IsDigit);
 
                     if (totalDigits < 4)
@@ -276,15 +287,15 @@ public static partial class LicenceNumber
                     }
 
                     var isPostcode = (value.Length == 7 || value.Length == 8)
-                        && char.IsUpper(value[0])
-                        && value.Count(c => c == ' ') == 1
-                        && value.Split(' ')[1].Length == 3;
-                            
+                                     && char.IsUpper(value[0])
+                                     && value.Count(c => c == ' ') == 1
+                                     && value.Split(' ')[1].Length == 3;
+
                     if (isPostcode)
                     {
                         continue;
                     }
-                    
+
                     var atLeastOneDigit = value.Any(char.IsDigit);
                     if (!atLeastOneDigit)
                     {
@@ -292,9 +303,9 @@ public static partial class LicenceNumber
                     }
 
                     var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
-                        && value[2] == ' '
-                        && value.All(c => c != '/')
-                        && value.All(c => c != '.');
+                                  && value[2] == ' '
+                                  && value.All(c => c != '/')
+                                  && value.All(c => c != '.');
 
                     if (!isOsRef)
                     {
@@ -307,7 +318,6 @@ public static partial class LicenceNumber
                             || value.Contains(" SE ")
                             || value.StartsWith("TF ")
                             || value.Contains(" TF ")
-
                             || value.StartsWith("A ")
                             || value.StartsWith("B ")
                             || value.StartsWith("C ")
@@ -334,7 +344,6 @@ public static partial class LicenceNumber
                             || value.StartsWith("X ")
                             || value.StartsWith("Y ")
                             || value.StartsWith("Z ")
-                            
                             || value.EndsWith(" A")
                             || value.EndsWith(" B")
                             || value.EndsWith(" C")
@@ -362,17 +371,17 @@ public static partial class LicenceNumber
                             || value.EndsWith(" Y")
                             || value.EndsWith(" Z");
                     }
-                    
+
                     if (isOsRef)
                     {
                         continue;
                     }
-                    
-                    var noCharSlashOrDot = value.All(c => c != '/')
-                        && value.All(c => c != '.')
-                        && !value.Any(char.IsLetter);
 
-                    if (noCharSlashOrDot && value.Split(' ') .Length < 3)
+                    var noCharSlashOrDot = value.All(c => c != '/')
+                                           && value.All(c => c != '.')
+                                           && !value.Any(char.IsLetter);
+
+                    if (noCharSlashOrDot && value.Split(' ').Length < 3)
                     {
                         continue;
                     }
@@ -384,13 +393,13 @@ public static partial class LicenceNumber
                     {
                         continue;
                     }
-                    
+
                     // Invalid end of a licence number (probably cut off)
                     if (value.EndsWith("/R"))
                     {
                         continue;
                     }
-                    
+
                     // Invalid end of a licence number
                     if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -401,13 +410,13 @@ public static partial class LicenceNumber
                         value,
                         true,
                         true);
-                    
+
                     // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
                     if (subLine.Contains($"{colText}-"))
                     {
                         continue;
                     }
-                    
+
                     var clonedColumn = new DocumentLineColumn(colText!);
                     newColumns.Clear();
                     newColumns.Add(clonedColumn);
@@ -437,10 +446,10 @@ public static partial class LicenceNumber
                 return anyMatchFound;
             }
         }
-        
+
         return anyMatchFound;
     }
-    
+
     [GeneratedRegex(YorkshireRegexPatten)]
     private static partial Regex LicenceNumbersRegex();
 }

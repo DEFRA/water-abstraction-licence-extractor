@@ -24,7 +24,7 @@ public class NoOcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
@@ -39,30 +39,27 @@ public class NoOcrDatabaseTests
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
-    private static Dictionary<string, string> FileLicenceMapping =>
+    private static Dictionary<string, DmsFileData> FileLicenceMapping =>
         new()
         {
             {
                 "25 68 001 247",
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
             },
             {
                 "25 68 001 248",
-                "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"
+                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
             },
             {
                 "NE/026/0034/018",
-                "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"
+                new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
             },
             {
                 "NE/026/0034/052",
-                "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"
+                new DmsFileData { DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf" }
             }
         };
 
-    private readonly HashSet<string> _liveLicenceNumbers = [];
-    private readonly HashSet<string> _deadLicenceNumbers = [];
-    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
     private readonly Dictionary<string, NaldData> _naldData = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
@@ -109,7 +106,7 @@ public class NoOcrDatabaseTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(14, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -228,9 +225,7 @@ public class NoOcrDatabaseTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            new NaldLicenceStatusData(),
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,

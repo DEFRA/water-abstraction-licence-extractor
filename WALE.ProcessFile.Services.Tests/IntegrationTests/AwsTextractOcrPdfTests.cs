@@ -37,7 +37,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         OutputService,
         TestConfig.PdfFolder3);
 
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() { { "", "" } };
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
     {
@@ -64,7 +64,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(12, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -164,9 +164,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
@@ -193,7 +191,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(expectedResults, GeneralTeststHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(expectedResults, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -203,9 +201,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var schemaData = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,

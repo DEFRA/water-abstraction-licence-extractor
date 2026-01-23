@@ -182,7 +182,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task FinishProcessRunAsync(ProcessRun processRun, int processRunId)
+    public Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
     {
         return Task.CompletedTask;
     }

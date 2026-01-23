@@ -408,11 +408,6 @@ public static partial class DataHelper
         {
             return false;
         }
-
-        if (line.Contains("Licence Holder"))
-        {
-            
-        }
         
         if (line.Contains('—'))
         {

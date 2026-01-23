@@ -67,7 +67,7 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName ));
+                var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName));
                 var linkReasons = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.LinkReason));
                 
                 var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)

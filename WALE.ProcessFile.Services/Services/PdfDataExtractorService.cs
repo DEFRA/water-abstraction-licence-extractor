@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -46,7 +45,8 @@ public class PdfDataExtractorService(
         {
             Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
             NumberOfPages = pdfDocument.Pages.Count,
-            Pages = pdfDocument.Pages
+            Pages = pdfDocument.Pages,
+            RegionCode = configuration.RegionCode
         };
         
         returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
@@ -78,6 +78,7 @@ public class PdfDataExtractorService(
             noOcrDataExtractorService.Name,
             configuration.LicenceNumberMapping,
             previouslyParsedPaths,
+            configuration.RegionCode,
             processRunId);
 
         var allImagesInDocument = await cacheService.GetImagesAsync(
@@ -135,10 +136,10 @@ public class PdfDataExtractorService(
             }
         }
 
-        var unmatchedLabelLookups =
-            GetUnmatchedLabels(configuration.Labels, labelGroupMatches, false);
+        var unmatchedOrMoreWantedLabelLookups =
+            GetUnmatchedOrMoreWantedLabels(configuration.Labels, labelGroupMatches, false);
         
-        if (unmatchedLabelLookups.Count == 0)
+        if (unmatchedOrMoreWantedLabelLookups.Count == 0)
         {
             returnResult.Matches = labelGroupMatches;
             return returnResult;
@@ -250,11 +251,12 @@ public class PdfDataExtractorService(
                     const bool isOcr = true;
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
-                        unmatchedLabelLookups,
+                        unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
                         configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
+                        configuration.RegionCode,
                         processRunId);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
@@ -291,8 +293,8 @@ public class PdfDataExtractorService(
                     var combinedList = labelGroupMatches.ToList();
                     combinedList.AddRange(serviceMatches);
                     
-                    var labelsNotMatchedAtAll = GetUnmatchedLabels(
-                        unmatchedLabelLookups,
+                    var labelsNotMatchedAtAll = GetUnmatchedOrMoreWantedLabels(
+                        unmatchedOrMoreWantedLabelLookups,
                         combinedList,
                         true);
 
@@ -308,15 +310,33 @@ public class PdfDataExtractorService(
                 documentLines.AddRange(serviceImageLines);
 
                 var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
-                labelGroupMatches.AddRange(uniqueServiceMatches);
+                var uniqueServiceMatchesNotInLabelGroupMatches = new List<LabelGroupResult>();
+
+                foreach (var uniqueServiceMatch in uniqueServiceMatches)
+                {
+                    var exists = labelGroupMatches.Any(lgm =>
+                        lgm.LabelGroupName == uniqueServiceMatch.LabelGroupName
+                        && lgm.PageNumber == uniqueServiceMatch.PageNumber
+                        //&& lgm.LineNumber == uniqueServiceMatch.LineNumber
+                        && lgm.Text?.FirstOrDefault()?.Text == uniqueServiceMatch.Text?.FirstOrDefault()?.Text);
+
+                    if (exists)
+                    {
+                        continue;
+                    }
+                    
+                    uniqueServiceMatchesNotInLabelGroupMatches.Add(uniqueServiceMatch);
+                }
+
+                labelGroupMatches.AddRange(uniqueServiceMatchesNotInLabelGroupMatches);
                 
-                unmatchedLabelLookups = GetUnmatchedLabels(
-                    unmatchedLabelLookups,
+                unmatchedOrMoreWantedLabelLookups = GetUnmatchedOrMoreWantedLabels(
+                    unmatchedOrMoreWantedLabelLookups,
                     labelGroupMatches,
                     false);
                     
-                var labelsNotMatchedAtAll2 = GetUnmatchedLabels(
-                    unmatchedLabelLookups,
+                var labelsNotMatchedAtAll2 = GetUnmatchedOrMoreWantedLabels(
+                    unmatchedOrMoreWantedLabelLookups,
                     labelGroupMatches,
                     true);
 
@@ -332,13 +352,13 @@ public class PdfDataExtractorService(
                 }
             }
 
-            unmatchedLabelLookups = GetUnmatchedLabels(
-                unmatchedLabelLookups,
+            unmatchedOrMoreWantedLabelLookups = GetUnmatchedOrMoreWantedLabels(
+                unmatchedOrMoreWantedLabelLookups,
                 labelGroupMatches,
                 false);
             
-            var labelsNotMatchedAtAll3 = GetUnmatchedLabels(
-                unmatchedLabelLookups,
+            var labelsNotMatchedAtAll3 = GetUnmatchedOrMoreWantedLabels(
+                unmatchedOrMoreWantedLabelLookups,
                 labelGroupMatches,
                 true);
 
@@ -429,198 +449,197 @@ public class PdfDataExtractorService(
                 var alreadyFound = uniqueServiceMatches
                     .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
 
-                if (alreadyFound != null)
+                if (alreadyFound == null)
                 {
-                    string? newValue;
-                    
-                    switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
-                    {
-                        case MultipleServiceMatchBehaviour.UseAllUnique:
-                            var multipleAlreadyFound = uniqueServiceMatches
-                                .Where(x => x.LabelGroupName == match.LabelGroupName)
-                                .ToList();
+                    uniqueServiceMatches.Add(match);
+                    continue;
+                }
 
-                            var existingValues = multipleAlreadyFound
-                                .Select(af => string.Join(' ', af.Text!.Select(m => m.Text)))
-                                .ToList();
+                string? newValue;
+                
+                switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
+                {
+                    case MultipleServiceMatchBehaviour.UseAllUnique:
+                        var multipleAlreadyFound = uniqueServiceMatches
+                            .Where(x => x.LabelGroupName == match.LabelGroupName)
+                            .ToList();
+
+                        var existingValues = multipleAlreadyFound
+                            .Select(af => string.Join(' ', af.Text!.Select(m => m.Text)))
+                            .ToList();
+                        
+                        newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                        if (!existingValues.Contains(newValue))
+                        {
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            var existingItem = uniqueServiceMatches
+                                .First(x => x.LabelGroupName == match.LabelGroupName);
                             
-                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+                            existingItem.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
+                        var subResultCount = GetSubResultCount(match);
+                        var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
 
-                            if (!existingValues.Contains(newValue))
-                            {
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                var existingItem = uniqueServiceMatches
-                                    .First(x => x.LabelGroupName == match.LabelGroupName);
-                                
-                                existingItem.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
-                            var subResultCount = GetSubResultCount(match);
-                            var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
-
-                            if (subResultCount >= alreadyFoundSubResultCount)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
-
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                        if (subResultCount >= alreadyFoundSubResultCount)
+                        {
                             match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
                             alreadyFound.AlternativeMatches = [];
                             match.AlternativeMatches.Add(alreadyFound);
 
                             uniqueServiceMatches.Remove(alreadyFound);
                             uniqueServiceMatches.Add(match);
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseFirstServiceResult:
+                        }
+                        else
+                        {
                             alreadyFound.AlternativeMatches.Add(match);
-                            match.AlternativeMatches = [];
-                            
-                            break;                        
-                        case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
-                            var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                        match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                        alreadyFound.AlternativeMatches = [];
+                        match.AlternativeMatches.Add(alreadyFound);
 
-                            if (newValue.Length >= existingValue.Length)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
+                        uniqueServiceMatches.Remove(alreadyFound);
+                        uniqueServiceMatches.Add(match);
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseFirstServiceResult:
+                        alreadyFound.AlternativeMatches.Add(match);
+                        match.AlternativeMatches = [];
+                        
+                        break;                        
+                    case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
+                        var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                        newValue = string.Join(' ', match.Text!.Select(m => m.Text));
 
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
-                            var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            var existingDocumentLine = new DocumentLine
-                            {
-                                Columns = [
-                                    new()
-                                    {
-                                        Text = existingLicenceNumber,
-                                        Words = [new(
-                                            existingLicenceNumber,
-                                            null,
-                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                            null)]
-                                    }
-                                ]
-                            };
-                            
-                            var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
-                            var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
-                            var existingValueLength = existingLicenceNumber.Length;
-                            
-                            var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
-                            var newDocumentLine = new DocumentLine
-                            {
-                                Columns = [
-                                    new()
-                                    {
-                                        Text = newLicenceNumber,
-                                        Words = [new(
-                                            newLicenceNumber,
-                                            null,
-                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                            null)]
-                                    }
-                                ]
-                            };
-                            
-                            var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
-                            var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
-                            var newValueLength = newLicenceNumber.Length;
+                        if (newValue.Length >= existingValue.Length)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
 
-                            if (newValueLength > existingValueLength
-                                || newValueNumberOfDigits > existingValueNumberOfDigits
-                                || newValueNumberOfParts > existingValueNumberOfParts)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
-
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
-                            var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
-                            var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
-
-                            if (existingDate == null)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
-
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else if (newDate == null)
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            else
-                            {
-                                var existingDateHasDayField = existingDate.Value.Day > 1;
-                                var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
-                                var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
-                                
-                                var newDateHasDayField = newDate.Value.Day > 1;
-                                var newDateIsPost1911 = newDate.Value.Year >= 1911;
-                                var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
-                                
-                                if (newDateHasDayField && newDateIsPost1911
-                                    && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
+                        var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                        var existingDocumentLine = new DocumentLine
+                        {
+                            Columns = [
+                                new()
                                 {
-                                    match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                    alreadyFound.AlternativeMatches = [];
-                                    match.AlternativeMatches.Add(alreadyFound);
-
-                                    uniqueServiceMatches.Remove(alreadyFound);
-                                    uniqueServiceMatches.Add(match);
+                                    Text = existingLicenceNumber,
+                                    Words = [new(
+                                        existingLicenceNumber,
+                                        null,
+                                        new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                        null)]
                                 }
-                                else
+                            ]
+                        };
+                        
+                        var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
+                        var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
+                        var existingValueLength = existingLicenceNumber.Length;
+                        
+                        var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
+                        var newDocumentLine = new DocumentLine
+                        {
+                            Columns = [
+                                new()
                                 {
-                                    alreadyFound.AlternativeMatches.Add(match);
+                                    Text = newLicenceNumber,
+                                    Words = [new(
+                                        newLicenceNumber,
+                                        null,
+                                        new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                        null)]
                                 }
-                            }
+                            ]
+                        };
+                        
+                        var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
+                        var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
+                        var newValueLength = newLicenceNumber.Length;
+
+                        if (newValueLength > existingValueLength
+                            || newValueNumberOfDigits > existingValueNumberOfDigits
+                            || newValueNumberOfParts > existingValueNumberOfParts)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
+                        var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                        var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                        if (existingDate == null)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else if (newDate == null)
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        else
+                        {
+                            var existingDateHasDayField = existingDate.Value.Day > 1;
+                            var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
+                            var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
                             
-                            break;
-                        default:
-                            throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
-                    }
-                    
-                    continue;
+                            var newDateHasDayField = newDate.Value.Day > 1;
+                            var newDateIsPost1911 = newDate.Value.Year >= 1911;
+                            var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
+                            
+                            if (newDateHasDayField && newDateIsPost1911
+                                && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                        }
+                        
+                        break;
+                    default:
+                        throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
                 }
-
-                uniqueServiceMatches.Add(match);
             }
         }
 
@@ -702,7 +721,7 @@ public class PdfDataExtractorService(
         return (imagesMetadata, true);
     }
     
-    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedLabels(
+    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedOrMoreWantedLabels(
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
         List<LabelGroupResult> labelGroupMatches,
         bool onlyNotFoundAtAll)
@@ -713,20 +732,19 @@ public class PdfDataExtractorService(
                 var doesntMatchAnyFound = labelGroupMatches.All(r =>
                     r.LabelGroupName != labelLookup.LabelGroupName);
                 
-                var labelFull = labelGroupMatches.FirstOrDefault(lgm =>
+                var fullLabel = labelGroupMatches.FirstOrDefault(lgm =>
                     lgm.MatchedLabel != null
                     && labelLookup.Labels.Any(l => l.Name == lgm.MatchedLabel.Name))?.MatchedLabel;
 
-                var ifMultiplePreferLast = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                var ifMultiplePreferLongest = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
-                var canGoOverPageBoundary = labelFull?.CanGoOverPageBoundary ?? false;
-                
-                if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                {
-                    
-                }
+                var ifMultiplePreferLast = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                var ifMultiplePreferLongest = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
+                var canGoOverPageBoundary = fullLabel?.CanGoOverPageBoundary ?? false;
+                var lookingForMultiple = fullLabel?.MultipleBehaviour
+                    is MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel;
                 
                 return doesntMatchAnyFound
+                    || lookingForMultiple
                     || (!onlyNotFoundAtAll && (ifMultiplePreferLast || ifMultiplePreferLongest || canGoOverPageBoundary));
             })
             .ToList();
@@ -758,6 +776,7 @@ public class PdfDataExtractorService(
         string serviceName,
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
+        int regionCode,
         int processRunId)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
@@ -800,6 +819,7 @@ public class PdfDataExtractorService(
                     labelGroupMatches,
                     licenceNumberMapping,
                     previouslyParsedPaths,
+                    regionCode,
                     processRunId);
                 
                 if (labelGroupMatch.Count == 0)
@@ -833,6 +853,7 @@ public class PdfDataExtractorService(
         LabelToMatch label,
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
+        int regionCode,
         int processRunId)
     {
         var returnList = new List<LabelGroupResult>();
@@ -848,7 +869,7 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
+                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text, regionCode);
                 
                 if (!licenceNumberMapping.TryGetValue(stripped!, out var dmsFileData))
                 {
@@ -877,7 +898,10 @@ public class PdfDataExtractorService(
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
+                new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    licenceNumberMapping,
+                    regionCode),
                 previouslyParsedPaths,
                 processRunId);
 
@@ -1007,6 +1031,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<LabelGroupResult> siblingMatches,
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
+        int regionCode,
         int processRunId)
     {
         var returnList = new List<LabelGroupResult>();
@@ -1055,6 +1080,7 @@ public class PdfDataExtractorService(
                                 label,
                                 licenceNumberMapping,
                                 previouslyParsedPaths,
+                                regionCode,
                                 processRunId);
 
                             returnList.AddRange(linkedLicences);
@@ -1181,7 +1207,9 @@ public class PdfDataExtractorService(
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
                         lineForPosition = fullLine,
-                        lineNumber = partialLine.LineNumber
+                        lineNumber = partialLine.LineNumber,
+                        processRunId = processRunId,
+                        regionCode = regionCode
                     };
                     
                     var singleValueWanted = matchedLabel.MultipleBehaviour is
@@ -1573,6 +1601,7 @@ public class PdfDataExtractorService(
         string labelGroupName,
         Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
+        int regionCode,
         int processRunId)
     {
         var subResults = new List<LabelGroupResult>();
@@ -1597,6 +1626,7 @@ public class PdfDataExtractorService(
                     subResults,
                     licenceMapping,
                     previouslyParsedPaths,
+                    regionCode,
                     processRunId);
 
                 if (subLabelGroupMatch.Count > 0)

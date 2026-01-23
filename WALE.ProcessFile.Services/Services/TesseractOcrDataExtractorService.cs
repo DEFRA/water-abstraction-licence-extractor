@@ -49,6 +49,8 @@ public class TesseractOcrDataExtractorService(
         var cachedJson = isPageScreenshot
             ? await cacheService.GetOcrScreenshotTextAsync(request)
             : await cacheService.GetOcrImageTextAsync(request);
+
+//        cachedJson = null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cachedJson))
         {

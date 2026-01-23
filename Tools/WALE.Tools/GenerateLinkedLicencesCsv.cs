@@ -85,7 +85,7 @@ public static class GenerateLinkedLicencesCsv
                     LicenceIsDead = licence.IsDeadLicence,
                     LicenceIsImpoundment = licence.IsImpoundmentLicence,
                     LinkedLicenceNumber = linkedLicence.LicenceNumber,
-                    NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
+                    //NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
                     LinkedLicenceFilename = linkedLicence.Filename,
                     LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath) ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")" : null,
                     LinkedLicenceFromSection = fromSections,

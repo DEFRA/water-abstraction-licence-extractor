@@ -51,7 +51,8 @@ public class OcrDatabaseTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [PdfFolder + fileName],
             0);
     }

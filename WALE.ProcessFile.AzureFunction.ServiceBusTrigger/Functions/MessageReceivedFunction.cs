@@ -83,7 +83,8 @@ public class MessageReceivedFunction(
             pdfFilePath,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                fileLicenceMapping),
+                fileLicenceMapping,
+                1),
             previouslyParsedPaths,
             0);
         

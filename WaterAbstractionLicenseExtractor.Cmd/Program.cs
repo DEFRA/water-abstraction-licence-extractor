@@ -12,7 +12,6 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -55,36 +54,28 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
 
+    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
+    var regionCode = 3;
+    
     var naldLicenceStatusData = new NaldLicenceStatusData
     {
         LiveLicences = ExternalDataHelper.GetLiveLicenceNumbers(
-            Environment.GetEnvironmentVariable("LiveLicencesPath")),
+            Environment.GetEnvironmentVariable("LiveLicencesPath"), regionCode),
         DeadLicences = ExternalDataHelper.GetDeadLicenceNumbers(
-            Environment.GetEnvironmentVariable("DeadLicencesPath")),
+            Environment.GetEnvironmentVariable("DeadLicencesPath"), regionCode),
         ImpoundmentLicences = ExternalDataHelper.GetImpoundmentLicenceNumbers(
-            Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"))
+            Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"), regionCode)
     };
     
-    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
-        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
-    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
-        Environment.GetEnvironmentVariable("DeadLicencesPath"));
-    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
-        Environment.GetEnvironmentVariable("LiveLicencesPath"));
     var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
-        Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"));
-    var naldData = ExternalDataHelper.GetNaldGeneralReportData(
-        Environment.GetEnvironmentVariable("NaldDataPath"));
-
+        Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"),
+        Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
+        regionCode);
+    
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
 
-    // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
-    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
-    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList());
-    
-    ExternalDataHelper.AddNaldAbstractionLicencePurposeData(
-        Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
-        ref naldData);
+    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode.ToString());
+    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList(), regionCode);
     
     var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services);
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
@@ -109,6 +100,7 @@ async Task ProgramAsync()
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
+                    regionCode,
                     processCount++,
                     licenceNumbersWithFilenames,
                     naldLicenceStatusData,
@@ -172,7 +164,8 @@ async Task ProgramAsync()
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
-        licenceNumbersWithFilenames);
+        licenceNumbersWithFilenames,
+        regionCode);
     
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
@@ -199,7 +192,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
+                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber, regionCode);
                 if (linkedLicences.Any())
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -309,7 +302,7 @@ async Task ProgramAsync()
     Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
     processRun.EndDateTimeUtc = DateTime.UtcNow;
-    await outputService.FinishProcessRunAsync(processRun);
+    await outputService.FinishProcessRunAsync(processRun, regionCode);
     
     Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     Console.WriteLine($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
@@ -466,10 +459,11 @@ ConfiguredServices ConfigureServices()
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
+    int regionCode,
     int fileNumber,
     Dictionary<string, DmsFileData> licenceMapping,
     NaldLicenceStatusData naldLicenceStatusData,
-    Dictionary<string, NaldData> naldData,
+    Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,
@@ -498,7 +492,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
-            licenceMapping);
+            licenceMapping,
+            regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
@@ -703,13 +698,13 @@ async Task MoveReportHtmlFilesAsync(
 }
 
 (Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromFolders(string pdfFolderPath)
+    GetFilesAndMappingFromFolders(string pdfFolderPath, int regionCode)
 {
     var filenames = GetPdfPathsWithLicenceNumbersFromFolders(pdfFolderPath);
     var missingMapping = filenames.Where(f => string.IsNullOrEmpty(f.Value)).ToList();
 
     var licenceNumberMapping = ExternalDataHelper
-        .GetLicenceNumberMappingFromFilenames(pdfFolderPath);
+        .GetLicenceNumberMappingFromFilenames(pdfFolderPath, regionCode);
     
     if (missingMapping.Count == 0)
     {

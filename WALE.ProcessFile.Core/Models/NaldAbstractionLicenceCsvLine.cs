@@ -2,7 +2,7 @@ using CsvHelper.Configuration.Attributes;
 
 namespace WALE.ProcessFile.Core.Models;
 
-public class NaldAbstractionLicencesDataLine
+public class NaldAbstractionLicenceCsvLine
 {
     [Index(0)]
     public string? Id { get; set; }
@@ -16,6 +16,9 @@ public class NaldAbstractionLicencesDataLine
     [Index(7)]
     public string? OrigEffectiveDate { get; set; }
 
+    [Index(13)]
+    public string? LapsedDate { get; set; }
+    
     [Index(20)]
     public string? FgacRegionCode { get; set; }
 }

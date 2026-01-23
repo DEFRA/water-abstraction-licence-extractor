@@ -311,6 +311,7 @@ public static partial class LicenceNumber
                     {
                         isOsRef =
                             value.StartsWith("NZ ")
+                            || value.StartsWith("NU")
                             || value.Contains(" NZ")
                             || value.StartsWith("TA ")
                             || value.Contains(" TA ")

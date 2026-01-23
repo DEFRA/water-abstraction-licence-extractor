@@ -405,10 +405,26 @@ public static class OcrHelper
         var combinedLinesNoBlanks = combinedLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .ToList();
+
+        var previousTop = (double?)null;
+        const int maxHeightDiff = 200;
+        var returnList = new List<DocumentLine>();
+        
+        // Add in some empty seperator lines where appropriate
+        foreach (var line in combinedLinesNoBlanks)
+        {
+            if (previousTop != null && line.Top - previousTop > maxHeightDiff)
+            {
+                returnList.Add(new DocumentLine());
+            }
+            
+            returnList.Add(line);
+            previousTop = line.Top;
+        }
         
         // TODO - another pass to look for pointlessly short lines? ones without any values on or just a floating number?
         
-        return combinedLinesNoBlanks;
+        return returnList;
     }
     
     private static IReadOnlyList<DocumentLine> GroupLegacyFlow(
@@ -455,7 +471,7 @@ public static class OcrHelper
             {
                 var words = new List<DocumentLineWord>();
                 DocumentLineWord? previousOkWord = null;
-                
+
                 foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
                 {
                     if (line.Words == null)
@@ -463,6 +479,11 @@ public static class OcrHelper
                         continue;
                     }
 
+                    if (line.Text?.Contains("25/68/1/1") == true)
+                    {
+                        
+                    }
+                    
                     var lineWords = new List<DocumentLineWord>();
                     
                     foreach (var word in line.Words)

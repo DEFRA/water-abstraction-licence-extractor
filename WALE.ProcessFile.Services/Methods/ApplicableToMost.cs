@@ -198,12 +198,29 @@ public static class ApplicableToMost
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
+                    // If its a floating number, its usually some weird internal refernece number
+                    if (licenceNumberLines.Count == 1
+                        && licenceNumberLines[0].Text == request.line.Text
+                        && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
+                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                    {
+                        licenceNumberLines = [];
+                    }
+                    
+                    // If its a number then 'M', its usually some weird internal refernece number
+                    if (licenceNumberLines.Count == 1
+                        && request.line.Text == $"{licenceNumberLines[0].Text} M"
+                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                    {
+                        licenceNumberLines = [];
+                    }
+                    
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
-
+                    
                     if (!isMultiple)
                     {
                         return CheckContains(request.label, returnList);
@@ -231,7 +248,7 @@ public static class ApplicableToMost
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
                         
                         if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
                         {

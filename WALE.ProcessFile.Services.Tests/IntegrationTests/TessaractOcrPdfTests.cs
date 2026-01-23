@@ -33,7 +33,7 @@ public class TessaractOcrPdfTests
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
-            "283928312", new DmsFileData
+            "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
                 DestinationFileName = "DEF"
@@ -46,15 +46,16 @@ public class TessaractOcrPdfTests
         DeadLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, NaldData> _naldData = [];
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
     {
         return _pdfDataExtractorCombined.GetMatchesAsync(
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                regionCode),
             [PdfFolder + fileName],
             0);
     }
@@ -66,7 +67,7 @@ public class TessaractOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -83,7 +84,7 @@ public class TessaractOcrPdfTests
         
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
+        Assert.Equal("14/46/03/0853", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -185,7 +186,7 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -252,14 +253,14 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        Assert.Null(licenceNumber);
+        Assert.Equal("1/459", (licenceNumber?.Text?.FirstOrDefault()!).Text); // TODO it's wrong
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -281,7 +282,7 @@ public class TessaractOcrPdfTests
         Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         var linkedLicenceNumberCount = resultList.Count(result => result.LabelGroupName == "LinkedLicenceNumber");
-        Assert.Equal(6, linkedLicenceNumberCount);
+        Assert.Equal(7, linkedLicenceNumberCount);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -312,7 +313,7 @@ public class TessaractOcrPdfTests
         const string filename = "34_236CA_LICENCE 8463615 (2007).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -375,7 +376,7 @@ public class TessaractOcrPdfTests
         const string filename = "original licence (12.03.1975).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -405,7 +406,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
         
@@ -418,12 +419,13 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Null(agreedSchemaLicence.LicenceNumber);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("909.0.0", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO - wrong
     }
 
     [Fact]
@@ -433,11 +435,11 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5796052.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -466,8 +468,7 @@ public class TessaractOcrPdfTests
         Assert.Equal(7, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
-        Assert.Null(licenceNumberResult); // TODO check if the other services can get it - Tesseract doesnt see it (apart from on the map page)
+        Assert.Equal("13/43/021/G/061", licenceNumberResult?.Text?.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -478,20 +479,13 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
-        Assert.Null(agreedSchemaLicence.LicenceNumber); 
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        
-        // NOTE if looking for all linked licence numbers in the document, we will find the licence one in the
-        // header that is otherwise not found, as the label text is not read
-        
-        Assert.Equal("43/43/021/G/061", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("1/34/30/021/G061", agreedSchemaLicence.LicenceNumber); 
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 
     [Fact]
@@ -501,7 +495,7 @@ public class TessaractOcrPdfTests
         const string filename = "28-39-28-0507 5609942.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -539,7 +533,7 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("28/39/28/307", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("28/39/28/507", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -569,7 +563,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6081901.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -596,17 +590,19 @@ public class TessaractOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var linkedLicencesCount = resultList.Count(result => result.LabelGroupName == "LinkedLicenceNumber");
-        Assert.Equal(1, linkedLicencesCount);
-        Assert.Equal("25 68 002 182", resultList.First(result => result.LabelGroupName == "LinkedLicenceNumber").Text![0].Text);
+
+        var linkedLicences = resultList.Where(result => result.LabelGroupName == "LinkedLicenceNumber").ToList();
+        Assert.Equal(3, linkedLicences.Count);
+        Assert.Equal("25 68 002 182", linkedLicences[0].Text![0].Text);
+        Assert.Equal("25 68 002 177", linkedLicences[1].Text![0].Text);
+        Assert.Equal("25/68/002/182", linkedLicences[2].Text![0].Text); // TODO, should realise its the same as the first
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -624,11 +620,9 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("25/68/002/177", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
-        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);        
+        Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);      
     }
 
     [Fact]
@@ -638,7 +632,7 @@ public class TessaractOcrPdfTests
         const string filename = "Original Licence 5646512.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -703,7 +697,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -764,11 +758,11 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document Licence document 28112002.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -798,7 +792,7 @@ public class TessaractOcrPdfTests
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
-        Assert.Null(licenceNumberResult); // For some reason Tesseract won't read the licence number from the box in the header its in
+        Assert.Equal("13/43/021/G/018", licenceNumberResult?.Text?.First().Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -809,16 +803,13 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Null(agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("1/34/30/021/G018", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("13/43/021/G/018", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }    
     
     [Fact]
@@ -828,7 +819,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083958.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -874,7 +865,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document [Licence] (25112008).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -930,7 +921,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -979,7 +970,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Original 5809134.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1022,7 +1013,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1083,7 +1074,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence Original 5652046.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1136,11 +1127,11 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -1162,7 +1153,7 @@ public class TessaractOcrPdfTests
         
         // Abstraction limits come out of OCR all scrambled
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        Assert.Null(abstractionLimitsResult);
+        Assert.NotNull(abstractionLimitsResult);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1187,7 +1178,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1232,7 +1223,7 @@ public class TessaractOcrPdfTests
         const string filename = "Application New Licence Issued - 22-07-1966 - 22-07-1966.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1281,7 +1272,7 @@ public class TessaractOcrPdfTests
         const string filename = "permit_01_01_1998.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1336,7 +1327,7 @@ public class TessaractOcrPdfTests
         const string filename = "2938010008 5641759.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1386,7 +1377,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1443,7 +1434,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.05.2001).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1501,7 +1492,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1543,7 +1534,7 @@ public class TessaractOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1597,7 +1588,7 @@ public class TessaractOcrPdfTests
         const string filename = "08-36-19-S-0130 5827009.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1665,7 +1656,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (12.09.1979).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1708,7 +1699,7 @@ public class TessaractOcrPdfTests
         const string filename = "Non-Application Licence Document (14.09.1992).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert

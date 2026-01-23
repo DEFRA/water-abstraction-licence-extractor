@@ -26,4 +26,6 @@ public class NaldData
     public List<NaldDataPeriod> Periods { get; init; } = [];
     
     public List<NaldDataPurpose> Purposes { get; init; } = [];
+    
+    public string? FgacRegionCode { get; set; }
 }

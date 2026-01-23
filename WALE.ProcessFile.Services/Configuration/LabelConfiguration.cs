@@ -2411,8 +2411,8 @@ public static class LabelConfiguration
             ],
             Format = LicenceNumber.Constant,
             Position = LabelPosition.ActuallyLabel,
-            PreviousLinesToFetch = 0,
-            NextLinesToFetch = 0,
+            PreviousLinesToFetch = 1,
+            NextLinesToFetch = 1,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
             Remove =

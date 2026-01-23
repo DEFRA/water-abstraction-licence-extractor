@@ -165,7 +165,7 @@ public class DatabaseOutputService(
         await databaseWriteService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
     }
 
-    public async Task FinishProcessRunAsync(ProcessRun processRun)
+    public async Task FinishProcessRunAsync(ProcessRun processRun, int processRunId)
     {
         // Fix up missing LicenceIds in LicenceSetList
         var licenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(
@@ -180,7 +180,7 @@ public class DatabaseOutputService(
                 continue;
             }
 
-            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber)!;
+            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber, processRunId)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

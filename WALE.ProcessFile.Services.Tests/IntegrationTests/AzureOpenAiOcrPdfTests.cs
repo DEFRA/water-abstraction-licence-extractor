@@ -41,7 +41,8 @@ public class AzureOpenAiOcrPdfTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [PdfFolder + fileName],
             0);
     }
@@ -132,10 +133,12 @@ public class AzureOpenAiOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("11/42/28/2/6", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
     }
 }

@@ -57,7 +57,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         DeadLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, NaldData> _naldData = [];
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
     private static string PdfFolder => TestConfig.PdfFolder;
     
@@ -70,7 +70,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             folder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [folder + fileName],
             0);
     }
@@ -272,7 +273,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     
     [Theory]
     [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0, 1)]
-    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 62", "02/06/1962", 5, 0, 1)]
+    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 19 67", "02/06/1967", 5, 0, 1)]
     [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 7, 0, 1)]
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7, 0, 1)]
     [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, 1)]
@@ -602,7 +603,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3 + fileName,
             new LookupConfiguration(
                 GetYorkshireLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [TestConfig.PdfFolder3 + fileName],
             0);
 

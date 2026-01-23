@@ -8,7 +8,10 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class ExternalDataHelper
 {
-    public static Dictionary<string, NaldData> GetNaldAbstractionLicencesData(string? naldDataReportPath)
+    public static Dictionary<string, List<NaldData>> GetNaldAbstractionLicencesData(
+        string? naldDataReportPath,
+        string? naldAbsLicencePurposesDataPath,
+        int regionCode)
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
         {
@@ -25,10 +28,17 @@ public static class ExternalDataHelper
         using var reader = new StreamReader(naldDataReportPath);
         using var csv = new CsvReader(reader, config);
 
-        var lines = csv.GetRecords<NaldAbstractionLicencesDataLine>().ToList();
+        var lines = csv.GetRecords<NaldAbstractionLicenceCsvLine>().ToList();
 
         foreach (var line in lines)
         {
+            var lapsedDate = DateTime.TryParse(line.LapsedDate, out var ld) ? ld : (DateTime?)null;
+
+            if (lapsedDate != null && DateTime.Today.AddYears(-1) > lapsedDate)
+            {
+                continue;
+            }
+            
             var lineCondition = new NaldDataAggregate
             {
                 Type = "General",
@@ -62,12 +72,6 @@ public static class ExternalDataHelper
                 Ngr4 = !string.IsNullOrWhiteSpace(line.Ngr4) ? line.Ngr4 : null*/
             };
             
-            var linePeriod = new NaldDataPeriod
-            {
-                /*PeriodStart = line.PeriodStart,
-                PeriodEnd = line.PeriodEnd*/
-            };
-            
             var linePurpose = new NaldDataPurpose
             {
                 /*PurposeId = line.PurposeId,
@@ -76,8 +80,8 @@ public static class ExternalDataHelper
                 PurposeUseDescription = line.PurposeUseDescription*/
             };
             
-            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
-            var key = line.FgacRegionCode + "|" + stippedLicenceNumber;
+            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
+            var key = line.FgacRegionCode + "|" + line.Id;
 
             // Find an existing line
             if (returnList.TryGetValue(key, out var existingItem))
@@ -96,11 +100,6 @@ public static class ExternalDataHelper
                 if (existingItem.Purposes.All(existingPurpose => existingPurpose.ToString() != linePurpose.ToString()))
                 {
                     existingItem.Purposes.Add(linePurpose);
-                }
-                
-                if (existingItem.Periods.All(existingPeriod => existingPeriod.ToString() != linePeriod.ToString()))
-                {
-                    existingItem.Periods.Add(linePeriod);
                 }
                 
                 continue;
@@ -123,17 +122,37 @@ public static class ExternalDataHelper
                 LicenceWideInstQty = line.LicenceWideInstQty,*/
                 AggregateConditions = lineConditionsArray,
                 Points = [linePoint],
-                Periods = [linePeriod],
-                Purposes = [linePurpose]
+                Periods = [],
+                Purposes = [linePurpose],
+                FgacRegionCode = line.FgacRegionCode
             };
             
             returnList.Add(key, naldData);
         }
+        
+        AddNaldAbstractionLicencePurposeData(
+            naldAbsLicencePurposesDataPath,
+            ref returnList);
 
-        return returnList;
+        var returnList2 = new Dictionary<string, List<NaldData>>();
+        
+        foreach (var (_, naldData) in returnList)
+        {
+            var key = naldData.FgacRegionCode + "|" + naldData.LicenceIdCharsAndDigitsOnly;
+            
+            if (returnList2.ContainsKey(key))
+            {
+                returnList2[key].Add(naldData);
+                continue;
+            }
+            
+            returnList2.Add(key, [naldData]);
+        }
+        
+        return returnList2;
     }
 
-    public static void AddNaldAbstractionLicencePurposeData(
+    private static void AddNaldAbstractionLicencePurposeData(
         string? naldDataReportPath,
         ref Dictionary<string, NaldData> generalNaldData)
     {
@@ -150,28 +169,50 @@ public static class ExternalDataHelper
         using var reader = new StreamReader(naldDataReportPath);
         using var csv = new CsvReader(reader, config);
 
-        var lines = csv.GetRecords<NaldPurposeDataLine>().ToList();
+        var lines = csv.GetRecords<NaldLicencePurposeCsvLine>().ToList();
 
         foreach (var line in lines)
         {
-            if (string.IsNullOrEmpty(line.Condition) || line.Condition == "-")
+            var licenceKey = $"{line.FgacRegionCode}|{line.InternalLicenceId}";
+            var existingData = generalNaldData.GetValueOrDefault(licenceKey);
+
+            if (existingData == null)
             {
+                // Was likely lapsed so we didnt include it
                 continue;
             }
+            
+            var naldDataPeriod = new NaldDataPeriod
+            {
+                PeriodStartDay = line.PeriodStartDay,
+                PeriodStartMonth = line.PeriodStartMonth,
+                PeriodEndDay = line.PeriodEndDay,
+                PeriodEndMonth = line.PeriodEndMonth
+            };
 
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
-            var existingData = generalNaldData[strippedLicenceNumber];
-
+            if (existingData.Periods.All(p => p.ToString() != naldDataReportPath))
+            {
+                existingData.Periods.Add(naldDataPeriod);                
+            }
+            
             existingData.AggregateConditions.Add(new NaldDataAggregate
             {
                 Type = "Limit",
-                Condition = line.Condition,
-                ConditionId = line.ConditionId
+                Condition = line.PurposeCode,
+                ConditionId = line.PurposeCodeId,
+                AnnualQty = double.TryParse(line.AnnualQty, out var annualQty) ? annualQty : null,
+                AnnualQtyUnits = line.AnnualQtyUnits,
+                DailyQty = double.TryParse(line.DailyQty, out var dailyQty) ? dailyQty : null,
+                DailyQtyUnits = line.DailyQtyUnits,
+                HourlyQty = double.TryParse(line.HourlyQty, out var hourlyQtt) ? hourlyQtt : null,
+                HourlyQtyUnits = line.HourlyQtyUnits,
+                InstQty = double.TryParse(line.InstQty, out var instQty) ? instQty : null,
+                InstQtyUnits = line.InstQtyUnits
             });
         }
     }
 
-    public static Dictionary<string, string> GetLicenceNumberMappingFromFilenames(string? pdfFolderPath)
+    public static Dictionary<string, string> GetLicenceNumberMappingFromFilenames(string? pdfFolderPath, int regionCode)
     {
         if (string.IsNullOrEmpty(pdfFolderPath))
         {
@@ -194,7 +235,7 @@ public static class ExternalDataHelper
                 continue;
             }
             
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode)!;
             
             if (!returnMapping.TryAdd(strippedLicenceNumber, filename))
             {
@@ -206,7 +247,8 @@ public static class ExternalDataHelper
     }
 
     public static HashSet<string> GetLiveLicenceNumbers(
-        string? liveLicencesReportPath)
+        string? liveLicencesReportPath,
+        int regionCode)
     {
         if (string.IsNullOrEmpty(liveLicencesReportPath))
         {
@@ -238,7 +280,7 @@ public static class ExternalDataHelper
 
             var licenceNumber = parts[2];
 
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode)!;
             returnList.Add(strippedLicenceNumber);
         }
 
@@ -246,7 +288,8 @@ public static class ExternalDataHelper
     }
 
     public static HashSet<string> GetDeadLicenceNumbers(
-        string? deadLicencesReportPath)
+        string? deadLicencesReportPath,
+        int regionCode)
     {
         if (string.IsNullOrEmpty(deadLicencesReportPath))
         {
@@ -278,7 +321,7 @@ public static class ExternalDataHelper
 
             var licenceNumber = parts[5];
 
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode)!;
             returnList.Add(strippedLicenceNumber);
         }
 
@@ -286,7 +329,8 @@ public static class ExternalDataHelper
     }
 
     public static HashSet<string> GetImpoundmentLicenceNumbers(
-        string? impoundmentLicencesReportPath)
+        string? impoundmentLicencesReportPath,
+        int regionCode)
     {
         if (string.IsNullOrEmpty(impoundmentLicencesReportPath))
         {
@@ -312,7 +356,7 @@ public static class ExternalDataHelper
             var parts = line.Split(',');
             var licenceNumber = parts[0];
             
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode)!;
             returnList.Add(strippedLicenceNumber);
         }
 

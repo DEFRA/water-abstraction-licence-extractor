@@ -21,7 +21,7 @@ public static class GenerateAggregatesCsvForTesting
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
-    private static readonly Dictionary<string, NaldData> NaldData = [];
+    private static readonly Dictionary<string, List<NaldData>> NaldData = [];
     private static readonly int ProcessRunId = -1;
     
     public static async Task GenerateCsvForTestingAsync()
@@ -40,7 +40,8 @@ public static class GenerateAggregatesCsvForTesting
             OutputService,
             KeyConfig.PdfFolder);
 
-        var data = await GetYorkshire70DataAsync(pdfDataExtractor);
+        var regionCode = 3;
+        var data = await GetYorkshire70DataAsync(pdfDataExtractor, regionCode);
         //var data = await GetYorkshire6DataAsync(pdfDataExtractor);
 
         await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today:yyyyMMdd}.csv");
@@ -57,12 +58,13 @@ public static class GenerateAggregatesCsvForTesting
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                FileLicenceMapping),
+                FileLicenceMapping,
+                3),
             [pdfFolder + fileName],
             ProcessRunId);
     }
 
-    static async Task<List<AggregatesCsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor, int regionCode)
     {
         var yorkshire = YorkshireFiles();
         
@@ -102,7 +104,8 @@ public static class GenerateAggregatesCsvForTesting
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
-            []);
+            [],
+            regionCode);
 
         foreach (var licenceSets in licenceSetGroups)
         {
@@ -123,7 +126,7 @@ public static class GenerateAggregatesCsvForTesting
         return returnList;
     }
 
-    static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor, int regionCode)
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         var naldLicenceStatusData = new NaldLicenceStatusData();
@@ -209,7 +212,8 @@ public static class GenerateAggregatesCsvForTesting
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
-            []);
+            [],
+            regionCode);
         
         return
         [

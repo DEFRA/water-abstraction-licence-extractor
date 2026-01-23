@@ -384,6 +384,7 @@ public static partial class DataHelper
         return 
             (!char.IsLetterOrDigit(ch) || !char.IsAscii(ch))
             && ch != ' '
+            && ch != '|'
             && ch != '/'
             && ch != '.'
             && ch != '%'
@@ -406,6 +407,11 @@ public static partial class DataHelper
         if (string.IsNullOrEmpty(line))
         {
             return false;
+        }
+
+        if (line.Contains("Licence Holder"))
+        {
+            
         }
         
         if (line.Contains('—'))

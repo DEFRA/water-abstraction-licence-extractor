@@ -3981,7 +3981,7 @@ public class PdfPigNoOcrPdfTests
             TestConfig.PdfFolder,
             0)).Last();
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
@@ -4031,9 +4031,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2920000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        
-        Assert.Equal("2/27/11/064", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]
@@ -4643,7 +4641,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12100074R01__Application WR Abstraction Licence Issued 11042025.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, 3, 3);
+        var resultFull = await GetMatchesAsync(filename, 1, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5299,6 +5297,15 @@ public class PdfPigNoOcrPdfTests
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+
+        var linkedLicences = resultFull.Matches!
+            .Where(x => x.LabelGroupName == "LinkedLicenceNumber")
+            .ToList();
+        
+        Assert.Equal(3, linkedLicences.Count);
+        Assert.Equal("MD/028/0084/008", linkedLicences[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("2/27/24/034", linkedLicences[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("NE/027/0024/044", linkedLicences[2].Text?.FirstOrDefault()?.Text);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5323,7 +5330,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/24/034", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // NOTE - This is linked accross region
     }
     
     [Fact]

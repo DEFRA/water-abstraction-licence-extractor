@@ -416,7 +416,12 @@ public static class FormattingHelper
             return false;
         }
 
-        if (regionCode == 3 || licenceNumber[0] is 'n' or 'N')
+        if (licenceNumber[0] is 'm' or 'M' || licenceNumber[1] is 'd' or 'D')
+        {
+            return false;
+        }
+        
+        if (regionCode == 3 || (licenceNumber[0] is 'n' or 'N' && licenceNumber[1] is 'e' or 'E'))
         {
             return true;
         }

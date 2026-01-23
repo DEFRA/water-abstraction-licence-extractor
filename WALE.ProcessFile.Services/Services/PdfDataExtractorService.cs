@@ -81,6 +81,25 @@ public class PdfDataExtractorService(
             configuration.RegionCode,
             processRunId);
 
+        // De-dupe
+        var newLabelGroupMatches = new List<LabelGroupResult>();
+
+        foreach (var labelGroupMatch in labelGroupMatches)
+        {
+            var exists = newLabelGroupMatches.Any(lgm =>
+                lgm.LabelGroupName == labelGroupMatch.LabelGroupName
+                && lgm.Text?.FirstOrDefault()?.Text == labelGroupMatch.Text?.FirstOrDefault()?.Text);
+
+            if (exists)
+            {
+                continue;
+            }
+            
+            newLabelGroupMatches.Add(labelGroupMatch);
+        }
+
+        labelGroupMatches = newLabelGroupMatches;
+        
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
@@ -316,8 +335,6 @@ public class PdfDataExtractorService(
                 {
                     var exists = labelGroupMatches.Any(lgm =>
                         lgm.LabelGroupName == uniqueServiceMatch.LabelGroupName
-                        && lgm.PageNumber == uniqueServiceMatch.PageNumber
-                        //&& lgm.LineNumber == uniqueServiceMatch.LineNumber
                         && lgm.Text?.FirstOrDefault()?.Text == uniqueServiceMatch.Text?.FirstOrDefault()?.Text);
 
                     if (exists)

@@ -239,7 +239,7 @@ public static partial class SchemaConverter
                         containedIn.Add(sectionItem);
                     }
                 }
-
+                
                 var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber, regionCode);
 
                 return ToLinkedLicence(
@@ -1010,6 +1010,11 @@ public static partial class SchemaConverter
             if (returnLicences.Any(returnLicence =>
                 FormattingHelper.StripForComparison(returnLicence.LicenceNumber, matchesResult.RegionCode)
                     == strippedLlNumber))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(strippedLlNumber))
             {
                 continue;
             }

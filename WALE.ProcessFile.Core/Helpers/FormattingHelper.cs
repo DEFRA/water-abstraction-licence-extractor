@@ -333,7 +333,7 @@ public static class FormattingHelper
                 }
                 else
                 {
-                    throw new Exception("Can't work it out (2)");
+                    return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
                 }
                 
                 parts.Add(part3);
@@ -421,7 +421,12 @@ public static class FormattingHelper
             return false;
         }
         
-        if (regionCode == 3 || (licenceNumber[0] is 'n' or 'N' && licenceNumber[1] is 'e' or 'E'))
+        if (licenceNumber[0] is '3' or '4' or '5' or '6' or '7' or '8' or '9')
+        {
+            return false;
+        }
+        
+        if (licenceNumber[0] is 'n' or 'N' && licenceNumber[1] is 'e' or 'E')
         {
             return true;
         }
@@ -443,7 +448,7 @@ public static class FormattingHelper
             return parts[1] is "26" or "27";
         }
 
-        return false;
+        return regionCode == 3;
     }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber, int regionCode)

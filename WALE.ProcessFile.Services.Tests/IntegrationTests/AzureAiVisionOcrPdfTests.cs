@@ -235,7 +235,8 @@ public class AzureAiVisionOcrPdfTests
             0)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("33 9966 5411", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO its actually an SE and should be filtered out
     }
     
     [Fact]

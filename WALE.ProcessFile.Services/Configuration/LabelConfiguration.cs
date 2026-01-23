@@ -2435,7 +2435,8 @@ public static class LabelConfiguration
                 new("0 150 300 M"), // Doubling scale
                 new("0 150 300"), // Doubling scale
                 new("0 425 850 M"), // Doubling scale
-                new("0 425 850") // Doubling scale
+                new("0 425 850"), // Doubling scale
+                new("0 100 200") // Doubling scale
             ],
             SkipLineWhenContains = NoneLicenceNumberSkips
         };

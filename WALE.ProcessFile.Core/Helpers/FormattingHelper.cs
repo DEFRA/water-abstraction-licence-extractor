@@ -82,6 +82,7 @@ public static class FormattingHelper
 
         var origSectionLengths = licenceNumber.Split('/');
 
+        
         licenceNumber = licenceNumber
             .Replace(".", string.Empty)
             .Replace(" ", string.Empty)
@@ -405,6 +406,10 @@ public static class FormattingHelper
                 parts.Add(remainingLicenceNumber);
             }
         }
+        else
+        {
+            return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
+        }
         
         return string.Join('/', parts);
     }
@@ -580,8 +585,14 @@ public static class FormattingHelper
             return $"{section1}/{section2}";
         }
         
+        var section3EndPoint = section3StartPoint + section3Length;
+        if (section3EndPoint >= noneSeperatedLicenceNumber.Length)
+        {
+            section3Length = noneSeperatedLicenceNumber.Length - section3StartPoint;
+        }
+        
         var section3 = noneSeperatedLicenceNumber.Substring(section3StartPoint, section3Length);
-        var section4 = noneSeperatedLicenceNumber[section4StartPoint..];
+        var section4 = section4StartPoint < noneSeperatedLicenceNumber.Length ? noneSeperatedLicenceNumber[section4StartPoint..] : string.Empty;
         
         // Pad part 4 with zeroes (needs to have 3 digits)
         section4 = section4.Where(char.IsDigit).Count() switch

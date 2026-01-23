@@ -251,6 +251,8 @@ public static partial class SchemaConverter
                     licenceNumbersMapping,
                     regionCode);
             })
+            .Where(linkedLicence => linkedLicence != null)
+            .Select(linkedLicence => linkedLicence!)
             .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
             .ToList();
 
@@ -446,7 +448,7 @@ public static partial class SchemaConverter
                    || licenceNumberStripped2.Contains(licenceNumberStripped1));
     }
     
-    private static LinkedLicence ToLinkedLicence(
+    private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
         string? filename,
         Condition? condition,
@@ -469,6 +471,11 @@ public static partial class SchemaConverter
         
         var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
 
+        if (string.IsNullOrWhiteSpace(strippedLinkedLicenceNumber))
+        {
+            return null;
+        }
+        
         var dmsFileData = !string.IsNullOrEmpty(strippedLinkedLicenceNumber)
             ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
             : null;
@@ -713,25 +720,30 @@ public static partial class SchemaConverter
                         }
 
                         // Back link is missing
-                        var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
-                        {
-                            ToLinkedLicence(
-                                incomingLink.LicenceNumber,
-                                incomingLink.Filename,
-                                null,
-                                [new LinkedLicenceSection
+                        var backLink = ToLinkedLicence(
+                            incomingLink.LicenceNumber,
+                            incomingLink.Filename,
+                            null,
+                            [
+                                new LinkedLicenceSection
                                 {
                                     SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
                                     LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})",
                                     LineNumber = -1,
                                     PageNumber = -1,
-                                }],
-                                naldLicenceStatusData,
-                                licenceNumbersMapping,
-                                regionCode)
-                        };
+                                }
+                            ],
+                            naldLicenceStatusData,
+                            licenceNumbersMapping,
+                            regionCode);
 
-                        licence.LinkedLicences = linkedLicencesNew.ToArray();
+                        if (backLink != null)
+                        {
+                            licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
+                            {
+                                backLink
+                            }.ToArray();
+                        }
 
                         if (!addImplicitLicenceSet)
                         {

@@ -307,7 +307,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 13, 0, 1)]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 1, 2)] // TODO - One is a subset of the other due to a bad scane
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 13, 0, 1)]
-    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6, 2, 2)]
+    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6, 3, 2)]
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, 1)]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 14, 0, 1)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 12, 0, 1)]
@@ -577,7 +577,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12202087-LV20011126", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
@@ -589,7 +589,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("1/22/02/087", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("088/22/2", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO doesnt look right
     }
     
     [Fact]

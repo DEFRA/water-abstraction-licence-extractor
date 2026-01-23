@@ -906,101 +906,102 @@ public static partial class SchemaConverter
 
         var abstractionLimitsPoints = abstractionLimits?.SubResults;
 
-        if (abstractionLimitsPoints == null)
+        if (abstractionLimitsPoints != null)
         {
-            return returnLicences;
-        }
-        
-        foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
-        {
-            var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
-
-            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+            foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
             {
-                var linkedLicencesData = abstractionLimitPointSub.SubResults
-                    .Where(subResult =>
-                        subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
-                    .ToList();
+                var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
 
-                foreach (var linkedLicenceData in linkedLicencesData)
+                foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
                 {
-                    var matches = ToMatchesResult(linkedLicenceData);
-                    
-                    var licenceNumber = GetLicenceNumber(matches);
-                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
-                    
-                    var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-                        ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
-                        : null;
-                    
-                    var linkedLicence = ToLicence(
-                        matches,
-                        naldLicenceStatusData,
-                        dmsFileData,
-                        licenceNumberMapping,
-                        naldData);
-                        
-                    returnLicences.Add(linkedLicence);   
-                }
-                    
-                var linkedLicenceNumbers = abstractionLimitPointSub.SubResults
-                    .Where(subResult =>
-                        subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
-                    .ToList();
+                    var linkedLicencesData = abstractionLimitPointSub.SubResults
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
+                        .ToList();
 
-                foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
-                {
-                    var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
-                    var licenceNumberTransformed = FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
-
-                    // Don't process ones we've already found
-                    if (licenceNumberTransformed == primaryLicence.LicenceNumber
-                        || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
+                    foreach (var linkedLicenceData in linkedLicencesData)
                     {
-                        continue;
-                    }
-                    
-                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode)!;
-                    
-                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
-                    {
-                        returnLicences.Add(new Licence
-                        {
-                            LicenceNumber = licenceNumber,
-                            Status = LicenceStatus.NotFound
-                        });
-                        
-                        continue;
-                    }
+                        var matches = ToMatchesResult(linkedLicenceData);
 
-                    var destinationFileName = dmsFileData.DestinationFileName!;
+                        var licenceNumber = GetLicenceNumber(matches);
+                        var strippedLicenceNumber =
+                            FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
 
-                    if (!destinationFileName.Contains('/'))
-                    {
-                        destinationFileName = $"{pdfFolder}{destinationFileName}";
-                    }
-                    
-                    var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                        destinationFileName,
-                        new LookupConfiguration(
-                            LabelConfiguration.GetLabels(),
+                        var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                            ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
+                            : null;
+
+                        var linkedLicence = ToLicence(
+                            matches,
+                            naldLicenceStatusData,
+                            dmsFileData,
                             licenceNumberMapping,
-                            matchesResult.RegionCode),
-                        previouslyParsedPaths,
-                        processRunId);
+                            naldData);
 
-                    var licence = ToLicence(
-                        relatedFileMatches,
-                        naldLicenceStatusData,
-                        dmsFileData,
-                        licenceNumberMapping,
-                        naldData);
-                    
-                    returnLicences.Add(licence);
+                        returnLicences.Add(linkedLicence);
+                    }
+
+                    var linkedLicenceNumbers = abstractionLimitPointSub.SubResults
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
+                        .ToList();
+
+                    foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
+                    {
+                        var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
+                        var licenceNumberTransformed =
+                            FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
+
+                        // Don't process ones we've already found
+                        if (licenceNumberTransformed == primaryLicence.LicenceNumber
+                            || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
+                        {
+                            continue;
+                        }
+
+                        var strippedLicenceNumber =
+                            FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode)!;
+
+                        if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
+                        {
+                            returnLicences.Add(new Licence
+                            {
+                                LicenceNumber = licenceNumber,
+                                Status = LicenceStatus.NotFound
+                            });
+
+                            continue;
+                        }
+
+                        var destinationFileName = dmsFileData.DestinationFileName!;
+
+                        if (!destinationFileName.Contains('/'))
+                        {
+                            destinationFileName = $"{pdfFolder}{destinationFileName}";
+                        }
+
+                        var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                            destinationFileName,
+                            new LookupConfiguration(
+                                LabelConfiguration.GetLabels(),
+                                licenceNumberMapping,
+                                matchesResult.RegionCode),
+                            previouslyParsedPaths,
+                            processRunId);
+
+                        var licence = ToLicence(
+                            relatedFileMatches,
+                            naldLicenceStatusData,
+                            dmsFileData,
+                            licenceNumberMapping,
+                            naldData);
+
+                        returnLicences.Add(licence);
+                    }
                 }
             }
         }
-        
+
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
             var strippedLlNumber = FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, matchesResult.RegionCode);

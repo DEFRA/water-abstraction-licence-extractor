@@ -3439,8 +3439,8 @@ public class PdfPigNoOcrPdfTests
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
-        
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("TH/039/0028/051", agreedSchemaLicence.LicenceNumber);

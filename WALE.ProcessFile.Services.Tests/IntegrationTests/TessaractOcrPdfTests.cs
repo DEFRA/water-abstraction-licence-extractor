@@ -360,13 +360,16 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("34/236", agreedSchemaLicence.LicenceNumber);
         
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("34/259", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("11/42/18.6.1/601", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("169/1 367", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); // TODO looks odd
     }
     
     [Fact]
@@ -1117,7 +1120,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(38, agreedSchemaLicence.LinkedLicences.Length);
     }
 
     [Fact]
@@ -1164,11 +1167,15 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length); // TODO these are hallucinations, possibly from bleedthrough
+        Assert.Equal("2/3860", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("0005 3 0", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("UnknownPage2", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
     }
 
     [Fact]
@@ -1209,11 +1216,16 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("25/68/3/91", agreedSchemaLicence.LicenceNumber);
+        
+        Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("UnknownPage3", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        
+        // TODO there are 2 more mentioned in a crosssed section that im not sure why it doesnt read
     }
     
     [Fact]
@@ -1367,7 +1379,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(38, agreedSchemaLicence.LinkedLicences.Length);
     }
 
     [Fact]
@@ -1520,11 +1532,12 @@ public class TessaractOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Fact]

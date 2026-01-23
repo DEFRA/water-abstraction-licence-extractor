@@ -286,6 +286,13 @@ public static partial class LicenceNumber
                         continue;
                     }
 
+                    var isApplication = value.StartsWith("WR.");
+
+                    if (isApplication)
+                    {
+                        continue;
+                    }
+                    
                     var isPostcode = (value.Length == 7 || value.Length == 8)
                                      && char.IsUpper(value[0])
                                      && value.Count(c => c == ' ') == 1

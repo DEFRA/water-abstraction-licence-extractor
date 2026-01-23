@@ -32,6 +32,11 @@ public static class ExternalDataHelper
 
         foreach (var line in lines)
         {
+            if (line.FgacRegionCode != regionCode.ToString())
+            {
+                continue;
+            }
+            
             var lapsedDate = DateTime.TryParse(line.LapsedDate, out var ld) ? ld : (DateTime?)null;
 
             if (lapsedDate != null && DateTime.Today.AddYears(-1) > lapsedDate)

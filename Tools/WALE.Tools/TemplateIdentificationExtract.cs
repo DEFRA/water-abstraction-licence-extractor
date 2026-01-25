@@ -100,6 +100,17 @@ public static class TemplateIdentificationExtract
         return value.Replace("\"", "\"\"");
     }
 
+    private static string ExtractPermitNumber(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return string.Empty;
+
+        var underscoreIndex = fileName.IndexOf("__");
+        return underscoreIndex >= 0 
+            ? fileName.Substring(0, underscoreIndex).Trim() 
+            : fileName;
+    }
+
     public static async Task GenerateTemplateFinderResult(string region)
     {
         var data = await GetTemplateFinderDataAsync(region);
@@ -107,6 +118,102 @@ public static class TemplateIdentificationExtract
         var fileName = $"Template_Finder-{DateTime.Today:yyyyMMdd}.xlsx";
         var fullPath = Path.Combine(OutputFolder, fileName);
         CreateExcelFileFromList(data, fullPath);
+    }
+
+    public static void GenerateWaterPdfsFolderInventory()
+    {
+        Console.WriteLine("Starting WaterPdfs folder inventory generation...");
+
+        try
+        {
+            // Get the parent directory of OutputFolder to access sibling folders
+            var outputFolderInfo = new DirectoryInfo(OutputFolder);
+            var parentDirectory = outputFolderInfo.Parent;
+
+            if (parentDirectory == null || !parentDirectory.Exists)
+            {
+                Console.WriteLine($"Parent directory not found for: {OutputFolder}");
+                return;
+            }
+
+            Console.WriteLine($"Scanning parent directory: {parentDirectory.FullName}");
+
+            // Get all directories that start with "WaterPdfs"
+            var waterPdfsFolders = parentDirectory.GetDirectories("WaterPdfs*");
+
+            if (waterPdfsFolders.Length == 0)
+            {
+                Console.WriteLine("No folders starting with 'WaterPdfs' found.");
+                return;
+            }
+
+            Console.WriteLine($"Found {waterPdfsFolders.Length} folder(s) starting with 'WaterPdfs'");
+
+            // Collect all file information
+            var fileInventory = new List<(string FolderName, string FileName, string PermitNumber, long FileSize, DateTime ModifiedTime)>();
+
+            foreach (var folder in waterPdfsFolders.Where(d => d.Name != "WaterPdfsDuplicates"))
+            {
+                Console.WriteLine($"Processing folder: {folder.Name}");
+
+                try
+                {
+                    var files = folder.GetFiles("*.pdf", SearchOption.AllDirectories);
+                    Console.WriteLine($"  Found {files.Length} file(s) in {folder.Name}");
+
+                    foreach (var file in files)
+                    {
+                        var permitNumber = ExtractPermitNumber(file.Name);
+                        fileInventory.Add((
+                            FolderName: folder.Name,
+                            FileName: file.Name,
+                            PermitNumber: permitNumber,
+                            FileSize: file.Length,
+                            ModifiedTime: file.LastWriteTime
+                        ));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Error processing folder {folder.Name}: {ex.Message}");
+                }
+            }
+
+            // Generate CSV file
+            var csvFileName = $"WaterPdfs_Inventory_{DateTime.Today:yyyyMMdd}.csv";
+            var csvFilePath = Path.Combine(OutputFolder, csvFileName);
+
+            using (var writer = new StreamWriter(csvFilePath))
+            {
+                // Write header
+                writer.WriteLine("FolderName,PermitNumber,FileName,FileSizeBytes,ModifiedTime");
+
+                // Write data rows
+                foreach (var file in fileInventory.OrderBy(f => f.FolderName).ThenBy(f => f.PermitNumber))
+                {
+                    var line = $"\"{EscapeCsv(file.FolderName)}\",\"{EscapeCsv(file.PermitNumber)}\",\"{EscapeCsv(file.FileName)}\",{file.FileSize},\"{file.ModifiedTime:yyyy-MM-dd HH:mm:ss}\"";
+                    writer.WriteLine(line);
+                }
+            }
+
+            Console.WriteLine($"Inventory CSV created successfully: {csvFilePath}");
+            Console.WriteLine($"Total files processed: {fileInventory.Count}");
+
+            // Print summary by folder
+            var summary = fileInventory.GroupBy(f => f.FolderName)
+                .Select(g => new { FolderName = g.Key, FileCount = g.Count(), TotalSize = g.Sum(f => f.FileSize) });
+
+            Console.WriteLine("\nSummary by folder:");
+            foreach (var item in summary)
+            {
+                Console.WriteLine($"  {item.FolderName}: {item.FileCount} files, {item.TotalSize:N0} bytes");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating WaterPdfs folder inventory: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
     }
     public static void CreateExcelFileFromList<T>(List<T> employees, string filePath)
     {

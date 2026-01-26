@@ -32,10 +32,10 @@ public class LicenceNumberTests
     [InlineData("12/34/56/78", new[] { "12", "34", "56", "78" })]
     [InlineData("AA/12/34/56", new[] { "AA", "12", "34", "56" })]
     [InlineData("01/002/003/00", new[] { "1", "2", "3", "" })]
-    [InlineData("1/2/3.1/4", new[] { "1", "2", "3.1", "4" })] // Has / and . -> split on / only
+    [InlineData("1/2/3.1/4", new[] { "1", "2", "31", "4" })] // Has / and . -> split on / only
     [InlineData("1.2.3.4", new[] { "1", "2", "3", "4" })] // Has only . -> split on .
-    [InlineData("ABC-123.DEF", new[] { "ABC", "123.DEF" })] // Has - and . -> split on - only
-    [InlineData("A B.C", new[] { "A", "B.C" })] // Has space and . -> split on space only
+    [InlineData("ABC-123.DEF", new[] { "ABC", "123DEF" })] // Has - and . -> split on - only
+    [InlineData("A B.C", new[] { "A", "BC" })] // Has space and . -> split on space only
     public void ExtractSegments_ShouldSplitCorrectly(string input, string[] expected)
     {
         // Act

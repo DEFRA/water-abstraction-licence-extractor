@@ -82,7 +82,7 @@ public partial class LicenceNumber : ILicenceNumberService
         return regex
             .Split(licenceNumber)
             .Where(s => !string.IsNullOrEmpty(s))
-            .Select(s => s.TrimStart('0'))
+            .Select(s => s.TrimStart('0').Replace(".", string.Empty))
             .ToList();
     }
 

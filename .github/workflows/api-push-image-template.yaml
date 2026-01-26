@@ -116,7 +116,7 @@ jobs:
 
           echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
           docker build \
-            --file ./Wale.Api/Dockerfile \
+            --file ./WALE.Api/Dockerfile \
             --build-arg GIT_COMMIT="$GIT_COMMIT" \
             --label org.opencontainers.image.source="$GIT_URL" \
             --label org.opencontainers.image.revision="$GIT_COMMIT" \
@@ -151,7 +151,7 @@ jobs:
       - name: Run container locally
         run: |
           image_tag=${{steps.imgtag.outputs.image_tag }}
-          docker build -t bst:$image_tag .
+          docker build -t bst:$image_tag -f ./WALE.Api/Dockerfile .
           echo "Running local image: $image_tag"
           docker run -d --name test-container -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=local bst:$image_tag
       - name: Wait for service to start

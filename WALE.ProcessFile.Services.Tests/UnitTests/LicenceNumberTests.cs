@@ -31,7 +31,7 @@ public class LicenceNumberTests
     [Theory]
     [InlineData("12/34/56/78", new[] { "12", "34", "56", "78" })]
     [InlineData("AA/12/34/56", new[] { "AA", "12", "34", "56" })]
-    [InlineData("01/002/003/00", new[] { "1", "2", "3", "0" })]
+    [InlineData("01/002/003/00", new[] { "1", "2", "3", "" })]
     [InlineData("1/2/3.1/4", new[] { "1", "2", "3.1", "4" })] // Has / and . -> split on / only
     [InlineData("1.2.3.4", new[] { "1", "2", "3", "4" })] // Has only . -> split on .
     [InlineData("ABC-123.DEF", new[] { "ABC", "123.DEF" })] // Has - and . -> split on - only
@@ -40,6 +40,28 @@ public class LicenceNumberTests
     {
         // Act
         var result = LicenceNumber.ExtractSegments(input);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+    
+    [Theory]
+    [InlineData(new[] { "123", "456", "789", "101" }, new[] { "123004560789000101" }, true)]
+    [InlineData(new[] { "1", "2", "3" }, new[] { "1", "2", "3" }, true)]
+    [InlineData(new[] { "1", "2", "3" }, new[] { "1", "2" }, false)]
+    [InlineData(new[] { "1", "2" }, new[] { "12" }, true)]
+    [InlineData(new[] { "12" }, new[] { "1", "2" }, true)]
+    [InlineData(new[] { "1", "2" }, new[] { "1", "3" }, false)]
+    [InlineData(new[] { "123", "456" }, new[] { "1230456" }, true)]
+    [InlineData(new[] { "123", "456" }, new[] { "1234560" }, false)]
+    [InlineData(new[] { "123", "456" }, new[] { "12345","60" }, false)]
+    [InlineData(new[] { "123", "456" }, new[] { "12","3456" }, true)]
+    [InlineData(new[] { "123", "456" }, new[] { "12","300456" }, true)]
+    [InlineData(new[] { "12003", "456" }, new[] { "12","300456" }, true)]
+    public void SegmentsMatch_ShouldMatchCorrectly(string[] segments1, string[] segments2, bool expected)
+    {
+        // Act
+        var result = LicenceNumber.SegmentsMatch(segments1.ToList(), segments2.ToList());
 
         // Assert
         Assert.Equal(expected, result);

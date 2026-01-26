@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -82,7 +83,6 @@ public partial class LicenceNumber : ILicenceNumberService
             .Split(licenceNumber)
             .Where(s => !string.IsNullOrEmpty(s))
             .Select(s => s.TrimStart('0'))
-            .Select(s => string.IsNullOrEmpty(s) ? "0" : s)
             .ToList();
     }
 
@@ -167,7 +167,7 @@ public partial class LicenceNumber : ILicenceNumberService
 
                 foreach (var entry in entries)
                 {
-                    if (candidateSegments.SequenceEqual(entry.Segments))
+                    if (SegmentsMatch(candidateSegments, entry.Segments))
                     {
                         // Passed all checks so add a clone of the line containing the matched NALD licence number
                         matchedLines.Add(line.Clone([new DocumentLineColumn(candidateText)]));
@@ -183,6 +183,68 @@ public partial class LicenceNumber : ILicenceNumberService
         }
 
         return (matchedLines.Count > 0, matchedLines);
+    }
+
+    public static bool SegmentsMatch(List<string> segments1, List<string> segments2)
+    {
+        var s1 = string.Join("/", segments1);
+        var s2 = string.Join("/", segments2);
+
+        if (s1 == s2)
+        {
+            return true;
+        }
+
+        var i1 = 0;
+        var i2 = 0;
+
+        while (i1 < s1.Length && i2 < s2.Length)
+        {
+            var c1 = s1[i1];
+            var c2 = s2[i2];
+
+            // If both characters match, advance both iterators
+            if (c1 == c2)
+            {
+                i1++;
+                i2++;
+                continue;
+            }
+
+            // Handle segment break in s1: s2 can have zeroes or continue with next character
+            if (c1 == '/')
+            {
+                if (c2 == '0')
+                {
+                    i2++;
+                }
+                else
+                {
+                    i1++;
+                }
+                continue;
+            }
+
+            // Handle segment break in s2: s1 can have zeroes or continue with next character
+            if (c2 == '/')
+            {
+                if (c1 == '0')
+                {
+                    i1++;
+                }
+                else
+                {
+                    i2++;
+                }
+                continue;
+            }
+
+            // Characters don't match and no special rules apply
+            return false;
+        }
+
+        // Both strings should be fully consumed
+        return i1 == s1.Length && i2 == s2.Length;
     }
 
     private static bool IsValidColumnForProcessing(DocumentLineColumn column) =>

@@ -586,7 +586,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("16/52/2/371", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("16/52/02/G/037", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
         

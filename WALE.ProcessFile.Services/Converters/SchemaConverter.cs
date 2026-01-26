@@ -36,64 +36,11 @@ public static partial class SchemaConverter
             .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
-        
-        var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
 
-        var dateOfIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfOriginalIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfExpiryStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
-            ? dateOfExpiryOut
-            : (DateTime?)null;
-        
-        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
-            ? effectiveDateOut
-            : (DateTime?)null;
-        
-        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
-            ? dateOfIssueOut
-            : (DateTime?)null;
-        
-        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
-            ? dateOfOriginalIssueOut
-            : (DateTime?)null;
-
-        var issuer = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
-        
-        var licenceVersion = new LicenceVersion
-        {
-            EffectiveDate = effectiveDate,
-            ExpiryDate = expiryDate,
-            IssueDate = dateOfIssue,
-            Issuer = issuer,
-            OriginalIssueDate = dateOfOriginalIssue
-        };
-        
         var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
         var licenceNumber = GetLicenceNumber(matchesResult, noneSchemaData);
+        
+        var licenceVersion = GetLicenceVersion(matches!, naldData, licenceNumber, regionCode);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -182,13 +129,6 @@ public static partial class SchemaConverter
             licenceNumber,
             naldLicenceStatusData,
             regionCode);
-        
-        var naldLicenceNumber = (string?)null;
-        
-        if (isLiveLicence == true || isDeadLicence == true ||  isImpoundmentLicence == true)
-        {
-            naldLicenceNumber = licenceNumber;
-        }
         
         var linkedLicences = aggregates
             .Where(x => x.LinkedLicences?.Length >= 1)
@@ -356,24 +296,12 @@ public static partial class SchemaConverter
             Individual = individual
         };
         
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-        
-        licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldDataLine?.VersionStartDate)
-            ? DateTime.Parse(naldDataLine.VersionStartDate)
-            : null;
-
-        licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
-            ? DateTime.Parse(naldDataLine.ExpiryDate)
-            : null;
-
-        licenceVersion.NaldVersionNumber = null; // TODO - Not in the current NALD report data we get
-        
         return new Licence
         {
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumber,
-            NaldLicenceNumber = naldLicenceNumber,
+            NaldLicenceNumber = dmsFileData?.PermitNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,
@@ -387,6 +315,112 @@ public static partial class SchemaConverter
             IsImpoundmentLicence = isImpoundmentLicence,
             IsLiveLicence = isLiveLicence,
             LicenceFoundInList = isFound
+        };
+    }
+
+    private static LicenceVersion GetLicenceVersion(
+        List<LabelGroupResult> matches,
+        Dictionary<string, List<NaldData>> naldData,
+        string? licenceNumber,
+        int regionCode)
+    {
+        var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfIssueStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfOriginalIssueStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfExpiryStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
+            ? dateOfExpiryOut
+            : (DateTime?)null;
+        
+        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
+            ? effectiveDateOut
+            : (DateTime?)null;
+        
+        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
+            ? dateOfIssueOut
+            : (DateTime?)null;
+        
+        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
+            ? dateOfOriginalIssueOut
+            : (DateTime?)null;
+
+        var issuer = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+        
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+        
+        var naldExpiryDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
+            ? DateTime.Parse(naldDataLine.ExpiryDate)
+            : (DateTime?)null;
+        
+        var naldRevisionDate = !string.IsNullOrEmpty(naldDataLine?.RevisionDate)
+            ? DateTime.Parse(naldDataLine.RevisionDate)
+            : (DateTime?)null;
+        
+        var naldOrigEffectiveDate = !string.IsNullOrEmpty(naldDataLine?.OrigEffDate)
+            ? DateTime.Parse(naldDataLine.OrigEffDate)
+            : (DateTime?)null;
+        
+        var naldEffectiveStartDate = !string.IsNullOrEmpty(naldDataLine?.EffStDate)
+            ? DateTime.Parse(naldDataLine.EffStDate)
+            : (DateTime?)null;
+        
+        var naldEffectiveEndDate = !string.IsNullOrEmpty(naldDataLine?.EffEndDate)
+            ? DateTime.Parse(naldDataLine.EffEndDate)
+            : (DateTime?)null;
+        
+        var naldOrigSignatureDate = !string.IsNullOrEmpty(naldDataLine?.OrigSigDate)
+            ? DateTime.Parse(naldDataLine.OrigSigDate)
+            : (DateTime?)null;
+        
+        var naldSignatureDate = !string.IsNullOrEmpty(naldDataLine?.LicSigDate)
+            ? DateTime.Parse(naldDataLine.LicSigDate)
+            : (DateTime?)null;
+
+        var naldIssueNumber = naldDataLine?.IssueNo;
+        var naldIncrementNumber = naldDataLine?.IncrNo;
+        var naldUpdateReason = naldDataLine?.AabvType;
+        
+        return new LicenceVersion
+        {
+            NaldRevisionDate = naldRevisionDate,
+            EffectiveDate = effectiveDate,
+            NaldOrigEffectiveDate = naldOrigEffectiveDate,
+            NaldOrigSignatureDate = naldOrigSignatureDate,
+            NaldSignatureDate = naldSignatureDate,     
+            NaldEffectiveStartDate = naldEffectiveStartDate,
+            NaldEffectiveEndDate = naldEffectiveEndDate,
+            NaldIssueNumber = naldIssueNumber,
+            NaldIncrementNumber = naldIncrementNumber,   
+            NaldUpdateReason = naldUpdateReason,
+            ExpiryDate = expiryDate,
+            NaldExpiryDate = naldExpiryDate,
+            IssueDate = dateOfIssue,
+            Issuer = issuer,
+            OriginalIssueDate = dateOfOriginalIssue
         };
     }
 
@@ -2616,10 +2650,11 @@ public static partial class SchemaConverter
         int regionCode)
     {
         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
-        
+        var naldDataKey = $"{regionCode}|{strippedLicenceNumber}";
+            
         return naldData.Count > 0
-            && !string.IsNullOrEmpty(strippedLicenceNumber)
-            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
+            && !string.IsNullOrEmpty(naldDataKey)
+            && naldData.TryGetValue(naldDataKey, out var naldDataLine)
                 ? naldDataLine.First()
                 : null;
     }

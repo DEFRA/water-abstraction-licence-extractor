@@ -15,7 +15,13 @@ public class NaldAbstractionLicenceCsvLine
     
     [Index(7)]
     public string? OrigEffectiveDate { get; set; }
+    
+    [Index(8)]
+    public string? OrigSignatureDate { get; set; }
 
+    [Index(12)]
+    public string? RevDate { get; set; }
+    
     [Index(13)]
     public string? LapsedDate { get; set; }
     

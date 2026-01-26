@@ -626,6 +626,55 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Empty(resultList);  
     }
     
+    [Fact]
+    public async Task AAA3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Northumbrian River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal("2 3rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("4/22/3/", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(new DateTime(1966, 05, 23), agreedSchemaLicence.LicenceVersion.IssueDate);
+    }
+    
     private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetYorkshireLabels()
     {
         return

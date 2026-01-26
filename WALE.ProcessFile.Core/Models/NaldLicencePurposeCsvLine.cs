@@ -52,9 +52,6 @@ public class NaldLicencePurposeCsvLine
     [Index(19)] // INST_QTY_USABILITY
     public string? InstQtyUnits { get; set; }
     
-    [Index(25)]
-    public string? Notes { get; set; }
-    
     [Index(26)] // FGAC_REGION_CODE
     public string? FgacRegionCode { get; set; }
 }

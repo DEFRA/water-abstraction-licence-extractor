@@ -70,6 +70,8 @@ async Task ProgramAsync()
     var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
         Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"),
         Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
+        Environment.GetEnvironmentVariable("NaldAbsLicenceVersionsDataPath"),
+        Environment.GetEnvironmentVariable("NaldAbsLicenceQuantitiesDataPath"),
         regionCode);
     
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
@@ -77,7 +79,7 @@ async Task ProgramAsync()
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode.ToString());
     var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList(), regionCode);
     
-    var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services);
+    var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services, regionCode);
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
@@ -599,12 +601,13 @@ async Task MoveReportHtmlFilesAsync(
 }
 
 (Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetFilesAndMapping(ConfiguredServices services)
+    GetFilesAndMapping(ConfiguredServices services, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
         services.PdfFolderPath!,
-        services.FileMappingPath!);
+        services.FileMappingPath!,
+        regionCode);
 
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
@@ -614,13 +617,14 @@ async Task MoveReportHtmlFilesAsync(
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //        .Take(100)
+        .Where(x => x.Key.Contains("NE0270022023__Application type unknown Licence Issued - 29092011"))
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;
 }
 
 (Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath)
+    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath, int regionCode)
 {
     var filenames = new Dictionary<string, DmsFileData>();
     var mappingFile = new Dictionary<string, DmsFileData>();
@@ -677,16 +681,19 @@ async Task MoveReportHtmlFilesAsync(
                     continue;
                 }
 
+                var naldLicenceRef = (string)row["NALD Licence Ref"];
+                
                 var dmsFileData = new DmsFileData
                 {
                     DestinationFileName = destinationFileName,
-                    NaldLicenceRef = (string)row["NALD Licence Ref"],
+                    NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
-                    DmsPath = (string)row["FullPath"]
+                    DmsPath = (string)row["FullPath"],
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
                 };
                 
                 filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
-                mappingFile.Add(permitNumber, dmsFileData);
+                mappingFile.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
             }
         }
     }

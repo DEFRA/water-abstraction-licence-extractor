@@ -11,6 +11,8 @@ public static class ExternalDataHelper
     public static Dictionary<string, List<NaldData>> GetNaldAbstractionLicencesData(
         string? naldDataReportPath,
         string? naldAbsLicencePurposesDataPath,
+        string? naldAbsLicenceVersionsDataPath,
+        string? naldAbsLicenceQuantitiesDataPath,
         int regionCode)
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
@@ -29,7 +31,8 @@ public static class ExternalDataHelper
         using var csv = new CsvReader(reader, config);
 
         var lines = csv.GetRecords<NaldAbstractionLicenceCsvLine>().ToList();
-
+        var lapsedIds = new List<string>();
+        
         foreach (var line in lines)
         {
             if (line.FgacRegionCode != regionCode.ToString())
@@ -41,124 +44,186 @@ public static class ExternalDataHelper
 
             if (lapsedDate != null && DateTime.Today.AddYears(-1) > lapsedDate)
             {
+                lapsedIds.Add(line.Id!);
                 continue;
             }
-            
-            var lineCondition = new NaldDataAggregate
-            {
-                Type = "General",
-                /*Condition = line.Condition,
-                ConditionId = line.ConditionId,
-                AnnualQty = line.LicenceWideAnnualQty,
-                DailyQty = line.LicenceWideDailyQty,
-                HourlyQty = line.LicenceWideHourlyQty,
-                InstQty = line.LicenceWideInstQty*/
-            };
-
-            if (string.IsNullOrEmpty(lineCondition.Condition) || lineCondition.Condition == "-")
-            {
-                lineCondition = null;
-            }
-
-            var linePoint = new NaldDataPoint
-            {
-                /*PointId = line.PointId,
-                PointName = line.PointName,
-                Category = line.PointCategory,
-                PrimaryType = line.PrimaryPointType,
-                SecondaryType = line.SecondaryPointType,
-                Ngr1Cartesian = !string.IsNullOrWhiteSpace(line.Ngr1Cartesian) ? line.Ngr1Cartesian : null,
-                Ngr2Cartesian = !string.IsNullOrWhiteSpace(line.Ngr2Cartesian) ? line.Ngr2Cartesian : null,
-                Ngr3Cartesian = !string.IsNullOrWhiteSpace(line.Ngr3Cartesian) ? line.Ngr3Cartesian : null,
-                Ngr4Cartesian = !string.IsNullOrWhiteSpace(line.Ngr4Cartesian) ? line.Ngr4Cartesian : null,
-                Ngr1 = !string.IsNullOrWhiteSpace(line.Ngr1) ? line.Ngr1 : null,
-                Ngr2 = !string.IsNullOrWhiteSpace(line.Ngr2) ? line.Ngr2 : null,
-                Ngr3 = !string.IsNullOrWhiteSpace(line.Ngr3) ? line.Ngr3 : null,
-                Ngr4 = !string.IsNullOrWhiteSpace(line.Ngr4) ? line.Ngr4 : null*/
-            };
-            
-            var linePurpose = new NaldDataPurpose
-            {
-                /*PurposeId = line.PurposeId,
-                PurposeCode = line.PurposeCode,
-                PurposeUseCode = line.PurposeUseCode,
-                PurposeUseDescription = line.PurposeUseDescription*/
-            };
             
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
             var key = line.FgacRegionCode + "|" + line.Id;
 
             // Find an existing line
-            if (returnList.TryGetValue(key, out var existingItem))
+            if (returnList.TryGetValue(key, out _))
             {
-                if (lineCondition != null && existingItem.AggregateConditions
-                    .All(existingCondition => existingCondition.ToString() != lineCondition.ToString()))
-                {
-                    existingItem.AggregateConditions.Add(lineCondition);
-                }
-
-                if (existingItem.Points.All(existingPoint => existingPoint.ToString() != linePoint.ToString()))
-                {
-                    existingItem.Points.Add(linePoint);
-                }
-                
-                if (existingItem.Purposes.All(existingPurpose => existingPurpose.ToString() != linePurpose.ToString()))
-                {
-                    existingItem.Purposes.Add(linePurpose);
-                }
-                
-                continue;
+                throw new Exception("Repeat row");
             }
-
-            var lineConditionsArray = lineCondition == null
-                ? new List<NaldDataAggregate>()
-                : [lineCondition];
 
             var naldData = new NaldData
             {
                 Id = line.Id,
-                ExpiryDate = line.ExpiryDate,
-                //VersionStartDate = line.VersionStartDate,
+                ExpiryDate = RemoveNullWord(line.ExpiryDate),
+                OrigEffDate = line.OrigEffectiveDate,
+                OrigSigDate = RemoveNullWord(line.OrigSignatureDate),
+                RevisionDate = RemoveNullWord(line.RevDate),
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
-                /*LicenceWideAnnualQty = line.LicenceWideAnnualQty,
-                LicenceWideDailyQty = line.LicenceWideDailyQty,
-                LicenceWideHourlyQty = line.LicenceWideHourlyQty,
-                LicenceWideInstQty = line.LicenceWideInstQty,*/
-                AggregateConditions = lineConditionsArray,
-                Points = [linePoint],
-                Periods = [],
-                Purposes = [linePurpose],
                 FgacRegionCode = line.FgacRegionCode
             };
             
             returnList.Add(key, naldData);
         }
+
+        AddNaldAbstractionLicenceVersionData(
+            naldAbsLicenceVersionsDataPath,
+            regionCode,
+            lapsedIds,
+            ref returnList);
+
+        AddNaldAbstractionLicenceQuantitiesData(
+            naldAbsLicenceQuantitiesDataPath,
+            regionCode,
+            lapsedIds,
+            ref returnList);
         
         AddNaldAbstractionLicencePurposeData(
             naldAbsLicencePurposesDataPath,
+            regionCode,
+            lapsedIds,
             ref returnList);
 
-        var returnList2 = new Dictionary<string, List<NaldData>>();
+        var changedKeyList = new Dictionary<string, List<NaldData>>();
         
         foreach (var (_, naldData) in returnList)
         {
             var key = naldData.FgacRegionCode + "|" + naldData.LicenceIdCharsAndDigitsOnly;
             
-            if (returnList2.ContainsKey(key))
+            if (changedKeyList.ContainsKey(key))
             {
-                returnList2[key].Add(naldData);
+                changedKeyList[key].Add(naldData);
                 continue;
             }
             
-            returnList2.Add(key, [naldData]);
+            changedKeyList.Add(key, [naldData]);
         }
         
-        return returnList2;
+        return changedKeyList;
     }
 
+    private static string? RemoveNullWord(string? value)
+    {
+        return value == "null" ? null : value;
+    }
+
+    private static void AddNaldAbstractionLicenceVersionData(
+        string? naldDataReportPath,
+        int regionCode,
+        List<string> lapsedIds,
+        ref Dictionary<string, NaldData> generalNaldData)
+    {
+        if (string.IsNullOrEmpty(naldDataReportPath))
+        {
+            throw new NullReferenceException(nameof(naldDataReportPath));
+        }
+
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = true
+        };
+
+        using var reader = new StreamReader(naldDataReportPath);
+        using var csv = new CsvReader(reader, config);
+
+        var lines = csv.GetRecords<NaldLicenceVersionCsvLine>().ToList();
+
+        foreach (var line in lines)
+        {
+            if (line.FgacRegionCode != regionCode.ToString())
+            {
+                continue;
+            }
+
+            if (lapsedIds.Contains(line.AablId.ToString()!))
+            {
+                continue;
+            }
+            
+            var licenceKey = $"{line.FgacRegionCode}|{line.AablId}";
+            var existingData = generalNaldData.GetValueOrDefault(licenceKey);
+
+            if (existingData == null)
+            {
+                throw new KeyNotFoundException(licenceKey);
+            }
+
+            if (line.Status != "CURR")
+            {
+                continue;
+            }
+            
+            existingData.AabvType = line.AabvType;
+            existingData.EffEndDate = RemoveNullWord(line.EffEndDate);
+            existingData.EffStDate = RemoveNullWord(line.EffStDate);
+            existingData.LicSigDate = RemoveNullWord(line.LicSigDate);
+            existingData.IncrNo = line.IncrNo;
+            existingData.IssueNo = line.IssueNo;
+            existingData.Status = line.Status;
+        }
+    }
+    
+    private static void AddNaldAbstractionLicenceQuantitiesData(
+        string? naldDataReportPath,
+        int regionCode,
+        List<string> lapsedIds,
+        ref Dictionary<string, NaldData> generalNaldData)
+    {
+        if (string.IsNullOrEmpty(naldDataReportPath))
+        {
+            throw new NullReferenceException(nameof(naldDataReportPath));
+        }
+
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = true
+        };
+
+        using var reader = new StreamReader(naldDataReportPath);
+        using var csv = new CsvReader(reader, config);
+
+        var lines = csv.GetRecords<NaldLicenceQuantitiesCsvLine>().ToList();
+
+        foreach (var line in lines)
+        {
+            if (line.FgacRegionCode != regionCode.ToString())
+            {
+                continue;
+            }
+
+            if (lapsedIds.Contains(line.AabvAablId.ToString()!))
+            {
+                continue;
+            }
+            
+            var licenceKey = $"{line.FgacRegionCode}|{line.AabvAablId}";
+            var existingData = generalNaldData.GetValueOrDefault(licenceKey);
+
+            if (existingData == null)
+            {
+                throw new KeyNotFoundException(licenceKey);
+            }
+            
+            existingData.MaxAnnualQty = RemoveNullWord(line.MaxAnnualQty) != null
+                ? double.Parse(line.MaxAnnualQty!)
+                : null;
+            
+            existingData.MaxDailyQty = RemoveNullWord(line.MaxDailyQty) != null
+                ? double.Parse(line.MaxDailyQty!)
+                : null;
+        }
+    }
+    
     private static void AddNaldAbstractionLicencePurposeData(
         string? naldDataReportPath,
+        int regionCode,
+        List<string> lapsedIds,
         ref Dictionary<string, NaldData> generalNaldData)
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
@@ -178,13 +243,22 @@ public static class ExternalDataHelper
 
         foreach (var line in lines)
         {
+            if (line.FgacRegionCode != regionCode.ToString())
+            {
+                continue;
+            }
+            
+            if (lapsedIds.Contains(line.InternalLicenceId!))
+            {
+                continue;
+            }
+            
             var licenceKey = $"{line.FgacRegionCode}|{line.InternalLicenceId}";
             var existingData = generalNaldData.GetValueOrDefault(licenceKey);
-
+            
             if (existingData == null)
             {
-                // Was likely lapsed so we didnt include it
-                continue;
+                throw new KeyNotFoundException(licenceKey);
             }
             
             var naldDataPeriod = new NaldDataPeriod

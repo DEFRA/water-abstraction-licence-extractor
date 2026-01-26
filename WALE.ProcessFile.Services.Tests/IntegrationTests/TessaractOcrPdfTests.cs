@@ -17,7 +17,7 @@ public class TessaractOcrPdfTests
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
  
-    private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
+    private readonly IPdfDataExtractorService _pdfDataExtractorCombined1 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
@@ -26,10 +26,19 @@ public class TessaractOcrPdfTests
         },
         CacheService,
         OutputService,
-        TestConfig.PdfFolder);    
+        TestConfig.PdfFolder);
     
-    private static string PdfFolder => TestConfig.PdfFolder;
-
+    private readonly IPdfDataExtractorService _pdfDataExtractorCombined3 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder3);
+    
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
@@ -48,15 +57,18 @@ public class TessaractOcrPdfTests
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
-        return _pdfDataExtractorCombined.GetMatchesAsync(
-            PdfFolder + fileName,
+        var f = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        var extractor = folderNumber == 1 ? _pdfDataExtractorCombined1 : _pdfDataExtractorCombined3;
+        
+        return extractor.GetMatchesAsync(
+            f + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 regionCode),
-            [PdfFolder + fileName],
+            [f + fileName],
             0);
     }
     
@@ -168,7 +180,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -226,7 +238,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -289,7 +301,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -356,7 +368,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -418,7 +430,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -478,7 +490,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -543,7 +555,7 @@ public class TessaractOcrPdfTests
             [],
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -612,7 +624,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -679,7 +691,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -745,7 +757,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -804,7 +816,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -847,7 +859,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -908,7 +920,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -959,7 +971,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1002,7 +1014,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1068,7 +1080,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1121,7 +1133,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1172,7 +1184,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1221,7 +1233,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1266,7 +1278,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1325,7 +1337,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1380,7 +1392,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1437,7 +1449,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1495,7 +1507,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1537,7 +1549,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1587,7 +1599,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1655,7 +1667,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1703,7 +1715,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1750,7 +1762,7 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined,
+            _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0);
         
@@ -1769,5 +1781,53 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);        
+    }
+    
+    [Fact]
+    public async Task AAA3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Northumbrian River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        // Tesseract can't get a good result on this
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.Null(dateOfIssue);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("4/22/3/", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined3,
+            TestConfig.PdfFolder3,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 }

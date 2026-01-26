@@ -1100,11 +1100,11 @@ public class TessaractOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Reads licence number very badly wrong. Doesnt read abstraction limits correctly
 
-        /*var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("938/1", licenceNumber.Text?.FirstOrDefault()?.Text);*/ // TODO Should be 9/38/1/61
+        Assert.Equal("29/38/1/61", licenceNumber.Text?.FirstOrDefault()?.Text); 
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

@@ -1139,7 +1139,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 
     [Fact]
@@ -1711,7 +1711,7 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Single(agreedSchemaLicence.LinkedLicences); // False positive, should be zero
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]

@@ -528,12 +528,6 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var (existingValueIsValidLicenceNumber, existingLicenceNumberOutput) = await LicenceNumber.AnyIsLicenceNumberAsync(
-                                [existingDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr);
-
-                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
                             var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
                             var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
                             var existingValueLength = existingLicenceNumber.Length;
@@ -554,19 +548,11 @@ public class PdfDataExtractorService(
                                 ]
                             };
                             
-                            var (newValueIsValidLicenceNumber, newLicenceNumberOutput) = await LicenceNumber.AnyIsLicenceNumberAsync(
-                                [newDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr);
-
-                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
-
                             var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
                             var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
                             var newValueLength = newLicenceNumber.Length;
 
-                            if (newValueIsOnlyLicenceNumber && !existingValueIsOnlyLicenceNumber
-                                || newValueLength > existingValueLength
+                            if (newValueLength > existingValueLength
                                 || newValueNumberOfDigits > existingValueNumberOfDigits
                                 || newValueNumberOfParts > existingValueNumberOfParts)
                             {

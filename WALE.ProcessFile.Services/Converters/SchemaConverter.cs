@@ -403,6 +403,7 @@ public static partial class SchemaConverter
         var naldIssueNumber = naldDataLine?.IssueNo;
         var naldIncrementNumber = naldDataLine?.IncrNo;
         var naldUpdateReason = naldDataLine?.AabvType;
+        var naldStatus = naldDataLine?.Status;
         
         return new LicenceVersion
         {
@@ -416,6 +417,7 @@ public static partial class SchemaConverter
             NaldIssueNumber = naldIssueNumber,
             NaldIncrementNumber = naldIncrementNumber,   
             NaldUpdateReason = naldUpdateReason,
+            NaldStatus = naldStatus,
             ExpiryDate = expiryDate,
             NaldExpiryDate = naldExpiryDate,
             IssueDate = dateOfIssue,

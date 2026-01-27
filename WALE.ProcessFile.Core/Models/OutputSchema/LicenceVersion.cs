@@ -55,6 +55,8 @@ public class LicenceVersion
     public int? NaldIssueNumber { get; set; }
     public int? NaldIncrementNumber { get; set; }
     public string? NaldUpdateReason { get; set; }
+    
+    public string? NaldStatus { get; set; }
 
     public static LicenceVersion Template => new()
     {

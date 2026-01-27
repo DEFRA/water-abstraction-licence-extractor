@@ -67,9 +67,13 @@ async Task ProgramAsync()
             Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"), regionCode)
     };
     
+    var (dmsFilesToProcess, allDmsData) = GetDmsFilesAndMapping(services, regionCode);
+    
     var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
+        allDmsData,
         Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"),
         Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
+        Environment.GetEnvironmentVariable("NaldAbsLicencePointsDataPath"),
         Environment.GetEnvironmentVariable("NaldAbsLicenceVersionsDataPath"),
         Environment.GetEnvironmentVariable("NaldAbsLicenceQuantitiesDataPath"),
         regionCode);
@@ -79,12 +83,11 @@ async Task ProgramAsync()
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode.ToString());
     var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList(), regionCode);
     
-    var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services, regionCode);
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
-        NumberOfFiles = files.Count
+        NumberOfFiles = dmsFilesToProcess.Count
     });
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
@@ -97,14 +100,14 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var (filePath, _) in files)
+        foreach (var (filePath, _) in dmsFilesToProcess)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
                     regionCode,
                     processCount++,
-                    licenceNumbersWithFilenames,
+                    allDmsData,
                     naldLicenceStatusData,
                     naldData,
                     outputService,
@@ -166,7 +169,7 @@ async Task ProgramAsync()
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
-        licenceNumbersWithFilenames,
+        allDmsData,
         regionCode);
     
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -601,7 +604,7 @@ async Task MoveReportHtmlFilesAsync(
 }
 
 (Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetFilesAndMapping(ConfiguredServices services, int regionCode)
+    GetDmsFilesAndMapping(ConfiguredServices services, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(

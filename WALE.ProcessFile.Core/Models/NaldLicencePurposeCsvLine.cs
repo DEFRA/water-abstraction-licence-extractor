@@ -8,13 +8,13 @@ public class NaldLicencePurposeCsvLine
     public string? Id { get; set; }
     
     [Index(1)] // AABV_AABL_ID
-    public string? InternalLicenceId { get; set; }
+    public string? AabvAablId { get; set; }
 
     [Index(5)] // APUR_APSE_CODE
-    public string? PurposeCode { get; set; }
+    public string? ApurApseCode { get; set; }
     
     [Index(6)] // APUR_APUS_CODE
-    public int? PurposeCodeId { get; set; }
+    public int? ApurApusCode { get; set; }
     
     [Index(7)] // PERIOD_ST_DAY
     public int? PeriodStartDay { get; set; }

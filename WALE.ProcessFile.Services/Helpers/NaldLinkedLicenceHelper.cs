@@ -8,12 +8,18 @@ public class NaldLinkedLicenceHelper
 {
     private readonly Dictionary<string, HashSet<string>> _linkedLicenceMap;
 
-    public NaldLinkedLicenceHelper(List<NaldLinkedLicenceRawData> rawData, int regionCode)
+    private NaldLinkedLicenceHelper(Dictionary<string, HashSet<string>> linkedLicenceMap)
     {
-        _linkedLicenceMap = BuildLinkedLicenceMap(rawData, regionCode);
+        _linkedLicenceMap = linkedLicenceMap;
     }
 
-    public List<string> GetLinkedLicences(string? licenceNumber, int regionCode)
+    public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData)
+    {
+        var map = await BuildLinkedLicenceMapAsync(rawData);
+        return new NaldLinkedLicenceHelper(map);
+    }
+
+    public async Task<List<string>> GetLinkedLicencesAsync(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber)) return [];
 
@@ -26,7 +32,7 @@ public class NaldLinkedLicenceHelper
         return [];
     }
 
-    private Dictionary<string, HashSet<string>> BuildLinkedLicenceMap(List<NaldLinkedLicenceRawData> rawData, int regionCode)
+    private static async Task<Dictionary<string, HashSet<string>>> BuildLinkedLicenceMapAsync(List<NaldLinkedLicenceRawData> rawData)
     {
         var map = new Dictionary<string, HashSet<string>>();
 
@@ -52,7 +58,7 @@ public class NaldLinkedLicenceHelper
 
             foreach (var text in potentialNumbers)
             {
-                var licenceNumbers = LicenceNumber.FindLicenceNumbers(text);
+                var licenceNumbers = await LicenceNumber.FindLicenceNumbersAsync(text);
                 foreach (var licenceNumber in licenceNumbers)
                 {
                     var strippedAggLicNo = FormattingHelper.StripForComparison(licenceNumber, regionCode);

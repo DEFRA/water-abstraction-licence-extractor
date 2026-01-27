@@ -3,8 +3,10 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -14,6 +16,17 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureAiVisionOcrPdfTests
 {
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
+
+    public AzureAiVisionOcrPdfTests()
+    {
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -237,6 +250,7 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("33 9966 5411", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO its actually an SE and should be filtered out
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]
@@ -590,7 +604,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("16/52/2/371", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("16/52/02/G/037", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
         
@@ -1359,7 +1373,7 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text); // TODO should be 2/27/29/12
+        Assert.Equal("2/27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         var company = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(company);

@@ -10,7 +10,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class TextToFindIsBetweenLabels
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -72,7 +72,7 @@ public static class TextToFindIsBetweenLabels
         
         if (betweenText == null)
         {
-            return Task.FromResult(new List<LabelGroupResult>());
+            return [];
         }
         
         // Add label text if asked for
@@ -136,7 +136,7 @@ public static class TextToFindIsBetweenLabels
         
         if (betweenText == null)
         {
-            return Task.FromResult(new List<LabelGroupResult>());
+            return [];
         }
         
         betweenText = betweenText
@@ -153,7 +153,7 @@ public static class TextToFindIsBetweenLabels
         
         if (isForbidden && betweenText.Count == 0)
         {
-            return Task.FromResult(new List<LabelGroupResult>());
+            return [];
         }
         
         labelGroupResult.Text = betweenText.ToList();
@@ -188,8 +188,8 @@ public static class TextToFindIsBetweenLabels
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
         
-        var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
-        return ProcessSubLabelsAsync(request, returnList);
+        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, betweenText, false);
+        return await ProcessSubLabelsAsync(request, returnList);
     }
     
     private static List<DocumentLine>? GetTextBetween(

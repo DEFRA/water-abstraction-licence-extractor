@@ -2,8 +2,10 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -14,6 +16,17 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("AWS Textract")]
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
+
+    static AwsTextractOcrPdfTests()
+    {
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
 

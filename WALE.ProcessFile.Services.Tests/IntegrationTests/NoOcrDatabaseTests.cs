@@ -6,6 +6,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -16,7 +17,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class NoOcrDatabaseTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -24,7 +29,15 @@ public class NoOcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(
+        ReadService,
+        WriteService,
+        TestConfig.PostgresHost,
+        TestConfig.PostgresPort,
+        TestConfig.PostgresDbName,
+        TestConfig.PostgresUsername,
+        TestConfig.PostgresPassword);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
@@ -37,6 +50,7 @@ public class NoOcrDatabaseTests
     public NoOcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>

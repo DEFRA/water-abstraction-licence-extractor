@@ -3,8 +3,10 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -17,6 +19,17 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     : IClassFixture<SingletonAwsTextractFixture>
 {
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresConnectionString);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
+
+    static TesseractAndAwsTextractOcrPdfTests()
+    {
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -348,10 +361,10 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 4, "1/24/01/034")]
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, "1/25/02/023")]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
-    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 12, 0, "2/27/09/167")]
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167")]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 14, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
     [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298")]
-    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 5, 0, "2/27/09/141")]
+    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141")]
     [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001")]
     //12504178R01__Application type unknown Licence Issued (01.05.2007).pdf, "299 July'03", // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
     //22630110__Issued licence- 2-26-30-110 6075592.PDF, "299 July'03" // Skips word 'issue' in Azure AI frustratingly

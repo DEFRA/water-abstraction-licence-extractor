@@ -25,7 +25,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = ConfigureServices();
+    var services = await ConfigureServicesAsync();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -80,8 +80,9 @@ async Task ProgramAsync()
     
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
 
+    // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode.ToString());
-    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList(), regionCode);
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList());
     
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
@@ -197,7 +198,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber, regionCode);
+                var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber, regionCode);
                 if (linkedLicences.Any())
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -334,7 +335,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-ConfiguredServices ConfigureServices()
+async Task<ConfiguredServices> ConfigureServicesAsync()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));
@@ -364,8 +365,16 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("ThumbnailImageDataPath");
     var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
         ?? throw new NullReferenceException("FullImageDataPath");
-    var postgresConnectionString = Environment.GetEnvironmentVariable("PostgresConnectionString")
-        ?? throw new NullReferenceException("PostgresConnectionString");
+    var postgresHost = Environment.GetEnvironmentVariable("POSTGRESQL_HOST")
+        ?? throw new NullReferenceException("POSTGRESQL_HOST");
+    var postgresPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRESQL_PORT")
+        ?? throw new NullReferenceException("POSTGRESQL_PORT"));
+    var postgresDatabaseName = Environment.GetEnvironmentVariable("POSTGRESQL_DBNAME")
+        ?? throw new NullReferenceException("POSTGRESQL_DBNAME"); 
+    var postgresUsername = Environment.GetEnvironmentVariable("POSTGRESQL_USERNAME")
+        ?? throw new NullReferenceException("POSTGRESQL_USERNAME");
+    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSSWORD")
+        ?? throw new NullReferenceException("POSTGRESQL_PASSSWORD");    
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
         ?? throw new NullReferenceException("FileMappingPath");
     var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
@@ -378,13 +387,29 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("TESSDATA_PREFIX");
     
     // This provider should have singleton lifetime and be shared for proper connection pooling
-    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
+    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+    
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+
+    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
+    var cacheService = new DatabaseCacheService(
+        databaseReadService,
+        databaseAddService,
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+    
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -620,7 +645,8 @@ async Task MoveReportHtmlFilesAsync(
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //        .Take(100)
-        .Where(x => x.Key.Contains("NE0270022023__Application type unknown Licence Issued - 29092011"))
+//        .Where(x => x.Key.Contains("NE0270022023__Application type unknown Licence Issued - 29092011"))
+        .Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

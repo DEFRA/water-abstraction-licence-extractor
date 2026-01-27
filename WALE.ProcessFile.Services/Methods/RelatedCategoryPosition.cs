@@ -10,7 +10,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class RelatedCategoryPosition
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -57,20 +57,20 @@ public static class RelatedCategoryPosition
 
             if (matchedValues.Count == 0)
             {
-                return Task.FromResult(returnList);
+                return returnList;
             }
             
             var labelGroupResult = request.labelGroupResult.Clone();
             labelGroupResult.Text = matchedValues;
             labelGroupResult.MatchedLabel = request.label;
             
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 matchedValues,
                 false));
             
-            return ProcessSubLabelsAsync(request, returnList); 
+            return await ProcessSubLabelsAsync(request, returnList); 
         }
         
         var relevantCategoryItems = new List<LabelGroupResult>();
@@ -172,7 +172,7 @@ public static class RelatedCategoryPosition
         
         if (absoluteMatches.Count <= 0)
         {
-            return Task.FromResult(returnList);
+            return returnList;
         }
 
         var categoryItemsOnLine = relevantCategoryItems
@@ -221,14 +221,14 @@ public static class RelatedCategoryPosition
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
 
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 [line],
                 false));
         }
 
-        return ProcessSubLabelsAsync(request, returnList);
+        return await ProcessSubLabelsAsync(request, returnList);
     }
 
     private static List<DocumentLine> GetMatches(

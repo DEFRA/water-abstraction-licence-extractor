@@ -98,24 +98,6 @@ public partial class LicenceNumber : ILicenceNumberService
     public const string YorkshireRegexPatten =
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    public static Task<List<string>> FindLicenceNumbersAsync(string? text)
-    {
-        return Instance.FindLicenceNumbersAsync(text);
-    }
-
-    async Task<List<string>> ILicenceNumberService.FindLicenceNumbersAsync(string? text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return [];
-        }
-
-        var (success, matchedLines) = await ((ILicenceNumberService)this).AnyIsLicenceNumberAsync(
-            [new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
-            new LabelToMatch(), false);
-        return success ? matchedLines.Select(x => x.Text).ToList() : [];
-    }
-
     public static Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
@@ -183,6 +165,39 @@ public partial class LicenceNumber : ILicenceNumberService
         }
 
         return (matchedLines.Count > 0, matchedLines);
+    }
+
+    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    {
+        return Instance.GetNaldLicencesAsync(licenceNumber, regionCode);
+    }
+
+    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    {
+        var normalized = NormalizeLicenceNumber(licenceNumber);
+
+        var index = await GetLicenceIndexAsync();
+        if (!index.TryGetValue(normalized, out var candidates))
+        {
+            return [];
+        }
+
+        var segments = ExtractSegments(licenceNumber);
+        return candidates
+            .Where(c => SegmentsMatch(segments, c.Segments))
+            .Select(c => c.NaldLicence)
+            .Where(l => l.RegionCode == regionCode)
+            .ToList();
+    }
+
+    public static Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText)
+    {
+        return Instance.ExtractNaldLicencesAsync(sourceText);
+    }
+
+    async Task<List<NaldLicence>> ILicenceNumberService.ExtractNaldLicencesAsync(string? sourceText)
+    {
+        throw new NotImplementedException();
     }
 
     public static bool SegmentsMatch(List<string> segments1, List<string> segments2)

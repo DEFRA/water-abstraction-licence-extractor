@@ -71,8 +71,9 @@ async Task ProgramAsync()
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
 
     // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
-    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
-    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList());
+    const string yorksRegionCode = "3";
+    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == yorksRegionCode);
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList(), yorksRegionCode);
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
@@ -192,7 +193,7 @@ async Task ProgramAsync()
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
                 var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
-                if (linkedLicences.Any())
+                if (linkedLicences.Count != 0)
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
                 }

@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
@@ -7,46 +5,66 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public class NaldLinkedLicenceHelper
 {
-    private readonly Dictionary<string, HashSet<string>> _linkedLicenceMap;
+    private readonly Dictionary<string, HashSet<NaldLicence>> _linkedLicenceMap;
+    private readonly string _processingRegionCode;
 
-    private NaldLinkedLicenceHelper(Dictionary<string, HashSet<string>> linkedLicenceMap)
+    private NaldLinkedLicenceHelper(Dictionary<string, HashSet<NaldLicence>> linkedLicenceMap, string processingRegionCode)
     {
         _linkedLicenceMap = linkedLicenceMap;
+        _processingRegionCode = processingRegionCode;
     }
 
-    public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData)
+    public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData,
+        string processingRegionCode)
     {
-        var map = await BuildLinkedLicenceMapAsync(rawData);
-        return new NaldLinkedLicenceHelper(map);
+        var map = await BuildLinkedLicenceMapAsync(rawData, processingRegionCode);
+        return new NaldLinkedLicenceHelper(map, processingRegionCode);
     }
 
-    public async Task<List<string>> GetLinkedLicencesAsync(string? licenceNumber)
+    public async Task<List<NaldLicence>> GetLinkedLicencesAsync(string? licenceNumber)
     {
-        if (string.IsNullOrEmpty(licenceNumber)) return [];
-
-        var stripped = FormattingHelper.StripForComparison(licenceNumber);
-        if (stripped != null && _linkedLicenceMap.TryGetValue(stripped, out var linked))
+        if (string.IsNullOrEmpty(licenceNumber))
         {
-            return linked.ToList();
+            return [];
         }
 
-        return [];
+        var naldLicences = await LicenceNumber.GetNaldLicencesAsync(licenceNumber, _processingRegionCode);
+        var candidateLicenceNumbers = naldLicences
+            .Select(l => l.LicenceNumber)
+            .ToList();
+
+        if (candidateLicenceNumbers.Count != 1)
+        {
+            return [];
+        }
+
+        return _linkedLicenceMap.TryGetValue(candidateLicenceNumbers[0], out var linked)
+            ? linked.ToList()
+            : [];
     }
 
-    private static async Task<Dictionary<string, HashSet<string>>> BuildLinkedLicenceMapAsync(List<NaldLinkedLicenceRawData> rawData)
+    private static async Task<Dictionary<string, HashSet<NaldLicence>>> BuildLinkedLicenceMapAsync(
+        List<NaldLinkedLicenceRawData> rawData, string processingRegionCode)
     {
-        var map = new Dictionary<string, HashSet<string>>();
+        var map = new Dictionary<string, HashSet<NaldLicence>>();
 
         foreach (var item in rawData)
         {
-            if (string.IsNullOrEmpty(item.LicenceNumber)) continue;
-
-            var strippedLicNo = FormattingHelper.StripForComparison(item.LicenceNumber);
-            if (strippedLicNo == null) continue;
-
-            if (!map.ContainsKey(strippedLicNo))
+            if (item.RegionCode != processingRegionCode)
             {
-                map[strippedLicNo] = [];
+                continue;
+            }
+            
+            var licNo = item.LicenceNumber;
+            
+            if (string.IsNullOrEmpty(licNo))
+            {
+                continue;
+            }
+
+            if (!map.ContainsKey(licNo))
+            {
+                map[licNo] = [];
             }
 
             var potentialNumbers = new List<string?>
@@ -59,19 +77,18 @@ public class NaldLinkedLicenceHelper
 
             foreach (var text in potentialNumbers)
             {
-                var licenceNumbers = await LicenceNumber.FindLicenceNumbersAsync(text);
-                foreach (var licenceNumber in licenceNumbers)
+                var linkCandidates = await LicenceNumber.ExtractNaldLicencesAsync(text);
+                
+                foreach (var linkCandidate in linkCandidates)
                 {
-                    var strippedAggLicNo = FormattingHelper.StripForComparison(licenceNumber);
-
-                    if (strippedAggLicNo != null && strippedAggLicNo != strippedLicNo)
+                    if (licNo != linkCandidate.LicenceNumber || linkCandidate.RegionCode != processingRegionCode)
                     {
-                        map[strippedLicNo].Add(strippedAggLicNo);
+                        map[licNo].Add(linkCandidate);
                     }
                 }
             }
         }
-        
+
         return map;
     }
 }

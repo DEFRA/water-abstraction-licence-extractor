@@ -21,8 +21,21 @@ public class TessaractOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(
+                TestConfig.TesseractPath,
+                PageSegMode.SparseTextOsd,
+                CacheService, OutputService,
+                TestConfig.DotnetPath,
+                TestConfig.TesseractExeName,
+                TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(
+                TestConfig.TesseractPath,
+                PageSegMode.Auto,
+                CacheService,
+                OutputService,
+                TestConfig.DotnetPath,
+                TestConfig.TesseractExeName,
+                TestConfig.TesseractExeDirectory),
         },
         CacheService,
         OutputService,

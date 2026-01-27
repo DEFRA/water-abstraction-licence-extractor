@@ -626,7 +626,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                lic."NOTES" AS Notes,
                                lic."FGAC_REGION_CODE" AS RegionCode
                            FROM nald."NALD_ABS_LICENCES" lic
-                           LEFT JOIN nald."NALD_LIC_CONDITIONS" lc ON lic."ID" = lc."AABP_ID" AND lc."ACIN_CODE" = 'AGG'
+                           LEFT JOIN nald."NALD_LIC_CONDITIONS" lc 
+                                ON lic."ID" = lc."AABP_ID"
+                                AND lic."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
+                                AND lc."ACIN_CODE" = 'AGG'
                            WHERE lc."PARAM1" IS NOT NULL 
                               OR lc."PARAM2" IS NOT NULL 
                               OR lc."TEXT" IS NOT NULL 

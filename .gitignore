@@ -67,3 +67,4 @@ WALE.Portal/lerna-debug.log*
 
 # Testing
 WALE.Portal/coverage/
+.output.txt

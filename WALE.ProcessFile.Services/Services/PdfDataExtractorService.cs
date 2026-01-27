@@ -307,7 +307,7 @@ public class PdfDataExtractorService(
                 
                 documentLines.AddRange(serviceImageLines);
 
-                var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
+                var uniqueServiceMatches = await GetUniqueServiceMatchesAsync(serviceMatchesDict);
                 labelGroupMatches.AddRange(uniqueServiceMatches);
                 
                 unmatchedLabelLookups = GetUnmatchedLabels(
@@ -416,7 +416,7 @@ public class PdfDataExtractorService(
         return subResultCount;
     }
 
-    private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    private static async Task<List<LabelGroupResult>> GetUniqueServiceMatchesAsync(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
 

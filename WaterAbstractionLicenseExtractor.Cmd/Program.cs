@@ -26,7 +26,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = ConfigureServices();
+    var services = await ConfigureServicesAsync();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -72,7 +72,7 @@ async Task ProgramAsync()
 
     // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
-    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList());
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList());
     
     ExternalDataHelper.AddNaldLimitReportData(
         Environment.GetEnvironmentVariable("NaldLimitDataPath"),
@@ -191,7 +191,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
+                var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
                 if (linkedLicences.Any())
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -328,7 +328,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-ConfiguredServices ConfigureServices()
+async Task<ConfiguredServices> ConfigureServicesAsync()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));
@@ -377,6 +377,8 @@ ConfiguredServices ConfigureServices()
     
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+
+    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
     
     var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
@@ -610,7 +612,7 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        //.Take(100)
+        .Take(50)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

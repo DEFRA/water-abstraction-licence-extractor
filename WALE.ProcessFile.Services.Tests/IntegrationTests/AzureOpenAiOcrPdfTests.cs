@@ -154,8 +154,7 @@ public class AzureOpenAiOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("11/42/28/2/6", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
     }
 }

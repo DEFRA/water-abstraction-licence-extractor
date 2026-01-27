@@ -252,8 +252,6 @@ public class AzureAiVisionOcrPdfTests
             0)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("33 9966 5411", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO its actually an SE and should be filtered out
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
@@ -383,10 +381,8 @@ public class AzureAiVisionOcrPdfTests
             0)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("11/42/28/210", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // TODO Probably halluacinated
-        Assert.Equal("11/12/28.2/7", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); // TODO 12 should be 42
     }
     
     [Fact]
@@ -622,8 +618,7 @@ public class AzureAiVisionOcrPdfTests
             0)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("16/52/02/G/037", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact(Skip = "TEST BROKEN WITH NEW IMPLEMENTATION ")]

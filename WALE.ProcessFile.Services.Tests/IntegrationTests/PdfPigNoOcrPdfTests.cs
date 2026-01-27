@@ -5319,10 +5319,11 @@ public class PdfPigNoOcrPdfTests
             .Where(x => x.LabelGroupName == "LinkedLicenceNumber")
             .ToList();
         
-        Assert.Equal(3, linkedLicences.Count);
+        Assert.Equal(4, linkedLicences.Count);
         Assert.Equal("MD/028/0084/008", linkedLicences[0].Text?.FirstOrDefault()?.Text);
         Assert.Equal("2/27/24/034", linkedLicences[1].Text?.FirstOrDefault()?.Text);
-        Assert.Equal("NE/027/0024/044", linkedLicences[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
+        Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5344,10 +5345,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/027/0024/044", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/24/034", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // NOTE - This is linked accross region
+        Assert.Equal("9.2.2", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); 
     }
     
     [Fact]

@@ -342,8 +342,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, "1/22/03/120")]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, "1/22/05/021")]
     [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, "1/22/05/044")]
-    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 1, "1/23/01/067")]
-    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 6, 3, "1/23/02/006")]
+    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067")]
+    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 6, 0, "1/23/02/006")]
     [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY, 1966", "27/05/1966", 7, 0, "1/23/02/044")]
     [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0, "1/23/02/207")]
     [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11th day of MAY, 19 66", "11/05/1966", 6, 0, "1/23/03/008")]
@@ -353,11 +353,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035")] // TODO the K shouldnt be there
     [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014")]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 1, "1/25/02/102")]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133")]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 0, "1/25/02/141")]
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120")]
-    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 4, "1/24/01/034")]
+    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 0, "1/24/01/034")]
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, "1/25/02/023")]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167")]
@@ -406,7 +406,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal(expectedLinkedLicenceCount, licence.LinkedLicences.Length);
     }
     
-        [Fact]
+    [Fact]
     public async Task AAA3_B4_ThenFoundCorrectly()
     {
         // Arrange

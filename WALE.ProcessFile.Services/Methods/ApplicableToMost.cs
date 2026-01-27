@@ -193,7 +193,8 @@ public static class ApplicableToMost
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                if (!isTableLine && LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                var (anyIsLicenceNumber, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                if (!isTableLine && anyIsLicenceNumber)
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
@@ -224,12 +225,13 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                var (anyIsLicenceNumber2, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                if (anyIsLicenceNumber2)
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
+                    licenceNumberLines2 = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
                     var returnList = new List<LabelGroupResult>();
                     
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    foreach (var licenceNumberLine in licenceNumberLines2)
                     {
                         var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
                         

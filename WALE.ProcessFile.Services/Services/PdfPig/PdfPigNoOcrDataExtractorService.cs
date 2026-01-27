@@ -324,7 +324,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
                     
-                    if (xDiff >= 25)
+                    if (xDiff >= 18)
                     {
                         columns.Add(new DocumentLineColumn());
                     }

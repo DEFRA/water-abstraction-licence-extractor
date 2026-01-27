@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -34,7 +34,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             out _,
             out var removedLines);
         
-        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);
+        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedLines, false);
 
         foreach (var item in returnList)
         {
@@ -55,6 +55,6 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             newReturnList.Add(item);
         }
         
-        return ProcessSubLabelsAsync(request, newReturnList);
+        return await ProcessSubLabelsAsync(request, newReturnList);
     }
 }

@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -41,6 +42,7 @@ public class OcrDatabaseTests
     public OcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(

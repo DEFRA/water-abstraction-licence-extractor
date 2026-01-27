@@ -17,7 +17,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class TessaractOcrPdfTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -384,7 +388,7 @@ public class TessaractOcrPdfTests
         Assert.Equal(4, abstractionLimitsResult.Text?.Count);        
         
         // TODO: In DB, this one is 34/236CA - and we're not getting a match, we're getting 34/259
-        // var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         // Assert.NotNull(licenceNumberResult);
         // Assert.True(licenceNumberResult.IsOcr);
         // Assert.Equal("34/236", licenceNumberResult.Text!.FirstOrDefault()?.Text);
@@ -546,9 +550,8 @@ public class TessaractOcrPdfTests
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        
+       
         Assert.Equal("1/34/30/021/G061", agreedSchemaLicence.LicenceNumber); 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Single().Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 
@@ -880,7 +883,6 @@ public class TessaractOcrPdfTests
         
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Single().Licences.First();
         Assert.NotNull(agreedSchemaLicence.LicenceNumber);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }    

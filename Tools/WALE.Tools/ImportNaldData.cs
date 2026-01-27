@@ -71,7 +71,7 @@ public static class ImportNaldData
             await truncateCmd.ExecuteNonQueryAsync();
         }
 
-        using var writer = connection.BeginBinaryImport(
+        await using var writer = connection.BeginBinaryImport(
             $"COPY nald.\"{tableName}\" ({columnNames}) FROM STDIN (FORMAT BINARY)");
 
         var values = new List<string>();
@@ -131,7 +131,7 @@ public static class ImportNaldData
             await WriteRowAsync(writer, values, columns.Length, tableName);
         }
 
-        writer.Complete();
+        await writer.CompleteAsync();
     }
 
     private static async Task WriteRowAsync(NpgsqlBinaryImporter writer, List<string> values, int expectedColumnCount, string tableName)
@@ -143,19 +143,21 @@ public static class ImportNaldData
             {
                 Console.WriteLine($"Warning: Line in {tableName} has {values.Count} columns, expected {expectedColumnCount}. Skipping.");
             }
+            
             return;
         }
 
-        writer.StartRow();
+        await writer.StartRowAsync();
+        
         foreach (var value in values)
         {
             if (value == "null")
             {
-                writer.WriteNull();
+                await writer.WriteNullAsync();
             }
             else
             {
-                writer.Write(value);
+                await writer.WriteAsync(value);
             }
         }
     }

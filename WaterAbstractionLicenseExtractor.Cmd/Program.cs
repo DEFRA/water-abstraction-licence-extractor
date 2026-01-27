@@ -12,6 +12,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
@@ -25,7 +26,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = await ConfigureServicesAsync();
+    var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -82,7 +83,7 @@ async Task ProgramAsync()
 
     // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
     var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode.ToString());
-    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList());
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList(), regionCode);
     
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
@@ -198,7 +199,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber, regionCode);
+                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber, regionCode);
                 if (linkedLicences.Any())
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -335,7 +336,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-async Task<ConfiguredServices> ConfigureServicesAsync()
+ConfiguredServices ConfigureServices()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));

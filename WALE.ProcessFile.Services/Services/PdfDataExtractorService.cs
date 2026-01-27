@@ -453,7 +453,8 @@ public class PdfDataExtractorService(
         return subResultCount;
     }
 
-    private static async Task<List<LabelGroupResult>> GetUniqueServiceMatchesAsync(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    private static List<LabelGroupResult> GetUniqueServiceMatches(
+        Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
 

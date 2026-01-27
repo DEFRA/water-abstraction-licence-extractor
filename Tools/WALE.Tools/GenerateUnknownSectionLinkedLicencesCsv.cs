@@ -13,7 +13,12 @@ namespace WALE.Tools;
 
 public static class GenerateUnknownSectionLinkedLicencesCsv
 {
-    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(KeyConfig.PostgresConnectionString);
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(
+        KeyConfig.PostgresHost,
+        KeyConfig.PostgresPort,
+        KeyConfig.PostgresDbName,
+        KeyConfig.PostgresUsername,
+        KeyConfig.PostgresPassword);
 
     private static readonly IOutputService OutputService = new DatabaseOutputService(
         new PostgresReadService(NpgsqlDataSourceProvider),

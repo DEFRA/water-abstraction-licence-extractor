@@ -1,5 +1,6 @@
 using System.Text;
 using Npgsql;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
 namespace WALE.Tools;
@@ -10,7 +11,6 @@ public static class ImportNaldData
     {
         Console.WriteLine("Starting NALD data import...");
         var dumpFolder = KeyConfig.NaldDataDumpFolder;
-        var connectionString = KeyConfig.PostgresConnectionString;
 
         if (!Directory.Exists(dumpFolder))
         {
@@ -21,8 +21,15 @@ public static class ImportNaldData
         var files = Directory.GetFiles(dumpFolder, "NALD_*.txt");
         Console.WriteLine($"Found {files.Length} files to import.");
 
-        await using var dataSource = NpgsqlDataSource.Create(connectionString);
+        NpgsqlDataSourceProvider npgsqlDataSourceProvider = new(
+            KeyConfig.PostgresHost,
+            KeyConfig.PostgresPort,
+            KeyConfig.PostgresDbName,
+            KeyConfig.PostgresUsername,
+            KeyConfig.PostgresPassword);
 
+        await using var dataSource = npgsqlDataSourceProvider.DataSource;
+        
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);

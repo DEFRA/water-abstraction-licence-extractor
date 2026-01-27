@@ -45,11 +45,19 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         });
     });
 
-    var dbConnectionString = config.GetConnectionString("PostgreSQL")
-                             ?? throw new InvalidOperationException("PostgreSQL connection string not configured");
-
+    var dbHost = config.GetConnectionString("POSTGRESQL_HOST")
+        ?? throw new InvalidOperationException("POSTGRESQL_HOST connection string not configured");
+    var dbPort = int.Parse(config.GetConnectionString("POSTGRESQL_PORT")
+        ?? throw new InvalidOperationException("POSTGRESQL_PORT connection string not configured"));
+    var dbDatabaseName = config.GetConnectionString("POSTGRESQL_DBNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_DBNAME connection string not configured");
+    var dbUsername = config.GetConnectionString("POSTGRESQL_USERNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_USERNAME connection string not configured");
+    var dbPassword = config.GetConnectionString("POSTGRESQL_PASSWORD")
+        ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
+    
     services
-        .AddPostgreSqlServices(dbConnectionString)
+        .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService, DatabaseCacheService>();
 }

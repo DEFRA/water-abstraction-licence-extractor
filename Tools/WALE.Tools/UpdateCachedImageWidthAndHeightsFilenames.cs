@@ -7,7 +7,12 @@ namespace WALE.Tools;
 
 public static class UpdateCachedImageWidthAndHeightsFilenames
 {
-    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(KeyConfig.PostgresConnectionString);
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(
+        KeyConfig.PostgresHost,
+        KeyConfig.PostgresPort,
+        KeyConfig.PostgresDbName,
+        KeyConfig.PostgresUsername,
+        KeyConfig.PostgresPassword);
     
     public static async Task PopulateWidthAndHeightsAsync()
     {

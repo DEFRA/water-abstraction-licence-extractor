@@ -358,8 +358,16 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("ThumbnailImageDataPath");
     var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
         ?? throw new NullReferenceException("FullImageDataPath");
-    var postgresConnectionString = Environment.GetEnvironmentVariable("PostgresConnectionString")
-        ?? throw new NullReferenceException("PostgresConnectionString");
+    var postgresHost = Environment.GetEnvironmentVariable("POSTGRESQL_HOST")
+        ?? throw new NullReferenceException("POSTGRESQL_HOST");
+    var postgresPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRESQL_PORT")
+        ?? throw new NullReferenceException("POSTGRESQL_PORT"));
+    var postgresDatabaseName = Environment.GetEnvironmentVariable("POSTGRESQL_DBNAME")
+        ?? throw new NullReferenceException("POSTGRESQL_DBNAME"); 
+    var postgresUsername = Environment.GetEnvironmentVariable("POSTGRESQL_USERNAME")
+        ?? throw new NullReferenceException("POSTGRESQL_USERNAME");
+    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSSWORD")
+        ?? throw new NullReferenceException("POSTGRESQL_PASSSWORD");    
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
         ?? throw new NullReferenceException("FileMappingPath");
     var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
@@ -372,13 +380,27 @@ ConfiguredServices ConfigureServices()
         ?? throw new NullReferenceException("TESSDATA_PREFIX");
     
     // This provider should have singleton lifetime and be shared for proper connection pooling
-    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
+    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+    
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
+    var cacheService = new DatabaseCacheService(
+        databaseReadService,
+        databaseAddService,
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+    
     var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -610,7 +632,7 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        //.Take(100)
+        .Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

@@ -14,13 +14,20 @@ try
 {
     var configuration = GetConfiguration();
     writeDebugLogs = configuration.GetValue<bool>("writeDebugLogs");
+
+    var argsStringForLogging = string.Join(' ', args);
+    if (args.Length >= 16)
+    {
+        var postgresPasswordTemp = args[15];
+        argsStringForLogging = argsStringForLogging.Replace(postgresPasswordTemp, "*****");
+    }
     
     await WriteLogFileIfDebugModeAsync(
         "Started.txt",
-        $"{typeof(Program).Assembly.GetName().Name} started - " + string.Join(' ', args),
+        $"{typeof(Program).Assembly.GetName().Name} started - " + argsStringForLogging,
         writeDebugLogs);
 
-    if (args.Length < 12)
+    if (args.Length < 16)
     {
         throw new Exception("Not enough arguments provided");
     }
@@ -35,8 +42,12 @@ try
     var processRunId = int.Parse(args[7]);
     var cacheFolder = args[8];
     var outputFolder = args[9];
-    var tessdataPrefix = args[10];
-    var postgresConnectionString = args[11];
+    var tessDataPath = args[10];
+    var postgresHost = args[11];
+    var postgresPort = int.Parse(args[12]);
+    var postgresDatabaseName = args[13];
+    var postgresUsername = args[14];
+    var postgresPassword = args[15];
 
     var isFileMode = bytesMode.Equals("file", StringComparison.InvariantCultureIgnoreCase);
     
@@ -45,8 +56,12 @@ try
         pageSegMode,
         cacheFolder,
         outputFolder,
-        tessdataPrefix,
-        postgresConnectionString);
+        tessDataPath,
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
 
     byte[]? imageBytes;
 
@@ -129,7 +144,11 @@ static (IOutputService OutputService, ICacheService CacheService, TesseractOcrDa
         string cacheFolder,
         string outputFolder,
         string tessDataPath,
-        string postgresConnectionString)
+        string postgresHost,
+        int postgresPort,
+        string postgresDatabaseName,
+        string postgresUsername,
+        string postgresPassword)
 {
     if (string.IsNullOrEmpty(tessDataPath))
         throw new NullReferenceException(tessDataPath);
@@ -144,17 +163,39 @@ static (IOutputService OutputService, ICacheService CacheService, TesseractOcrDa
         return (fileOutputService, fileCacheService, tesseractService);
     }
     
-    if (string.IsNullOrEmpty(postgresConnectionString))
-        throw new NullReferenceException("PostgresConnectionString");
+    if (string.IsNullOrEmpty(postgresHost))
+        throw new NullReferenceException(nameof(postgresHost));
     
-    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
+    if (string.IsNullOrEmpty(postgresDatabaseName))
+        throw new NullReferenceException(nameof(postgresDatabaseName));
+    
+    if (string.IsNullOrEmpty(postgresUsername))
+        throw new NullReferenceException(nameof(postgresUsername));
+    
+    if (string.IsNullOrEmpty(postgresPassword))
+        throw new NullReferenceException(nameof(postgresPassword));
+    
+    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+    
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
     var dbOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-    var dbCacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
+    var dbCacheService = new DatabaseCacheService(
+        databaseReadService,
+        databaseAddService,
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
     
     return (dbOutputService, dbCacheService, tesseractService);
 }

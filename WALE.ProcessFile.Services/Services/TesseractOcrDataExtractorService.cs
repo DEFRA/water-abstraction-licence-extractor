@@ -143,7 +143,11 @@ public class TesseractOcrDataExtractorService(
             $"\"{cacheService.CacheFolder}\"",
             $"\"{outputService.OutputFolder}\"",
             $"\"{tessDataPath}\"",
-            $"\"{cacheService.ConnectionString ?? "N/A"}\""
+            $"\"{cacheService.Host ?? "N/A"}\"",
+            $"\"{cacheService.Port}\"",
+            $"\"{cacheService.DatabaseName ?? "N/A"}\"",
+            $"\"{cacheService.Username ?? "N/A"}\"",
+            $"\"{cacheService.Password ?? "N/A"}\""
         });
         
         var proc = Process.Start(

@@ -216,18 +216,78 @@ public static class TestConfig
         }
     }
 
-    private static string? _postgresConnectionString;
-    public static string PostgresConnectionString
+    private static string? _postgresHost;
+    public static string PostgresHost
     {
         get
         {
-            if (_postgresConnectionString != null)
+            if (_postgresHost != null)
             {
-                return _postgresConnectionString;
+                return _postgresHost;
             }
             
-            _postgresConnectionString = Config["PostgresConnectionString"]!;
-            return _postgresConnectionString;
+            _postgresHost = Config["POSTGRESQL_HOST"]!;
+            return _postgresHost;
+        }
+    }
+    
+    private static int? _postgresPort;
+    public static int PostgresPort
+    {
+        get
+        {
+            if (_postgresPort != null)
+            {
+                return _postgresPort.Value;
+            }
+            
+            _postgresPort = int.Parse(Config["POSTGRESQL_PORT"]!);
+            return _postgresPort.Value;
+        }
+    }
+    
+    private static string? _postgresDbName;
+    public static string PostgresDbName
+    {
+        get
+        {
+            if (_postgresDbName != null)
+            {
+                return _postgresDbName;
+            }
+            
+            _postgresDbName = Config["POSTGRESQL_DBNAME"]!;
+            return _postgresDbName;
+        }
+    }
+    
+    private static string? _postgresUsername;
+    public static string PostgresUsername
+    {
+        get
+        {
+            if (_postgresUsername != null)
+            {
+                return _postgresUsername;
+            }
+            
+            _postgresUsername = Config["POSTGRESQL_USERNAME"]!;
+            return _postgresUsername;
+        }
+    }
+    
+    private static string? _postgresPassword;
+    public static string PostgresPassword
+    {
+        get
+        {
+            if (_postgresPassword != null)
+            {
+                return _postgresPassword;
+            }
+            
+            _postgresPassword = Config["POSTGRESQL_PASSSWORD"]!;
+            return _postgresPassword;
         }
     }
     

@@ -17,7 +17,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class NoOcrDatabaseTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -25,7 +29,15 @@ public class NoOcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(
+        ReadService,
+        WriteService,
+        TestConfig.PostgresHost,
+        TestConfig.PostgresPort,
+        TestConfig.PostgresDbName,
+        TestConfig.PostgresUsername,
+        TestConfig.PostgresPassword);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(

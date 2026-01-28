@@ -61,12 +61,7 @@ public class NaldLinkedLicenceHelper
             {
                 continue;
             }
-
-            if (!map.ContainsKey(licNo))
-            {
-                map[licNo] = [];
-            }
-
+            
             var potentialNumbers = new List<string?>
             {
                 item.Param1,
@@ -83,6 +78,11 @@ public class NaldLinkedLicenceHelper
                 {
                     if (licNo != linkCandidate.LicenceNumber || linkCandidate.RegionCode != processingRegionCode)
                     {
+                        if (!map.ContainsKey(licNo))
+                        {
+                            map[licNo] = [];
+                        }
+                        
                         map[licNo].Add(linkCandidate);
                     }
                 }

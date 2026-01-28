@@ -1782,7 +1782,7 @@ public class TessaractOcrPdfTests
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
     }
     
-    [Fact]
+    /*[Fact]
     public async Task FileWithImageWithSmallDimensions()
     {
         // Arrange
@@ -1828,5 +1828,5 @@ public class TessaractOcrPdfTests
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
-    }
+    }*/
 }

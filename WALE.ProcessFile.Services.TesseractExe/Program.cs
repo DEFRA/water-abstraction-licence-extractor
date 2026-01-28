@@ -8,12 +8,12 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using TesseractOcrDataExtractorService = WALE.ProcessFile.Services.TesseractExe.TesseractOcrDataExtractorService;
 
+var writeDebugLogs = true;
+
 try
 {
     var configuration = GetConfiguration();
-
-    var writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
-    var writeToFile = configuration.GetValue<bool>("writeDebugLogs");
+    writeDebugLogs = configuration.GetValue<bool>("writeDebugLogs");
     
     var argsStringForLogging = string.Join(' ', args);
     if (args.Length >= 16)

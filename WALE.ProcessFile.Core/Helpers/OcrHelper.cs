@@ -32,7 +32,7 @@ public static IReadOnlyList<DocumentLine> Group(
         
         if (!useNewProcessingFlow)
         {
-            return GroupLegacyFlow(
+            return LegacyGrouping(
                 returnLines,
                 pageNumber,
                 horizontalColumnGapTrigger,
@@ -437,8 +437,8 @@ public static IReadOnlyList<DocumentLine> Group(
         return returnList;
     }
     
-    private static IReadOnlyList<DocumentLine> GroupLegacyFlow(
-        IReadOnlyList<LineAndWords> returnLines,
+    private static IReadOnlyList<DocumentLine> LegacyGrouping(
+        IReadOnlyList<LineAndWords> inputLines,
         int pageNumber,
         int horizontalColumnGapTrigger,
         int minimumFontSize,
@@ -456,12 +456,12 @@ public static IReadOnlyList<DocumentLine> Group(
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
-        var rawLines = returnLines
+        var noneCorruptOrEmptyLines = inputLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
         
-        var groupedLines = rawLines
+        var groupedLines = noneCorruptOrEmptyLines
             .GroupBy(line =>
             {
                 previousLine ??= line;

@@ -98,8 +98,7 @@ public class PdfDocument
         
         return PdfPigDocument!.GetPageAsSKBitmap(
             pageNumber,
-            background: background,
-            scale: 2F);
+            2F);
     }
     
     public void Dispose()

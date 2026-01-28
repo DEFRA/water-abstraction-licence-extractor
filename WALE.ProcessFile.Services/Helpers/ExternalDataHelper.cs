@@ -58,7 +58,7 @@ public static class ExternalDataHelper
                 ExpiryDate = RemoveNullWord(line.ExpiryDate),
                 OrigEffDate = line.OrigEffectiveDate,
                 OrigSigDate = RemoveNullWord(line.OrigSignatureDate),
-                RevisionDate = RemoveNullWord(line.RevDate),
+                RevocationDate = RemoveNullWord(line.RevDate),
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
                 FgacRegionCode = line.FgacRegionCode

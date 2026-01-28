@@ -1,3 +1,5 @@
+using Docnet.Core;
+using Docnet.Core.Models;
 using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Graphics.Colors;
@@ -12,6 +14,8 @@ public class PdfDocument
     public string PdfFilePath { get; }
     
     private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
+    
+    private static readonly DocLib DocLibInstance = DocLib.Instance;
     
     public PdfDocument(string pdfFilePath, bool fromCache)
     {
@@ -96,9 +100,21 @@ public class PdfDocument
             OpenPdfPigDocument();
         }
         
-        return PdfPigDocument!.GetPageAsSKBitmap(
-            pageNumber,
-            2F);
+        using var docReader = DocLibInstance.GetDocReader(
+            PdfFilePath,
+            new PageDimensions(1080, 1920));
+
+        using var pageReader = docReader.GetPageReader(pageNumber - 1);
+        var rawBytes = pageReader.GetImage();
+
+        var skImage = SKImage.FromPixelCopy(
+            new SKImageInfo(
+                pageReader.GetPageWidth(),
+                pageReader.GetPageHeight()
+            ),
+            rawBytes);
+        
+        return SKBitmap.FromImage(skImage);
     }
     
     public void Dispose()

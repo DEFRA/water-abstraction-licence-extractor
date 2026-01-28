@@ -9,7 +9,7 @@ public class NaldData
     
     public string? ExpiryDate { get; init; }
     
-    public string? RevisionDate { get; init; }
+    public string? RevocationDate { get; init; }
     
     public string? OrigEffDate { get; init; }
     

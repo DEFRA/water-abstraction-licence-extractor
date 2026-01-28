@@ -376,8 +376,8 @@ public static partial class SchemaConverter
             ? DateTime.Parse(naldDataLine.ExpiryDate)
             : (DateTime?)null;
         
-        var naldRevisionDate = !string.IsNullOrEmpty(naldDataLine?.RevisionDate)
-            ? DateTime.Parse(naldDataLine.RevisionDate)
+        var naldRevocationDate = !string.IsNullOrEmpty(naldDataLine?.RevocationDate)
+            ? DateTime.Parse(naldDataLine.RevocationDate)
             : (DateTime?)null;
         
         var naldOrigEffectiveDate = !string.IsNullOrEmpty(naldDataLine?.OrigEffDate)

@@ -42,7 +42,7 @@ public class LicenceVersion
     
     public DateTime? OriginalIssueDate { get; set; }
     
-    public DateTime? NaldRevisionDate { get; set; }
+    public DateTime? NaldRevocationDate { get; set; }
     
     public DateTime? NaldExpiryDate { get; set; }
     
@@ -60,7 +60,7 @@ public class LicenceVersion
 
     public static LicenceVersion Template => new()
     {
-        NaldRevisionDate = null,
+        NaldRevocationDate = null,
         NaldExpiryDate = null,
         NaldOrigEffectiveDate = null,
         NaldOrigSignatureDate = null,        

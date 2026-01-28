@@ -407,7 +407,7 @@ public static partial class SchemaConverter
         
         return new LicenceVersion
         {
-            NaldRevisionDate = naldRevisionDate,
+            NaldRevocationDate = naldRevocationDate,
             EffectiveDate = effectiveDate,
             NaldOrigEffectiveDate = naldOrigEffectiveDate,
             NaldOrigSignatureDate = naldOrigSignatureDate,

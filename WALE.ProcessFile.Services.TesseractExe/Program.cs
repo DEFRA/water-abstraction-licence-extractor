@@ -14,7 +14,7 @@ try
 {
     var configuration = GetConfiguration();
     writeDebugLogs = configuration.GetValue<bool>("writeDebugLogs");
-
+    
     var argsStringForLogging = string.Join(' ', args);
     if (args.Length >= 16)
     {
@@ -131,7 +131,6 @@ static IConfiguration GetConfiguration()
     var builder = new ConfigurationBuilder();
     builder.SetBasePath(Directory.GetCurrentDirectory())
         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-        .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)        
         .AddEnvironmentVariables();
 
     return builder.Build();

@@ -43,7 +43,7 @@ public class TesseractOcrDataExtractorService(
             ProcessRunId = processRunId
         };
 
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         var returnLines = new List<LineAndWords>();
 
         var cachedJson = isPageScreenshot

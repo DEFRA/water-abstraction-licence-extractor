@@ -275,7 +275,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
-        var outputFilename = $"{folder}/ocr-page-{request.PageNumber}.json";
+        var outputFilename = $"{folder}/temporary-ocr-page-{request.PageNumber}.json";
 
         if (!File.Exists(outputFilename))
         {

@@ -70,7 +70,7 @@ public class AwsTextractOcrDataExtractorService
             int processRunId,
             string noOcrServiceName)
     {
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         
         var returnLines = new List<LineAndWords>();
         var request = new OcrServiceImageTextCacheRequest

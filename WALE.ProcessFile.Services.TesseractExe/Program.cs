@@ -8,15 +8,12 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using TesseractOcrDataExtractorService = WALE.ProcessFile.Services.TesseractExe.TesseractOcrDataExtractorService;
 
-bool writeToConsole;
-bool writeToFile;
-
 try
 {
     var configuration = GetConfiguration();
 
-    writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
-    writeToFile = configuration.GetValue<bool>("writeDebugLogs");
+    var writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
+    var writeToFile = configuration.GetValue<bool>("writeDebugLogs");
     
     var argsStringForLogging = string.Join(' ', args);
     if (args.Length >= 16)
@@ -137,7 +134,6 @@ static IConfiguration GetConfiguration()
     var builder = new ConfigurationBuilder();
     builder.SetBasePath(Directory.GetCurrentDirectory())
         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-        .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)        
         .AddEnvironmentVariables();
 
     return builder.Build();

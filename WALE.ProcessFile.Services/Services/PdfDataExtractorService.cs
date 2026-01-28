@@ -178,6 +178,9 @@ public class PdfDataExtractorService(
             if (pageImages.Count > 10)
             {
                 pageImages = [page.ImageReference!];
+                var extension = page.ImageReference!.Split('.').Last();
+                
+                allImagesInDocument.Insert(0, (pageNumber, 1, extension, 2000, 2000));
             }
 
             for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)

@@ -69,6 +69,17 @@ public class TessaractOcrPdfTests
         OutputService,
         TestConfig.PdfFolder3);
     
+    private readonly IPdfDataExtractorService _pdfDataExtractorCombined4 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder4);
+    
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
@@ -89,8 +100,26 @@ public class TessaractOcrPdfTests
 
     private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
-        var f = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        var extractor = folderNumber == 1 ? _pdfDataExtractorCombined1 : _pdfDataExtractorCombined3;
+        string f;
+        IPdfDataExtractorService extractor;
+
+        switch (folderNumber)
+        {
+            case 1:
+                f = TestConfig.PdfFolder;
+                extractor = _pdfDataExtractorCombined1;
+                break;
+            case 3:
+                f = TestConfig.PdfFolder3;
+                extractor = _pdfDataExtractorCombined3;
+                break;
+            case 4:
+                f = TestConfig.PdfFolder4;
+                extractor = _pdfDataExtractorCombined4;
+                break;
+            default:
+                throw new Exception("Number not known");
+        }
         
         return extractor.GetMatchesAsync(
             f + fileName,
@@ -1826,11 +1855,11 @@ public class TessaractOcrPdfTests
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, 3);
+        var resultFull = await GetMatchesAsync(filename, 1, 4);
         var resultList = resultFull.Matches!;
         
         // Assert
-//        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1849,8 +1878,8 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined3,
-            TestConfig.PdfFolder3,
+            _pdfDataExtractorCombined4,
+            TestConfig.PdfFolder4,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);
@@ -1870,7 +1899,7 @@ public class TessaractOcrPdfTests
         const string filename = "12202043__Licence - Signed Addendum 6431587.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, 3);
+        var resultFull = await GetMatchesAsync(filename, 1, 4);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1897,8 +1926,8 @@ public class TessaractOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined3,
-            TestConfig.PdfFolder3,
+            _pdfDataExtractorCombined4,
+            TestConfig.PdfFolder4,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);

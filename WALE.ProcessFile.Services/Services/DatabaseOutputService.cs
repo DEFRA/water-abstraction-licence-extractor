@@ -1,6 +1,5 @@
 using System.Text.Json;
 using SkiaSharp;
-using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -20,11 +19,16 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
+    public Task<List<(string ProviderName, string? ImageReference)>> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
         string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return Task.FromResult($"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}");
+
+        return Task.FromResult(new List<(string ProviderName, string? ImageReference)>
+        {
+            (pdfServiceName, $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
+            ("Docnet", $"Screenshot-{pdfFilename}-Docnet-{pageNumber}")
+        });
     }
 
     public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
@@ -140,15 +144,19 @@ public class DatabaseOutputService(
             return;
         }
         
-        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
-        var bytes = await GetAsJpegAsync(memoryStream);
-        
-        await databaseWriteService.SavePageScreenshotIfDoesntExistAsync(
-            pageNumber,
-            noOcrServiceName,
-            pdfFilename,
-            bytes,
-            processRunId);
+        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+
+        foreach (var (providerName, bitmap) in images)
+        {
+            var bytes = await GetAsJpegAsync(bitmap);
+
+            await databaseWriteService.SavePageScreenshotIfDoesntExistAsync(
+                pageNumber,
+                providerName,
+                pdfFilename,
+                bytes,
+                processRunId);
+        }
     }
 
     public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)

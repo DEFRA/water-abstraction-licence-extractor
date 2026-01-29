@@ -93,13 +93,17 @@ public class PdfDocument
         set => _pages = value;
     }
 
-    public SKBitmap GetPageAsSkBitmap(int pageNumber, IColor background)
+    public List<(string Provider, SKBitmap Bitmap)> GetPageAsSkBitmap(int pageNumber, string noOcrServiceName)
     {
         if (FromCache && PdfPigDocument == null)
         {
             OpenPdfPigDocument();
         }
-        
+
+        var pdfPigBitmap = PdfPigDocument!.GetPageAsSKBitmap(
+            pageNumber,
+            2F);
+
         using var docReader = DocLibInstance.GetDocReader(
             PdfFilePath,
             new PageDimensions(1080, 1920));
@@ -107,16 +111,39 @@ public class PdfDocument
         using var pageReader = docReader.GetPageReader(pageNumber - 1);
         var rawBytes = pageReader.GetImage();
 
+        for (var i = 0; i < rawBytes.Length / 4; i++)
+        {
+            var j = i * 4;
+            var alpha = rawBytes[j];
+            var red = rawBytes[j + 1];
+            var green = rawBytes[j + 2];
+            var blue = rawBytes[j + 3];
+
+            if (alpha != 0 || red != 0 || green != 0 || blue != 0) continue;
+
+            rawBytes[j] = byte.MaxValue;
+            rawBytes[j + 1] = byte.MaxValue;
+            rawBytes[j + 2] = byte.MaxValue;
+            rawBytes[j + 3] = byte.MaxValue;
+        }
+
         var skImage = SKImage.FromPixelCopy(
             new SKImageInfo(
                 pageReader.GetPageWidth(),
-                pageReader.GetPageHeight()
+                pageReader.GetPageHeight(),
+                SKColorType.Bgra8888
             ),
             rawBytes);
-        
-        return SKBitmap.FromImage(skImage);
+
+        var docnetBitmap = SKBitmap.FromImage(skImage);
+
+        return
+        [
+            (noOcrServiceName, pdfPigBitmap),
+            ("Docnet", docnetBitmap)
+        ];
     }
-    
+
     public void Dispose()
     {
         if (FromCache && PdfPigDocument == null)

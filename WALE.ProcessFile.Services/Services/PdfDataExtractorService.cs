@@ -177,10 +177,13 @@ public class PdfDataExtractorService(
             
             if (pageImages.Count > 10)
             {
-                pageImages = [page.ImageReference!];
-                var extension = page.ImageReference!.Split('.').Last();
-                
-                allImagesInDocument.Insert(0, (pageNumber, 1, extension, 2000, 2000));
+                pageImages = page.ImageReferences.Select(x => x.ImageReference).ToList()!;
+
+                foreach (var pageImage in pageImages)
+                {
+                    var extension = pageImage.Split('.').Last();
+                    allImagesInDocument.Insert(0, (pageNumber, 1, extension, 2000, 2000));   
+                }
             }
 
             for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
@@ -709,7 +712,10 @@ public class PdfDataExtractorService(
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
-                ImageReference = await outputService.GetPageScreenshotReferenceAsync(page.Number, Name, pdfDocument.PdfFilePath)
+                ImageReferences = await outputService.GetPageScreenshotReferenceAsync(
+                    page.Number,
+                    Name,
+                    pdfDocument.PdfFilePath)
             };
             
             imagesMetadata.Pages.Add(metadataPage);

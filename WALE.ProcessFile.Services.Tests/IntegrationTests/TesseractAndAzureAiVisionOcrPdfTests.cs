@@ -66,6 +66,22 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder3);
+    
+    private readonly IPdfDataExtractorService _pdfDataExtractor4 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new AzureAiVisionOcrDataExtractorService(
+                TestConfig.AiVisionEndpoint,
+                TestConfig.AiVisionKey,
+                CacheService,
+                OutputService),
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder4);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
@@ -76,20 +92,36 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
-    private static string PdfFolder => TestConfig.PdfFolder;
-    
     private Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
-        var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
-        var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        string f;
+        IPdfDataExtractorService extractor;
+
+        switch (useExtractor)
+        {
+            case 1:
+                f = TestConfig.PdfFolder;
+                extractor = _pdfDataExtractor;
+                break;
+            case 3:
+                f = TestConfig.PdfFolder3;
+                extractor = _pdfDataExtractor3;
+                break;
+            case 4:
+                f = TestConfig.PdfFolder4;
+                extractor = _pdfDataExtractor4;
+                break;
+            default:
+                throw new Exception("Number not known");
+        }
         
-        return pdfExtractor.GetMatchesAsync(
-            folder + fileName,
+        return extractor.GetMatchesAsync(
+            f + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 3),
-            [folder + fileName],
+            [f + fileName],
             0);
     }
     
@@ -321,7 +353,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 1, 2)] // TODO - One is a subset of the other due to a bad scane
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, 1)]
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6, 0, 1)]
-    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 5, 0, 1)]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 7, 0, 1)]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 14, 0, 1)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11, 0, 1)]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, 1)] // Should be 2000 but impossible to tell in file, so fine
@@ -645,7 +677,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 4);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -672,8 +704,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
+            _pdfDataExtractor4,
+            TestConfig.PdfFolder4,
             0);
         
         Assert.Single(agreedSchemaLicenceGroup);

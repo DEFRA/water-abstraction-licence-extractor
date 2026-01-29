@@ -1,6 +1,5 @@
 using System.Text.Json;
 using SkiaSharp;
-using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -18,15 +17,15 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.CompletedTask;
     }
 
-    public Task<string> GetPageScreenshotReferenceAsync(
+    public Task<List<(string ProviderName, string? ImageReference)>> GetPageScreenshotReferenceAsync(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath)
     {
-        return Task.FromResult(GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath));
+        return Task.FromResult(GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath));
     }
     
-    private string GetPageScreenshotPath(
+    private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath)
@@ -35,8 +34,20 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         var imgOutputPath = $"{folderName}/{pdfServiceName}/Images/";
 
         Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
+
+        var result1 = $"{imgOutputPath}page-{pageNumber}.jpg";
         
-        return $"{imgOutputPath}page-{pageNumber}.jpg";
+        imgOutputPath = $"{folderName}/Docnet/Images/";
+
+        Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
+
+        var result2 = $"{imgOutputPath}page-{pageNumber}.jpg";
+        
+        return
+        [
+            (pdfServiceName, result1),
+            ("Docnet",result2),
+        ];
     }
     
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
@@ -117,15 +128,25 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         string pdfFilePath,
         int processRunId)
     {
-        var imgOutputFilename = GetPageScreenshotPath(pageNumber, noOcrServiceName, pdfFilePath);
+        var pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber, noOcrServiceName, pdfFilePath);
+        var exists1 = File.Exists(pdfPigImgOutputFilename);
         
-        if (File.Exists(imgOutputFilename))
+        // Add in docnet check
+        pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber,"Docnet", pdfFilePath);
+        var exists2 = File.Exists(pdfPigImgOutputFilename);
+
+        if (exists1 && exists2)
         {
             return;
         }
         
-        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
-        await SaveAsJpegAsync(memoryStream, imgOutputFilename);
+        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+
+        foreach (var (provider, bitmap) in images)
+        {
+            pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber, provider, pdfFilePath);
+            await SaveAsJpegAsync(bitmap, pdfPigImgOutputFilename);
+        }
     }
     
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)
@@ -179,7 +200,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     
     public async Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        var pageScreenshotPath = GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath);
+        var pageScreenshotPath = GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
         return await File.ReadAllBytesAsync(pageScreenshotPath);
     }
 

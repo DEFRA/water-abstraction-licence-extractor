@@ -17,7 +17,7 @@ public interface IDatabaseWriteService
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, string pdfFilePath, int processRunId);
 
-    public Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
+    public Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
         byte[] data, int processRunId);
 
     Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines, int processRunId);

@@ -52,7 +52,11 @@ public static class ImportNaldData
     {
         using var reader = new StreamReader(filePath, Encoding.UTF8);
         var headerLine = await reader.ReadLineAsync();
-        if (headerLine == null) return;
+
+        if (headerLine == null)
+        {
+            return;
+        }
 
         // Strip BOM if present
         if (headerLine.StartsWith('\uFEFF'))

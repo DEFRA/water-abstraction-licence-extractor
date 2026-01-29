@@ -16,7 +16,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class OcrDatabaseTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -24,7 +28,15 @@ public class OcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
     
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(
+        ReadService,
+        WriteService,
+        TestConfig.PostgresHost,
+        TestConfig.PostgresPort,
+        TestConfig.PostgresDbName,
+        TestConfig.PostgresUsername,
+        TestConfig.PostgresPassword);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     public OcrDatabaseTests()
@@ -95,7 +107,7 @@ public class OcrDatabaseTests
         
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
+        Assert.Equal("14/46/03/0853", licenceNumber.Text?.FirstOrDefault()?.Text);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

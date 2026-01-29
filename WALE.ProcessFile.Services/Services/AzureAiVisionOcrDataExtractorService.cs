@@ -33,7 +33,7 @@ public class AzureAiVisionOcrDataExtractorService(
             int processRunId,
             string noOcrServiceName)
     {
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         
         var returnLines = new List<(string Text, IList<Word> Words)>();
         var request = new OcrServiceImageTextCacheRequest

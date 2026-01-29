@@ -177,9 +177,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        throw new NotImplementedException();
+        var pageScreenshotPath = GetPageScreenshotPath(pageNumber, pdfServiceName, pdfFilePath);
+        return await File.ReadAllBytesAsync(pageScreenshotPath);
     }
 
     public Task FinishProcessRunAsync(ProcessRun processRun)

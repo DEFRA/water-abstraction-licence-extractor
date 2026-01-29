@@ -15,7 +15,15 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public string? CacheFolder { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
-    public string? ConnectionString { get; set; } = null;
+    public string? Host { get; set; } = null;
+    
+    public int Port { get; set; }
+
+    public string? DatabaseName { get; set; } = null;
+    
+    public string? Username { get; set; } = null;
+    
+    public string? Password { get; set; } = null;
 
     public Task SetupAsync()
     {
@@ -267,7 +275,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
-        var outputFilename = $"{folder}/ocr-page-{request.PageNumber}.json";
+        var outputFilename = $"{folder}/temporary-ocr-page-{request.PageNumber}.json";
 
         if (!File.Exists(outputFilename))
         {

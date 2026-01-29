@@ -16,7 +16,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class AzureOpenAiOcrPdfTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);

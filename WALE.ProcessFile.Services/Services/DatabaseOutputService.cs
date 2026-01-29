@@ -31,10 +31,24 @@ public class DatabaseOutputService(
         });
     }
 
-    public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, pdfServiceName);
+        
+        var bytes1 = await databaseReadService.GetPageScreenshotAsync(
+            pageNumber,
+            pdfFilename,
+            pdfServiceName);
+        
+        var bytes2 = await databaseReadService.GetPageScreenshotAsync(
+            pageNumber,
+            pdfFilename,
+            "Docnet");
+        
+        return [
+            bytes1!,
+            bytes2!
+        ];
     }
 
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)

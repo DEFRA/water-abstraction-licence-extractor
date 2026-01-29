@@ -4,6 +4,7 @@ using Tesseract;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using TesseractOcrDataExtractorService = WALE.ProcessFile.Services.TesseractExe.TesseractOcrDataExtractorService;
@@ -64,18 +65,18 @@ try
         postgresUsername,
         postgresPassword);
 
-    byte[]? imageBytes;
+    List<byte[]> bytesList;
 
     if (isPageScreenshot)
     {
-        imageBytes = await outputService.GetPageScreenshotDataAsync(
+        bytesList = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             PdfDataExtractorService.Name,
             pdfFilepath);
     }
     else
     {
-        imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+        var imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
@@ -83,14 +84,34 @@ try
             NoOcrServiceName = PdfDataExtractorService.Name,
             Extension = FileHelper.GetImageExtension(imageReference)
         });
+        
+        bytesList =
+        [
+            imageBytes!
+        ];
     }
 
-    if (imageBytes == null)
+    if (bytesList.Count == 0)
     {
         throw new Exception("Image was not found");
     }
-    
-    var textLines = tesseractService.GetDataFromTesseract(imageBytes);
+
+    var textLines = new List<LineAndWords>();
+    var maxNumberOfWords = -1;
+                
+    foreach (var bytes in bytesList)
+    {
+        var returnList = tesseractService.GetDataFromTesseract(bytes);
+        var numberOfWords = returnList.Sum(line => line.Words!.Count);
+
+        if (numberOfWords <= maxNumberOfWords)
+        {
+            continue;
+        }
+                    
+        maxNumberOfWords = numberOfWords;
+        textLines = returnList;
+    }
     
     var request = new OcrServiceImageTextCacheRequest
     {

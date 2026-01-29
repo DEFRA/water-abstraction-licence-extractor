@@ -15,8 +15,8 @@ public class PdfPage
     {
         return $"{serviceName}/Images/page-{Number}.png";
     }
-    
-    public string? ImageFilepath { get; set; }
+
+    public List<string> ImageFilepaths { get; set; } = [];
 
     public List<PdfPageProvider> Providers { get; set; } = [];
     

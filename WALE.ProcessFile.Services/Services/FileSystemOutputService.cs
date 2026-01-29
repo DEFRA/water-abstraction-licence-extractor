@@ -128,12 +128,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         string pdfFilePath,
         int processRunId)
     {
-        var pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber, noOcrServiceName, pdfFilePath);
-        var exists1 = File.Exists(pdfPigImgOutputFilename);
+        var imagePaths = GetPageScreenshotPaths(
+            pageNumber,
+            noOcrServiceName,
+            pdfFilePath);
         
-        // Add in docnet check
-        pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber,"Docnet", pdfFilePath);
-        var exists2 = File.Exists(pdfPigImgOutputFilename);
+        var exists1 = File.Exists(imagePaths[0].ImageReference);
+        var exists2 = imagePaths.Count >= 2 && File.Exists(imagePaths[1].ImageReference);
 
         if (exists1 && exists2)
         {
@@ -144,8 +145,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         foreach (var (provider, bitmap) in images)
         {
-            pdfPigImgOutputFilename = GetPageScreenshotPaths(pageNumber, provider, pdfFilePath);
-            await SaveAsJpegAsync(bitmap, pdfPigImgOutputFilename);
+            var imgOutputFilename = imagePaths
+                .First(x => x.ProviderName == provider)
+                .ImageReference!;
+            
+            await SaveAsJpegAsync(bitmap, imgOutputFilename);
         }
     }
     
@@ -198,10 +202,21 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public async Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        var pageScreenshotPath = GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
-        return await File.ReadAllBytesAsync(pageScreenshotPath);
+        var pageScreenshotPaths = GetPageScreenshotPaths(
+            pageNumber,
+            pdfServiceName,
+            pdfFilePath);
+
+        var returnList = new List<byte[]>();
+        
+        foreach (var pageScreenshotPath in pageScreenshotPaths)
+        {
+            returnList.Add(await File.ReadAllBytesAsync(pageScreenshotPath.ImageReference!));
+        }
+
+        return returnList;
     }
 
     public Task FinishProcessRunAsync(ProcessRun processRun, int regionId)

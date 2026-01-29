@@ -98,24 +98,6 @@ public partial class LicenceNumber : ILicenceNumberService
     public const string YorkshireRegexPatten =
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    public static Task<List<string>> FindLicenceNumbersAsync(string? text)
-    {
-        return Instance.FindLicenceNumbersAsync(text);
-    }
-
-    async Task<List<string>> ILicenceNumberService.FindLicenceNumbersAsync(string? text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return [];
-        }
-
-        var (success, matchedLines) = await ((ILicenceNumberService)this).AnyIsLicenceNumberAsync(
-            [new DocumentLine { Columns = { new DocumentLineColumn(text) } }],
-            new LabelToMatch(), false);
-        return success ? matchedLines.Select(x => x.Text).ToList() : [];
-    }
-
     public static Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
@@ -139,8 +121,8 @@ public partial class LicenceNumber : ILicenceNumberService
 
         // Flatten and validate sublines
         var subLinesToProcess = columnsToProcess
-            .SelectMany(x => GetColumnSubLines(x.Column).Select(subLine => (x.Line, x.Column, subLine)))
-            .Where(x => IsValidSubLine(x.subLine, x.Column));
+            .SelectMany(x => GetSubLines(x.Column.Text).Select(subLine => (x.Line, x.Column, subLine)))
+            .Where(x => IsValidSubLine(x.subLine, x.Column.Text));
 
         var licenceIndex = await GetLicenceIndexAsync();
 
@@ -185,6 +167,78 @@ public partial class LicenceNumber : ILicenceNumberService
         return (matchedLines.Count > 0, matchedLines);
     }
 
+    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    {
+        return Instance.GetNaldLicencesAsync(licenceNumber, regionCode);
+    }
+
+    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    {
+        var normalized = NormalizeLicenceNumber(licenceNumber);
+
+        var index = await GetLicenceIndexAsync();
+        if (!index.TryGetValue(normalized, out var candidates))
+        {
+            return [];
+        }
+
+        var segments = ExtractSegments(licenceNumber);
+        return candidates
+            .Where(c => SegmentsMatch(segments, c.Segments))
+            .Select(c => c.NaldLicence)
+            .Where(l => l.RegionCode == regionCode)
+            .ToList();
+    }
+
+    public static Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText)
+    {
+        return Instance.ExtractNaldLicencesAsync(sourceText);
+    }
+
+    async Task<List<NaldLicence>> ILicenceNumberService.ExtractNaldLicencesAsync(string? sourceText)
+    {
+        if (string.IsNullOrEmpty(sourceText) || !sourceText.Any(char.IsDigit))
+        {
+            return [];
+        }
+
+        var subLines = GetSubLines(sourceText)
+            .Where(subLine => IsValidSubLine(subLine, sourceText));
+
+        var resultList = new List<NaldLicence>();
+        var licenceIndex = await GetLicenceIndexAsync();
+
+        foreach (var subLine in subLines)
+        {
+            var licenceNumberCandidates = LicenceNumbersRegex().Matches(subLine);
+            if (licenceNumberCandidates.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (Match match in licenceNumberCandidates)
+            {
+                var candidateText = match.Value;
+                var normalizedCandidate = NormalizeLicenceNumber(candidateText);
+
+                if (!licenceIndex.TryGetValue(normalizedCandidate, out var entries))
+                {
+                    continue;
+                }
+
+                var candidateSegments = ExtractSegments(candidateText);
+
+                resultList
+                    .AddRange(entries.Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
+                        .Select(entry => entry.NaldLicence));
+            }
+        }
+
+        return resultList
+            .DistinctBy(l => new { l.LicenceNumber, l.RegionCode })
+            .ToList();
+    }
+
     public static bool SegmentsMatch(List<string> segments1, List<string> segments2)
     {
         var s1 = string.Join("/", segments1);
@@ -222,6 +276,7 @@ public partial class LicenceNumber : ILicenceNumberService
                 {
                     i1++;
                 }
+
                 continue;
             }
 
@@ -236,6 +291,7 @@ public partial class LicenceNumber : ILicenceNumberService
                 {
                     i2++;
                 }
+
                 continue;
             }
 
@@ -252,17 +308,17 @@ public partial class LicenceNumber : ILicenceNumberService
         && column.Text.Any(char.IsDigit)
         && !DataHelper.IsCorruptedText(column.Text);
 
-    private static bool IsValidSubLine(string subLine, DocumentLineColumn column) =>
+    private static bool IsValidSubLine(string subLine, string fullText) =>
         subLine.Length >= 4
         && (subLine.Contains(' ')
-            || column.Text.Contains('/')
-            || column.Text.Contains('.'));
+            || fullText.Contains('/')
+            || fullText.Contains('.'));
 
-    private static string[] GetColumnSubLines(DocumentLineColumn column)
+    private static string[] GetSubLines(string text)
     {
         const string splitChar = ",";
 
-        var columnText = column.Text
+        text = text
             .Replace(". ", $"{splitChar} ")
             .Replace(" and", splitChar)
             .Replace(" for", splitChar)
@@ -271,10 +327,10 @@ public partial class LicenceNumber : ILicenceNumberService
             .Replace(" from", splitChar)
             .Replace(" (", splitChar);
 
-        columnText = SlashSpaceDigitRegex()
-            .Replace(columnText, "/");
+        text = SlashSpaceDigitRegex()
+            .Replace(text, "/");
 
-        var subLines = columnText.Split(splitChar);
+        var subLines = text.Split(splitChar);
         return subLines;
     }
 

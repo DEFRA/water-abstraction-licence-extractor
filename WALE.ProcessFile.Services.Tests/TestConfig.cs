@@ -286,7 +286,7 @@ public static class TestConfig
                 return _postgresPassword;
             }
             
-            _postgresPassword = Config["POSTGRESQL_PASSSWORD"]!;
+            _postgresPassword = Config["POSTGRESQL_PASSWORD"]!;
             return _postgresPassword;
         }
     }

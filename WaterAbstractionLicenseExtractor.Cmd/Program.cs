@@ -366,8 +366,8 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
         ?? throw new NullReferenceException("POSTGRESQL_DBNAME"); 
     var postgresUsername = Environment.GetEnvironmentVariable("POSTGRESQL_USERNAME")
         ?? throw new NullReferenceException("POSTGRESQL_USERNAME");
-    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSSWORD")
-        ?? throw new NullReferenceException("POSTGRESQL_PASSSWORD");    
+    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSWORD")
+        ?? throw new NullReferenceException("POSTGRESQL_PASSWORD");
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
         ?? throw new NullReferenceException("FileMappingPath");
     var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")

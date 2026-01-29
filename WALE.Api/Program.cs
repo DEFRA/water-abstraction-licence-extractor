@@ -59,5 +59,12 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddTransient<IOutputService, DatabaseOutputService>()
-        .AddTransient<ICacheService, DatabaseCacheService>();
+        .AddTransient<ICacheService>(sp => new DatabaseCacheService(
+            sp.GetRequiredService<IDatabaseReadService>(),
+            sp.GetRequiredService<IDatabaseWriteService>(),
+            dbHost,
+            dbPort,
+            dbDatabaseName,
+            dbUsername,
+            dbPassword));
 }

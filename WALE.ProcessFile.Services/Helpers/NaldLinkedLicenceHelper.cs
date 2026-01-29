@@ -5,10 +5,11 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public class NaldLinkedLicenceHelper
 {
-    private readonly Dictionary<string, HashSet<NaldLicence>> _linkedLicenceMap;
+    private readonly Dictionary<string, Dictionary<string, NaldLinkedLicence>> _linkedLicenceMap;
     private readonly string _processingRegionCode;
 
-    private NaldLinkedLicenceHelper(Dictionary<string, HashSet<NaldLicence>> linkedLicenceMap, string processingRegionCode)
+    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, NaldLinkedLicence>> linkedLicenceMap,
+        string processingRegionCode)
     {
         _linkedLicenceMap = linkedLicenceMap;
         _processingRegionCode = processingRegionCode;
@@ -21,7 +22,7 @@ public class NaldLinkedLicenceHelper
         return new NaldLinkedLicenceHelper(map, processingRegionCode);
     }
 
-    public async Task<List<NaldLicence>> GetLinkedLicencesAsync(string? licenceNumber)
+    public async Task<List<NaldLinkedLicence>> GetLinkedLicencesAsync(string? licenceNumber)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
@@ -39,14 +40,14 @@ public class NaldLinkedLicenceHelper
         }
 
         return _linkedLicenceMap.TryGetValue(candidateLicenceNumbers[0], out var linked)
-            ? linked.ToList()
+            ? linked.Values.ToList()
             : [];
     }
 
-    private static async Task<Dictionary<string, HashSet<NaldLicence>>> BuildLinkedLicenceMapAsync(
+    private static async Task<Dictionary<string, Dictionary<string, NaldLinkedLicence>>> BuildLinkedLicenceMapAsync(
         List<NaldLinkedLicenceRawData> rawData, string processingRegionCode)
     {
-        var map = new Dictionary<string, HashSet<NaldLicence>>();
+        var map = new Dictionary<string, Dictionary<string, NaldLinkedLicence>>();
 
         foreach (var item in rawData)
         {
@@ -54,14 +55,14 @@ public class NaldLinkedLicenceHelper
             {
                 continue;
             }
-            
-            var licNo = item.LicenceNumber;
-            
-            if (string.IsNullOrEmpty(licNo))
+
+            var forwardLinkKey = item.LicenceNumber;
+
+            if (string.IsNullOrEmpty(forwardLinkKey))
             {
                 continue;
             }
-            
+
             var potentialNumbers = new List<string?>
             {
                 item.Param1,
@@ -73,17 +74,31 @@ public class NaldLinkedLicenceHelper
             foreach (var text in potentialNumbers)
             {
                 var linkCandidates = await LicenceNumber.ExtractNaldLicencesAsync(text);
-                
+
                 foreach (var linkCandidate in linkCandidates)
                 {
-                    if (licNo != linkCandidate.LicenceNumber || linkCandidate.RegionCode != processingRegionCode)
+                    if (forwardLinkKey != linkCandidate.LicenceNumber ||
+                        linkCandidate.RegionCode != processingRegionCode)
                     {
-                        if (!map.ContainsKey(licNo))
+                        var backLinkKey = linkCandidate.LicenceNumber;
+
+                        // Ensure map keys are initialized in both directions
+                        map.TryAdd(forwardLinkKey, []);
+                        map.TryAdd(backLinkKey, []);
+
+                        // Add forward link (or update if it exists already - a previous iteration may have added it as a back link)
+                        map[forwardLinkKey][backLinkKey] = new NaldLinkedLicence
                         {
-                            map[licNo] = [];
-                        }
-                        
-                        map[licNo].Add(linkCandidate);
+                            NaldLicence = linkCandidate,
+                            LinkType = NaldLinkedLicenceType.Explicit
+                        };
+
+                        // Add back link, but only if no forward link already exists (achieved by using TryAdd, which does nothing if the key already exists)
+                        map[backLinkKey].TryAdd(forwardLinkKey, new NaldLinkedLicence
+                        {
+                            NaldLicence = item.ToNaldLicence(),
+                            LinkType = NaldLinkedLicenceType.BackLink
+                        });
                     }
                 }
             }

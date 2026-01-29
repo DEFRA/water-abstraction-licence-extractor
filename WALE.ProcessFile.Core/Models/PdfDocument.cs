@@ -2,8 +2,8 @@ using Docnet.Core;
 using Docnet.Core.Models;
 using SkiaSharp;
 using UglyToad.PdfPig;
-using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Rendering.Skia;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.Services.PdfPig;
 
 namespace WALE.ProcessFile.Core.Models;
@@ -15,12 +15,15 @@ public class PdfDocument
     
     private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
     
+    private IOutputService OutputService { get; set; }
+    
     private static readonly DocLib DocLibInstance = DocLib.Instance;
     
-    public PdfDocument(string pdfFilePath, bool fromCache)
+    public PdfDocument(string pdfFilePath, bool fromCache, IOutputService outputService)
     {
         PdfFilePath = pdfFilePath;
         FromCache = fromCache;
+        OutputService = outputService;
         
         if (fromCache)
         {
@@ -68,26 +71,35 @@ public class PdfDocument
             _pages = PdfPigDocument!.GetPages()
                 .Select(page =>
                 {
+                    var screenshotPaths = OutputService.GetPageScreenshotReferences(
+                        page.Number,
+                        "PdfPig",
+                        PdfFilePath);
+                    
                     var pdfPage = new PdfPage
                     {
                         PdfPigPage = page,
                         Number = page.Number,
                         NumberOfImages = page.NumberOfImages,
-                        Text = page.Text
+                        DigitalText = page.Text,
+                        ScreenshotFilepaths = screenshotPaths
+                            .Select(sp => sp.ImageReference)
+                            .ToList()!
                     };
 
-                    //var OutputFolder = ""; // TODO
-                    //dfPage.ImageFilepath = $"{OutputFolder}/{pdfPage.GetImageFilepath("PdfPig")}";
-                    
-                    pdfPage.Providers.Add(new PdfPageProvider
+                    foreach (var (providerName, _) in screenshotPaths)
                     {
-                        Provider = "PdfPig",
-                        Text = [page.Text]
-                    });
+                        pdfPage.Providers.Add(new PdfPageProvider
+                        {
+                            Provider = providerName,
+                            Text = [page.Text]
+                        });
+                    }
                     
                     return pdfPage;
                 })
                 .ToList();
+            
             return _pages!;
         }
         set => _pages = value;
@@ -102,7 +114,7 @@ public class PdfDocument
 
         var pdfPigBitmap = PdfPigDocument!.GetPageAsSKBitmap(
             pageNumber,
-            2F);
+            3F);
 
         using var docReader = DocLibInstance.GetDocReader(
             PdfFilePath,

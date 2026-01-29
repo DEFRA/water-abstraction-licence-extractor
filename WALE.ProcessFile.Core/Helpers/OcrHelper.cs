@@ -6,17 +6,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class OcrHelper
 {
-    public static bool IsPageScreenshot(string imageReference, int pageNumber)
-    {
-        var imageReferenceLower = imageReference.ToLower();
-        
-        return 
-            imageReferenceLower.StartsWith("screenshot")
-            || imageReferenceLower.EndsWith($"page-{pageNumber}.jpg")
-            || imageReferenceLower.EndsWith($"page-{pageNumber}.png");
-    }
-
-public static IReadOnlyList<DocumentLine> Group(
+    public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         bool useNewProcessingFlow,
         int pageNumber,
@@ -630,6 +620,16 @@ public static IReadOnlyList<DocumentLine> Group(
         }
         
         return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
+    }
+    
+    public static bool IsPageScreenshot(string imageReference, int pageNumber)
+    {
+        var imageReferenceLower = imageReference.ToLower();
+        
+        return 
+            imageReferenceLower.StartsWith("screenshot")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.jpg")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.png");
     }
     
     private class TopBottomPositions

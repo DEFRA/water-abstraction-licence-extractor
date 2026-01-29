@@ -19,16 +19,16 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public Task<List<(string ProviderName, string? ImageReference)>> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(int pageNumber, string pdfServiceName,
         string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
-        return Task.FromResult(new List<(string ProviderName, string? ImageReference)>
-        {
+        return
+        [
             (pdfServiceName, $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
             ("Docnet", $"Screenshot-{pdfFilename}-Docnet-{pageNumber}")
-        });
+        ];
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)

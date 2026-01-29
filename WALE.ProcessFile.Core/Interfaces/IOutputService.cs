@@ -9,7 +9,7 @@ public interface IOutputService
     
     public Task SetupAsync();
     
-    public Task<List<(string ProviderName, string? ImageReference)>> GetPageScreenshotReferenceAsync(
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath);

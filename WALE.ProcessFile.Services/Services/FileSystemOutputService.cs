@@ -17,12 +17,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.CompletedTask;
     }
 
-    public Task<List<(string ProviderName, string? ImageReference)>> GetPageScreenshotReferenceAsync(
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath)
     {
-        return Task.FromResult(GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath));
+        return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
     }
     
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
@@ -153,10 +153,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 60)
+    private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
     {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+
         await using var stream = new FileStream(
             filePath,
             FileMode.OpenOrCreate,

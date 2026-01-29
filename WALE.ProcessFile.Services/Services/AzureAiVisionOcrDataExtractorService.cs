@@ -95,7 +95,12 @@ public class AzureAiVisionOcrDataExtractorService(
 
             foreach (var bytes in bytesList)
             {
-                var textLines = await GetTextLinesAsync(bytes, isPageScreenshot, request);
+                var textLines = await GetTextLinesAsync(
+                    bytes,
+                    isPageScreenshot,
+                    imageReference,
+                    request);
+                
                 var numberOfWords = textLines.Sum(line => line.Words.Count);
 
                 if (numberOfWords <= maxNumberOfWords)
@@ -131,11 +136,58 @@ public class AzureAiVisionOcrDataExtractorService(
     private async Task<List<(string Text, IList<Word> Words)>> GetTextLinesAsync(
         byte[] bytes,
         bool isPageScreenshot,
+        string imageReference,
         OcrServiceImageTextCacheRequest request)
     {
-        await using var stream = new MemoryStream(bytes);
-        var textHeaders = await _client.ReadInStreamAsync(stream);
-        
+        ReadInStreamHeaders? textHeaders;
+
+        try
+        {
+            await using var stream = new MemoryStream(bytes);
+            textHeaders = await _client.ReadInStreamAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            if (ex is ComputerVisionOcrErrorException ocrEx)
+            {
+                var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
+
+                if (errorCode == "InvalidImageDimension")
+                {
+                    var data = JsonSerializer.Serialize(new ReadResult { Lines = [] },
+                        JsonHelper.GetSerializerOptions());
+
+                    if (isPageScreenshot)
+                    {
+                        await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                    }
+                    else
+                    {
+                        await cacheService.SaveOcrImageTextAsync(request, data);                
+                    }
+                        
+                    return [];
+                }
+
+                throw;
+            }
+            
+            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw;
+            }
+            
+            bytes = await cacheService.DeflateImageAsync(
+                request.Filepath!,
+                request.ImageNumber,
+                request.PageNumber,
+                request.ProcessRunId,
+                FileHelper.GetImageExtension(imageReference));
+
+            await using var stream = new MemoryStream(bytes);
+            textHeaders = await _client.ReadInStreamAsync(stream);
+        }
+
         const int waitBeforeCheck = 2000;
         await Task.Delay(waitBeforeCheck);
 
@@ -152,33 +204,33 @@ public class AzureAiVisionOcrDataExtractorService(
         do
         {
             results = await _client.GetReadResultAsync(operationId);
-        }
-        while (results.Status is OperationStatusCodes.Running or OperationStatusCodes.NotStarted);
-        
+        } while (results.Status is OperationStatusCodes.Running or OperationStatusCodes.NotStarted);
+
         if (results.AnalyzeResult.ReadResults.Count > 1)
         {
-            throw new Exception("Cache is broken with more then one result - generally the result of passing in a PDF rather then an image");
+            throw new Exception(
+                "Cache is broken with more then one result - generally the result of passing in a PDF rather then an image");
         }
-        
+
         var returnLines = new List<(string Text, IList<Word> Words)>();
-        
+
         foreach (var page in results.AnalyzeResult.ReadResults)
         {
             var data = JsonSerializer.Serialize(page, JsonHelper.GetSerializerOptions());
 
             if (isPageScreenshot)
             {
-                await cacheService.SaveOcrScreenshotTextAsync(request, data);                
+                await cacheService.SaveOcrScreenshotTextAsync(request, data);
             }
             else
             {
-                await cacheService.SaveOcrImageTextAsync(request, data);                
+                await cacheService.SaveOcrImageTextAsync(request, data);
             }
 
             var pageLines = ToPageLines(page!);
             returnLines.AddRange(pageLines);
         }
-        
+
         return returnLines;
     }
     

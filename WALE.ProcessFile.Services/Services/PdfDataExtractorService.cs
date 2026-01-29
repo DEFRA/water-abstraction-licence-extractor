@@ -177,7 +177,7 @@ public class PdfDataExtractorService(
             
             if (pageImages.Count > 10)
             {
-                pageImages = page.ImageReferences.Select(x => x.ImageReference).ToList()!;
+                pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
 
                 foreach (var pageImage in pageImages)
                 {
@@ -712,10 +712,14 @@ public class PdfDataExtractorService(
             var metadataPage = new ImageMetadataPage
             {
                 Number = page.Number,
-                ImageReferences = await outputService.GetPageScreenshotReferenceAsync(
-                    page.Number,
-                    Name,
-                    pdfDocument.PdfFilePath)
+                ScreenshotReferences = outputService
+                    .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilePath)
+                    .Select(sr => new ImageMetadataPageScreenshot
+                    {
+                        ImageReference = sr.ImageReference,
+                        ProviderName = sr.ProviderName
+                    })
+                    .ToList()
             };
             
             imagesMetadata.Pages.Add(metadataPage);

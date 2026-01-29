@@ -22,8 +22,14 @@ docker run -d \
  postgres:18
 ```
 
-Example 'PostgresConnectionString' connection string for appsettings;
-`Host=localhost;Port=5432;Database=wale;Username=ea;Password=EnvironmentAgency1;Timeout=300;CommandTimeout=300;KeepAlive=300;`
+Example 'PostgresConnectionString' app settings;
+`
+  "POSTGRESQL_HOST": "localhost",
+  "POSTGRESQL_PORT": "5432",
+  "POSTGRESQL_DBNAME": "wale",
+  "POSTGRESQL_USERNAME": "ea",
+  "POSTGRESQL_PASSWORD": "EnvironmentAgency1"
+`
 
 To run migrations, use the WALE.Tools.Database.PostgreSQL.MigrationRunner tool
 

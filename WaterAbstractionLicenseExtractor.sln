@@ -45,6 +45,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\portal-build-and-sonar-analyze-template.yaml = .github\workflows\portal-build-and-sonar-analyze-template.yaml
 		.github\workflows\api-push-image-template.yaml = .github\workflows\api-push-image-template.yaml
 		.github\workflows\portal-push-image-template.yaml = .github\workflows\portal-push-image-template.yaml
+		.github\workflows\migrationrunner-push-image-template.yaml = .github\workflows\migrationrunner-push-image-template.yaml
+		.github\workflows\migrationrunner-create-rollout-image-version.yaml = .github\workflows\migrationrunner-create-rollout-image-version.yaml
+		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
 	EndProjectSection
 EndProject
 Global

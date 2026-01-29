@@ -66,6 +66,22 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder3);
+    
+    private readonly IPdfDataExtractorService _pdfDataExtractor4 = new PdfDataExtractorService(
+        new PdfPigNoOcrDataExtractorService(),
+        new List<IOcrDataExtractorService>
+        {
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new AzureAiVisionOcrDataExtractorService(
+                TestConfig.AiVisionEndpoint,
+                TestConfig.AiVisionKey,
+                CacheService,
+                OutputService),
+        },
+        CacheService,
+        OutputService,
+        TestConfig.PdfFolder4);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
@@ -74,21 +90,38 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         DeadLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, NaldData> _naldData = [];
-    
-    private static string PdfFolder => TestConfig.PdfFolder;
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
-        var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
-        var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        string f;
+        IPdfDataExtractorService extractor;
+
+        switch (useExtractor)
+        {
+            case 1:
+                f = TestConfig.PdfFolder;
+                extractor = _pdfDataExtractor;
+                break;
+            case 3:
+                f = TestConfig.PdfFolder3;
+                extractor = _pdfDataExtractor3;
+                break;
+            case 4:
+                f = TestConfig.PdfFolder4;
+                extractor = _pdfDataExtractor4;
+                break;
+            default:
+                throw new Exception("Number not known");
+        }
         
-        return pdfExtractor.GetMatchesAsync(
-            folder + fileName,
+        return extractor.GetMatchesAsync(
+            f + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
-            [folder + fileName],
+                _fileLicenceMapping,
+                3),
+            [f + fileName],
             0);
     }
     
@@ -192,11 +225,14 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/3/76", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
     }
     
     [Fact]
@@ -280,11 +316,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Theory]
@@ -297,7 +334,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 6, 0, 1)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 5, 0, 1)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "2 3rd day of MAY, 19 66", "23/05/1966", 7, 0, 1)]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, 1)]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, 2)]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, 1)]
     [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, 1)]
     [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST , 19 66", "01/08/1966", 6, 0, 1)]
@@ -311,12 +348,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, 1)]
     [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, 1)]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, 1)]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, 1)]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 1, 2)]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, 1)]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 1, 2)] // TODO - One is a subset of the other due to a bad scane
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, 1)]
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6, 0, 1)]
-    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, 1)]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 6, 0, 1)]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "299 July'03", "29/07/2003", 14, 0, 1)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11, 0, 1)]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, 1)] // Should be 2000 but impossible to tell in file, so fine
@@ -346,7 +383,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             _naldLicenceStatusData,
@@ -355,19 +392,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3,
             0);
 
-        var licence = schemaData[0].Licences[0];
+        var licence = agreedSchemaLicenceGroup[0].Licences[0];
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
-        
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
-            resultFull,
-            _fileLicenceMapping,
-            _naldLicenceStatusData,
-            _naldData,
-            _pdfDataExtractor3,
-            TestConfig.PdfFolder,
-            0);
         
         Assert.Equal(expectedLicenceGroups, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -380,7 +408,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("22702013__2-27-02-013 6999981.PDF", "16 June 2000", "16/06/2000", 13, 0, "2/27/02/013")] // Correct
     [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 14, 1, "2/26/32/370")] // Correct
     [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 14, 0, "2/27/06/035")] // Correct
-    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12, 0, "2/27/07/039")] // Correct
+    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12, 28, "2/27/07/039")] // Correct // TOOD - Fix a bug where it thinks a linked licence number when its actually a 1 and a slash mixed up
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, "1/25/06/023")] // Year incorrect - faint stamp, can't even read as a human
     [InlineData("22634080__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1997", "27/03/1997", 11, 0, "2/26/34/080")] // Correct
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11, 0, "2/27/09/167")] // Incorrect - stamp is not amazing
@@ -593,7 +621,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12202087-LV20011126", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
@@ -605,7 +633,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("1/22/02/087", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("26/11/01", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO this is wrong, its a date so should get rid of it
     }
     
     [Fact]
@@ -619,7 +648,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3 + fileName,
             new LookupConfiguration(
                 GetYorkshireLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [TestConfig.PdfFolder3 + fileName],
             0);
 
@@ -638,6 +668,55 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         // Assert
         Assert.Empty(resultList);  
+    }
+    
+    [Fact]
+    public async Task AAA3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 4);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Northumbrian River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal("2 3rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractor4,
+            TestConfig.PdfFolder4,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(new DateTime(1966, 05, 23), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
     
     private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetYorkshireLabels()

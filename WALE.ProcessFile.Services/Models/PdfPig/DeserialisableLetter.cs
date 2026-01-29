@@ -80,6 +80,7 @@ public class DeserialisableLetter
         return new Letter(
             Value!,
             GlyphRectangle!.ToPdfRectangle(),
+            GlyphRectangle!.ToPdfRectangle(),
             StartBaseLine!.ToPdfPoint(),
             EndBaseLine!.ToPdfPoint(),
             Width,

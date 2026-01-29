@@ -20,9 +20,10 @@ public static partial class SchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        Dictionary<string, NaldData> naldData)
+        Dictionary<string, List<NaldData>> naldData)
     {
         var matches = matchesResult.Matches;
+        var regionCode = matchesResult.RegionCode;
 
         if (matches == null)
         {
@@ -35,64 +36,11 @@ public static partial class SchemaConverter
             .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
-        
-        var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
 
-        var dateOfIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfOriginalIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfExpiryStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
-            ? dateOfExpiryOut
-            : (DateTime?)null;
-        
-        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
-            ? effectiveDateOut
-            : (DateTime?)null;
-        
-        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
-            ? dateOfIssueOut
-            : (DateTime?)null;
-        
-        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
-            ? dateOfOriginalIssueOut
-            : (DateTime?)null;
-
-        var issuer = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
-        
-        var licenceVersion = new LicenceVersion
-        {
-            EffectiveDate = effectiveDate,
-            ExpiryDate = expiryDate,
-            IssueDate = dateOfIssue,
-            Issuer = issuer,
-            OriginalIssueDate = dateOfOriginalIssue
-        };
-        
         var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
         var licenceNumber = GetLicenceNumber(matchesResult, noneSchemaData);
+        
+        var licenceVersion = GetLicenceVersion(matches!, naldData, licenceNumber, regionCode);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -102,12 +50,14 @@ public static partial class SchemaConverter
             matches,
             licenceNumber,
             naldData,
+            regionCode,
             ref noneSchemaData);
         
         var purposes = GetPurposes(
             matches,
             licenceNumber,
-            naldData);
+            naldData,
+            matchesResult.RegionCode);
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -118,6 +68,7 @@ public static partial class SchemaConverter
             naldData,
             licenceNumbersMapping,
             naldLicenceStatusData,
+            matchesResult.RegionCode,
             ref noneSchemaData);
 
         var issuedToMatch = matchesResult.Matches!
@@ -176,33 +127,27 @@ public static partial class SchemaConverter
 
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
             licenceNumber,
-            naldLicenceStatusData);
-        
-        var naldLicenceNumber = (string?)null;
-        
-        if (isLiveLicence == true || isDeadLicence == true ||  isImpoundmentLicence == true)
-        {
-            naldLicenceNumber = licenceNumber;
-        }
+            naldLicenceStatusData,
+            regionCode);
         
         var linkedLicences = aggregates
             .Where(x => x.LinkedLicences?.Length >= 1)
             .SelectMany(x => x.LinkedLicences!)
             .ToList();
 
-        linkedLicences.AddRange(GetRecordsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetPurposesLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetPointsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
-        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping));
+        linkedLicences.AddRange(GetRecordsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetPurposesLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetPointsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
+        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode));
         
-        var licenceHistory = GetLicenceHistoryLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping);
+        var licenceHistory = GetLicenceHistoryLinkedLicences(matches, naldLicenceStatusData, licenceNumbersMapping, matchesResult.RegionCode);
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
         linkedLicences = linkedLicences
-            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber))
+            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
             .Select(linkedLicencesGroup =>
             {
                 var firstLinkedLicence = linkedLicencesGroup.First();
@@ -234,8 +179,8 @@ public static partial class SchemaConverter
                         containedIn.Add(sectionItem);
                     }
                 }
-
-                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber);
+                
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber, regionCode);
 
                 return ToLinkedLicence(
                     linkedLicenceNumber,
@@ -243,9 +188,12 @@ public static partial class SchemaConverter
                     firstLinkedLicence.Condition,
                     containedIn.ToArray(),
                     naldLicenceStatusData,
-                    licenceNumbersMapping);
+                    licenceNumbersMapping,
+                    regionCode);
             })
-            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber))
+            .Where(linkedLicence => linkedLicence != null)
+            .Select(linkedLicence => linkedLicence!)
+            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
             .ToList();
 
         var newLinkedLicences = new List<LinkedLicence>();
@@ -253,7 +201,7 @@ public static partial class SchemaConverter
         foreach (var linkedLicence in linkedLicences)
         {
             if (newLinkedLicences.Any(linkedLicence2 =>
-                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber)))
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
             {
                 continue;
             }
@@ -266,21 +214,22 @@ public static partial class SchemaConverter
         var allDocumentLinkedLicences = GetAllDocumentLinkedLicences(
             matches,
             naldLicenceStatusData,
-            licenceNumbersMapping);
+            licenceNumbersMapping,
+            matchesResult.RegionCode);
        
         var additionalLinkedLicenceCount = 1;
         
         foreach (var allDocumentLinkedLicence in allDocumentLinkedLicences)
         {
-            var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.FormatLicenceNumber(allDocumentLinkedLicence.LicenceNumber);
-            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
+            var paddedAllDocumentLinkedLicenceNumber = FormattingHelper.FormatLicenceNumber(allDocumentLinkedLicence.LicenceNumber, regionCode);
+            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
             {
                 continue;
             }
             
             var found = linkedLicences
                 .Any(linkedLicence =>
-                    LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber));
+                    LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber, regionCode));
 
             if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
             {
@@ -295,7 +244,7 @@ public static partial class SchemaConverter
                     .Any(lhLinkedLicence =>
                     {
                         var paddedLinkedLicenceNumber =
-                            FormattingHelper.FormatLicenceNumber(lhLinkedLicence.LicenceNumber);
+                            FormattingHelper.FormatLicenceNumber(lhLinkedLicence.LicenceNumber, regionCode);
                         
                         var lhLineNumber = lhLinkedLicence.ContainedIn!
                             .First(ci => ci.SectionName == "LicenceHistory").LineNumber;
@@ -305,18 +254,18 @@ public static partial class SchemaConverter
                         var onlyInLicenceHistory = allDocumentLinkedLicence.ContainedIn?
                             .All(ci => ci.LineNumber == lhLineNumber && ci.PageNumber == lhPageNumber) == true;
                         
-                        return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber)
+                        return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber, regionCode)
                             && onlyInLicenceHistory;
                     });
             }
 
-            if (FormattingHelper.StripForComparison(allDocumentLinkedLicence.LicenceNumber)!.Length < 4)
+            if (FormattingHelper.StripForComparison(allDocumentLinkedLicence.LicenceNumber, regionCode)!.Length < 4)
             {
                 found = true;
             }
             
             if (linkedLicences.Any(linkedLicence2 =>
-                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, allDocumentLinkedLicence.LicenceNumber)))
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, allDocumentLinkedLicence.LicenceNumber, regionCode)))
             {
                 found = true;
             }
@@ -347,37 +296,17 @@ public static partial class SchemaConverter
             Individual = individual
         };
         
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
-        
-        licenceVersion.NaldStartDate = !string.IsNullOrEmpty(naldDataLine?.VersionStartDate)
-            ? DateTime.Parse(naldDataLine.VersionStartDate)
-            : null;
-
-        licenceVersion.NaldEndDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
-            ? DateTime.Parse(naldDataLine.ExpiryDate)
-            : null;
-
-        licenceVersion.NaldVersionNumber = null; // TODO - Not in the current NALD report data we get
-
-        foreach (var anyLL in linkedLicences)
-        {
-            if (anyLL.IsDeadLicence == null)
-            {
-                
-            }
-        }
-        
         return new Licence
         {
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumber,
-            NaldLicenceNumber = naldLicenceNumber,
+            NaldLicenceNumber = dmsFileData?.PermitNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,
             Purposes = purposes,
-            PeriodsOfAbstraction = GetPeriods(matches, licenceNumber, naldData),
+            PeriodsOfAbstraction = GetPeriods(matches, licenceNumber, naldData, regionCode),
             DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
@@ -389,11 +318,120 @@ public static partial class SchemaConverter
         };
     }
 
+    private static LicenceVersion GetLicenceVersion(
+        List<LabelGroupResult> matches,
+        Dictionary<string, List<NaldData>> naldData,
+        string? licenceNumber,
+        int regionCode)
+    {
+        var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfIssueStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfOriginalIssueStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var dateOfExpiryStr = Formats.Date.DateFormatConsistent(matches
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
+            .Text?
+            .FirstOrDefault()?
+            .Text);
+
+        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
+            ? dateOfExpiryOut
+            : (DateTime?)null;
+        
+        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
+            ? effectiveDateOut
+            : (DateTime?)null;
+        
+        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
+            ? dateOfIssueOut
+            : (DateTime?)null;
+        
+        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
+            ? dateOfOriginalIssueOut
+            : (DateTime?)null;
+
+        var issuer = matches
+            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+        
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+        
+        var naldExpiryDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
+            ? DateTime.Parse(naldDataLine.ExpiryDate)
+            : (DateTime?)null;
+        
+        var naldRevocationDate = !string.IsNullOrEmpty(naldDataLine?.RevocationDate)
+            ? DateTime.Parse(naldDataLine.RevocationDate)
+            : (DateTime?)null;
+        
+        var naldOrigEffectiveDate = !string.IsNullOrEmpty(naldDataLine?.OrigEffDate)
+            ? DateTime.Parse(naldDataLine.OrigEffDate)
+            : (DateTime?)null;
+        
+        var naldEffectiveStartDate = !string.IsNullOrEmpty(naldDataLine?.EffStDate)
+            ? DateTime.Parse(naldDataLine.EffStDate)
+            : (DateTime?)null;
+        
+        var naldEffectiveEndDate = !string.IsNullOrEmpty(naldDataLine?.EffEndDate)
+            ? DateTime.Parse(naldDataLine.EffEndDate)
+            : (DateTime?)null;
+        
+        var naldOrigSignatureDate = !string.IsNullOrEmpty(naldDataLine?.OrigSigDate)
+            ? DateTime.Parse(naldDataLine.OrigSigDate)
+            : (DateTime?)null;
+        
+        var naldSignatureDate = !string.IsNullOrEmpty(naldDataLine?.LicSigDate)
+            ? DateTime.Parse(naldDataLine.LicSigDate)
+            : (DateTime?)null;
+
+        var naldIssueNumber = naldDataLine?.IssueNo;
+        var naldIncrementNumber = naldDataLine?.IncrNo;
+        var naldUpdateReason = naldDataLine?.AabvType;
+        var naldStatus = naldDataLine?.Status;
+        
+        return new LicenceVersion
+        {
+            NaldRevocationDate = naldRevocationDate,
+            EffectiveDate = effectiveDate,
+            NaldOrigEffectiveDate = naldOrigEffectiveDate,
+            NaldOrigSignatureDate = naldOrigSignatureDate,
+            NaldSignatureDate = naldSignatureDate,     
+            NaldEffectiveStartDate = naldEffectiveStartDate,
+            NaldEffectiveEndDate = naldEffectiveEndDate,
+            NaldIssueNumber = naldIssueNumber,
+            NaldIncrementNumber = naldIncrementNumber,   
+            NaldUpdateReason = naldUpdateReason,
+            NaldStatus = naldStatus,
+            ExpiryDate = expiryDate,
+            NaldExpiryDate = naldExpiryDate,
+            IssueDate = dateOfIssue,
+            Issuer = issuer,
+            OriginalIssueDate = dateOfOriginalIssue
+        };
+    }
+
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
         string? licenceNumber,
-        NaldLicenceStatusData naldLicenceStatusData)
+        NaldLicenceStatusData naldLicenceStatusData,
+        int regionCode)
     {
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
         
         var isLiveLicence = naldLicenceStatusData.LiveLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
             ? naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber)
@@ -414,10 +452,10 @@ public static partial class SchemaConverter
         return (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound);
     }
 
-    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2)
+    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionCode)
     {
         var licenceNumberStripped1 =
-            FormattingHelper.StripForComparison(licenceNumber1);
+            FormattingHelper.StripForComparison(licenceNumber1, regionCode);
 
         if (string.IsNullOrWhiteSpace(licenceNumberStripped1))
         {
@@ -425,7 +463,7 @@ public static partial class SchemaConverter
         }
 
         var licenceNumberStripped2 =
-            FormattingHelper.StripForComparison(licenceNumber2);
+            FormattingHelper.StripForComparison(licenceNumber2, regionCode);
 
         if (string.IsNullOrWhiteSpace(licenceNumberStripped2))
         {
@@ -446,17 +484,19 @@ public static partial class SchemaConverter
                    || licenceNumberStripped2.Contains(licenceNumberStripped1));
     }
     
-    private static LinkedLicence ToLinkedLicence(
+    private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
             linkedLicenceNumber,
-            naldLicenceStatusData);
+            naldLicenceStatusData,
+            regionCode);
         
         var naldLicenceNumber = (string?)null;
         
@@ -465,8 +505,13 @@ public static partial class SchemaConverter
             naldLicenceNumber = linkedLicenceNumber;
         }
         
-        var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber);
+        var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
 
+        if (string.IsNullOrWhiteSpace(strippedLinkedLicenceNumber))
+        {
+            return null;
+        }
+        
         var dmsFileData = !string.IsNullOrEmpty(strippedLinkedLicenceNumber)
             ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
             : null;
@@ -490,7 +535,7 @@ public static partial class SchemaConverter
         MatchesResult matchesResult,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         int processRunId)
@@ -498,7 +543,7 @@ public static partial class SchemaConverter
         var returnList = new List<LicenceSet>();
 
         var licenceNumber = GetLicenceNumber(matchesResult);
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
 
         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
             ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -630,7 +675,8 @@ public static partial class SchemaConverter
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
-                licenceNumbersMapping);
+                licenceNumbersMapping,
+                matchesResult.RegionCode);
 
             var newLicenceSetIds = new List<LicenceSetReference>
             {
@@ -670,7 +716,8 @@ public static partial class SchemaConverter
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var returnList = new List<LicenceSet>();
         
@@ -709,24 +756,30 @@ public static partial class SchemaConverter
                         }
 
                         // Back link is missing
-                        var linkedLicencesNew = new List<LinkedLicence>(licence.LinkedLicences)
-                        {
-                            ToLinkedLicence(
-                                incomingLink.LicenceNumber,
-                                incomingLink.Filename,
-                                null,
-                                [new LinkedLicenceSection
+                        var backLink = ToLinkedLicence(
+                            incomingLink.LicenceNumber,
+                            incomingLink.Filename,
+                            null,
+                            [
+                                new LinkedLicenceSection
                                 {
                                     SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
                                     LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})",
                                     LineNumber = -1,
                                     PageNumber = -1,
-                                }],
-                                naldLicenceStatusData,
-                                licenceNumbersMapping)
-                        };
+                                }
+                            ],
+                            naldLicenceStatusData,
+                            licenceNumbersMapping,
+                            regionCode);
 
-                        licence.LinkedLicences = linkedLicencesNew.ToArray();
+                        if (backLink != null)
+                        {
+                            licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
+                            {
+                                backLink
+                            }.ToArray();
+                        }
 
                         if (!addImplicitLicenceSet)
                         {
@@ -888,7 +941,7 @@ public static partial class SchemaConverter
         Licence primaryLicence,
         Dictionary<string, DmsFileData> licenceNumberMapping,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
@@ -901,106 +954,115 @@ public static partial class SchemaConverter
 
         var abstractionLimitsPoints = abstractionLimits?.SubResults;
 
-        if (abstractionLimitsPoints == null)
+        if (abstractionLimitsPoints != null)
         {
-            return returnLicences;
-        }
-        
-        foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
-        {
-            var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
-
-            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+            foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
             {
-                var linkedLicencesData = abstractionLimitPointSub.SubResults
-                    .Where(subResult =>
-                        subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
-                    .ToList();
+                var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
 
-                foreach (var linkedLicenceData in linkedLicencesData)
+                foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
                 {
-                    var matches = ToMatchesResult(linkedLicenceData);
-                    
-                    var licenceNumber = GetLicenceNumber(matches);
-                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
-                    
-                    var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-                        ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
-                        : null;
-                    
-                    var linkedLicence = ToLicence(
-                        matches,
-                        naldLicenceStatusData,
-                        dmsFileData,
-                        licenceNumberMapping,
-                        naldData);
-                        
-                    returnLicences.Add(linkedLicence);   
-                }
-                    
-                var linkedLicenceNumbers = abstractionLimitPointSub.SubResults
-                    .Where(subResult =>
-                        subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
-                    .ToList();
+                    var linkedLicencesData = abstractionLimitPointSub.SubResults
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
+                        .ToList();
 
-                foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
-                {
-                    var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
-                    var licenceNumberTransformed = FormattingHelper.FormatLicenceNumber(licenceNumber);
-
-                    // Don't process ones we've already found
-                    if (licenceNumberTransformed == primaryLicence.LicenceNumber
-                        || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
+                    foreach (var linkedLicenceData in linkedLicencesData)
                     {
-                        continue;
+                        var matches = ToMatchesResult(linkedLicenceData);
+
+                        var licenceNumber = GetLicenceNumber(matches);
+                        var strippedLicenceNumber =
+                            FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
+
+                        var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                            ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
+                            : null;
+
+                        var linkedLicence = ToLicence(
+                            matches,
+                            naldLicenceStatusData,
+                            dmsFileData,
+                            licenceNumberMapping,
+                            naldData);
+
+                        returnLicences.Add(linkedLicence);
                     }
-                    
-                    var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber)!;
-                    
-                    if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
+
+                    var linkedLicenceNumbers = abstractionLimitPointSub.SubResults
+                        .Where(subResult =>
+                            subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
+                        .ToList();
+
+                    foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
                     {
-                        returnLicences.Add(new Licence
+                        var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
+                        var licenceNumberTransformed =
+                            FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
+
+                        // Don't process ones we've already found
+                        if (licenceNumberTransformed == primaryLicence.LicenceNumber
+                            || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
                         {
-                            LicenceNumber = licenceNumber,
-                            Status = LicenceStatus.NotFound
-                        });
-                        
-                        continue;
+                            continue;
+                        }
+
+                        var strippedLicenceNumber =
+                            FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode)!;
+
+                        if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
+                        {
+                            returnLicences.Add(new Licence
+                            {
+                                LicenceNumber = licenceNumber,
+                                Status = LicenceStatus.NotFound
+                            });
+
+                            continue;
+                        }
+
+                        var destinationFileName = dmsFileData.DestinationFileName!;
+
+                        if (!destinationFileName.Contains('/'))
+                        {
+                            destinationFileName = $"{pdfFolder}{destinationFileName}";
+                        }
+
+                        var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                            destinationFileName,
+                            new LookupConfiguration(
+                                LabelConfiguration.GetLabels(),
+                                licenceNumberMapping,
+                                matchesResult.RegionCode),
+                            previouslyParsedPaths,
+                            processRunId);
+
+                        var licence = ToLicence(
+                            relatedFileMatches,
+                            naldLicenceStatusData,
+                            dmsFileData,
+                            licenceNumberMapping,
+                            naldData);
+
+                        returnLicences.Add(licence);
                     }
-
-                    var destinationFileName = dmsFileData.DestinationFileName!;
-
-                    if (!destinationFileName.Contains('/'))
-                    {
-                        destinationFileName = $"{pdfFolder}{destinationFileName}";
-                    }
-                    
-                    var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                        destinationFileName,
-                        new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
-                        previouslyParsedPaths,
-                        processRunId);
-
-                    var licence = ToLicence(
-                        relatedFileMatches,
-                        naldLicenceStatusData,
-                        dmsFileData,
-                        licenceNumberMapping,
-                        naldData);
-                    
-                    returnLicences.Add(licence);
                 }
             }
         }
-        
+
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
-            var strippedLlNumber = FormattingHelper.StripForComparison(linkedLicence.LicenceNumber);
+            var strippedLlNumber = FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, matchesResult.RegionCode);
             
             // Already found it
             if (returnLicences.Any(returnLicence =>
-                FormattingHelper.StripForComparison(returnLicence.LicenceNumber)
+                FormattingHelper.StripForComparison(returnLicence.LicenceNumber, matchesResult.RegionCode)
                     == strippedLlNumber))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(strippedLlNumber))
             {
                 continue;
             }
@@ -1025,7 +1087,10 @@ public static partial class SchemaConverter
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
+                new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    licenceNumberMapping,
+                    matchesResult.RegionCode),
                 previouslyParsedPaths,
                 processRunId);
                     
@@ -1073,7 +1138,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var additional = matches
             .FirstOrDefault(result => result.LabelGroupName == "Additional");
@@ -1093,9 +1159,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1130,7 +1197,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetReasonsForConditionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var reasonsForConditions = matches
             .FirstOrDefault(result => result.LabelGroupName == "ReasonsForConditions");
@@ -1150,9 +1218,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1200,7 +1269,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetAllDocumentLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
@@ -1225,9 +1295,10 @@ public static partial class SchemaConverter
             
             var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                 linkedLicenceNumber,
-                naldLicenceStatusData);
+                naldLicenceStatusData,
+                regionCode);
 
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber);
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
     
             var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                 ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1278,7 +1349,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var licenceHistorySection = matches
             .FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
@@ -1299,9 +1371,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1336,7 +1409,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetPurposesLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var purposeSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Purpose");
@@ -1365,9 +1439,10 @@ public static partial class SchemaConverter
                 
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                             licenceNumber,
-                            naldLicenceStatusData);
+                            naldLicenceStatusData,
+                            regionCode);
 
-                        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                             ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1406,7 +1481,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetPointsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var pointsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Points");
@@ -1435,9 +1511,10 @@ public static partial class SchemaConverter
                 
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                             licenceNumber,
-                            naldLicenceStatusData);
+                            naldLicenceStatusData,
+                            regionCode);
 
-                        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                             ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1476,7 +1553,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetRecordsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var records = matches
             .FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -1496,9 +1574,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
                 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
                     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1533,7 +1612,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var furtherConditions = matches
             .FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
@@ -1553,9 +1633,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1590,7 +1671,8 @@ public static partial class SchemaConverter
     private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {
         var furtherProvisions = matches
             .FirstOrDefault(result => result.LabelGroupName == "FurtherProvisions");
@@ -1610,9 +1692,10 @@ public static partial class SchemaConverter
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
-                    naldLicenceStatusData);
+                    naldLicenceStatusData,
+                    regionCode);
 
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
     
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1788,9 +1871,10 @@ public static partial class SchemaConverter
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
+        int regionCode,
         ref Dictionary<string, object> noneSchemaData)
     {
         var abstractionLimitsSection = matches
@@ -1946,11 +2030,12 @@ public static partial class SchemaConverter
                         .Text;
 
                     var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-                    var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber);
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber, regionCode);
                     
                     var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                         licenceNumber,
-                        naldLicenceStatusData);
+                        naldLicenceStatusData,
+                        regionCode);
                     
                     var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                         ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -2088,7 +2173,7 @@ public static partial class SchemaConverter
                 PrimaryType = linkedLicenceNumbers.Count >= 1
                     ? PrimaryType.LicenceToLicence
                     : PrimaryType.InLicence,
-                NaldType = GetNaldType(naldData, licenceNumber),
+                NaldType = GetNaldType(naldData, licenceNumber, regionCode),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
@@ -2239,7 +2324,8 @@ public static partial class SchemaConverter
     private static PeriodOfAbstraction[] GetPeriods(
         List<LabelGroupResult> matches,
         string? licenceNumber,
-        Dictionary<string, NaldData> naldData)
+        Dictionary<string, List<NaldData>> naldData,
+        int regionCode)
     {
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
@@ -2263,8 +2349,8 @@ public static partial class SchemaConverter
                 Inclusive = true,
                 StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
                 EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
+                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text, regionCode),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text, regionCode)
             });
         }
         
@@ -2342,8 +2428,8 @@ public static partial class SchemaConverter
                 TimeCutoff = timeCutoff,
                 PointIds = null, // TODO set purpose ids and point ids
                 PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text)
+                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text, regionCode),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber, periodResults.Text?.FirstOrDefault()?.Text, regionCode)
             });
         }
 
@@ -2433,7 +2519,8 @@ public static partial class SchemaConverter
     private static PointOfAbstraction[] GetPoints(
         List<LabelGroupResult> matches,
         string? licenceNumber,
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
+        int regionCode,
         ref Dictionary<string, object> noneSchemaData)
     {
         var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
@@ -2520,7 +2607,7 @@ public static partial class SchemaConverter
                             Id = $"{number} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldData, licenceNumber, tableLine.Text)
+                            NaldData = GetNaldPointData(naldData, licenceNumber, tableLine.Text, regionCode)
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2551,7 +2638,7 @@ public static partial class SchemaConverter
                     Id = number,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldData, licenceNumber, description)
+                    NaldData = GetNaldPointData(naldData, licenceNumber, description, regionCode)
                 });
             }
         }
@@ -2560,24 +2647,27 @@ public static partial class SchemaConverter
     }
 
     private static NaldData? GetNaldDataLine(
-        Dictionary<string, NaldData> naldData,
-        string? licenceNumber)
+        Dictionary<string, List<NaldData>> naldData,
+        string? licenceNumber,
+        int regionCode)
     {
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber);
-        
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
+        var naldDataKey = $"{regionCode}|{strippedLicenceNumber}";
+            
         return naldData.Count > 0
-            && !string.IsNullOrEmpty(strippedLicenceNumber)
-            && naldData.TryGetValue(strippedLicenceNumber, out var naldDataLine)
-                ? naldDataLine
+            && !string.IsNullOrEmpty(naldDataKey)
+            && naldData.TryGetValue(naldDataKey, out var naldDataLine)
+                ? naldDataLine.First()
                 : null;
     }
     
     private static NaldPointData? GetNaldPointData(
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         string? licenceNumber,
-        string? description)
+        string? description,
+        int regionCode)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
 
         if (naldDataLine?.Points.Count is null or 0)
         {
@@ -2624,11 +2714,12 @@ public static partial class SchemaConverter
     }
     
     private static NaldPurposeData? GetNaldPurposeData(
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         string? licenceNumber,
-        string? description)
+        string? description,
+        int regionCode)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
 
         if (naldDataLine?.Purposes.Count is null or 0)
         {
@@ -2660,11 +2751,12 @@ public static partial class SchemaConverter
     }
     
     private static string? GetNaldPeriodStartDate(
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         string? licenceNumber,
-        string? description)
+        string? description,
+        int regionCode)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
 
         if (naldDataLine == null)
         {
@@ -2677,26 +2769,20 @@ public static partial class SchemaConverter
         }
 
         var periods = naldDataLine.Periods;
-        
-        if (periods.Count == 1)
-        {
-            return periods[0].PeriodStart;
-        }
+        var period = periods.Count == 1 ?
+            periods[0]
+            : periods.First(p => p.PeriodStartDay != null);
 
-        // TODO - Work out which period matches the description
-        
-        return periods
-            .First(p => !string.IsNullOrEmpty(p.PeriodStart))
-            .PeriodStart!
-            .ToString();
+        return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
     }
     
     private static string? GetNaldPeriodEndDate(
-        Dictionary<string, NaldData> naldData,
+        Dictionary<string, List<NaldData>> naldData,
         string? licenceNumber,
-        string? description)
+        string? description,
+        int regionCode)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
 
         if (naldDataLine?.Periods.Count is null or 0)
         {
@@ -2704,23 +2790,18 @@ public static partial class SchemaConverter
         }
 
         var periods = naldDataLine.Periods;
-        
-        if (periods.Count == 1)
-        {
-            return periods[0].PeriodEnd;
-        }
+        var period = periods.Count == 1 ?
+            periods[0]
+            : periods.First(p => p.PeriodEndDay != null);
 
-        // TODO - Work out which period matches the description
-        
-        return periods
-            .First(p => !string.IsNullOrEmpty(p.PeriodStart)).PeriodEnd!
-            .ToString();
+        return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
     }
     
     private static PurposeOfAbstraction[] GetPurposes(
         List<LabelGroupResult> matches,
         string? licenceNumber,
-        Dictionary<string, NaldData> naldData)
+        Dictionary<string, List<NaldData>> naldData,
+        int regionCode)
     {
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
@@ -2804,7 +2885,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
                             });
                         }
 
@@ -2824,7 +2905,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
                             });
                         }
 
@@ -2844,7 +2925,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
                             });
                         }
 
@@ -2864,7 +2945,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
                             });
                         }
 
@@ -2884,7 +2965,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim())
+                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
                             });
                         }
 
@@ -2898,7 +2979,7 @@ public static partial class SchemaConverter
                     Description = description,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPurposeData(naldData, licenceNumber, description)
+                    NaldData = GetNaldPurposeData(naldData, licenceNumber, description, regionCode)
                 });
             }
         }
@@ -3018,9 +3099,9 @@ public static partial class SchemaConverter
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }
-    private static string? GetNaldType(Dictionary<string, NaldData> naldData, string? licenceNumber)
+    private static string? GetNaldType(Dictionary<string, List<NaldData>> naldData, string? licenceNumber, int regionCode)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
         var naldAggregateCondition = naldDataLine?.AggregateConditions;
 
         return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0].Condition)
@@ -3031,7 +3112,8 @@ public static partial class SchemaConverter
     public static List<LicenceSet> AddAdditionalLicenceSets(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping)
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode)
     {        
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
         
@@ -3039,7 +3121,8 @@ public static partial class SchemaConverter
             licenceSetGroups,
             true,
             naldLicenceStatusData,
-            licenceNumbersMapping));
+            licenceNumbersMapping,
+            regionCode));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         return distinctLicenceSets;
@@ -3115,7 +3198,7 @@ public static partial class SchemaConverter
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
         {
             noneSchemaData?.TryAdd("scrapedLicenceNumber", scrapedLicenceNumber);
-            licenceNumber = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber);
+            licenceNumber = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber, matchesResult.RegionCode);
         }
         
         string? fileNameLicenceNumber = null;
@@ -3144,8 +3227,8 @@ public static partial class SchemaConverter
                 fileNameLicenceNumber = licenceNumberPart.Replace("-", "/");
 
                 fileNameLicenceNumber = fileNameLicenceNumber.Contains('/')
-                    ? FormattingHelper.FormatLicenceNumber(fileNameLicenceNumber)
-                    : FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber);
+                    ? FormattingHelper.FormatLicenceNumber(fileNameLicenceNumber, matchesResult.RegionCode)
+                    : FormattingHelper.NoneSeperatedToNaldLicenceNumber(fileNameLicenceNumber, matchesResult.RegionCode);
 
                 if (!string.IsNullOrEmpty(fileNameLicenceNumber))
                 {
@@ -3162,9 +3245,9 @@ public static partial class SchemaConverter
         // If they are similar, use the filename version of the licence number
         if (!string.IsNullOrEmpty(scrapedLicenceNumber)
             && !string.IsNullOrEmpty(fileNameLicenceNumber)
-            && FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber) != fileNameLicenceNumber)
+            && FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber, matchesResult.RegionCode) != fileNameLicenceNumber)
         {
-            var formattedScraped = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber);
+            var formattedScraped = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber, matchesResult.RegionCode);
             var characterDifferenceCount = DifferenceCount(fileNameLicenceNumber, formattedScraped);
 
             if (characterDifferenceCount <= 2)
@@ -3174,7 +3257,7 @@ public static partial class SchemaConverter
             }
         }
         
-        licenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumber)?.ToUpper();
+        licenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode)?.ToUpper();
         return licenceNumber;
     }
     

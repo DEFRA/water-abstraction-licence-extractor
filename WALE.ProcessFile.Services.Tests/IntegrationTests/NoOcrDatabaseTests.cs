@@ -74,7 +74,7 @@ public class NoOcrDatabaseTests
             }
         };
 
-    private readonly Dictionary<string, NaldData> _naldData = [];
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
@@ -82,7 +82,8 @@ public class NoOcrDatabaseTests
             TestConfig.PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                FileLicenceMapping),
+                FileLicenceMapping,
+                3),
             [TestConfig.PdfFolder + fileName],
             0);
     }

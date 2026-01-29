@@ -32,7 +32,8 @@ public class FunctionInputModel
     public ICacheService? cacheService { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
     public int processRunId { get; set; }
-    
+    public int regionCode { get; set; }
+
     public FunctionInputModel Clone()
     {
         return new FunctionInputModel
@@ -62,7 +63,9 @@ public class FunctionInputModel
             outputService = outputService,
             cacheService = cacheService,
             pdfDataExtractorService = pdfDataExtractorService,
-            autoCorrect = autoCorrect
+            autoCorrect = autoCorrect,
+            processRunId = processRunId,
+            regionCode = regionCode
         };
     }
 }

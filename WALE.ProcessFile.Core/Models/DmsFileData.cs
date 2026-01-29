@@ -9,4 +9,6 @@ public class DmsFileData
     public string? DmsPath { get; set; }
     
     public string? DestinationFileName { get; set; }
+    
+    public string? StrippedLicenceNumber { get; set; }
 }

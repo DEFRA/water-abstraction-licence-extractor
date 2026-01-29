@@ -1,6 +1,5 @@
 using System.Text.Json;
 using SkiaSharp;
-using UglyToad.PdfPig.Graphics.Colors;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -20,17 +19,36 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public Task<string> GetPageScreenshotReferenceAsync(int pageNumber, string pdfServiceName,
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(int pageNumber, string pdfServiceName,
         string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return Task.FromResult($"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}");
+
+        return
+        [
+            (pdfServiceName, $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
+            ("Docnet", $"Screenshot-{pdfFilename}-Docnet-{pageNumber}")
+        ];
     }
 
-    public Task<byte[]?> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        return databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, pdfServiceName);
+        
+        var bytes1 = await databaseReadService.GetPageScreenshotAsync(
+            pageNumber,
+            pdfFilename,
+            pdfServiceName);
+        
+        var bytes2 = await databaseReadService.GetPageScreenshotAsync(
+            pageNumber,
+            pdfFilename,
+            "Docnet");
+        
+        return [
+            bytes1!,
+            bytes2!
+        ];
     }
 
     public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
@@ -140,15 +158,19 @@ public class DatabaseOutputService(
             return;
         }
         
-        using var memoryStream = pdfDocument.GetPageAsSkBitmap(pageNumber, RGBColor.White);
-        var bytes = await GetAsJpegAsync(memoryStream);
-        
-        await databaseWriteService.SavePageScreenshotIfDoesntExistAsync(
-            pageNumber,
-            noOcrServiceName,
-            pdfFilename,
-            bytes,
-            processRunId);
+        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+
+        foreach (var (providerName, bitmap) in images)
+        {
+            var bytes = await GetAsJpegAsync(bitmap);
+
+            await databaseWriteService.SavePageScreenshotIfDoesntExistAsync(
+                pageNumber,
+                providerName,
+                pdfFilename,
+                bytes,
+                processRunId);
+        }
     }
 
     public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
@@ -165,7 +187,7 @@ public class DatabaseOutputService(
         await databaseWriteService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
     }
 
-    public async Task FinishProcessRunAsync(ProcessRun processRun)
+    public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
     {
         // Fix up missing LicenceIds in LicenceSetList
         var licenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(
@@ -180,7 +202,7 @@ public class DatabaseOutputService(
                 continue;
             }
 
-            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber)!;
+            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber, regionId)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

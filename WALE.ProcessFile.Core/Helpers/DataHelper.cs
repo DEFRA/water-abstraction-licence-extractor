@@ -384,6 +384,7 @@ public static partial class DataHelper
         return 
             (!char.IsLetterOrDigit(ch) || !char.IsAscii(ch))
             && ch != ' '
+            && ch != '|'
             && ch != '/'
             && ch != '.'
             && ch != '%'

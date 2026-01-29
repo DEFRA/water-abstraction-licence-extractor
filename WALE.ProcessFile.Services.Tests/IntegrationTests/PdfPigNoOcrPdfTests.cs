@@ -56,12 +56,15 @@ public class PdfPigNoOcrPdfTests
         CacheService,
         OutputService,
         TestConfig.PdfFolder3);
+
+    private static int NoneNeRegionCode = 1;
+    private static int NeRegionCode = 3;
     
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
         new()
         {
             { 
-                FormattingHelper.StripForComparison("25 68 001 247")!,
+                FormattingHelper.StripForComparison("25 68 001 247", NoneNeRegionCode)!,
                 new DmsFileData
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
@@ -69,15 +72,15 @@ public class PdfPigNoOcrPdfTests
                 }
             },
             {
-                FormattingHelper.StripForComparison("25 68 001 248")!,
+                FormattingHelper.StripForComparison("25 68 001 248", NoneNeRegionCode)!,
                 new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/018")!,
+                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
                 new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/052")!,
+                FormattingHelper.StripForComparison("NE/026/0034/052", NeRegionCode)!,
                 new DmsFileData { DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf" }
             }
         };
@@ -86,15 +89,15 @@ public class PdfPigNoOcrPdfTests
         new()
         {
             { 
-                FormattingHelper.StripForComparison("25 68 001 247")!,
+                FormattingHelper.StripForComparison("25 68 001 247", NeRegionCode)!,
                 new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
             },
             {
-                FormattingHelper.StripForComparison("25 68 001 248")!,
+                FormattingHelper.StripForComparison("25 68 001 248", NeRegionCode)!,
                 new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/018")!,
+                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
                 new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
             }
         };
@@ -106,9 +109,9 @@ public class PdfPigNoOcrPdfTests
         ImpoundmentLicences = []
     };
     
-    private static readonly Dictionary<string, NaldData> NaldData = [];
+    private static readonly Dictionary<string, List<NaldData>> NaldData = [];
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1, int fileLicenceMapping = 1)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1, int fileLicenceMapping = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
@@ -120,7 +123,8 @@ public class PdfPigNoOcrPdfTests
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-              fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52),
+              fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
+                regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -132,7 +136,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -308,7 +312,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation -Application New Licence Issued 24_12_2019 00_00_00 11164372.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -517,7 +521,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application – Transfer – Issued Licence – 07.07.2022.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -748,7 +752,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application new Issued licence 04052017 AN0300012011 9781525.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -936,7 +940,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - NA Formal Variation - Issued Licence [26_3_21] 11759321.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1436,7 +1440,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application – Renewal – Licence Issued – 24062022.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2011,7 +2015,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Renewal Issued Licence- 25.01.2024.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2217,7 +2221,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation  Issued licence -007-13122023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2321,7 +2325,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, fileLicenceMapping: 2);
+        var resultFull = await GetMatchesAsync(filename, 1, fileLicenceMapping: 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2431,7 +2435,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2676,7 +2680,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Vesting Licence Issued November 2017 011 10045454.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2766,7 +2770,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application NA New Issued Licence 11765926.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2857,7 +2861,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - New - Issued Licence 31.01.2017 9655530.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2947,7 +2951,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Issued New Licence 2 23.2.2024.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -3068,7 +3072,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application New Licence July 2017 9867755.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -3160,7 +3164,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application NA Formal Variation Licence 08122021.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -3247,7 +3251,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - formal variation - issue licence 9227047.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -3374,7 +3378,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "06_transfer_application_new_licence_issued_2112018_10555534.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -3452,8 +3456,8 @@ public class PdfPigNoOcrPdfTests
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0);
-        
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         Assert.Equal("TH/039/0028/051", agreedSchemaLicence.LicenceNumber);
@@ -3482,7 +3486,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "1.3-licence-07.02.2023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
 
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("South West Water Limited", companyName?.Text?.FirstOrDefault()?.Text);
@@ -3565,7 +3569,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Abstraction Licence 7310604.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var abstractionLimitsResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -3678,7 +3682,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - New - Licence Issued 30092021.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -3808,7 +3812,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Formal Variation Issued Licence 07032023 (1).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -3895,7 +3899,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Formal Variation Issued Licence 07032023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -3973,7 +3977,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application Minor Variation Issued Licence 03.10.24.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.NotNull(points);
@@ -3994,7 +3998,7 @@ public class PdfPigNoOcrPdfTests
             TestConfig.PdfFolder,
             0)).Last();
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
+        Assert.Single(agreedSchemaLicenceGroup.Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
@@ -4044,9 +4048,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2920000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        
-        Assert.Equal("2/27/11/064", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]
@@ -4056,7 +4058,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "Application - Minor Variation -Application New Licence Issued 28_04_2021 00_00_00 11794555.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceNumber = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
@@ -4101,7 +4103,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22718045__Application - Reduction -Application New Licence Issued 24_06_2019 00_00_00 10897641.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -4144,7 +4146,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22719149__Application Formal Variation - Issued Licence [04-09-2018] 10474343.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -4182,7 +4184,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -4261,7 +4263,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0260034056__Application New Issued Licence 10.09.2020 11497061.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -4409,7 +4411,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22718033__Application - Minor Variation - Issued Licence - 16022023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
@@ -4473,7 +4475,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4573,7 +4575,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0270023043__Application New Licence Issued 18.12.2018 10623801.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4613,7 +4615,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4656,7 +4658,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12100074R01__Application WR Abstraction Licence Issued 11042025.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 1, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4700,7 +4702,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12100073R01__Application - New -  Issued Licence 31.03.2015 8814302.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4740,7 +4742,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12100068__Application Normal Variation Licence Issued 17062025.docx.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4790,7 +4792,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22631079__Application – Transfer – Issued Licence – 240223.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4823,7 +4825,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12304073__Application –  New – Issued licence – November  2015 9083023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4856,7 +4858,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12504142__Application Minor Variation Issued Licence - 27052025.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4889,7 +4891,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "12504008__Application - Minor Variation - Issued Licence PDF Copy 9211405.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -4972,7 +4974,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22702039__Application Formal Variation Issue Licence 30062023.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5096,7 +5098,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22722265__Application - new - issue licence 9393610.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5131,7 +5133,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0270024056__Application Formal Variation Issued Licence - [11072017] - (11072017).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5167,7 +5169,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22708052__Application - Formal Variation - Issued Licence 24.01.2017 9644004.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5205,7 +5207,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22728270R01__Application - New - Issued Licence 24.06.2015 8918352.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5242,7 +5244,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "ne0230003031__Application – NA New – Issued Licence-22072022.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5277,7 +5279,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0210000014__Application NA New Issued Licence 31-03-2021 11765884.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5310,8 +5312,18 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0270024044__Application Variation Issued Licence June 2017.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+
+        var linkedLicences = resultFull.Matches!
+            .Where(x => x.LabelGroupName == "LinkedLicenceNumber")
+            .ToList();
+        
+        Assert.Equal(4, linkedLicences.Count);
+        Assert.Equal("MD/028/0084/008", linkedLicences[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("2/27/24/034", linkedLicences[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
+        Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -5333,10 +5345,11 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/027/0024/044", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/24/034", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // NOTE - This is linked accross region
+        Assert.Equal("9.2.2", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); 
     }
     
     [Fact]
@@ -5346,7 +5359,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0240005016__Application - Formal Variation -Application New Licence Issued 24_03_2021 00_00_00 11751498.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5379,7 +5392,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0230001007__Application – NA New – Issued Licence-22072022.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5412,7 +5425,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22722562R01__Application - Minor Variation -Application New Licence Issued 25_06_2019 00_00_00 10900765.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5445,7 +5458,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0240005010__Application - New HEP Licence - Issued Licence 6 June 2013 7844848.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5478,7 +5491,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22724199__Drax licence document - Amended 6065605.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
@@ -5511,7 +5524,7 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0270007008__Application New Issued Licence 31.03.2014 8288333.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(

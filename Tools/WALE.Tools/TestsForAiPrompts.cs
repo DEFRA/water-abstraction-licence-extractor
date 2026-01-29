@@ -526,19 +526,23 @@ public static class TestsForAiPrompts
         string pdfFilename,
         List<List<SKBitmap>> pageImageGroups)
     {
+        var cacheService = new FileSystemCacheService("Cache/");
+        var outputService = new FileSystemOutputService("Output/");
+        
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
                 ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
             PageSegMode.SparseTextOsd,
-            new FileSystemCacheService("Cache/"),
-            new FileSystemOutputService("Output/"),
+            cacheService,
+            outputService,
             KeyConfig.DotnetPath,
             KeyConfig.TesseractExeName,
             KeyConfig.TesseractExeDirectory);
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
-            true);
+            true,
+            outputService);
         
         var imagePrompts = new List<ChatMessageContentPart>();
                 

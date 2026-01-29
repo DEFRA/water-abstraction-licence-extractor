@@ -110,7 +110,7 @@ public static class BaseMethod
 
                         foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                            var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
 
                             if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
                             {
@@ -202,6 +202,7 @@ public static class BaseMethod
                 request.labelGroupName!,
                 request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
+                request.regionCode,
                 request.processRunId);
             
             if (request.label!.MinimumSubMatches.HasValue

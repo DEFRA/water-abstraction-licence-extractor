@@ -4,16 +4,17 @@ using Tesseract;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Services;
 using TesseractOcrDataExtractorService = WALE.ProcessFile.Services.TesseractExe.TesseractOcrDataExtractorService;
 
-var writeDebugLogs = true;
-
 try
 {
     var configuration = GetConfiguration();
-    writeDebugLogs = configuration.GetValue<bool>("writeDebugLogs");
+
+    var writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
+    var writeToFile = configuration.GetValue<bool>("writeDebugLogs");
     
     var argsStringForLogging = string.Join(' ', args);
     if (args.Length >= 16)
@@ -21,11 +22,12 @@ try
         var postgresPasswordTemp = args[15];
         argsStringForLogging = argsStringForLogging.Replace(postgresPasswordTemp, "*****");
     }
-    
+
     await WriteLogFileIfDebugModeAsync(
         "Started.txt",
         $"{typeof(Program).Assembly.GetName().Name} started - " + argsStringForLogging,
-        writeDebugLogs);
+        writeToConsole,
+        writeToFile);
 
     if (args.Length < 16)
     {
@@ -63,18 +65,18 @@ try
         postgresUsername,
         postgresPassword);
 
-    byte[]? imageBytes;
+    List<byte[]> bytesList;
 
     if (isPageScreenshot)
     {
-        imageBytes = await outputService.GetPageScreenshotDataAsync(
+        bytesList = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             PdfDataExtractorService.Name,
             pdfFilepath);
     }
     else
     {
-        imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+        var imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
@@ -82,14 +84,34 @@ try
             NoOcrServiceName = PdfDataExtractorService.Name,
             Extension = FileHelper.GetImageExtension(imageReference)
         });
+        
+        bytesList =
+        [
+            imageBytes!
+        ];
     }
 
-    if (imageBytes == null)
+    if (bytesList.Count == 0)
     {
         throw new Exception("Image was not found");
     }
-    
-    var textLines = tesseractService.GetDataFromTesseract(imageBytes);
+
+    var textLines = new List<LineAndWords>();
+    var maxNumberOfWords = -1;
+                
+    foreach (var bytes in bytesList)
+    {
+        var returnList = tesseractService.GetDataFromTesseract(bytes);
+        var numberOfWords = returnList.Sum(line => line.Words!.Count);
+
+        if (numberOfWords <= maxNumberOfWords)
+        {
+            continue;
+        }
+                    
+        maxNumberOfWords = numberOfWords;
+        textLines = returnList;
+    }
     
     var request = new OcrServiceImageTextCacheRequest
     {
@@ -112,14 +134,16 @@ try
     await WriteLogFileIfDebugModeAsync(
         "Finished.txt",
         $"{typeof(Program).Assembly.GetName().Name} finished with {textLines.Count} rows",
-        writeDebugLogs);
+        writeToConsole,
+        writeToFile);
 }
 catch (Exception ex)
 {
     await WriteLogFileIfDebugModeAsync(
         "Error.txt",
          "ERROR - " + ex,
-        writeDebugLogs);
+        true,
+        true);
 
     throw;
 }
@@ -199,11 +223,14 @@ static (IOutputService OutputService, ICacheService CacheService, TesseractOcrDa
     return (dbOutputService, dbCacheService, tesseractService);
 }
 
-static async Task WriteLogFileIfDebugModeAsync(string filename, string content, bool isDebug)
+static async Task WriteLogFileIfDebugModeAsync(string filename, string content, bool shouldConsoleWrite, bool shouldWriteFile)
 {
-    Console.WriteLine(content);
-    
-    if (!isDebug)
+    if (shouldConsoleWrite)
+    {
+        Console.WriteLine(content);
+    }
+
+    if (!shouldWriteFile)
     {
         return;
     }

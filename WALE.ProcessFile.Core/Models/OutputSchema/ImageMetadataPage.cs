@@ -7,7 +7,8 @@ public class ImageMetadataPage
     [JsonPropertyName("number")]
     public int Number { get; set; }
 
-    public string? ImageReference { get; set; }
+    [JsonPropertyName("screenshotReferences")] 
+    public List<ImageMetadataPageScreenshot> ScreenshotReferences { get; set; } = [];
 
     [JsonPropertyName("imageFiles")] 
     public List<string> Images { get; set; } = [];

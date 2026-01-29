@@ -25,8 +25,6 @@ public class TesseractOcrDataExtractorService(
         var tesseractEngine = GetEngine();
         var engine = tesseractEngine;
         
-        engine.SetVariable("user_defined_dpi", "200");
-        
         var processTask = Task.Run(() =>
         {
             //var dtProcessStart = DateTime.Now;
@@ -113,6 +111,7 @@ public class TesseractOcrDataExtractorService(
     {
         var engine = new TesseractEngine(dataPath, "eng");
         engine.SetVariable("tessedit_parallelize", "1");
+        engine.SetVariable("user_defined_dpi", "200");
 
         return engine;
     }

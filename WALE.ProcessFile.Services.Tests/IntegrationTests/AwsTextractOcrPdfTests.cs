@@ -56,7 +56,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         var pdfService = number == 1 ? _pdfDataExtractor1 : _pdfDataExtractor3;
@@ -65,7 +65,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             pdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -77,7 +78,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
 
         // Assert
@@ -204,7 +205,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults, int expectedLinkedLicenceLength)
     {
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         var resultList = resultFull.Matches!;
         
         // Assert

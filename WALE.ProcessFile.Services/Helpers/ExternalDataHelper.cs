@@ -19,7 +19,7 @@ public static class ExternalDataHelper
     {
         if (string.IsNullOrEmpty(naldDataReportPath))
         {
-            throw new NullReferenceException(nameof(naldDataReportPath));
+            return [];
         }
 
         var returnList = new Dictionary<string, NaldData>();

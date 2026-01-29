@@ -69,7 +69,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         ImpoundmentLicences = []
     };
     
-    private readonly Dictionary<string, NaldData> _naldData = [];
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
     private static string PdfFolder => TestConfig.PdfFolder;
     
@@ -82,7 +82,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             folder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                3),
             [folder + fileName],
             0);
     }
@@ -232,11 +233,14 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/3/76", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
     }
     
     [Fact]
@@ -317,11 +321,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             TestConfig.PdfFolder,
             0);
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Theory]
@@ -334,7 +339,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043")]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6, 0, "1/22/03/007")]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045")]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, "1/22/03/120")] // TODO can get 1 linked licence here
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, "1/22/03/120")]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, "1/22/05/021")]
     [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, "1/22/05/044")]
     [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067")]
@@ -345,15 +350,15 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 6, 0, "1/23/03/075")]
     [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967", "13/03/1967", 7, 0, "1/22/02/009")]
     [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14, 0, "1/23/03/142")]
-    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035")]
+    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035")] // TODO the K shouldnt be there
     [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014")]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 1, "1/25/02/102")]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133")]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 0, "1/25/02/141")]
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120")] // TODO looks a bit wrong
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 0, "1/24/01/034")]
-    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 66", "03/05/1966", 4, 0, "1/25/02/023")]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 7, 0, "1/25/02/023")]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167")]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 14, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
@@ -399,5 +404,54 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
         
         Assert.Equal(expectedLinkedLicenceCount, licence.LinkedLicences.Length);
+    }
+    
+    [Fact]
+    public async Task AAA3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Northumbrian River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal("23rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            0);
+        
+        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(new DateTime(1966, 05, 23), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 }

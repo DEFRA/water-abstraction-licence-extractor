@@ -42,17 +42,28 @@ public class LicenceVersion
     
     public DateTime? OriginalIssueDate { get; set; }
     
-    public DateTime? NaldStartDate { get; set; }
+    public DateTime? NaldRevocationDate { get; set; }
     
-    public DateTime? NaldEndDate { get; set; }
+    public DateTime? NaldExpiryDate { get; set; }
     
-    public string? NaldVersionNumber { get; set; }
+    public DateTime? NaldOrigEffectiveDate { get; set; }
+    
+    public DateTime? NaldOrigSignatureDate { get; set; }
+    public DateTime? NaldSignatureDate { get; set; }
+    public DateTime? NaldEffectiveStartDate { get; set; }
+    public DateTime? NaldEffectiveEndDate { get; set; }
+    public int? NaldIssueNumber { get; set; }
+    public int? NaldIncrementNumber { get; set; }
+    public string? NaldUpdateReason { get; set; }
+    
+    public string? NaldStatus { get; set; }
 
     public static LicenceVersion Template => new()
     {
-        NaldStartDate = null,
-        NaldEndDate = null,
-        NaldVersionNumber = null,
+        NaldRevocationDate = null,
+        NaldExpiryDate = null,
+        NaldOrigEffectiveDate = null,
+        NaldOrigSignatureDate = null,        
         Issuer = string.Empty,
         EffectiveDate = DateTime.MinValue,
         ExpiryDate = DateTime.MinValue,

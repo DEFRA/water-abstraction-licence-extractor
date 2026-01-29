@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
@@ -14,17 +13,19 @@ public class NaldLinkedLicenceHelper
         _linkedLicenceMap = linkedLicenceMap;
     }
 
-    public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData)
+    public static async Task<NaldLinkedLicenceHelper> CreateAsync(
+        List<NaldLinkedLicenceRawData> rawData,
+        int regionCode)
     {
-        var map = await BuildLinkedLicenceMapAsync(rawData);
+        var map = await BuildLinkedLicenceMapAsync(rawData, regionCode);
         return new NaldLinkedLicenceHelper(map);
     }
 
-    public async Task<List<string>> GetLinkedLicencesAsync(string? licenceNumber)
+    public List<string> GetLinkedLicences(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber)) return [];
 
-        var stripped = FormattingHelper.StripForComparison(licenceNumber);
+        var stripped = FormattingHelper.StripForComparison(licenceNumber, regionCode);
         if (stripped != null && _linkedLicenceMap.TryGetValue(stripped, out var linked))
         {
             return linked.ToList();
@@ -33,7 +34,9 @@ public class NaldLinkedLicenceHelper
         return [];
     }
 
-    private static async Task<Dictionary<string, HashSet<string>>> BuildLinkedLicenceMapAsync(List<NaldLinkedLicenceRawData> rawData)
+    private static async Task<Dictionary<string, HashSet<string>>> BuildLinkedLicenceMapAsync(
+        List<NaldLinkedLicenceRawData> rawData,
+        int regionCode)
     {
         var map = new Dictionary<string, HashSet<string>>();
 
@@ -41,7 +44,7 @@ public class NaldLinkedLicenceHelper
         {
             if (string.IsNullOrEmpty(item.LicenceNumber)) continue;
 
-            var strippedLicNo = FormattingHelper.StripForComparison(item.LicenceNumber);
+            var strippedLicNo = FormattingHelper.StripForComparison(item.LicenceNumber, regionCode);
             if (strippedLicNo == null) continue;
 
             if (!map.ContainsKey(strippedLicNo))
@@ -62,7 +65,7 @@ public class NaldLinkedLicenceHelper
                 var licenceNumbers = await LicenceNumber.FindLicenceNumbersAsync(text);
                 foreach (var licenceNumber in licenceNumbers)
                 {
-                    var strippedAggLicNo = FormattingHelper.StripForComparison(licenceNumber);
+                    var strippedAggLicNo = FormattingHelper.StripForComparison(licenceNumber, regionCode);
 
                     if (strippedAggLicNo != null && strippedAggLicNo != strippedLicNo)
                     {

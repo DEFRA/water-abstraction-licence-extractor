@@ -2,6 +2,8 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldDataPurpose
 {
+    public int? Id { get; set; }
+    
     public long PurposeId { get; init; }
     
     public string? PurposeCode { get; init; }
@@ -12,6 +14,6 @@ public class NaldDataPurpose
 
     public override string ToString()
     {
-        return $"{PurposeId}{PurposeCode}{PurposeUseCode}{PurposeUseDescription}";
+        return $"{Id}{PurposeId}{PurposeCode}{PurposeUseCode}{PurposeUseDescription}";
     }
 }

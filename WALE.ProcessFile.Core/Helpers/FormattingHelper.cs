@@ -6,14 +6,14 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    public static string? StripForComparison(string? formattedLicenceNumber)
+    public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {
             return null;
         }
 
-        if (IsNeLicenceNumber(formattedLicenceNumber))
+        if (IsNeLicenceNumber(formattedLicenceNumber, regionCode))
         {
             return StripForComparison_NE(formattedLicenceNumber);
         }
@@ -25,36 +25,46 @@ public static class FormattingHelper
             .Replace("-", "/");
 
         var parts = licenceNumber.Split('/');
+
+        var first = true;
         var sb = new StringBuilder();
 
         foreach (var part in parts)
         {
-            if (part.StartsWith('0'))
+            var partChanged = part;
+            
+            while (partChanged.StartsWith('0'))
             {
-                var partWithoutLeadingZero = part[1..];
-                sb.Append(partWithoutLeadingZero);
-                
-                continue;
+                partChanged = partChanged[1..];
+            }
+
+            if (!first)
+            {
+                sb.Append('_');
             }
             
-            sb.Append(part);
+            sb.Append(partChanged);
+            first = false;            
         }
 
         var str = sb.ToString();
 
-        if (str.EndsWith('0'))
+        // Commented out 12-01-2026 as it makes these the same 4/29/10/*G/0010 and 4/29/10/*G/0100
+        
+        /*if (str.EndsWith('0'))
         {
             var partWithoutTrailingZero = str[..^1];
             return partWithoutTrailingZero.Replace("0", string.Empty) + "0";
-        }
-        
-        return str.Replace("0", string.Empty);
+        }*/
+
+        // Commented out 12-01-2026 as it makes these the same 6/33/02/*G/0103 and 6/33/02/*G/0013
+        return str;// str.Replace("0", string.Empty);
     }
 
     private static string? StripForComparison_NE(string? formattedLicenceNumber)
     {
         var licenceNumber = ToFullLicenceNumber_NE(formattedLicenceNumber);
-        return licenceNumber?.Replace("/", string.Empty);
+        return licenceNumber?.Replace("/", "_");
     }
 
     private static string? ToFullLicenceNumber_NE(string? licenceNumber)
@@ -72,6 +82,7 @@ public static class FormattingHelper
 
         var origSectionLengths = licenceNumber.Split('/');
 
+        
         licenceNumber = licenceNumber
             .Replace(".", string.Empty)
             .Replace(" ", string.Empty)
@@ -323,7 +334,7 @@ public static class FormattingHelper
                 }
                 else
                 {
-                    throw new Exception("Can't work it out (2)");
+                    return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
                 }
                 
                 parts.Add(part3);
@@ -395,40 +406,64 @@ public static class FormattingHelper
                 parts.Add(remainingLicenceNumber);
             }
         }
+        else
+        {
+            return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
+        }
         
         return string.Join('/', parts);
     }
     
-    private static bool IsNeLicenceNumber(string? licenceNumber)
+    private static bool IsNeLicenceNumber(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return false;
         }
 
-        if (licenceNumber[0] is 'n' or 'N')
+        if (licenceNumber[0] is 'm' or 'M' || licenceNumber[1] is 'd' or 'D')
+        {
+            return false;
+        }
+        
+        if (licenceNumber[0] is '3' or '4' or '5' or '6' or '7' or '8' or '9')
+        {
+            return false;
+        }
+        
+        if (licenceNumber[0] is 'n' or 'N' && licenceNumber[1] is 'e' or 'E')
         {
             return true;
         }
         
         licenceNumber = licenceNumber
-            .Replace("/", string.Empty)
-            .Replace(".", string.Empty)
-            .Replace(" ", string.Empty)
-            .Replace("-", string.Empty);
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
 
-        var firstThreeChars = licenceNumber[..3];
-        return firstThreeChars is "121" or "122" or "123" or "124" or "125" or "226" or "227";
+        var parts = licenceNumber.Split('/');
+
+        if (parts[0] is "1")
+        {
+            return parts[1] is "21" or "22" or "23" or "24" or "25";
+        }
+        
+        if (parts[0] is "2")
+        {
+            return parts[1] is "26" or "27";
+        }
+
+        return regionCode == 3;
     }
     
-    public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
         {
             return noneSeperatedLicenceNumber;
         }
 
-        if (IsNeLicenceNumber(noneSeperatedLicenceNumber))
+        if (IsNeLicenceNumber(noneSeperatedLicenceNumber, regionCode))
         {
             return ToFullLicenceNumber_NE(noneSeperatedLicenceNumber);
             //return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
@@ -438,14 +473,14 @@ public static class FormattingHelper
         return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
     }
 
-    public static string? FormatLicenceNumber(string? licenceNumber)
+    public static string? FormatLicenceNumber(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return licenceNumber;
         }
         
-        if (IsNeLicenceNumber(licenceNumber))
+        if (IsNeLicenceNumber(licenceNumber, regionCode))
         {
             return ToFullLicenceNumber_NE(licenceNumber);
         }
@@ -492,7 +527,7 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
-        return NOTYorkshire1_PadLicenceNumber(licenceNumber);
+        return NOTYorkshire1_PadLicenceNumber(licenceNumber, regionCode);
     }
 
     private static string? Yorkshire1_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
@@ -550,8 +585,14 @@ public static class FormattingHelper
             return $"{section1}/{section2}";
         }
         
+        var section3EndPoint = section3StartPoint + section3Length;
+        if (section3EndPoint >= noneSeperatedLicenceNumber.Length)
+        {
+            section3Length = noneSeperatedLicenceNumber.Length - section3StartPoint;
+        }
+        
         var section3 = noneSeperatedLicenceNumber.Substring(section3StartPoint, section3Length);
-        var section4 = noneSeperatedLicenceNumber[section4StartPoint..];
+        var section4 = section4StartPoint < noneSeperatedLicenceNumber.Length ? noneSeperatedLicenceNumber[section4StartPoint..] : string.Empty;
         
         // Pad part 4 with zeroes (needs to have 3 digits)
         section4 = section4.Where(char.IsDigit).Count() switch
@@ -605,7 +646,7 @@ public static class FormattingHelper
         return $"{section1}/{section2}/{section3}/{section4}";
     }
 
-    private static string? NOTYorkshire1_PadLicenceNumber(string? licenceNumber)
+    private static string? NOTYorkshire1_PadLicenceNumber(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
@@ -636,7 +677,7 @@ public static class FormattingHelper
         if (parts.Length < 2)
         {
             return startsWithDigit && usesSlashes
-                ? NoneSeperatedToNaldLicenceNumber(part1.Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber(part1.Replace("/", string.Empty), regionCode)
                 : part1;
         }
         
@@ -650,7 +691,7 @@ public static class FormattingHelper
         if (parts.Length < 3)
         {
             return startsWithDigit && usesSlashes
-                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}".Replace("/", string.Empty), regionCode)
                 : $"{part1}/{part2}";
         }
         
@@ -664,7 +705,7 @@ public static class FormattingHelper
         if (parts.Length < 4)
         {
             return startsWithDigit && usesSlashes
-                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}".Replace("/", string.Empty), regionCode)
                 : $"{part1}/{part2}/{part3}";
         }
         
@@ -681,14 +722,14 @@ public static class FormattingHelper
         if (parts.Length < 5)
         {
             return startsWithDigit && usesSlashes
-                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty))
+                ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}".Replace("/", string.Empty), regionCode)
                 : $"{part1}/{part2}/{part3}/{part4}";
         }
 
         var part5 = parts[4];
         
         return startsWithDigit && usesSlashes
-            ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty))
+            ? NoneSeperatedToNaldLicenceNumber($"{part1}/{part2}/{part3}/{part4}/{part5}".Replace("/", string.Empty), regionCode)
             : $"{part1}/{part2}/{part3}/{part4}/{part5}";
     }
     

@@ -22,6 +22,7 @@ public interface IPdfDataExtractorService
         string labelGroupName,
         Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
+        int regionCode,
         int processRunId);
 
     public void Dispose();

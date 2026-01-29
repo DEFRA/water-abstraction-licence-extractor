@@ -6,17 +6,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class OcrHelper
 {
-    public static bool IsPageScreenshot(string imageReference, int pageNumber)
-    {
-        var imageReferenceLower = imageReference.ToLower();
-        
-        return 
-            imageReferenceLower.StartsWith("screenshot")
-            || imageReferenceLower.EndsWith($"page-{pageNumber}.jpg")
-            || imageReferenceLower.EndsWith($"page-{pageNumber}.png");
-    }
-
-public static IReadOnlyList<DocumentLine> Group(
+    public static IReadOnlyList<DocumentLine> Group(
         IReadOnlyList<LineAndWords> returnLines,
         bool useNewProcessingFlow,
         int pageNumber,
@@ -32,7 +22,7 @@ public static IReadOnlyList<DocumentLine> Group(
         
         if (!useNewProcessingFlow)
         {
-            return GroupLegacyFlow(
+            return LegacyGrouping(
                 returnLines,
                 pageNumber,
                 horizontalColumnGapTrigger,
@@ -415,14 +405,30 @@ public static IReadOnlyList<DocumentLine> Group(
         var combinedLinesNoBlanks = combinedLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .ToList();
+
+        var previousTop = (double?)null;
+        const int maxHeightDiff = 200;
+        var returnList = new List<DocumentLine>();
+        
+        // Add in some empty seperator lines where appropriate
+        foreach (var line in combinedLinesNoBlanks)
+        {
+            if (previousTop != null && line.Top - previousTop > maxHeightDiff)
+            {
+                returnList.Add(new DocumentLine());
+            }
+            
+            returnList.Add(line);
+            previousTop = line.Top;
+        }
         
         // TODO - another pass to look for pointlessly short lines? ones without any values on or just a floating number?
         
-        return combinedLinesNoBlanks;
+        return returnList;
     }
     
-    private static IReadOnlyList<DocumentLine> GroupLegacyFlow(
-        IReadOnlyList<LineAndWords> returnLines,
+    private static IReadOnlyList<DocumentLine> LegacyGrouping(
+        IReadOnlyList<LineAndWords> inputLines,
         int pageNumber,
         int horizontalColumnGapTrigger,
         int minimumFontSize,
@@ -440,12 +446,12 @@ public static IReadOnlyList<DocumentLine> Group(
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
-        var rawLines = returnLines
+        var noneCorruptOrEmptyLines = inputLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
             .ToList();
         
-        var groupedLines = rawLines
+        var groupedLines = noneCorruptOrEmptyLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -465,7 +471,7 @@ public static IReadOnlyList<DocumentLine> Group(
             {
                 var words = new List<DocumentLineWord>();
                 DocumentLineWord? previousOkWord = null;
-                
+
                 foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
                 {
                     if (line.Words == null)
@@ -473,6 +479,11 @@ public static IReadOnlyList<DocumentLine> Group(
                         continue;
                     }
 
+                    if (line.Text?.Contains("25/68/1/1") == true)
+                    {
+                        
+                    }
+                    
                     var lineWords = new List<DocumentLineWord>();
                     
                     foreach (var word in line.Words)
@@ -609,6 +620,16 @@ public static IReadOnlyList<DocumentLine> Group(
         }
         
         return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
+    }
+    
+    public static bool IsPageScreenshot(string imageReference, int pageNumber)
+    {
+        var imageReferenceLower = imageReference.ToLower();
+        
+        return 
+            imageReferenceLower.StartsWith("screenshot")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.jpg")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.png");
     }
     
     private class TopBottomPositions

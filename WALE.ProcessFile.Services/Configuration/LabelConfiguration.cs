@@ -2411,8 +2411,8 @@ public static class LabelConfiguration
             ],
             Format = LicenceNumber.Constant,
             Position = LabelPosition.ActuallyLabel,
-            PreviousLinesToFetch = 0,
-            NextLinesToFetch = 0,
+            PreviousLinesToFetch = 1,
+            NextLinesToFetch = 1,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
             Remove =
@@ -2422,6 +2422,10 @@ public static class LabelConfiguration
                 EnvironmentAgencyTelephone2Pattern,
                 EnvironmentAgencyTelephone3Pattern,
                 EnvironmentAgencyTelephone4Pattern,
+                new("condition 9.2.1"),
+                new("9.2.1") { ColumnMustStartWith = true },
+                new("condition 9.2.2"),
+                new("9.2.2") { ColumnMustStartWith = true },
                 new("0 0 0 0"), // Don't understand what this means, but it appears in some map
                 new("2 8 2 8"), // Don't understand what this means, but it appears in some map
                 new("4 2 4 2"), // Don't understand what this means, but it appears in some map
@@ -2435,7 +2439,8 @@ public static class LabelConfiguration
                 new("0 150 300 M"), // Doubling scale
                 new("0 150 300"), // Doubling scale
                 new("0 425 850 M"), // Doubling scale
-                new("0 425 850") // Doubling scale
+                new("0 425 850"), // Doubling scale
+                new("0 100 200") // Doubling scale
             ],
             SkipLineWhenContains = NoneLicenceNumberSkips
         };

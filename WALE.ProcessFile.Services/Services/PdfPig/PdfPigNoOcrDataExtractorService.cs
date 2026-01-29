@@ -28,7 +28,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         };
         
         var metadataFileText = await cacheService.GetNoOcrPagesMetadataAsync(request);
-        var pdfDocument = new PdfDocument(pdfFilePath, !string.IsNullOrEmpty(metadataFileText));
+        var pdfDocument = new PdfDocument(
+            pdfFilePath,
+            !string.IsNullOrEmpty(metadataFileText),
+            outputService);
         
         if (!pdfDocument.FromCache)
         {
@@ -45,19 +48,33 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
         {
             var pageElement = pageArray[pageNumber - 1];
+            var screenshotFilepaths = outputService.GetPageScreenshotReferences(
+                pageNumber,
+                Name,
+                pdfFilePath);
+            
             var pdfPage = new PdfPage
             {
                 Number = pageNumber,
                 NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
-                Text = pageElement.GetProperty("text").GetString(),
-                ImageFilepath = await outputService.GetPageScreenshotReferenceAsync(pageNumber, Name, pdfFilePath)
+                DigitalText = pageElement.GetProperty("text").GetString(),
+                ScreenshotFilepaths = screenshotFilepaths
+                    .Select(fp => fp.ImageReference)
+                    .ToList()!
             };
 
-            pdfPage.Providers.Add(new PdfPageProvider
+            var providers = screenshotFilepaths
+                .Select(fp => fp.ProviderName)
+                .ToList();
+
+            foreach (var provider in providers)
             {
-                Provider = Name,
-                Text = [pdfPage.Text!]
-            });
+                pdfPage.Providers.Add(new PdfPageProvider
+                {
+                    Provider = provider,
+                    Text = [pdfPage.DigitalText!]
+                });                
+            }
                 
             pagesList.Add(pdfPage);
         }
@@ -168,7 +185,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 {
                     { "number", page.Number },
                     { "numberOfImages", page.NumberOfImages },
-                    { "text", page.Text! },
+                    { "text", page.DigitalText! },
                     { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) },
                 });
 
@@ -199,7 +216,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     continue;
                 }
                 
-                if (FormattingHelper.IsPageEmpty(page.Text))
+                if (FormattingHelper.IsPageEmpty(page.DigitalText))
                 {
                     await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
                     continue;

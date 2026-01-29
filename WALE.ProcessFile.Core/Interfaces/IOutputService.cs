@@ -9,12 +9,12 @@ public interface IOutputService
     
     public Task SetupAsync();
     
-    public Task<string> GetPageScreenshotReferenceAsync(
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath);
     
-    public Task<byte[]?> GetPageScreenshotDataAsync(
+    public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath);
@@ -42,7 +42,7 @@ public interface IOutputService
 
     public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     
-    Task FinishProcessRunAsync(ProcessRun processRun);
+    Task FinishProcessRunAsync(ProcessRun processRun, int regionId);
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     

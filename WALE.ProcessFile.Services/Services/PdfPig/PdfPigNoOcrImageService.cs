@@ -16,7 +16,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         string returnExtension;
         byte[]? bytes;
 
-        Pix? pix = null;
+        Pix? pix;
         
         try
         {
@@ -90,11 +90,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         }
         catch (Exception exception)
         {
-            if (exception is IOException)
-            {
-                return null;
-            }
-
+            // TODO - throw?
             return null;
         }
         

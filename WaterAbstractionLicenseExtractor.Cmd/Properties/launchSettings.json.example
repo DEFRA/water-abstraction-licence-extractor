@@ -29,7 +29,7 @@
         "POSTGRESQL_PORT": "5432",
         "POSTGRESQL_DBNAME": "wale",
         "POSTGRESQL_USERNAME": "ea",
-        "POSTGRESQL_PASSSWORD": "EnvironmentAgency1",
+        "POSTGRESQL_PASSWORD": "EnvironmentAgency1",
         "ListDataPath": "list-data.js",
         "ProcessRunsDataPath": "",
         "InternalDataPath": "filename + '/internal.jsonp'",

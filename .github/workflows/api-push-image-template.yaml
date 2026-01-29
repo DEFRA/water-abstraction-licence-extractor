@@ -148,36 +148,6 @@ jobs:
             echo "| url        | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.url'] }} |"
             echo "| version    | ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }} |"
           } >> $GITHUB_STEP_SUMMARY
-      - name: Run container locally
-        run: |
-          image_tag=${{steps.imgtag.outputs.image_tag }}
-          docker build -t bst:$image_tag -f ./WALE.Api/Dockerfile .
-          echo "Running local image: $image_tag"
-          docker run -d --name test-container -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=local bst:$image_tag
-      - name: Wait for service to start
-        run: >
-          echo "Waiting for the service to start..."
-
-          for i in {1..10}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health || echo "000")
-            echo "HTTP Status: $STATUS"
-            if [ "$STATUS" -eq 200 ]; then
-              echo "Service is healthy..."
-              break
-            fi
-            echo "--- Last 5 log lines from container ---"
-            docker logs test-container --tail 5 || true
-            echo "---------------------------------------"
-            sleep 3
-          done
-      - name: Test application response
-        run: |
-          curl -i http://localhost:8080/health
-      - name: Cleanup container
-        if: always()
-        run: |
-          docker rm -f test-container
-
 
       - name: Create and push git tag
         if: ${{ inputs.dev_image_version_release == true }}

@@ -56,7 +56,7 @@ public static class ExternalDataHelper
             {
                 Id = line.Id,
                 ExpiryDate = RemoveNullWord(line.ExpiryDate),
-                OrigEffDate = line.OrigEffectiveDate,
+                OrigEffDate = RemoveNullWord(line.OrigEffectiveDate),
                 OrigSigDate = RemoveNullWord(line.OrigSignatureDate),
                 RevocationDate = RemoveNullWord(line.RevDate),
                 LicenceNumber = line.LicenceNo!,

@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text;
+using System.Web;
 using CsvHelper;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -27,7 +29,10 @@ public static class GenerateLinkedLicencesCsv
 
         var data = await GetDataAsync(processRunId);
 
-        await using var writer = new StreamWriter($"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv");
+        await using var writer = new StreamWriter(
+            $"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv",
+            false,
+            Encoding.Unicode);
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         await csv.WriteRecordsAsync(data);
@@ -78,7 +83,7 @@ public static class GenerateLinkedLicencesCsv
                 var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
                     ? value.ToString()
                     : null;
-                
+
                 returnList.Add(new LinkedLicencesCsvLine
                 {
                     Filename = licence.Filename,

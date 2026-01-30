@@ -7,6 +7,7 @@ var serviceProvider = CreateServices();
 
 using var scope = serviceProvider.CreateScope();
 UpdateDatabase(scope.ServiceProvider);
+
 return;
 
 static ServiceProvider CreateServices()
@@ -15,8 +16,20 @@ static ServiceProvider CreateServices()
         .AddJsonFile("appsettings.json")
         .AddUserSecrets<Program>()
         .Build();
-    
-    var dbConnectionString = config.GetConnectionString("PostgreSQL");
+
+    var dbHost = config.GetValue<string>("POSTGRESQL_HOST")
+        ?? throw new InvalidOperationException("POSTGRESQL_HOST connection string not configured");
+    var dbPort = int.Parse(config.GetValue<string>("POSTGRESQL_PORT")
+        ?? throw new InvalidOperationException("POSTGRESQL_PORT connection string not configured"));
+    var dbDatabaseName = config.GetValue<string>("POSTGRESQL_DBNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_DBNAME connection string not configured");
+    var dbUsername = config.GetValue<string>("POSTGRESQL_USERNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_USERNAME connection string not configured");
+    var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
+        ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
+
+    var dbConnectionString =
+        $"Host={dbHost};Port={dbPort};Database={dbDatabaseName};Username={dbUsername};Password={dbPassword};Timeout=300;CommandTimeout=300;KeepAlive=300;";
     
     return new ServiceCollection()
         .AddFluentMigratorCore()

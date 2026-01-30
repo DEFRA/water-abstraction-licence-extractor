@@ -28,7 +28,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = await ConfigureServicesAsync();
+    var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -338,7 +338,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-async Task<ConfiguredServices> ConfigureServicesAsync()
+ConfiguredServices ConfigureServices()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));

@@ -54,21 +54,37 @@ public class InternalTesseractOcrDataExtractorService(
 
         var textLines = new List<LineAndWords>();
         var maxNumberOfWords = -1;
+        var canSave = false;
                 
         foreach (var bytes in bytesList)
         {
-            var returnList = GetDataFromTesseract(bytes);
-            var numberOfWords = returnList.Sum(line => line.Words!.Count);
-
-            if (numberOfWords <= maxNumberOfWords)
+            try
             {
-                continue;
+                var returnList = GetDataFromTesseract(bytes);
+                var numberOfWords = returnList.Sum(line => line.Words!.Count);
+
+                if (numberOfWords <= maxNumberOfWords)
+                {
+                    continue;
+                }
+                        
+                maxNumberOfWords = numberOfWords;
+                textLines = returnList;
+
+                canSave = true;
             }
-                    
-            maxNumberOfWords = numberOfWords;
-            textLines = returnList;
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                // TODO log
+            }
         }
     
+        if (!canSave)
+        {
+            return textLines;
+        }
+        
         var request = new OcrServiceImageTextCacheRequest
         {
             PageNumber = pageNumber,
@@ -125,8 +141,13 @@ public class InternalTesseractOcrDataExtractorService(
 
         page?.Dispose();
         tesseractEngine.Dispose();
+
+        if (!isCompletedSuccessfully)
+        {
+            throw new TimeoutException($"Tesseract process timed out after {maxExecutionTimeMs} seconds");
+        }
         
-        return !isCompletedSuccessfully ? [] : processTask.Result;
+        return processTask.Result;
     }
 
     private static PageSegMode ConvertPageSegMode(Core.Enums.PageSegMode pageSegMode)

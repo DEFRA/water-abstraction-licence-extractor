@@ -266,7 +266,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
         
         var content = await File.ReadAllTextAsync(outputFilename);
-        return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
+        }
+        catch
+        {
+            Console.WriteLine($"MALFORMED JSON ERROR - {content}");
+            throw;
+        }
     }
     
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)

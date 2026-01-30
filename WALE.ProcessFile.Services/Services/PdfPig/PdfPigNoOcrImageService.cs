@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using Tesseract;
 using UglyToad.PdfPig.Content;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Services.Services.PdfPig;
@@ -36,7 +37,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                     }
 
                     returnExtension = jpgExtension;
-                    bytes = Deflate(bytes);
+                    bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
                 }
             }
@@ -57,7 +58,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                     }
 
                     returnExtension = jpgExtension;
-                    bytes = Deflate(bytes);
+                    bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
                 }
             }
@@ -83,7 +84,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                         throw;
                     }
 
-                    bytes = Deflate(bytes);
+                    bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
                 }
             }
@@ -106,19 +107,5 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             processRunId);
         
         return returnExtension;
-    }
-
-    public static byte[] Deflate(byte[] input)
-    {
-        var cutInput = new byte[input.Length - 2];
-        Array.Copy(input, 2, cutInput, 0, cutInput.Length);
-
-        var stream = new MemoryStream();
-
-        using var compressStream = new MemoryStream(cutInput);
-        using var decompressor = new DeflateStream(compressStream, CompressionMode.Decompress);
-        
-        decompressor.CopyTo(stream);
-        return stream.ToArray();
     }
 }

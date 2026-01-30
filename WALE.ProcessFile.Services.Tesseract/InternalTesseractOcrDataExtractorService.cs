@@ -1,14 +1,96 @@
 ﻿using Tesseract;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Services.TesseractExe;
+namespace WALE.ProcessFile.Services.Tesseract;
 
-public class TesseractOcrDataExtractorService(
+public class InternalTesseractOcrDataExtractorService(
+    IOutputService outputService,
+    ICacheService cacheService,
     string dataPath,
-    PageSegMode pageSegMode)
+    Core.Enums.PageSegMode pageSegMode)
 {
-    public List<LineAndWords> GetDataFromTesseract(byte[] bytes)
+    public async Task<List<LineAndWords>> ProcessAsync(
+        string noOcrServiceName,
+        int pageNumber,
+        int imageNumber,
+        bool isPageScreenshot,
+        string imageReference,
+        string pdfFilepath,
+        int processRunId)
+    {
+        List<byte[]> bytesList;
+
+        if (isPageScreenshot)
+        {
+            bytesList = await outputService.GetPageScreenshotDataAsync(
+                pageNumber,
+                noOcrServiceName,
+                pdfFilepath);
+        }
+        else
+        {
+            var imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = pdfFilepath,
+                NoOcrServiceName = noOcrServiceName,
+                Extension = FileHelper.GetImageExtension(imageReference)
+            });
+        
+            bytesList =
+            [
+                imageBytes!
+            ];
+        }
+
+        if (bytesList.Count == 0)
+        {
+            throw new Exception("Image was not found");
+        }
+
+        var textLines = new List<LineAndWords>();
+        var maxNumberOfWords = -1;
+                
+        foreach (var bytes in bytesList)
+        {
+            var returnList = GetDataFromTesseract(bytes);
+            var numberOfWords = returnList.Sum(line => line.Words!.Count);
+
+            if (numberOfWords <= maxNumberOfWords)
+            {
+                continue;
+            }
+                    
+            maxNumberOfWords = numberOfWords;
+            textLines = returnList;
+        }
+    
+        var request = new OcrServiceImageTextCacheRequest
+        {
+            PageNumber = pageNumber,
+            ImageNumber = imageNumber,
+            Filepath = pdfFilepath,
+            OcrServiceName = $"TesseractOcr-{pageSegMode}",
+            ProcessRunId = processRunId
+        };
+
+        if (isPageScreenshot)
+        {
+            await cacheService.SaveTemporaryOcrScreenshotTextAsync(request, textLines);        
+        }
+        else
+        {
+            await cacheService.SaveTemporaryOcrImageTextAsync(request, textLines);        
+        }
+
+        return textLines;
+    }
+    
+    private List<LineAndWords> GetDataFromTesseract(byte[] bytes)
     {
         var ocrImage = Pix.LoadFromMemory(bytes);
         
@@ -28,7 +110,7 @@ public class TesseractOcrDataExtractorService(
         var processTask = Task.Run(() =>
         {
             //var dtProcessStart = DateTime.Now;
-            page = engine.Process(ocrImage, pageSegMode);
+            page = engine.Process(ocrImage, ConvertPageSegMode(pageSegMode));
             //var tsProcess = (DateTime.Now - dtProcessStart).TotalMilliseconds;
             
             //var dtIterateStart = DateTime.Now;
@@ -47,6 +129,16 @@ public class TesseractOcrDataExtractorService(
         return !isCompletedSuccessfully ? [] : processTask.Result;
     }
 
+    private static PageSegMode ConvertPageSegMode(Core.Enums.PageSegMode pageSegMode)
+    {
+        return pageSegMode switch
+        {
+            Core.Enums.PageSegMode.SparseTextOsd => PageSegMode.SparseTextOsd,
+            Core.Enums.PageSegMode.Auto => PageSegMode.Auto,
+            _ => throw new ArgumentOutOfRangeException(nameof(pageSegMode), pageSegMode, null)
+        };
+    }
+    
     private static List<LineAndWords> GetTextLinesFromPageAsync(Page page)
     {
         using var iterator = page.GetIterator();

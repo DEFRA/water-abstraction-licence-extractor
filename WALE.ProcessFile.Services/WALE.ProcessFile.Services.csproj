@@ -83,5 +83,8 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
     </ItemGroup>
 </Project>

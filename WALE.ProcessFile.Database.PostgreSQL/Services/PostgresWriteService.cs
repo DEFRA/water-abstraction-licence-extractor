@@ -407,6 +407,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM no_ocr_pages_metadata_cache;
                            DELETE FROM no_ocr_page_text_cache;
                            DELETE FROM ocr_image_text_cache;
+                           DELETE FROM ocr_screenshot_text_cache;
                            """;
 
         await ExecuteAsync(connection, sql, 0);

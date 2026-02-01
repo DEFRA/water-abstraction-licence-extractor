@@ -487,7 +487,7 @@ public static partial class SchemaConverter
     
     private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
-        string? naldLicenceNumber,
+        string? naldLinkedLicenceNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
@@ -496,7 +496,7 @@ public static partial class SchemaConverter
         int regionCode)
     {
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-            linkedLicenceNumber,
+            naldLinkedLicenceNumber,
             naldLicenceStatusData,
             regionCode);
         
@@ -514,7 +514,7 @@ public static partial class SchemaConverter
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
-            NaldLicenceNumber = naldLicenceNumber,
+            NaldLicenceNumber = naldLinkedLicenceNumber,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,

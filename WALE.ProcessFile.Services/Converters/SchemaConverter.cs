@@ -184,6 +184,7 @@ public static partial class SchemaConverter
 
                 return ToLinkedLicence(
                     linkedLicenceNumber,
+                    firstLinkedLicence.NaldLicenceNumber,
                     firstLinkedLicence.Filename,
                     firstLinkedLicence.Condition,
                     containedIn.ToArray(),
@@ -427,11 +428,11 @@ public static partial class SchemaConverter
     }
 
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
-        string? licenceNumber,
+        string? licenceNumberInNaldFormat,
         NaldLicenceStatusData naldLicenceStatusData,
         int regionCode)
     {
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, regionCode);
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumberInNaldFormat, regionCode);
         
         var isLiveLicence = naldLicenceStatusData.LiveLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
             ? naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber)
@@ -486,6 +487,7 @@ public static partial class SchemaConverter
     
     private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
+        string? naldLicenceNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
@@ -497,13 +499,6 @@ public static partial class SchemaConverter
             linkedLicenceNumber,
             naldLicenceStatusData,
             regionCode);
-        
-        var naldLicenceNumber = (string?)null;
-        
-        if (isLiveLicence == true || isDeadLicence == true ||  isImpoundmentLicence == true)
-        {
-            naldLicenceNumber = linkedLicenceNumber;
-        }
         
         var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
 
@@ -758,6 +753,7 @@ public static partial class SchemaConverter
                         // Back link is missing
                         var backLink = ToLinkedLicence(
                             incomingLink.LicenceNumber,
+                            incomingLink.NaldLicenceNumber,
                             incomingLink.Filename,
                             null,
                             [
@@ -853,9 +849,10 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static List<(string LicenceNumber, string? Filename)> GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
+    private static List<(string LicenceNumber, string NaldLicenceNumber, string? Filename)>
+        GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<(string, string?)>();
+        var returnList = new List<(string, string, string?)>();
         
         foreach (var licence in licences)
         {
@@ -866,7 +863,10 @@ public static partial class SchemaConverter
 
             if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
             {
-                returnList.Add((licence.LicenceNumber!, licence.Filename));
+                returnList.Add((
+                    licence.LicenceNumber!,
+                    licence.NaldLicenceNumber!,
+                    licence.Filename));
             }
         }
 
@@ -1161,7 +1161,7 @@ public static partial class SchemaConverter
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
 
@@ -1224,7 +1224,7 @@ public static partial class SchemaConverter
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
 
@@ -1305,7 +1305,7 @@ public static partial class SchemaConverter
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
             
             var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                linkedLicenceNumber,
+                naldLicenceNumber,
                 naldLicenceStatusData,
                 regionCode);
 
@@ -1379,6 +1379,9 @@ public static partial class SchemaConverter
             {
                 var lln = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
+                var naldLicenceNumber =
+                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
+                
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
@@ -1395,6 +1398,7 @@ public static partial class SchemaConverter
                 return new LinkedLicence
                 {
                     LicenceNumber = lln,
+                    NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     IsLiveLicence = isLiveLicence,
@@ -1453,7 +1457,7 @@ public static partial class SchemaConverter
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                            licenceNumber,
+                            naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
 
@@ -1529,7 +1533,7 @@ public static partial class SchemaConverter
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
                         
                         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                            licenceNumber,
+                            naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
 
@@ -1592,8 +1596,11 @@ public static partial class SchemaConverter
             {
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
+                var naldLicenceNumber =
+                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
+                
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
                 
@@ -1602,9 +1609,6 @@ public static partial class SchemaConverter
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                     : null;
-
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
                 
                 return new LinkedLicence
                 {
@@ -1655,6 +1659,9 @@ public static partial class SchemaConverter
             {
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                 
+                var naldLicenceNumber =
+                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
+                
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
                     naldLicenceStatusData,
@@ -1665,9 +1672,6 @@ public static partial class SchemaConverter
                 var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                     : null;
-
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
                 
                 return new LinkedLicence
                 {
@@ -1722,7 +1726,7 @@ public static partial class SchemaConverter
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
                 
                 var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
 
@@ -2064,6 +2068,9 @@ public static partial class SchemaConverter
                     var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber, regionCode);
                     
+                    var naldLicenceNumber =
+                        (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
+                    
                     var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
                         licenceNumber,
                         naldLicenceStatusData,
@@ -2076,6 +2083,7 @@ public static partial class SchemaConverter
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,
+                        NaldLicenceNumber = naldLicenceNumber,
                         DmsPath = dmsFileData?.DmsPath,
                         Filename = linkedLicenceFilename,
                         IsLiveLicence = isLiveLicence,

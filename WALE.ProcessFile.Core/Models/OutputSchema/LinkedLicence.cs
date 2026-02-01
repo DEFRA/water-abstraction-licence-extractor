@@ -4,6 +4,8 @@ public class LinkedLicence
 {
     public string? LicenceNumber { get; set; }
     
+    public string? ScrapedLicenceNumber { get; set; }
+    
     public string? NaldLicenceNumber { get; set; }
     
     public string? Filename { get; set; }

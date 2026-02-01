@@ -425,7 +425,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM no_ocr_pages_metadata_cache WHERE filename = @Filename;
                            DELETE FROM no_ocr_page_text_cache WHERE filename = @Filename;
                            DELETE FROM ocr_image_text_cache WHERE filename = @Filename;
-                           DELETE FROM ocr_screenshot_text_cacheWHERE filename = @Filename;
+                           DELETE FROM ocr_screenshot_text_cache WHERE filename = @Filename;
                            DELETE FROM page_screenshot WHERE filename = @Filename;
                            """;
         

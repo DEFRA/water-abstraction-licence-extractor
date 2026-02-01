@@ -184,6 +184,7 @@ public static partial class SchemaConverter
 
                 return ToLinkedLicence(
                     linkedLicenceNumber,
+                    firstLinkedLicence.ScrapedLicenceNumber,
                     firstLinkedLicence.NaldLicenceNumber,
                     firstLinkedLicence.Filename,
                     firstLinkedLicence.Condition,
@@ -487,6 +488,7 @@ public static partial class SchemaConverter
     
     private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
+        string? scrapedLinkedLicenceNumber,
         string? naldLinkedLicenceNumber,
         string? filename,
         Condition? condition,
@@ -514,6 +516,7 @@ public static partial class SchemaConverter
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
+            ScrapedLicenceNumber = scrapedLinkedLicenceNumber,
             NaldLicenceNumber = naldLinkedLicenceNumber,
             Filename = filename,
             Condition = condition,
@@ -734,7 +737,10 @@ public static partial class SchemaConverter
                         continue;
                     }
 
-                    var incomingLinks = GetLicencesThatReferenceLicence(allLicencesInSets, licence.LicenceNumber!);
+                    var incomingLinks = GetLicencesThatReferenceLicence(
+                        allLicencesInSets,
+                        licence.LicenceNumber!);
+                    
                     var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
 
                     var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
@@ -753,6 +759,7 @@ public static partial class SchemaConverter
                         // Back link is missing
                         var backLink = ToLinkedLicence(
                             incomingLink.LicenceNumber,
+                            incomingLink.ScrapedLicenceNumber,
                             incomingLink.NaldLicenceNumber,
                             incomingLink.Filename,
                             null,
@@ -849,10 +856,10 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static List<(string LicenceNumber, string NaldLicenceNumber, string? Filename)>
+    private static List<(string LicenceNumber, string ScrapedLicenceNumber, string NaldLicenceNumber, string? Filename)>
         GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<(string, string, string?)>();
+        var returnList = new List<(string, string, string, string?)>();
         
         foreach (var licence in licences)
         {
@@ -864,6 +871,7 @@ public static partial class SchemaConverter
             if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
             {
                 returnList.Add((
+                    licence.LicenceNumber!,
                     licence.LicenceNumber!,
                     licence.NaldLicenceNumber!,
                     licence.Filename));
@@ -1173,8 +1181,9 @@ public static partial class SchemaConverter
 
                 return new LinkedLicence
                 {
-                    NaldLicenceNumber = naldLicenceNumber,
                     LicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
+                    NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     IsLiveLicence = isLiveLicence,
@@ -1236,8 +1245,9 @@ public static partial class SchemaConverter
 
                 return new LinkedLicence
                 {
-                    NaldLicenceNumber = naldLicenceNumber,
                     LicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
+                    NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     IsLiveLicence = isLiveLicence,
@@ -1301,11 +1311,11 @@ public static partial class SchemaConverter
             
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
-            var naldLicenceNumber =
+            var naldLinkedLicenceNumber =
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
             
             var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-                naldLicenceNumber,
+                naldLinkedLicenceNumber,
                 naldLicenceStatusData,
                 regionCode);
 
@@ -1318,7 +1328,8 @@ public static partial class SchemaConverter
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                NaldLicenceNumber = naldLicenceNumber,
+                ScrapedLicenceNumber = linkedLicenceNumber,
+                NaldLicenceNumber = naldLinkedLicenceNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
                 IsLiveLicence = isLiveLicence,
@@ -1398,6 +1409,7 @@ public static partial class SchemaConverter
                 return new LinkedLicence
                 {
                     LicenceNumber = lln,
+                    ScrapedLicenceNumber = lln,
                     NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
@@ -1470,6 +1482,7 @@ public static partial class SchemaConverter
                         return new LinkedLicence
                         {
                             NaldLicenceNumber = naldLicenceNumber,
+                            ScrapedLicenceNumber = licenceNumber,
                             LicenceNumber = licenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
@@ -1546,6 +1559,7 @@ public static partial class SchemaConverter
                         return new LinkedLicence
                         {
                             LicenceNumber = licenceNumber,
+                            ScrapedLicenceNumber = licenceNumber,
                             NaldLicenceNumber = naldLicenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
@@ -1615,6 +1629,7 @@ public static partial class SchemaConverter
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     LicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
                     NaldLicenceNumber = naldLicenceNumber,
                     IsLiveLicence = isLiveLicence,
                     IsDeadLicence = isDeadLicence,
@@ -1676,6 +1691,7 @@ public static partial class SchemaConverter
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
                     NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
@@ -1739,6 +1755,7 @@ public static partial class SchemaConverter
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
+                    ScrapedLicenceNumber = licenceNumber,
                     NaldLicenceNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
@@ -2083,6 +2100,7 @@ public static partial class SchemaConverter
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,
+                        ScrapedLicenceNumber = licenceNumber,
                         NaldLicenceNumber = naldLicenceNumber,
                         DmsPath = dmsFileData?.DmsPath,
                         Filename = linkedLicenceFilename,

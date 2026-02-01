@@ -191,7 +191,7 @@ public partial class LicenceNumber : ILicenceNumberService
         var segments = ExtractSegments(licenceNumber);
         
         return candidates
-            .Where(c => AllChecksMatch(segments, licenceNumber, c))
+            .Where(c => SegmentsMatch(segments, c.Segments))
             .Select(c => c.NaldLicence)
             .Where(l => l.RegionCode == regionCode)
             .ToList();
@@ -236,7 +236,7 @@ public partial class LicenceNumber : ILicenceNumberService
                 var candidateSegments = ExtractSegments(candidateText);
 
                 resultList
-                    .AddRange(entries.Where(entry => AllChecksMatch(candidateSegments, candidateText, entry))
+                    .AddRange(entries.Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
                         .Select(entry => entry.NaldLicence));
             }
         }

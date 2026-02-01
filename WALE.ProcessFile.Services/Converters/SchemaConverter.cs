@@ -2074,13 +2074,14 @@ public static partial class SchemaConverter
                 .Select(linkedLicenceNumber =>
                 {
                     var condition = (Condition?)null; // TODO
-                        
-                    var linkedLicenceFilename = siblings
+                    
+                    // TODO the following is bugged - so dont use it
+                    /*var linkedLicenceFilename = siblings
                         .FirstOrDefault(sibling =>
                             sibling.MatchedLabel?.Name == "LinkedLicenceFilename")?
                         .Text?
                         .FirstOrDefault()?
-                        .Text;
+                        .Text;*/
 
                     var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber, regionCode);
@@ -2100,10 +2101,10 @@ public static partial class SchemaConverter
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,
-                        ScrapedLicenceNumber = licenceNumber,
+                        ScrapedLicenceNumber = scrapedLicenceNumber,
                         NaldLicenceNumber = naldLicenceNumber,
                         DmsPath = dmsFileData?.DmsPath,
-                        Filename = linkedLicenceFilename,
+                        Filename = dmsFileData?.DestinationFileName,
                         IsLiveLicence = isLiveLicence,
                         IsDeadLicence = isDeadLicence,
                         IsImpoundmentLicence = isImpoundmentLicence,

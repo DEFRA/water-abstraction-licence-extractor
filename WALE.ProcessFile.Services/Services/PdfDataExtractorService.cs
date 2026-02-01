@@ -238,11 +238,12 @@ public class PdfDataExtractorService(
                         break;
                     }
                     
-                    var containsTheWordMap = serviceImageLines
+                    var containsAPhraseSuggestingItsAMap = serviceImageLines
                         .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
-                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase));
+                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase)
+                            || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.InvariantCultureIgnoreCase));
 
-                    if (containsTheWordMap)
+                    if (containsAPhraseSuggestingItsAMap)
                     {
                         serviceImageLines = [];
                         break;

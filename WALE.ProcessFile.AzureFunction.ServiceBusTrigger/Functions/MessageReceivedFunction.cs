@@ -72,7 +72,7 @@ public class MessageReceivedFunction(
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService, outputService, dotnetPath, tesseractExeName, tesseractExeDirectory),
+                new TesseractOcrDataExtractorService(tesseractPath, Core.Enums.PageSegMode.SparseTextOsd, cacheService, outputService, dotnetPath, tesseractExeName, tesseractExeDirectory),
                 new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey, cacheService, outputService),
             ],
             cacheService,

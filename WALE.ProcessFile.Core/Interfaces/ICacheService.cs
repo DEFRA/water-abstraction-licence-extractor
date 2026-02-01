@@ -26,13 +26,14 @@ public interface ICacheService
     
     public Task ClearCacheAsync();
     
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension);
+    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
         string pdfFilePath,
         string extension,
+        string serviceName,
         int? width = null,
         int? height = null);
     

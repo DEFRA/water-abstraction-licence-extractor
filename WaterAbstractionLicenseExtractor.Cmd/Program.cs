@@ -10,11 +10,13 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WaterAbstractionLicenseExtractor.Cmd;
@@ -26,7 +28,7 @@ async Task ProgramAsync()
 {
     Console.WriteLine("Started");
 
-    var services = await ConfigureServicesAsync();
+    var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
@@ -336,7 +338,7 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     return returnDict;
 }
 
-async Task<ConfiguredServices> ConfigureServicesAsync()
+ConfiguredServices ConfigureServices()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
         ?? throw new NullReferenceException("ConcurrentCount"));
@@ -422,7 +424,7 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
 
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
             tessDataPrefix,
-            PageSegMode.SparseTextOsd,
+            WALE.ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
             cacheService,
             outputService,
             dotnetPath,
@@ -432,7 +434,7 @@ async Task<ConfiguredServices> ConfigureServicesAsync()
         
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
             tessDataPrefix,
-            PageSegMode.Auto,
+            WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
             cacheService,
             outputService,
             dotnetPath,
@@ -646,8 +648,8 @@ async Task MoveReportHtmlFilesAsync(
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //        .Take(100)
-//        .Where(x => x.Key.Contains("NE0270022023__Application type unknown Licence Issued - 29092011"))
-        .Take(5)
+//       .Where(x => x.Key.Contains("22724461"))
+//        .Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;

@@ -744,7 +744,8 @@ public class PdfDataExtractorService(
                     page.Number,
                     imageNumber++,
                     pdfDocument.PdfFilePath,
-                    extension);
+                    extension,
+                    Name);
                 
                 metadataPage.Images.Add(imageReference);
             }

@@ -5,11 +5,12 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
-using Tesseract;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Config;
 
@@ -532,7 +533,7 @@ public static class TestsForAiPrompts
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
                 ?? throw new NullReferenceException(KeyConfig.TesseractPrefix),
-            PageSegMode.SparseTextOsd,
+                ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
             cacheService,
             outputService,
             KeyConfig.DotnetPath,

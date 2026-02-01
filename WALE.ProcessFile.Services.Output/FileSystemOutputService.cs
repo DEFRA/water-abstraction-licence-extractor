@@ -5,7 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 
-namespace WALE.ProcessFile.Services.Services;
+namespace WALE.ProcessFile.Services.Output;
 
 public class FileSystemOutputService(string outputFolder) : IOutputService
 {

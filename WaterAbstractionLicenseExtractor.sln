@@ -50,6 +50,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tesseract", "WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj", "{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Output", "WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj", "{AE89912A-3499-4777-AF64-A4C9D4A00511}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Cache", "WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj", "{C57510AA-CA14-45CD-BC68-E8DAFA82B943}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +110,18 @@ Global
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE89912A-3499-4777-AF64-A4C9D4A00511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE89912A-3499-4777-AF64-A4C9D4A00511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE89912A-3499-4777-AF64-A4C9D4A00511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE89912A-3499-4777-AF64-A4C9D4A00511}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}

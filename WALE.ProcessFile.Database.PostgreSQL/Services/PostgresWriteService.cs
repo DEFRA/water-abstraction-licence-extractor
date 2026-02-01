@@ -402,11 +402,14 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
+                           DELETE FROM all_pages_text;
                            DELETE FROM image_on_page;
                            DELETE FROM no_ocr_images_metadata_cache;
                            DELETE FROM no_ocr_pages_metadata_cache;
                            DELETE FROM no_ocr_page_text_cache;
                            DELETE FROM ocr_image_text_cache;
+                           DELETE FROM ocr_screenshot_text_cache;
+                           DELETE FROM page_screenshot;
                            """;
 
         await ExecuteAsync(connection, sql, 0);
@@ -422,6 +425,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM no_ocr_pages_metadata_cache WHERE filename = @Filename;
                            DELETE FROM no_ocr_page_text_cache WHERE filename = @Filename;
                            DELETE FROM ocr_image_text_cache WHERE filename = @Filename;
+                           DELETE FROM ocr_screenshot_text_cacheWHERE filename = @Filename;
                            DELETE FROM page_screenshot WHERE filename = @Filename;
                            """;
         

@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.AwsTextract;
-using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Output;
 
 namespace WALE.ProcessFile.Services.Tests.Helper;
 

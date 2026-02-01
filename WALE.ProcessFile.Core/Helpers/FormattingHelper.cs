@@ -82,13 +82,12 @@ public static class FormattingHelper
 
         var origSectionLengths = licenceNumber.Split('/');
 
-        
         licenceNumber = licenceNumber
             .Replace(".", string.Empty)
             .Replace(" ", string.Empty)
             .Replace("-", string.Empty)
             .Replace("/", string.Empty);
-
+        
         var parts = new List<string>();
         var remainingLicenceNumber = licenceNumber;
         
@@ -359,7 +358,14 @@ public static class FormattingHelper
         
             if (!string.IsNullOrEmpty(postRSection))
             {
-                parts.Add(postRSection);
+                if (postRSection.Length == 1 && char.IsLetter(postRSection[0]))
+                {
+                    parts[^1] += postRSection;
+                }
+                else
+                {
+                    parts.Add(postRSection);   
+                }
             }
         }
         else if (remainingLicenceNumber[0] is 'n' or 'N')

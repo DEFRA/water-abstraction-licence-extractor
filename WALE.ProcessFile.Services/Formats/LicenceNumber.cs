@@ -152,7 +152,11 @@ public partial class LicenceNumber : ILicenceNumberService
                     if (SegmentsMatch(candidateSegments, entry.Segments))
                     {
                         // Passed all checks so add a clone of the line containing the matched NALD licence number
-                        matchedLines.Add(line.Clone([new DocumentLineColumn(candidateText)]));
+                        var matchedLine = line.Clone([new DocumentLineColumn(candidateText)]);
+                        matchedLine.AdditionalData ??= new Dictionary<string, object>();
+                        matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
+                        
+                        matchedLines.Add(matchedLine);
 
                         // Exit early if we're looking for a single instance match
                         if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)

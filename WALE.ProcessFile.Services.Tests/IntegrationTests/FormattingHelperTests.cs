@@ -22,7 +22,7 @@ public class FormattingHelperTests
     public void WhenX_Y_ThenX3()
     {
         var actual = FormattingHelper.FormatLicenceNumber("22632295A", 3);
-        Assert.Equal("2/26/32/295/A", actual);
+        Assert.Equal("2/26/32/295A", actual);
     }
     
     [Fact]

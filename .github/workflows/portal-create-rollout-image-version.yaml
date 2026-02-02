@@ -17,7 +17,7 @@ permissions: {}   # disables all default permissions
 jobs:
   # 1️⃣ First run the dev build & sonar analysis
   build-and-sonar:
-    uses: ./.github/workflows/build-and-sonar-analyze-template.yaml
+    uses: ./.github/workflows/portal-build-and-sonar-analyze-template.yaml
     with:
       dotnet_application_solution_name: WaterAbstractionLicenseExtractor
       environment: rollout

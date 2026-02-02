@@ -2623,7 +2623,7 @@ public static partial class SchemaConverter
                 returnList.Add(new PointOfAbstraction
                 {
                     Description = description,
-                    Id = number,
+                    Id = pointNumber,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
                     NaldData = GetNaldPointData(naldDataLine, description) // TODO needs to get the correct point

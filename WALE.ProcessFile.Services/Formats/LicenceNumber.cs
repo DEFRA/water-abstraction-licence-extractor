@@ -32,7 +32,7 @@ public partial class LicenceNumber : ILicenceNumberService
 
     private Task<Dictionary<string, List<LicenceIndexEntry>>> GetLicenceIndexAsync() => _licenceIndex.Value;
 
-    private class LicenceIndexEntry
+    public class LicenceIndexEntry
     {
         public required NaldLicence NaldLicence { get; init; }
         public required List<string> Segments { get; init; }
@@ -149,16 +149,22 @@ public partial class LicenceNumber : ILicenceNumberService
 
                 foreach (var entry in entries)
                 {
-                    if (SegmentsMatch(candidateSegments, entry.Segments))
+                    if (!AllChecksMatch(candidateSegments, candidateText, entry))
                     {
-                        // Passed all checks so add a clone of the line containing the matched NALD licence number
-                        matchedLines.Add(line.Clone([new DocumentLineColumn(candidateText)]));
+                        continue;
+                    }
+                    
+                    // Passed all checks so add a clone of the line containing the matched NALD licence number
+                    var matchedLine = line.Clone([new DocumentLineColumn(candidateText)]);
+                    matchedLine.AdditionalData ??= new Dictionary<string, object>();
+                    matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
+                        
+                    matchedLines.Add(matchedLine);
 
-                        // Exit early if we're looking for a single instance match
-                        if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
-                        {
-                            return (true, matchedLines);
-                        }
+                    // Exit early if we're looking for a single instance match
+                    if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                    {
+                        return (true, matchedLines);
                     }
                 }
             }
@@ -183,6 +189,7 @@ public partial class LicenceNumber : ILicenceNumberService
         }
 
         var segments = ExtractSegments(licenceNumber);
+        
         return candidates
             .Where(c => SegmentsMatch(segments, c.Segments))
             .Select(c => c.NaldLicence)
@@ -239,57 +246,148 @@ public partial class LicenceNumber : ILicenceNumberService
             .ToList();
     }
 
-    public static bool SegmentsMatch(List<string> segments1, List<string> segments2)
+    private static bool AnySourceNumberSectionHasMoreZeroes(string sourceLinkedLicenceNumber, string naldLinkedLicenceNumber)
     {
-        var s1 = string.Join("/", segments1);
-        var s2 = string.Join("/", segments2);
+        sourceLinkedLicenceNumber = sourceLinkedLicenceNumber
+            .Replace(" ", "/")
+            .Replace(".", "/");
+        
+        naldLinkedLicenceNumber = naldLinkedLicenceNumber
+            .Replace(" ", "/")
+            .Replace(".", "/");
 
-        if (s1 == s2)
+        var sourceSegments = sourceLinkedLicenceNumber.Split('/');
+        var naldSegments = naldLinkedLicenceNumber.Split('/');
+
+        if (naldSegments.Length == 1)
+        {
+            return false;
+        }
+        
+        var index = 0;
+        
+        foreach (var sourceSegment in sourceSegments)
+        {
+            if (string.IsNullOrWhiteSpace(sourceSegment))
+            {
+                continue;
+            }
+            
+            var naldSegment = naldSegments.Length > index ? naldSegments[index++] : null;
+
+            var sourceSegmentZeroCount = sourceSegment.Count(c => c == '0');
+            var naldSegmentZeroCount = naldSegment?.Count(c => c == '0') ?? 0;
+
+            if (sourceSegmentZeroCount > naldSegmentZeroCount)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private static bool NumberOfSectionsMatch(string sourceLinkedLicenceNumber, string naldLinkedLicenceNumber)
+    {
+        if (!sourceLinkedLicenceNumber.Contains('/'))
+        {
+            return true;
+        }
+        
+        var sourceParts =  sourceLinkedLicenceNumber.Split('/');
+        var naldParts = naldLinkedLicenceNumber.Split('/');
+
+        if (naldParts.Length == 1)
+        {
+            return true;
+        }
+        
+        var countsMatch = sourceParts.Count(c => !string.IsNullOrEmpty(c))
+            == naldParts.Count(c => !string.IsNullOrEmpty(c));
+
+        if (!countsMatch)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool AllChecksMatch(List<string> candidateSegments, string candidateText, LicenceIndexEntry entry)
+    {
+        if (!SegmentsMatch(candidateSegments, entry.Segments))
+        {
+            return false;
+        }
+
+        if (!NumberOfSectionsMatch(candidateText, entry.NaldLicence.LicenceNumber))
+        {
+            return false;
+        }
+
+        if (AnySourceNumberSectionHasMoreZeroes(candidateText, entry.NaldLicence.LicenceNumber))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    
+    public static bool SegmentsMatch(
+        List<string> segments1,
+        List<string> segments2)
+    {
+        var segments1String = string.Join("/", segments1);
+        var segments2String = string.Join("/", segments2);
+
+        if (segments1String == segments2String)
         {
             return true;
         }
 
-        var i1 = 0;
-        var i2 = 0;
+        var segments1Index = 0;
+        var segments2Index = 0;
 
-        while (i1 < s1.Length && i2 < s2.Length)
+        while (segments1Index < segments1String.Length
+            && segments2Index < segments2String.Length)
         {
-            var c1 = s1[i1];
-            var c2 = s2[i2];
+            var segment1Char = segments1String[segments1Index];
+            var segment2Char = segments2String[segments2Index];
 
             // If both characters match, advance both iterators
-            if (c1 == c2)
+            if (segment1Char == segment2Char)
             {
-                i1++;
-                i2++;
+                segments1Index++;
+                segments2Index++;
+                
                 continue;
             }
 
             // Handle segment break in s1: s2 can have zeroes or continue with next character
-            if (c1 == '/')
+            if (segment1Char == '/')
             {
-                if (c2 == '0')
+                if (segment2Char == '0')
                 {
-                    i2++;
+                    segments2Index++;
                 }
                 else
                 {
-                    i1++;
+                    segments1Index++;
                 }
 
                 continue;
             }
 
             // Handle segment break in s2: s1 can have zeroes or continue with next character
-            if (c2 == '/')
+            if (segment2Char == '/')
             {
-                if (c1 == '0')
+                if (segment1Char == '0')
                 {
-                    i1++;
+                    segments1Index++;
                 }
                 else
                 {
-                    i2++;
+                    segments2Index++;
                 }
 
                 continue;
@@ -300,7 +398,7 @@ public partial class LicenceNumber : ILicenceNumberService
         }
 
         // Both strings should be fully consumed
-        return i1 == s1.Length && i2 == s2.Length;
+        return segments1Index == segments1String.Length && segments2Index == segments2String.Length;
     }
 
     private static bool IsValidColumnForProcessing(DocumentLineColumn column) =>

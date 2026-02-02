@@ -340,7 +340,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043")]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6, 0, "1/22/03/007")]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045")]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, "1/22/03/120")]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, "1/22/03/120")]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, "1/22/05/021")]
     [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, "1/22/05/044")]
     [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067")]
@@ -354,7 +354,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035")] // TODO the K shouldnt be there
     [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014")]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 1, "1/25/02/102")]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133")]
     [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 0, "1/25/02/141")]
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120")] // TODO looks a bit wrong

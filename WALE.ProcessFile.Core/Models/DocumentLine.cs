@@ -64,6 +64,8 @@ public class DocumentLine(
 
     public double Left { get; init; } = left;
     
+    public Dictionary<string, object>? AdditionalData { get; set; }
+    
     public DocumentLine Clone(List<DocumentLineColumn> columns)
     {
         var cloned = Clone();

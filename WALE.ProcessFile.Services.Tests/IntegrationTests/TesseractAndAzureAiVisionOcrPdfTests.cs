@@ -335,7 +335,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 6, 0, 1)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 5, 0, 1)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "2 3rd day of MAY, 19 66", "23/05/1966", 7, 0, 1)]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 1, 2)]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, 1)]
     [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, 1)]
     [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 5, 0, 1)]
     [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST , 19 66", "01/08/1966", 6, 0, 1)]
@@ -349,9 +349,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, 1)]
     [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2.0 JUL 2005", "20/07/2005", 13, 0, 1)]
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, 1)]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 1, 2)]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, 1)]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, 1)]
-    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 1, 2)] // TODO - One is a subset of the other due to a bad scane
+    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 0, 1)]
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, 1)]
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th dey of Hay, 1969", "28/05/1969", 6, 0, 1)]
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 6, 0, 1)]
@@ -409,7 +409,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     [InlineData("22702013__2-27-02-013 6999981.PDF", "16 June 2000", "16/06/2000", 13, 0, "2/27/02/013")] // Correct
     [InlineData("22632370__2-26-32-370 6937616.PDF", "9 February 2004", "09/02/2004", 14, 1, "2/26/32/370")] // Correct
     [InlineData("22706035__2-27-06-035 6957806.PDF", "9 FEBRUARY 2004", "09/02/2004", 14, 0, "2/27/06/035")] // Correct
-    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12, 28, "2/27/07/039")] // Correct // TOOD - Fix a bug where it thinks a linked licence number when its actually a 1 and a slash mixed up
+    [InlineData("22707039__Application New Licence Issued - [21.01.2008] - (21.01.2008).PDF", "0 1 OCT 2002", "01/10/2002", 12, 26, "2/27/07/039")] // Correct // TOOD - Fix a bug where it thinks a linked licence number when its actually a 1 and a slash mixed up
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2050", "26/01/2050", 13, 0, "1/25/06/023")] // Year incorrect - faint stamp, can't even read as a human
     [InlineData("22634080__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1997", "27/03/1997", 11, 0, "2/26/34/080")] // Correct
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "2.7. MAR.1897", "27/03/1897", 11, 0, "2/27/09/167")] // Incorrect - stamp is not amazing
@@ -622,7 +622,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             TestConfig.PdfFolder3,
             -1);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Single(licenceSets);
         
         Assert.Equal("12202087-LV20011126", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
@@ -634,8 +634,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("1/22/02/087", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("26/11/01", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO this is wrong, its a date so should get rid of it
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
     
     [Fact]

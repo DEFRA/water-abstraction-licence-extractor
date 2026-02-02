@@ -56,6 +56,7 @@ public static class LabelConfiguration
                     new("10. Further conditions"),
                     new("10. Further provisions"),                    
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
@@ -2415,6 +2416,7 @@ public static class LabelConfiguration
             NextLinesToFetch = 1,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
+            SkipLineNumbers = [0],
             Remove =
             [
                 PageNumberPattern,

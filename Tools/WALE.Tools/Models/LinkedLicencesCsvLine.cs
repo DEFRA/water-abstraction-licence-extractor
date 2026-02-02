@@ -12,13 +12,21 @@ public class LinkedLicencesCsvLine
     
     public string? NaldLicenceNumber { get; set; }
     
-    public bool? LicenceIsLive { get; set; }
+    public string? IssuedBy { get; set; }
     
-    public bool? LicenceIsDead { get; set; }
+    public string? DateOfIssue { get; set; }
     
-    public bool? LicenceIsImpoundment { get; set; }
+    public bool? IsLive { get; set; }
+    
+    public bool? IsDead { get; set; }
+    
+    public bool? IsImpoundment { get; set; }
     
     public bool LicenceFoundInList { get; set; }
+    
+    public bool HasInlicenceAggregates { get; set; }
+    
+    public bool HasLicenceToLicenceAggregates { get; set; }
     
     public string? LinkedLicenceNumber { get; set; }
     
@@ -41,4 +49,9 @@ public class LinkedLicencesCsvLine
     public bool? LinkedLicenceIsImpoundment { get; set; }
     
     public bool LinkedLicenceFoundInList { get; set; }
+
+    public LinkedLicencesCsvLine Clone()
+    {
+        return (LinkedLicencesCsvLine)MemberwiseClone();
+    }
 }

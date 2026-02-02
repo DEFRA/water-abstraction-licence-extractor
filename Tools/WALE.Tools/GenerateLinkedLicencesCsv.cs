@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using CsvHelper;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Output;
@@ -52,25 +53,32 @@ public static class GenerateLinkedLicencesCsv
                 continue;
             }
             
+            var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
+                ? value.ToString()
+                : null;
+
+            var outputLine = new LinkedLicencesCsvLine
+            {
+                Filename = licence.Filename,
+                DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
+                LicenceNumber = licence.LicenceNumber,
+                ScrapedLicenceNumber = licenceNumber,
+                NaldLicenceNumber = licence.NaldLicenceNumber,
+                DateOfIssue = licence.LicenceVersion.IssueDate?.ToString("dd/MM/yyyy"),
+                IssuedBy = licence.LicenceVersion.Issuer,
+                HasInlicenceAggregates = licence.AbstractionLimits
+                    .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.InLicence) ?? false,
+                HasLicenceToLicenceAggregates = licence.AbstractionLimits
+                    .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.LicenceToLicence) ?? false,
+                IsLive = licence.IsLiveLicence,
+                IsDead = licence.IsDeadLicence,
+                IsImpoundment = licence.IsImpoundmentLicence,
+                LicenceFoundInList = licence.LicenceFoundInList,
+            };
+            
             if (licence.LinkedLicences.Length == 0)
             {
-                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                    ? value.ToString()
-                    : null;
-                
-                returnList.Add(new LinkedLicencesCsvLine
-                {
-                    Filename = licence.Filename,
-                    DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
-                    LicenceNumber = licence.LicenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = licence.NaldLicenceNumber,
-                    LicenceFoundInList = licence.LicenceFoundInList,
-                    LicenceIsLive = licence.IsLiveLicence,
-                    LicenceIsDead = licence.IsDeadLicence,
-                    LicenceIsImpoundment = licence.IsImpoundmentLicence
-                });
-                
+                returnList.Add(outputLine);
                 continue;
             }
             
@@ -78,34 +86,24 @@ public static class GenerateLinkedLicencesCsv
             {
                 var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName));
                 var linkReasons = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.LinkReason));
-                
-                var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                    ? value.ToString()
-                    : null;
 
-                returnList.Add(new LinkedLicencesCsvLine
-                {
-                    Filename = licence.Filename,
-                    DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
-                    LicenceNumber = licence.LicenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = licence.NaldLicenceNumber,
-                    LicenceFoundInList = licence.LicenceFoundInList,
-                    LicenceIsLive = licence.IsLiveLicence,
-                    LicenceIsDead = licence.IsDeadLicence,
-                    LicenceIsImpoundment = licence.IsImpoundmentLicence,
-                    LinkedLicenceNumber = linkedLicence.LicenceNumber,
-                    ScrapedLinkedLicenceNumber = linkedLicence.ScrapedLicenceNumber,
-                    NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber,
-                    LinkedLicenceFilename = linkedLicence.Filename,
-                    LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath) ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")" : null,
-                    LinkedLicenceFromSection = fromSections,
-                    LinkedLicenceLinkReason = linkReasons,
-                    LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList,
-                    LinkedLicenceIsLive = linkedLicence.IsLiveLicence,
-                    LinkedLicenceIsDead = linkedLicence.IsDeadLicence,
-                    LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence
-                });
+                var outputLineCloned = outputLine.Clone();
+                
+                outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
+                outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.ScrapedLicenceNumber;
+                outputLineCloned.NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber;
+                outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename;
+                outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
+                    ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
+                    : null;
+                outputLineCloned.LinkedLicenceFromSection = fromSections;
+                outputLineCloned.LinkedLicenceLinkReason = linkReasons;
+                outputLineCloned.LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList;
+                outputLineCloned.LinkedLicenceIsLive = linkedLicence.IsLiveLicence;
+                outputLineCloned.LinkedLicenceIsDead = linkedLicence.IsDeadLicence;
+                outputLineCloned.LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence;
+                
+                returnList.Add(outputLineCloned);
             }
         }
 

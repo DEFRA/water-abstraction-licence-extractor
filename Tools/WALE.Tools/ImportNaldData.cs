@@ -8,1459 +8,7 @@ namespace WALE.Tools;
 
 public static class ImportNaldData
 {
-    private static readonly Dictionary<string, Dictionary<string, string>> TableColumnTypes = new()
-    {
-        {
-            "NALD_ABSTAT_CATGRIES", new Dictionary<string, string>
-            {
-                { "ALL_PRIMARY", "string" },
-                { "ALL_SECONDARY", "string" },
-                { "ALL_USES", "string" },
-                { "DISP_ORD", "short" },
-                { "INCLUDE_IN_REPORT", "string" },
-                { "STAT_CATEGORY", "string" },
-                { "STAT_REF", "decimal" },
-            }
-        },
-        {
-            "NALD_ABSTAT_CAT_PRIMS", new Dictionary<string, string>
-            {
-                { "AARC_STAT_REF", "decimal" },
-                { "APPR_CODE", "string" },
-            }
-        },
-        {
-            "NALD_ABSTAT_CAT_SECS", new Dictionary<string, string>
-            {
-                { "AARC_STAT_REF", "decimal" },
-                { "APSE_CODE", "string" },
-            }
-        },
-        {
-            "NALD_ABSTAT_CAT_USES", new Dictionary<string, string>
-            {
-                { "AARC_STAT_REF", "decimal" },
-                { "APUS_CODE_FROM", "short" },
-                { "APUS_CODE_TO", "short" },
-            }
-        },
-        {
-            "NALD_ABSTAT_EXCEPTIONS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "AABV_ID", "int" },
-                { "AABV_INCR_NO", "short" },
-                { "AABV_ISSUE_NO", "short" },
-                { "AAYR_ARYR_CODE", "string" },
-                { "AAYR_YEAR", "short" },
-                { "ANN_ACT_QTY", "decimal" },
-                { "ANN_AUTH_QTY", "decimal" },
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "ARTY_ID", "int" },
-                { "DATESTAMP", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "LIC_NO", "string" },
-                { "NMES_MESSAGE_NUMBER", "string" },
-            }
-        },
-        {
-            "NALD_ABSTAT_REPORT_DATA", new Dictionary<string, string>
-            {
-                { "AABL_AREP_LEAP_CODE", "string" },
-                { "AARC_STAT_REF", "decimal" },
-                { "FGAC_REGION_CODE", "short" },
-                { "GW_TOT_ACT_QTY", "long" },
-                { "GW_TOT_AUTH_QTY", "long" },
-                { "SW_TOT_ACT_QTY", "long" },
-                { "SW_TOT_AUTH_QTY", "long" },
-                { "TOT_LICENSED_RETURNED", "long" },
-                { "TOT_NO_LICENCES", "long" },
-                { "TW_TOT_ACT_QTY", "long" },
-                { "TW_TOT_AUTH_QTY", "long" },
-            }
-        },
-        {
-            "NALD_ABSTAT_TOTALS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "AAYR_ARYR_CODE", "string" },
-                { "AAYR_YEAR", "short" },
-                { "ACT_OVERRIDDEN", "string" },
-                { "ANN_ACT_QTY", "decimal" },
-                { "ANN_ACT_USABILITY", "string" },
-                { "ANN_AUTH_QTY", "decimal" },
-                { "ANN_AUTH_USABILITY", "string" },
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "AUTH_CALC_FROM_DAILY", "string" },
-                { "AUTH_OVERRIDDEN", "string" },
-                { "DELETED", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "PREV_YEAR_AUTH_USED", "string" },
-                { "SOURCE_TYPE", "string" },
-                { "USER_NOTES", "string" },
-            }
-        },
-        {
-            "NALD_ABSTAT_YEARS", new Dictionary<string, string>
-            {
-                { "ARYR_CODE", "string" },
-                { "SNAPSHOT_DATE", "datetime" },
-                { "YEAR", "short" },
-            }
-        },
-        {
-            "NALD_ABS_LICENCES", new Dictionary<string, string>
-            {
-                { "AREP_AREA_CODE", "string" },
-                { "AREP_CAMS_CODE", "string" },
-                { "AREP_EIUC_CODE", "string" },
-                { "AREP_LEAP_CODE", "string" },
-                { "AREP_SUC_CODE", "string" },
-                { "EXPIRY_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FOLL_LIC_NO", "string" },
-                { "ID", "int" },
-                { "LAPSED_DATE", "datetime" },
-                { "LIC_NO", "string" },
-                { "NOTES", "string" },
-                { "ORIG_APP_NO", "string" },
-                { "ORIG_EFF_DATE", "datetime" },
-                { "ORIG_LIC_NO", "string" },
-                { "ORIG_SIG_DATE", "datetime" },
-                { "PREV_LIC_NO", "string" },
-                { "REV_DATE", "datetime" },
-                { "SUSP_FROM_BILLING", "string" },
-                { "SUSP_FROM_RETURNS", "string" },
-                { "X_REG_IND", "string" },
-            }
-        },
-        {
-            "NALD_ABS_LIC_PURPOSES", new Dictionary<string, string>
-            {
-                { "AABV_AABL_ID", "int" },
-                { "AABV_INCR_NO", "short" },
-                { "AABV_ISSUE_NO", "short" },
-                { "ANNUAL_QTY", "decimal" },
-                { "ANNUAL_QTY_USABILITY", "string" },
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "AREC_CODE", "string" },
-                { "DAILY_QTY", "decimal" },
-                { "DAILY_QTY_USABILITY", "string" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-                { "HOURLY_QTY", "decimal" },
-                { "HOURLY_QTY_USABILITY", "string" },
-                { "ID", "int" },
-                { "INST_QTY", "decimal" },
-                { "INST_QTY_USABILITY", "string" },
-                { "LANDS", "string" },
-                { "AMOM_CODE", "string" },
-                { "NOTES", "string" },
-                { "PERIOD_END_DAY", "short" },
-                { "PERIOD_END_MONTH", "short" },
-                { "PERIOD_ST_DAY", "short" },
-                { "PERIOD_ST_MONTH", "short" },
-                { "TIMELTD_END_DATE", "datetime" },
-                { "TIMELTD_ST_DATE", "datetime" },
-            }
-        },
-        {
-            "NALD_ABS_LIC_QUANTITIES", new Dictionary<string, string>
-            {
-                { "AABV_AABL_ID", "int" },
-                { "AABV_INCR_NO", "short" },
-                { "AABV_ISSUE_NO", "short" },
-                { "ANN_QTY", "decimal" },
-                { "ANN_QTY_USABILITY", "string" },
-                { "DAILY_QTY", "decimal" },
-                { "DAILY_QTY_USABILITY", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "HOURLY_QTY", "decimal" },
-                { "HOURLY_QTY_USABILITY", "string" },
-                { "ID", "int" },
-                { "INST_QTY", "decimal" },
-                { "INST_QTY_USABILITY", "string" },
-                { "NOTES", "string" },
-                { "PERIOD_END_DAY", "short" },
-                { "PERIOD_END_MONTH", "short" },
-                { "PERIOD_ST_DAY", "short" },
-                { "PERIOD_ST_MONTH", "short" },
-            }
-        },
-        {
-            "NALD_ABS_LIC_VERSIONS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "ACCL_CODE", "string" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "ALTY_CODE", "string" },
-                { "APPR_DATE", "datetime" },
-                { "ASRC_CODE", "string" },
-                { "DEREG_CODE", "string" },
-                { "DEREG_DATE", "datetime" },
-                { "EFF_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "INCR_NO", "short" },
-                { "ISSUE_DATE", "datetime" },
-                { "ISSUE_NO", "short" },
-                { "LIC_STATUS", "string" },
-                { "POST_DATE", "datetime" },
-                { "SIG_DATE", "datetime" },
-                { "VERSION_STATUS", "string" },
-                { "WA_ALTY_CODE", "string" },
-            }
-        },
-        {
-            "NALD_ABS_PURP_POINTS", new Dictionary<string, string>
-            {
-                { "AAIP_ID", "int" },
-                { "AABP_ID", "int" },
-                { "AMOA_CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_ADDRESSES", new Dictionary<string, string>
-            {
-                { "APCO_CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "LINE1", "string" },
-                { "LINE2", "string" },
-                { "LINE3", "string" },
-                { "LINE4", "string" },
-                { "POSTCODE", "string" },
-            }
-        },
-        {
-            "NALD_APP_FORM_HELP", new Dictionary<string, string>
-            {
-                { "HLP_APPLN", "string" },
-                { "HLP_MODTAB_NAME", "string" },
-                { "HLP_SEQ", "short" },
-                { "HLP_TEXT", "string" },
-            }
-        },
-        {
-            "NALD_BANK_CODES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_BILL_CHGVERSIONS", new Dictionary<string, string>
-            {
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "ACVR_AABL_ID", "int" },
-                { "ACVR_VERS_NO", "short" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_BILL_ERRORS", new Dictionary<string, string>
-            {
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "NMES_MESSAGE_NUMBER", "string" },
-            }
-        },
-        {
-            "NALD_BILL_HEADERS", new Dictionary<string, string>
-            {
-                { "ABHD_ID", "int" },
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "ADDR_LINE1", "string" },
-                { "ADDR_LINE2", "string" },
-                { "ADDR_LINE3", "string" },
-                { "ADDR_LINE4", "string" },
-                { "ADDR_POSTCODE", "string" },
-                { "BANK_ACCOUNT_NO", "string" },
-                { "BANK_SORT_CODE", "string" },
-                { "CUST_NAME", "string" },
-                { "CUST_REF", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "GIRO_OCR", "string" },
-                { "IAS_CUST_REF", "string" },
-                { "ID", "int" },
-                { "LH_ACC_NO", "string" },
-                { "TOTAL_BILL_AMT", "decimal" },
-                { "TOTAL_VAT_AMT", "decimal" },
-            }
-        },
-        {
-            "NALD_BILL_PROCESSES", new Dictionary<string, string>
-            {
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "END_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "MODULE_NAME", "string" },
-                { "START_DATE", "datetime" },
-                { "STATUS", "string" },
-            }
-        },
-        {
-            "NALD_BILL_RUNS", new Dictionary<string, string>
-            {
-                { "BILL_RUN_NO", "short" },
-                { "BILL_RUN_TYPE", "string" },
-                { "FIN_YEAR", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "RUN_DATE", "datetime" },
-                { "RUN_STATUS", "string" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_BILL_TPT_RETURNS", new Dictionary<string, string>
-            {
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "ACEL_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FIN_YEAR", "string" },
-            }
-        },
-        {
-            "NALD_BILL_TRANS", new Dictionary<string, string>
-            {
-                { "ABHD_ID", "int" },
-                { "ABRN_BILL_RUN_NO", "short" },
-                { "ABRN_FIN_YEAR", "string" },
-                { "ACEL_ID", "int" },
-                { "BILL_AMT", "decimal" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "LIC_ID", "int" },
-                { "LINE_DESCR", "string" },
-                { "LINE_TYPE", "string" },
-                { "VAT_AMT", "decimal" },
-                { "VAT_CODE", "string" },
-                { "VERS_NO", "short" },
-            }
-        },
-        {
-            "NALD_BILL_YEARS", new Dictionary<string, string>
-            {
-                { "ABCV_ABRN_BILL_RUN_NO", "short" },
-                { "ABCV_ABRN_FIN_YEAR", "string" },
-                { "ABCV_ACVR_AABL_ID", "int" },
-                { "ABCV_ACVR_VERS_NO", "short" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FIN_YEAR", "string" },
-            }
-        },
-        {
-            "NALD_BUTTONS", new Dictionary<string, string>
-            {
-                { "BUTTON_NUMBER", "short" },
-                { "BUTTON_TEXT", "string" },
-                { "DESCRIPTION", "string" },
-            }
-        },
-        {
-            "NALD_CHG_AGRMNTS", new Dictionary<string, string>
-            {
-                { "ACEL_ID", "int" },
-                { "AFSA_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_CHG_ELEMENTS", new Dictionary<string, string>
-            {
-                { "ACVR_AABL_ID", "int" },
-                { "ACVR_VERS_NO", "short" },
-                { "ALSF_CODE", "string" },
-                { "ANNUAL_QTY", "decimal" },
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "ASFT_CODE", "string" },
-                { "ASFT_CODE_DERIVED", "string" },
-                { "ASRF_CODE", "string" },
-                { "BASE_CHARGE", "decimal" },
-                { "CHARGE_STATUS", "string" },
-                { "DAILY_QTY", "decimal" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "EIUC_COMP_QTY", "decimal" },
-                { "FGAC_REGION_CODE", "short" },
-                { "HOURLY_QTY", "decimal" },
-                { "ID", "int" },
-                { "INST_QTY", "decimal" },
-                { "MIN_CHARGE", "decimal" },
-                { "NOTES", "string" },
-                { "PERIOD_END_DAY", "short" },
-                { "PERIOD_END_MONTH", "short" },
-                { "PERIOD_ST_DAY", "short" },
-                { "PERIOD_ST_MONTH", "short" },
-                { "TRANS_LOSS", "decimal" },
-                { "UNIT_CHARGE", "decimal" },
-            }
-        },
-        {
-            "NALD_CHG_VERSIONS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "AIIA_ALHA_ACC_NO", "string" },
-                { "AIIA_IAS_CUST_REF", "string" },
-                { "EFF_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VERS_NO", "short" },
-                { "VERS_STATUS", "string" },
-            }
-        },
-        {
-            "NALD_CODE_CONTROLS", new Dictionary<string, string>
-            {
-                { "COL_NAME", "string" },
-                { "LAST_VAL", "int" },
-                { "TAB_NAME", "string" },
-            }
-        },
-        {
-            "NALD_CONTACTS", new Dictionary<string, string>
-            {
-                { "AADD_ID", "int" },
-                { "APAR_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "SURNAME", "string" },
-                { "TITLE", "string" },
-                { "FORENAMES", "string" },
-            }
-        },
-        {
-            "NALD_CONT_NOS", new Dictionary<string, string>
-            {
-                { "ACNT_CODE", "string" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "CONT_NO", "string" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_CONT_NO_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_CRIT_CLASSES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_CTRL_FLOWS", new Dictionary<string, string>
-            {
-                { "AMAN_CODE", "string" },
-                { "FLOW_QTY", "decimal" },
-                { "SEQ_NO", "short" },
-            }
-        },
-        {
-            "NALD_CTRL_LEVELS", new Dictionary<string, string>
-            {
-                { "AMAN_CODE", "string" },
-                { "LEVEL_QTY", "decimal" },
-                { "SEQ_NO", "short" },
-            }
-        },
-        {
-            "NALD_CTRL_POINT_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_DEREG_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_DOCUMENT_REFS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "AIMP_ID", "int" },
-                { "DOC_REF", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-            }
-        },
-        {
-            "NALD_EIUC_VALS", new Dictionary<string, string>
-            {
-                { "AREP_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_FIN_AGRMNT_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_FIN_AGRMNT_VALS", new Dictionary<string, string>
-            {
-                { "AFSA_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_FORM_HELP", new Dictionary<string, string>
-            {
-                { "HLP_MODTAB_NAME", "string" },
-                { "HLP_TEXT", "string" },
-            }
-        },
-        {
-            "NALD_GROUP_LH_ACCS", new Dictionary<string, string>
-            {
-                { "ACC_NO", "string" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_IAS_INVOICE_ACCS", new Dictionary<string, string>
-            {
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "ALHA_ACC_NO", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "IAS_CUST_REF", "string" },
-            }
-        },
-        {
-            "NALD_IMP_LICENCES", new Dictionary<string, string>
-            {
-                { "AREA", "string" },
-                { "CAMS", "string" },
-                { "EXPIRY_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "LEAP", "string" },
-                { "LIC_NO", "string" },
-                { "NOTES", "string" },
-            }
-        },
-        {
-            "NALD_IMP_LIC_PURPOSES", new Dictionary<string, string>
-            {
-                { "AIMV_AIMP_ID", "int" },
-                { "AIMV_INCR_NO", "short" },
-                { "AIMV_ISSUE_NO", "short" },
-                { "AISI_CODE", "string" },
-                { "AMOI_CODE", "string" },
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "LANDS", "string" },
-                { "NOTES", "string" },
-            }
-        },
-        {
-            "NALD_IMP_LIC_VERSIONS", new Dictionary<string, string>
-            {
-                { "ACCL_CODE", "string" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "AIMP_ID", "int" },
-                { "ASRC_CODE", "string" },
-                { "EFF_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "INCR_NO", "short" },
-                { "ISSUE_DATE", "datetime" },
-                { "ISSUE_NO", "short" },
-                { "LIC_STATUS", "string" },
-                { "SIG_DATE", "datetime" },
-                { "VERSION_STATUS", "string" },
-            }
-        },
-        {
-            "NALD_IMP_PURP_POINTS", new Dictionary<string, string>
-            {
-                { "AAIP_ID", "int" },
-                { "AIPU_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "IMOI_CODE", "string" },
-            }
-        },
-        {
-            "NALD_IMP_SITE_STATUSES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LH_ACCS", new Dictionary<string, string>
-            {
-                { "ACC_NO", "string" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "AGCA_ACC_NO", "string" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_LH_AGRMNTS", new Dictionary<string, string>
-            {
-                { "AFSA_CODE", "string" },
-                { "ALHA_ACC_NO", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_LH_REC_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LH_SUSP_LOGS", new Dictionary<string, string>
-            {
-                { "ALHA_ACC_NO", "string" },
-                { "AMRE_AMRE_TYPE", "string" },
-                { "AMRE_CODE", "string" },
-                { "CREATE_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_LIC_AGRMNTS", new Dictionary<string, string>
-            {
-                { "AABP_ID", "int" },
-                { "AIPU_ID", "int" },
-                { "ALSA_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "VALUE", "string" },
-            }
-        },
-        {
-            "NALD_LIC_AGRMNT_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LIC_AVAILS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LIC_CONDITIONS", new Dictionary<string, string>
-            {
-                { "AABP_ID", "int" },
-                { "ACIN_CODE", "string" },
-                { "ACIN_SUBCODE", "string" },
-                { "AIPU_ID", "int" },
-                { "COND_TEXT", "string" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-            }
-        },
-        {
-            "NALD_LIC_COND_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "SUBCODE", "string" },
-            }
-        },
-        {
-            "NALD_LIC_ROLES", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "AIMP_ID", "int" },
-                { "ALRT_CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-            }
-        },
-        {
-            "NALD_LIC_ROLE_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LIC_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LOSS_FACTORS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_LOSS_FACTOR_VALS", new Dictionary<string, string>
-            {
-                { "ALSF_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_MAN_REP_CODES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "REPORT_DATETIME", "datetime" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_MAN_UNITS", new Dictionary<string, string>
-            {
-                { "AMAN_CODE", "string" },
-                { "AMLA_CODE", "string" },
-                { "APFR_CODE", "string" },
-                { "APTY_CODE", "string" },
-                { "ASLA_CODE", "string" },
-                { "ATLL_CODE", "string" },
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_MAN_UNIT_POINTS", new Dictionary<string, string>
-            {
-                { "AAIP_ID", "int" },
-                { "AMAN_CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_MEANS_OF_ABS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_MEANS_OF_IMP", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_MEANS_OF_MEASURE", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_MESSAGES", new Dictionary<string, string>
-            {
-                { "MESSAGE_NUMBER", "string" },
-                { "MESSAGE_TEXT", "string" },
-            }
-        },
-        {
-            "NALD_MOD_LOGS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "AABV_INCR_NO", "short" },
-                { "AABV_ISSUE_NO", "short" },
-                { "ACVR_AABL_ID", "int" },
-                { "ACVR_VERS_NO", "short" },
-                { "AIMP_ID", "int" },
-                { "AIMV_AIMP_ID", "int" },
-                { "AIMV_INCR_NO", "short" },
-                { "AIMV_ISSUE_NO", "short" },
-                { "AMRE_AMRE_TYPE", "string" },
-                { "AMRE_CODE", "string" },
-                { "ARVN_AABL_ID", "int" },
-                { "ARVN_VERS_NO", "short" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "MOD_DATE", "datetime" },
-                { "MOD_DESCR", "string" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_MOD_REASONS", new Dictionary<string, string>
-            {
-                { "AMRE_TYPE", "string" },
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_NGR_CONVERSIONS", new Dictionary<string, string>
-            {
-                { "EASTING", "int" },
-                { "NGR_SHEET", "string" },
-                { "NORTHING", "int" },
-            }
-        },
-        {
-            "NALD_NRW_DELETIONS_AUDIT", new Dictionary<string, string>
-            {
-                { "DELETION_DATE", "datetime" },
-                { "ID", "int" },
-                { "LIC_NO", "string" },
-                { "PK_VALUES", "string" },
-                { "TABLE_NAME", "string" },
-            }
-        },
-        {
-            "NALD_PARTIES", new Dictionary<string, string>
-            {
-                { "ASIC_ASID_DIVISION", "string" },
-                { "ASIC_CLASS", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "NAME", "string" },
-            }
-        },
-        {
-            "NALD_POINTS", new Dictionary<string, string>
-            {
-                { "AADD_ID", "int" },
-                { "AAPC_CODE", "string" },
-                { "AAPT_APTP_CODE", "string" },
-                { "AAPT_APTS_CODE", "string" },
-                { "ABAN_CODE", "string" },
-                { "ASRC_CODE", "string" },
-                { "BANK_ACCOUNT_NO", "string" },
-                { "BANK_SORT_CODE", "string" },
-                { "CUST_NAME", "string" },
-                { "CUST_REF", "string" },
-                { "EASTING", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "NAME", "string" },
-                { "NGR", "string" },
-                { "NORTHING", "int" },
-            }
-        },
-        {
-            "NALD_POINT_CATEGORIES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_POINT_TYPES", new Dictionary<string, string>
-            {
-                { "APTP_CODE", "string" },
-                { "APTS_CODE", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_POINT_TYPE_PRIMS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_POINT_TYPE_SECS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_POSTAL_COUNTIES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_PRES_FLOW_RESTS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_PRINTER_DRIVERS", new Dictionary<string, string>
-            {
-                { "COMMAND", "string" },
-                { "NAME", "string" },
-            }
-        },
-        {
-            "NALD_PROC_DETAILS", new Dictionary<string, string>
-            {
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "NMES_MESSAGE_NUMBER", "string" },
-                { "PROC_DATETIME", "datetime" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_PURPOSES", new Dictionary<string, string>
-            {
-                { "APPR_CODE", "string" },
-                { "APSE_CODE", "string" },
-                { "APUS_CODE", "short" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_PURP_PRIMS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_PURP_SECS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_PURP_USES", new Dictionary<string, string>
-            {
-                { "ALSF_CODE", "string" },
-                { "CODE", "short" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_REF_CODES", new Dictionary<string, string>
-            {
-                { "ABBREVIATION", "string" },
-                { "DOMAIN", "string" },
-                { "LOW_VALUE", "string" },
-                { "MEANING", "string" },
-            }
-        },
-        {
-            "NALD_REPORTS", new Dictionary<string, string>
-            {
-                { "FILENAME", "string" },
-                { "NAME", "string" },
-            }
-        },
-        {
-            "NALD_REPORT_DRIVERS", new Dictionary<string, string>
-            {
-                { "APDR_NAME", "string" },
-                { "ARTS_NAME", "string" },
-                { "TRAY", "string" },
-            }
-        },
-        {
-            "NALD_REPORT_LICENCES", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "REPORT_DATETIME", "datetime" },
-                { "USER_ID", "string" },
-            }
-        },
-        {
-            "NALD_REP_UNITS", new Dictionary<string, string>
-            {
-                { "ACON_AADD_ID", "int" },
-                { "ACON_APAR_ID", "int" },
-                { "AREP_CODE", "string" },
-                { "ARUT_CODE", "string" },
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_REP_UNIT_POINTS", new Dictionary<string, string>
-            {
-                { "AAIP_ID", "int" },
-                { "AREP_CODE", "string" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_REP_UNIT_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_RET_AGENCY_FREQS", new Dictionary<string, string>
-            {
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "REC_FREQ_CODE", "string" },
-                { "RET_FREQ_CODE", "string" },
-            }
-        },
-        {
-            "NALD_RET_COL_FREQS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_RET_FMT_POINTS", new Dictionary<string, string>
-            {
-                { "AAIP_ID", "int" },
-                { "ARTY_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_RET_FMT_PURPOSES", new Dictionary<string, string>
-            {
-                { "APUR_APPR_CODE", "string" },
-                { "APUR_APSE_CODE", "string" },
-                { "APUR_APUS_CODE", "short" },
-                { "ARTY_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_RET_FORMATS", new Dictionary<string, string>
-            {
-                { "ARTC_CODE", "string" },
-                { "ARTC_REC_FREQ_CODE", "string" },
-                { "ARTC_RET_FREQ_CODE", "string" },
-                { "ARVN_AABL_ID", "int" },
-                { "ARVN_VERS_NO", "short" },
-                { "DESCR", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "ID", "int" },
-                { "LATEST_RET_DATE", "datetime" },
-                { "NOTES", "string" },
-                { "RET_RECD_DATE", "datetime" },
-            }
-        },
-        {
-            "NALD_RET_FORM_LOGS", new Dictionary<string, string>
-            {
-                { "ACON_AADD_ID_FROM", "int" },
-                { "ACON_AADD_ID_TO", "int" },
-                { "ACON_APAR_ID_FROM", "int" },
-                { "ACON_APAR_ID_TO", "int" },
-                { "ALRO_ID", "int" },
-                { "ARTY_ID", "int" },
-                { "DATE_FROM", "datetime" },
-                { "DATE_PRODUCED", "datetime" },
-                { "DATE_TO", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FORM_PROD_NO", "int" },
-            }
-        },
-        {
-            "NALD_RET_FREQ_COMBS", new Dictionary<string, string>
-            {
-                { "ARAF_REC_FREQ_CODE", "string" },
-                { "ARAF_RET_FREQ_CODE", "string" },
-                { "ARCF_CODE", "string" },
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_RET_LINES", new Dictionary<string, string>
-            {
-                { "ARFL_ARTY_ID", "int" },
-                { "ARFL_DATE_FROM", "datetime" },
-                { "ATPT_ACEL_ID", "int" },
-                { "ATPT_FIN_YEAR", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "RET_DATE", "datetime" },
-                { "RET_QTY", "decimal" },
-            }
-        },
-        {
-            "NALD_RET_LOG_ERRORS", new Dictionary<string, string>
-            {
-                { "ARTY_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FORM_PROD_NO", "int" },
-            }
-        },
-        {
-            "NALD_RET_VERSIONS", new Dictionary<string, string>
-            {
-                { "AABL_ID", "int" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VERS_NO", "short" },
-                { "VERS_STATUS", "string" },
-            }
-        },
-        {
-            "NALD_SCHED_JOBS_FGAC", new Dictionary<string, string>
-            {
-                { "FGAC_REGION_CODE", "short" },
-                { "JOB", "int" },
-            }
-        },
-        {
-            "NALD_SEAS_FACTORS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_SEAS_FACTOR_VALS", new Dictionary<string, string>
-            {
-                { "ASFT_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_SEAS_LIC_AVAILS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_SOFTWARE", new Dictionary<string, string>
-            {
-                { "SFT_DESCRIPTION", "string" },
-                { "SFT_ID", "string" },
-            }
-        },
-        {
-            "NALD_SOFTWARE_PRIVS", new Dictionary<string, string>
-            {
-                { "ROLE_NAME", "string" },
-                { "SFT_ID", "string" },
-            }
-        },
-        {
-            "NALD_SOFT_BUTTONS", new Dictionary<string, string>
-            {
-                { "BUTTON_NUMBER", "short" },
-                { "SFT_ID", "string" },
-            }
-        },
-        {
-            "NALD_SOFT_BUTTON_PRIVS", new Dictionary<string, string>
-            {
-                { "BUTTON_NUMBER", "short" },
-                { "ROLE_NAME", "string" },
-                { "SFT_ID", "string" },
-            }
-        },
-        {
-            "NALD_SOURCES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "FGAC_REGION_CODE", "short" },
-            }
-        },
-        {
-            "NALD_SRC_FACTORS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_SRC_FACTOR_VALS", new Dictionary<string, string>
-            {
-                { "ASRF_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_STDIND_CLASSES", new Dictionary<string, string>
-            {
-                { "ASID_DIVISION", "string" },
-                { "CLASS", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_STDIND_DIVISIONS", new Dictionary<string, string>
-            {
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "DIVISION", "string" },
-            }
-        },
-        {
-            "NALD_SUC_VALS", new Dictionary<string, string>
-            {
-                { "AREP_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_SYSTEM_PARAMS", new Dictionary<string, string>
-            {
-                { "BANK_ACCOUNT_NO", "string" },
-                { "BANK_SORT_CODE", "string" },
-                { "CUST_FILE_SET", "string" },
-                { "DEREG_HIGH", "decimal" },
-                { "DEREG_LOW", "decimal" },
-                { "DFLT_DAYS_GRACE", "short" },
-                { "DFLT_SRC_FACTOR", "string" },
-                { "DFLT_VAT_CODE", "string" },
-                { "EIUC_COMP_ON", "string" },
-                { "ENQ_NAME", "string" },
-                { "ENQ_NAME_WELSH", "string" },
-                { "ENQ_TEL_NO", "string" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FIMS_FILE_DATE", "short" },
-                { "FIMS_FILE_DAY", "string" },
-                { "FIMS_FILE_FREQUENCY", "string" },
-                { "FIMS_FILE_TIME", "string" },
-                { "FIMS_LAST_FILE_CREATED", "datetime" },
-                { "FORM_PRODN_MONTH", "short" },
-                { "GIRO_TERMINATOR", "string" },
-                { "LAST_CUST_FILE_SEQ", "int" },
-                { "LAST_IAS_NAME_XFER", "datetime" },
-                { "LAST_TRANS_FILE_SEQ", "int" },
-                { "OCR_FONT_SWITCH", "string" },
-                { "PRINTER_DEFN_PATH", "string" },
-                { "REGION_CODE", "string" },
-                { "REGION_NAME", "string" },
-                { "REGION_NAME_WELSH", "string" },
-                { "REPORT_DEST_PATH", "string" },
-                { "TEMPORARY_LIC_CHARGEABLE", "string" },
-                { "TEMP_LIC_LIMIT", "decimal" },
-                { "TLPA_APPLIED", "string" },
-                { "TLPA_APPLIED_DATE", "datetime" },
-                { "TLPA_FILE_ENABLED", "string" },
-                { "TRANSFER_LIC_CHARGEABLE", "string" },
-                { "WA_LICS_ENABLED", "string" },
-            }
-        },
-        {
-            "NALD_TIMELTD_AVAILS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_TLP_FACTORS", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_TLP_FACTOR_VALS", new Dictionary<string, string>
-            {
-                { "ASRF_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_TPT_RETURNS", new Dictionary<string, string>
-            {
-                { "ACEL_ID", "int" },
-                { "AUTO_SUM_INDICATOR", "string" },
-                { "BILLABLE_RET_QTY", "decimal" },
-                { "BILLED_DATE", "datetime" },
-                { "FGAC_REGION_CODE", "short" },
-                { "FIN_YEAR", "string" },
-                { "LATEST_RET_DATE", "datetime" },
-                { "RET_ENTRY_INDICATOR", "string" },
-                { "RET_RECD_DATE", "datetime" },
-                { "RETURN_QTY", "decimal" },
-            }
-        },
-        {
-            "NALD_VAT_CODES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_VAT_RATES", new Dictionary<string, string>
-            {
-                { "AVAT_CODE", "string" },
-                { "EFF_END_DATE", "datetime" },
-                { "EFF_ST_DATE", "datetime" },
-                { "VALUE", "decimal" },
-            }
-        },
-        {
-            "NALD_WA_LIC_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-            }
-        },
-        {
-            "NALD_YEAR_TYPES", new Dictionary<string, string>
-            {
-                { "CODE", "string" },
-                { "DESCR", "string" },
-                { "DISABLED", "string" },
-                { "DISP_ORD", "short" },
-                { "PERIOD_FROM_DAY", "short" },
-                { "PERIOD_FROM_MONTH", "short" },
-                { "PERIOD_TO_DAY", "short" },
-                { "PERIOD_TO_MONTH", "short" },
-            }
-        },
-    };
+    private static Dictionary<string, Dictionary<string, NpgsqlTypes.NpgsqlDbType>>? _schemaCache;
 
     public static async Task ImportAsync()
     {
@@ -1485,13 +33,16 @@ public static class ImportNaldData
 
         await using var dataSource = npgsqlDataSourceProvider.DataSource;
 
+        // Cache the schema information once
+        await LoadSchemaAsync(dataSource);
+
         await using var fkConnection = await dataSource.OpenConnectionAsync();
         await DropForeignKeysAsync(fkConnection);
 
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
-            Console.WriteLine($"Importing {fileName}...");
+            Console.WriteLine($"Truncating {fileName}...");
 
             try
             {
@@ -1521,6 +72,111 @@ public static class ImportNaldData
         await RecreateForeignKeysAsync(fkConnection);
 
         Console.WriteLine("NALD data import completed.");
+    }
+
+    private static async Task LoadSchemaAsync(NpgsqlDataSource dataSource)
+    {
+        _schemaCache = new Dictionary<string, Dictionary<string, NpgsqlTypes.NpgsqlDbType>>();
+
+        await using var connection = await dataSource.OpenConnectionAsync();
+
+        var sql = @"
+            SELECT 
+                table_name,
+                column_name,
+                data_type,
+                udt_name
+            FROM information_schema.columns
+            WHERE table_schema = 'nald'
+            ORDER BY table_name, ordinal_position";
+
+        await using var cmd = new NpgsqlCommand(sql, connection);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            var tableName = reader.GetString(0);
+            var columnName = reader.GetString(1);
+            var dataType = reader.GetString(2);
+            var udtName = reader.GetString(3);
+
+            if (!_schemaCache.ContainsKey(tableName))
+            {
+                _schemaCache[tableName] = new Dictionary<string, NpgsqlTypes.NpgsqlDbType>();
+            }
+
+            _schemaCache[tableName][columnName] = MapPostgresTypeToNpgsqlDbType(dataType, udtName);
+        }
+    }
+
+    private static NpgsqlTypes.NpgsqlDbType MapPostgresTypeToNpgsqlDbType(string dataType, string udtName)
+    {
+        return dataType.ToLower() switch
+        {
+            "smallint" => NpgsqlTypes.NpgsqlDbType.Smallint,
+            "integer" => NpgsqlTypes.NpgsqlDbType.Integer,
+            "bigint" => NpgsqlTypes.NpgsqlDbType.Bigint,
+            "numeric" => NpgsqlTypes.NpgsqlDbType.Numeric,
+            "real" => NpgsqlTypes.NpgsqlDbType.Real,
+            "double precision" => NpgsqlTypes.NpgsqlDbType.Double,
+            "character varying" => NpgsqlTypes.NpgsqlDbType.Varchar,
+            "character" => NpgsqlTypes.NpgsqlDbType.Char,
+            "text" => NpgsqlTypes.NpgsqlDbType.Text,
+            "timestamp without time zone" => NpgsqlTypes.NpgsqlDbType.Timestamp,
+            "timestamp with time zone" => NpgsqlTypes.NpgsqlDbType.TimestampTz,
+            "date" => NpgsqlTypes.NpgsqlDbType.Date,
+            "boolean" => NpgsqlTypes.NpgsqlDbType.Boolean,
+            _ => NpgsqlTypes.NpgsqlDbType.Text
+        };
+    }
+
+    private static async Task WriteTypedValueAsync(NpgsqlBinaryImporter writer, string value,
+        NpgsqlTypes.NpgsqlDbType type)
+    {
+        switch (type)
+        {
+            case NpgsqlTypes.NpgsqlDbType.Smallint:
+                await writer.WriteAsync(short.Parse(value, CultureInfo.InvariantCulture), type);
+                break;
+            case NpgsqlTypes.NpgsqlDbType.Integer:
+                await writer.WriteAsync(int.Parse(value, CultureInfo.InvariantCulture), type);
+                break;
+            case NpgsqlTypes.NpgsqlDbType.Bigint:
+                await writer.WriteAsync(long.Parse(value, CultureInfo.InvariantCulture), type);
+                break;
+            case NpgsqlTypes.NpgsqlDbType.Numeric:
+            case NpgsqlTypes.NpgsqlDbType.Real:
+            case NpgsqlTypes.NpgsqlDbType.Double:
+                await writer.WriteAsync(decimal.Parse(value, CultureInfo.InvariantCulture), type);
+                break;
+            case NpgsqlTypes.NpgsqlDbType.Timestamp:
+            case NpgsqlTypes.NpgsqlDbType.TimestampTz:
+            case NpgsqlTypes.NpgsqlDbType.Date:
+                string[] formats =
+                [
+                    "dd/MM/yyyy",
+                    "d/M/yyyy",
+                    "yyyy-MM-dd",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyyMMddHHmmss",
+                    "dd/MM/yyyy HH:mm:ss",
+                    "d/M/yyyy HH:mm:ss"
+                ];
+                if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var result))
+                {
+                    await writer.WriteAsync(result, type);
+                }
+                else
+                {
+                    await writer.WriteAsync(DateTime.Parse(value, CultureInfo.InvariantCulture), type);
+                }
+
+                break;
+            default:
+                await writer.WriteAsync(value, type);
+                break;
+        }
     }
 
     private static async Task DropForeignKeysAsync(NpgsqlConnection connection)
@@ -1906,7 +562,7 @@ public static class ImportNaldData
         await using var truncateCmd = new NpgsqlCommand($"TRUNCATE TABLE nald.\"{tableName}\" CASCADE", connection);
         await truncateCmd.ExecuteNonQueryAsync();
     }
-    
+
     private static async Task ImportFileAsync(NpgsqlDataSource dataSource, string filePath, string tableName)
     {
         using var reader = new StreamReader(filePath, Encoding.UTF8);
@@ -1994,12 +650,11 @@ public static class ImportNaldData
         await writer.CompleteAsync();
     }
 
-    private static async Task WriteRowAsync(NpgsqlBinaryImporter writer, List<string> values, string[] allColumnsInFile,
-        string[] columnsToImport, string tableName)
+    private static async Task WriteRowAsync(NpgsqlBinaryImporter writer, List<string> values,
+        string[] allColumnsInFile, string[] columnsToImport, string tableName)
     {
         if (values.Count != allColumnsInFile.Length)
         {
-            // Only log if it's not just an empty line
             if (values.Count > 1 || !string.IsNullOrWhiteSpace(values[0]))
             {
                 Console.WriteLine(
@@ -2027,60 +682,17 @@ public static class ImportNaldData
                 continue;
             }
 
-            if (TableColumnTypes.TryGetValue(tableName, out var tableMapping) &&
-                tableMapping.TryGetValue(columnName, out var type))
+            if (_schemaCache!.TryGetValue(tableName, out var tableSchema) &&
+                tableSchema.TryGetValue(columnName, out var npgsqlType))
             {
                 try
                 {
-                    switch (type)
-                    {
-                        case "short":
-                            await writer.WriteAsync(short.Parse(value, CultureInfo.InvariantCulture),
-                                NpgsqlTypes.NpgsqlDbType.Smallint);
-                            break;
-                        case "int":
-                            await writer.WriteAsync(int.Parse(value, CultureInfo.InvariantCulture),
-                                NpgsqlTypes.NpgsqlDbType.Integer);
-                            break;
-                        case "long":
-                            await writer.WriteAsync(long.Parse(value, CultureInfo.InvariantCulture),
-                                NpgsqlTypes.NpgsqlDbType.Bigint);
-                            break;
-                        case "decimal":
-                            await writer.WriteAsync(decimal.Parse(value, CultureInfo.InvariantCulture),
-                                NpgsqlTypes.NpgsqlDbType.Numeric);
-                            break;
-                        case "datetime":
-                            string[] formats =
-                            [
-                                "dd/MM/yyyy",
-                                "d/M/yyyy",
-                                "yyyy-MM-dd",
-                                "yyyy-MM-dd HH:mm:ss",
-                                "yyyyMMddHHmmss"
-                            ];
-                            if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture,
-                                    DateTimeStyles.None, out var result))
-                            {
-                                await writer.WriteAsync(result, NpgsqlTypes.NpgsqlDbType.Timestamp);
-                            }
-                            else
-                            {
-                                await writer.WriteAsync(DateTime.Parse(value, CultureInfo.InvariantCulture),
-                                    NpgsqlTypes.NpgsqlDbType.Timestamp);
-                            }
-
-                            break;
-                        default:
-                            await writer.WriteAsync(value, NpgsqlTypes.NpgsqlDbType.Text);
-                            break;
-                    }
+                    await WriteTypedValueAsync(writer, value, npgsqlType);
                 }
                 catch (Exception ex)
                 {
-                    string message =
-                        $"Error parsing value '{value}' for column '{columnName}' in table '{tableName}' as type '{type}': {ex.Message}. Writing as null.";
-                    Console.WriteLine(message);
+                    Console.WriteLine(
+                        $"Error parsing value '{value}' for column '{columnName}' in table '{tableName}' as type '{npgsqlType}': {ex.Message}. Writing as null.");
                     await writer.WriteNullAsync();
                 }
             }

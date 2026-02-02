@@ -1407,6 +1407,7 @@ public class AddNaldSchemaCorrected : Migration
             .WithColumn("ARTY_ID").AsInt32().NotNullable()
             .WithColumn("ARVN_VERS_NO").AsInt16().NotNullable()
             .WithColumn("LIC_NO").AsString(20).NotNullable()
+            .WithColumn("ERR_DATETIME").AsDateTime().Nullable()
             ;
         Create.PrimaryKey("ARLE_PK").OnTable("NALD_RET_LOG_ERRORS").WithSchema("nald").Columns("FGAC_REGION_CODE", "FORM_PROD_NO", "ARTY_ID");
 

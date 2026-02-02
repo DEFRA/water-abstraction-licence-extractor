@@ -15,19 +15,8 @@ on:
 
 permissions: {}   # disables all default permissions
 jobs:
-  # 1️⃣ First run the dev build
-  build:
-    uses: ./.github/workflows/portal-build-template.yaml
-    with:
-      dotnet_application_solution_name: WaterAbstractionLicenseExtractor
-      environment: rollout
-    permissions:
-      id-token: write
-      contents: read
-  
-  # 2️⃣ Then push the image after build succeeds  
+  # Push the image 
   push-image:
-    needs: build   # ensures build must complete first
     uses: ./.github/workflows/portal-push-image-template.yaml
     with:
       IMAGE_VERSION: ${{ github.event.inputs.DEVIMAGEVERSION }}

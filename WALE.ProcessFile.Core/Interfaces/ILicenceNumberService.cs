@@ -8,6 +8,6 @@ public interface ILicenceNumberService
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr);
-    Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, string regionCode);
+    Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, short regionCode);
     Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText);
 }

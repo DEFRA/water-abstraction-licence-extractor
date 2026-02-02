@@ -173,12 +173,12 @@ public partial class LicenceNumber : ILicenceNumberService
         return (matchedLines.Count > 0, matchedLines);
     }
 
-    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, short regionCode)
     {
         return Instance.GetNaldLicencesAsync(licenceNumber, regionCode);
     }
 
-    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, string regionCode)
+    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, short regionCode)
     {
         var normalized = NormalizeLicenceNumber(licenceNumber);
 

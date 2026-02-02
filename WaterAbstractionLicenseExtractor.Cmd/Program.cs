@@ -56,7 +56,7 @@ async Task ProgramAsync()
         services.FullImageDataPath!);
 
     // Filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
-    const int regionCode = 3;
+    const short regionCode = 3;
     
     var naldLicenceStatusData = new NaldLicenceStatusData
     {
@@ -80,10 +80,9 @@ async Task ProgramAsync()
         regionCode);
     
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
-
-    var yorkshireRegionCode = regionCode.ToString();
-    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == yorkshireRegionCode);
-    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList(), yorkshireRegionCode);
+    
+    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
+    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList(), regionCode);
     
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {

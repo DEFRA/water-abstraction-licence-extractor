@@ -6,17 +6,17 @@ namespace WALE.ProcessFile.Services.Helpers;
 public class NaldLinkedLicenceHelper
 {
     private readonly Dictionary<string, Dictionary<string, NaldLinkedLicence>> _linkedLicenceMap;
-    private readonly string _processingRegionCode;
+    private readonly short _processingRegionCode;
 
     private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, NaldLinkedLicence>> linkedLicenceMap,
-        string processingRegionCode)
+        short processingRegionCode)
     {
         _linkedLicenceMap = linkedLicenceMap;
         _processingRegionCode = processingRegionCode;
     }
 
     public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData,
-        string processingRegionCode)
+        short processingRegionCode)
     {
         var map = await BuildLinkedLicenceMapAsync(rawData, processingRegionCode);
         return new NaldLinkedLicenceHelper(map, processingRegionCode);
@@ -45,7 +45,7 @@ public class NaldLinkedLicenceHelper
     }
 
     private static async Task<Dictionary<string, Dictionary<string, NaldLinkedLicence>>> BuildLinkedLicenceMapAsync(
-        List<NaldLinkedLicenceRawData> rawData, string processingRegionCode)
+        List<NaldLinkedLicenceRawData> rawData, short processingRegionCode)
     {
         var map = new Dictionary<string, Dictionary<string, NaldLinkedLicence>>();
 

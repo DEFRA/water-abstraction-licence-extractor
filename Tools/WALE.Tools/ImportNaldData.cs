@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
@@ -19,6 +20,14 @@ public static class ImportNaldData
         public string ReferencedTableName { get; set; } = string.Empty;
         public string ReferencedColumnNames { get; set; } = string.Empty;
         public string OnDeleteAction { get; set; } = string.Empty;
+    }
+
+    private class SchemaColumn
+    {
+        public string TableName { get; set; } = string.Empty;
+        public string ColumnName { get; set; } = string.Empty;
+        public string DataType { get; set; } = string.Empty;
+        public string UdtName { get; set; } = string.Empty;
     }
 
     public static async Task ImportAsync()
@@ -47,12 +56,11 @@ public static class ImportNaldData
         // Cache the schema information once
         await LoadSchemaAsync(dataSource);
 
-        await using var fkConnection = await dataSource.OpenConnectionAsync();
-        
         // Store foreign keys before dropping them
-        await StoreForeignKeysAsync(fkConnection);
-        await DropForeignKeysAsync(fkConnection);
+        await StoreForeignKeysAsync(dataSource);
+        await DropForeignKeysAsync(dataSource);
 
+        // Truncate all tables
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -68,6 +76,7 @@ public static class ImportNaldData
             }
         }
 
+        // Import all files
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -83,7 +92,7 @@ public static class ImportNaldData
             }
         }
 
-        await RecreateForeignKeysAsync(fkConnection);
+        await RecreateForeignKeysAsync(dataSource);
 
         Console.WriteLine("NALD data import completed.");
     }
@@ -92,56 +101,48 @@ public static class ImportNaldData
     {
         _schemaCache = new Dictionary<string, Dictionary<string, NpgsqlTypes.NpgsqlDbType>>();
 
-        await using var connection = await dataSource.OpenConnectionAsync();
-
         var sql = @"
             SELECT 
-                table_name,
-                column_name,
-                data_type,
-                udt_name
+                table_name as TableName,
+                column_name as ColumnName,
+                data_type as DataType,
+                udt_name as UdtName
             FROM information_schema.columns
             WHERE table_schema = 'nald'
             ORDER BY table_name, ordinal_position";
 
-        await using var cmd = new NpgsqlCommand(sql, connection);
-        await using var reader = await cmd.ExecuteReaderAsync();
+        await using var connection = await dataSource.OpenConnectionAsync();
+        var columns = await connection.QueryAsync<SchemaColumn>(sql);
 
-        while (await reader.ReadAsync())
+        foreach (var column in columns)
         {
-            var tableName = reader.GetString(0);
-            var columnName = reader.GetString(1);
-            var dataType = reader.GetString(2);
-            var udtName = reader.GetString(3);
-
-            if (!_schemaCache.ContainsKey(tableName))
+            if (!_schemaCache.ContainsKey(column.TableName))
             {
-                _schemaCache[tableName] = new Dictionary<string, NpgsqlTypes.NpgsqlDbType>();
+                _schemaCache[column.TableName] = new Dictionary<string, NpgsqlTypes.NpgsqlDbType>();
             }
 
-            _schemaCache[tableName][columnName] = MapPostgresTypeToNpgsqlDbType(dataType, udtName);
+            _schemaCache[column.TableName][column.ColumnName] = MapPostgresTypeToNpgsqlDbType(column.DataType, column.UdtName);
         }
     }
 
-    private static async Task StoreForeignKeysAsync(NpgsqlConnection connection)
+    private static async Task StoreForeignKeysAsync(NpgsqlDataSource dataSource)
     {
         Console.WriteLine("Storing foreign key definitions...");
-        _foreignKeys = new List<ForeignKeyDefinition>();
 
         var sql = @"
             SELECT
-                con.conname AS constraint_name,
-                rel.relname AS table_name,
-                string_agg(att.attname, ', ' ORDER BY u.ord) AS column_names,
-                ref_rel.relname AS referenced_table_name,
-                string_agg(ref_att.attname, ', ' ORDER BY u.ord) AS referenced_column_names,
+                con.conname AS ConstraintName,
+                rel.relname AS TableName,
+                string_agg(att.attname, ', ' ORDER BY u.ord) AS ColumnNames,
+                ref_rel.relname AS ReferencedTableName,
+                string_agg(ref_att.attname, ', ' ORDER BY u.ord) AS ReferencedColumnNames,
                 CASE con.confdeltype
                     WHEN 'a' THEN 'NO ACTION'
                     WHEN 'r' THEN 'RESTRICT'
                     WHEN 'c' THEN 'CASCADE'
                     WHEN 'n' THEN 'SET NULL'
                     WHEN 'd' THEN 'SET DEFAULT'
-                END AS delete_rule
+                END AS OnDeleteAction
             FROM pg_constraint con
             JOIN pg_class rel ON con.conrelid = rel.oid
             JOIN pg_namespace nsp ON rel.relnamespace = nsp.oid
@@ -156,23 +157,8 @@ public static class ImportNaldData
             GROUP BY con.conname, rel.relname, ref_rel.relname, con.confdeltype
             ORDER BY rel.relname, con.conname";
 
-        await using var cmd = new NpgsqlCommand(sql, connection);
-        await using var reader = await cmd.ExecuteReaderAsync();
-
-        while (await reader.ReadAsync())
-        {
-            var fk = new ForeignKeyDefinition
-            {
-                ConstraintName = reader.GetString(0),
-                TableName = reader.GetString(1),
-                ColumnNames = reader.GetString(2),
-                ReferencedTableName = reader.GetString(3),
-                ReferencedColumnNames = reader.GetString(4),
-                OnDeleteAction = reader.GetString(5)
-            };
-
-            _foreignKeys.Add(fk);
-        }
+        await using var connection = await dataSource.OpenConnectionAsync();
+        _foreignKeys = (await connection.QueryAsync<ForeignKeyDefinition>(sql)).ToList();
 
         Console.WriteLine($"Stored {_foreignKeys.Count} foreign key definitions.");
     }
@@ -247,9 +233,10 @@ public static class ImportNaldData
         }
     }
 
-    private static async Task DropForeignKeysAsync(NpgsqlConnection connection)
+    private static async Task DropForeignKeysAsync(NpgsqlDataSource dataSource)
     {
         Console.WriteLine("Dropping all foreign keys in nald schema...");
+        
         var sql = @"
             DO $$ 
             DECLARE 
@@ -263,17 +250,11 @@ public static class ImportNaldData
                 END LOOP;
             END $$;";
 
-        await using var cmd = new NpgsqlCommand(sql, connection);
-        await cmd.ExecuteNonQueryAsync();
+        await using var connection = await dataSource.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql);
     }
 
-    private static async Task ExecuteSqlAsync(NpgsqlConnection connection, string sql)
-    {
-        await using var cmd = new NpgsqlCommand(sql, connection);
-        await cmd.ExecuteNonQueryAsync();
-    }
-
-    private static async Task RecreateForeignKeysAsync(NpgsqlConnection connection)
+    private static async Task RecreateForeignKeysAsync(NpgsqlDataSource dataSource)
     {
         if (_foreignKeys == null || _foreignKeys.Count == 0)
         {
@@ -283,6 +264,7 @@ public static class ImportNaldData
 
         Console.WriteLine($"Re-creating {_foreignKeys.Count} foreign keys...");
 
+        await using var connection = await dataSource.OpenConnectionAsync();
         foreach (var fk in _foreignKeys)
         {
             try
@@ -301,7 +283,7 @@ public static class ImportNaldData
                     FOREIGN KEY ({string.Join(", ", fk.ColumnNames.Split(", ").Select(c => $"\"{c}\""))}) 
                     REFERENCES nald.""{fk.ReferencedTableName}"" ({string.Join(", ", fk.ReferencedColumnNames.Split(", ").Select(c => $"\"{c}\""))}){onDeleteClause};";
 
-                await ExecuteSqlAsync(connection, sql);
+                await connection.ExecuteAsync(sql);
                 Console.WriteLine($"Recreated FK: {fk.ConstraintName} on {fk.TableName}");
             }
             catch (Exception ex)
@@ -316,10 +298,7 @@ public static class ImportNaldData
     private static async Task TruncateTableAsync(NpgsqlDataSource dataSource, string tableName)
     {
         await using var connection = await dataSource.OpenConnectionAsync();
-
-        // Truncate table before import
-        await using var truncateCmd = new NpgsqlCommand($"TRUNCATE TABLE nald.\"{tableName}\" CASCADE", connection);
-        await truncateCmd.ExecuteNonQueryAsync();
+        await connection.ExecuteAsync($"TRUNCATE TABLE nald.\"{tableName}\" CASCADE");
     }
 
     private static async Task ImportFileAsync(NpgsqlDataSource dataSource, string filePath, string tableName)
@@ -344,6 +323,7 @@ public static class ImportNaldData
         var columnsToImport = columns.Where(c => c != "SOURCE_CODE" && c != "BATCH_RUN_DATE").ToArray();
         var columnNames = string.Join(", ", columnsToImport.Select(c => $"\"{c}\""));
 
+        // For binary import, we still need to open a connection
         await using var connection = await dataSource.OpenConnectionAsync();
 
         await using var writer = await connection.BeginBinaryImportAsync(
@@ -360,9 +340,7 @@ public static class ImportNaldData
             if (c == '\"')
             {
                 inQuotes = !inQuotes;
-                // We keep the quotes for now to handle double-double quotes later, or we can handle them here.
-                // Actually, let's handle them here for simplicity.
-                // If we encounter a quote, and the next char is also a quote, it's an escaped quote.
+                // Handle escaped quotes (double-double quotes)
                 if (!inQuotes) // We just closed quotes, check if next is also quote
                 {
                     int next = reader.Peek();
@@ -400,6 +378,7 @@ public static class ImportNaldData
             }
         }
 
+        // Handle last row if file doesn't end with newline
         if (values.Count > 0 || current.Length > 0)
         {
             values.Add(current.ToString());

@@ -353,7 +353,9 @@ public class AddNaldSchemaCorrected : Migration
             .WithColumn("END_DATE").AsDateTime().NotNullable()
             .WithColumn("FGAC_REGION_CODE").AsInt16().NotNullable()
             ;
-        Create.PrimaryKey("ABPR_PK").OnTable("NALD_BILL_PROCESSES").WithSchema("nald").Columns("FGAC_REGION_CODE", "ABRN_FIN_YEAR", "ABRN_BILL_RUN_NO", "MODULE_NAME", "START_DATE");
+        
+        // PK omitted due to duplicate data provided
+        // Create.PrimaryKey("ABPR_PK").OnTable("NALD_BILL_PROCESSES").WithSchema("nald").Columns("FGAC_REGION_CODE", "ABRN_FIN_YEAR", "ABRN_BILL_RUN_NO", "MODULE_NAME", "START_DATE");
 
         Create.Table("NALD_BILL_RUNS").InSchema("nald")
             .WithColumn("FIN_YEAR").AsInt16().NotNullable()
@@ -815,7 +817,9 @@ public class AddNaldSchemaCorrected : Migration
             .WithColumn("TEXT").AsString(300).Nullable()
             .WithColumn("FGAC_REGION_CODE").AsInt16().NotNullable()
             ;
-        Create.PrimaryKey("ALSL_PK").OnTable("NALD_LH_SUSP_LOGS").WithSchema("nald").Columns("FGAC_REGION_CODE", "ALHA_ACC_NO", "CREATE_DATE");
+        
+        // PK omitted due to duplicate data provided
+        // Create.PrimaryKey("ALSL_PK").OnTable("NALD_LH_SUSP_LOGS").WithSchema("nald").Columns("FGAC_REGION_CODE", "ALHA_ACC_NO", "CREATE_DATE");
 
         Create.Table("NALD_LIC_AGRMNTS").InSchema("nald")
             .WithColumn("ID").AsInt32().NotNullable()
@@ -931,7 +935,9 @@ public class AddNaldSchemaCorrected : Migration
             .WithColumn("REPORT_DATETIME").AsDateTime().NotNullable()
             .WithColumn("FGAC_REGION_CODE").AsInt16().NotNullable()
             ;
-        Create.PrimaryKey("AMRC_PK").OnTable("NALD_MAN_REP_CODES").WithSchema("nald").Columns("FGAC_REGION_CODE", "CODE", "USER_ID", "REPORT_DATETIME");
+        
+        // PK omitted due to duplicates in the data
+        // Create.PrimaryKey("AMRC_PK").OnTable("NALD_MAN_REP_CODES").WithSchema("nald").Columns("FGAC_REGION_CODE", "CODE", "USER_ID", "REPORT_DATETIME");
 
         Create.Table("NALD_MAN_UNITS").InSchema("nald")
             .WithColumn("CODE").AsString(5).NotNullable()
@@ -1168,7 +1174,7 @@ public class AddNaldSchemaCorrected : Migration
         Create.PrimaryKey("APFR_PK").OnTable("NALD_PRES_FLOW_RESTS").WithSchema("nald").Columns("CODE");
 
         Create.Table("NALD_PRINTER_DRIVERS").InSchema("nald")
-            .WithColumn("NAME").AsString(12).NotNullable()
+            .WithColumn("NAME").AsString(20).NotNullable()
             .WithColumn("DESCR").AsString(70).NotNullable()
             ;
         Create.PrimaryKey("APDR_PK").OnTable("NALD_PRINTER_DRIVERS").WithSchema("nald").Columns("NAME");
@@ -1251,7 +1257,9 @@ public class AddNaldSchemaCorrected : Migration
             .WithColumn("AABL_LIC_NO").AsString(20).NotNullable()
             .WithColumn("FGAC_REGION_CODE").AsInt16().NotNullable()
             ;
-        Create.PrimaryKey("AREL_PK").OnTable("NALD_REPORT_LICENCES").WithSchema("nald").Columns("FGAC_REGION_CODE", "AABL_ID", "USER_ID", "REPORT_DATETIME");
+        
+        // PK excluded because of duplicates in the provided data
+        // Create.PrimaryKey("AREL_PK").OnTable("NALD_REPORT_LICENCES").WithSchema("nald").Columns("FGAC_REGION_CODE", "AABL_ID", "USER_ID", "REPORT_DATETIME");
 
         Create.Table("NALD_REP_UNITS").InSchema("nald")
             .WithColumn("CODE").AsString(5).NotNullable()

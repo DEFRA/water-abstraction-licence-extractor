@@ -21,6 +21,11 @@ public static class ApplicableToMost
         {
             return [];
         }
+
+        if (request.label.SkipLineNumbers.Contains(request.line!.LineNumber))
+        {
+            return [];
+        }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
             && request.line?.Text.Equals(request.label.Text?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)

@@ -673,10 +673,9 @@ public class TessaractOcrPdfTests
         Assert.Equal("25 68 002 182", licenceNumberResult.Text!.FirstOrDefault()?.Text);
 
         var linkedLicences = resultList.Where(result => result.LabelGroupName == "LinkedLicenceNumber").ToList();
-        Assert.Equal(3, linkedLicences.Count);
-        Assert.Equal("25 68 002 182", linkedLicences[0].Text![0].Text);
-        Assert.Equal("25 68 002 177", linkedLicences[1].Text![0].Text);
-        Assert.Equal("25/68/002/182", linkedLicences[2].Text![0].Text); // TODO, should realise its the same as the first
+        Assert.Equal(2, linkedLicences.Count);
+        Assert.Equal("25 68 002 177", linkedLicences[0].Text![0].Text);
+        Assert.Equal("25 68 002 182", linkedLicences[1].Text![0].Text);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,

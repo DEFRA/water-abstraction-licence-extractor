@@ -47,6 +47,7 @@ public class LabelToMatch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     public bool AutoCorrect { get; init; }
+    public IReadOnlyList<int> SkipLineNumbers { get; set; } = [];
 
     public LabelToMatch Clone()
     {
@@ -82,7 +83,8 @@ public class LabelToMatch
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
             DoNotTrimLines = DoNotTrimLines,
-            AutoCorrect = AutoCorrect
+            AutoCorrect = AutoCorrect,
+            SkipLineNumbers = SkipLineNumbers
         };
     }    
 }

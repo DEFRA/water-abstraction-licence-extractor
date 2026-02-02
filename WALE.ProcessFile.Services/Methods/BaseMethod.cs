@@ -25,6 +25,11 @@ public static class BaseMethod
             return returnList;
         }
         
+        if (request.label.SkipLineNumbers.Contains(request.line!.LineNumber))
+        {
+            return returnList;
+        }
+        
         switch (request.label.Format)
         {
             case Date.Constant:

@@ -2416,6 +2416,7 @@ public static class LabelConfiguration
             NextLinesToFetch = 1,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
             MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
+            SkipLineNumbers = [0],
             Remove =
             [
                 PageNumberPattern,

@@ -40,7 +40,8 @@ public static partial class SchemaConverter
         var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult);
         var licenceNumber = GetLicenceNumber(matchesResult, noneSchemaData);
         
-        var licenceVersion = GetLicenceVersion(matches, naldData, licenceNumber, regionCode);
+        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+        var licenceVersion = GetLicenceVersion(matches, naldDataLine);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -48,9 +49,7 @@ public static partial class SchemaConverter
         
         var points = GetPoints(
             matches,
-            licenceNumber,
-            naldData,
-            regionCode,
+            naldDataLine,
             ref noneSchemaData);
         
         var purposes = GetPurposes(
@@ -320,112 +319,43 @@ public static partial class SchemaConverter
         };
     }
 
+    private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
+    {
+        return Formats.Date.DateFormatConsistent(
+            DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName));
+    }
+    
     private static LicenceVersion GetLicenceVersion(
         List<LabelGroupResult> matches,
-        Dictionary<string, List<NaldData>> naldData,
-        string? licenceNumber,
-        int regionCode)
+        NaldData? naldDataLine)
     {
-        var effectiveDateStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateEffective")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfOriginalIssueStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var dateOfExpiryStr = Formats.Date.DateFormatConsistent(matches
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfExpiry")?
-            .Text?
-            .FirstOrDefault()?
-            .Text);
-
-        var expiryDate = DateTime.TryParse(dateOfExpiryStr, out var dateOfExpiryOut)
-            ? dateOfExpiryOut
-            : (DateTime?)null;
-        
-        var effectiveDate = DateTime.TryParse(effectiveDateStr, out var effectiveDateOut)
-            ? effectiveDateOut
-            : (DateTime?)null;
-        
-        var dateOfIssue = DateTime.TryParse(dateOfIssueStr, out var dateOfIssueOut)
-            ? dateOfIssueOut
-            : (DateTime?)null;
-        
-        var dateOfOriginalIssue = DateTime.TryParse(dateOfOriginalIssueStr, out var dateOfOriginalIssueOut)
-            ? dateOfOriginalIssueOut
-            : (DateTime?)null;
-
-        var issuer = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Issuer")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
-        
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-        
-        var naldExpiryDate = !string.IsNullOrEmpty(naldDataLine?.ExpiryDate)
-            ? DateTime.Parse(naldDataLine.ExpiryDate)
-            : (DateTime?)null;
-        
-        var naldRevocationDate = !string.IsNullOrEmpty(naldDataLine?.RevocationDate)
-            ? DateTime.Parse(naldDataLine.RevocationDate)
-            : (DateTime?)null;
-        
-        var naldOrigEffectiveDate = !string.IsNullOrEmpty(naldDataLine?.OrigEffDate)
-            ? DateTime.Parse(naldDataLine.OrigEffDate)
-            : (DateTime?)null;
-        
-        var naldEffectiveStartDate = !string.IsNullOrEmpty(naldDataLine?.EffStDate)
-            ? DateTime.Parse(naldDataLine.EffStDate)
-            : (DateTime?)null;
-        
-        var naldEffectiveEndDate = !string.IsNullOrEmpty(naldDataLine?.EffEndDate)
-            ? DateTime.Parse(naldDataLine.EffEndDate)
-            : (DateTime?)null;
-        
-        var naldOrigSignatureDate = !string.IsNullOrEmpty(naldDataLine?.OrigSigDate)
-            ? DateTime.Parse(naldDataLine.OrigSigDate)
-            : (DateTime?)null;
-        
-        var naldSignatureDate = !string.IsNullOrEmpty(naldDataLine?.LicSigDate)
-            ? DateTime.Parse(naldDataLine.LicSigDate)
-            : (DateTime?)null;
-
-        var naldIssueNumber = naldDataLine?.IssueNo;
-        var naldIncrementNumber = naldDataLine?.IncrNo;
-        var naldUpdateReason = naldDataLine?.AabvType;
-        var naldStatus = naldDataLine?.Status;
-        
         return new LicenceVersion
         {
-            NaldRevocationDate = naldRevocationDate,
-            EffectiveDate = effectiveDate,
-            NaldOrigEffectiveDate = naldOrigEffectiveDate,
-            NaldOrigSignatureDate = naldOrigSignatureDate,
-            NaldSignatureDate = naldSignatureDate,     
-            NaldEffectiveStartDate = naldEffectiveStartDate,
-            NaldEffectiveEndDate = naldEffectiveEndDate,
-            NaldIssueNumber = naldIssueNumber,
-            NaldIncrementNumber = naldIncrementNumber,   
-            NaldUpdateReason = naldUpdateReason,
-            NaldStatus = naldStatus,
-            ExpiryDate = expiryDate,
-            NaldExpiryDate = naldExpiryDate,
-            IssueDate = dateOfIssue,
-            Issuer = issuer,
-            OriginalIssueDate = dateOfOriginalIssue
+            EffectiveDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective")),
+            ExpiryDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry")),
+            NaldExpiryDate = GetDateOrNull(naldDataLine?.ExpiryDate),
+            IssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue")),
+            Issuer = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, "Issuer"),
+            OriginalIssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue")),
+            
+            NaldIssueNumber = naldDataLine?.IssueNo,
+            NaldIncrementNumber = naldDataLine?.IncrNo,   
+            NaldUpdateReason = naldDataLine?.AabvType,
+            NaldStatus = naldDataLine?.Status,
+            NaldRevocationDate = GetDateOrNull(naldDataLine?.RevocationDate),
+            NaldOrigEffectiveDate = GetDateOrNull(naldDataLine?.OrigEffDate),
+            NaldOrigSignatureDate = GetDateOrNull(naldDataLine?.OrigSigDate),
+            NaldSignatureDate = GetDateOrNull(naldDataLine?.LicSigDate),
+            NaldEffectiveStartDate = GetDateOrNull(naldDataLine?.EffStDate),
+            NaldEffectiveEndDate = GetDateOrNull(naldDataLine?.EffEndDate)
         };
+    }
+
+    private static DateTime? GetDateOrNull(string? dateString)
+    {
+        return !string.IsNullOrEmpty(dateString)
+            ? DateTime.TryParse(dateString, out var date) ? date : null
+            : null;
     }
 
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
@@ -2495,9 +2425,11 @@ public static partial class SchemaConverter
         return returnList.ToArray();
     }
 
-    private static MeanOfAbstraction[] GetMeansOfAbstraction(List<LabelGroupResult> matches, ref Dictionary<string, object> noneSchemaData)
+    private static MeanOfAbstraction[] GetMeansOfAbstraction(
+        List<LabelGroupResult> matches,
+        ref Dictionary<string, object> noneSchemaData)
     {
-        var meansResult = matches.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction");
+        var meansResult = DataHelper.GetFirstMatchByLabelGroup(matches, "MeansOfAbstraction");
         var returnList = new List<MeanOfAbstraction>();
 
         if (meansResult == null)
@@ -2508,12 +2440,11 @@ public static partial class SchemaConverter
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults.FirstOrDefault(
-                    x => x.MatchedLabel?.Name == "TextWithoutNumber")?
+                    subResult => subResult.MatchedLabel?.Name == "TextWithoutNumber")?
                 .Text?
                 .Select(t => t.Text);
 
-            var meansPointTable = meanResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "MeanPointTable");
+            var meansPointTable = DataHelper.GetFirstMatchByLabel(meanResult.SubResults, "MeanPointTable");
 
             // NE0260034052 has one
             if (noneSchemaData.ContainsKey(TemplateFeatures.MeansPointsTable))
@@ -2528,46 +2459,47 @@ public static partial class SchemaConverter
                 noneSchemaData.Add(TemplateFeatures.MeansPointsTable, meansPointTable != null);
             }
             
-            var meanId = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "MeanId");            
+            var meanIdResult = DataHelper.GetFirstMatchByLabel(meanResult.SubResults, "MeanId");            
             
-            var units = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "PerSecondUnitsMeans");
-
-            var value = meanResult.SubResults.FirstOrDefault(
-                x => x.MatchedLabel?.Name == "PerSecondValueMeans");
-            
-            if (textWithoutNumber == null && meanId == null)
+            if (textWithoutNumber == null && meanIdResult == null)
             {
                 continue;
             }
                 
-            var text = textWithoutNumber != null
+            var description = textWithoutNumber != null
                 ? string.Join('\n', textWithoutNumber)
                 : null;
-            
-            var number = meanId?.Text?.FirstOrDefault()?.Text;
-            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
-            var value1 = value?.Text?.FirstOrDefault()?.Text;
-            var value2 = double.TryParse(value1, out var valueResult) ? valueResult : (double?)null;
+            var documentSectionNumber = DataHelper.GetFirstLineTextFromMatch(meanIdResult);
+
+            var perSecondUnits = DataHelper.GetTextFromFirstMatchByLabel(
+                meanResult.SubResults,
+                "PerSecondUnitsMeans");
+            
+            var perSecondValueString = DataHelper.GetTextFromFirstMatchByLabel(
+                meanResult.SubResults,
+                "PerSecondValueMeans");
+            
+            var perSecondValue = double.TryParse(perSecondValueString, out var valueResult)
+                ? valueResult
+                : (double?)null;
 
             var periodType = LimitPeriodType.Unknown;
 
-            if (text?.Contains("second", StringComparison.InvariantCultureIgnoreCase) == true)
+            if (description?.Contains("second", StringComparison.InvariantCultureIgnoreCase) == true)
             {
                 periodType = LimitPeriodType.PerSecond;
             }
             
             returnList.Add(new MeanOfAbstraction
             {
-                Id = number,
-                Description = text,
-                AbstractionLimit = value2 != null ? new AbstractionLimit
+                Id = documentSectionNumber,
+                Description = description,
+                AbstractionLimit = perSecondValue != null ? new AbstractionLimit
                 {
                     PeriodType = periodType,
-                    Units = units?.Text?.FirstOrDefault()?.Text,
-                    Value = value2
+                    Units = perSecondUnits,
+                    Value = perSecondValue
                 } : null
             });
         }
@@ -2577,12 +2509,10 @@ public static partial class SchemaConverter
     
     private static PointOfAbstraction[] GetPoints(
         List<LabelGroupResult> matches,
-        string? licenceNumber,
-        Dictionary<string, List<NaldData>> naldData,
-        int regionCode,
+        NaldData? naldDataLine,
         ref Dictionary<string, object> noneSchemaData)
     {
-        var pointsResults = matches.FirstOrDefault(result => result.LabelGroupName == "Points");
+        var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
         var returnList = new List<PointOfAbstraction>();
 
         if (pointsResults == null)
@@ -2592,8 +2522,9 @@ public static partial class SchemaConverter
         
         foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
-            var purposeGroupName = pointPurposeGroup.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeGroupName");
+            var purposeGroupName = DataHelper.GetFirstMatchByLabel(
+                pointPurposeGroup.SubResults,
+                "PurposeGroupName");
 
             var purposeIds = purposeGroupName?.SubResults
                 .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
@@ -2602,15 +2533,14 @@ public static partial class SchemaConverter
                 .Select(x => x!)
                 .ToArray();
             
-            var points = pointPurposeGroup.SubResults
-                .Where(x => x.MatchedLabel?.Name == "Point");
+            var points = DataHelper.GetMatchesByLabel(
+                pointPurposeGroup.SubResults,
+                "Point");
 
             foreach (var point in points)
             {
-                var pointNumber = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointPointNumber");
-
-                var number = pointNumber?.Text?.FirstOrDefault()?.Text;
+                var pointNumber = DataHelper.GetTextFromFirstMatchByLabel(
+                    point.SubResults, "PointPointNumber");
 
                 var tLines = point.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint")?
@@ -2636,8 +2566,7 @@ public static partial class SchemaConverter
                 }
                 
                 // NE0260034052 has one
-                var pointTable = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTable");
+                var pointTable = DataHelper.GetFirstMatchByLabel(point.SubResults,"PointTable");
 
                 if (noneSchemaData.ContainsKey(TemplateFeatures.PointsTable))
                 {
@@ -2663,10 +2592,10 @@ public static partial class SchemaConverter
                         returnList.Add(new PointOfAbstraction
                         {
                             Description = tableLine.Text,
-                            Id = $"{number} {subId}", // e.g 2.1 - A
+                            Id = $"{pointNumber} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldData, licenceNumber, tableLine.Text, regionCode)
+                            NaldData = GetNaldPointData(naldDataLine, tableLine.Text) // TODO needs to get the correct point
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2688,7 +2617,7 @@ public static partial class SchemaConverter
                 // If its like 'A SE' or 'B NE' get rid of the A and B
                 if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
                 {
-                    description = description.Substring(2);
+                    description = description[2..];
                 }
                 
                 returnList.Add(new PointOfAbstraction
@@ -2697,7 +2626,7 @@ public static partial class SchemaConverter
                     Id = number,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldData, licenceNumber, description, regionCode)
+                    NaldData = GetNaldPointData(naldDataLine, description) // TODO needs to get the correct point
                 });
             }
         }
@@ -2720,14 +2649,8 @@ public static partial class SchemaConverter
                 : null;
     }
     
-    private static NaldPointData? GetNaldPointData(
-        Dictionary<string, List<NaldData>> naldData,
-        string? licenceNumber,
-        string? description,
-        int regionCode)
+    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-
         if (naldDataLine?.Points.Count is null or 0)
         {
             return null;
@@ -3322,13 +3245,7 @@ public static partial class SchemaConverter
     
     private static string? GetScrapedLicenceNumber(MatchesResult matches)
     {
-        var scrapedLicenceNumber = matches.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .Text;
-
-        return scrapedLicenceNumber;
+        return DataHelper.GetTextFromFirstMatchByLabelGroup(matches.Matches!, "LicenceNumber");
     }
 
     private static List<LicenceSetReference> AddEncompassingLicenceSets(

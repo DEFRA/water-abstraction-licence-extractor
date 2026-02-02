@@ -585,4 +585,37 @@ public static partial class DataHelper
             NullOutSubLabels(match.SubResults);
         }
     }
+
+    public static string? GetTextFromFirstMatchByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return GetFirstLineTextFromMatch(GetFirstMatchByLabelGroup(matches, labelGroupName));
+    }
+    
+    public static string? GetTextFromFirstMatchByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return GetFirstLineTextFromMatch(GetFirstMatchByLabel(matches, name));
+    }
+    
+    public static LabelGroupResult? GetFirstMatchByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return matches.FirstOrDefault(result => result.LabelGroupName == labelGroupName);
+    }
+    
+    public static LabelGroupResult? GetFirstMatchByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return matches.FirstOrDefault(result => result.MatchedLabel?.Name == name);
+    }
+    
+    public static IEnumerable<LabelGroupResult> GetMatchesByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return matches.Where(result => result.MatchedLabel?.Name == name);
+    }
+    
+    public static string? GetFirstLineTextFromMatch(LabelGroupResult? match)
+    {
+        return match?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+    }
 }

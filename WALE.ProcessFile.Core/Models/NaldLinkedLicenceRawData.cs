@@ -9,7 +9,7 @@ public record NaldLinkedLicenceRawData
     public required string? Param2 { get; init; }
     public required string? Text { get; init; }
     public required string? Notes { get; init; }
-    public required string RegionCode { get; init; }
+    public required short RegionCode { get; init; }
     public required int Id { get; init; }
 
     public NaldLicence ToNaldLicence()

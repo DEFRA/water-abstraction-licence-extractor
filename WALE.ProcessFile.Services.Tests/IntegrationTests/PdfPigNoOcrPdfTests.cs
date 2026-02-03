@@ -146,7 +146,7 @@ public class PdfPigNoOcrPdfTests
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
-        Assert.Equal(16, history.Text!.Count);
+        Assert.Equal(14, history.Text!.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -322,7 +322,7 @@ public class PdfPigNoOcrPdfTests
 
         var history = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
         Assert.NotNull(history);
-        Assert.Equal(4, history.Text!.Count);
+        Assert.Equal(2, history.Text!.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

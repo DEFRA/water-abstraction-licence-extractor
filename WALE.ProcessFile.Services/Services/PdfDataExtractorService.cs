@@ -69,7 +69,6 @@ public class PdfDataExtractorService(
         }
 
         const bool notOcr = false;
-        const int minAverageLineLength = 15;
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
             documentLines,
@@ -109,6 +108,9 @@ public class PdfDataExtractorService(
         
         var isTextFile = documentLines.Count >= 100;
 
+        int pageNumber;
+        int imageNumber;
+        
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
@@ -125,11 +127,11 @@ public class PdfDataExtractorService(
             for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
             {
                 var page = imagesMetadata.Pages[pageNumberIndex];
-                var pageNumber = pageNumberIndex + 1;
+                pageNumber = pageNumberIndex + 1;
                 
                 for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
                 {
-                    var imageNumber = imageNumberIndex + 1;
+                    imageNumber = imageNumberIndex + 1;
                     var image = allImagesInDocument
                         .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
 
@@ -170,8 +172,8 @@ public class PdfDataExtractorService(
         for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
         {
             var page = imagesMetadata.Pages[pageNumberIndex];
-            var pageNumber = pageNumberIndex + 1;
-            
+            pageNumber = pageNumberIndex + 1;
+           
             var breakPageLoop = false;
             var pageImages = page.Images.ToList();
             
@@ -189,7 +191,7 @@ public class PdfDataExtractorService(
             for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
             {
                 var imageReference = pageImages[imageNumberIndex];
-                var imageNumber = imageNumberIndex + 1;
+                imageNumber = imageNumberIndex + 1;
                 
                 var image = allImagesInDocument
                     .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
@@ -237,25 +239,10 @@ public class PdfDataExtractorService(
                     {
                         break;
                     }
-                    
-                    var containsAPhraseSuggestingItsAMap = serviceImageLines
-                        .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
-                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase)
-                            || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.InvariantCultureIgnoreCase));
 
-                    if (containsAPhraseSuggestingItsAMap)
+                    if (DataHelper.LikelyMapPage(serviceImageLines, pageImages.Count))
                     {
                         serviceImageLines = [];
-                        break;
-                    }
-                    
-                    var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
-                    
-                    // Short lines indicate it may be a map page,
-                    // no point processing that with the other services
-                    if (averageLineLength < minAverageLineLength)
-                    {
-                        serviceImageLines = [];                        
                         break;
                     }
                     

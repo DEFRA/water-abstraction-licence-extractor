@@ -606,6 +606,11 @@ public static partial class DataHelper
         return matches.FirstOrDefault(result => result.MatchedLabel?.Name == name);
     }
     
+    public static IEnumerable<LabelGroupResult> GetMatchesByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return matches.Where(result => result.LabelGroupName == labelGroupName);
+    }
+    
     public static IEnumerable<LabelGroupResult> GetMatchesByLabel(IEnumerable<LabelGroupResult> matches, string name)
     {
         return matches.Where(result => result.MatchedLabel?.Name == name);
@@ -617,5 +622,40 @@ public static partial class DataHelper
             .Text?
             .FirstOrDefault()?
             .Text;
+    }
+
+    public static bool LikelyMapPage(IReadOnlyList<DocumentLine> documentLines, int numberOfImages)
+    {
+        if (documentLines.Count == 0)
+        {
+            return false;
+        }
+
+        if (numberOfImages > 10)
+        {
+            return true;
+        }
+        
+        var containsAPhraseSuggestingItsAMap = documentLines
+            .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
+              || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase)
+              || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.InvariantCultureIgnoreCase));
+
+        if (containsAPhraseSuggestingItsAMap)
+        {
+            return true;
+        }
+                    
+        var averageLineLength = documentLines.Average(line => line.Text.Length);
+        const int minAverageLineLength = 15;
+        
+        // Short lines indicate it may be a map page,
+        // no point processing that with the other services
+        if (averageLineLength < minAverageLineLength)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

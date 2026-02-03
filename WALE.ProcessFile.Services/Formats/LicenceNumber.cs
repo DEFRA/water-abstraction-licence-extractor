@@ -160,7 +160,7 @@ public partial class LicenceNumber : ILicenceNumberService
                     matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
                         
                     matchedLines.Add(matchedLine);
-
+                    
                     // Exit early if we're looking for a single instance match
                     if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                     {

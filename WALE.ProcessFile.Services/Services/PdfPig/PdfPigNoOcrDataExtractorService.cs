@@ -238,14 +238,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
 
                 pageLines.AddRange(await GetPageLinesAsync((Page)page.PdfPigPage!));
+                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
                 
                 if (pageLines.Count == 0)
                 {
-                    await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
                     continue;
                 }
-
-                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
                 
                 var pageLinesFormatted = FormatPageLines(
                     pageLines,

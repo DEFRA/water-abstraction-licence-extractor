@@ -409,7 +409,17 @@ public static class FormattingHelper
             // Part 5 - Likely R01, but can be 1 and other stuff
             if (!string.IsNullOrEmpty(remainingLicenceNumber))
             {
-                parts.Add(remainingLicenceNumber);
+                var lastPart = parts[^1];
+                var endsWithR = lastPart[^1] == 'R';
+
+                if (endsWithR)
+                {
+                    parts[^1] += remainingLicenceNumber;
+                }
+                else
+                {
+                    parts.Add(remainingLicenceNumber);   
+                }
             }
         }
         else
@@ -417,7 +427,13 @@ public static class FormattingHelper
             return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
         }
         
-        return string.Join('/', parts);
+        var outputString = string.Join('/', parts);
+        if (outputString.Contains("R0") && !outputString.Contains("/R0"))
+        {
+            outputString = outputString.Replace("R0", "/R0");
+        }
+        
+        return outputString;
     }
     
     private static bool IsNeLicenceNumber(string? licenceNumber, int regionCode)

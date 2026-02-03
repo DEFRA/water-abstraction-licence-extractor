@@ -34,12 +34,14 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     {
         options.AddPolicy("AllowPortal", policy =>
         {
-            policy.WithOrigins(
+            policy
+                .SetIsOriginAllowed(origin => true)
+                /*.WithOrigins(
                     "http://localhost:5173",  // Vite dev server
                     "http://localhost:3000",   // Docker/production portal
                     "http://localhost:8080",
                     "http://localhost"
-                )
+                )*/
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

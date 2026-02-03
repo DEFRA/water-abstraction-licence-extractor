@@ -120,13 +120,17 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
                 metaDataFileText!,
                 JsonHelper.GetSerializerOptions());
-            
-            var pageCount = ((JsonElement)metadata!["pages"]).GetArrayLength();
+
+            var pagesElement = (JsonElement)metadata!["pages"];
+            var pageCount = pagesElement.GetArrayLength();
             
             for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
             {
                 dtStart = DateTime.Now;
-
+                
+                var pageElement = pagesElement[pageNumber - 1];
+                var numberOfImages = pageElement.GetProperty("numberOfImages").GetInt32();
+                
                 var pageRequest = new NoOcrServicePageCacheRequest
                 {
                     Filepath = pdfDocument.PdfFilePath,
@@ -159,6 +163,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     pageLines,
                     pageNumber);
 
+                if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
+                {
+                    continue;
+                }
+                
                 documentLines.AddRange(pageLinesTransformed);
             }
         }
@@ -178,7 +187,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     PageNumber = page.Number,
                     ProcessRunId = processRunId
                 };
-                
+
+                var numberOfImages = page.NumberOfImages;
                 var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
                 
                 pagesMetadata.Add(new Dictionary<string, object>
@@ -212,6 +222,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         pageLines,
                         page.Number);
                     
+                    if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
+                    {
+                        continue;
+                    }
+                    
                     documentLines.AddRange(pageLinesTransformed);
                     continue;
                 }
@@ -223,19 +238,22 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
 
                 pageLines.AddRange(await GetPageLinesAsync((Page)page.PdfPigPage!));
+                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
                 
                 if (pageLines.Count == 0)
                 {
-                    await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
                     continue;
                 }
-
-                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
                 
                 var pageLinesFormatted = FormatPageLines(
                     pageLines,
                     page.Number);
 
+                if (DataHelper.LikelyMapPage(pageLinesFormatted, numberOfImages))
+                {
+                    continue;
+                }
+                
                 documentLines.AddRange(pageLinesFormatted);
             }
             

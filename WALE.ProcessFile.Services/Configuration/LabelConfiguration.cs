@@ -2454,7 +2454,11 @@ public static class LabelConfiguration
         "discharge permit",
         "discharge number",
         "discharge consent",
-        "drawing no."
+        "drawing no.",
+        "Date of Issue",
+        "Date effective",
+        "Date of expiry",
+        "Date of original issue"
     ];
     
     private const string LicenceNumberHeaderLine = "Licence Serial No: ";

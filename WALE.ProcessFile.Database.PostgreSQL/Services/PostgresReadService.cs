@@ -671,6 +671,147 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result.ToList();
     }
 
+    public async Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        // Run the 3 lookups concurrently.
+        var liveTask = RunWithNewConnectionAsync(c => GetLiveLicenceNumbersAsync(c, regionCode));
+        var deadTask = RunWithNewConnectionAsync(c => GetDeadLicenceNumbersAsync(c, regionCode));
+        var impoundmentTask = RunWithNewConnectionAsync(c => GetImpoundmentLicenceNumbersAsync(c, regionCode));
+
+        await Task.WhenAll(liveTask, deadTask, impoundmentTask);
+        return (await liveTask, await deadTask, await impoundmentTask);
+        
+        // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
+        async Task<HashSet<string>> RunWithNewConnectionAsync(Func<NpgsqlConnection, Task<HashSet<string>>> query)
+        {
+            await using var connection = GetPostgresConnection();
+            return await query(connection);
+        }
+    }
+
+    private async Task<HashSet<string>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                             NALD_ABS_LICENCES."LIC_NO",
+                             NALD_ABS_LICENCES."FGAC_REGION_CODE"
+                           FROM nald."NALD_ABS_LICENCES" NALD_ABS_LICENCES
+                           INNER JOIN nald."NALD_ABS_LIC_VERSIONS" NALD_ABS_LIC_VERSIONS
+                             ON NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_ABS_LICENCES."FGAC_REGION_CODE"
+                             AND NALD_ABS_LIC_VERSIONS."AABL_ID" = NALD_ABS_LICENCES."ID"
+                           WHERE
+                             (
+                               (NALD_ABS_LICENCES."EXPIRY_DATE" IS NULL OR NALD_ABS_LICENCES."EXPIRY_DATE" >= CURRENT_DATE)
+                               AND (NALD_ABS_LICENCES."LAPSED_DATE" IS NULL OR NALD_ABS_LICENCES."LAPSED_DATE" >= CURRENT_DATE)
+                               AND (NALD_ABS_LICENCES."REV_DATE" IS NULL OR NALD_ABS_LICENCES."REV_DATE" >= CURRENT_DATE)
+                             )
+                             AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                 AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                 AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                 AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
+                                 AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                             )
+                             AND NALD_ABS_LIC_VERSIONS."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                 AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                 AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                 AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
+                                 AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                             )
+                             AND NALD_ABS_LIC_VERSIONS."WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
+                             AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
+        
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+        
+        return results
+            .Select(r => r.LicenceNumber)
+            .ToHashSet();
+    }
+
+    private async Task<HashSet<string>> GetDeadLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                             NALD_ABS_LICENCES."LIC_NO",
+                             NALD_ABS_LICENCES."FGAC_REGION_CODE"
+                           FROM nald."NALD_ABS_LICENCES" NALD_ABS_LICENCES
+                           INNER JOIN nald."NALD_ABS_LIC_VERSIONS" NALD_ABS_LIC_VERSIONS
+                             ON NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_ABS_LICENCES."FGAC_REGION_CODE"
+                             AND NALD_ABS_LIC_VERSIONS."AABL_ID" = NALD_ABS_LICENCES."ID"
+                           WHERE
+                             (
+                               NALD_ABS_LICENCES."EXPIRY_DATE" < CURRENT_DATE
+                               OR NALD_ABS_LICENCES."LAPSED_DATE" < CURRENT_DATE
+                               OR NALD_ABS_LICENCES."REV_DATE" < CURRENT_DATE
+                             )
+                             AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                 AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                 AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                             )
+                             AND NALD_ABS_LIC_VERSIONS."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                 AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                 AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                 AND LIC_VER_SUBQUERY_2."ISSUE_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY_3."ISSUE_NO")
+                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_3
+                                   WHERE LIC_VER_SUBQUERY_3."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                     AND LIC_VER_SUBQUERY_3."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                     AND LIC_VER_SUBQUERY_3."STATUS" <> 'DRAFT'
+                                 )
+                             )
+                             AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
+        
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+        
+        return results
+            .Select(r => r.LicenceNumber)
+            .ToHashSet();
+    }
+
+    private async Task<HashSet<string>> GetImpoundmentLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                             NALD_IMP_LICENCES."LIC_NO",
+                             NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                           FROM
+                             nald."NALD_IMP_LICENCES" NALD_IMP_LICENCES
+                           WHERE
+                             (@RegionCode IS NULL OR NALD_IMP_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
+        
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+        
+        return results
+            .Select(r => r.LicenceNumber)
+            .ToHashSet();
+    }
+
     private async Task<T?> QuerySingleOrDefaultAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

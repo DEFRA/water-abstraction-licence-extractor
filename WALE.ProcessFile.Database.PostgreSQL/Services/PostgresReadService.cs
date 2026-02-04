@@ -2,7 +2,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
-using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -61,9 +60,35 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public async Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                   SELECT
+                       page_number
+                   FROM page_screenshot 
+                   WHERE
+                       filename = @Filename 
+                       AND no_ocr_service_name = @NoOcrServiceName
+                   """;
+
+        var results = await QueryAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = fileName,
+                NoOcrServiceName = noOcrServiceName
+            });
+
+        return results.ToList();
+    }
+
     public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
+        
         const string sql = """
                            SELECT data 
                            FROM no_ocr_page_text_cache 
@@ -83,6 +108,44 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.PageNumber,
                 request.NoOcrServiceName
             });
+    }
+
+    public async Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        
+        const string sql = """
+                           SELECT
+                                page_number
+                                , data 
+                           FROM no_ocr_page_text_cache 
+                           WHERE
+                               filename = @Filename
+                               AND no_ocr_service_name = @NoOcrServiceName;
+                           """;
+
+        var results = await QueryAsync<(int, string)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName
+            });
+
+        var resultList = results.ToList();
+        var returnDict = new Dictionary<int, string>();
+
+        foreach (var (pageNumber, data) in resultList)
+        {
+            if (!returnDict.TryAdd(pageNumber, data))
+            {
+                Console.Write($"$Oops there was already this page added - must be in the cache more then once - {request.Filepath}");
+            }
+        }
+        
+        return returnDict!;
     }
 
     public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)
@@ -675,7 +738,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.QuerySingleOrDefaultAsync<T>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.QuerySingleOrDefaultAsync<T>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -689,6 +764,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
+            Console.WriteLine("WARNING QuerySingleOrDefaultAsync retrying");
+            
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
@@ -698,7 +775,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.QueryAsync<T>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.QueryAsync<T>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -712,13 +801,27 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
+            Console.WriteLine("WARNING QueryAsync retrying");
+            
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
-    
+
     private NpgsqlConnection GetPostgresConnection()
-        => dataSourceProvider.DataSource.CreateConnection();
+    {
+        var dtStart = DateTime.Now;
+        
+        var conn = dataSourceProvider.DataSource.OpenConnection();
+        var duration =  DateTime.Now - dtStart;
+
+        if (duration.TotalSeconds > 1)
+        {
+            Console.WriteLine($"WARNING OpenConnection took {duration.TotalMilliseconds}ms");
+        }
+
+        return conn;
+    }
 
     // TODO move to a 'Core' layer
     private static JsonSerializerOptions GetSerializerOptions() =>

@@ -88,14 +88,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         PdfDocument pdfDocument,
         int pageNumber,
         string pdfServiceName,
-        int processRunId)
+        int processRunId,
+        List<int> pagesWithScreenshotsCached)
     {
         return outputService.SavePageScreenshotIfDoesntExistAsync(
             pdfDocument,
             pageNumber,
             pdfServiceName,
             pdfDocument.PdfFilePath,
-            processRunId);
+            processRunId,
+            pagesWithScreenshotsCached);
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
@@ -124,22 +126,27 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var pagesElement = (JsonElement)metadata!["pages"];
             var pageCount = pagesElement.GetArrayLength();
             
+            var pageRequest = new NoOcrServicePageCacheRequest
+            {
+                Filepath = pdfDocument.PdfFilePath,
+                NoOcrServiceName = Name,
+                ProcessRunId = processRunId
+            };
+            
+            dtStart = DateTime.Now;
+            
+            var allPagesTextLines =
+                await cacheService.GetNoOcrAllPagesTextLinesAsync(pageRequest);
+            
+            Console.WriteLine($"Read {Name} text file pages from cache in " +
+                $"{(DateTime.Now - dtStart).TotalMilliseconds}ms - {pdfDocument.PdfFilePath}");
+            
             for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
             {
-                dtStart = DateTime.Now;
-                
                 var pageElement = pagesElement[pageNumber - 1];
                 var numberOfImages = pageElement.GetProperty("numberOfImages").GetInt32();
-                
-                var pageRequest = new NoOcrServicePageCacheRequest
-                {
-                    Filepath = pdfDocument.PdfFilePath,
-                    NoOcrServiceName = Name,
-                    PageNumber = pageNumber,
-                    ProcessRunId = processRunId
-                };
 
-                var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
+                var fileText = allPagesTextLines[pageNumber];
 
                 if (string.IsNullOrEmpty(fileText))
                 {
@@ -148,9 +155,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 }
 
                 List<TextBlock> pageLines = [];
-                
-                Console.WriteLine($"Read {Name} text file page {pageNumber} in {(DateTime.Now - dtStart).TotalSeconds}" +
-                    $" seconds - {pdfDocument.PdfFilePath}");
                 
                 var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
                     fileText,
@@ -188,6 +192,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     ProcessRunId = processRunId
                 };
 
+                dtStart = DateTime.Now;
+                
                 var numberOfImages = page.NumberOfImages;
                 var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
                 
@@ -205,10 +211,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 
                 if (fromCache)
                 {
-                    dtStart = DateTime.Now;
-
                     Console.WriteLine(
-                        $"Read {Name} text file page {page.Number} in {(DateTime.Now - dtStart).TotalSeconds} seconds");
+                        $"Read {Name} text file page from cache {page.Number} in {(DateTime.Now - dtStart).TotalSeconds} seconds");
 
                     var cachedTextBlocks =
                         JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(

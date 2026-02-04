@@ -21,7 +21,8 @@ public interface INoOcrDataExtractorService
         PdfDocument pdfDocument,
         int pageNumber,
         string pdfServiceName,
-        int processRunId);
+        int processRunId,
+        List<int> pagesWithScreenshotsCached);
     
     public void Release(PdfDocument pdfDocument);
     

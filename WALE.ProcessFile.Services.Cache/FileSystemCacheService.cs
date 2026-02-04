@@ -190,7 +190,12 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
-    
+
+    public Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);

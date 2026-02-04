@@ -129,6 +129,12 @@ public class DatabaseCacheService(
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
 
+    public Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);
+    }
+
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);

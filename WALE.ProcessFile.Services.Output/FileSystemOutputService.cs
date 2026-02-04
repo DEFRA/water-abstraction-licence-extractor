@@ -24,7 +24,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
     }
-    
+
+    public Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName)
+    {
+        throw new NotImplementedException();
+    }
+
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
         int pageNumber,
         string pdfServiceName,
@@ -115,12 +120,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public Task SavePageScreenshotIfDoesntExistAsync(UglyToad.PdfPig.PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
-        string pdfFilePath, int processRunId)
+    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
+        string pdfFilePath, int processRunId, List<int> pagesWithScreenshotsCached)
     {
         throw new NotImplementedException();
     }
-
+    
     public async Task SavePageScreenshotIfDoesntExistAsync(
         PdfDocument pdfDocument,
         int pageNumber,

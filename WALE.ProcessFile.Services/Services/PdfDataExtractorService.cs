@@ -660,12 +660,13 @@ public class PdfDataExtractorService(
     
     private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, int processRunId)
     {
-        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        });
+        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                Filepath = pdfDocument.PdfFilePath,
+                NoOcrServiceName = Name,
+                ProcessRunId = processRunId
+            });
 
         return JsonSerializer.Deserialize<ImageMetadata>(
             metaDataFileText!,
@@ -675,6 +676,10 @@ public class PdfDataExtractorService(
     private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
         GetImageMetadataAsync(PdfDocument pdfDocument, int processRunId)
     {
+        var pagesWithScreenshotsCached = await outputService.GetPageNumbersOfScreenshotAsync(
+            pdfDocument.PdfFilePath,
+            Name);
+        
         foreach (var page in pdfDocument.Pages)
         {
             await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
@@ -682,7 +687,8 @@ public class PdfDataExtractorService(
                 pdfDocument,
                 page.Number,
                 Name,
-                processRunId);
+                processRunId,
+                pagesWithScreenshotsCached);
         }
 
         if (pdfDocument.FromCache)

@@ -553,7 +553,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.ExecuteScalarAsync<int>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.ExecuteScalarAsync<int>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -566,6 +578,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
+            
+            Console.WriteLine("WARNING ExecuteScalarAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await ExecuteScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
@@ -576,7 +590,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
             await connection.ExecuteAsync(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
         }
         catch (NpgsqlException ex)
         {
@@ -589,6 +613,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
+            
+            Console.WriteLine("WARNING ExecuteAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             await ExecuteAsync(GetPostgresConnection(), sql, retryNumber + 1, param);

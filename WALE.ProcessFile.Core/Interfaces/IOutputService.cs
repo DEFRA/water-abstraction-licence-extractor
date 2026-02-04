@@ -14,6 +14,8 @@ public interface IOutputService
         string pdfServiceName,
         string pdfFilePath);
     
+    public Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName);
+    
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
@@ -38,7 +40,8 @@ public interface IOutputService
         int pageNumber,
         string noOcrServiceName,
         string pdfFilePath,
-        int processRunId);
+        int processRunId,
+        List<int> pagesWithScreenshotsCached);
 
     public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     

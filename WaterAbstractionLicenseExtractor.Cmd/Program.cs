@@ -83,13 +83,9 @@ async Task ProgramAsync()
 
     var (dmsFilesToProcess, allDmsData) = GetDmsFilesAndMapping(services, regionCode);
 
-    var naldData = ExternalDataHelper.GetNaldAbstractionLicencesData(
+    var naldData = await ExternalDataHelper.GetNaldDataFromDatabaseAsync(
+        services.DatabaseReadService!,
         allDmsData,
-        Environment.GetEnvironmentVariable("NaldAbsLicencesDataPath"),
-        Environment.GetEnvironmentVariable("NaldAbsLicencePurposesDataPath"),
-        Environment.GetEnvironmentVariable("NaldAbsLicencePointsDataPath"),
-        Environment.GetEnvironmentVariable("NaldAbsLicenceVersionsDataPath"),
-        Environment.GetEnvironmentVariable("NaldAbsLicenceQuantitiesDataPath"),
         regionCode);
 
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();

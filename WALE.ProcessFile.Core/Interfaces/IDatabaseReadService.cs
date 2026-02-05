@@ -61,6 +61,16 @@ public interface IDatabaseReadService
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
     Task<List<NaldLicence>> GetNaldLicencesAsync();
-    
+
     Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
+
+    Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode);
+
+    Task<List<NaldLicenceVersionCsvLine>> GetNaldLicenceVersionsAsync(short regionCode);
+
+    Task<List<NaldLicencePurposeCsvLine>> GetNaldLicencePurposesAsync(short regionCode);
+
+    Task<List<NaldLicencePointCsvLine>> GetNaldLicencePointsAsync(short regionCode);
+
+    Task<List<NaldLicenceQuantitiesCsvLine>> GetNaldLicenceQuantitiesAsync(short regionCode);
 }

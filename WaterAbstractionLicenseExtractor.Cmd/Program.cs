@@ -93,9 +93,8 @@ async Task ProgramAsync()
         regionCode);
 
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
-
-    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
-    var yorkshireNaldHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldData.ToList(), regionCode);
+    var yorkshireNaldLinkedLicenceRawData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
+    var yorkshireNaldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldLinkedLicenceRawData.ToList(), regionCode);
 
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
@@ -211,7 +210,7 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = await yorkshireNaldHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
+                var linkedLicences = await yorkshireNaldLinkedLicenceHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
                 if (linkedLicences.Count != 0)
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;

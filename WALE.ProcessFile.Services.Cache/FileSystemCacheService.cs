@@ -191,9 +191,40 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
 
-    public Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    public async Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
-        throw new NotImplementedException();
+        var returnDictionary = new Dictionary<int, string?>();
+
+        var metadataFileText = await GetNoOcrPagesMetadataAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                Filepath = request.Filepath,
+                NoOcrServiceName = request.NoOcrServiceName,
+                ProcessRunId = request.ProcessRunId
+            });
+            
+        var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            metadataFileText!,
+            JsonHelper.GetSerializerOptions())!;
+
+        var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
+        
+        for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
+        {
+            request.PageNumber = pageNumber;
+            
+            var outputFilename = await GetNoOcrPageReferenceAsync(request);
+            var existsInCache = File.Exists(outputFilename);
+
+            if (!existsInCache)
+            {
+                continue;
+            }
+            
+            returnDictionary.Add(pageNumber, await File.ReadAllTextAsync(outputFilename));
+        }
+        
+        return returnDictionary;
     }
 
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
@@ -307,7 +338,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {

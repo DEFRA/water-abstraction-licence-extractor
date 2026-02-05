@@ -147,7 +147,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
+    public async Task SavePageScreenshotAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
         byte[] data, int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -244,7 +244,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         return request;
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename,
+    public async Task SaveAllPagesTextAsync(string documentLinesStr, string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {

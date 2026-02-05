@@ -73,7 +73,7 @@ public interface ICacheService
         string extension,
         int processRunId);
     
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     

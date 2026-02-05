@@ -353,7 +353,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false
@@ -535,7 +536,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false,
@@ -720,7 +722,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false

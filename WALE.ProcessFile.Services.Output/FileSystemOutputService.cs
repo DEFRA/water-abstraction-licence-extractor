@@ -120,13 +120,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
-        string pdfFilePath, int processRunId, List<int> pagesWithScreenshotsCached)
-    {
-        throw new NotImplementedException();
-    }
-    
-    public async Task SavePageScreenshotIfDoesntExistAsync(
+    public async Task SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
@@ -175,7 +169,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         stream.Close();
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
         var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         Directory.CreateDirectory($"{outputFolder}/{folderName}");

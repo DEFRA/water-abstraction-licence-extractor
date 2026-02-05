@@ -19,7 +19,7 @@ public class NpgsqlDataSourceProvider : INpgsqlDataSourceProvider
             Timeout = 0,
             CommandTimeout = 0,
             KeepAlive = 30,
-            Pooling = true,
+            Pooling = false,
             MinPoolSize = 10,
             MaxPoolSize = 10
             //SslMode = SslMode.Require,

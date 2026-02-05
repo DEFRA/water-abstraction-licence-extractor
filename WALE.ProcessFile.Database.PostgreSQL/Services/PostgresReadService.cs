@@ -141,7 +141,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             if (!returnDict.TryAdd(pageNumber, data))
             {
-                Console.Write($"$Oops there was already this page added - must be in the cache more then once - {request.Filepath}");
+                // TODO some weird circumstance meant that certain (not all) pages were repeated
+                // PROBABLY because of retry logic (might be limited to Ryan's machine)
+                Console.WriteLine($"WARNING - Page number {pageNumber} is duplicated in {request.Filepath}");
             }
         }
         

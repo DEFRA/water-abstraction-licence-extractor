@@ -87,7 +87,7 @@ public class PdfDataExtractorService(
         {
             var exists = newLabelGroupMatches.Any(lgm =>
                 lgm.LabelGroupName == labelGroupMatch.LabelGroupName
-                && lgm.Text?.FirstOrDefault()?.Text == labelGroupMatch.Text?.FirstOrDefault()?.Text);
+                && DataHelper.GetFirstLineTextFromMatch(lgm) == DataHelper.GetFirstLineTextFromMatch(labelGroupMatch));
 
             if (exists)
             {

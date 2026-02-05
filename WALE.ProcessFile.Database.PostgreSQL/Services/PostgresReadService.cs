@@ -852,7 +852,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
-                               AND "STATUS" = 'CURR'
                            """;
 
         return (await QueryAsync<NaldLicenceVersionCsvLine>(

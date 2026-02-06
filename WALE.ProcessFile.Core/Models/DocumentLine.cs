@@ -22,7 +22,7 @@ public class DocumentLine(
         PositionConstants.UnknownCoordinate,
         PositionConstants.UnknownCoordinate) { }
 
-    //[JsonIgnore]
+    [JsonIgnore]
     public string Text
     {
         get

@@ -9,7 +9,7 @@ public class DocumentLineColumn(string text, List<DocumentLineWord> words)
     
     public DocumentLineColumn() : this(string.Empty, []) { }
 
-    //[JsonIgnore]
+    [JsonIgnore]
     public string Text { get; set; } = text; // TODO remove eventually    
     
     public List<DocumentLineWord> Words { get; set; } = words;

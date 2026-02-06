@@ -19,11 +19,9 @@ public class NpgsqlDataSourceProvider : INpgsqlDataSourceProvider
             Timeout = 0,
             CommandTimeout = 0,
             KeepAlive = 30,
-            Pooling = false,
-            MinPoolSize = 10,
-            MaxPoolSize = 10
-            //SslMode = SslMode.Require,
-            //SslNegotiation = SslNegotiation.Postgres
+            Pooling = true,
+            MinPoolSize = 0,
+            MaxPoolSize = 30
         };
 
         DataSource = NpgsqlDataSource.Create(connectionString);

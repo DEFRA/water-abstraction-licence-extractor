@@ -148,6 +148,8 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
+            
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
                 var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();

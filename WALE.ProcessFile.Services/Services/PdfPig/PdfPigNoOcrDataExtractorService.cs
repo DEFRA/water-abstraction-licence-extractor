@@ -199,7 +199,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             processRunId);
     }
 
-    private async Task<List<DocumentLine>> GetTextLinesFromCacheAsync(
+    private Task<List<DocumentLine>> GetTextLinesFromCacheAsync(
         PdfDocument pdfDocument,
         Dictionary<string, object>? pagesTextMetadata,
         Dictionary<int, string> allPagesTextLines)
@@ -256,7 +256,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             $"Getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
             $" - {pdfDocument.PdfFilePath}");
         
-        return documentLines;
+        return Task.FromResult(documentLines);
     }
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(

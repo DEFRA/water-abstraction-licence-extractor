@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Services.Cache;
 
@@ -191,9 +192,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
 
-    public async Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        var returnDictionary = new Dictionary<int, string?>();
+        var returnDictionary = new Dictionary<int, string>();
 
         var metadataFileText = await GetNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
@@ -202,7 +203,12 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
                 NoOcrServiceName = request.NoOcrServiceName,
                 ProcessRunId = request.ProcessRunId
             });
-            
+
+        if (string.IsNullOrEmpty(metadataFileText))
+        {
+            return null;
+        }
+        
         var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
             metadataFileText!,
             JsonHelper.GetSerializerOptions())!;
@@ -211,9 +217,15 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
         {
-            request.PageNumber = pageNumber;
+            var pageRequest = new NoOcrServicePageCacheRequest
+            {
+                PageNumber = pageNumber,
+                NoOcrServiceName = request.NoOcrServiceName,
+                ProcessRunId = request.ProcessRunId,
+                Filepath = request.Filepath
+            };
             
-            var outputFilename = await GetNoOcrPageReferenceAsync(request);
+            var outputFilename = await GetNoOcrPageReferenceAsync(pageRequest);
             var existsInCache = File.Exists(outputFilename);
 
             if (!existsInCache)
@@ -370,17 +382,19 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<TextBlock> pageLines)
+        List<MinimalTextBlock> pageLines)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
         var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";
+
+        var data = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         
         await File.WriteAllTextAsync(
             outputFilename,
-            JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
+            data);
         
         return request;
     }

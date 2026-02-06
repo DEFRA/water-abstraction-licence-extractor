@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -110,7 +111,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request)
+    public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
         
@@ -135,6 +136,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
 
         var resultList = results.ToList();
+        if (resultList.Count == 0)
+        {
+            return null;
+        }
+        
         var returnDict = new Dictionary<int, string>();
 
         foreach (var (pageNumber, data) in resultList)
@@ -147,7 +153,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             }
         }
         
-        return returnDict!;
+        return returnDict;
     }
 
     public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)

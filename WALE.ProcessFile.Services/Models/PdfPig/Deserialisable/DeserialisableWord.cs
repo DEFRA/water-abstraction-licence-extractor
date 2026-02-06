@@ -1,6 +1,6 @@
 using UglyToad.PdfPig.Content;
 
-namespace WALE.ProcessFile.Services.Models.PdfPig;
+namespace WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
 
 /// <summary>
 /// A word.

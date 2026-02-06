@@ -1,11 +1,11 @@
-using UglyToad.PdfPig.Core;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
 public static class DocumentLineWordCoordinatesHelper
 {
-    public static DocumentLineWordCoordinates Convert(PdfRectangle rectangle)
+    public static DocumentLineWordCoordinates Convert(MinimalPdfRectangle rectangle)
     {
         return new DocumentLineWordCoordinates(
             rectangle.Top,

@@ -171,8 +171,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request,
-        string pageLines, int processRunId)
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(
+        NoOcrServicePageCacheRequest request,
+        string data,
+        int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -189,7 +191,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 Filename = request.Filepath,
                 request.PageNumber,
                 request.NoOcrServiceName,
-                Data = pageLines,
+                Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });

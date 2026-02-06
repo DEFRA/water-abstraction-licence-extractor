@@ -2,7 +2,7 @@ using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.PdfFonts;
 
-namespace WALE.ProcessFile.Services.Models.PdfPig;
+namespace WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
 
 /// <summary>
 /// A glyph or combination of glyphs (characters) drawn by a PDF content stream.

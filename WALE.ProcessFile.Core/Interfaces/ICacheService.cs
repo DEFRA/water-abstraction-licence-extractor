@@ -1,6 +1,7 @@
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -48,7 +49,7 @@ public interface ICacheService
     
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
 
-    public Task<Dictionary<int, string?>> GetNoOcrAllPagesTextLinesAsync(NoOcrServicePageCacheRequest request);
+    public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
 
@@ -83,7 +84,7 @@ public interface ICacheService
     
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<TextBlock> pageLines);
+        List<MinimalTextBlock> pageLines);
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,

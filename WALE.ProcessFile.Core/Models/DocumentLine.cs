@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Constants;
 
 namespace WALE.ProcessFile.Core.Models;
@@ -21,6 +22,7 @@ public class DocumentLine(
         PositionConstants.UnknownCoordinate,
         PositionConstants.UnknownCoordinate) { }
 
+    //[JsonIgnore]
     public string Text
     {
         get

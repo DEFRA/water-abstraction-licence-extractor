@@ -710,11 +710,6 @@ public class PdfDataExtractorService(
             {
                 var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
                 
-                if (label.Text?.Count > 0 && label.Text[0].Text == "Licence ")
-                {
-                    
-                }
-                
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
                     continue;

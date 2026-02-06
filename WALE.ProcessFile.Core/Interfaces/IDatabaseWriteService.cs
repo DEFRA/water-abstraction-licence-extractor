@@ -20,7 +20,7 @@ public interface IDatabaseWriteService
     public Task SavePageScreenshotAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
         byte[] data, int processRunId);
 
-    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines, int processRunId);
+    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
     Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
     

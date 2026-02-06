@@ -55,7 +55,8 @@ public class DatabaseCacheService(
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
             Filepath = pdfFilePath,
-            Extension = extension
+            Extension = extension,
+            NoOcrServiceName = serviceName
         });
 
         if (bytAry == null)

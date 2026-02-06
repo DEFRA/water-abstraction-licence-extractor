@@ -49,7 +49,8 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             ImageNumber = imageNumber,
             Filepath = pdfFilePath,
             ProcessRunId = processRunId,
-            Extension = extension
+            Extension = extension,
+            NoOcrServiceName = serviceName
         });
 
         if (bytAry == null)

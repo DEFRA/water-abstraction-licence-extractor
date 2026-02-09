@@ -75,7 +75,8 @@ public class PdfDataExtractorService(
             configuration.LicenceNumberMapping,
             previouslyParsedPaths,
             configuration.RegionCode,
-            processRunId);
+            processRunId,
+            configuration);
 
         Console.WriteLine(
             $"Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
@@ -272,7 +273,8 @@ public class PdfDataExtractorService(
                         configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
                         configuration.RegionCode,
-                        processRunId);
+                        processRunId,
+                        configuration);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -699,7 +701,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -737,7 +740,8 @@ public class PdfDataExtractorService(
                     licenceNumberMapping,
                     previouslyParsedPaths,
                     regionCode,
-                    processRunId);
+                    processRunId,
+                    lookupConfiguration);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -771,7 +775,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -818,6 +823,7 @@ public class PdfDataExtractorService(
                 new LookupConfiguration(
                     LabelConfiguration.GetLabels(),
                     licenceNumberMapping,
+                    lookupConfiguration.ValidLowercaseFirstNames,
                     regionCode),
                 previouslyParsedPaths,
                 processRunId);
@@ -949,7 +955,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -998,7 +1005,8 @@ public class PdfDataExtractorService(
                                 licenceNumberMapping,
                                 previouslyParsedPaths,
                                 regionCode,
-                                processRunId);
+                                processRunId,
+                                lookupConfiguration);
 
                             returnList.AddRange(linkedLicences);
 
@@ -1126,7 +1134,8 @@ public class PdfDataExtractorService(
                         lineForPosition = fullLine,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
-                        regionCode = regionCode
+                        regionCode = regionCode,
+                        lookupConfiguration = lookupConfiguration
                     };
                     
                     var singleValueWanted = matchedLabel.MultipleBehaviour is
@@ -1143,7 +1152,7 @@ public class PdfDataExtractorService(
                             partialLine!,
                             singleValueWanted);
                      
-                        if ((DateTime.Now - dtStart).TotalMilliseconds > 10)
+                        if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             Console.WriteLine(
                                 $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
@@ -1527,7 +1536,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var subResults = new List<LabelGroupResult>();
         
@@ -1552,7 +1562,8 @@ public class PdfDataExtractorService(
                     licenceMapping,
                     previouslyParsedPaths,
                     regionCode,
-                    processRunId);
+                    processRunId,
+                    lookupConfiguration);
 
                 if (subLabelGroupMatch.Count > 0)
                 {

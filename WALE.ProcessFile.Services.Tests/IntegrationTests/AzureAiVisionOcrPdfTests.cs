@@ -16,7 +16,8 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-public class AzureAiVisionOcrPdfTests
+[Collection("First Names 3")]
+public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
@@ -28,7 +29,7 @@ public class AzureAiVisionOcrPdfTests
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    public AzureAiVisionOcrPdfTests()
+    static AzureAiVisionOcrPdfTests()
     {
         LicenceNumber.Instance = new LicenceNumber(ReadService);
     }
@@ -87,6 +88,12 @@ public class AzureAiVisionOcrPdfTests
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
+    private LookupConfiguration LookupConfiguration(int regionCode) => new(
+        LabelConfiguration.GetLabels(),
+        _fileLicenceMapping,
+        firstNamesFixture.FirstNamesCsv,
+        regionCode);
+    
     private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
@@ -97,10 +104,7 @@ public class AzureAiVisionOcrPdfTests
         
         return service.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                regionCode),
+            LookupConfiguration(regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -186,7 +190,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            0);
+            0,
+            LookupConfiguration(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -251,7 +256,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -290,7 +296,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -380,7 +387,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -491,7 +499,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
@@ -617,7 +626,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -692,7 +702,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -717,7 +728,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -818,7 +830,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -930,7 +943,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -991,7 +1005,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1052,7 +1067,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1090,7 +1106,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1268,7 +1285,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1499,7 +1517,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1566,7 +1585,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1595,7 +1615,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1621,7 +1642,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1647,7 +1669,8 @@ public class AzureAiVisionOcrPdfTests
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(2));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

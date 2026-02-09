@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using CompanyName = WALE.ProcessFile.Services.Formats.CompanyName;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -466,7 +467,8 @@ public static partial class SchemaConverter
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LicenceSet>();
 
@@ -495,7 +497,8 @@ public static partial class SchemaConverter
             pdfDataExtractorService,
             pdfFolder,
             previouslyParsedPaths,
-            processRunId);
+            processRunId,
+            lookupConfiguration);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -883,7 +886,8 @@ public static partial class SchemaConverter
         IPdfDataExtractorService pdfDataExtractorService,
         string pdfFolder,
         List<string> previouslyParsedPaths,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnLicences = new List<Licence>();
         
@@ -971,6 +975,7 @@ public static partial class SchemaConverter
                             new LookupConfiguration(
                                 LabelConfiguration.GetLabels(),
                                 licenceNumberMapping,
+                                lookupConfiguration.ValidLowercaseFirstNames,
                                 matchesResult.RegionCode),
                             previouslyParsedPaths,
                             processRunId);
@@ -1028,6 +1033,7 @@ public static partial class SchemaConverter
                 new LookupConfiguration(
                     LabelConfiguration.GetLabels(),
                     licenceNumberMapping,
+                    lookupConfiguration.ValidLowercaseFirstNames,
                     matchesResult.RegionCode),
                 previouslyParsedPaths,
                 processRunId);

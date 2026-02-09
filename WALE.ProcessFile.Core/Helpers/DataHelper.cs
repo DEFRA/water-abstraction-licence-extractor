@@ -316,7 +316,7 @@ public static partial class DataHelper
     
     public static bool IsCorruptedLine(List<DocumentLineWord?>? words, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
-        if (words == null)
+        if (!isOcr || words == null)
         {
             return false;
         }

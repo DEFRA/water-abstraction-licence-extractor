@@ -53,15 +53,22 @@ public class AzureOpenAiOcrPdfTests
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
+
+    private LookupConfiguration LookupConfiguration()
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            CompanyName.GetFirstNamesCsvFromFile(),
+            3);
+    }
     
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                3),
+            LookupConfiguration(),
+            
             [PdfFolder + fileName],
             0);
     }
@@ -142,7 +149,7 @@ public class AzureOpenAiOcrPdfTests
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
-        
+
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
@@ -150,7 +157,8 @@ public class AzureOpenAiOcrPdfTests
             [],
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration());
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

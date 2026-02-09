@@ -23,7 +23,8 @@ public interface IPdfDataExtractorService
         Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId);
+        int processRunId,
+        LookupConfiguration configuration);
 
     public void Dispose();
 }

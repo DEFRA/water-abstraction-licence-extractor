@@ -25,11 +25,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
     }
 
-    public Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName)
-    {
-        throw new NotImplementedException();
-    }
-
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
         int pageNumber,
         string pdfServiceName,

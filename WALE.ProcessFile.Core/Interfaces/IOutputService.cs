@@ -14,8 +14,6 @@ public interface IOutputService
         string pdfServiceName,
         string pdfFilePath);
     
-    public Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName);
-    
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,

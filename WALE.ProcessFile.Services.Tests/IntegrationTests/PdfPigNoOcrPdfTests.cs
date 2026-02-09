@@ -758,7 +758,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-//        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

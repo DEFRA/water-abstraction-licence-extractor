@@ -61,31 +61,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                   SELECT
-                       page_number
-                   FROM page_screenshot 
-                   WHERE
-                       filename = @Filename 
-                       AND no_ocr_service_name = @NoOcrServiceName
-                   """;
-
-        var results = await QueryAsync<int>(
-            connection,
-            sql,
-            0,
-            new
-            {
-                Filename = fileName,
-                NoOcrServiceName = noOcrServiceName
-            });
-
-        return results.ToList();
-    }
-
     public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         await using var connection = GetPostgresConnection();

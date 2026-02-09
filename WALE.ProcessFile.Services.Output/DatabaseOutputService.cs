@@ -31,12 +31,6 @@ public class DatabaseOutputService(
         ];
     }
 
-    public Task<List<int>> GetPageNumbersOfScreenshotAsync(string fileName, string noOcrServiceName)
-    {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(fileName)!;
-        return databaseReadService.GetPageNumbersOfScreenshotAsync(pdfFilename, noOcrServiceName);
-    }
-
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;

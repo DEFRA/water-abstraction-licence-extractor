@@ -11,6 +11,7 @@ public class PdfPage
     [JsonIgnore]
     public string? DigitalText { get; set; }
 
+    // There are multiple as (at time of writing) one from PdfPig and one from Docnet
     public List<string> ScreenshotFilepaths { get; set; } = [];
 
     public List<PdfPageProvider> Providers { get; set; } = [];

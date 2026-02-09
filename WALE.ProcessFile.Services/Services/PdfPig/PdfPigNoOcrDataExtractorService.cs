@@ -4,6 +4,8 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 using WALE.ProcessFile.Services.Helpers;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
 
@@ -13,11 +15,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
     private const int LineHeight = 9;
-    
-    public async Task<PdfDocument> GetPdfDocumentAsync(
-        string pdfFilePath,
-        IOutputService outputService,
+
+    private async Task<MetadataCollection?> GetMetadataAsync(
         ICacheService cacheService,
+        string pdfFilePath,
         int processRunId)
     {
         var request = new NoOcrServiceMetadataCacheRequest
@@ -27,22 +28,87 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             ProcessRunId = processRunId
         };
         
-        var metadataFileText = await cacheService.GetNoOcrPagesMetadataAsync(request);
-        var pdfDocument = new PdfDocument(
-            pdfFilePath,
-            !string.IsNullOrEmpty(metadataFileText),
-            outputService);
+        var metadataFileTextTask = cacheService.GetNoOcrPagesMetadataAsync(request);
+        var metadataImagesTextTask = cacheService.GetNoOcrImagesMetadataAsync(request);
+        var allDocumentLinesTask = cacheService.GetNoOcrAllPagesTextLinesAsync(request);
         
-        if (!pdfDocument.FromCache)
+        var metadataFileText = await metadataFileTextTask;
+        var metadataImagesText = await metadataImagesTextTask;
+        var allDocumentLines = await allDocumentLinesTask;
+
+        if (string.IsNullOrEmpty(metadataFileText)
+            || string.IsNullOrEmpty(metadataImagesText))
         {
-            return pdfDocument;
+            return null;
         }
         
-        var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
-            metadataFileText!,
+        var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            metadataFileText,
+            JsonHelper.GetSerializerOptions())!;
+            
+        var imagesMetaData = JsonSerializer.Deserialize<ImageMetadata>(
+            metadataImagesText,
             JsonHelper.GetSerializerOptions())!;
 
-        var pageArray = ((JsonElement)metadata["pages"]).EnumerateArray().ToList();
+        return new MetadataCollection
+        {
+            PagesMetadata = pagesTextMetadata,
+            AllDocumentLines = allDocumentLines,
+            ImageMetadata = imagesMetaData
+        };
+    }
+    
+    public async Task<PdfDocument> GetPdfDocumentAsync(
+        string pdfFilePath,
+        IOutputService outputService,
+        ICacheService cacheService,
+        int processRunId)
+    {
+        var metadata = await GetMetadataAsync(cacheService, pdfFilePath, processRunId);
+        var pdfDocument = new PdfDocument(pdfFilePath, metadata != null, outputService);
+        
+        if (pdfDocument.FromCache)
+        {
+            pdfDocument.Pages = GetPages(metadata!.PagesMetadata!, pdfFilePath, outputService);
+            pdfDocument.ImagesMetadata = metadata.ImageMetadata;
+        
+            pdfDocument.DocumentLines = await GetTextLinesFromCacheAsync(
+                pdfDocument,
+                metadata.PagesMetadata,
+                metadata.AllDocumentLines!);
+        
+            return pdfDocument;
+        }
+
+        await PopulateImageDataAndDocumentLinesAsync(
+            pdfDocument,
+            cacheService,
+            outputService,
+            processRunId);
+            
+        // This one is just for audting - not used for processing
+        var saveAllPagesTextTask = outputService.SaveAllPagesTextAsync(
+            pdfDocument.DocumentLines!,
+            pdfFilePath,
+            Name,
+            processRunId);
+
+        var saveImageMetadataTask = SaveImageMetadataAsync(
+            pdfDocument,
+            pdfDocument.ImagesMetadata!,
+            processRunId,
+            cacheService);
+
+        await Task.WhenAll(saveAllPagesTextTask, saveImageMetadataTask);
+        return pdfDocument;
+    }
+
+    private List<PdfPage> GetPages(
+        Dictionary<string, object> pagesTextMetadata,
+        string pdfFilePath,
+        IOutputService outputService)
+    {
+        var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
         var pagesList = new List<PdfPage>();
             
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
@@ -79,18 +145,53 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pagesList.Add(pdfPage);
         }
 
-        pdfDocument.Pages = pagesList;
-        return pdfDocument;
+        return pagesList;
+    }
+
+    private async Task PopulateImageDataAndDocumentLinesAsync(
+        PdfDocument pdfDocument,
+        ICacheService cacheService,
+        IOutputService outputService,
+        int processRunId)
+    {
+        var documentLinesTask = GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
+            pdfDocument,
+            cacheService,
+            outputService,
+            processRunId);
+        
+        var imagesMetadataTask = GetImageMetadataAndSaveImagesAsync(
+            pdfDocument,
+            processRunId,
+            outputService,
+            cacheService);
+        
+        pdfDocument.ImagesMetadata = await imagesMetadataTask;
+        pdfDocument.DocumentLines = await documentLinesTask;
     }
     
-    public Task SavePageScreenshotIfDoesntExistAsync(
+    private async Task SaveImageMetadataAsync(
+        PdfDocument pdfDocument,
+        ImageMetadata imagesMetadata,
+        int processRunId,
+        ICacheService cacheService)
+    {
+        await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
+        {
+            Filepath = pdfDocument.PdfFilePath,
+            NoOcrServiceName = Name,
+            ProcessRunId = processRunId
+        }, imagesMetadata);
+    }
+    
+    public Task SavePageScreenshotAsync(
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,
         string pdfServiceName,
         int processRunId)
     {
-        return outputService.SavePageScreenshotIfDoesntExistAsync(
+        return outputService.SavePageScreenshotAsync(
             pdfDocument,
             pageNumber,
             pdfServiceName,
@@ -98,9 +199,70 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             processRunId);
     }
 
-    public async Task<List<DocumentLine>> GetTextLinesFromPdfAsync(
+    private Task<List<DocumentLine>> GetTextLinesFromCacheAsync(
+        PdfDocument pdfDocument,
+        Dictionary<string, object>? pagesTextMetadata,
+        Dictionary<int, string> allPagesTextLines)
+    {
+        var documentLines = new List<DocumentLine>();
+
+        if (!pdfDocument.FromCache || pagesTextMetadata == null)
+        {
+            throw new Exception("Cache doesn't have pages text metadata");
+        }
+
+        var pagesElement = (JsonElement)pagesTextMetadata["pages"];
+        var pageCount = pagesElement.GetArrayLength();
+        
+        var dtStart = DateTime.Now;
+        
+        Console.WriteLine($"Read {Name} text file pages from cache in " +
+            $"{(DateTime.Now - dtStart).TotalMilliseconds}ms - {pdfDocument.PdfFilePath}");
+        
+        for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
+        {
+            var pageElement = pagesElement[pageNumber - 1];
+            var numberOfImages = pageElement.GetProperty("numberOfImages").GetInt32();
+
+            var fileText = allPagesTextLines[pageNumber];
+
+            if (string.IsNullOrEmpty(fileText))
+            {
+                // TODO should not happen
+                continue;
+            }
+
+            var pageLines = JsonSerializer.Deserialize<List<MinimalTextBlock>>(
+                fileText,
+                JsonHelper.GetSerializerOptions())!;
+            
+            var pageLinesTransformed = FormatPageLines(
+                pageLines,
+                pageNumber);
+
+            if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
+            {
+                continue;
+            }
+            
+            documentLines.AddRange(pageLinesTransformed);
+        }
+        
+        // Update line numbers, now in one big list
+        var lineNumber = 0;
+        documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
+        
+        Console.WriteLine(
+            $"Getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
+            $" - {pdfDocument.PdfFilePath}");
+        
+        return Task.FromResult(documentLines);
+    }
+
+    public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
         PdfDocument pdfDocument,
         ICacheService cacheService,
+        IOutputService outputService,
         int processRunId)
     {
         var dtStart = DateTime.Now;
@@ -112,153 +274,70 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             NoOcrServiceName = Name,
             ProcessRunId = processRunId
         };
+    
+        Console.WriteLine(
+            $"Read {Name} document in {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
         
-        if (pdfDocument.FromCache)
+        var pagesMetadata = new List<Dictionary<string, object>>();
+        
+        foreach (var page in pdfDocument.Pages)
         {
-            var metaDataFileText = await cacheService.GetNoOcrPagesMetadataAsync(metadataRequest);
+            await SavePageScreenshotAsync(
+                outputService,
+                pdfDocument,
+                page.Number,
+                Name,
+                processRunId);
             
-            var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                metaDataFileText!,
-                JsonHelper.GetSerializerOptions());
-
-            var pagesElement = (JsonElement)metadata!["pages"];
-            var pageCount = pagesElement.GetArrayLength();
-            
-            for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
+            var pageRequest = new NoOcrServicePageCacheRequest
             {
-                dtStart = DateTime.Now;
-                
-                var pageElement = pagesElement[pageNumber - 1];
-                var numberOfImages = pageElement.GetProperty("numberOfImages").GetInt32();
-                
-                var pageRequest = new NoOcrServicePageCacheRequest
-                {
-                    Filepath = pdfDocument.PdfFilePath,
-                    NoOcrServiceName = Name,
-                    PageNumber = pageNumber,
-                    ProcessRunId = processRunId
-                };
+                Filepath = pdfDocument.PdfFilePath,
+                NoOcrServiceName = Name,
+                PageNumber = page.Number,
+                ProcessRunId = processRunId
+            };
 
-                var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
+            dtStart = DateTime.Now;
+            
+            var numberOfImages = page.NumberOfImages;
+            
+            pagesMetadata.Add(new Dictionary<string, object>
+            {
+                { "number", page.Number },
+                { "numberOfImages", page.NumberOfImages },
+                { "text", page.DigitalText! },
+                { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) },
+            });
 
-                if (string.IsNullOrEmpty(fileText))
-                {
-                    // TODO should not happen
-                    continue;
-                }
-
-                List<TextBlock> pageLines = [];
-                
-                Console.WriteLine($"Read {Name} text file page {pageNumber} in {(DateTime.Now - dtStart).TotalSeconds}" +
-                    $" seconds - {pdfDocument.PdfFilePath}");
-                
-                var cachedTextBlocks = JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
-                    fileText,
-                    JsonHelper.GetSerializerOptions())!;
-                
-                pageLines.AddRange(cachedTextBlocks.Select(
-                    cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
-                
-                var pageLinesTransformed = FormatPageLines(
-                    pageLines,
-                    pageNumber);
-
-                if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
-                {
-                    continue;
-                }
-                
-                documentLines.AddRange(pageLinesTransformed);
+            if (FormattingHelper.IsPageEmpty(page.DigitalText))
+            {
+                await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
+                continue;
             }
-        }
-        else
-        {
-            Console.WriteLine(
-                $"Read {Name} document in {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
+
+            var pdfPigPageLines = await GetPageLinesAsync((Page)page.PdfPigPage!);
+            var pageLines = pdfPigPageLines.Select(MinimalTextBlock.FromPdfPigTextBlock).ToList();
             
-            var pagesMetadata = new List<Dictionary<string, object>>();
+            await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
             
-            foreach (var page in pdfDocument.Pages)
+            if (pdfPigPageLines.Count == 0)
             {
-                var pageRequest = new NoOcrServicePageCacheRequest
-                {
-                    Filepath = pdfDocument.PdfFilePath,
-                    NoOcrServiceName = Name,
-                    PageNumber = page.Number,
-                    ProcessRunId = processRunId
-                };
-
-                var numberOfImages = page.NumberOfImages;
-                var fileText = await cacheService.GetNoOcrPageTextLinesAsync(pageRequest);
-                
-                pagesMetadata.Add(new Dictionary<string, object>
-                {
-                    { "number", page.Number },
-                    { "numberOfImages", page.NumberOfImages },
-                    { "text", page.DigitalText! },
-                    { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) },
-                });
-
-                List<TextBlock> pageLines = [];
-
-                var fromCache = pdfDocument.FromCache && !string.IsNullOrEmpty(fileText);
-                
-                if (fromCache)
-                {
-                    dtStart = DateTime.Now;
-
-                    Console.WriteLine(
-                        $"Read {Name} text file page {page.Number} in {(DateTime.Now - dtStart).TotalSeconds} seconds");
-
-                    var cachedTextBlocks =
-                        JsonSerializer.Deserialize<List<Models.PdfPig.DeserialisableTextBlock>>(
-                            fileText!,
-                            JsonHelper.GetSerializerOptions())!;
-
-                    pageLines.AddRange(cachedTextBlocks.Select(
-                        cachedTextBlock => cachedTextBlock.ToPdfPigTextBlock()));
-
-                    var pageLinesTransformed = FormatPageLines(
-                        pageLines,
-                        page.Number);
-                    
-                    if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
-                    {
-                        continue;
-                    }
-                    
-                    documentLines.AddRange(pageLinesTransformed);
-                    continue;
-                }
-                
-                if (FormattingHelper.IsPageEmpty(page.DigitalText))
-                {
-                    await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
-                    continue;
-                }
-
-                pageLines.AddRange(await GetPageLinesAsync((Page)page.PdfPigPage!));
-                await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
-                
-                if (pageLines.Count == 0)
-                {
-                    continue;
-                }
-                
-                var pageLinesFormatted = FormatPageLines(
-                    pageLines,
-                    page.Number);
-
-                if (DataHelper.LikelyMapPage(pageLinesFormatted, numberOfImages))
-                {
-                    continue;
-                }
-                
-                documentLines.AddRange(pageLinesFormatted);
+                continue;
             }
             
-            await cacheService.SaveNoOcrPagesMetadata(metadataRequest, pagesMetadata);
+            var pageLinesFormatted = FormatPageLines(
+                pageLines,
+                page.Number);
+
+            if (DataHelper.LikelyMapPage(pageLinesFormatted, numberOfImages))
+            {
+                continue;
+            }
+            
+            documentLines.AddRange(pageLinesFormatted);
         }
+        
+        await cacheService.SaveNoOcrPagesMetadataAsync(metadataRequest, pagesMetadata);
 
         // Update line numbers, now in one big list
         var lineNumber = 0;
@@ -271,8 +350,66 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return documentLines;
     }
     
+    private async Task<ImageMetadata>
+        GetImageMetadataAndSaveImagesAsync(
+            PdfDocument pdfDocument,
+            int processRunId,
+            IOutputService outputService,
+            ICacheService cacheService)
+    {
+        var imagesMetadata = new ImageMetadata();
+            
+        foreach (var page in pdfDocument.Pages)
+        {
+            // TODO should use the interface (via a factory)
+            var pageImageService = new PdfPigNoOcrPageService((Page)page.PdfPigPage!);
+
+            var metadataPage = new ImageMetadataPage
+            {
+                Number = page.Number,
+                ScreenshotReferences = outputService
+                    .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilePath)
+                    .Select(sr => new ImageMetadataPageScreenshot
+                    {
+                        ImageReference = sr.ImageReference,
+                        ProviderName = sr.ProviderName
+                    })
+                    .ToList()
+            };
+            
+            imagesMetadata.Pages.Add(metadataPage);
+            var imageNumber = 1;
+            
+            foreach (var image in await pageImageService.GetImagesAsync())
+            {
+                var extension = await image.SaveImageBytesAsync(
+                    pdfDocument.PdfFilePath,
+                    imageNumber,
+                    page.Number,
+                    cacheService,
+                    processRunId);
+
+                if (extension == null)
+                {
+                    continue;
+                }
+                
+                var imageReference = await cacheService.GetImageReferenceAsync(
+                    page.Number,
+                    imageNumber++,
+                    pdfDocument.PdfFilePath,
+                    extension,
+                    Name);
+                
+                metadataPage.Images.Add(imageReference);
+            }
+        }
+
+        return imagesMetadata;
+    }
+    
     private static IReadOnlyList<DocumentLine> FormatPageLines(
-        IReadOnlyList<TextBlock> pageLineBlocks,
+        IReadOnlyList<MinimalTextBlock> pageLineBlocks,
         int pageNumber)
     {
         if (pageLineBlocks.Count == 0)
@@ -283,7 +420,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         const int blankLineGap = 37;
         
         var lineNumber = 0;
-        var previousWordLine = (Word?)null;
+        var previousWordLine = (MinimalWord?)null;
         
         var orderedPageWords = pageLineBlocks
             .SelectMany(textBlock => textBlock.TextLines)
@@ -292,10 +429,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 word.BoundingBox.Bottom,
                 LineHeight,
                 word.Text))
-            .ThenBy(line => line.BoundingBox.Centroid.X)
+            .ThenBy(line => line.BoundingBox.CentroidX)
             .ToList();
         
-        Word? previousWord = null;
+        MinimalWord? previousWord = null;
         var lineIndex = 0;
         
         var returnList = orderedPageWords
@@ -351,7 +488,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     new()
                 };
 
-                Word? previousWord2 = null;
+                MinimalWord? previousWord2 = null;
                 
                 foreach (var word in orderedWords)
                 {

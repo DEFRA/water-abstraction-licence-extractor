@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Services.Cache;
 
@@ -54,7 +55,8 @@ public class DatabaseCacheService(
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
             Filepath = pdfFilePath,
-            Extension = extension
+            Extension = extension,
+            NoOcrServiceName = serviceName
         });
 
         if (bytAry == null)
@@ -129,6 +131,12 @@ public class DatabaseCacheService(
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
 
+    public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
+    {
+        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);
+    }
+
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
@@ -157,7 +165,7 @@ public class DatabaseCacheService(
         return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -197,16 +205,9 @@ public class DatabaseCacheService(
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<TextBlock> pageLines)
+        List<MinimalTextBlock> pageLines)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-
-        var existing = await databaseReadService.GetNoOcrPageTextLinesAsync(request);
-
-        if (!string.IsNullOrEmpty(existing))
-        {
-            return request;
-        }
         
         var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         return await databaseWriteService.SaveNoOcrPageAsync(request, pageLinesStr, request.ProcessRunId);

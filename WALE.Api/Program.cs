@@ -6,9 +6,16 @@ using WALE.ProcessFile.Services.Output;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
 {

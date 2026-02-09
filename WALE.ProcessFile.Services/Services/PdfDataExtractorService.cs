@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -6,12 +5,10 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -41,39 +38,31 @@ public class PdfDataExtractorService(
             cacheService,
             processRunId);
 
+        if (pdfDocument.DocumentLines == null)
+        {
+            throw new Exception("TextLines hasn't been initialized");
+        }
+        
+        if (pdfDocument.ImagesMetadata == null)
+        {
+            throw new Exception("ImagesMetadata hasn't been initialized");
+        }
+        
         var returnResult = new MatchesResult
         {
             Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
-            RegionCode = configuration.RegionCode
+            RegionCode = configuration.RegionCode,
+            ServicesUsed = [ noOcrDataExtractorService.Name, "Docnet" ] // TODO, tidy this up
         };
         
-        returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
-        
-        var (imagesMetadata, imageMetadataChanged) =
-            await GetImageMetadataAsync(pdfDocument, processRunId);
-        
-        var documentLines =
-            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(
-                pdfDocument,
-                cacheService,
-                processRunId);
-
-        await outputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath, Name, processRunId);
-        
-        // Save all text
-        if (!pdfDocument.FromCache)
-        {
-            await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);            
-        }
-
-        const bool notOcr = false;
+        var isOcr = false;
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
-            documentLines,
+            pdfDocument.DocumentLines,
             configuration.Labels,
-            notOcr,
+            isOcr,
             noOcrDataExtractorService.Name,
             configuration.LicenceNumberMapping,
             previouslyParsedPaths,
@@ -87,7 +76,7 @@ public class PdfDataExtractorService(
         {
             var exists = newLabelGroupMatches.Any(lgm =>
                 lgm.LabelGroupName == labelGroupMatch.LabelGroupName
-                && lgm.Text?.FirstOrDefault()?.Text == labelGroupMatch.Text?.FirstOrDefault()?.Text);
+                && DataHelper.GetFirstLineTextFromMatch(lgm) == DataHelper.GetFirstLineTextFromMatch(labelGroupMatch));
 
             if (exists)
             {
@@ -106,7 +95,7 @@ public class PdfDataExtractorService(
                 NoOcrServiceName = Name
             });
         
-        var isTextFile = documentLines.Count >= 100;
+        var isTextFile = pdfDocument.DocumentLines.Count >= 100;
 
         int pageNumber;
         int imageNumber;
@@ -124,9 +113,9 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = true;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
+            for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
             {
-                var page = imagesMetadata.Pages[pageNumberIndex];
+                var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
                 pageNumber = pageNumberIndex + 1;
                 
                 for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
@@ -167,11 +156,13 @@ public class PdfDataExtractorService(
         }
 
         returnResult.ScannedFile = true;
-        documentLines = [];
+        isOcr = true;
         
-        for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
+        var documentLines = new List<DocumentLine>();
+        
+        for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
         {
-            var page = imagesMetadata.Pages[pageNumberIndex];
+            var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
             pageNumber = pageNumberIndex + 1;
            
             var breakPageLoop = false;
@@ -261,7 +252,6 @@ public class PdfDataExtractorService(
                         });
                     }                    
                     
-                    const bool isOcr = true;
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
                         unmatchedOrMoreWantedLabelLookups,
@@ -384,7 +374,9 @@ public class PdfDataExtractorService(
             }
         }
 
-        await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);
+        // TODO - dont think this line does anything, as the collection isn't created at that point
+        //await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);
+        
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;
@@ -658,89 +650,6 @@ public class PdfDataExtractorService(
         return uniqueServiceMatches;
     }
     
-    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, int processRunId)
-    {
-        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        });
-
-        return JsonSerializer.Deserialize<ImageMetadata>(
-            metaDataFileText!,
-            JsonHelper.GetSerializerOptions())!;
-    }
-    
-    private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument, int processRunId)
-    {
-        foreach (var page in pdfDocument.Pages)
-        {
-            await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
-                outputService,
-                pdfDocument,
-                page.Number,
-                Name,
-                processRunId);
-        }
-
-        if (pdfDocument.FromCache)
-        {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument, processRunId), false);
-        }
-
-        var imagesMetadata = new ImageMetadata();
-            
-        foreach (var page in pdfDocument.Pages)
-        {
-            // TODO should use the interface (via a factory)
-            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!);
-
-            var metadataPage = new ImageMetadataPage
-            {
-                Number = page.Number,
-                ScreenshotReferences = outputService
-                    .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilePath)
-                    .Select(sr => new ImageMetadataPageScreenshot
-                    {
-                        ImageReference = sr.ImageReference,
-                        ProviderName = sr.ProviderName
-                    })
-                    .ToList()
-            };
-            
-            imagesMetadata.Pages.Add(metadataPage);
-            var imageNumber = 1;
-            
-            foreach (var image in await pageImageService.GetImagesAsync())
-            {
-                var extension = await image.SaveImageBytesAsync(
-                    pdfDocument.PdfFilePath,
-                    imageNumber,
-                    page.Number,
-                    cacheService,
-                    processRunId);
-
-                if (extension == null)
-                {
-                    continue;
-                }
-                
-                var imageReference = await cacheService.GetImageReferenceAsync(
-                    page.Number,
-                    imageNumber++,
-                    pdfDocument.PdfFilePath,
-                    extension,
-                    Name);
-                
-                metadataPage.Images.Add(imageReference);
-            }
-        }
-
-        return (imagesMetadata, true);
-    }
-    
     private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedOrMoreWantedLabels(
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
         List<LabelGroupResult> labelGroupMatches,
@@ -768,25 +677,6 @@ public class PdfDataExtractorService(
                     || (!onlyNotFoundAtAll && (ifMultiplePreferLast || ifMultiplePreferLongest || canGoOverPageBoundary));
             })
             .ToList();
-    }
-    
-    private async Task SaveImageMetadataIfChangedAsync(
-        bool anyChanges,
-        PdfDocument pdfDocument,
-        ImageMetadata imagesMetadata,
-        int processRunId)
-    {
-        if (!anyChanges)
-        {
-            return;
-        }
-
-        await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        }, imagesMetadata);
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
@@ -819,11 +709,6 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
-                
-                if (label.Text?.Count > 0 && label.Text[0].Text == "Licence ")
-                {
-                    
-                }
                 
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {

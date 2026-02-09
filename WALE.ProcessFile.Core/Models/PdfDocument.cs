@@ -4,6 +4,7 @@ using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Rendering.Skia;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.Services.PdfPig;
 
 namespace WALE.ProcessFile.Core.Models;
@@ -155,6 +156,10 @@ public class PdfDocument
             ("Docnet", docnetBitmap)
         ];
     }
+
+    public List<DocumentLine>? DocumentLines { get; set; }
+    
+    public ImageMetadata? ImagesMetadata { get; set; }
 
     public void Dispose()
     {

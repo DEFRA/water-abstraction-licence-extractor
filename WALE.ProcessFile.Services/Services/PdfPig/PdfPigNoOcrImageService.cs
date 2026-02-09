@@ -92,6 +92,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         catch (Exception exception)
         {
             // TODO - throw?
+            Console.WriteLine("ERROR - " + exception);
             return null;
         }
         

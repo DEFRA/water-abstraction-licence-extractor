@@ -73,7 +73,7 @@ public static class BaseMethod
                 
                 break;
             case Number.Constant:
-                if (Number.AnyIsNumber(lines, request.label, out var numberLines))
+                if (Number.AnyIsNumber(lines, request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 

@@ -92,7 +92,7 @@ public static class ApplicableToMost
                 false,
                 out var removedLines);
 
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText))
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText, request.isOcr))
             {
                 continue;
             }
@@ -168,7 +168,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (Number.AnyIsNumber([documentLine], request.label, out var numberLines))
+                if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 

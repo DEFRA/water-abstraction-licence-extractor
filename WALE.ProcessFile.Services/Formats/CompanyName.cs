@@ -17,12 +17,16 @@ public static class CompanyName
         bool isOcr,
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
+        var dtStart = DateTime.Now;
+        
         // TODO get rid of any dates in here (d/m/yy)
         
         matchedLines = null;
         var matched = false;
         
         var initialMatchedLines = new List<DocumentLine>();
+
+        var lineCount = 0;
         
         foreach (var line in lines)
         {
@@ -30,6 +34,8 @@ public static class CompanyName
             {
                 continue;
             }
+            
+            lineCount++;
 
             var anyLineMatch = false;
             var newColumns = new List<DocumentLineColumn>();
@@ -42,7 +48,7 @@ public static class CompanyName
                     continue;
                 }
             
-                if (DataHelper.IsCorruptedText(column.Text))
+                if (DataHelper.IsCorruptedText(column.Text, isOcr))
                 {
                     newColumns.Add(column);
                     
@@ -61,7 +67,7 @@ public static class CompanyName
                     ? AutoCorrectHelper.AutoCorrectText(text, true, false)
                     : text;
                 
-                if (DataHelper.IsCorruptedText(correctedText)
+                if ((DataHelper.IsCorruptedText(correctedText, isOcr))
                     || !TryGetCompanyOrPersonalName(correctedText, label, out var companyOrPersonalName))
                 {
                     if (matched)
@@ -163,6 +169,12 @@ public static class CompanyName
         if (returnList.Count > 0)
         {
             matchedLines = returnList;
+        }
+        
+        if ((DateTime.Now - dtStart).TotalMilliseconds > 10)
+        {
+            Console.WriteLine(
+                $"Company match took {(DateTime.Now - dtStart).TotalMilliseconds}ms (from {lineCount} lines)");
         }
         
         return matched;

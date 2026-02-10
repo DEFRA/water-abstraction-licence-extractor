@@ -3128,6 +3128,7 @@ public static partial class SchemaConverter
             "per year" => LimitPeriodType.PerYear,
             "in total" => LimitPeriodType.InTotal,
             "total annual quantity" => LimitPeriodType.InTotal,
+            "consecutive five year period" => LimitPeriodType.Per5Years,            
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

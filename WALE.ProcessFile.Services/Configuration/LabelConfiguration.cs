@@ -2101,6 +2101,36 @@ public static class LabelConfiguration
                     },
                     new()
                     {
+                        Name = "Per5YearUnits",
+                        CategoryName = "PerUnits",
+                        Text =
+                        [
+                            new("consecutive five year")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },                    
+                    new()
+                    {
                         Name = "PerSecondUnits",
                         CategoryName = "PerUnits",
                         Text = [new("per second")],
@@ -2269,6 +2299,39 @@ public static class LabelConfiguration
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",
                         RelatedName = "PerYearUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "Per5YearValue",
+                        CategoryName = "PerValue",
+                        Text =
+                        [
+                            new("consecutive five year period")
+                        ],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "Per5YearUnits",
                         Format = "Number",
                         Remove =
                         [

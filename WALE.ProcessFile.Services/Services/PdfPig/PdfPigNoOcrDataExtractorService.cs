@@ -214,8 +214,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var pagesElement = (JsonElement)pagesTextMetadata["pages"];
         var pageCount = pagesElement.GetArrayLength();
         
-        //var dtStart = DateTime.Now;
-        
         for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++)
         {
             var pageElement = pagesElement[pageNumber - 1];
@@ -248,10 +246,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         // Update line numbers, now in one big list
         var lineNumber = 0;
         documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
-        
-        /*Console.WriteLine(
-            $"Transformed cached document text lines in {(DateTime.Now - dtStart).TotalSeconds} seconds" +
-            $" - {pdfDocument.PdfFilePath}");*/
         
         return Task.FromResult(documentLines);
     }

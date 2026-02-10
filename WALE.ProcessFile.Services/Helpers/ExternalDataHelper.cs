@@ -89,7 +89,7 @@ public static class ExternalDataHelper
     }
 
     private static void AddNaldAbstractionLicenceVersionData(
-        List<NaldLicenceVersionCsvLine> lines,
+        List<NaldLicenceVersionDataLine> lines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
@@ -125,7 +125,7 @@ public static class ExternalDataHelper
     }
 
     private static void AddNaldAbstractionLicenceQuantitiesData(
-        List<NaldLicenceQuantitiesCsvLine> lines,
+        List<NaldLicenceQuantitiesDataLine> lines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
@@ -156,7 +156,7 @@ public static class ExternalDataHelper
     }
 
     private static void AddNaldAbstractionLicencePointsData(
-        List<NaldLicencePointCsvLine> lines,
+        List<NaldLicencePointDataLine> lines,
         ref Dictionary<string, NaldData> purposeToLicenceMapping)
     {
         foreach (var line in lines)
@@ -180,7 +180,7 @@ public static class ExternalDataHelper
     }
 
     private static Dictionary<string, NaldData> AddNaldAbstractionLicencePurposeData(
-        List<NaldLicencePurposeCsvLine> lines,
+        List<NaldLicencePurposeDataLine> lines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {

@@ -254,7 +254,12 @@ public static partial class SchemaConverter
                         
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
                             .All(aci =>  aci.PageNumber == lhPageNumber
-                                && IsPlusOrMinusOneLine(aci.LineNumber, lhLineNumber)) == true;
+                                && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
+
+                        if (lhLinkedLicence.LicenceNumber == anywhereInDocumentLinkedLicence.LicenceNumber && anywhereInDocumentLinkedLicence.LicenceNumber.Contains("160"))
+                        {
+                            
+                        }
                         
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber, regionCode)
                             && onlyInLicenceHistory;
@@ -327,11 +332,10 @@ public static partial class SchemaConverter
     }
 
     // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
-    private static bool IsPlusOrMinusOneLine(int document1LineNumber, int document2LineNumber)
+    private static bool IsPlusOrMinusACoupleOfLines(int document1LineNumber, int document2LineNumber)
     {
-        return document1LineNumber == document2LineNumber
-            || document1LineNumber - 1 == document2LineNumber
-            || document1LineNumber + 1 == document2LineNumber;            
+        return document1LineNumber >= document2LineNumber - 2
+            && document1LineNumber <= document2LineNumber + 2;            
     }
     
     private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
@@ -1977,7 +1981,8 @@ public static partial class SchemaConverter
             }
 
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
-                .Any(t => t.Text.Contains("The aggregate quantity")) == true;
+                .Any(t => t.Text.Contains("The aggregate quantity")
+                    || t.Text.Contains("quantity equal to the difference between")) == true;
                 
             var siblings = abstractionLimitPointSub.SubResults;
             var datePurposes = siblings
@@ -2074,7 +2079,6 @@ public static partial class SchemaConverter
                 .ToList();
 
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
-            var aggregateLimits = new List<AggregateAbstractionLimit>();
                 
             var purposeCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
@@ -2102,7 +2106,33 @@ public static partial class SchemaConverter
                     new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
 
-            var dict = new Dictionary<string, int>();
+            var relatedNamesDict = new Dictionary<string, int>();
+            var aggregateLimits = new List<AggregateAbstractionLimit>();
+
+            var newValueResults = new List<LabelGroupResult>();
+
+            // Work out the best match when a value found for multiple lines
+            foreach (var valueResult in valueResults)
+            {
+                var allDuplicates = valueResults
+                    .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
+                        && vr.PageNumber == valueResult.PageNumber
+                        && vr.LineNumber == valueResult.LineNumber)
+                    .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
+                        sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
+                    .ToList();
+                
+                var bestResult = allDuplicates
+                    .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
+                    .First();
+
+                if (!newValueResults.Contains(bestResult.vr))
+                {
+                    newValueResults.Add(bestResult.vr);                    
+                }
+            }
+
+            valueResults = newValueResults;
             
             foreach (var valueResult in valueResults)
             {
@@ -2111,9 +2141,9 @@ public static partial class SchemaConverter
                     continue;
                 }
 
-                if (!dict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
+                if (!relatedNamesDict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
                 {
-                    dict[valueResult.MatchedLabel?.RelatedName!] += 1;
+                    relatedNamesDict[valueResult.MatchedLabel?.RelatedName!] += 1;
                 }
 
                 var allUnits = siblings?
@@ -2121,7 +2151,7 @@ public static partial class SchemaConverter
                         sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)
                     .ToList();
 
-                var unitPosition = dict[valueResult.MatchedLabel?.RelatedName!];
+                var unitPosition = relatedNamesDict[valueResult.MatchedLabel?.RelatedName!];
                 
                 var units = allUnits!.Count > unitPosition ? allUnits[unitPosition]
                     .Text?
@@ -3098,6 +3128,7 @@ public static partial class SchemaConverter
             "per year" => LimitPeriodType.PerYear,
             "in total" => LimitPeriodType.InTotal,
             "total annual quantity" => LimitPeriodType.InTotal,
+            "consecutive five year period" => LimitPeriodType.Per5Years,            
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

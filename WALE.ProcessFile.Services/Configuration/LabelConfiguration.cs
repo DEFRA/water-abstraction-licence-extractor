@@ -135,6 +135,8 @@ public static class LabelConfiguration
                     new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -202,6 +204,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -301,6 +305,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [

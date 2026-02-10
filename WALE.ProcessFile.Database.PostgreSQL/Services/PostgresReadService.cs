@@ -895,25 +895,44 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
-                               "ID" AS Id,
-                               "AABV_AABL_ID" AS AabvAablId,
-                               "APUR_APSE_CODE" AS ApurApseCode,
-                               "APUR_APUS_CODE" AS ApurApusCode,
-                               "PERIOD_ST_DAY" AS PeriodStartDay,
-                               "PERIOD_ST_MONTH" AS PeriodStartMonth,
-                               "PERIOD_END_DAY" AS PeriodEndDay,
-                               "PERIOD_END_MONTH" AS PeriodEndMonth,
-                               "ANNUAL_QTY" AS AnnualQty,
-                               "ANNUAL_QTY_USABILITY" AS AnnualQtyUnits,
-                               "DAILY_QTY" AS DailyQty,
-                               "DAILY_QTY_USABILITY" AS DailyQtyUnits,
-                               "HOURLY_QTY" AS HourlyQty,
-                               "HOURLY_QTY_USABILITY" AS HourlyQtyUnits,
-                               "INST_QTY" AS InstQty,
-                               "INST_QTY_USABILITY" AS InstQtyUnits,
-                               "FGAC_REGION_CODE" AS FgacRegionCode
-                           FROM nald."NALD_ABS_LIC_PURPOSES"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                               p."ID" AS Id,
+                               p."AABV_AABL_ID" AS AabvAablId,
+                               p."AABV_ISSUE_NO" AS AabvIssueNo,
+                               p."AABV_INCR_NO" AS AabvIncrNo,
+                               p."APUR_APPR_CODE" AS ApurApprCode,
+                               p."APUR_APSE_CODE" AS ApurApseCode,
+                               p."APUR_APUS_CODE" AS ApurApusCode,
+                               p."PERIOD_ST_DAY" AS PeriodStartDay,
+                               p."PERIOD_ST_MONTH" AS PeriodStartMonth,
+                               p."PERIOD_END_DAY" AS PeriodEndDay,
+                               p."PERIOD_END_MONTH" AS PeriodEndMonth,
+                               p."AMOM_CODE" AS AmomCode,
+                               p."ANNUAL_QTY" AS AnnualQty,
+                               p."ANNUAL_QTY_USABILITY" AS AnnualQtyUnits,
+                               p."DAILY_QTY" AS DailyQty,
+                               p."DAILY_QTY_USABILITY" AS DailyQtyUnits,
+                               p."HOURLY_QTY" AS HourlyQty,
+                               p."HOURLY_QTY_USABILITY" AS HourlyQtyUnits,
+                               p."INST_QTY" AS InstQty,
+                               p."INST_QTY_USABILITY" AS InstQtyUnits,
+                               p."TIMELTD_ST_DATE" AS TimeLtdStartDate,
+                               p."TIMELTD_END_DATE" AS TimeLtdEndDate,
+                               p."LANDS" AS Lands,
+                               p."AREC_CODE" AS ArecCode,
+                               p."DISP_ORD" AS DispOrd,
+                               p."NOTES" AS Notes,
+                               p."FGAC_REGION_CODE" AS FgacRegionCode,
+                               pp."DESCR" AS PurpPrimDescr,
+                               ps."DESCR" AS PurpSecDescr,
+                               pu."DESCR" AS PurpUseDescr
+                           FROM nald."NALD_ABS_LIC_PURPOSES" p
+                           LEFT JOIN nald."NALD_PURP_PRIMS" pp
+                               ON p."APUR_APPR_CODE" = pp."CODE"
+                           LEFT JOIN nald."NALD_PURP_SECS" ps
+                               ON p."APUR_APSE_CODE" = ps."CODE"
+                           LEFT JOIN nald."NALD_PURP_USES" pu
+                               ON p."APUR_APUS_CODE" = pu."CODE"
+                           WHERE p."FGAC_REGION_CODE" = @RegionCode
                            """;
 
         return (await QueryAsync<NaldLicencePurposeDataLine>(

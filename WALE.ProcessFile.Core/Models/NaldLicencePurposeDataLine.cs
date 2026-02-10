@@ -6,6 +6,12 @@ public class NaldLicencePurposeDataLine
 
     public string? AabvAablId { get; set; }
 
+    public int? AabvIssueNo { get; set; }
+
+    public int? AabvIncrNo { get; set; }
+
+    public string? ApurApprCode { get; set; }
+
     public string? ApurApseCode { get; set; }
 
     public int? ApurApusCode { get; set; }
@@ -17,6 +23,8 @@ public class NaldLicencePurposeDataLine
     public int? PeriodEndDay { get; set; }
 
     public int? PeriodEndMonth { get; set; }
+
+    public string? AmomCode { get; set; }
 
     public string? AnnualQty { get; set; }
 
@@ -34,5 +42,23 @@ public class NaldLicencePurposeDataLine
 
     public string? InstQtyUnits { get; set; }
 
+    public DateTime? TimeLtdStartDate { get; set; }
+
+    public DateTime? TimeLtdEndDate { get; set; }
+
+    public string? Lands { get; set; }
+
+    public string? ArecCode { get; set; }
+
+    public int? DispOrd { get; set; }
+
+    public string? Notes { get; set; }
+
     public string? FgacRegionCode { get; set; }
+
+    public string? PurpPrimDescr { get; set; }
+
+    public string? PurpSecDescr { get; set; }
+
+    public string? PurpUseDescr { get; set; }
 }

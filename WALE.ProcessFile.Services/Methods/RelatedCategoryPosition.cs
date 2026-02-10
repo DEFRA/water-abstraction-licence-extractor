@@ -53,7 +53,8 @@ public static class RelatedCategoryPosition
                 request.label,
                 modifiedLine,
                 modifiedPreviousLines,
-                modifiedNextLines);
+                modifiedNextLines,
+                request.isOcr);
 
             if (matchedValues.Count == 0)
             {
@@ -120,7 +121,8 @@ public static class RelatedCategoryPosition
             request.label,
             modifiedLine,
             modifiedPreviousLines,
-            modifiedNextLines);
+            modifiedNextLines,
+            request.isOcr);
         
         var allLines = new List<DocumentLine>();
         allLines.AddRange(modifiedPreviousLines);
@@ -235,7 +237,8 @@ public static class RelatedCategoryPosition
         LabelToMatch label,
         DocumentLine? modifiedLine,
         List<DocumentLine> modifiedPreviousLines,
-        List<DocumentLine> modifiedNextLines)
+        List<DocumentLine> modifiedNextLines,
+        bool isOcr)
     {
         var matches = new List<DocumentLine>();
         
@@ -243,7 +246,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in previousLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }                
@@ -254,7 +257,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in modifiedLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }
@@ -265,7 +268,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in nextLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }

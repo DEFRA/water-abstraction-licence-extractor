@@ -59,7 +59,7 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr,
+                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr, request.lookupConfiguration,
                     out var companyNameLines))
                 {
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
@@ -73,7 +73,7 @@ public static class BaseMethod
                 
                 break;
             case Number.Constant:
-                if (Number.AnyIsNumber(lines, request.label, out var numberLines))
+                if (Number.AnyIsNumber(lines, request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
@@ -208,7 +208,8 @@ public static class BaseMethod
                 request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
                 request.regionCode,
-                request.processRunId);
+                request.processRunId,
+                request.lookupConfiguration!);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

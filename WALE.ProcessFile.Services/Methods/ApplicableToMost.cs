@@ -14,6 +14,7 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+     
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.Split
@@ -56,7 +57,7 @@ public static class ApplicableToMost
         var isMultiple = request.label?.MultipleBehaviour is
             MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                 or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
-
+        
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
@@ -91,16 +92,16 @@ public static class ApplicableToMost
                 true,
                 false,
                 out var removedLines);
-
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText))
+            
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText, request.isOcr))
             {
                 continue;
             }
-            
+
             var documentLine = request.line!.Clone();
             documentLine.Columns.Clear();
             documentLine.Columns.Add(new DocumentLineColumn(outputText));
-
+            
             if (request.isDateLookup)
             {
                 // TODO can swap this out now for shared method in Base
@@ -168,7 +169,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (Number.AnyIsNumber([documentLine], request.label, out var numberLines))
+                if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
@@ -368,7 +369,11 @@ public static class ApplicableToMost
                 : outputText;
             
             if (request.isCompanyType
-                && CompanyName.TryGetCompanyOrPersonalName(outputText, matchedLabel, out _))
+                && CompanyName.TryGetCompanyOrPersonalName(
+                    outputText,
+                    matchedLabel,
+                    request.lookupConfiguration,
+                    out _))
             {
                 if (request.label?.Position == LabelPosition.LabelIsInMiddleOfTextToFind)
                 {
@@ -407,7 +412,7 @@ public static class ApplicableToMost
                 
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
-
+            
             var trimmedWords = outputText!.Trim().Split(' ');
 
             if (trimmedWords.Length == 1

@@ -11,6 +11,7 @@ public static class Number
     public static bool AnyIsNumber(
         IReadOnlyList<DocumentLine?> linesList,
         LabelToMatch? label,
+        bool isOcr,
         out List<DocumentLine> matchedLines)
     {
         matchedLines = [];
@@ -25,7 +26,7 @@ public static class Number
         
         foreach (var line in linesList)
         {
-            if (DataHelper.IsCorruptedText(line?.Text))
+            if (DataHelper.IsCorruptedText(line?.Text, isOcr))
             {
                 if (matched)
                 {

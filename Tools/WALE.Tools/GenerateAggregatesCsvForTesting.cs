@@ -10,6 +10,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
@@ -52,16 +53,32 @@ public static class GenerateAggregatesCsvForTesting
         await csv.WriteRecordsAsync((IEnumerable)data);
     }
 
+    private static LookupConfiguration? _lookupConfiguration;
+    
+    static LookupConfiguration LookupConfiguration
+    {
+        get
+        {
+            if (_lookupConfiguration == null)
+            {
+                _lookupConfiguration = new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    FileLicenceMapping,
+                    CompanyName.GetFirstNamesCsvFromFile(),
+                    3);
+            }
+
+            return _lookupConfiguration;
+        }
+    }
+    
     static Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
     {
         var pdfFolder = KeyConfig.PdfFolder;
         
         return pdfDataExtractor.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                FileLicenceMapping,
-                3),
+            LookupConfiguration,
             [pdfFolder + fileName],
             ProcessRunId);
     }
@@ -97,7 +114,8 @@ public static class GenerateAggregatesCsvForTesting
                 NaldData,
                 pdfDataExtractor,
                 KeyConfig.PdfFolder,
-                ProcessRunId
+                ProcessRunId,
+                LookupConfiguration
             );
 
             licenceSetGroups.Add(licenceSets);
@@ -132,6 +150,8 @@ public static class GenerateAggregatesCsvForTesting
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         var naldLicenceStatusData = new NaldLicenceStatusData();
+
+        var firstNames = CompanyName.GetFirstNamesCsvFromFile();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(
@@ -141,7 +161,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets1);
         var file1 = licenceSets1[0].Licences[0];
@@ -154,7 +175,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets2);
         var file2 = licenceSets2[0].Licences[0];
@@ -167,7 +189,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets3);
         var file3 = licenceSets3[0].Licences[0];
@@ -180,7 +203,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets4);
         var file4 = licenceSets4[0].Licences[0];
@@ -193,7 +217,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets5);
         var file5 = licenceSets5[0].Licences[0];
@@ -206,7 +231,8 @@ public static class GenerateAggregatesCsvForTesting
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];

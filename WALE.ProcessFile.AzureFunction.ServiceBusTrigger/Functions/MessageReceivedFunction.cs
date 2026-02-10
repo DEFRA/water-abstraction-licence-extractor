@@ -11,6 +11,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
@@ -84,6 +85,7 @@ public class MessageReceivedFunction(
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 fileLicenceMapping,
+                CompanyName.GetFirstNamesCsvFromFile(),
                 1),
             previouslyParsedPaths,
             0);

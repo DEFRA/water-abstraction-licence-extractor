@@ -18,7 +18,8 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-public class PdfPigNoOcrPdfTests
+[Collection("First Names 1")]
+public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
@@ -30,7 +31,7 @@ public class PdfPigNoOcrPdfTests
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    public PdfPigNoOcrPdfTests()
+    static PdfPigNoOcrPdfTests()
     {
         LicenceNumber.Instance = new LicenceNumber(ReadService);
     }
@@ -113,6 +114,15 @@ public class PdfPigNoOcrPdfTests
     
     private static readonly Dictionary<string, List<NaldData>> NaldData = [];
 
+    private LookupConfiguration LookupConfiguration(int regionCode, int fileLicenceMapping)
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
+            firstNamesFixture.FirstNamesCsv,
+            regionCode);
+    }
+    
     private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1, int fileLicenceMapping = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
@@ -123,10 +133,7 @@ public class PdfPigNoOcrPdfTests
         
         return service.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-              fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
-                regionCode),
+            LookupConfiguration(regionCode, fileLicenceMapping),
             [pdfFolder + fileName],
             0);
     }
@@ -263,7 +270,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1, 1));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 
@@ -457,7 +465,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.LicenceSetId);
         
@@ -723,7 +732,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -917,7 +927,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -1423,7 +1434,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -1952,7 +1964,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
@@ -2029,7 +2042,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(51, additionalInformation.Text!.Count);
+        Assert.Equal(52, additionalInformation.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -2210,7 +2223,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2314,7 +2328,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2415,7 +2430,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 2))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -2557,7 +2573,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
@@ -2760,7 +2777,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2784,7 +2802,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(43, additionalInformation.Text!.Count);
+        Assert.Equal(44, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -2851,7 +2869,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2941,7 +2960,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -3042,7 +3062,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3152,7 +3173,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3178,7 +3200,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(28, additionalInformation.Text!.Count);
+        Assert.Equal(30, additionalInformation.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -3240,7 +3262,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -3361,7 +3384,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3457,7 +3481,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1, 1));
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
@@ -3500,7 +3525,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1, 1));
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -3626,7 +3652,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
         Assert.Equal("2/26/32/328", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
@@ -3718,7 +3745,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -3832,7 +3860,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -3926,7 +3955,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -3998,7 +4028,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -4073,7 +4104,7 @@ public class PdfPigNoOcrPdfTests
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(72, additionalInformation.Text!.Count);
+        Assert.Equal(75, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -4086,7 +4117,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -4134,7 +4166,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1, 2))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -4166,7 +4199,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3, 2));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
         
@@ -4204,7 +4238,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3, 2));
         
         Assert.Equal(3, licenceGroups.Count);
 
@@ -4301,7 +4336,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3, 2));
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -4435,7 +4471,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0)).Last();
+            0,
+            LookupConfiguration(3, 2))).Last();
         
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
         
@@ -4487,7 +4524,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3, 2));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4587,7 +4625,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            -1);
+            -1,
+            LookupConfiguration(3, 2));
         
         Assert.Single(licenceSets);
         
@@ -4627,7 +4666,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            -1);
+            -1,
+            LookupConfiguration(3, 2));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4670,7 +4710,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4714,7 +4755,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4754,7 +4796,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4804,7 +4847,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -4837,7 +4881,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4870,7 +4915,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -4903,7 +4949,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -4986,7 +5033,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -5110,7 +5158,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5145,7 +5194,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5181,7 +5231,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5219,7 +5270,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5256,7 +5308,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5291,7 +5344,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5334,7 +5388,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5347,11 +5402,10 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("NE/027/0024/044", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/24/034", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // NOTE - This is linked accross region
-        Assert.Equal("9.2.2", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); 
+        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
     }
     
     [Fact]
@@ -5371,7 +5425,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5404,7 +5459,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5437,7 +5493,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5470,7 +5527,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5503,7 +5561,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5536,7 +5595,8 @@ public class PdfPigNoOcrPdfTests
             NaldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            -1);
+            -1,
+            LookupConfiguration(3, 3));
         
         Assert.Single(licenceSets);
         

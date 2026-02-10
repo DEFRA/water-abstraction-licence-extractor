@@ -15,7 +15,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-[Collection("AWS Textract")]
+[Collection("AWS Textract 1")]
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -58,6 +58,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
+    private LookupConfiguration LookupConfiguration(int regionCode) => new(
+        LabelConfiguration.GetLabels(),
+        _fileLicenceMapping,
+        textractFixture.FirstNamesCsv,
+        regionCode);
+    
     private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
@@ -65,10 +71,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         return pdfService.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                regionCode),
+            LookupConfiguration(regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -188,7 +191,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -225,7 +229,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            0);
+            0,
+            LookupConfiguration(3));
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLinkedLicenceLength, licence.LinkedLicences.Length);

@@ -32,12 +32,18 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
+        var dtStart = DateTime.Now;
+        
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
             outputService,
             cacheService,
             processRunId);
 
+        Console.WriteLine(
+            $"Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $" - {pdfDocument.PdfFilePath}");
+        
         if (pdfDocument.DocumentLines == null)
         {
             throw new Exception("TextLines hasn't been initialized");
@@ -47,6 +53,8 @@ public class PdfDataExtractorService(
         {
             throw new Exception("ImagesMetadata hasn't been initialized");
         }
+        
+        dtStart = DateTime.Now;
         
         var returnResult = new MatchesResult
         {
@@ -67,8 +75,13 @@ public class PdfDataExtractorService(
             configuration.LicenceNumberMapping,
             previouslyParsedPaths,
             configuration.RegionCode,
-            processRunId);
+            processRunId,
+            configuration);
 
+        Console.WriteLine(
+            $"Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $" - {pdfDocument.PdfFilePath}");
+        
         // De-dupe
         var newLabelGroupMatches = new List<LabelGroupResult>();
 
@@ -260,7 +273,8 @@ public class PdfDataExtractorService(
                         configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
                         configuration.RegionCode,
-                        processRunId);
+                        processRunId,
+                        configuration);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -687,7 +701,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -725,7 +740,8 @@ public class PdfDataExtractorService(
                     licenceNumberMapping,
                     previouslyParsedPaths,
                     regionCode,
-                    processRunId);
+                    processRunId,
+                    lookupConfiguration);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -759,7 +775,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -806,6 +823,7 @@ public class PdfDataExtractorService(
                 new LookupConfiguration(
                     LabelConfiguration.GetLabels(),
                     licenceNumberMapping,
+                    lookupConfiguration.ValidLowercaseFirstNames,
                     regionCode),
                 previouslyParsedPaths,
                 processRunId);
@@ -937,7 +955,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -986,7 +1005,8 @@ public class PdfDataExtractorService(
                                 licenceNumberMapping,
                                 previouslyParsedPaths,
                                 regionCode,
-                                processRunId);
+                                processRunId,
+                                lookupConfiguration);
 
                             returnList.AddRange(linkedLicences);
 
@@ -1011,7 +1031,7 @@ public class PdfDataExtractorService(
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-                        
+
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -1114,7 +1134,8 @@ public class PdfDataExtractorService(
                         lineForPosition = fullLine,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
-                        regionCode = regionCode
+                        regionCode = regionCode,
+                        lookupConfiguration = lookupConfiguration
                     };
                     
                     var singleValueWanted = matchedLabel.MultipleBehaviour is
@@ -1123,11 +1144,19 @@ public class PdfDataExtractorService(
                     
                     foreach (var expression in lookupExpressions)
                     {
+                        var dtStart = DateTime.Now;
+                        
                         var result = await ProcessExpressionResultAsync(
                             expression.Value,
                             request,
                             partialLine!,
                             singleValueWanted);
+                     
+                        if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
+                        {
+                            Console.WriteLine(
+                                $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+                        }
                         
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
@@ -1507,7 +1536,8 @@ public class PdfDataExtractorService(
         Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
-        int processRunId)
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var subResults = new List<LabelGroupResult>();
         
@@ -1532,7 +1562,8 @@ public class PdfDataExtractorService(
                     licenceMapping,
                     previouslyParsedPaths,
                     regionCode,
-                    processRunId);
+                    processRunId,
+                    lookupConfiguration);
 
                 if (subLabelGroupMatch.Count > 0)
                 {
@@ -1856,37 +1887,20 @@ public class PdfDataExtractorService(
         IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(labelTextMatch =>
-            {
-                var text = labelTextMatch.Text;
-
-                if (text.Contains(PositionConstants.EndOfLineMarker))
-                {
-                    text = text
-                        .Replace(PositionConstants.EndOfLineMarker, string.Empty);
-                }
-                
-                if (text.Contains(PositionConstants.EndOfColumnMarker))
-                {
-                    text = text
-                        .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
-                }
-                
-                return (labelTextMatch, text);
-            })
+            .Select(labelTextMatch => labelTextMatch.Text
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty)
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
             .ToList();
         
-        if (labelText.Any(tuple =>
-            tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.InvariantCultureIgnoreCase))
         {
             return true;
         }
+
+        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
-        return labelText.Any(tuple =>
-        {
-            return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
-                StringComparison.InvariantCultureIgnoreCase);
-        });
+        return labelText.Any(text => joinedLines.Contains(text,
+            StringComparison.InvariantCultureIgnoreCase));
     }
     
     public void Dispose()

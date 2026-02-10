@@ -1015,6 +1015,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "AABV_INCR_NO" AS AabvIncrNo,
                                "MAX_ANNUAL_QTY" AS MaxAnnualQty,
                                "MAX_DAILY_QTY" AS MaxDailyQty,
+                               "AGGREGATED_IND" AS AggregatedInd,
+                               "PURP_POINTS_IND" AS PurpPointsInd,
+                               "USER_VALID_IND" AS UserValidInd,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
                            WHERE "FGAC_REGION_CODE" = @RegionCode

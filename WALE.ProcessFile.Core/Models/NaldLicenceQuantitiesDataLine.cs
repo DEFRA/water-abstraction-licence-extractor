@@ -14,5 +14,11 @@ public class NaldLicenceQuantitiesDataLine
 
     public string? MaxDailyQty { get; set; }
 
+    public string? AggregatedInd { get; set; }
+
+    public string? PurpPointsInd { get; set; }
+
+    public string? UserValidInd { get; set; }
+
     public string? FgacRegionCode { get; set; }
 }

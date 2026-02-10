@@ -2086,6 +2086,13 @@ public static partial class SchemaConverter
                 })
                 .ToList();
 
+            linkedLicenceNumbers = linkedLicenceNumbers
+                .Where(linkedLicence =>
+                    FormattingHelper.IsValidLicenceNumber(
+                        linkedLicence.LicenceNumber!,
+                        regionCode) != false)
+                .ToList();
+            
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
                 
             var purposeCondition = siblings

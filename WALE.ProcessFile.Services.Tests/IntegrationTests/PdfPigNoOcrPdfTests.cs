@@ -4354,9 +4354,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
+
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual.SelectMany(x => x.Limits).Count());
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences![0].LicenceNumber);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -4379,7 +4384,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
         
@@ -4555,8 +4562,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -5611,5 +5619,48 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task FileWithALotOfLinkedLicenceAggregates()
+    {
+        // Arrange
+        const string filename = "22718077__Application - Minor Variation - Issued Licence 25.10.2016 9535704.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
+        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        
+        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            FileLicenceMapping,
+            _naldLicenceStatusData,
+            NaldData,
+            _pdfDataExtractor3,
+            TestConfig.PdfFolder3,
+            -1,
+            LookupConfiguration(3, 3));
+        
+        Assert.Equal(2, licenceSets.Count);
+        
+        Assert.Equal("22718077-LV20161012", licenceSets[0].LicenceSetId);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+
+        var agreedSchemaLicenceGroup = licenceSets[0];
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Equal("2/27/18/077", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
+        
+        Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Equal(6, agreedSchemaLicence.LinkedLicences.Length);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
+        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences?.Length); // TODO should be 6 - probably 7 as its referencing itself
     }
 }

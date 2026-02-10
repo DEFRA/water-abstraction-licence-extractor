@@ -456,6 +456,11 @@ public static class FormattingHelper
             return false;
         }
 
+        if (!licenceNumber.Contains('/') && (licenceNumber.Contains(' ') || licenceNumber.Contains('.')))
+        {
+            return false;
+        }
+        
         if (licenceNumber[0] is 'm' or 'M' || licenceNumber[1] is 'd' or 'D')
         {
             return false;

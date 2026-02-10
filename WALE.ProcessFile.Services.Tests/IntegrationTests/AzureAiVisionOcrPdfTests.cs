@@ -1109,7 +1109,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
             0,
             LookupConfiguration(1));
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -1117,6 +1117,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal("08/36/19/S/0101", agreedSchemaLicence.LicenceNumber);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("8/36/19/S/130", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);

@@ -2342,7 +2342,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, fileLicenceMapping: 2);
+        var resultFull = await GetMatchesAsync(filename, 3, fileLicenceMapping: 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -2436,7 +2436,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
 
         Assert.Single(primaryLicence.LinkedLicences);
-        
+
+        Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -4378,9 +4379,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -4554,8 +4555,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
         
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

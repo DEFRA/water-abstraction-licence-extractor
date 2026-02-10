@@ -1751,7 +1751,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(8, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(9, abstractionLimitsSection.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1769,7 +1769,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             0,
             LookupConfiguration(1));
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();

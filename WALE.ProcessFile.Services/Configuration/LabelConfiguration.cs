@@ -1964,7 +1964,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    GetLinkedLicenceAbstractionAndOrPointsLimits(),
+                    GetLinkedLicenceNumber("LinkedLicenceNumber"),
                     new()
                     {
                         Name = "LinkedLicenceFilename",

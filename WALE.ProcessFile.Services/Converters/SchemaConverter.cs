@@ -1066,6 +1066,13 @@ public static partial class SchemaConverter
             returnLicences.Add(licence);
         }
 
+        returnLicences = returnLicences
+            .Where(linkedLicence =>
+                FormattingHelper.IsValidLicenceNumber(
+                    linkedLicence.LicenceNumber!,
+                    lookupConfiguration.RegionCode) != false)
+            .ToList();
+        
         return returnLicences;
     }
     
@@ -1982,6 +1989,7 @@ public static partial class SchemaConverter
 
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")
+                    || t.Text.Contains("The quantities detailed below are in aggregate")
                     || t.Text.Contains("quantity equal to the difference between")) == true;
                 
             var siblings = abstractionLimitPointSub.SubResults;

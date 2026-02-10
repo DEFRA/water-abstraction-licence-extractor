@@ -2184,24 +2184,38 @@ public static partial class SchemaConverter
                     Purposes = limitPurposes?.ToArray()
                 };
 
-                if (hasLinkedLicenceNumber || textSuggestsIsAggregate)
+                var isAggregate = false;
+
+                if (hasLinkedLicenceNumber)
+                {
+                    isAggregate = hasLinkedLicenceNumber;
+                }
+                else if (textSuggestsIsAggregate)
+                {
+                    var anyPointsSpecified = abstractionLimit.Points?.Length > 1;
+                    var limitedByPoints = anyPointsSpecified
+                        && abstractionLimit.Points!.Length != allPoints.Length;
+
+                    var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
+                    var limitedByPurpose = anyPurposesSpecified
+                        && abstractionLimit.Purposes!.Length != allPurposes.Length;
+
+                    var underThisLicence = abstractionLimitPointSub.Text?
+                        .Any(t => t.Text.Contains("under this licence")) == true;
+                    
+                    isAggregate = limitedByPoints || limitedByPurpose || underThisLicence;
+                }
+                
+                if (isAggregate)
                 {
                     aggregateLimits.Add(abstractionLimit);
                     continue;
                 }
 
-                if ((limitPoints == null || limitPoints.Count < 2)
-                    && (limitPurposes == null || limitPurposes.Count < 2))
-                {
-                    var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
+                var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
 
-                    var individualGroup = individualGroups[pos];
-                    individualGroup.Limits.Add(abstractionLimit);
-                }
-                else
-                {
-                    aggregateLimits.Add(abstractionLimit);
-                }
+                var individualGroup = individualGroups[pos];
+                individualGroup.Limits.Add(abstractionLimit);
             }
 
             if (shouldAddGroups)

@@ -5402,11 +5402,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("NE/027/0024/044", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         
         Assert.Equal("2/27/24/034", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber); // NOTE - This is linked accross region
-        Assert.Equal("9.2.2", agreedSchemaLicence.LinkedLicences[2].LicenceNumber); 
+        Assert.Equal("MD/028/0084/008", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
     }
     
     [Fact]

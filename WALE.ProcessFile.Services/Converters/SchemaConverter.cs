@@ -8,7 +8,6 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
-using CompanyName = WALE.ProcessFile.Services.Formats.CompanyName;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -254,7 +253,8 @@ public static partial class SchemaConverter
                             .First(ci => ci.SectionName == "LicenceHistory").PageNumber;                        
                         
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
-                            .All(ci => ci.LineNumber == lhLineNumber && ci.PageNumber == lhPageNumber) == true;
+                            .All(aci =>  aci.PageNumber == lhPageNumber
+                                && IsPlusOrMinusOneLine(aci.LineNumber, lhLineNumber)) == true;
                         
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber, regionCode)
                             && onlyInLicenceHistory;
@@ -282,6 +282,12 @@ public static partial class SchemaConverter
             }
         }
         
+        // Limit to valid ones
+        linkedLicences = linkedLicences
+            .Where(linkedLicence =>
+                FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
+            .ToList();
+
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -320,6 +326,14 @@ public static partial class SchemaConverter
         };
     }
 
+    // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
+    private static bool IsPlusOrMinusOneLine(int document1LineNumber, int document2LineNumber)
+    {
+        return document1LineNumber == document2LineNumber
+            || document1LineNumber - 1 == document2LineNumber
+            || document1LineNumber + 1 == document2LineNumber;            
+    }
+    
     private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
     {
         return Formats.Date.DateFormatConsistent(
@@ -1010,7 +1024,7 @@ public static partial class SchemaConverter
                 continue;
             }
             
-            if (!licenceNumberMapping.TryGetValue(strippedLlNumber!, out var dmsFileData))
+            if (!licenceNumberMapping.TryGetValue(strippedLlNumber, out var dmsFileData))
             {
                 returnLicences.Add(new Licence
                 {

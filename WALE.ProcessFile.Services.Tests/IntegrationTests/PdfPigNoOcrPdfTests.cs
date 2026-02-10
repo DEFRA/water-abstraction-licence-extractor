@@ -504,7 +504,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates!);
-        Assert.Equal(2, primaryLicence.AbstractionLimits.Aggregates![0].Limits.Count);
+        Assert.Single(primaryLicence.AbstractionLimits.Aggregates![0].Limits);
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates[0];
         Assert.Equal(LimitPeriodType.PerYear, aggregate.Limits[0].PeriodType);

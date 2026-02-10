@@ -40,7 +40,8 @@ public static class Number
             {
                 var wordWithoutBrackers = word
                     .Replace("(", string.Empty)
-                    .Replace(")", string.Empty);
+                    .Replace(")", string.Empty)
+                    .Replace("*", string.Empty);                    
                 
                 if (!double.TryParse(wordWithoutBrackers, out var numberLineDbl))
                 {

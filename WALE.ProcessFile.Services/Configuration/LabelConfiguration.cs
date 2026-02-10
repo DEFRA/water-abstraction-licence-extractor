@@ -54,7 +54,8 @@ public static class LabelConfiguration
                     new("9. Further conditions"),
                     new("9. Further provisions"),
                     new("10. Further conditions"),
-                    new("10. Further provisions"),                    
+                    new("10. Further provisions"),
+                    new("10 Further provisions") { LineMustStartWith = true },                 
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
@@ -415,7 +416,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("10. FURTHER PROVISIONS[END_OF_LINE]"),
-                    new("10 FURTHER PROVISIONS"),
+                    new("10 FURTHER PROVISIONS") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =

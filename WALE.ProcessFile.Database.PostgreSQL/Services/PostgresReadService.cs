@@ -819,11 +819,24 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT
                                "ID" AS Id,
                                "LIC_NO" AS LicenceNo,
+                               "AREP_SUC_CODE" AS ArepSucCode,
+                               "AREP_AREA_CODE" AS ArepAreaCode,
+                               "SUSP_FROM_BILLING" AS SuspFromBilling,
+                               "AREP_LEAP_CODE" AS ArepLeapCode,
                                "EXPIRY_DATE" AS ExpiryDate,
                                "ORIG_EFF_DATE" AS OrigEffectiveDate,
                                "ORIG_SIG_DATE" AS OrigSignatureDate,
+                               "ORIG_APP_NO" AS OrigAppNo,
+                               "ORIG_LIC_NO" AS OrigLicNo,
+                               "NOTES" AS Notes,
                                "REV_DATE" AS RevDate,
                                "LAPSED_DATE" AS LapsedDate,
+                               "SUSP_FROM_RETURNS" AS SuspFromReturns,
+                               "AREP_CAMS_CODE" AS ArepCamsCode,
+                               "X_REG_IND" AS XRegInd,
+                               "PREV_LIC_NO" AS PrevLicNo,
+                               "FOLL_LIC_NO" AS FollLicNo,
+                               "AREP_EIUC_CODE" AS ArepEiucCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LICENCES"
                            WHERE "FGAC_REGION_CODE" = @RegionCode

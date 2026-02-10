@@ -860,8 +860,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "AABV_TYPE" AS AabvType,
                                "EFF_ST_DATE" AS EffStDate,
                                "STATUS" AS Status,
+                               "RETURNS_REQ" AS ReturnsReq,
+                               "CHARGEABLE" AS Chargeable,
+                               "ASRC_CODE" AS AsrcCode,
+                               "ACON_APAR_ID" AS AconAparId,
+                               "ACON_AADD_ID" AS AconAaddId,
+                               "ALTY_CODE" AS AltyCode,
+                               "ACCL_CODE" AS AcclCode,
+                               "MULTIPLE_LH" AS MultipleLh,
                                "LIC_SIG_DATE" AS LicSigDate,
+                               "APP_NO" AS AppNo,
+                               "LIC_DOC_FLAG" AS LicDocFlag,
                                "EFF_END_DATE" AS EffEndDate,
+                               "EXPIRY_DATE1" AS ExpiryDate1,
+                               "WA_ALTY_CODE" AS WaAltyCode,
+                               "VOL_CONV" AS VolConv,
+                               "WRT_CODE" AS WrtCode,
+                               "DEREG_CODE" AS DeregCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE "FGAC_REGION_CODE" = @RegionCode

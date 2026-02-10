@@ -2,14 +2,11 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicencePointDataLine
 {
+    // Properties from NALD_ABS_PURP_POINTS table
     public string? AabpId { get; set; }
-
     public string? AaipId { get; set; }
-
     public string? AmoaCode { get; set; }
-
     public string? Notes { get; set; }
-
     public string? FgacRegionCode { get; set; }
 
     // Properties from NALD_POINTS table

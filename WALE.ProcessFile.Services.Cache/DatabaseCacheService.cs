@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Tesseract;
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -253,5 +252,17 @@ public class DatabaseCacheService(
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
         return databaseWriteService.SaveTemporaryOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
+    }
+
+    public Task<MetadataCollection?> GetMetadataAsync(
+        string pdfFilePath,
+        string noOcrServiceName,
+        int processRunId)
+    {
+        return BaseCacheService.GetMetadataAsync(
+            this,
+            pdfFilePath,
+            noOcrServiceName,
+            processRunId);
     }
 }

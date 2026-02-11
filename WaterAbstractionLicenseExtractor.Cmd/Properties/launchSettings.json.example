@@ -30,7 +30,8 @@
         "FullImageDataPath": "''",
         "DotnetPath": "/usr/local/share/dotnet/dotnet",
         "TesseractExeName": "WALE.ProcessFile.Services.TesseractExe.dll",
-        "TesseractExeDirectory": "[Fill in]"
+        "TesseractExeDirectory": "[Fill in]",
+        "ApiBaseUrl": ""
       }
     }
   }

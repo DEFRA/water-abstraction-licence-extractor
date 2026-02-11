@@ -2,7 +2,7 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public class AbstractionLimit
+public class AbstractionLimit : PeriodAndPointRestricted
 {
     public LimitPeriodType PeriodType { get; init; }
     
@@ -10,11 +10,11 @@ public class AbstractionLimit
     
     public string? Units { get; init; }
     
-    public Point[]? Points { get; set; }
-    
-    public Purpose[]? Purposes { get; set; }
-    
     public bool? ImplicitLimit { get; set; }
+    
+    public bool IsAverage { get; set; }
+    
+    public int? AveragePeriod { get; set; }
 
     public AbstractionLimit Clone()
     {
@@ -27,7 +27,9 @@ public class AbstractionLimit
             Units = Units,
             Points = Points,
             Purposes = Purposes,
-            ImplicitLimit = ImplicitLimit
+            ImplicitLimit = ImplicitLimit,
+            IsAverage = IsAverage,
+            AveragePeriod = AveragePeriod
         };
     }
 
@@ -52,6 +54,8 @@ public class AbstractionLimit
                 Id = string.Empty
             }
         ],
-        Units = string.Empty
+        Units = string.Empty,
+        IsAverage = true,
+        AveragePeriod = 5
     };
 }

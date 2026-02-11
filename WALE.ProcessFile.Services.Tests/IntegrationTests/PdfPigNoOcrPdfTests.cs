@@ -3796,7 +3796,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
 
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
@@ -3809,8 +3810,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(limit.Purposes!);
         Assert.Equal("4.1", limit.Purposes![0].Id);
         Assert.Equal(10140000, limit.Value);
+
+        limitG = agreedSchemaLicence.AbstractionLimits.Individual[1];
+        limit = limitG.Limits[0];
         
-        limit = limitG.Limits[2];
         Assert.Single(limit.Purposes!);
         Assert.Equal("4.2", limit.Purposes![0].Id);
         Assert.Equal(2482000, limit.Value);
@@ -4067,7 +4070,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[0].Limits);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[1].Limits);
 
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
@@ -4076,7 +4081,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(limit.Points!);
         Assert.Equal(730000, limit.Value);
 
-        limit = limitG.Limits[1];
+        limitG = agreedSchemaLicence.AbstractionLimits.Individual[1];
+        limit = limitG.Limits[0];
+        
         Assert.Null(limit.Purposes);
         Assert.Single(limit.Points!);
         Assert.Equal(2920000, limit.Value);
@@ -4288,10 +4295,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
-//        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        //Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count()); // TODO dont know
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
     }
     
     [Fact]
@@ -4412,10 +4419,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
         
         Assert.Equal(4, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -4586,9 +4593,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -4645,8 +4652,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual![1].Limits.Count);
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits);

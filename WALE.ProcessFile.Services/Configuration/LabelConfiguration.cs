@@ -2105,7 +2105,8 @@ public static class LabelConfiguration
                         CategoryName = "PerUnits",
                         Text =
                         [
-                            new("consecutive five year")
+                            new("consecutive five year"),
+                            new("five consecutive years")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                         Format = "Units",
@@ -2327,7 +2328,8 @@ public static class LabelConfiguration
                         CategoryName = "PerValue",
                         Text =
                         [
-                            new("consecutive five year period")
+                            new("consecutive five year"),
+                            new("five consecutive years")
                         ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",

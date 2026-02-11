@@ -10,7 +10,7 @@ public class MixedModeCacheService(
     DatabaseCacheService databaseCacheService)
         : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true;
+    public bool UsesDatabase { get; set; } = databaseCacheService.UsesDatabase;
     public string? CacheFolder { get; set; }
     public string? Host { get; set; } = databaseCacheService.Host;
     public int Port { get; set; } = databaseCacheService.Port;

@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
-    public bool UsesDatabase { get; set; }
+    public bool UsesDatabase { get; set; } = true;
     public string? CacheFolder { get; set; }
     public string? Host { get; set; }
     public int Port { get; set; }

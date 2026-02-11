@@ -15,48 +15,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
     private const int LineHeight = 9;
-
-    private async Task<MetadataCollection?> GetMetadataAsync(
-        ICacheService cacheService,
-        string pdfFilePath,
-        int processRunId)
-    {
-        var request = new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        };
-        
-        var metadataFileTextTask = cacheService.GetNoOcrPagesMetadataAsync(request);
-        var metadataImagesTextTask = cacheService.GetNoOcrImagesMetadataAsync(request);
-        var allDocumentLinesTask = cacheService.GetNoOcrAllPagesTextLinesAsync(request);
-        
-        var metadataFileText = await metadataFileTextTask;
-        var metadataImagesText = await metadataImagesTextTask;
-        var allDocumentLines = await allDocumentLinesTask;
-
-        if (string.IsNullOrEmpty(metadataFileText)
-            || string.IsNullOrEmpty(metadataImagesText))
-        {
-            return null;
-        }
-        
-        var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
-            metadataFileText,
-            JsonHelper.GetSerializerOptions())!;
-            
-        var imagesMetaData = JsonSerializer.Deserialize<ImageMetadata>(
-            metadataImagesText,
-            JsonHelper.GetSerializerOptions())!;
-
-        return new MetadataCollection
-        {
-            PagesMetadata = pagesTextMetadata,
-            AllDocumentLines = allDocumentLines,
-            ImageMetadata = imagesMetaData
-        };
-    }
     
     public async Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFilePath,
@@ -64,7 +22,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ICacheService cacheService,
         int processRunId)
     {
-        var metadata = await GetMetadataAsync(cacheService, pdfFilePath, processRunId);
+        var metadata = await cacheService.GetMetadataAsync(pdfFilePath, Name, processRunId);
         var pdfDocument = new PdfDocument(pdfFilePath, metadata != null, outputService);
         
         if (pdfDocument.FromCache)

@@ -473,6 +473,15 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
 
+    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    {
+        return BaseCacheService.GetMetadataAsync(
+            this,
+            pdfFilePath,
+            noOcrServiceName,
+            processRunId);
+    }
+
     private string GetFolderPath(string pdfFilePath)
     {
         var fileOutputFolder = Path.Combine(CacheFolder!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);

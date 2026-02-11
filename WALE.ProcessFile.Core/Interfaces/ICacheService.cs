@@ -1,4 +1,3 @@
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.PdfPig;
@@ -109,4 +108,9 @@ public interface ICacheService
     Task SaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines);
+
+    Task<MetadataCollection?> GetMetadataAsync(
+        string pdfFilePath,
+        string noOcrServiceName,
+        int processRunId);
 }

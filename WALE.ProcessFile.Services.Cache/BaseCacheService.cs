@@ -1,26 +1,24 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 
-namespace WALE.Api.Areas.Extractor.Controllers;
+namespace WALE.ProcessFile.Services.Cache;
 
-[ApiController]
-[Area("Extractor")]
-[Route("/[area]/[controller]/[action]")]
-public class MetadataController(ICacheService cacheService) : Controller
+public class BaseCacheService
 {
-    [HttpGet]
-    public async Task<IActionResult> GetAsync(
-        [FromQuery] string filename,
-        [FromQuery] string noOcrServiceName)
+    public static async Task<MetadataCollection?> GetMetadataAsync(
+        ICacheService cacheService,
+        string pdfFilePath,
+        string noOcrServiceName,
+        int processRunId)
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
-            Filepath = filename,
-            NoOcrServiceName = noOcrServiceName
+            Filepath = pdfFilePath,
+            NoOcrServiceName = noOcrServiceName,
+            ProcessRunId = processRunId
         };
         
         var metadataFileTextTask = cacheService.GetNoOcrPagesMetadataAsync(request);
@@ -34,7 +32,7 @@ public class MetadataController(ICacheService cacheService) : Controller
         if (string.IsNullOrEmpty(metadataFileText)
             || string.IsNullOrEmpty(metadataImagesText))
         {
-            return Ok("null");
+            return null;
         }
         
         var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
@@ -44,12 +42,12 @@ public class MetadataController(ICacheService cacheService) : Controller
         var imagesMetaData = JsonSerializer.Deserialize<ImageMetadata>(
             metadataImagesText,
             JsonHelper.GetSerializerOptions())!;
-        
-        return Ok(new MetadataCollection
+
+        return new MetadataCollection
         {
             PagesMetadata = pagesTextMetadata,
             AllDocumentLines = allDocumentLines,
             ImageMetadata = imagesMetaData
-        });
+        };
     }
 }

@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -27,7 +26,6 @@ return;
 async Task ProgramAsync()
 {
     Console.WriteLine("Started");
-
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
@@ -92,6 +90,8 @@ async Task ProgramAsync()
     var yorkshireNaldLinkedLicenceRawData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
     var yorkshireNaldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldLinkedLicenceRawData.ToList(), regionCode);
 
+    var firstNamesCsv = CompanyName.GetFirstNamesCsvFromFile();
+    
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
@@ -116,11 +116,13 @@ async Task ProgramAsync()
                     filePath,
                     regionCode,
                     processCount++,
+                    processRun.NumberOfFiles,
                     allDmsData,
                     naldLicenceStatusData,
                     naldData,
                     outputService,
                     pdfDataExtractors,
+                    firstNamesCsv,
                     processRun,
                     extractorLock));
 
@@ -395,6 +397,8 @@ ConfiguredServices ConfigureServices()
                                 ?? throw new NullReferenceException("TesseractExeDirectory");
     var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
+    var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
+                         ?? throw new NullReferenceException("ApiBaseUrl");    
 
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
@@ -411,7 +415,7 @@ ConfiguredServices ConfigureServices()
 
     LicenceNumber.Instance = new LicenceNumber(databaseReadService);
 
-    var cacheService = new DatabaseCacheService(
+    var databaseCacheService = new DatabaseCacheService(
         databaseReadService,
         databaseAddService,
         postgresHost,
@@ -420,8 +424,18 @@ ConfiguredServices ConfigureServices()
         postgresUsername,
         postgresPassword);
 
-    var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    var httpClient = new HttpClient();
+    httpClient.BaseAddress = new Uri(apiBaseUrl);
+    
+    var apiCacheService = new ApiCacheService(httpClient);
+    
+    var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
+    
+    var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    var apiOutputService = new ApiOutputService(httpClient);
 
+    var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
+    
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -501,17 +515,20 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
     int regionCode,
     int fileNumber,
+    int totalNumber,
     Dictionary<string, DmsFileData> licenceMapping,
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
+    HashSet<string> firstNamesCsv,
     ProcessRun processRun,
     Lock extractorLock)
 {
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
-    Console.WriteLine($"Attempting {fileNumber} {fileName}...");
+    var dtStart = DateTime.Now;
+    Console.WriteLine($"Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
     IPdfDataExtractorService pdfDataExtractor;
 
@@ -533,6 +550,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             licenceMapping,
+            firstNamesCsv,
             regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
@@ -548,6 +566,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         if (matchesFull.Matches != null)
         {
+            // TODO move this to one batch save
             foreach (var match in matchesFull.Matches)
             {
                 await outputService.SaveMatchAsync(
@@ -558,7 +577,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             }
         }
 
-        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
+        Console.WriteLine($"Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
@@ -567,7 +587,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             naldData,
             pdfDataExtractor,
             pdfFolder,
-            processRun.ProcessRunId);
+            processRun.ProcessRunId,
+            lookupConfig);
 
         return licenceSets;
     }
@@ -655,9 +676,10 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-//        .Take(100)
-//       .Where(x => x.Key.Contains("22724461"))
-//        .Take(5)
+//        .Take(200)
+//       .Where(x => x.Key.Contains("22728110_"))
+//        .Where(x => x.Key.Contains("22718077_"))        
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

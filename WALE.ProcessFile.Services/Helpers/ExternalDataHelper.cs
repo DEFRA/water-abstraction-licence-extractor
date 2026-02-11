@@ -25,10 +25,10 @@ public static class ExternalDataHelper
         var purposes = await purposesTask;
         var points = await pointsTask;
         var quantities = await quantitiesTask;
-        
+
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
-        
+
         foreach (var line in licences)
         {
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
@@ -62,7 +62,8 @@ public static class ExternalDataHelper
 
         AddNaldAbstractionLicenceVersionData(versions, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicenceQuantitiesData(quantities, internalLicenceIdsNotInDataset, ref returnList);
-        var purposeToLicenceMapping = AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
+        var purposeToLicenceMapping =
+            AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicencePointsData(points, ref purposeToLicenceMapping);
 
         var changedKeyList = new Dictionary<string, List<NaldData>>();
@@ -89,69 +90,70 @@ public static class ExternalDataHelper
     }
 
     private static void AddNaldAbstractionLicenceVersionData(
-        List<NaldLicenceVersionDataLine> lines,
+        List<NaldLicenceVersionDataLine> naldCurrentVersionDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
-        foreach (var line in lines)
+        foreach (var versionDataLine in naldCurrentVersionDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AablId}";
-
-            if (licenceNumbersNotInDataset.Contains(key))
+            if (!generalNaldData.TryGetValue(versionDataLine.LookupKey, out var naldData))
             {
-                continue;
+                throw new KeyNotFoundException(versionDataLine.LookupKey);
             }
 
-            var existingData = generalNaldData.GetValueOrDefault(key);
-
-            if (existingData == null)
-            {
-                throw new KeyNotFoundException(key);
-            }
-
-            if (line.Status != "CURR")
-            {
-                continue;
-            }
-
-            existingData.AabvType = line.AabvType;
-            existingData.EffEndDate = RemoveNullWord(line.EffEndDate);
-            existingData.EffStDate = RemoveNullWord(line.EffStDate);
-            existingData.LicSigDate = RemoveNullWord(line.LicSigDate);
-            existingData.IncrNo = line.IncrNo;
-            existingData.IssueNo = line.IssueNo;
-            existingData.Status = line.Status;
+            naldData.AabvType = versionDataLine.AabvType;
+            naldData.EffEndDate = RemoveNullWord(versionDataLine.EffEndDate);
+            naldData.EffStDate = RemoveNullWord(versionDataLine.EffStDate);
+            naldData.LicSigDate = RemoveNullWord(versionDataLine.LicSigDate);
+            naldData.IncrNo = versionDataLine.IncrNo;
+            naldData.AppNo = versionDataLine.AppNo;
+            naldData.IssueNo = versionDataLine.IssueNo;
+            naldData.Status = versionDataLine.Status;
+            naldData.WaAltyCode = versionDataLine.WaAltyCode;
+            naldData.AsrcCode = versionDataLine.AsrcCode;
         }
     }
 
     private static void AddNaldAbstractionLicenceQuantitiesData(
-        List<NaldLicenceQuantitiesDataLine> lines,
+        List<NaldLicenceQuantitiesDataLine> naldLicenceQuantitiesDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
-        foreach (var line in lines)
+        foreach (var quantitiesDataLine in naldLicenceQuantitiesDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AabvAablId}";
+            if (!generalNaldData.TryGetValue(quantitiesDataLine.LookupKey, out var naldData))
+            {
+                throw new KeyNotFoundException(quantitiesDataLine.LookupKey);
+            }
 
-            if (licenceNumbersNotInDataset.Contains(key))
+            // Ignore non-current quantity data
+            if (naldData.IncrNo != quantitiesDataLine.AabvIncrNo ||
+                naldData.IssueNo != quantitiesDataLine.AabvIssueNo)
             {
                 continue;
             }
 
-            var existingData = generalNaldData.GetValueOrDefault(key);
+            naldData.MaxAnnualQty = RemoveNullWord(quantitiesDataLine.MaxAnnualQty) != null
+                ? double.Parse(quantitiesDataLine.MaxAnnualQty!)
+                : null;
 
-            if (existingData == null)
+            naldData.MaxDailyQty = RemoveNullWord(quantitiesDataLine.MaxDailyQty) != null
+                ? double.Parse(quantitiesDataLine.MaxDailyQty!)
+                : null;
+
+            naldData.QuantityAggregated = quantitiesDataLine.AggregatedInd;
+            naldData.QuantityUserValid = quantitiesDataLine.UserValidInd;
+
+            naldData.QuantityPurpPoints = quantitiesDataLine.PurpPointsInd switch
             {
-                throw new KeyNotFoundException(key);
-            }
-
-            existingData.MaxAnnualQty = RemoveNullWord(line.MaxAnnualQty) != null
-                ? double.Parse(line.MaxAnnualQty!)
-                : null;
-
-            existingData.MaxDailyQty = RemoveNullWord(line.MaxDailyQty) != null
-                ? double.Parse(line.MaxDailyQty!)
-                : null;
+                "1" => "Single Point / Single Purpose",
+                "2" => "Single Point / Multiple Purposes",
+                "3" => "Multiple Points / Single Purpose",
+                "4" => "Multiple Points / Multiple Purposes",
+                _ => "Unknown"
+            };
         }
     }
 
@@ -186,14 +188,10 @@ public static class ExternalDataHelper
     {
         var returnDict = new Dictionary<string, NaldData>();
 
-        foreach (var line in lines)
+        foreach (var line in lines.Where(x =>
+                     !licenceNumbersNotInDataset.Contains($"{x.FgacRegionCode}|{x.AabvAablId}")))
         {
             var key = $"{line.FgacRegionCode}|{line.AabvAablId}";
-
-            if (licenceNumbersNotInDataset.Contains(key))
-            {
-                continue;
-            }
 
             var existingData = generalNaldData.GetValueOrDefault(key);
 

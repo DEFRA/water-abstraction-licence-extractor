@@ -42,4 +42,10 @@ public class NaldData
     public double? MaxAnnualQty { get; set; }
     
     public double? MaxDailyQty { get; set; }
+    public string? AppNo { get; set; }
+    public string? WaAltyCode { get; set; }
+    public string? AsrcCode { get; set; }
+    public string? QuantityAggregated { get; set; }
+    public string? QuantityUserValid { get; set; }
+    public string? QuantityPurpPoints { get; set; }
 }

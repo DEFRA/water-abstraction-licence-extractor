@@ -2,6 +2,8 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicenceQuantitiesDataLine
 {
+    public string LookupKey => $"{FgacRegionCode}|{AabvAablId}";
+    
     public int? Id { get; set; }
 
     public int? AabvAablId { get; set; }

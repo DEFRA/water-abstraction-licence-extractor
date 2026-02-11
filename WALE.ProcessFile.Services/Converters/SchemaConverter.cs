@@ -2022,8 +2022,6 @@ public static partial class SchemaConverter
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList(); // E.g. Jan, Feb etc..
-
-            //var shouldAddGroups = true;
             
             if (datePurposes.Count >= 1)
             {
@@ -2057,7 +2055,6 @@ public static partial class SchemaConverter
             }
             else if (individualGroups.Count == 0)
             {
-//                shouldAddGroups = false;
                 individualGroups.Add(allIndividualGroups[0]);
             }
             
@@ -2270,14 +2267,11 @@ public static partial class SchemaConverter
                 individualGroup.Limits.Add(abstractionLimit);
             }
 
-//            if (shouldAddGroups)
-            //{
-                var notIncluded = individualGroups
-                    .Where(ig => !allIndividualGroups.Contains(ig))
-                    .ToList();
-                
-                allIndividualGroups.AddRange(notIncluded);
-            //}
+            var notIncluded = individualGroups
+                .Where(ig => !allIndividualGroups.Contains(ig))
+                .ToList();
+            
+            allIndividualGroups.AddRange(notIncluded);
 
             if (aggregateAbstractionLimits.Count == 0)
             {

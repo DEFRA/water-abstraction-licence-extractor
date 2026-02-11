@@ -880,7 +880,25 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
-                             AND "STATUS" = 'CURR'
+                             AND "ISSUE_NO" = (
+                                 SELECT max(lic_ver_subquery."ISSUE_NO")
+                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
+                                 WHERE lic_ver_subquery."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                                   AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                                   AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                                   AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
+                                   AND lic_ver_subquery."STATUS" <> 'DRAFT'
+                             )
+                             AND "INCR_NO" = (
+                                 SELECT max(lic_ver_subquery_2."INCR_NO")
+                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery_2
+                                 WHERE lic_ver_subquery_2."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                                   AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                                   AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                                   AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
+                                   AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
+                             )
+                             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
                            """;
 
         return (await QueryAsync<NaldLicenceVersionDataLine>(

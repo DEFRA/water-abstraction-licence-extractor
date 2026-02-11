@@ -61,10 +61,6 @@ public class Aggregate : AbstractionLimitGroup
 
     public TimeCutoff? TimeCutoff { get; set; }
     
-    public Purpose[]? Purposes { get; set; } = [];
-
-    public Point[]? Points { get; set; } = [];
-    
     public LinkedLicence[]? LinkedLicences { get; init; } = [];
 
     public new static Aggregate Template => new()
@@ -85,7 +81,7 @@ public class Aggregate : AbstractionLimitGroup
         },
         LicenceNumber = null,
         LicenceVersionId = null,
-        Limits = [AggregateAbstractionLimit.Template],
+        Limits = [AbstractionLimit.Template],
         LinkedLicences = []
     };
 }

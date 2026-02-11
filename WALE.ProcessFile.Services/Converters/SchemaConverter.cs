@@ -255,11 +255,6 @@ public static partial class SchemaConverter
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
                             .All(aci =>  aci.PageNumber == lhPageNumber
                                 && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
-
-                        if (lhLinkedLicence.LicenceNumber == anywhereInDocumentLinkedLicence.LicenceNumber && anywhereInDocumentLinkedLicence.LicenceNumber.Contains("160"))
-                        {
-                            
-                        }
                         
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, paddedLinkedLicenceNumber, regionCode)
                             && onlyInLicenceHistory;
@@ -1066,6 +1061,13 @@ public static partial class SchemaConverter
             returnLicences.Add(licence);
         }
 
+        returnLicences = returnLicences
+            .Where(linkedLicence =>
+                FormattingHelper.IsValidLicenceNumber(
+                    linkedLicence.LicenceNumber!,
+                    lookupConfiguration.RegionCode) != false)
+            .ToList();
+        
         return returnLicences;
     }
     
@@ -1938,8 +1940,12 @@ public static partial class SchemaConverter
                     var yearlyQuantity = double.Parse(words[3]);
                     var instantRate = double.Parse(words[4]);
 
+                    var points = new Point[] { new() { Id = abstractionPoint }};
+                    
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup
                     {
+                        Points = points,
+                        Purposes = null,
                         Limits =
                         [
                             new()
@@ -1947,28 +1953,28 @@ public static partial class SchemaConverter
                                 Value = hourlyQuantity,
                                 PeriodType = LimitPeriodType.PerHour,
                                 Units = "cubic metres",
-                                Points = [new() { Id = abstractionPoint }]
+                                Points = points
                             },
                             new()
                             {
                                 Value = dailyQuantity,
                                 PeriodType = LimitPeriodType.PerDay,
                                 Units = "cubic metres",
-                                Points = [new() { Id = abstractionPoint }]
+                                Points = points
                             },
                             new()
                             {
                                 Value = yearlyQuantity,
                                 PeriodType = LimitPeriodType.PerYear,
                                 Units = "cubic metres",
-                                Points = [new() { Id = abstractionPoint }]
+                                Points = points
                             },
                             new()
                             {
                                 Value = instantRate,
                                 PeriodType = LimitPeriodType.PerSecond,
                                 Units = "litres",
-                                Points = [new() { Id = abstractionPoint }]
+                                Points = points
                             }
                         ]
                     };
@@ -1980,22 +1986,50 @@ public static partial class SchemaConverter
                 continue;
             }
 
+            var siblings = abstractionLimitPointSub.SubResults;
+            
+            var purposeCondition = siblings
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
+                    
+            var purposeConditionSub = purposeCondition?
+                .SubResults
+                .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
+                .ToList();
+                    
+            var limitPurposes = purposeConditionSub?.Count > 0 ?
+                purposeConditionSub.Select(pcs =>
+                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
+                : null;
+                    
+            var pointCondition = siblings
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
+
+            var pointConditionSub = pointCondition?
+                .SubResults
+                .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
+                .ToList();
+                    
+            var limitPoints = pointConditionSub?.Count > 0 ?
+                pointConditionSub.Select(pcs =>
+                    new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
+                : null;
+            
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")
+                    || t.Text.Contains("The quantities detailed below are in aggregate")
                     || t.Text.Contains("quantity equal to the difference between")) == true;
-                
-            var siblings = abstractionLimitPointSub.SubResults;
+            
             var datePurposes = siblings
-                .Where(x => x.MatchedLabel?.Name == "DatePurposeRough")
-                .ToList();
-
-            var shouldAddGroups = true;
+                .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
+                .ToList(); // E.g. Jan, Feb etc..
             
             if (datePurposes.Count >= 1)
             {
                 individualGroups.Add(new AbstractionLimitGroup
                 {
-                    Limits = []
+                    Limits = [],
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray()
                 });
                 
                 foreach (var datePurpose in datePurposes)
@@ -2003,20 +2037,24 @@ public static partial class SchemaConverter
                     individualGroups.Add(new AbstractionLimitGroup
                     {
                         TimePeriod = GetTimePeriod(datePurpose),
-                        Limits = []
+                        Limits = [],
+                        Points = limitPoints?.ToArray(),
+                        Purposes = limitPurposes?.ToArray()
                     });
                 }
             }
             else if (allIndividualGroups.Count == 0 && individualGroups.Count == 0)
             {
+                // Add a group
                 individualGroups.Add(new AbstractionLimitGroup
                 {
-                    Limits = []
+                    Limits = [],
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray()
                 });
             }
             else if (individualGroups.Count == 0)
             {
-                shouldAddGroups = false;
                 individualGroups.Add(allIndividualGroups[0]);
             }
             
@@ -2078,36 +2116,17 @@ public static partial class SchemaConverter
                 })
                 .ToList();
 
+            linkedLicenceNumbers = linkedLicenceNumbers
+                .Where(linkedLicence =>
+                    FormattingHelper.IsValidLicenceNumber(
+                        linkedLicence.LicenceNumber!,
+                        regionCode) != false)
+                .ToList();
+            
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
-                
-            var purposeCondition = siblings
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
-                    
-            var purposeConditionSub = purposeCondition?
-                .SubResults
-                .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
-                .ToList();
-                    
-            var limitPurposes = purposeConditionSub?.Count > 0 ?
-                purposeConditionSub.Select(pcs =>
-                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
-                : null;
-                    
-            var pointCondition = siblings
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
-
-            var pointConditionSub = pointCondition?
-                .SubResults
-                .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
-                .ToList();
-                    
-            var limitPoints = pointConditionSub?.Count > 0 ?
-                pointConditionSub.Select(pcs =>
-                    new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
-                : null;
 
             var relatedNamesDict = new Dictionary<string, int>();
-            var aggregateLimits = new List<AggregateAbstractionLimit>();
+            var aggregateAbstractionLimits = new List<AbstractionLimit>();
 
             var newValueResults = new List<LabelGroupResult>();
 
@@ -2160,7 +2179,7 @@ public static partial class SchemaConverter
 
                 var text = valueResult.MatchedLabel?.Text?.FirstOrDefault()?.Text;
                     
-                var abstractionLimit = new AggregateAbstractionLimit
+                var abstractionLimit = new AbstractionLimit
                 {
                     PeriodType = ToLimitPeriodType(text),
                     Value = number,
@@ -2169,38 +2188,98 @@ public static partial class SchemaConverter
                     Purposes = limitPurposes?.ToArray()
                 };
 
-                if (hasLinkedLicenceNumber || textSuggestsIsAggregate)
+                var isAggregate = false;
+
+                if (hasLinkedLicenceNumber)
                 {
-                    aggregateLimits.Add(abstractionLimit);
+                    isAggregate = hasLinkedLicenceNumber;
+                }
+                else if (textSuggestsIsAggregate)
+                {
+                    var anyPointsSpecified = abstractionLimit.Points?.Length > 1;
+                    var limitedByPoints = anyPointsSpecified
+                        && abstractionLimit.Points!.Length != allPoints.Length;
+
+                    var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
+                    var limitedByPurpose = anyPurposesSpecified
+                        && abstractionLimit.Purposes!.Length != allPurposes.Length;
+
+                    var containsUnderThisLicenceText = abstractionLimitPointSub.Text?
+                        .Any(t => t.Text.Contains("under this licence")) == true;
+                    
+                    isAggregate = limitedByPoints || limitedByPurpose || containsUnderThisLicenceText;
+                }
+                
+                if (isAggregate)
+                {
+                    aggregateAbstractionLimits.Add(abstractionLimit);
                     continue;
                 }
+                
+                var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
+                var individualGroup = individualGroups[pos];
+                
+                var groupPointsStr = individualGroup.Points?.Length > 0
+                    ? string.Join(',', individualGroup.Points.Select(p => p.Id))
+                    : string.Empty;
+                
+                var limitPointsStr = abstractionLimit.Points?.Length > 0
+                    ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
+                    : string.Empty;
+                
+                var groupPurposesStr = individualGroup.Purposes?.Length > 0
+                    ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
+                    : string.Empty;
+                
+                var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
+                    ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
+                    : string.Empty;
 
-                if ((limitPoints == null || limitPoints.Count < 2)
-                    && (limitPurposes == null || limitPurposes.Count < 2))
+                if (individualGroup.Limits.Count > 0
+                    && (groupPointsStr != limitPointsStr || groupPurposesStr != limitPurposesStr))
                 {
-                    var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
+                    individualGroup = individualGroups.FirstOrDefault(ig =>
+                    {
+                        groupPointsStr = ig.Points?.Length > 0
+                            ? string.Join(',', ig.Points.Select(p => p.Id))
+                            : string.Empty;
+                        
+                        groupPurposesStr = ig.Purposes?.Length > 0
+                            ? string.Join(',', ig.Purposes.Select(p => p.Id))
+                            : string.Empty;
 
-                    var individualGroup = individualGroups[pos];
-                    individualGroup.Limits.Add(abstractionLimit);
+                        return groupPointsStr == limitPointsStr && groupPurposesStr == limitPurposesStr;
+                    });
+
+                    if (individualGroup == null)
+                    {
+                        individualGroup = new AbstractionLimitGroup
+                        {
+                            Points = abstractionLimit.Points,
+                            Purposes = abstractionLimit.Purposes,
+                            Limits = []
+                        };
+
+                        individualGroups.Add(individualGroup);
+                    }
                 }
-                else
-                {
-                    aggregateLimits.Add(abstractionLimit);
-                }
+                
+                individualGroup.Limits.Add(abstractionLimit);
             }
 
-            if (shouldAddGroups)
-            {
-                allIndividualGroups.AddRange(individualGroups);
-            }
+            var notIncluded = individualGroups
+                .Where(ig => !allIndividualGroups.Contains(ig))
+                .ToList();
+            
+            allIndividualGroups.AddRange(notIncluded);
 
-            if (aggregateLimits.Count == 0)
+            if (aggregateAbstractionLimits.Count == 0)
             {
                 continue;
             }
                 
-            var pointsLoop = aggregateLimits.First().Points;
-            var purposesLoop = aggregateLimits.First().Purposes;
+            var pointsLoop = aggregateAbstractionLimits.First().Points;
+            var purposesLoop = aggregateAbstractionLimits.First().Purposes;
             var timeCutoff = (TimeCutoff?)null; // TODO
             var timePeriod = GetTimePeriod(
                 siblings?.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
@@ -2215,7 +2294,7 @@ public static partial class SchemaConverter
                 NaldType = GetNaldType(naldData, licenceNumber, regionCode),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
-                Limits = aggregateLimits,
+                Limits = aggregateAbstractionLimits,
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],
                 TimeCutoff = timeCutoff,
@@ -2243,7 +2322,7 @@ public static partial class SchemaConverter
                 
             if (aggregate.Purposes.Length > 0)
             {
-                foreach (var aggregateLimit in aggregateLimits)
+                foreach (var aggregateLimit in aggregateAbstractionLimits)
                 {
                     aggregateLimit.Purposes = null;
                 }
@@ -2255,7 +2334,7 @@ public static partial class SchemaConverter
                 
             if (aggregate.Points.Length > 0)
             {
-                foreach (var aggregateLimit in aggregateLimits)
+                foreach (var aggregateLimit in aggregateAbstractionLimits)
                 {
                     aggregateLimit.Points = null;
                 }
@@ -3128,7 +3207,8 @@ public static partial class SchemaConverter
             "per year" => LimitPeriodType.PerYear,
             "in total" => LimitPeriodType.InTotal,
             "total annual quantity" => LimitPeriodType.InTotal,
-            "consecutive five year period" => LimitPeriodType.Per5Years,            
+            "consecutive five year" => LimitPeriodType.Per5Years,
+            "five consecutive years" => LimitPeriodType.Per5Years,
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -431,8 +430,12 @@ ConfiguredServices ConfigureServices()
     var apiCacheService = new ApiCacheService(httpClient);
     
     var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
-    var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    
+    var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    var apiOutputService = new ApiOutputService(httpClient);
 
+    var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
+    
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -676,7 +679,7 @@ async Task MoveReportHtmlFilesAsync(
 //        .Take(200)
 //       .Where(x => x.Key.Contains("22728110_"))
 //        .Where(x => x.Key.Contains("22718077_"))        
-        .Take(100)
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

@@ -13,7 +13,7 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class MetadataController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Get(
+    public async Task<IActionResult> GetAsync(
         [FromQuery] string filename,
         [FromQuery] string noOcrServiceName)
     {

@@ -75,10 +75,10 @@ public class MixedModeCacheService(
         return databaseCacheService.GetImageBytesAsync(request);
     }
 
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        return databaseCacheService.GetImagesAsync(request);
+        return apiCacheService.GetImagesAsync(request);
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(

@@ -93,7 +93,7 @@ public class DatabaseCacheService(
         return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
     }
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
@@ -282,10 +282,12 @@ public class DatabaseCacheService(
         var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
         var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
         var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+        var licencesAlternateFormatTask = databaseReadService.GetNaldLicencesAsync();
         
         return new NaldDataCollection
         {
             Licences = await licencesTask,
+            LicencesAlternateFormat = await licencesAlternateFormatTask,
             LicenceVersions = await versionsTask,
             LicencePurposes = await purposesTask,
             LicencePoints = await pointsTask,

@@ -64,7 +64,7 @@ public static class GenerateAggregatesCsvForTesting
                 _lookupConfiguration = new LookupConfiguration(
                     LabelConfiguration.GetLabels(),
                     FileLicenceMapping,
-                    CompanyName.GetFirstNamesCsvFromFileAsync(),
+                    CompanyName.GetFirstNamesCsvFromFileAsync().Result,
                     3);
             }
 

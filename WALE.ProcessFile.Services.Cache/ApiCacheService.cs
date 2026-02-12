@@ -49,9 +49,18 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<List<ImageDetails>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/GetAll?filename={request.Filepath}&noOcrServiceName={request.NoOcrServiceName}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<ImageDetails>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)

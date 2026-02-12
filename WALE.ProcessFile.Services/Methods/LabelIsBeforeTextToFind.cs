@@ -27,7 +27,7 @@ public static class LabelIsBeforeTextToFind
             out _,
             out var removedLines);
 
-        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedNextLines, false);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedNextLines, false);
         
         foreach (var item in returnList)
         {

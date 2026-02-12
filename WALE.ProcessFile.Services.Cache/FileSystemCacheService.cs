@@ -91,7 +91,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return Task.FromResult(outputFilename);
     }
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
@@ -102,7 +102,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
         files = files.Where(f => f.StartsWith("page-") && f.Contains("-image-")).ToList();
         
-        var returnList = new List<(int pageNumber, int imageNumber, string extension, int width, int height)>();
+        var returnList = new List<ImageDetails>();
 
         foreach (var filename in files)
         {
@@ -118,7 +118,14 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             
             var imageNumber = int.Parse(parts[1]);
 
-            returnList.Add((pageNumber, imageNumber, extension, width, height));
+            returnList.Add(new ImageDetails
+            {
+                pageNumber = pageNumber,
+                imageNumber = imageNumber,
+                extension = extension,
+                width = width,
+                height = height
+            });
         }
 
         return Task.FromResult(returnList);

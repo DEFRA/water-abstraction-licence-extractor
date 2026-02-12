@@ -199,7 +199,7 @@ public static class ApplicableToMost
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                var (anyIsLicenceNumber, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                var (anyIsLicenceNumber, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
                 if (!isTableLine && anyIsLicenceNumber)
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -248,7 +248,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                var (anyIsLicenceNumber2, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                var (anyIsLicenceNumber2, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
                 if (anyIsLicenceNumber2)
                 {
                     licenceNumberLines2 = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);

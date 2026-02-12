@@ -65,7 +65,7 @@ public static class RelatedCategoryPosition
             labelGroupResult.Text = matchedValues;
             labelGroupResult.MatchedLabel = request.label;
             
-            returnList.AddRange(await FilterIntoFormatAsync(
+            returnList.AddRange(FilterIntoFormat(
                 request,
                 labelGroupResult,
                 matchedValues,
@@ -223,7 +223,7 @@ public static class RelatedCategoryPosition
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
 
-            returnList.AddRange(await FilterIntoFormatAsync(
+            returnList.AddRange(FilterIntoFormat(
                 request,
                 labelGroupResult,
                 [line],

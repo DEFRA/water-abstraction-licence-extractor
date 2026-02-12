@@ -1,18 +1,15 @@
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
 public static class ExternalDataHelper
 {
-    public static async Task<Dictionary<string, List<NaldData>>> GetNaldDataAsync(
-        ICacheService cacheService,
+    public static Dictionary<string, List<NaldData>> TransformNaldData(
+        NaldDataCollection data,
         Dictionary<string, DmsFileData> licenceNumbersWithFilenames,
         int regionCode)
     {
-        var data = await cacheService.GetNaldDataAsync((short)regionCode);
-        
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
         

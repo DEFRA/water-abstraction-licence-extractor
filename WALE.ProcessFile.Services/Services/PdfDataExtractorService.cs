@@ -106,7 +106,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filepath =  pdfFilePath,
+                Filepath = pdfFilePath,
                 NoOcrServiceName = Name
             });
         
@@ -202,7 +202,14 @@ public class PdfDataExtractorService(
                 foreach (var pageImage in pageImages)
                 {
                     var extension = pageImage.Split('.').Last();
-                    allImagesInDocument.Insert(0, (pageNumber, 1, extension, 2000, 2000));   
+                    allImagesInDocument.Insert(0, new ImageDetails
+                    {
+                        pageNumber = pageNumber,
+                        imageNumber = 1,
+                        extension = extension,
+                        width = 2000,
+                        height = 2000
+                    });   
                 }
             }
 

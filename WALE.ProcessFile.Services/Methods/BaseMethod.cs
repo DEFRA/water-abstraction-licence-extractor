@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class BaseMethod
 {
-    public static async Task<List<LabelGroupResult>> FilterIntoFormatAsync(
+    public static List<LabelGroupResult> FilterIntoFormat(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
@@ -87,7 +87,7 @@ public static class BaseMethod
                 break;
             case LicenceNumber.Constant:
                 {
-                    var (success, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
                     if (success)
                     {
                         licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -108,7 +108,7 @@ public static class BaseMethod
                 break;
             case LicenceNumberFilename.Constant:
                 {
-                    var (success, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
                     if (success)
                     {
                         var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);

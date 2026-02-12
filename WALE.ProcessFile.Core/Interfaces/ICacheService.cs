@@ -39,7 +39,7 @@ public interface ICacheService
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
@@ -114,8 +114,7 @@ public interface ICacheService
         string noOcrServiceName,
         int processRunId);
     
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(
-        int regionCode);
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
 
     Task<NaldDataCollection> GetNaldDataAsync(short regionCode);
     

@@ -3,6 +3,8 @@ namespace WALE.ProcessFile.Core.Models;
 public class NaldDataCollection
 {
     public List<NaldAbstractionLicenceCsvLine>? Licences { get; set; }
+    
+    public List<NaldLicence>? LicencesAlternateFormat { get; set; }
 
     public List<NaldLicenceVersionCsvLine>? LicenceVersions { get; set; }
 

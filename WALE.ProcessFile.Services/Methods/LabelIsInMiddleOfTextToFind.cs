@@ -54,7 +54,7 @@ public static class LabelIsInMiddleOfTextToFind
             out _,
             out var removedLines);
         
-        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedLines, false);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);
 
         foreach (var item in returnList)
         {

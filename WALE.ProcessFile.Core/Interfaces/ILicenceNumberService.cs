@@ -4,10 +4,10 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface ILicenceNumberService
 {
-    Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
+    (bool Success, List<DocumentLine> MatchedLines) AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr);
-    Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, short regionCode);
-    Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText);
+    List<NaldLicence> GetNaldLicences(string licenceNumber, short regionCode);
+    List<NaldLicence> ExtractNaldLicences(string? sourceText);
 }

@@ -303,7 +303,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public async Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
@@ -320,7 +320,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                 AND (page_number = @PageNumber or @PageNumber is null)
                            """;
 
-        var results = await QueryAsync<(int, int, string, int, int)>(
+        var results = await QueryAsync<ImageDetails>(
             connection,
             sql,
             0,

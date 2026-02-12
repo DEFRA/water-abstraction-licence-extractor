@@ -65,15 +65,7 @@ async Task ProgramAsync()
     var (dmsFilesToProcess, allDmsData) =
         GetDmsFilesAndMapping(services, regionCode);
 
-    var naldDataTask = ExternalDataHelper.GetNaldDataAsync(
-        cacheService,
-        allDmsData,
-        regionCode);
-    
-    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
-        cacheService,
-        regionCode);
-    
+    var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
@@ -82,12 +74,22 @@ async Task ProgramAsync()
         NumberOfFiles = dmsFilesToProcess.Count
     });
 
-    var naldData = await naldDataTask;
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
-    var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
     await moveReportHtmlFilesTask;
+    
+    var allNaldData =  await naldDataTask;
+    LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
+        cacheService,
+        regionCode);
+    
+    var naldData = ExternalDataHelper.TransformNaldData(
+        allNaldData,
+        allDmsData,
+        regionCode);
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
@@ -199,7 +201,7 @@ async Task ProgramAsync()
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
                 var linkedLicences =
-                    await naldLinkedLicenceHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
+                    naldLinkedLicenceHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
                 
                 if (linkedLicences.Count != 0)
                 {
@@ -412,8 +414,6 @@ ConfiguredServices ConfigureServices()
 
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-
-    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
 
     var databaseCacheService = new DatabaseCacheService(
         databaseReadService,
@@ -687,8 +687,8 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-//        .Take(200)
-       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
+        .Take(10)
+//       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
 //        .Where(x => x.Key.Contains("22718077_"))
 //        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);

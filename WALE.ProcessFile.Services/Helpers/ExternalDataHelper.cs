@@ -152,28 +152,6 @@ public static class ExternalDataHelper
         }
     }
 
-    private static void AddNaldAbstractionLicencePointsData(
-        List<NaldLicencePointDataLine> naldLicencePointDataLines,
-        ref Dictionary<string, NaldData> purposeToLicenceMapping)
-    {
-        foreach (var pointDataLine in naldLicencePointDataLines)
-        {
-            if (!purposeToLicenceMapping.TryGetValue(pointDataLine.PurposeIdLookupKey, out var naldData))
-            {
-                continue;
-            }
-            
-            // todo: populate this properly considering the many to many rel
-            var naldDataPoint = new NaldDataPoint
-            {
-                PointId = pointDataLine.PointId,
-                PointName = pointDataLine.AmoaCode
-            };
-
-            naldData.Points.Add(naldDataPoint);
-        }
-    }
-
     private static Dictionary<string, NaldData> AddNaldAbstractionLicencePurposeData(
         List<NaldLicencePurposeDataLine> naldLicencePurposeDataLines,
         HashSet<string> licenceNumbersNotInDataset,
@@ -234,5 +212,46 @@ public static class ExternalDataHelper
         }
 
         return returnDict;
+    }
+
+    private static void AddNaldAbstractionLicencePointsData(
+        List<NaldLicencePointDataLine> naldLicencePointDataLines,
+        ref Dictionary<string, NaldData> purposeToLicenceMapping)
+    {
+        foreach (var pointDataLine in naldLicencePointDataLines)
+        {
+            if (!purposeToLicenceMapping.TryGetValue(pointDataLine.PurposeIdLookupKey, out var naldData))
+            {
+                continue;
+            }
+            
+            var pointId = pointDataLine.PointId;
+            var purposeId = pointDataLine.PurposeId;
+            
+            var existingPurpose = naldData.Purposes.FirstOrDefault(x => x.Id == purposeId);
+            if (existingPurpose == null)
+            {
+                throw new Exception("Purpose to licence mapping is corrupted");
+            }
+            
+            existingPurpose.PointIds.Add(pointId);
+            
+            var existingPoint = naldData.Points.FirstOrDefault(x => x.PointId == pointId);
+            if (existingPoint != null)
+            {
+                existingPoint.PurposeIds.Add(purposeId);
+                continue;
+            }
+            
+            // Todo: complete this ctor
+            var naldDataPoint = new NaldDataPoint
+            {
+                PointId = pointDataLine.PointId,
+                PointName = pointDataLine.LocalName,
+                PurposeIds = [purposeId]
+            };
+
+            naldData.Points.Add(naldDataPoint);
+        }
     }
 }

@@ -2,31 +2,20 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldDataPoint
 {
-    public string? PointName { get; set; }
-    
-    public string? Category { get; set; }
-
-    public long PointId { get; init; }
-    
-    public string? Ngr1 { get; set; }
-    
-    public string? Ngr2 { get; set; }
-    
-    public string? Ngr3 { get; set; }
-    
-    public string? Ngr4 { get; set; }
-    
-    public string? Ngr1Cartesian { get; set; }
-    
-    public string? Ngr2Cartesian { get; set; }
-    
-    public string? Ngr3Cartesian { get; set; }
-    
-    public string? Ngr4Cartesian { get; set; }
-    
-    public string? PrimaryType { get; set; }
-    
-    public string? SecondaryType { get; set; }
+    public int PointId { get; init; }
+    public string? PointName { get; init; }
+    public string? Category { get; init; }
+    public string? Ngr1 { get; init; }
+    public string? Ngr2 { get; init; }
+    public string? Ngr3 { get; init; }
+    public string? Ngr4 { get; init; }
+    public string? Ngr1Cartesian { get; init; }
+    public string? Ngr2Cartesian { get; init; }
+    public string? Ngr3Cartesian { get; init; }
+    public string? Ngr4Cartesian { get; init; }
+    public string? PrimaryType { get; init; }
+    public string? SecondaryType { get; init; }
+    public List<int> PurposeIds { get; init; } = [];
 
     public override string ToString()
     {

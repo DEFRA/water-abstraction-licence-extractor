@@ -2,8 +2,10 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicencePointDataLine
 {
+    // Derived props
     public string PurposeIdLookupKey => $"{FgacRegionCode}|{AabpId}";
     public int PointId => AaipId;
+    public int PurposeId => AabpId;
     
     // Properties from NALD_ABS_PURP_POINTS table
     public required int AabpId { get; set; }

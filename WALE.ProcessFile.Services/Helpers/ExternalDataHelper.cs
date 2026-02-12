@@ -1,3 +1,4 @@
+using UglyToad.PdfPig.Writer;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -60,8 +61,11 @@ public static class ExternalDataHelper
             returnList.Add(key, naldData);
         }
 
+        // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
         AddNaldAbstractionLicenceVersionData(versions, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicenceQuantitiesData(quantities, internalLicenceIdsNotInDataset, ref returnList);
+
+        // still todo:
         var purposeToLicenceMapping =
             AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicencePointsData(points, ref purposeToLicenceMapping);
@@ -72,9 +76,9 @@ public static class ExternalDataHelper
         {
             var key = naldData.FgacRegionCode + "|" + naldData.LicenceIdCharsAndDigitsOnly;
 
-            if (changedKeyList.ContainsKey(key))
+            if (changedKeyList.TryGetValue(key, out var value))
             {
-                changedKeyList[key].Add(naldData);
+                value.Add(naldData);
                 continue;
             }
 
@@ -182,65 +186,62 @@ public static class ExternalDataHelper
     }
 
     private static Dictionary<string, NaldData> AddNaldAbstractionLicencePurposeData(
-        List<NaldLicencePurposeDataLine> lines,
+        List<NaldLicencePurposeDataLine> naldLicencePurposeDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
         var returnDict = new Dictionary<string, NaldData>();
 
-        foreach (var line in lines.Where(x =>
-                     !licenceNumbersNotInDataset.Contains($"{x.FgacRegionCode}|{x.AabvAablId}")))
+        foreach (var purposeDataLine in naldLicencePurposeDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LicenceIdLookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AabvAablId}";
-
-            var existingData = generalNaldData.GetValueOrDefault(key);
-
-            if (existingData == null)
+            if (!generalNaldData.TryGetValue(purposeDataLine.LicenceIdLookupKey, out var naldData))
             {
-                throw new KeyNotFoundException(key);
+                throw new KeyNotFoundException(purposeDataLine.LicenceIdLookupKey);
             }
 
-            var naldDataPeriod = new NaldDataPeriod
+            // Ignore non-current purpose data
+            if (naldData.IncrNo != purposeDataLine.AabvIncrNo ||
+                naldData.IssueNo != purposeDataLine.AabvIssueNo)
             {
-                PeriodStartDay = line.PeriodStartDay,
-                PeriodStartMonth = line.PeriodStartMonth,
-                PeriodEndDay = line.PeriodEndDay,
-                PeriodEndMonth = line.PeriodEndMonth
-            };
-
-            if (existingData.Periods.All(p => p.ToString() != naldDataPeriod.ToString()))
-            {
-                existingData.Periods.Add(naldDataPeriod);
+                continue;
             }
 
             var naldDataPurpose = new NaldDataPurpose
             {
-                Id = int.Parse(line.Id!),
-                PurposeId = line.ApurApusCode!.Value
+                Id = int.Parse(purposeDataLine.Id!),
+                CategoryUse = new NaldDataPurposeCategoryUse
+                {
+                    PrimaryCategoryCode = purposeDataLine.ApurApprCode!,
+                    PrimaryCategoryDescription = purposeDataLine.PurpPrimDescr!,
+                    SecondaryCategoryCode = purposeDataLine.ApurApseCode!,
+                    SecondaryCategoryDescription = purposeDataLine.PurpSecDescr!,
+                    UseCode = purposeDataLine.ApurApusCode!.Value,
+                    UseDescription = purposeDataLine.PurpUseDescr!,
+                },
+                Period = new NaldDataPeriod
+                {
+                    PeriodStartDay = purposeDataLine.PeriodStartDay,
+                    PeriodStartMonth = purposeDataLine.PeriodStartMonth,
+                    PeriodEndDay = purposeDataLine.PeriodEndDay,
+                    PeriodEndMonth = purposeDataLine.PeriodEndMonth
+                },
+                Quantity = new NaldDataQuantity
+                {
+                    AnnualQty = double.TryParse(purposeDataLine.AnnualQty, out var annualQty) ? annualQty : null,
+                    AnnualQtyUsability = purposeDataLine.AnnualQtyUsability,
+                    DailyQty = double.TryParse(purposeDataLine.DailyQty, out var dailyQty) ? dailyQty : null,
+                    DailyQtyUsability = purposeDataLine.DailyQtyUsability,
+                    HourlyQty = double.TryParse(purposeDataLine.HourlyQty, out var hourlyQtt) ? hourlyQtt : null,
+                    HourlyQtyUsability = purposeDataLine.HourlyQtyUsability,
+                    InstQty = double.TryParse(purposeDataLine.InstQty, out var instQty) ? instQty : null,
+                    InstQtyUsability = purposeDataLine.InstQtyUsability
+                },
+                Notes = purposeDataLine.Notes
             };
 
-            if (existingData.Purposes.All(p => p.ToString() != naldDataPurpose.ToString()))
-            {
-                var purposeKey = $"{line.FgacRegionCode}|{line.Id}";
-
-                returnDict.Add(purposeKey, existingData);
-                existingData.Purposes.Add(naldDataPurpose);
-            }
-
-            existingData.AggregateConditions.Add(new NaldDataAggregate
-            {
-                Type = "Limit",
-                Condition = line.ApurApseCode,
-                ConditionId = line.ApurApusCode,
-                AnnualQty = double.TryParse(line.AnnualQty, out var annualQty) ? annualQty : null,
-                AnnualQtyUnits = line.AnnualQtyUnits,
-                DailyQty = double.TryParse(line.DailyQty, out var dailyQty) ? dailyQty : null,
-                DailyQtyUnits = line.DailyQtyUnits,
-                HourlyQty = double.TryParse(line.HourlyQty, out var hourlyQtt) ? hourlyQtt : null,
-                HourlyQtyUnits = line.HourlyQtyUnits,
-                InstQty = double.TryParse(line.InstQty, out var instQty) ? instQty : null,
-                InstQtyUnits = line.InstQtyUnits
-            });
+            returnDict.Add(purposeDataLine.PurposeIdLookupKey, naldData);
+            naldData.Purposes.Add(naldDataPurpose);
         }
 
         return returnDict;

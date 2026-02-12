@@ -2,6 +2,9 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicencePurposeDataLine
 {
+    public string LicenceIdLookupKey => $"{FgacRegionCode}|{AabvAablId}";
+    public string PurposeIdLookupKey => $"{FgacRegionCode}|{Id}";
+    
     public string? Id { get; set; }
 
     public string? AabvAablId { get; set; }
@@ -28,19 +31,19 @@ public class NaldLicencePurposeDataLine
 
     public string? AnnualQty { get; set; }
 
-    public string? AnnualQtyUnits { get; set; }
+    public char? AnnualQtyUsability { get; set; }
 
     public string? DailyQty { get; set; }
 
-    public string? DailyQtyUnits { get; set; }
+    public char? DailyQtyUsability { get; set; }
 
     public string? HourlyQty { get; set; }
 
-    public string? HourlyQtyUnits { get; set; }
+    public char? HourlyQtyUsability { get; set; }
 
     public string? InstQty { get; set; }
 
-    public string? InstQtyUnits { get; set; }
+    public char? InstQtyUsability { get; set; }
 
     public DateTime? TimeLtdStartDate { get; set; }
 

@@ -6,19 +6,19 @@ public class NaldDataAggregate
 
     public double? AnnualQty { get; init; }
     
-    public string? AnnualQtyUnits { get; init; }
+    public char? AnnualQtyUsability { get; init; }
     
     public double? DailyQty { get; init; }
     
-    public string? DailyQtyUnits { get; init; }
+    public char? DailyQtyUsability { get; init; }
     
     public double? HourlyQty { get; init; }
     
-    public string? HourlyQtyUnits { get; init; }
+    public char? HourlyQtyUsability { get; init; }
     
     public double? InstQty { get; init; }
     
-    public string? InstQtyUnits { get; init; }
+    public char? InstQtyUsability { get; init; }
     
     public string? Condition { get; init; }
     
@@ -34,6 +34,6 @@ public class NaldDataAggregate
 
     public override string ToString()
     {
-        return $"{ConditionId}{Condition}{Type}{AnnualQty}{AnnualQtyUnits}{DailyQty}{DailyQtyUnits}{HourlyQty}{HourlyQtyUnits}{InstQty}{InstQtyUnits}|{PeriodStartDay}/{PeriodStartMonth}-{PeriodEndDay}/{PeriodEndMonth}";
+        return $"{ConditionId}{Condition}{Type}{AnnualQty}{AnnualQtyUsability}{DailyQty}{DailyQtyUsability}{HourlyQty}{HourlyQtyUsability}{InstQty}{InstQtyUsability}|{PeriodStartDay}/{PeriodStartMonth}-{PeriodEndDay}/{PeriodEndMonth}";
     }
 }

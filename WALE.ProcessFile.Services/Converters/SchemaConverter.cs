@@ -2726,7 +2726,7 @@ public static partial class SchemaConverter
         return new NaldPurposeData
         {
             Id = purpose.PurposeId.ToString(),
-            Code = purpose.PurposeCode,
+            Code = purpose.PurposeCategoryUseCode,
             UseCode = purpose.PurposeUseCode,
             UseDescription = purpose.PurposeUseDescription
         };

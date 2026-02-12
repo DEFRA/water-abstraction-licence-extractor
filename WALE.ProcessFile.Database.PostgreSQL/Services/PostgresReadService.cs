@@ -926,13 +926,13 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                p."PERIOD_END_MONTH" AS PeriodEndMonth,
                                p."AMOM_CODE" AS AmomCode,
                                p."ANNUAL_QTY" AS AnnualQty,
-                               p."ANNUAL_QTY_USABILITY" AS AnnualQtyUnits,
+                               p."ANNUAL_QTY_USABILITY" AS AnnualQtyUsability,
                                p."DAILY_QTY" AS DailyQty,
-                               p."DAILY_QTY_USABILITY" AS DailyQtyUnits,
+                               p."DAILY_QTY_USABILITY" AS DailyQtyUsability,
                                p."HOURLY_QTY" AS HourlyQty,
-                               p."HOURLY_QTY_USABILITY" AS HourlyQtyUnits,
+                               p."HOURLY_QTY_USABILITY" AS HourlyQtyUsability,
                                p."INST_QTY" AS InstQty,
-                               p."INST_QTY_USABILITY" AS InstQtyUnits,
+                               p."INST_QTY_USABILITY" AS InstQtyUsability,
                                p."TIMELTD_ST_DATE" AS TimeLtdStartDate,
                                p."TIMELTD_END_DATE" AS TimeLtdEndDate,
                                p."LANDS" AS Lands,
@@ -944,11 +944,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ps."DESCR" AS PurpSecDescr,
                                pu."DESCR" AS PurpUseDescr
                            FROM nald."NALD_ABS_LIC_PURPOSES" p
-                           LEFT JOIN nald."NALD_PURP_PRIMS" pp
+                           JOIN nald."NALD_PURP_PRIMS" pp
                                ON p."APUR_APPR_CODE" = pp."CODE"
-                           LEFT JOIN nald."NALD_PURP_SECS" ps
+                           JOIN nald."NALD_PURP_SECS" ps
                                ON p."APUR_APSE_CODE" = ps."CODE"
-                           LEFT JOIN nald."NALD_PURP_USES" pu
+                           JOIN nald."NALD_PURP_USES" pu
                                ON p."APUR_APUS_CODE" = pu."CODE"
                            WHERE p."FGAC_REGION_CODE" = @RegionCode
                            """;

@@ -162,4 +162,30 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
     }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        var path = $"/Extractor/LinkedLicence/GetMap?regionCode={regionCode}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<NaldLinkedLicenceRawData>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        var path = $"/Extractor/NaldData/GetAll?regionCode={regionCode}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<NaldDataCollection>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
 }

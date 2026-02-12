@@ -113,4 +113,9 @@ public interface ICacheService
         string pdfFilePath,
         string noOcrServiceName,
         int processRunId);
+    
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(
+        int regionCode);
+
+    Task<NaldDataCollection> GetNaldDataAsync(short regionCode);
 }

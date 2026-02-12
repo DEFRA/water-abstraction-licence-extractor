@@ -81,14 +81,14 @@ async Task ProgramAsync()
 
     var (dmsFilesToProcess, allDmsData) = GetDmsFilesAndMapping(services, regionCode);
 
-    var naldData = await ExternalDataHelper.GetNaldDataFromDatabaseAsync(
-        services.DatabaseReadService!,
+    var naldData = await ExternalDataHelper.GetNaldDataAsync(
+        cacheService,
         allDmsData,
         regionCode);
-
-    var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
-    var yorkshireNaldLinkedLicenceRawData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
-    var yorkshireNaldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldLinkedLicenceRawData.ToList(), regionCode);
+    
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
+        cacheService,
+        regionCode);
 
     var firstNamesCsv = CompanyName.GetFirstNamesCsvFromFile();
     
@@ -208,7 +208,9 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = await yorkshireNaldLinkedLicenceHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
+                var linkedLicences =
+                    await naldLinkedLicenceHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
+                
                 if (linkedLicences.Count != 0)
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
@@ -307,14 +309,19 @@ async Task ProgramAsync()
     }
 
     Console.WriteLine($"Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    const bool saveListsToFile = false;
 
-    await JsOutputHelper.SaveListDataAsync(
-        outputLines,
-        outputFolder,
-        outputService,
-        services.RegenerateMappingJson,
-        processRun,
-        true);
+    if (saveListsToFile)
+    {
+        // The following is just for some reports and charts - saves to filestream
+        await JsOutputHelper.SaveListDataAsync(
+            outputLines,
+            outputFolder,
+            outputService,
+            services.RegenerateMappingJson,
+            processRun,
+            saveListsToFile);
+    }
 
     Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 

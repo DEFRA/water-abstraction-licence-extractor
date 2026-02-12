@@ -225,4 +225,39 @@ public class MixedModeCacheService(
     {
        return apiCacheService.GetMetadataAsync(pdfFilePath, noOcrServiceName, processRunId);
     }
+
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        return apiCacheService.GetNaldLinkedLicenceRawDataAsync(regionCode);
+    }
+
+    public Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        return apiCacheService.GetNaldDataAsync(regionCode);
+    }
+
+    public Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
+    {
+        return databaseCacheService.GetNaldAbsLicencesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceVersionCsvLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    {
+        return databaseCacheService.GetNaldLicenceVersionsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePurposeCsvLine>> GetNaldLicencePurposesAsync(short regionCode)
+    {
+        return databaseCacheService.GetNaldLicencePurposesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePointCsvLine>> GetNaldLicencePointsAsync(short regionCode)
+    {
+        return databaseCacheService.GetNaldLicencePointsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceQuantitiesCsvLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    {
+        return databaseCacheService.GetNaldLicenceQuantitiesAsync(regionCode);
+    }
 }

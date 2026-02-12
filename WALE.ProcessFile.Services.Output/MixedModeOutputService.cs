@@ -111,7 +111,7 @@ public class MixedModeOutputService(
 
     public Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
     {
-        return databaseOutputService.FinishProcessRunAsync(processRun, regionId);
+        return apiOutputService.FinishProcessRunAsync(processRun, regionId);
     }
 
     public Task<List<ProcessRun>> GetProcessRunsAsync()

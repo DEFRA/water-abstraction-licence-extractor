@@ -21,10 +21,27 @@ public class ProcessRunController(IOutputService outputService) : Controller
 
         return Ok(processRun.ProcessRunId);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> FinishAsync([FromBody] EndRequest request)
+    {
+        await outputService.FinishProcessRunAsync(new ProcessRun
+        {
+            ProcessRunId = request.processRunId
+        }, request.regionCode);
+
+        return Ok(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
     
     public class CreateRequest
     {
         public string? description { get; set; }
         public int numberOfFiles { get; set; }
+    }
+    
+    public class EndRequest
+    {
+        public int processRunId { get; set; }
+        public int regionCode { get; set; }
     }
 }

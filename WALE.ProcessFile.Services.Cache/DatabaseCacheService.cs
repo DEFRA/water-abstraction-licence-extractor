@@ -265,4 +265,56 @@ public class DatabaseCacheService(
             noOcrServiceName,
             processRunId);
     }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
+ 
+        return data
+            .Where(dataLine => dataLine.RegionCode == regionCode)
+            .ToList();
+    }
+
+    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
+        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+        
+        return new NaldDataCollection
+        {
+            Licences = await licencesTask,
+            LicenceVersions = await versionsTask,
+            LicencePurposes = await purposesTask,
+            LicencePoints = await pointsTask,
+            LicenceQuantities = await quantitiesTask
+        };
+    }
+
+    public Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceVersionCsvLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePurposeCsvLine>> GetNaldLicencePurposesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePointCsvLine>> GetNaldLicencePointsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePointsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceQuantitiesCsvLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+    }
 }

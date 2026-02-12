@@ -482,6 +482,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             processRunId);
     }
 
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(string pdfFilePath)
     {
         var fileOutputFolder = Path.Combine(CacheFolder!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);

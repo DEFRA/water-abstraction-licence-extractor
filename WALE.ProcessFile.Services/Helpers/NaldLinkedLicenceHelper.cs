@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
@@ -15,9 +16,13 @@ public class NaldLinkedLicenceHelper
         _processingRegionCode = processingRegionCode;
     }
 
-    public static async Task<NaldLinkedLicenceHelper> CreateAsync(List<NaldLinkedLicenceRawData> rawData,
+    public static async Task<NaldLinkedLicenceHelper> CreateAsync(
+        ICacheService cacheService,
         short processingRegionCode)
     {
+        var rawData =
+            await cacheService.GetNaldLinkedLicenceRawDataAsync(processingRegionCode);
+        
         var map = await BuildLinkedLicenceMapAsync(rawData, processingRegionCode);
         return new NaldLinkedLicenceHelper(map, processingRegionCode);
     }

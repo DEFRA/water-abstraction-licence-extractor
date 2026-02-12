@@ -7,6 +7,6 @@ public class NaldDataPurposeCategoryUse
     public required string PrimaryCategoryDescription { get; init; }
     public required string SecondaryCategoryCode { get; init; }
     public required string SecondaryCategoryDescription { get; init; }
-    public required int UseCode { get; init; }
+    public required short UseCode { get; init; }
     public required string UseDescription { get; init; }
 }

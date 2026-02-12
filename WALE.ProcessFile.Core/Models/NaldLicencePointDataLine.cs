@@ -2,12 +2,15 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicencePointDataLine
 {
+    public string PurposeIdLookupKey => $"{FgacRegionCode}|{AabpId}";
+    public int PointId => AaipId;
+    
     // Properties from NALD_ABS_PURP_POINTS table
-    public string? AabpId { get; set; }
-    public string? AaipId { get; set; }
+    public required int AabpId { get; set; }
+    public required int AaipId { get; set; }
     public string? AmoaCode { get; set; }
     public string? Notes { get; set; }
-    public string? FgacRegionCode { get; set; }
+    public required short FgacRegionCode { get; set; }
 
     // Properties from NALD_POINTS table
     public string? Ngr1Sheet { get; set; }

@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldData
 {
-    public string? Id { get; set; }
+    public int Id { get; set; }
     public string? LicenceNumber { get; set; }
     
     public string? LicenceIdCharsAndDigitsOnly { get; set; }
@@ -24,7 +24,7 @@ public class NaldData
     
     public List<NaldDataPurpose> Purposes { get; init; } = [];
     
-    public string? FgacRegionCode { get; set; }
+    public short FgacRegionCode { get; set; }
     
     public string? EffStDate { get; set; }
     
@@ -46,7 +46,7 @@ public class NaldData
     public string? AppNo { get; set; }
     public string? WaAltyCode { get; set; }
     public string? AsrcCode { get; set; }
-    public string? QuantityAggregated { get; set; }
-    public string? QuantityUserValid { get; set; }
+    public char? QuantityAggregated { get; set; }
+    public char? QuantityUserValid { get; set; }
     public string? QuantityPurpPoints { get; set; }
 }

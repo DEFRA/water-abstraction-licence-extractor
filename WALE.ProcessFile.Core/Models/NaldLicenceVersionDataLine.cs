@@ -4,8 +4,8 @@ public class NaldLicenceVersionDataLine
 {
     public string LookupKey => $"{FgacRegionCode}|{AablId}";
     public int? AablId { get; set; }
-    public int? IssueNo { get; set; }
-    public int? IncrNo { get; set; }
+    public short IssueNo { get; set; }
+    public short IncrNo { get; set; }
     public string? AabvType { get; set; }
     public string? EffStDate { get; set; }
     public string? Status { get; set; }
@@ -26,5 +26,5 @@ public class NaldLicenceVersionDataLine
     public string? VolConv { get; set; }
     public string? WrtCode { get; set; }
     public string? DeregCode { get; set; }
-    public string? FgacRegionCode { get; set; }
+    public short FgacRegionCode { get; set; }
 }

@@ -5,12 +5,12 @@ public class NaldLicencePurposeDataLine
     public string LicenceIdLookupKey => $"{FgacRegionCode}|{AabvAablId}";
     public string PurposeIdLookupKey => $"{FgacRegionCode}|{Id}";
     public string? Id { get; set; }
-    public string? AabvAablId { get; set; }
-    public int? AabvIssueNo { get; set; }
-    public int? AabvIncrNo { get; set; }
+    public int AabvAablId { get; set; }
+    public short AabvIssueNo { get; set; }
+    public short AabvIncrNo { get; set; }
     public string? ApurApprCode { get; set; }
     public string? ApurApseCode { get; set; }
-    public int? ApurApusCode { get; set; }
+    public short ApurApusCode { get; set; }
     public int? PeriodStartDay { get; set; }
     public int? PeriodStartMonth { get; set; }
     public int? PeriodEndDay { get; set; }
@@ -30,7 +30,7 @@ public class NaldLicencePurposeDataLine
     public string? ArecCode { get; set; }
     public int? DispOrd { get; set; }
     public string? Notes { get; set; }
-    public string? FgacRegionCode { get; set; }
+    public short FgacRegionCode { get; set; }
     public string? PurpPrimDescr { get; set; }
     public string? PurpSecDescr { get; set; }
     public string? PurpUseDescr { get; set; }

@@ -64,8 +64,6 @@ public static class ExternalDataHelper
         // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
         AddNaldAbstractionLicenceVersionData(versions, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicenceQuantitiesData(quantities, internalLicenceIdsNotInDataset, ref returnList);
-
-        // still todo:
         var purposeToLicenceMapping =
             AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicencePointsData(points, ref purposeToLicenceMapping);
@@ -139,49 +137,40 @@ public static class ExternalDataHelper
                 continue;
             }
 
-            naldData.MaxAnnualQty = RemoveNullWord(quantitiesDataLine.MaxAnnualQty) != null
-                ? double.Parse(quantitiesDataLine.MaxAnnualQty!)
-                : null;
-
-            naldData.MaxDailyQty = RemoveNullWord(quantitiesDataLine.MaxDailyQty) != null
-                ? double.Parse(quantitiesDataLine.MaxDailyQty!)
-                : null;
-
+            naldData.MaxAnnualQty = quantitiesDataLine.MaxAnnualQty;
+            naldData.MaxDailyQty = quantitiesDataLine.MaxDailyQty;
             naldData.QuantityAggregated = quantitiesDataLine.AggregatedInd;
             naldData.QuantityUserValid = quantitiesDataLine.UserValidInd;
-
             naldData.QuantityPurpPoints = quantitiesDataLine.PurpPointsInd switch
             {
-                "1" => "Single Point / Single Purpose",
-                "2" => "Single Point / Multiple Purposes",
-                "3" => "Multiple Points / Single Purpose",
-                "4" => "Multiple Points / Multiple Purposes",
+                '1' => "Single Point / Single Purpose",
+                '2' => "Single Point / Multiple Purposes",
+                '3' => "Multiple Points / Single Purpose",
+                '4' => "Multiple Points / Multiple Purposes",
                 _ => "Unknown"
             };
         }
     }
 
     private static void AddNaldAbstractionLicencePointsData(
-        List<NaldLicencePointDataLine> lines,
+        List<NaldLicencePointDataLine> naldLicencePointDataLines,
         ref Dictionary<string, NaldData> purposeToLicenceMapping)
     {
-        foreach (var line in lines)
+        foreach (var pointDataLine in naldLicencePointDataLines)
         {
-            var key = $"{line.FgacRegionCode}|{line.AabpId}";
-            var existingData = purposeToLicenceMapping.GetValueOrDefault(key);
-
-            if (existingData == null)
+            if (!purposeToLicenceMapping.TryGetValue(pointDataLine.PurposeIdLookupKey, out var naldData))
             {
                 continue;
             }
-
+            
+            // todo: populate this properly considering the many to many rel
             var naldDataPoint = new NaldDataPoint
             {
-                PointId = int.Parse(line.AaipId!),
-                PointName = line.AmoaCode
+                PointId = pointDataLine.PointId,
+                PointName = pointDataLine.AmoaCode
             };
 
-            existingData.Points.Add(naldDataPoint);
+            naldData.Points.Add(naldDataPoint);
         }
     }
 
@@ -216,7 +205,7 @@ public static class ExternalDataHelper
                     PrimaryCategoryDescription = purposeDataLine.PurpPrimDescr!,
                     SecondaryCategoryCode = purposeDataLine.ApurApseCode!,
                     SecondaryCategoryDescription = purposeDataLine.PurpSecDescr!,
-                    UseCode = purposeDataLine.ApurApusCode!.Value,
+                    UseCode = purposeDataLine.ApurApusCode,
                     UseDescription = purposeDataLine.PurpUseDescr!,
                 },
                 Period = new NaldDataPeriod

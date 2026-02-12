@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldAbstractionLicenceDataLine
 {
-    public string? Id { get; set; }
+    public int Id { get; set; }
     public string? LicenceNo { get; set; }
     public string? ArepSucCode { get; set; }
     public string? ArepAreaCode { get; set; }
@@ -22,5 +22,5 @@ public class NaldAbstractionLicenceDataLine
     public string? PrevLicNo { get; set; }
     public string? FollLicNo { get; set; }
     public string? ArepEiucCode { get; set; }
-    public string? FgacRegionCode { get; set; }
+    public short FgacRegionCode { get; set; }
 }

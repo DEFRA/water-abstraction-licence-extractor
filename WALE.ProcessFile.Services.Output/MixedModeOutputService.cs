@@ -32,9 +32,9 @@ public class MixedModeOutputService(
         return databaseOutputService.GetPageScreenshotDataAsync(pageNumber, pdfServiceName, pdfFilePath);
     }
 
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
     {
-        return apiOutputService.SaveProcessRunAsync(processRun);
+        return apiOutputService.StartProcessRunAsync(processRun);
     }
 
     public Task SaveLicenceSetsAsync(

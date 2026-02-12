@@ -51,7 +51,7 @@ public class DatabaseOutputService(
         ];
     }
 
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
     {
         return databaseWriteService.AddProcessRunAsync(processRun);
     }

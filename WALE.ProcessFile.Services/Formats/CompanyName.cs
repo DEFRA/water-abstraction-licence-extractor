@@ -332,23 +332,25 @@ public static class CompanyName
                 || char.IsDigit(text.Last()));
     }
     
-    public static HashSet<string> GetFirstNamesCsvFromFile()
+    public static async Task<HashSet<string>> GetFirstNamesCsvFromFileAsync()
     {
         var returnList = new HashSet<string>();
-
         var dtStart = DateTime.Now;
         
         using var reader = new StreamReader("Data/first-names.csv");
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         
-        var records = csv.GetRecords<FirstNamesRow>()
-            .Select(record => record.FirstForename!.ToLower())
-            .ToList();
-            
-        foreach (var nameLowercase in records
-            .Where(name => name.Length > 2 && !FirstNameAvoidWords.Contains(name)))
+        var data = csv.GetRecordsAsync<FirstNamesRow>();
+        
+        await foreach (var record in data)
         {
-            returnList.Add(nameLowercase);
+            var name = record.FirstForename!.ToLower();
+            if (name.Length <= 2 || FirstNameAvoidWords.Contains(name))
+            {
+                continue;
+            }
+            
+            returnList.Add(name);
         }
 
         Console.WriteLine($"Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");

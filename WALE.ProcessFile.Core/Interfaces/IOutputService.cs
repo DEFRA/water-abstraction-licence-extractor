@@ -19,7 +19,7 @@ public interface IOutputService
         string pdfServiceName,
         string pdfFilePath);
     
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
 
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     

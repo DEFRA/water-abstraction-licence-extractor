@@ -12,7 +12,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateRequest request)
     {
-        var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
+        var processRun = await outputService.StartProcessRunAsync(new ProcessRun
         {
             Description = request.description,
             StartDateTimeUtc = DateTime.UtcNow,

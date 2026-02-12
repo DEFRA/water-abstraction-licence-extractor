@@ -118,4 +118,9 @@ public interface ICacheService
         int regionCode);
 
     Task<NaldDataCollection> GetNaldDataAsync(short regionCode);
+    
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode);
+    
+    Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> 
+        GetNaldLicenceNumbersAsync(short? regionCode);
 }

@@ -293,6 +293,17 @@ public class DatabaseCacheService(
         };
     }
 
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
+    }
+
     public Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);

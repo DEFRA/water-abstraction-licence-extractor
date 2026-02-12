@@ -64,7 +64,7 @@ public static class GenerateAggregatesCsvForTesting
                 _lookupConfiguration = new LookupConfiguration(
                     LabelConfiguration.GetLabels(),
                     FileLicenceMapping,
-                    CompanyName.GetFirstNamesCsvFromFile(),
+                    CompanyName.GetFirstNamesCsvFromFileAsync(),
                     3);
             }
 
@@ -151,7 +151,7 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         var naldLicenceStatusData = new NaldLicenceStatusData();
 
-        var firstNames = CompanyName.GetFirstNamesCsvFromFile();
+        var firstNames = CompanyName.GetFirstNamesCsvFromFileAsync();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(

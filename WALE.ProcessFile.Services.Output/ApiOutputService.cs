@@ -31,7 +31,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public async Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
+    public async Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Create";
 

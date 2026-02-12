@@ -59,7 +59,7 @@ public class AzureOpenAiOcrPdfTests
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFile(),
+            CompanyName.GetFirstNamesCsvFromFileAsync(),
             3);
     }
     

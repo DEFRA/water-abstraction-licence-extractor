@@ -67,7 +67,7 @@ public class OcrDatabaseTests
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                CompanyName.GetFirstNamesCsvFromFile(),
+                CompanyName.GetFirstNamesCsvFromFileAsync(),
                 3),
             [PdfFolder + fileName],
             0);

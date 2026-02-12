@@ -83,7 +83,7 @@ public class NoOcrDatabaseTests
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFile(),
+            CompanyName.GetFirstNamesCsvFromFileAsync(),
             3);
     }
     
@@ -100,7 +100,7 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
-        var processRun = await OutputService.SaveProcessRunAsync(new ProcessRun
+        var processRun = await OutputService.StartProcessRunAsync(new ProcessRun
         {
             Description = "Test run",
             StartDateTimeUtc = DateTime.UtcNow,

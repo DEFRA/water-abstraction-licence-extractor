@@ -236,6 +236,17 @@ public class MixedModeCacheService(
         return apiCacheService.GetNaldDataAsync(regionCode);
     }
 
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    {
+        return apiCacheService.GetNaldLicenceStatusDataAsync(regionCode);
+    }
+
+    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseCacheService.GetNaldLicenceNumbersAsync(regionCode);
+    }
+
     public Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseCacheService.GetNaldAbsLicencesAsync(regionCode);

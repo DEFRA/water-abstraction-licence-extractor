@@ -43,7 +43,7 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    await MoveReportHtmlFilesAsync(
+    var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
         services.ReportTemplatePath!,
         outputFolder,
         services.LoadAiJs,
@@ -55,50 +55,40 @@ async Task ProgramAsync()
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
 
-    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
+    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
+    // when we want to handle more than one region)
     const short regionCode = 3;
+    
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(
+        regionCode);
 
-    var naldLicenceNumbersFromDb = await services.DatabaseReadService!.GetNaldLicenceNumbersAsync(regionCode);
+    var (dmsFilesToProcess, allDmsData) =
+        GetDmsFilesAndMapping(services, regionCode);
 
-    var naldLicenceStatusData = new NaldLicenceStatusData
-    {
-        LiveLicences = naldLicenceNumbersFromDb.Live
-            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
-            .Where(x => !string.IsNullOrEmpty(x))
-            .Select(x => x!)
-            .ToHashSet(),
-        DeadLicences = naldLicenceNumbersFromDb.Dead
-            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
-            .Where(x => !string.IsNullOrEmpty(x))
-            .Select(x => x!)
-            .ToHashSet(),
-        ImpoundmentLicences = naldLicenceNumbersFromDb.Impoundment
-            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
-            .Where(x => !string.IsNullOrEmpty(x))
-            .Select(x => x!)
-            .ToHashSet()
-    };
-
-    var (dmsFilesToProcess, allDmsData) = GetDmsFilesAndMapping(services, regionCode);
-
-    var naldData = await ExternalDataHelper.GetNaldDataAsync(
+    var naldDataTask = ExternalDataHelper.GetNaldDataAsync(
         cacheService,
         allDmsData,
         regionCode);
     
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
+    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
         cacheService,
         regionCode);
-
-    var firstNamesCsv = CompanyName.GetFirstNamesCsvFromFile();
     
-    var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
+    var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
+    var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
         NumberOfFiles = dmsFilesToProcess.Count
     });
 
+    var naldData = await naldDataTask;
+    var naldLicenceStatusData  = await naldLicenceStatusDataTask;
+    var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
+    var firstNamesCsv = await firstNamesTask;
+    var processRun = await processRunTask;
+    await moveReportHtmlFilesTask;
+    
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
     try
@@ -264,8 +254,8 @@ async Task ProgramAsync()
                     licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
                 }
                 else if (licenceLoop.LicenceNumber == null
-                         && !string.IsNullOrEmpty(filename)
-                         && !savedLicenceFilenames.TryGetValue(filename, out _))
+                     && !string.IsNullOrEmpty(filename)
+                     && !savedLicenceFilenames.TryGetValue(filename, out _))
                 {
                     var loopLicenceId = await outputService.SaveLicenceAsync(
                         licenceLoop,
@@ -296,7 +286,10 @@ async Task ProgramAsync()
         }
 
         var licence = licenceSetGroup[0].Licences.First();
-        var licenceSets = GetLicenceSetsForLicenceSetIds(licence.LicenceSets, allLicenceSets);
+        
+        var licenceSets = GetLicenceSetsForLicenceSetIds(
+            licence.LicenceSets,
+            allLicenceSets);
 
         var outputLine = JsOutputHelper.ToOutputLine(
             licence,
@@ -571,16 +564,27 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFilePath,
             processRun.ProcessRunId);
 
+        var dtStartSaveMatches = DateTime.Now;
+        
         if (matchesFull.Matches != null)
         {
             // TODO move this to one batch save
-            foreach (var match in matchesFull.Matches)
-            {
-                await outputService.SaveMatchAsync(
+            var saveTasks = matchesFull.Matches
+                .Select(match => outputService.SaveMatchAsync(
                     matchResultId,
                     match.MatchedLabel?.Name,
                     match.LabelGroupName,
-                    match);
+                    match))
+                .ToList();
+            
+            await Task.WhenAll(saveTasks);
+            
+            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
+
+            if (saveDuration >= 1000)
+            {
+                Console.WriteLine(
+                    $"Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             }
         }
 
@@ -684,9 +688,9 @@ async Task MoveReportHtmlFilesAsync(
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //        .Take(200)
-//       .Where(x => x.Key.Contains("22728110_"))
-//        .Where(x => x.Key.Contains("22718077_"))        
-        .Take(10)
+       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
+//        .Where(x => x.Key.Contains("22718077_"))
+//        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

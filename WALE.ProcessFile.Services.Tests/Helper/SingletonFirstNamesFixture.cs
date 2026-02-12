@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Services.Tests.Helper;
 
 public class SingletonFirstNamesFixture : IDisposable
 {
-    public readonly HashSet<string> FirstNamesCsv = CompanyName.GetFirstNamesCsvFromFile();
+    public readonly HashSet<string> FirstNamesCsv = CompanyName.GetFirstNamesCsvFromFileAsync();
     
     public void Dispose()
     {

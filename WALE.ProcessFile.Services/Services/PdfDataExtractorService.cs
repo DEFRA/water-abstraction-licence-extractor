@@ -82,6 +82,8 @@ public class PdfDataExtractorService(
             $"Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilePath}");
         
+        dtStart = DateTime.Now;
+        
         // De-dupe
         var newLabelGroupMatches = new List<LabelGroupResult>();
 
@@ -170,11 +172,20 @@ public class PdfDataExtractorService(
 
         returnResult.ScannedFile = true;
         isOcr = true;
-        
+
+        if ((DateTime.Now - dtStart).TotalMilliseconds >= 1000)
+        {
+            Console.WriteLine(
+                $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+                $" - {pdfDocument.PdfFilePath}");
+        }
+
         var documentLines = new List<DocumentLine>();
         
         for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
         {
+            dtStart = DateTime.Now;
+            
             var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
             pageNumber = pageNumberIndex + 1;
            
@@ -183,6 +194,9 @@ public class PdfDataExtractorService(
             
             if (pageImages.Count > 10)
             {
+                Console.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
+                    $" - {pdfDocument.PdfFilePath}");
+                
                 pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
 
                 foreach (var pageImage in pageImages)
@@ -379,13 +393,17 @@ public class PdfDataExtractorService(
 
             if (labelsNotMatchedAtAll3.Count == 0)
             {
+                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
                 break;
             }
             
             if (breakPageLoop)
             {
+                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
                 break;
             }
+            
+            ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
         }
 
         // TODO - dont think this line does anything, as the collection isn't created at that point
@@ -397,6 +415,19 @@ public class PdfDataExtractorService(
         return returnResult;      
     }
 
+    private static void ProfilePageIfSlow(DateTime dtStart, int pageNumber, int numberOfImages, PdfDocument pdfDocument)
+    {
+        var duration = DateTime.Now - dtStart;
+
+        if (400 > duration.TotalMilliseconds)
+        {
+            return;
+        }
+        
+        Console.WriteLine($"INFO - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
+            $" - {pdfDocument.PdfFilePath}");
+    }
+    
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;

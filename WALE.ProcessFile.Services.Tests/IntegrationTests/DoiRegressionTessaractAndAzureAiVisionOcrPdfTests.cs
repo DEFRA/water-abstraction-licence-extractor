@@ -240,4 +240,307 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         Assert.Equal("1966-11-08", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
     }
+    
+    [Fact]
+    public async Task DoiNotFound_12100001()
+    {
+        // Arrange
+        const string filename = "12100001__Application Minor Variation Issued Licence 17062025 .pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2025-06-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100004()
+    {
+        // Arrange
+        const string filename = "12100004__Application - Renewal - Same Terms – Issued licence - November 2014 8621766.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("11 November 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2014-11-11", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100010()
+    {
+        // Arrange
+        const string filename = "12100010__1-21-00-010 5822315.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("28 DAY OF March 1984", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("1984-03-28", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100023()
+    {
+        // Arrange
+        const string filename = "12100023__Application - Transfer - Issued licence 22.7.2016 9423969.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("22 July 2016", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2016-07-22", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100052()
+    {
+        // Arrange
+        const string filename = "12100052__Application - New - Issued licence 8677332.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("17 December 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2014-12-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100063()
+    {
+        // Arrange
+        const string filename = "12100063__Application type unknown Licence Issued - 05031993.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("5th AY OF March 1993", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("1993-03-05", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100065()
+    {
+        // Arrange
+        const string filename = "12100065__Application New Licence Issued - [1974] - (1974).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("21st day of March 1974", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("1974-03-21", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_2100068()
+    {
+        // Arrange
+        const string filename = "12100068__Application Normal Variation Licence Issued 17062025.docx.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2025-06-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100069()
+    {
+        // Arrange
+        const string filename = "12100069__Application New Licence Issued - [1997] - (1997).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("30th 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+
+        Assert.Null(agreedSchemaLicence.LicenceVersion.IssueDate);
+
+        // TODO issue date missing
+        //Assert.Equal("1966-11-08", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
+    
+    [Fact]
+    public async Task DoiNotFound_12100071R01()
+    {
+        // Arrange
+        const string filename = "12100071R01__Application - New - Issued Licence 15-05-2018 10311405.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, 5);
+        
+        // Assert
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("11 May 2018", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _fileLicenceMapping,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractorCombined5,
+            TestConfig.PdfFolder5,
+            0,
+            LookupConfiguration(1));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
+        Assert.Equal("2018-05-11", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+    }
 }

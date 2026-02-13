@@ -11,12 +11,7 @@ public class MixedModeCacheService(
         : ICacheService
 {
     public bool UsesDatabase { get; set; } = databaseCacheService.UsesDatabase;
-    public string? CacheFolder { get; set; }
-    public string? Host { get; set; } = databaseCacheService.Host;
-    public int Port { get; set; } = databaseCacheService.Port;
-    public string? DatabaseName { get; set; } = databaseCacheService.DatabaseName;
-    public string? Username { get; set; } = databaseCacheService.Username;
-    public string? Password { get; set; } = databaseCacheService.Password;
+    public string? CacheFolderOrUrl { get; set; } = apiCacheService.CacheFolderOrUrl;
 
     public Task SetupAsync()
     {

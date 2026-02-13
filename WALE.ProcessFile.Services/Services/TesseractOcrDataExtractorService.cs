@@ -95,7 +95,7 @@ public class TesseractOcrDataExtractorService(
 
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
-                    // TODO - Log
+                    Console.WriteLine("WARNING - Transient error occured with the standalone Tesseract process");
 
                     // Don't cache, should work next time
                 }
@@ -172,14 +172,9 @@ public class TesseractOcrDataExtractorService(
             $"\"{pdfFilePath}\"",
             isPageScreenshot.ToString(),
             processRunId.ToString(),
-            $"\"{cacheService.CacheFolder}\"",
+            $"\"{cacheService.CacheFolderOrUrl}\"",
             $"\"{outputService.OutputFolder}\"",
-            $"\"{tessDataPath}\"",
-            $"\"{cacheService.Host ?? "N/A"}\"",
-            $"\"{cacheService.Port}\"",
-            $"\"{cacheService.DatabaseName ?? "N/A"}\"",
-            $"\"{cacheService.Username ?? "N/A"}\"",
-            $"\"{cacheService.Password ?? "N/A"}\""
+            $"\"{tessDataPath}\""
         });
         
         var proc = Process.Start(

@@ -86,8 +86,11 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
     }
     
     [HttpGet]
-    public async Task<ActionResult> PartialPageImage([FromQuery] string filename, [FromQuery] string extension,
-        [FromQuery] int pageNumber, [FromQuery] int imageNumber)
+    public async Task<ActionResult> PartialPageImage(
+        [FromQuery] string filename,
+        [FromQuery] string extension,
+        [FromQuery] int pageNumber,
+        [FromQuery] int imageNumber)
     {
         var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {

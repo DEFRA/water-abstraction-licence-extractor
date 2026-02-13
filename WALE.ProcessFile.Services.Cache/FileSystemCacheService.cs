@@ -13,21 +13,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 {
     public bool UsesDatabase { get; set; } = false;
 
-    public string? CacheFolder { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
-
-    public string? Host { get; set; } = null;
-    
-    public int Port { get; set; }
-
-    public string? DatabaseName { get; set; } = null;
-    
-    public string? Username { get; set; } = null;
-    
-    public string? Password { get; set; } = null;
+    public string? CacheFolderOrUrl { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
     public Task SetupAsync()
     {
-        Directory.CreateDirectory(CacheFolder!);
+        Directory.CreateDirectory(CacheFolderOrUrl!);
         return Task.CompletedTask;
     }
 
@@ -511,7 +501,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     private string GetFolderPath(string pdfFilePath)
     {
-        var fileOutputFolder = Path.Combine(CacheFolder!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
+        var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
         return fileOutputFolder.Trim();
     }
     

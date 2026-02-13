@@ -29,7 +29,7 @@ public class MixedModeOutputService(
         string pdfServiceName,
         string pdfFilePath)
     {
-        return databaseOutputService.GetPageScreenshotDataAsync(pageNumber, pdfServiceName, pdfFilePath);
+        return apiOutputService.GetPageScreenshotDataAsync(pageNumber, pdfServiceName, pdfFilePath);
     }
 
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)

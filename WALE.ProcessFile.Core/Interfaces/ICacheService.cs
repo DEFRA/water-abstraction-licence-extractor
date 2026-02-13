@@ -8,17 +8,7 @@ public interface ICacheService
 {
     public bool UsesDatabase { get; set; }
     
-    public string? CacheFolder { get; set; }
-    
-    public string? Host { get; set; }
-    
-    public int Port { get; set; }
-    
-    public string? DatabaseName { get; set; }
-    
-    public string? Username { get; set; }
-    
-    public string? Password { get; set; }
+    public string? CacheFolderOrUrl { get; set; }
     
     public Task SetupAsync();
 

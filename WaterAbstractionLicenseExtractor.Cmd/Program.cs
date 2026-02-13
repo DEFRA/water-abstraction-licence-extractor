@@ -417,12 +417,7 @@ ConfiguredServices ConfigureServices()
 
     var databaseCacheService = new DatabaseCacheService(
         databaseReadService,
-        databaseAddService,
-        postgresHost,
-        postgresPort,
-        postgresDatabaseName,
-        postgresUsername,
-        postgresPassword);
+        databaseAddService);
 
     var httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri(apiBaseUrl);

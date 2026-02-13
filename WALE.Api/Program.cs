@@ -71,10 +71,5 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),
-            sp.GetRequiredService<IDatabaseWriteService>(),
-            dbHost,
-            dbPort,
-            dbDatabaseName,
-            dbUsername,
-            dbPassword));
+            sp.GetRequiredService<IDatabaseWriteService>()));
 }

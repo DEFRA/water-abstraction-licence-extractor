@@ -10,12 +10,7 @@ namespace WALE.ProcessFile.Services.Cache;
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
     public bool UsesDatabase { get; set; } = true;
-    public string? CacheFolder { get; set; }
-    public string? Host { get; set; }
-    public int Port { get; set; }
-    public string? DatabaseName { get; set; }
-    public string? Username { get; set; }
-    public string? Password { get; set; }
+    public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
     public Task SetupAsync()
     {
@@ -44,9 +39,16 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/GetImage?pageNumber={request.PageNumber}"
+           + $"&imageNumber={request.ImageNumber}&filename={request.Filepath}"
+           + $"&noOcrServiceName={request.NoOcrServiceName}&extension={request.Extension}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
     public async Task<List<ImageDetails>>

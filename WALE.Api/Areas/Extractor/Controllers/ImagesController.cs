@@ -7,7 +7,9 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class ImagesController(ICacheService cacheService) : Controller
+public class ImagesController(
+    ICacheService cacheService,
+    IOutputService outputService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -64,5 +66,45 @@ public class ImagesController(ICacheService cacheService) : Controller
             }); 
 
         return Ok(imageText);
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult> GetImageAsync(
+        [FromQuery] string filename,
+        [FromQuery] string extension,
+        [FromQuery] int pageNumber,
+        [FromQuery] int imageNumber,
+        [FromQuery] string? noOcrServiceName)
+    {
+        var bytes = await cacheService.GetImageBytesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filename,
+                NoOcrServiceName = noOcrServiceName,
+                Extension = extension
+            });
+
+        if (bytes == null)
+        {
+            return NotFound();
+        }
+    
+        return File(bytes, "image/jpeg");
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult> GetPageScreenshotAsync(
+        [FromQuery] string fileName,
+        [FromQuery] string serviceName,
+        [FromQuery] int pageNumber)
+    {
+        var data = await outputService.GetPageScreenshotDataAsync(
+            pageNumber,
+            serviceName,
+            fileName);
+
+        return Ok(data);
     }
 }

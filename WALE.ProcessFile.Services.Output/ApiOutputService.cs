@@ -23,12 +23,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<byte[]>> GetPageScreenshotDataAsync(
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
         string pdfFilePath)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilePath}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Page screenshot data returned null");
+        }
+
+        return JsonSerializer.Deserialize<List<byte[]>?>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public async Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)

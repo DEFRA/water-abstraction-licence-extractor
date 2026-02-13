@@ -73,7 +73,7 @@ public class MixedModeOutputService(
 
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
-        return databaseOutputService.SaveMatchResultAsync(matchesResult, pdfFilePath, processRunId);
+        return apiOutputService.SaveMatchResultAsync(matchesResult, pdfFilePath, processRunId);
     }
 
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)

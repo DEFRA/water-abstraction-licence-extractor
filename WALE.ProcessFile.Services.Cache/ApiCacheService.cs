@@ -88,14 +88,30 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var path = $"/Extractor/Metadata/GetImageText?pageNumber={request.PageNumber}"
+            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return content;
     }
 
-    public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var path = $"/Extractor/Metadata/GetScreenshotText?pageNumber={request.PageNumber}"
+           + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+           + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return content;
     }
 
     public Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)

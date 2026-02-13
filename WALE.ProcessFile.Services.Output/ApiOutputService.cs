@@ -71,9 +71,23 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/MatchResult/Save";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Matches = matchesResult,
+            PdfFilePath = pdfFilePath,
+            ProcessRunId = processRunId
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
     }
 
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)

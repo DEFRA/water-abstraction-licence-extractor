@@ -114,13 +114,13 @@ public class MixedModeCacheService(
     public Task<string?> GetOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request)
     {
-        return databaseCacheService.GetOcrImageTextAsync(request);
+        return apiCacheService.GetOcrImageTextAsync(request);
     }
 
     public Task<string?> GetOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request)
     {
-        return databaseCacheService.GetOcrScreenshotTextAsync(request);
+        return apiCacheService.GetOcrScreenshotTextAsync(request);
     }
 
     public Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(

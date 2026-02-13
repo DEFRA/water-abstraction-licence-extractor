@@ -23,4 +23,46 @@ public class ImagesController(ICacheService cacheService) : Controller
         
         return Ok(pageImages);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetImageTextAsync(
+        [FromQuery] int pageNumber,
+        [FromQuery] int imageNumber,
+        [FromQuery] string filepath,
+        [FromQuery] string ocrServiceName,
+        [FromQuery] int processRunId)
+    {
+        var imageText = await cacheService.GetOcrImageTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filepath,
+                OcrServiceName = ocrServiceName,
+                ProcessRunId = processRunId
+            }); 
+
+        return Ok(imageText);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetScreenshotTextAsync(
+        [FromQuery] int pageNumber,
+        [FromQuery] int imageNumber,
+        [FromQuery] string filepath,
+        [FromQuery] string ocrServiceName,
+        [FromQuery] int processRunId)
+    {
+        var imageText = await cacheService.GetOcrScreenshotTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filepath,
+                OcrServiceName = ocrServiceName,
+                ProcessRunId = processRunId
+            }); 
+
+        return Ok(imageText);
+    }
 }

@@ -93,7 +93,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
-        var path = $"/Extractor/Metadata/GetImageText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Images/GetImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
@@ -106,7 +106,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
-        var path = $"/Extractor/Metadata/GetScreenshotText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Images/GetScreenshotText?pageNumber={request.PageNumber}"
            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 

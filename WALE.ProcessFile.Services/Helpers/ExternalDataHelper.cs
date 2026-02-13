@@ -222,36 +222,39 @@ public static class ExternalDataHelper
         {
             if (!purposeToLicenceMapping.TryGetValue(pointDataLine.PurposeIdLookupKey, out var naldData))
             {
+                // Just skip it - might be a purpose ID linked to a non-current version
                 continue;
             }
-            
-            var pointId = pointDataLine.PointId;
+
             var purposeId = pointDataLine.PurposeId;
-            
-            var existingPurpose = naldData.Purposes.FirstOrDefault(x => x.Id == purposeId);
-            if (existingPurpose == null)
+
+            var naldDataPurpose = naldData.Purposes.FirstOrDefault(x => x.Id == purposeId);
+            if (naldDataPurpose == null)
             {
+                // By definition, the NALD data discovered by the dictionary lookup should contain the purpose ID
+                // matching the dictionary key, so we should never be able to hit this exception.
                 throw new Exception("Purpose to licence mapping is corrupted");
             }
-            
-            existingPurpose.PointIds.Add(pointId);
-            
-            var existingPoint = naldData.Points.FirstOrDefault(x => x.PointId == pointId);
-            if (existingPoint != null)
-            {
-                existingPoint.PurposeIds.Add(purposeId);
-                continue;
-            }
-            
-            // Todo: complete this ctor
-            var naldDataPoint = new NaldDataPoint
-            {
-                PointId = pointDataLine.PointId,
-                PointName = pointDataLine.LocalName,
-                PurposeIds = [purposeId]
-            };
 
-            naldData.Points.Add(naldDataPoint);
+            var pointId = pointDataLine.PointId;
+            naldDataPurpose.PointIds.Add(pointId);
+
+            var naldDataPoint = naldData.Points.FirstOrDefault(x => x.PointId == pointId);
+            if (naldDataPoint == null)
+            {
+                naldDataPoint = new NaldDataPoint
+                {
+                    PointId = pointDataLine.PointId,
+                    PointName = pointDataLine.LocalName,
+                    PurposeIds = [purposeId]
+                };
+
+                naldData.Points.Add(naldDataPoint);
+            }
+            else
+            {
+                naldDataPoint.PurposeIds.Add(purposeId);
+            }
         }
     }
 }

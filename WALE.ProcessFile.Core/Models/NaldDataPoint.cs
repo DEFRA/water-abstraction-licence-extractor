@@ -3,6 +3,7 @@ namespace WALE.ProcessFile.Core.Models;
 public class NaldDataPoint
 {
     public int PointId { get; init; }
+    public short RegionCode { get; init; }
     public string? PointName { get; init; }
     public string? Category { get; init; }
     public string? Ngr1 { get; init; }
@@ -19,6 +20,6 @@ public class NaldDataPoint
 
     public override string ToString()
     {
-        return $"{PointId}{PointName}{Category}{PrimaryType}{SecondaryType}{Ngr1}{Ngr2}{Ngr3}{Ngr4}{Ngr1Cartesian}{Ngr2Cartesian}{Ngr3Cartesian}{Ngr4Cartesian}";
+        return $"{PointId}{RegionCode}";
     }
 }

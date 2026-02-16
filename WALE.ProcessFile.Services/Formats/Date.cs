@@ -60,6 +60,13 @@ public static partial class Date
             : null;
     }
 
+    public static DateTime? GetDateOrNull(string? dateString)
+    {
+        return !string.IsNullOrEmpty(dateString)
+            ? DateTime.TryParse(dateString, out var date) ? date : null
+            : null;
+    }
+    
     public static string? DateFormatConsistent(string? input)
     {
         if (input == null)

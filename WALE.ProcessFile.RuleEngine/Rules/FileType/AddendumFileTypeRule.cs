@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
 using WALE.ProcessFile.RuleEngine.Helpers;
+using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 
@@ -34,7 +35,7 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
             MatchedTerms = matchedTerms?.SelectMany(m => m.Text?.Select(t => t.Text)!).ToList()!,
-            DateOfIssue = RuleSharedHelper.DateFormatConsistent(RuleSharedHelper.ExtractDateOfIssue(content)),
+            DateOfIssue = Date.DateFormatConsistent(RuleSharedHelper.ExtractDateOfIssue(content)),
             LicenceNumber = RuleSharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>
             {

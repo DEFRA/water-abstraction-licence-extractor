@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.RuleEngine.Helpers;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
@@ -34,11 +35,11 @@ public static class GenerateLicenceReaderExtract
         "42901S0033R01__Application Transfer Issued Licence 18.12.24.pdf"
     };
 
-    private static string GetResultsCsvPath(string pdfFolder) => Path.Combine(pdfFolder, ResultsCsvFileName);
+    private static string GetInProgressResultsCsvPath(string pdfFolder) => Path.Combine(pdfFolder, ResultsCsvFileName);
 
     private static List<LicenceReaderCsvLine> LoadExistingResults(string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath(pdfFolder);
+        var csvPath = GetInProgressResultsCsvPath(pdfFolder);
         var results = new List<LicenceReaderCsvLine>();
 
         if (!File.Exists(csvPath))
@@ -69,7 +70,7 @@ public static class GenerateLicenceReaderExtract
                         FileName = parts[0].Trim('"'),
                         PermitNumber = parts[1].Trim('"'),
                         LicenceNumber = string.IsNullOrEmpty(parts[2]) || parts[2] == "\"\"" ? null : parts[2].Trim('"'),
-                        DateOfIssue = string.IsNullOrEmpty(parts[3]) || parts[3] == "\"\"" ? null : parts[3].Trim('"')
+                        DateOfIssue = string.IsNullOrEmpty(parts[3]) || parts[3] == "\"\"" ? null : DateOnly.Parse(parts[3].Trim('"'))
                     });
                 }
             }
@@ -87,13 +88,13 @@ public static class GenerateLicenceReaderExtract
 
     private static void MarkFileAsProcessingInCsv(string fileName, string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath(pdfFolder);
+        var csvPath = GetInProgressResultsCsvPath(pdfFolder);
         
         lock (CsvWriteLock)
         {
             try
             {
-                bool fileExists = File.Exists(csvPath);
+                var fileExists = File.Exists(csvPath);
                 using var writer = new StreamWriter(csvPath, true);
 
                 // Write header if file doesn't exist
@@ -112,9 +113,9 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static void UpdateFileResultInCsv(LicenceReaderCsvLine result, string pdfFolder)
+    private static void UpdateInProgressFileResultsCsv(LicenceReaderCsvLine result, string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath(pdfFolder);
+        var csvPath = GetInProgressResultsCsvPath(pdfFolder);
         
         lock (CsvWriteLock)
         {
@@ -246,17 +247,17 @@ public static class GenerateLicenceReaderExtract
                     pdfFolder));
         }
 
-        var data = await GetLicenceReaderDataAsync(
+        var lines = await GetLicenceReaderDataAsync(
             pdfDataExtractors,
             pdfFolder,
             regionCode);
 
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
-            data,
+            lines,
             "LicenceReader",
             OutputFolder,
-            line => line.LicenceNumber ?? "No Licence",
+            line => line.LicenceNumber ?? "No Licence Number scraped",
             "licence records",
             "Licence Processing Summary");
     }
@@ -287,7 +288,7 @@ public static class GenerateLicenceReaderExtract
             Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
             Console.WriteLine($"  Message: {ex.Message}");
             
-            throw; // Re-throw to maintain the original error handling flow
+            throw;
         }
     }
 
@@ -296,8 +297,11 @@ public static class GenerateLicenceReaderExtract
         string pdfFolder,
         int regionCode)
     {
-        // Load existing results (includes both completed and crashed files)
+        // Load existing results (includes both completed and crashed files) - bookmarking system
         var existingResults = LoadExistingResults(pdfFolder);
+        
+        // NOTE - Next line for debugging only
+        //existingResults.Clear();
         
         var processedFileNames = new HashSet<string>(
             existingResults.Select(existingResult => existingResult.FileName)!,
@@ -307,13 +311,24 @@ public static class GenerateLicenceReaderExtract
             .GetFiles(pdfFolder)
             .Where(filePath => filePath.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .Select(filePath => filePath.Split('/').Last())
-            .OrderBy(fileName => fileName).ToList();
-
+            .OrderBy(fileName => fileName)
+            .ToList();
+        
         // Filter out files already in CSV (completed or crashed) and hard-coded excluded files
         var pdfFileNames = allPdfFileNames
             .Where(fileName => !processedFileNames.Contains(fileName) && !ExcludedFiles.Contains(fileName))
             .ToList();
-
+        
+        // NOTE - Next line for debugging only - Filter to a subset of files if wanted
+        /*pdfFileNames = pdfFileNames
+            .Where(fileName =>
+                fileName.StartsWith("12203045__")
+                    || fileName.StartsWith("12205044__")
+                    || fileName.StartsWith("12303008__")
+                    || fileName.StartsWith("12303075__")
+                    || fileName.StartsWith("12303076__"))
+            .ToList();*/
+        
         Console.WriteLine($"Found {allPdfFileNames.Count} total PDF files");
         Console.WriteLine($"Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
@@ -330,15 +345,14 @@ public static class GenerateLicenceReaderExtract
                 .OrderBy(existingResult => existingResult.PermitNumber)
                 .ToList();
         }
-
-        var labels = LicenceReaderConfiguration.GetLabels();
-        Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
         
         var configuration = new LookupConfiguration(
-            labels,
+            LicenceReaderConfiguration.GetLabels(),
             FileLicenceMapping,
-            [],
+            CompanyName.GetFirstNamesCsvFromFile(),
             regionCode);
+        
+        Console.WriteLine($"Retrieved {configuration.Labels.Count} label groups from configuration");
         
         var returnList = new ConcurrentBag<LicenceReaderCsvLine>();
         var batchSize = pdfDataExtractors.Count;
@@ -397,26 +411,30 @@ public static class GenerateLicenceReaderExtract
                         $"successfully, processing licence data for {pdfFilePath}...");
 
                     // Extract licence number and date of issue from matches
-                    var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
-                    var dateOfIssue = SharedHelper.ExtractDateOfIssue(internalJson);
+                    var licenceNumber = RuleSharedHelper.ExtractLicenceNumber(internalJson);
+                    var dateOfIssue = RuleSharedHelper.ExtractDateOfIssue(internalJson);
 
                     // Extract permit number from filename (everything before first underscore)
                     var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
 
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Extracted - File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Extracted - " +
+                        $"File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
 
+                    var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
+                    var dateOnly = datetime != null ? DateOnly.FromDateTime(datetime.Value) : (DateOnly?)null;
+                    
                     var result = new LicenceReaderCsvLine
                     {
                         LicenceNumber = licenceNumber,
                         PermitNumber = permitNumber,
-                        DateOfIssue = SharedHelper.DateFormatConsistent(dateOfIssue), 
+                        DateOfIssue = dateOnly,
                         FileName = pdfFilePath
                     };
 
                     returnList.Add(result);
 
                     // Update the CSV row with actual results
-                    UpdateFileResultInCsv(result, pdfFolder);
+                    UpdateInProgressFileResultsCsv(result, pdfFolder);
                 }
                 catch (Exception ex)
                 {
@@ -443,7 +461,7 @@ public static class GenerateLicenceReaderExtract
                     returnList.Add(failedResult);
 
                     // Update CSV with failed result
-                    UpdateFileResultInCsv(failedResult, pdfFolder);
+                    UpdateInProgressFileResultsCsv(failedResult, pdfFolder);
                 }
             }).ToArray();
 

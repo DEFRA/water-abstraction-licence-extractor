@@ -71,7 +71,7 @@ public static class TemplateFinderConfiguration
                 Text = 
                 [
                     new("Variation"),
-                    new("Superseded"),
+                    new("Superseded")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,

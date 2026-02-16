@@ -246,8 +246,105 @@ public static class ExternalDataHelper
                 {
                     PointId = pointDataLine.PointId,
                     PointName = pointDataLine.LocalName,
-                    PurposeIds = [purposeId]
+                    PurposeIds = [purposeId],
+                    AaptAptpCode = pointDataLine.AaptAptpCode,
+                    AaptAptsCode = pointDataLine.AaptAptsCode,
+                    AapcCode = pointDataLine.AapcCode,
+                    NationalGridReferences = [],
+                    CartesianReferences = []
                 };
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr1Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr1East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr1North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 1,
+                        Sheet = pointDataLine.Ngr1Sheet,
+                        East = pointDataLine.Ngr1East,
+                        North = pointDataLine.Ngr1North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr2Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr2East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr2North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 2,
+                        Sheet = pointDataLine.Ngr2Sheet,
+                        East = pointDataLine.Ngr2East,
+                        North = pointDataLine.Ngr2North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr3Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr3East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr3North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 3,
+                        Sheet = pointDataLine.Ngr3Sheet,
+                        East = pointDataLine.Ngr3East,
+                        North = pointDataLine.Ngr3North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr4Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr4East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr4North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 4,
+                        Sheet = pointDataLine.Ngr4Sheet,
+                        East = pointDataLine.Ngr4East,
+                        North = pointDataLine.Ngr4North
+                    });
+                }
+
+                if (pointDataLine.Cart1East.HasValue || pointDataLine.Cart1North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 1,
+                        East = pointDataLine.Cart1East,
+                        North = pointDataLine.Cart1North
+                    });
+                }
+
+                if (pointDataLine.Cart2East.HasValue || pointDataLine.Cart2North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 2,
+                        East = pointDataLine.Cart2East,
+                        North = pointDataLine.Cart2North
+                    });
+                }
+
+                if (pointDataLine.Cart3East.HasValue || pointDataLine.Cart3North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 3,
+                        East = pointDataLine.Cart3East,
+                        North = pointDataLine.Cart3North
+                    });
+                }
+
+                if (pointDataLine.Cart4East.HasValue || pointDataLine.Cart4North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 4,
+                        East = pointDataLine.Cart4East,
+                        North = pointDataLine.Cart4North
+                    });
+                }
 
                 naldData.Points.Add(naldDataPoint);
             }

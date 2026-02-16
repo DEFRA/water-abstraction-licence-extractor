@@ -2720,15 +2720,15 @@ public static partial class SchemaConverter
             // TODO - Work out which purpose matches the description
             
             purpose = naldDataLine.Purposes
-                .First(p => p.PurposeId != 0);
+                .First(p => p.Id != 0);
         }
 
         return new NaldPurposeData
         {
-            Id = purpose.PurposeId.ToString(),
-            Code = purpose.PurposeCategoryUseCode,
-            UseCode = purpose.PurposeUseCode,
-            UseDescription = purpose.PurposeUseDescription
+            Id = purpose.Id.ToString(),
+            Code = purpose.CategoryUse.Code,
+            UseCode = purpose.CategoryUse.UseCode.ToString(),
+            UseDescription = purpose.CategoryUse.UseDescription
         };
     }
     

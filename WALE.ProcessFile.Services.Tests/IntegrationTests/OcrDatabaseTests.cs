@@ -1,10 +1,12 @@
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -15,7 +17,11 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class OcrDatabaseTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresConnectionString);
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -23,27 +29,36 @@ public class OcrDatabaseTests
     private static IDatabaseWriteService WriteService =>
         new PostgresWriteService(NpgsqlDataSourceProvider);
     
-    private static readonly ICacheService CacheService = new DatabaseCacheService(ReadService, WriteService, TestConfig.PostgresConnectionString);
+    private static readonly ICacheService CacheService = new DatabaseCacheService(
+        ReadService,
+        WriteService,
+        TestConfig.PostgresHost,
+        TestConfig.PostgresPort,
+        TestConfig.PostgresDbName,
+        TestConfig.PostgresUsername,
+        TestConfig.PostgresPassword);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     public OcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
         },
         CacheService,
         OutputService,
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {
@@ -51,7 +66,9 @@ public class OcrDatabaseTests
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+                _fileLicenceMapping,
+                CompanyName.GetFirstNamesCsvFromFile(),
+                3),
             [PdfFolder + fileName],
             0);
     }
@@ -66,7 +83,13 @@ public class OcrDatabaseTests
     [Fact]
     public async Task Uncached_Then_Changed()
     {
-        const string filename = "14460030853 licence effective 24.07.2005.PDF";
+        var filename = "14460030853 licence effective 24.07.2005";
+        await CacheService.ClearCacheAsync(filename);
+
+        filename = "14460030853 licence effective 24-07-2005";
+        await CacheService.ClearCacheAsync(filename);
+        
+        filename = "14460030853 licence effective 24.07.2005.pdf";
         await CacheService.ClearCacheAsync(filename);
         
         await ProcessAsync(filename); // Uncached
@@ -93,7 +116,7 @@ public class OcrDatabaseTests
         
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
-        Assert.Equal("14/46/03/0852", licenceNumber.Text?.FirstOrDefault()?.Text); // TODO should be 14/46/03/0853
+        Assert.Equal("14/46/03/0853", licenceNumber.Text?.FirstOrDefault()?.Text);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

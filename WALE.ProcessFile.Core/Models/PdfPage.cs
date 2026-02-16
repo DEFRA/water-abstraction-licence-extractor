@@ -9,14 +9,10 @@ public class PdfPage
     public int NumberOfImages { get; set; }
 
     [JsonIgnore]
-    public string? Text { get; set; }
+    public string? DigitalText { get; set; }
 
-    public string GetImageFilepath(string serviceName)
-    {
-        return $"{serviceName}/Images/page-{Number}.png";
-    }
-    
-    public string? ImageFilepath { get; set; }
+    // There are multiple as (at time of writing) one from PdfPig and one from Docnet
+    public List<string> ScreenshotFilepaths { get; set; } = [];
 
     public List<PdfPageProvider> Providers { get; set; } = [];
     

@@ -9,7 +9,9 @@ using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
 /*using Microsoft.Extensions.Logging;*/
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
@@ -66,12 +68,12 @@ public class MessageReceivedFunction(
             pdfFilePath
         };
         
-        var fileLicenceMapping = new Dictionary<string, string>();
+        var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
             [
-                new TesseractOcrDataExtractorService(tesseractPath, PageSegMode.SparseTextOsd, cacheService, outputService, dotnetPath, tesseractExeName, tesseractExeDirectory),
+                new TesseractOcrDataExtractorService(tesseractPath, Core.Enums.PageSegMode.SparseTextOsd, cacheService, outputService, dotnetPath, tesseractExeName, tesseractExeDirectory),
                 new AzureAiVisionOcrDataExtractorService(aiVisionEndpoint, aiVisionKey, cacheService, outputService),
             ],
             cacheService,
@@ -82,7 +84,9 @@ public class MessageReceivedFunction(
             pdfFilePath,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
-                fileLicenceMapping),
+                fileLicenceMapping,
+                CompanyName.GetFirstNamesCsvFromFile(),
+                1),
             previouslyParsedPaths,
             0);
         

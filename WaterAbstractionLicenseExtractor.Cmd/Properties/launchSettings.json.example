@@ -10,18 +10,17 @@
         "PdfFolderPath": "../../../../../WaterPdfs/",
         "ReportTemplatePath": "../../../../WALE.ProcessFile.Services/Templates/",
         "FileMappingPath": "../../../../licence-number-filename-map.csv",
-        "LiveLicencesPath": "",
-        "ImpoundmentLicencesPath": "",
-        "DeadLicencesPath": "",
-        "NaldDataPath": "",
-        "NaldLimitDataPath": "",
         "OutputFolder": "Output/",
         "CacheFolder": "Cache/",
         "ConcurrentCount": "10",
         "REGENERATE_MAPPING_JSON": "true",
         "LOAD_AI_JS": "false",
         "RefreshCache": "false",
-        "PostgresConnectionString": "",
+        "POSTGRESQL_HOST": "localhost",
+        "POSTGRESQL_PORT": "5432",
+        "POSTGRESQL_DBNAME": "wale",
+        "POSTGRESQL_USERNAME": "ea",
+        "POSTGRESQL_PASSWORD": "EnvironmentAgency1",
         "ListDataPath": "list-data.js",
         "ProcessRunsDataPath": "",
         "InternalDataPath": "filename + '/internal.jsonp'",
@@ -31,7 +30,8 @@
         "FullImageDataPath": "''",
         "DotnetPath": "/usr/local/share/dotnet/dotnet",
         "TesseractExeName": "WALE.ProcessFile.Services.TesseractExe.dll",
-        "TesseractExeDirectory": "[Fill in]"
+        "TesseractExeDirectory": "[Fill in]",
+        "ApiBaseUrl": ""
       }
     }
   }

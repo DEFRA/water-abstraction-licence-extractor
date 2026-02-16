@@ -6,7 +6,7 @@
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
 const string workflow = "FileTypeIdentificationExtract";
 
-const int processRunId = 45;
+const int processRunId = 631;
 
 switch (workflow)
 {

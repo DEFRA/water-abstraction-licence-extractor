@@ -6,7 +6,6 @@ bin/
 obj/
 *.dll
 *.pdb
-*.cache
 *.deps.json
 
 # User-specific files
@@ -67,3 +66,4 @@ WALE.Portal/lerna-debug.log*
 
 # Testing
 WALE.Portal/coverage/
+.output.txt

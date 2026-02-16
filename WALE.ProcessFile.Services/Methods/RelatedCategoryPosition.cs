@@ -10,7 +10,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class RelatedCategoryPosition
 {
-    public static Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
+    public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
@@ -53,24 +53,25 @@ public static class RelatedCategoryPosition
                 request.label,
                 modifiedLine,
                 modifiedPreviousLines,
-                modifiedNextLines);
+                modifiedNextLines,
+                request.isOcr);
 
             if (matchedValues.Count == 0)
             {
-                return Task.FromResult(returnList);
+                return returnList;
             }
             
             var labelGroupResult = request.labelGroupResult.Clone();
             labelGroupResult.Text = matchedValues;
             labelGroupResult.MatchedLabel = request.label;
             
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 matchedValues,
                 false));
             
-            return ProcessSubLabelsAsync(request, returnList); 
+            return await ProcessSubLabelsAsync(request, returnList); 
         }
         
         var relevantCategoryItems = new List<LabelGroupResult>();
@@ -120,7 +121,8 @@ public static class RelatedCategoryPosition
             request.label,
             modifiedLine,
             modifiedPreviousLines,
-            modifiedNextLines);
+            modifiedNextLines,
+            request.isOcr);
         
         var allLines = new List<DocumentLine>();
         allLines.AddRange(modifiedPreviousLines);
@@ -172,7 +174,7 @@ public static class RelatedCategoryPosition
         
         if (absoluteMatches.Count <= 0)
         {
-            return Task.FromResult(returnList);
+            return returnList;
         }
 
         var categoryItemsOnLine = relevantCategoryItems
@@ -221,21 +223,22 @@ public static class RelatedCategoryPosition
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
 
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 [line],
                 false));
         }
 
-        return ProcessSubLabelsAsync(request, returnList);
+        return await ProcessSubLabelsAsync(request, returnList);
     }
 
     private static List<DocumentLine> GetMatches(
         LabelToMatch label,
         DocumentLine? modifiedLine,
         List<DocumentLine> modifiedPreviousLines,
-        List<DocumentLine> modifiedNextLines)
+        List<DocumentLine> modifiedNextLines,
+        bool isOcr)
     {
         var matches = new List<DocumentLine>();
         
@@ -243,7 +246,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in previousLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }                
@@ -254,7 +257,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in modifiedLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(modifiedLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }
@@ -265,7 +268,7 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in nextLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], label, out var numberLines))
+                if (Number.AnyIsNumber([column.AsDocumentLine(nextLine)], label, isOcr, out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }

@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -13,7 +14,7 @@ public class FunctionInputModel
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }
     public List<TextAndLabel>? textBeforeAtAndAfterLabel { get; set; }
-    public bool autoCorrect { get; set; }
+    public LookupConfiguration? lookupConfiguration { get; set; }
     public bool isDateLookup { get; set; }
     public bool isDateOrPurposeLookup { get; set; }
     public bool isCompanyType { get; set; }
@@ -26,13 +27,14 @@ public class FunctionInputModel
     public bool isOcr { get; set; }
     public string? serviceName { get; set; }
     public string? labelGroupName { get; set; }
-    public Dictionary<string, string>? licenceNumberMapping { get; set; }
+    public Dictionary<string, DmsFileData>? licenceNumberMapping { get; set; }
     public List<string>? previouslyParsedPaths { get; set; }
     public IOutputService? outputService { get; set; }
     public ICacheService? cacheService { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
     public int processRunId { get; set; }
-    
+    public int regionCode { get; set; }
+
     public FunctionInputModel Clone()
     {
         return new FunctionInputModel
@@ -62,7 +64,8 @@ public class FunctionInputModel
             outputService = outputService,
             cacheService = cacheService,
             pdfDataExtractorService = pdfDataExtractorService,
-            autoCorrect = autoCorrect
+            processRunId = processRunId,
+            regionCode = regionCode
         };
     }
 }

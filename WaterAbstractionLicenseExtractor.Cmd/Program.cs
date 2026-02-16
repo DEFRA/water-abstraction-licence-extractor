@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -10,11 +9,13 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WaterAbstractionLicenseExtractor.Cmd;
@@ -25,21 +26,20 @@ return;
 async Task ProgramAsync()
 {
     Console.WriteLine("Started");
-
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
     var outputFolder = services.OutputFolder!;
-    
+
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
-    
+
     if (services.RefreshCache)
     {
         await cacheService.ClearCacheAsync();
     }
-    
+
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
@@ -54,34 +54,51 @@ async Task ProgramAsync()
         services.LicenceSetsDataPath!,
         services.ThumbnailImageDataPath!,
         services.FullImageDataPath!);
-    
-    var impoundmentLicenceNumbers = ExternalDataHelper.GetImpoundmentLicenceNumbers(
-        Environment.GetEnvironmentVariable("ImpoundmentLicencesPath"));
-    var deadLicenceNumbers = ExternalDataHelper.GetDeadLicenceNumbers(
-        Environment.GetEnvironmentVariable("DeadLicencesPath"));
-    var liveLicenceNumbers = ExternalDataHelper.GetLiveLicenceNumbers(
-        Environment.GetEnvironmentVariable("LiveLicencesPath"));
-    var naldData = ExternalDataHelper.GetNaldGeneralReportData(
-        Environment.GetEnvironmentVariable("NaldDataPath"));
+
+    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
+    const short regionCode = 3;
+
+    var naldLicenceNumbersFromDb = await services.DatabaseReadService!.GetNaldLicenceNumbersAsync(regionCode);
+
+    var naldLicenceStatusData = new NaldLicenceStatusData
+    {
+        LiveLicences = naldLicenceNumbersFromDb.Live
+            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+            .Where(x => !string.IsNullOrEmpty(x))
+            .Select(x => x!)
+            .ToHashSet(),
+        DeadLicences = naldLicenceNumbersFromDb.Dead
+            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+            .Where(x => !string.IsNullOrEmpty(x))
+            .Select(x => x!)
+            .ToHashSet(),
+        ImpoundmentLicences = naldLicenceNumbersFromDb.Impoundment
+            .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+            .Where(x => !string.IsNullOrEmpty(x))
+            .Select(x => x!)
+            .ToHashSet()
+    };
+
+    var (dmsFilesToProcess, allDmsData) = GetDmsFilesAndMapping(services, regionCode);
+
+    var naldData = await ExternalDataHelper.GetNaldDataFromDatabaseAsync(
+        services.DatabaseReadService!,
+        allDmsData,
+        regionCode);
 
     var naldLinkedLicenceRawData = await services.DatabaseReadService!.GetNaldLinkedLicenceRawDataAsync();
+    var yorkshireNaldLinkedLicenceRawData = naldLinkedLicenceRawData.Where(x => x.RegionCode == regionCode);
+    var yorkshireNaldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(yorkshireNaldLinkedLicenceRawData.ToList(), regionCode);
 
-    // filter to Yorks/North region (hard-coded for now - this will need reconsidering when we want to handle more than one region)
-    var yorkshireNaldData = naldLinkedLicenceRawData.Where(x => x.RegionCode == "3");
-    var yorkshireNaldHelper = new NaldLinkedLicenceHelper(yorkshireNaldData.ToList());
+    var firstNamesCsv = CompanyName.GetFirstNamesCsvFromFile();
     
-    ExternalDataHelper.AddNaldLimitReportData(
-        Environment.GetEnvironmentVariable("NaldLimitDataPath"),
-        ref naldData);
-    
-    var (files, licenceNumbersWithFilenames) = GetFilesAndMapping(services);
     var processRun = await outputService.SaveProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
-        NumberOfFiles = files.Count
+        NumberOfFiles = dmsFilesToProcess.Count
     });
-    
+
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
     try
@@ -91,20 +108,21 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
-        
-        foreach (var pdfFilePath in files)
+
+        foreach (var (filePath, _) in dmsFilesToProcess)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
-                    pdfFilePath.Key,
+                    filePath,
+                    regionCode,
                     processCount++,
-                    licenceNumbersWithFilenames,
-                    impoundmentLicenceNumbers,
-                    deadLicenceNumbers,
-                    liveLicenceNumbers,
+                    processRun.NumberOfFiles,
+                    allDmsData,
+                    naldLicenceStatusData,
                     naldData,
                     outputService,
                     pdfDataExtractors,
+                    firstNamesCsv,
                     processRun,
                     extractorLock));
 
@@ -141,7 +159,7 @@ async Task ProgramAsync()
                 {
                     throw new Exception("An empty licence set was returned");
                 }
-                
+
                 licenceSetGroups.Add(scrapeResultLicenceSets);
             }
         }
@@ -158,15 +176,15 @@ async Task ProgramAsync()
     }
 
     Console.WriteLine($"All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    
+
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
-        impoundmentLicenceNumbers,
-        deadLicenceNumbers,
-        liveLicenceNumbers);
-    
+        naldLicenceStatusData,
+        allDmsData,
+        regionCode);
+
     Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    
+
     var outputLines = new List<IntermediateOutputLicence>();
 
     var fileNumber = 1;
@@ -175,9 +193,9 @@ async Task ProgramAsync()
     var savedLicenceNumbers = new Dictionary<string, int>();
     var savedLicenceFilenames = new Dictionary<string, int>();
     var notFoundSavedLicenceNumbers = new Dictionary<string, int>();
-    
+
     var savedLicenceSetIds = new HashSet<string>();
-    
+
     foreach (var licenceSetGroup in licenceSetGroups)
     {
         if (licenceSetGroup.Count == 0)
@@ -190,22 +208,23 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences = yorkshireNaldHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
-                if (linkedLicences.Any())
+                var linkedLicences = await yorkshireNaldLinkedLicenceHelper.GetLinkedLicencesAsync(licenceLoop.LicenceNumber);
+                if (linkedLicences.Count != 0)
                 {
                     licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
                 }
 
                 var filename = licenceLoop.Filename;
-                
+
                 if (licenceLoop.LicenceNumber != null
                     && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _)
-                        || (licenceLoop.Status == LicenceStatus.Ok && notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))))
+                        || (licenceLoop.Status == LicenceStatus.Ok &&
+                            notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))))
                 {
                     int loopLicenceId;
                     var savedVersionIsStatusNotFound =
                         notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var existingLicenceId);
-                    
+
                     if (savedVersionIsStatusNotFound && licenceLoop.Status == LicenceStatus.Ok)
                     {
                         await outputService.UpdateLicenceAsync(
@@ -213,7 +232,7 @@ async Task ProgramAsync()
                             existingLicenceId,
                             filename,
                             processRun.ProcessRunId);
-                        
+
                         loopLicenceId = existingLicenceId;
                     }
                     else
@@ -243,34 +262,34 @@ async Task ProgramAsync()
                     licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
                 }
                 else if (licenceLoop.LicenceNumber == null
-                    && !string.IsNullOrEmpty(filename)
-                    && !savedLicenceFilenames.TryGetValue(filename, out _))
+                         && !string.IsNullOrEmpty(filename)
+                         && !savedLicenceFilenames.TryGetValue(filename, out _))
                 {
                     var loopLicenceId = await outputService.SaveLicenceAsync(
                         licenceLoop,
                         filename,
                         processRun.ProcessRunId);
-                    
+
                     savedLicenceFilenames.Add(filename, loopLicenceId);
                     licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
                 }
-                
+
                 var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
                     licenceLoop.LicenceSets,
                     allLicenceSets);
 
                 var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
-                
+
                 foreach (var kvp in licenceSetsLoop.Where(kvp => !savedLicenceSetIds.Contains(kvp.Key)))
                 {
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
-                
+
                 await outputService.SaveLicenceSetsAsync(
                     newLicenceSetsLoop,
                     licenceLoop.Filename!,
-                    processRun.ProcessRunId);  
+                    processRun.ProcessRunId);
             }
         }
 
@@ -286,9 +305,9 @@ async Task ProgramAsync()
 
         outputLines.Add(outputLine);
     }
-    
+
     Console.WriteLine($"Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    
+
     await JsOutputHelper.SaveListDataAsync(
         outputLines,
         outputFolder,
@@ -296,15 +315,16 @@ async Task ProgramAsync()
         services.RegenerateMappingJson,
         processRun,
         true);
-    
+
     Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    
+
     processRun.EndDateTimeUtc = DateTime.UtcNow;
-    await outputService.FinishProcessRunAsync(processRun);
-    
+    await outputService.FinishProcessRunAsync(processRun, regionCode);
+
     Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    Console.WriteLine($"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
-    
+    Console.WriteLine(
+        $"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+
     //Console.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
 
@@ -320,68 +340,104 @@ Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
         {
             continue;
         }
-        
+
         returnDict.TryAdd(licenceSet.LicenceSetId, licenceSet);
     }
-    
+
     return returnDict;
 }
 
 ConfiguredServices ConfigureServices()
 {
     var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
-        ?? throw new NullReferenceException("ConcurrentCount"));
+                                          ?? throw new NullReferenceException("ConcurrentCount"));
     var regenerateMappingJson = bool.Parse(Environment.GetEnvironmentVariable("REGENERATE_MAPPING_JSON")
-        ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
+                                           ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
     var loadAiJs = bool.Parse(Environment.GetEnvironmentVariable("LOAD_AI_JS")
-        ?? throw new NullReferenceException("LOAD_AI_JS"));
+                              ?? throw new NullReferenceException("LOAD_AI_JS"));
     var refreshCache = bool.Parse(Environment.GetEnvironmentVariable("RefreshCache")
-        ?? throw new NullReferenceException("RefreshCache"));
+                                  ?? throw new NullReferenceException("RefreshCache"));
     var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-        ?? throw new NullReferenceException("PdfFolderPath");
+                        ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
-        ?? throw new NullReferenceException("ReportTemplatePath");
+                             ?? throw new NullReferenceException("ReportTemplatePath");
     var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
-        ?? throw new NullReferenceException("OutputFolder");
+                       ?? throw new NullReferenceException("OutputFolder");
     var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
-        ?? throw new NullReferenceException("ListDataPath");
+                       ?? throw new NullReferenceException("ListDataPath");
     var processRunsDataPath = Environment.GetEnvironmentVariable("ProcessRunsDataPath")
-        ?? throw new NullReferenceException("ProcessRunsDataPath");
+                              ?? throw new NullReferenceException("ProcessRunsDataPath");
     var internalDataPath = Environment.GetEnvironmentVariable("InternalDataPath")
-        ?? throw new NullReferenceException("InternalDataPath");
+                           ?? throw new NullReferenceException("InternalDataPath");
     var licenceDataPath = Environment.GetEnvironmentVariable("LicenceDataPath")
-        ?? throw new NullReferenceException("LicenceDataPath");
+                          ?? throw new NullReferenceException("LicenceDataPath");
     var licenceSetsDataPath = Environment.GetEnvironmentVariable("LicenceSetsDataPath")
-        ?? throw new NullReferenceException("LicenceSetsDataPath");
+                              ?? throw new NullReferenceException("LicenceSetsDataPath");
     var thumbnailImageDataPath = Environment.GetEnvironmentVariable("ThumbnailImageDataPath")
-        ?? throw new NullReferenceException("ThumbnailImageDataPath");
+                                 ?? throw new NullReferenceException("ThumbnailImageDataPath");
     var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
-        ?? throw new NullReferenceException("FullImageDataPath");
-    var postgresConnectionString = Environment.GetEnvironmentVariable("PostgresConnectionString")
-        ?? throw new NullReferenceException("PostgresConnectionString");
+                            ?? throw new NullReferenceException("FullImageDataPath");
+    var postgresHost = Environment.GetEnvironmentVariable("POSTGRESQL_HOST")
+                       ?? throw new NullReferenceException("POSTGRESQL_HOST");
+    var postgresPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRESQL_PORT")
+                                 ?? throw new NullReferenceException("POSTGRESQL_PORT"));
+    var postgresDatabaseName = Environment.GetEnvironmentVariable("POSTGRESQL_DBNAME")
+                               ?? throw new NullReferenceException("POSTGRESQL_DBNAME");
+    var postgresUsername = Environment.GetEnvironmentVariable("POSTGRESQL_USERNAME")
+                           ?? throw new NullReferenceException("POSTGRESQL_USERNAME");
+    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSWORD")
+                           ?? throw new NullReferenceException("POSTGRESQL_PASSWORD");
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
-        ?? throw new NullReferenceException("FileMappingPath");
+                          ?? throw new NullReferenceException("FileMappingPath");
     var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
-        ?? throw new NullReferenceException("DotnetPath");
+                     ?? throw new NullReferenceException("DotnetPath");
     var tesseractExeName = Environment.GetEnvironmentVariable("TesseractExeName")
-        ?? throw new NullReferenceException("TesseractExeName");
+                           ?? throw new NullReferenceException("TesseractExeName");
     var tesseractExeDirectory = Environment.GetEnvironmentVariable("TesseractExeDirectory")
-        ?? throw new NullReferenceException("TesseractExeDirectory");
+                                ?? throw new NullReferenceException("TesseractExeDirectory");
     var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-        ?? throw new NullReferenceException("TESSDATA_PREFIX");
-    
+                         ?? throw new NullReferenceException("TESSDATA_PREFIX");
+    var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
+                         ?? throw new NullReferenceException("ApiBaseUrl");    
+
     // This provider should have singleton lifetime and be shared for proper connection pooling
-    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(postgresConnectionString);
+    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+
     Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-    
+
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+
+    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
+
+    var databaseCacheService = new DatabaseCacheService(
+        databaseReadService,
+        databaseAddService,
+        postgresHost,
+        postgresPort,
+        postgresDatabaseName,
+        postgresUsername,
+        postgresPassword);
+
+    var httpClient = new HttpClient();
+    httpClient.BaseAddress = new Uri(apiBaseUrl);
     
-    var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, postgresConnectionString);
-    var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    var apiCacheService = new ApiCacheService(httpClient);
+    
+    var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
+    
+    var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+    var apiOutputService = new ApiOutputService(httpClient);
+
+    var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
     
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
-    
+
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
     {
         var id = idx + 1;
@@ -389,29 +445,29 @@ ConfiguredServices ConfigureServices()
 
         var tesseractOcrSparse = new TesseractOcrDataExtractorService(
             tessDataPrefix,
-            PageSegMode.SparseTextOsd,
+            WALE.ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
             cacheService,
             outputService,
             dotnetPath,
             tesseractExeName,
             tesseractExeDirectory,
             id);
-        
+
         var tesseractOcrDefault = new TesseractOcrDataExtractorService(
             tessDataPrefix,
-            PageSegMode.Auto,
+            WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
             cacheService,
             outputService,
             dotnetPath,
             tesseractExeName,
-            tesseractExeDirectory,            
+            tesseractExeDirectory,
             id);
 
         var azureAiServices = new AzureAiVisionOcrDataExtractorService(
             Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
-                ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
+            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
             Environment.GetEnvironmentVariable("AzureAIVisionKey")
-                ?? throw new NullReferenceException("AzureAIVisionKey"),
+            ?? throw new NullReferenceException("AzureAIVisionKey"),
             cacheService,
             outputService,
             id);
@@ -430,7 +486,7 @@ ConfiguredServices ConfigureServices()
 
         pdfDataExtractors.Add(pdfDataExtractor);
     }
-    
+
     return new ConfiguredServices
     {
         CacheService = cacheService,
@@ -457,23 +513,25 @@ ConfiguredServices ConfigureServices()
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilePath,
+    int regionCode,
     int fileNumber,
-    Dictionary<string, string> licenceMapping,
-    HashSet<string> impoundmentLicenceNumbers,
-    HashSet<string> deadLicenceNumbers,
-    HashSet<string> liveLicenceNumbers,
-    Dictionary<string, NaldData> naldData,
+    int totalNumber,
+    Dictionary<string, DmsFileData> licenceMapping,
+    NaldLicenceStatusData naldLicenceStatusData,
+    Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
+    HashSet<string> firstNamesCsv,
     ProcessRun processRun,
     Lock extractorLock)
 {
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
-    Console.WriteLine($"Attempting {fileNumber} {fileName}...");
+    var dtStart = DateTime.Now;
+    Console.WriteLine($"Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
     IPdfDataExtractorService pdfDataExtractor;
-    
+
     lock (extractorLock)
     {
         pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
@@ -491,7 +549,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
-            licenceMapping);
+            licenceMapping,
+            firstNamesCsv,
+            regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
@@ -506,6 +566,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         if (matchesFull.Matches != null)
         {
+            // TODO move this to one batch save
             foreach (var match in matchesFull.Matches)
             {
                 await outputService.SaveMatchAsync(
@@ -516,18 +577,18 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             }
         }
 
-        Console.WriteLine($"Finished {fileNumber} {fileName}...");
+        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
+        Console.WriteLine($"Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             licenceMapping,
-            impoundmentLicenceNumbers,
-            deadLicenceNumbers,
-            liveLicenceNumbers,
+            naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
             pdfFolder,
-            processRun.ProcessRunId);
+            processRun.ProcessRunId,
+            lookupConfig);
 
         return licenceSets;
     }
@@ -574,19 +635,19 @@ async Task MoveReportHtmlFilesAsync(
     reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
     reportHtml = reportHtml.Replace("[FULL_IMAGE_DATA_PATH]", fullImageDataPath);
     reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
-    
+
     await File.WriteAllTextAsync(reportPath, reportHtml);
-    
+
     File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
 
     var processRunSelectorPath = $"{outputFolder}index.html";
     File.Move($"{outputFolder}process-runs-template.html", processRunSelectorPath, true);
-    
+
     var processRunsHtml = await File.ReadAllTextAsync(processRunSelectorPath);
     processRunsHtml = processRunsHtml.Replace("[PROCESS_RUNS_DATA_PATH]", processRunsPath);
-    
+
     await File.WriteAllTextAsync(processRunSelectorPath, processRunsHtml);
-    
+
     var indexPath = $"{outputFolder}list.html";
     File.Move($"{outputFolder}list-template.html", indexPath, true);
 
@@ -594,17 +655,19 @@ async Task MoveReportHtmlFilesAsync(
     indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
     indexHtml = indexHtml.Replace("[LIST_DATA_PATH]", listDataPath);
     indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
-    
+
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
-    GetFilesAndMapping(ConfiguredServices services)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
+    LicenceNumbersWithFilenames)
+    GetDmsFilesAndMapping(ConfiguredServices services, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
         services.PdfFolderPath!,
-        services.FileMappingPath!);
+        services.FileMappingPath!,
+        regionCode);
 
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
@@ -613,18 +676,22 @@ async Task MoveReportHtmlFilesAsync(
     filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-        .Take(100)
+//        .Take(200)
+//       .Where(x => x.Key.Contains("22728110_"))
+//        .Where(x => x.Key.Contains("22718077_"))        
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-    
+
     return filesAndMapping;
 }
 
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath)
+(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
+    LicenceNumbersWithFilenames)
+    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath, int regionCode)
 {
-    var mappingFile = new Dictionary<string, string>();
-    var filenames = new Dictionary<string, string>();
-    
+    var filenames = new Dictionary<string, DmsFileData>();
+    var mappingFile = new Dictionary<string, DmsFileData>();
+
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -632,7 +699,7 @@ async Task MoveReportHtmlFilesAsync(
         .GetFiles(pdfFolderPath)
         .Select(path => path.Split('/').Last())
         .ToList();
-    
+
     using (var stream = File.Open(mappingFilePath, FileMode.Open, FileAccess.Read))
     {
         using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -656,13 +723,13 @@ async Task MoveReportHtmlFilesAsync(
             {
                 throw new InvalidOperationException("Excel file is empty.");
             }
-            
+
             foreach (DataRow row in dataTable.Rows)
             {
                 var destinationFileName = (string)row["DestinationFileName"];
                 var permitNumberField = row["PermitNumber"];
                 string permitNumber;
-                
+
                 if (permitNumberField is string permitNumberValue)
                 {
                     permitNumber = permitNumberValue;
@@ -676,9 +743,20 @@ async Task MoveReportHtmlFilesAsync(
                 {
                     continue;
                 }
-                
-                filenames.Add(pdfFolderPath + destinationFileName, permitNumber);
-                mappingFile.Add(permitNumber, destinationFileName);
+
+                var naldLicenceRef = (string)row["NALD Licence Ref"];
+
+                var dmsFileData = new DmsFileData
+                {
+                    DestinationFileName = destinationFileName,
+                    NaldLicenceRef = naldLicenceRef,
+                    PermitNumber = permitNumber,
+                    DmsPath = (string)row["FullPath"],
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
+                };
+
+                filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
+                mappingFile.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
             }
         }
     }
@@ -687,122 +765,6 @@ async Task MoveReportHtmlFilesAsync(
         filenames,
         mappingFile
     );
-}
-
-(Dictionary<string, string> FilepathsWithLicenceNumbers, Dictionary<string, string> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromFolders(string pdfFolderPath)
-{
-    var filenames = GetPdfPathsWithLicenceNumbersFromFolders(pdfFolderPath);
-    var missingMapping = filenames.Where(f => string.IsNullOrEmpty(f.Value)).ToList();
-
-    var licenceNumberMapping = ExternalDataHelper
-        .GetLicenceNumberMappingFromFilenames(pdfFolderPath);
-    
-    if (missingMapping.Count == 0)
-    {
-        return (
-            filenames.ToDictionary(k => k.Key, k => k.Value!),
-            licenceNumberMapping
-        );
-    }
-    
-    var inverseLicenceNumberMapping = licenceNumberMapping
-        .ToDictionary(i => i.Value, i => i.Key);
-
-    foreach (var filename in missingMapping)
-    {
-        var filenameOnly = filename.Key.Split('/').Last();
-
-        if (!inverseLicenceNumberMapping.TryGetValue(filenameOnly, out var value))
-        {
-            continue;
-        }
-        
-        filenames[filename.Key] = value;
-    }
-
-    missingMapping = filenames.Where(f => string.IsNullOrEmpty(f.Value)).ToList();
-
-    if (missingMapping.Count > 0)
-    {
-        throw new Exception($"Missing licence number mapping: {string.Join(", ", missingMapping.Select(mm => mm.Key))}");
-    }
-    
-    return (
-        filenames.ToDictionary(k => k.Key, k => k.Value!),
-        licenceNumberMapping
-    );
-}
-
-Dictionary<string, string?> GetPdfPathsWithLicenceNumbersFromFolders(string pdfFolderPath)
-{
-    var pdfFilePaths = FileHelper.GetRelevantFilesInFolder(pdfFolderPath);
-    
-    //var yorkshire = Yorkshire200Files();
-
-    // YORKSHIRE 200 - From new files
-    
-    /*pdfFilePaths = pdfFilePaths.Where(filePath =>
-    {
-        var filename = filePath.Split('/').Last();
-        
-        return yorkshire.Contains(filename, StringComparer.InvariantCultureIgnoreCase);
-    }).OrderBy(filename => filename).Skip(0).Take(10).ToList();*/
-    
-    // YORKSHIRE 6 - From original files
-
-    /*pdfFilePaths = pdfFilePaths.Where(filePath =>
-        filePath.Contains("2-26-32-126 6937559.PDF")
-        || filePath.Contains("2-27-29-012 7003124.PDF")
-        || filePath.Contains("Application - New - Licence Issued 30092021.pdf")
-        || filePath.Contains("Application Formal Variation Issued Licence 07032023 (1).pdf")
-        || filePath.Contains("Application Formal Variation Issued Licence 07032023.pdf")
-        || filePath.Contains("Application Minor Variation Issued Licence 03.10.24.pdf")
-    ).ToArray();*/
-    
-    // Any additional filtering
-    
-    /*pdfFilePaths = pdfFilePaths.Where(x =>
-        // Orig 3
-        x.Contains("11497061")
-        || x.Contains("11149535")
-        || x.Contains("11149440")
-        
-        // Some more
-        || x.Contains("16022023")
-        || x.Contains("08072024")
-        || x.Contains("19122022")
-        || x.Contains("11761845")
-        ).ToArray();*/
-
-    /*pdfFilePaths = pdfFilePaths.Where(x => 
-        //x.Contains("12303008")
-            
-        x.Contains("12100004")
-        ||x.Contains("12100052")
-        ||x.Contains("12100065")
-        ||x.Contains("12201014")
-        ||x.Contains("12201021")
-        ||x.Contains("12201023")
-        ||x.Contains("12201078")
-        ||x.Contains("12202043")
-        ||x.Contains("12203007")
-        ||x.Contains("12203045")
-        ||x.Contains("12203120")
-        ||x.Contains("12205021")
-        ||x.Contains("12205044")
-        
-        ||x.Contains("12206039") // Pdf pages come through as pretty much blank
-        ||x.Contains("12301067")
-        ||x.Contains("12302006")
-        ||x.Contains("12302044")
-        ||x.Contains("12302207")
-        ||x.Contains("12303008") // Not found
-        ||x.Contains("12303075")
-        
-    ).ToList();*/
-
-    return pdfFilePaths;
 }
 
 void Copy(string sourceDir, string targetDir)
@@ -818,84 +780,4 @@ void Copy(string sourceDir, string targetDir)
     {
         Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
     }
-}
-
-List<string> Yorkshire200Files()
-{
-    return
-    [
-        "22713185__Non-Application Licence Documents (20.12.1996).pdf",
-        "22714090r01__Application Transfer Issued Licence 12 6 24 12 6 24.pdf",
-        "22718033__Application - Minor Variation - Issued Licence - 16022023.pdf",
-        "22718045__Application - Reduction -Application New Licence Issued 24_06_2019 00_00_00 10897641.pdf",
-        "22718125R01__Application - NA Formal Variation - Issued Licence 31.03.21 11764153.pdf",
-        "22718131r01__Application -New   licence - Issued Licence  - PDR- 15.12.2022.pdf",
-        "22724197__Application - NA Formal Variation - Issued Licence 02112022.pdf",
-        "NE0270012011__Application - New - Issued Licence 02.12.2013 8110044.pdf",
-        "NE0270012049__Application – New Full   – Issued Licence 23122022.pdf",
-        "ne0270018009__Application – Formal Variation – Issued Licence 19122022.pdf",
-        "ne0270018020__Application - Minor Variation - Issued Licence - 16022023.pdf",
-        "ne0270018023__Application - Minor Variation -Issued Licence - 08.11.2022.pdf",
-        "ne0270018033__Application – Formal Variation – Issued Licence 1512022.pdf",
-        "NE0270018041__Application NA New Issued Licence 26 03 2021 11761845.pdf",
-        "22725124__Non-Application Licence Document (09.10.2008).pdf",
-        "22727116__Application Formal Variation Issued Licence - 26092023.pdf",
-        "22727278__Non-Application Licence Document (26.01.2009).pdf",
-        "22727279__Non-Application Licence Document (26.01.2009).pdf",
-        "ne0270025032__Application New Issued Licence 16.05.23.pdf",
-        "NE0270025037__Application Formal Variation Issued Licence 16.05.23.pdf",
-        "NE0270026005R01__Application Renewal Licence Issued - (25092024).pdf",
-        "ne0270027009__Application Formal Variation Issued Licence 03.05.23.pdf",
-        "ne0270028073__Application – NA New – Issued Licence 27092022.pdf",
-        "NE0270028081__Application New License - License Issued - 18102024.pdf",
-        "22704027r01__Application Formal Variation Issued Licence - [issued date] - (07062024).pdf",
-        "22707004__Application - Transfer - Issued Licence 28.04.2017 9774748.pdf",
-        "22708092__Application – NA Formal Variation – Issued Licence-10082022.pdf",
-        "22709099__Application Minor Variation Licence issued 21.12.2018 10629856.pdf",
-        "22709196r01__Application New Licence Issued - [22.03.2024] - (22.03.2024).pdf",
-        "NE0270005031__Application New Issued Licence 17.04.23.pdf",
-        "NE0270029007R01__Application Renewal Licence Issued - [issued date] - (11042024).pdf",
-        "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf",
-        "22631097__Non-Application Licence Document (09.03.1988).pdf",
-        "22631114__Application Formal Variation Issued Licence - [issued date] - (29082024).pdf",
-        "22631168R01__Application Renewal Licence Issued - [issued date] - (09052024).pdf",
-        "22632004__Application Minor Variation Issued Licence - 06122023.pdf",
-        "22632235__Application Renewal - Licence Issued - 11112024.pdf",
-        "22632344__Application - NA Formal Variation - Issued Licence 27102022.pdf",
-        "22634031__Application - NA Formal Variation - Issued Licence 27102022.pdf",
-        "22724007__Application minor variation issued Licence 22724007 11600563.pdf",
-        "NE0260030016R01__Application Renewal - Licence Issued - 20112024.pdf",
-        "NE0260031035__Application New Issued Licence 28.04.2023.pdf",
-        "ne0260032055__Application - NA New - Issued Licence 15112022.pdf",
-        "NE0260032058__Application NA New Licence Issued (Public Register) - 02122022 .pdf",
-        "NE0260032074__Application  new  -licence issued  (08072024).pdf",
-        "NE0260033011__Application - New -Application New Licence Issued 24_03_2020 00_00_00 11292824.pdf",
-        "NE0260033017__Application Formal Variation - Licence Issued - (23052024).pdf",
-        "NE0260034006__Application - Formal Variation -Application New Licence Issued 08_08_2019 00_00_00 10974057.pdf",
-        "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
-        "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
-        "NE0260034056__Application New Issued Licence 10.09.2020 11497061.pdf",
-        "NE0270024021R02__Application Renewal Licence Issued - 20062024.pdf",
-        "22721238__Non-Application Licence Document (25.07.1977).pdf",
-        "22721348r01__Application – NA Formal Variation – Issued Licence 13.07.2022.pdf",
-        "22721356R01__Application Formal Variation Issued Licence 13.9.18 10487468.pdf",
-        "22722128__Non-Application Licence Document (15.08.1988).pdf",
-        "22722323__Non-Application Licence Document - Issued Licence - 22101998.pdf",
-        "22722395A__Non-Application Licence Document (22.10.2001).pdf",
-        "22722452__Non-Application Licence Document [Issued Licence] (26.2.01).pdf",
-        "22722460__Application New Licence Issued [17.1.1992] (26.7.2010).pdf",
-        "22722580r01__Application Transfer - Issued Licence 24092021.pdf",
-        "22723556__Application - Formal Variation -Application New Licence Issued 12_04_2019 00_00_00 10797059.pdf",
-        "ne0270021016__Application - Minor Variation -Application New Licence Issued 12_03_2021 00_00_00 11736007.pdf",
-        "NE0270022058__Application New Issued Licence 18.05.23.pdf",
-        "NE0270023043__Application New Licence Issued 18.12.2018 10623801.pdf",
-        "NE0270023047__Application - New -Application New Licence Issued 06_04_2020 00_00_00 11303354.pdf",
-        "22719149__Application Formal Variation - Issued Licence [04-09-2018] 10474343.pdf",
-        "22719156__Application Formal Variation Licence Issued - 12102023.pdf",
-        "22720093__Non-Application Licence Document (02.02.1998).pdf",
-        "22720211__Non-Application Licence Document (01.12.1990).pdf",
-        "22724371r01__Application NA Formal Variation Issued Licence 21122021.pdf",
-        "NE0270020038__Application - New Licence Issued - Licence Issued - PDF - 28.10.2022.pdf",
-        "NE0270020044__Application New Licence Issued - 20112024.pdf"
-    ];
 }

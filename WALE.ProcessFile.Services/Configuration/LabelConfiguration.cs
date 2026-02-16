@@ -29,6 +29,7 @@ public static class LabelConfiguration
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
+            
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
             ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
         ];
@@ -53,8 +54,10 @@ public static class LabelConfiguration
                     new("9. Further conditions"),
                     new("9. Further provisions"),
                     new("10. Further conditions"),
-                    new("10. Further provisions"),                    
+                    new("10. Further provisions"),
+                    new("10 Further provisions") { LineMustStartWith = true },                 
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
@@ -133,6 +136,8 @@ public static class LabelConfiguration
                     new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -200,6 +205,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -299,6 +306,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
@@ -407,7 +416,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("10. FURTHER PROVISIONS[END_OF_LINE]"),
-                    new("10 FURTHER PROVISIONS"),
+                    new("10 FURTHER PROVISIONS") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
@@ -1236,10 +1245,22 @@ public static class LabelConfiguration
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFirstServiceResult,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
+                NextLinesToFetch = 1
+            },
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Hampshire Ref")
+                ],
+                Position = LabelPosition.LabelIsAfterTextToFind,
+                Format = LicenceNumber.Constant,
+                Name = "DocumentLicenceNumberHampshire",
+                PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0
             }
         ];
@@ -1943,7 +1964,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    GetLinkedLicenceAbstractionAndOrPointsLimits(),
+                    GetLinkedLicenceNumber("LinkedLicenceNumber"),
                     new()
                     {
                         Name = "LinkedLicenceFilename",
@@ -2078,6 +2099,37 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
+                    new()
+                    {
+                        Name = "Per5YearUnits",
+                        CategoryName = "PerUnits",
+                        Text =
+                        [
+                            new("consecutive five year"),
+                            new("five consecutive years")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },                    
                     new()
                     {
                         Name = "PerSecondUnits",
@@ -2272,6 +2324,40 @@ public static class LabelConfiguration
                     },
                     new()
                     {
+                        Name = "Per5YearValue",
+                        CategoryName = "PerValue",
+                        Text =
+                        [
+                            new("consecutive five year"),
+                            new("five consecutive years")
+                        ],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "Per5YearUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
                         Name = "PerSecondValue",
                         CategoryName = "PerValue",
                         Text = [new("per second")],
@@ -2398,9 +2484,11 @@ public static class LabelConfiguration
             ],
             Format = LicenceNumber.Constant,
             Position = LabelPosition.ActuallyLabel,
-            PreviousLinesToFetch = 0,
-            NextLinesToFetch = 0,
+            PreviousLinesToFetch = 1,
+            NextLinesToFetch = 1,
             MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+            MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseAllUnique,
+            SkipLineNumbers = [0],
             Remove =
             [
                 PageNumberPattern,
@@ -2408,6 +2496,10 @@ public static class LabelConfiguration
                 EnvironmentAgencyTelephone2Pattern,
                 EnvironmentAgencyTelephone3Pattern,
                 EnvironmentAgencyTelephone4Pattern,
+                new("condition 9.2.1"),
+                new("9.2.1") { ColumnMustStartWith = true },
+                new("condition 9.2.2"),
+                new("9.2.2") { ColumnMustStartWith = true },
                 new("0 0 0 0"), // Don't understand what this means, but it appears in some map
                 new("2 8 2 8"), // Don't understand what this means, but it appears in some map
                 new("4 2 4 2"), // Don't understand what this means, but it appears in some map
@@ -2421,7 +2513,8 @@ public static class LabelConfiguration
                 new("0 150 300 M"), // Doubling scale
                 new("0 150 300"), // Doubling scale
                 new("0 425 850 M"), // Doubling scale
-                new("0 425 850") // Doubling scale
+                new("0 425 850"), // Doubling scale
+                new("0 100 200") // Doubling scale
             ],
             SkipLineWhenContains = NoneLicenceNumberSkips
         };
@@ -2433,7 +2526,11 @@ public static class LabelConfiguration
         "discharge permit",
         "discharge number",
         "discharge consent",
-        "drawing no."
+        "drawing no.",
+        "Date of Issue",
+        "Date effective",
+        "Date of expiry",
+        "Date of original issue"
     ];
     
     private const string LicenceNumberHeaderLine = "Licence Serial No: ";

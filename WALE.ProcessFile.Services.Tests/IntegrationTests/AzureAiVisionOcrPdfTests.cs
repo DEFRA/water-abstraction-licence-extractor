@@ -3,8 +3,12 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -12,8 +16,24 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-public class AzureAiVisionOcrPdfTests
+[Collection("First Names 3")]
+public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
+
+    static AzureAiVisionOcrPdfTests()
+    {
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -59,13 +79,22 @@ public class AzureAiVisionOcrPdfTests
         OutputService,
         TestConfig.PdfFolder3);
     
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
-    private readonly HashSet<string> _liveLicenceNumbers = [];
-    private readonly HashSet<string> _deadLicenceNumbers = [];
-    private readonly HashSet<string> _impoundmentLicenceNumbers = [];
-    private readonly Dictionary<string, NaldData> _naldData = [];
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
+    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
+    {
+        LiveLicences = [],
+        DeadLicences = [],
+        ImpoundmentLicences = []
+    };
+    private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int number = 1)
+    private LookupConfiguration LookupConfiguration(int regionCode) => new(
+        LabelConfiguration.GetLabels(),
+        _fileLicenceMapping,
+        firstNamesFixture.FirstNamesCsv,
+        regionCode);
+    
+    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
@@ -75,9 +104,7 @@ public class AzureAiVisionOcrPdfTests
         
         return service.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+            LookupConfiguration(regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -89,7 +116,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, 3);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -159,13 +186,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            0);
+            0,
+            LookupConfiguration(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -212,7 +238,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -226,13 +252,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -245,7 +270,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22632235__Application Renewal - Licence Issued - 11112024.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -267,13 +292,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -286,7 +310,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -359,16 +383,16 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
     [Fact]
@@ -378,7 +402,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -464,20 +488,19 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("25/68/1/158/", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("25/68/1/158", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
         
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
@@ -490,7 +513,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -592,20 +615,19 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("16/52/2/371", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("16/52/02/G/037", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
         
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -618,7 +640,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -676,13 +698,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0)).Last();
+            0,
+            LookupConfiguration(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -695,7 +716,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
@@ -703,13 +724,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -726,7 +746,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -806,13 +826,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -832,7 +851,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -913,26 +932,28 @@ public class AzureAiVisionOcrPdfTests
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("25/68/3/91/", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/3/76", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
     }
     
     [Fact]
@@ -942,7 +963,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -980,13 +1001,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1005,7 +1025,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         var dateOfIssue = resultFull.Matches!
@@ -1043,13 +1063,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1065,7 +1084,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "08-36-19-S-0101 5826949.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -1083,15 +1102,14 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -1099,6 +1117,7 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("08/36/19/S/0101", agreedSchemaLicence.LicenceNumber);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("8/36/19/S/130", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -1131,7 +1150,7 @@ public class AzureAiVisionOcrPdfTests
         }
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
 
         // Assert
         var allText = string.Join(' ', resultFull.Pages[0].Providers[1].Text!);
@@ -1145,7 +1164,7 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "2-26-32-126 6937559.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("YORKSHIRE W", companyName?.Text?.FirstOrDefault()?.Text);
@@ -1263,13 +1282,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1293,7 +1311,9 @@ public class AzureAiVisionOcrPdfTests
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Units);        
         Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         
-        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         var limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[0];
         
         Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
@@ -1308,41 +1328,47 @@ public class AzureAiVisionOcrPdfTests
         Assert.Single(limitGroup.Limits[1].Points!);
         Assert.Equal("(1)", limitGroup.Limits[1].Points![0].Id);
         
-        Assert.Equal("cubic metres", limitGroup.Limits[2].Units);
-        Assert.Equal(68191, limitGroup.Limits[2].Value);
-        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[2].PeriodType);
-        Assert.Single(limitGroup.Limits[2].Points!);
-        Assert.Equal("(2)", limitGroup.Limits[2].Points![0].Id);
+        limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[1];
         
-        Assert.Equal("cubic metres", limitGroup.Limits[3].Units);
-        Assert.Equal(18184368, limitGroup.Limits[3].Value);
-        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[3].PeriodType);
-        Assert.Single(limitGroup.Limits[3].Points!);
-        Assert.Equal("(2)", limitGroup.Limits[3].Points![0].Id);
+        Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
+        Assert.Equal(68191, limitGroup.Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
+        Assert.Single(limitGroup.Limits[0].Points!);
+        Assert.Equal("(2)", limitGroup.Limits[0].Points![0].Id);
         
-        Assert.Equal("cubic metres", limitGroup.Limits[4].Units);
-        Assert.Equal(45461, limitGroup.Limits[4].Value);
-        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[4].PeriodType);
-        Assert.Single(limitGroup.Limits[4].Points!);
-        Assert.Equal("(3)", limitGroup.Limits[4].Points![0].Id);
+        Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
+        Assert.Equal(18184368, limitGroup.Limits[1].Value);
+        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
+        Assert.Single(limitGroup.Limits[1].Points!);
+        Assert.Equal("(2)", limitGroup.Limits[1].Points![0].Id);
         
-        Assert.Equal("cubic metres", limitGroup.Limits[5].Units);
-        Assert.Equal(16593236, limitGroup.Limits[5].Value);
-        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[5].PeriodType);
-        Assert.Single(limitGroup.Limits[5].Points!);
-        Assert.Equal("(3)", limitGroup.Limits[5].Points![0].Id);
+        limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[2];
         
-        Assert.Equal("cubic metres", limitGroup.Limits[6].Units);
-        Assert.Equal(15911, limitGroup.Limits[6].Value);
-        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[6].PeriodType);
-        Assert.Single(limitGroup.Limits[6].Points!);
-        Assert.Equal("(4)", limitGroup.Limits[6].Points![0].Id);
+        Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
+        Assert.Equal(45461, limitGroup.Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
+        Assert.Single(limitGroup.Limits[0].Points!);
+        Assert.Equal("(3)", limitGroup.Limits[0].Points![0].Id);
         
-        Assert.Equal("cubic metres", limitGroup.Limits[7].Units);
-        Assert.Equal(5819000, limitGroup.Limits[7].Value);
-        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[7].PeriodType);
-        Assert.Single(limitGroup.Limits[7].Points!);
-        Assert.Equal("(4)", limitGroup.Limits[7].Points![0].Id);
+        Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
+        Assert.Equal(16593236, limitGroup.Limits[1].Value);
+        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
+        Assert.Single(limitGroup.Limits[1].Points!);
+        Assert.Equal("(3)", limitGroup.Limits[1].Points![0].Id);
+        
+        limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[3];
+        
+        Assert.Equal("cubic metres", limitGroup.Limits[0].Units);
+        Assert.Equal(15911, limitGroup.Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
+        Assert.Single(limitGroup.Limits[0].Points!);
+        Assert.Equal("(4)", limitGroup.Limits[0].Points![0].Id);
+        
+        Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
+        Assert.Equal(5819000, limitGroup.Limits[1].Value);
+        Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
+        Assert.Single(limitGroup.Limits[1].Points!);
+        Assert.Equal("(4)", limitGroup.Limits[1].Points![0].Id);
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
         Assert.Equal("(1)", agreedSchemaLicence.Points[0].Id);
@@ -1369,13 +1395,13 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "2-27-29-012 7003124.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, 1);
         
         var licenceNumberResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal("27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text); // TODO should be 2/27/29/12
+        Assert.Equal("2/27/29/12", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         var company = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.NotNull(company);
@@ -1496,13 +1522,12 @@ public class AzureAiVisionOcrPdfTests
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration(1));
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1559,19 +1584,18 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22713185__Non-Application Licence Documents (20.12.1996).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1590,19 +1614,18 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "2671309044__Application type unknown Licence Issued (30102002).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1618,19 +1641,18 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "2671311013__Non-Application Licence Document (09.01.1985).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1646,24 +1668,23 @@ public class AzureAiVisionOcrPdfTests
         const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2);
+        var resultFull = await GetMatchesAsync(filename, 2, 2);
         Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
 
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            _impoundmentLicenceNumbers,
-            _deadLicenceNumbers,
-            _liveLicenceNumbers,
+            _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
-            0);
+            0,
+            LookupConfiguration(2));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
         Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber);
-        Assert.NotNull(agreedSchemaLicence.LinkedLicences);
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 }

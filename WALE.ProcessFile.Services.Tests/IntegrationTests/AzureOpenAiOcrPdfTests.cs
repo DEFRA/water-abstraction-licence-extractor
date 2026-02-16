@@ -2,8 +2,12 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
@@ -13,6 +17,21 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureOpenAiOcrPdfTests
 {
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
+    
+    private static IDatabaseReadService ReadService =>
+        new PostgresReadService(NpgsqlDataSourceProvider);
+
+    public AzureOpenAiOcrPdfTests()
+    {
+        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -31,17 +50,25 @@ public class AzureOpenAiOcrPdfTests
         OutputService,
         TestConfig.PdfFolder);
     
-    private readonly Dictionary<string, string> _fileLicenceMapping = new() {{"", ""}};
+    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
+
+    private LookupConfiguration LookupConfiguration()
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            CompanyName.GetFirstNamesCsvFromFile(),
+            3);
+    }
     
     private Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping),
+            LookupConfiguration(),
+            
             [PdfFolder + fileName],
             0);
     }
@@ -122,22 +149,22 @@ public class AzureOpenAiOcrPdfTests
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
         // TODO - other 2 things
-        
+
         var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
-            [],
-            [],
-            [],
+            new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration());
         
-        Assert.Single(agreedSchemaLicenceGroup);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
 }

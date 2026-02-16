@@ -12,9 +12,7 @@
         <PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
         <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="1.0.2" />        
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="System.Drawing.Common" Version="9.0.1"/>
         <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-        <PackageReference Include="Tesseract" Version="5.2.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -74,10 +72,17 @@
         <Content Update="Templates\process-runs-template.html">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <None Update="configs">
+            <!-- Exclude the file from analysis -->
+            <SonarQubeExclude>true</SonarQubeExclude>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
     </ItemGroup>
 </Project>

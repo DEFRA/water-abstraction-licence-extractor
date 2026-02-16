@@ -2,27 +2,44 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldData
 {
+    public string? Id { get; set; }
     public string? LicenceNumber { get; set; }
     
     public string? LicenceIdCharsAndDigitsOnly { get; set; }
     
     public string? ExpiryDate { get; init; }
     
-    public string? VersionStartDate { get; init; }
+    public string? RevocationDate { get; init; }
+    
+    public string? OrigEffDate { get; init; }
+    
+    public string? OrigSigDate { get; init; }
     
     public List<NaldDataAggregate> AggregateConditions { get; init; } = [];
-
-    public double? LicenceWideAnnualQty { get; set; }
-
-    public double? LicenceWideDailyQty { get; set; }
-
-    public double? LicenceWideHourlyQty { get; set; }
-
-    public double? LicenceWideInstQty { get; set; }
     
     public List<NaldDataPoint> Points { get; init; } = [];
     
     public List<NaldDataPeriod> Periods { get; init; } = [];
     
     public List<NaldDataPurpose> Purposes { get; init; } = [];
+    
+    public string? FgacRegionCode { get; set; }
+    
+    public string? EffStDate { get; set; }
+    
+    public string? EffEndDate { get; set; }
+    
+    public string? LicSigDate { get; set; }
+    
+    public int? IssueNo { get; set; }
+    
+    public int? IncrNo { get; set; }
+    
+    public string? AabvType { get; set; }
+    
+    public string? Status { get; set; }
+    
+    public double? MaxAnnualQty { get; set; }
+    
+    public double? MaxDailyQty { get; set; }
 }

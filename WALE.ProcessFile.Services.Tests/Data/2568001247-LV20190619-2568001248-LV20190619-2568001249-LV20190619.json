@@ -18,6 +18,8 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
+              "scrapedLicenceNumber": "25 68 001 247",
+              "naldLicenceNumber": "2568001247",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
               "containedIn": [
                 {
@@ -27,11 +29,14 @@
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "licenceFoundInList": false,
+              "dmsPath": "Something to look for"
             },
             {
               "licenceNumber": "25 68 001 248",
-              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "scrapedLicenceNumber": "25 68 001 248",
+              "naldLicenceNumber": "2568001248",
+              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
               "containedIn": [
                 {
                   "sectionName": "AbstractionLimits",
@@ -45,16 +50,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         },
@@ -67,6 +72,8 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 248",
+              "scrapedLicenceNumber": "25 68 001 248",
+              "naldLicenceNumber": "2568001248",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
               "containedIn": [
                 {
@@ -80,7 +87,8 @@
             },
             {
               "licenceNumber": "25 68 001 249",
-              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+              "scrapedLicenceNumber": "25 68 001 249",
+              "naldLicenceNumber": "2568001249",
               "containedIn": [
                 {
                   "sectionName": "AbstractionLimits",
@@ -94,16 +102,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         },
@@ -116,6 +124,8 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
+              "scrapedLicenceNumber": "25 68 001 247",
+              "naldLicenceNumber": "2568001247",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
               "containedIn": [
                 {
@@ -125,11 +135,13 @@
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "licenceFoundInList": false,
+              "dmsPath": "Something to look for"
             },
             {
               "licenceNumber": "25 68 001 249",
-              "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "scrapedLicenceNumber": "25 68 001 249",
+              "naldLicenceNumber": "2568001249",
               "containedIn": [
                 {
                   "sectionName": "AbstractionLimits",
@@ -143,16 +155,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         }
@@ -204,22 +216,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -234,6 +246,8 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
+                "scrapedLicenceNumber": "25 68 001 247",
+                "naldLicenceNumber": "2568001247",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                 "containedIn": [
                   {
@@ -243,11 +257,14 @@
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "licenceFoundInList": false,
+                "dmsPath": "Something to look for"
               },
               {
                 "licenceNumber": "25 68 001 248",
-                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "scrapedLicenceNumber": "25 68 001 248",
+                "naldLicenceNumber": "2568001248",
+                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                 "containedIn": [
                   {
                     "sectionName": "AbstractionLimits",
@@ -261,16 +278,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -279,6 +296,8 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/247",
+          "scrapedLicenceNumber": "25 68 001 247",
+          "naldLicenceNumber": "2568001247",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
           "containedIn": [
             {
@@ -288,11 +307,14 @@
               "pageNumber": 4
             }
           ],
-          "licenceFoundInList": false
+          "licenceFoundInList": false,
+          "dmsPath": "Something to look for"
         },
         {
           "licenceNumber": "25/68/001/248",
-          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "scrapedLicenceNumber": "25 68 001 248",
+          "naldLicenceNumber": "2568001248",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
           "containedIn": [
             {
               "sectionName": "AbstractionLimits",
@@ -331,7 +353,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false
@@ -380,22 +403,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -410,6 +433,8 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 248",
+                "scrapedLicenceNumber": "25 68 001 248",
+                "naldLicenceNumber": "2568001248",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                 "containedIn": [
                   {
@@ -423,7 +448,8 @@
               },
               {
                 "licenceNumber": "25 68 001 249",
-                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+                "scrapedLicenceNumber": "25 68 001 249",
+                "naldLicenceNumber": "2568001249",
                 "containedIn": [
                   {
                     "sectionName": "AbstractionLimits",
@@ -437,16 +463,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -455,6 +481,8 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/248",
+          "scrapedLicenceNumber": "25 68 001 248",
+          "naldLicenceNumber": "2568001248",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
           "containedIn": [
             {
@@ -468,7 +496,8 @@
         },
         {
           "licenceNumber": "25/68/001/249",
-          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
+          "scrapedLicenceNumber": "25 68 001 249",
+          "naldLicenceNumber": "2568001249",
           "containedIn": [
             {
               "sectionName": "AbstractionLimits",
@@ -507,10 +536,12 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
-      "licenceFoundInList": false
+      "licenceFoundInList": false,
+      "dmsPath": "Something to look for"
     },
     {
       "id": "2568001248-LV20190619",
@@ -556,22 +587,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -586,6 +617,8 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
+                "scrapedLicenceNumber": "25 68 001 247",
+                "naldLicenceNumber": "2568001247",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                 "containedIn": [
                   {
@@ -595,11 +628,13 @@
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "licenceFoundInList": false,
+                "dmsPath": "Something to look for"
               },
               {
                 "licenceNumber": "25 68 001 249",
-                "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "scrapedLicenceNumber": "25 68 001 249",
+                "naldLicenceNumber": "2568001249",
                 "containedIn": [
                   {
                     "sectionName": "AbstractionLimits",
@@ -613,16 +648,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -631,6 +666,8 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/247",
+          "scrapedLicenceNumber": "25 68 001 247",
+          "naldLicenceNumber": "2568001247",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
           "containedIn": [
             {
@@ -640,11 +677,13 @@
               "pageNumber": 4
             }
           ],
-          "licenceFoundInList": false
+          "licenceFoundInList": false,
+          "dmsPath": "Something to look for"
         },
         {
           "licenceNumber": "25/68/001/249",
-          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "scrapedLicenceNumber": "25 68 001 249",
+          "naldLicenceNumber": "2568001249",
           "containedIn": [
             {
               "sectionName": "AbstractionLimits",
@@ -683,7 +722,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false

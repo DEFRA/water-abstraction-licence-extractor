@@ -1,0 +1,34 @@
+name: Portal - Create rollout Image Version and Push ECR
+
+on:
+  workflow_dispatch:
+    inputs:
+      DEVIMAGEVERSION:
+        description: 'DEV Image Version'
+        type: string
+        required: true
+      tag_short_description:
+        description: "Short description for the git tag"
+        required: true
+        type: string
+
+
+permissions: {}   # disables all default permissions
+jobs:
+  # Push the image 
+  push-image:
+    uses: ./.github/workflows/portal-push-image-template.yaml
+    with:
+      IMAGE_VERSION: ${{ github.event.inputs.DEVIMAGEVERSION }}
+      repository: wli/wradi-portal
+      dev_image_version_release: true
+      tag_short_description: ${{ github.event.inputs.tag_short_description }}
+    secrets:
+      AWS_ENV_REGION: ${{ secrets.AWS_ENV_REGION }}
+      AWS_ENV_ACCOUNT: ${{ secrets.AWS_ENV_ACCOUNT }}
+      AWS_ENV_ROLE: ${{ secrets.AWS_ENV_ROLE }}
+    permissions:
+      id-token: write
+      contents: write
+  
+        

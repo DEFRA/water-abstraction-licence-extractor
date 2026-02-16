@@ -5,7 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
-using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
@@ -13,7 +13,12 @@ namespace WALE.Tools;
 
 public static class GenerateUnknownSectionLinkedLicencesCsv
 {
-    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(KeyConfig.PostgresConnectionString);
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(
+        KeyConfig.PostgresHost,
+        KeyConfig.PostgresPort,
+        KeyConfig.PostgresDbName,
+        KeyConfig.PostgresUsername,
+        KeyConfig.PostgresPassword);
 
     private static readonly IOutputService OutputService = new DatabaseOutputService(
         new PostgresReadService(NpgsqlDataSourceProvider),

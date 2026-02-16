@@ -14,10 +14,16 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
+     
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.Split
             or LabelPosition.RelatedCategoryPosition)
+        {
+            return [];
+        }
+
+        if (request.label.SkipLineNumbers.Contains(request.line!.LineNumber))
         {
             return [];
         }
@@ -51,7 +57,7 @@ public static class ApplicableToMost
         var isMultiple = request.label?.MultipleBehaviour is
             MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                 or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
-
+        
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
@@ -86,16 +92,16 @@ public static class ApplicableToMost
                 true,
                 false,
                 out var removedLines);
-
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText))
+            
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText, request.isOcr))
             {
                 continue;
             }
-            
+
             var documentLine = request.line!.Clone();
             documentLine.Columns.Clear();
             documentLine.Columns.Add(new DocumentLineColumn(outputText));
-
+            
             if (request.isDateLookup)
             {
                 // TODO can swap this out now for shared method in Base
@@ -163,7 +169,7 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (Number.AnyIsNumber([documentLine], request.label, out var numberLines))
+                if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
@@ -193,17 +199,35 @@ public static class ApplicableToMost
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                if (!isTableLine && LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                var (anyIsLicenceNumber, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                if (!isTableLine && anyIsLicenceNumber)
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
+                    
+                    // If its a floating number, its usually some weird internal refernece number
+                    if (licenceNumberLines.Count == 1
+                        && licenceNumberLines[0].Text == request.line.Text
+                        && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
+                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                    {
+                        licenceNumberLines = [];
+                    }
+                    
+                    // If its a number then 'M', its usually some weird internal refernece number
+                    if (licenceNumberLines.Count == 1
+                        && request.line.Text == $"{licenceNumberLines[0].Text} M"
+                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                    {
+                        licenceNumberLines = [];
+                    }
                     
                     foreach (var licenceNumberLine in licenceNumberLines)
                     {
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                     }
-
+                    
                     if (!isMultiple)
                     {
                         return CheckContains(request.label, returnList);
@@ -224,21 +248,22 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                if (LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr, out var licenceNumberLines))
+                var (anyIsLicenceNumber2, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync([documentLine], request.label!, request.isOcr);
+                if (anyIsLicenceNumber2)
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
+                    licenceNumberLines2 = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
                     var returnList = new List<LabelGroupResult>();
                     
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    foreach (var licenceNumberLine in licenceNumberLines2)
                     {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
+                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
                         
-                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
+                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
                         {
                             continue;
                         }
 
-                        licenceNumberLine.Columns[0].Text = relatedFileName!;
+                        licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
@@ -344,7 +369,11 @@ public static class ApplicableToMost
                 : outputText;
             
             if (request.isCompanyType
-                && CompanyName.TryGetCompanyOrPersonalName(outputText, matchedLabel, out _))
+                && CompanyName.TryGetCompanyOrPersonalName(
+                    outputText,
+                    matchedLabel,
+                    request.lookupConfiguration,
+                    out _))
             {
                 if (request.label?.Position == LabelPosition.LabelIsInMiddleOfTextToFind)
                 {
@@ -383,7 +412,7 @@ public static class ApplicableToMost
                 
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
-
+            
             var trimmedWords = outputText!.Trim().Split(' ');
 
             if (trimmedWords.Length == 1

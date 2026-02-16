@@ -1,18 +1,14 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -36,50 +32,75 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
+        var dtStart = DateTime.Now;
+        
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFilePath,
             outputService,
             cacheService,
             processRunId);
 
+        Console.WriteLine(
+            $"Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $" - {pdfDocument.PdfFilePath}");
+        
+        if (pdfDocument.DocumentLines == null)
+        {
+            throw new Exception("TextLines hasn't been initialized");
+        }
+        
+        if (pdfDocument.ImagesMetadata == null)
+        {
+            throw new Exception("ImagesMetadata hasn't been initialized");
+        }
+        
+        dtStart = DateTime.Now;
+        
         var returnResult = new MatchesResult
         {
             Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
             NumberOfPages = pdfDocument.Pages.Count,
-            Pages = pdfDocument.Pages
+            Pages = pdfDocument.Pages,
+            RegionCode = configuration.RegionCode,
+            ServicesUsed = [ noOcrDataExtractorService.Name, "Docnet" ] // TODO, tidy this up
         };
         
-        returnResult.ServicesUsed.Add(noOcrDataExtractorService.Name);
-        
-        var (imagesMetadata, imageMetadataChanged) =
-            await GetImageMetadataAsync(pdfDocument, processRunId);
-        
-        var documentLines =
-            await noOcrDataExtractorService.GetTextLinesFromPdfAsync(
-                pdfDocument,
-                cacheService,
-                processRunId);
-
-        await outputService.SaveAllPagesTextIfDoesntExistAsync(documentLines, pdfFilePath, Name, processRunId);
-        
-        // Save all text
-        if (!pdfDocument.FromCache)
-        {
-            await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);            
-        }
-
-        const bool notOcr = false;
-        const int minAverageLineLength = 15;
+        var isOcr = false;
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
-            documentLines,
+            pdfDocument.DocumentLines,
             configuration.Labels,
-            notOcr,
+            isOcr,
             noOcrDataExtractorService.Name,
             configuration.LicenceNumberMapping,
             previouslyParsedPaths,
-            processRunId);
+            configuration.RegionCode,
+            processRunId,
+            configuration);
 
+        Console.WriteLine(
+            $"Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $" - {pdfDocument.PdfFilePath}");
+        
+        // De-dupe
+        var newLabelGroupMatches = new List<LabelGroupResult>();
+
+        foreach (var labelGroupMatch in labelGroupMatches)
+        {
+            var exists = newLabelGroupMatches.Any(lgm =>
+                lgm.LabelGroupName == labelGroupMatch.LabelGroupName
+                && DataHelper.GetFirstLineTextFromMatch(lgm) == DataHelper.GetFirstLineTextFromMatch(labelGroupMatch));
+
+            if (exists)
+            {
+                continue;
+            }
+            
+            newLabelGroupMatches.Add(labelGroupMatch);
+        }
+
+        labelGroupMatches = newLabelGroupMatches;
+        
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
@@ -87,8 +108,11 @@ public class PdfDataExtractorService(
                 NoOcrServiceName = Name
             });
         
-        var isTextFile = documentLines.Count >= 100;
+        var isTextFile = pdfDocument.DocumentLines.Count >= 100;
 
+        int pageNumber;
+        int imageNumber;
+        
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
         if (isTextFile)
@@ -102,14 +126,14 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = true;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
+            for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
             {
-                var page = imagesMetadata.Pages[pageNumberIndex];
-                var pageNumber = pageNumberIndex + 1;
+                var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
+                pageNumber = pageNumberIndex + 1;
                 
                 for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
                 {
-                    var imageNumber = imageNumberIndex + 1;
+                    imageNumber = imageNumberIndex + 1;
                     var image = allImagesInDocument
                         .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
 
@@ -135,35 +159,43 @@ public class PdfDataExtractorService(
             }
         }
 
-        var unmatchedLabelLookups =
-            GetUnmatchedLabels(configuration.Labels, labelGroupMatches, false);
+        var unmatchedOrMoreWantedLabelLookups =
+            GetUnmatchedOrMoreWantedLabels(configuration.Labels, labelGroupMatches, false);
         
-        if (unmatchedLabelLookups.Count == 0)
+        if (unmatchedOrMoreWantedLabelLookups.Count == 0)
         {
             returnResult.Matches = labelGroupMatches;
             return returnResult;
         }
 
         returnResult.ScannedFile = true;
-        documentLines = [];
+        isOcr = true;
         
-        for (var pageNumberIndex = 0; pageNumberIndex < imagesMetadata.Pages.Count; pageNumberIndex++)
+        var documentLines = new List<DocumentLine>();
+        
+        for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
         {
-            var page = imagesMetadata.Pages[pageNumberIndex];
-            var pageNumber = pageNumberIndex + 1;
-            
+            var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
+            pageNumber = pageNumberIndex + 1;
+           
             var breakPageLoop = false;
             var pageImages = page.Images.ToList();
             
             if (pageImages.Count > 10)
             {
-                pageImages = [page.ImageReference!];
+                pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
+
+                foreach (var pageImage in pageImages)
+                {
+                    var extension = pageImage.Split('.').Last();
+                    allImagesInDocument.Insert(0, (pageNumber, 1, extension, 2000, 2000));   
+                }
             }
 
             for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
             {
                 var imageReference = pageImages[imageNumberIndex];
-                var imageNumber = imageNumberIndex + 1;
+                imageNumber = imageNumberIndex + 1;
                 
                 var image = allImagesInDocument
                     .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
@@ -205,28 +237,16 @@ public class PdfDataExtractorService(
                         // TODO proper logging somewhere
                         throw;
                     }
-
+                    
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)
                     {
                         break;
                     }
-                    
-                    var containsTheWordMap = serviceImageLines
-                        .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
-                            || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase));
 
-                    if (containsTheWordMap)
+                    if (DataHelper.LikelyMapPage(serviceImageLines, pageImages.Count))
                     {
-                        break;
-                    }
-                    
-                    var averageLineLength = serviceImageLines.Average(line => line.Text.Length);
-                    
-                    // Short lines indicate it may be a map page,
-                    // no point processing that with the other services
-                    if (averageLineLength < minAverageLineLength)
-                    {
+                        serviceImageLines = [];
                         break;
                     }
                     
@@ -245,15 +265,16 @@ public class PdfDataExtractorService(
                         });
                     }                    
                     
-                    const bool isOcr = true;
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
-                        unmatchedLabelLookups,
+                        unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
                         configuration.LicenceNumberMapping,
                         previouslyParsedPaths,
-                        processRunId);
+                        configuration.RegionCode,
+                        processRunId,
+                        configuration);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -289,8 +310,8 @@ public class PdfDataExtractorService(
                     var combinedList = labelGroupMatches.ToList();
                     combinedList.AddRange(serviceMatches);
                     
-                    var labelsNotMatchedAtAll = GetUnmatchedLabels(
-                        unmatchedLabelLookups,
+                    var labelsNotMatchedAtAll = GetUnmatchedOrMoreWantedLabels(
+                        unmatchedOrMoreWantedLabelLookups,
                         combinedList,
                         true);
 
@@ -306,15 +327,31 @@ public class PdfDataExtractorService(
                 documentLines.AddRange(serviceImageLines);
 
                 var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
-                labelGroupMatches.AddRange(uniqueServiceMatches);
+                var uniqueServiceMatchesNotInLabelGroupMatches = new List<LabelGroupResult>();
+
+                foreach (var uniqueServiceMatch in uniqueServiceMatches)
+                {
+                    var exists = labelGroupMatches.Any(lgm =>
+                        lgm.LabelGroupName == uniqueServiceMatch.LabelGroupName
+                        && lgm.Text?.FirstOrDefault()?.Text == uniqueServiceMatch.Text?.FirstOrDefault()?.Text);
+
+                    if (exists)
+                    {
+                        continue;
+                    }
+                    
+                    uniqueServiceMatchesNotInLabelGroupMatches.Add(uniqueServiceMatch);
+                }
+
+                labelGroupMatches.AddRange(uniqueServiceMatchesNotInLabelGroupMatches);
                 
-                unmatchedLabelLookups = GetUnmatchedLabels(
-                    unmatchedLabelLookups,
+                unmatchedOrMoreWantedLabelLookups = GetUnmatchedOrMoreWantedLabels(
+                    unmatchedOrMoreWantedLabelLookups,
                     labelGroupMatches,
                     false);
                     
-                var labelsNotMatchedAtAll2 = GetUnmatchedLabels(
-                    unmatchedLabelLookups,
+                var labelsNotMatchedAtAll2 = GetUnmatchedOrMoreWantedLabels(
+                    unmatchedOrMoreWantedLabelLookups,
                     labelGroupMatches,
                     true);
 
@@ -330,13 +367,13 @@ public class PdfDataExtractorService(
                 }
             }
 
-            unmatchedLabelLookups = GetUnmatchedLabels(
-                unmatchedLabelLookups,
+            unmatchedOrMoreWantedLabelLookups = GetUnmatchedOrMoreWantedLabels(
+                unmatchedOrMoreWantedLabelLookups,
                 labelGroupMatches,
                 false);
             
-            var labelsNotMatchedAtAll3 = GetUnmatchedLabels(
-                unmatchedLabelLookups,
+            var labelsNotMatchedAtAll3 = GetUnmatchedOrMoreWantedLabels(
+                unmatchedOrMoreWantedLabelLookups,
                 labelGroupMatches,
                 true);
 
@@ -351,7 +388,9 @@ public class PdfDataExtractorService(
             }
         }
 
-        await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);
+        // TODO - dont think this line does anything, as the collection isn't created at that point
+        //await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);
+        
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;
@@ -414,7 +453,8 @@ public class PdfDataExtractorService(
         return subResultCount;
     }
 
-    private static List<LabelGroupResult> GetUniqueServiceMatches(Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
+    private static List<LabelGroupResult> GetUniqueServiceMatches(
+        Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
         var uniqueServiceMatches = new List<LabelGroupResult>();
 
@@ -427,263 +467,204 @@ public class PdfDataExtractorService(
                 var alreadyFound = uniqueServiceMatches
                     .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
 
-                if (alreadyFound != null)
+                if (alreadyFound == null)
                 {
-                    switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
-                    {
-                        case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
-                            var subResultCount = GetSubResultCount(match);
-                            var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
+                    uniqueServiceMatches.Add(match);
+                    continue;
+                }
 
-                            if (subResultCount >= alreadyFoundSubResultCount)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
+                string? newValue;
+                
+                switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
+                {
+                    case MultipleServiceMatchBehaviour.UseAllUnique:
+                        var multipleAlreadyFound = uniqueServiceMatches
+                            .Where(x => x.LabelGroupName == match.LabelGroupName)
+                            .ToList();
 
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
+                        var existingValues = multipleAlreadyFound
+                            .Select(af => string.Join(' ', af.Text!.Select(m => m.Text)))
+                            .ToList();
+                        
+                        newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+
+                        if (!existingValues.Contains(newValue))
+                        {
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            var existingItem = uniqueServiceMatches
+                                .First(x => x.LabelGroupName == match.LabelGroupName);
                             
-                            break;
-                        case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                            existingItem.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual:
+                        var subResultCount = GetSubResultCount(match);
+                        var alreadyFoundSubResultCount = GetSubResultCount(alreadyFound);
+
+                        if (subResultCount >= alreadyFoundSubResultCount)
+                        {
                             match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
                             alreadyFound.AlternativeMatches = [];
                             match.AlternativeMatches.Add(alreadyFound);
 
                             uniqueServiceMatches.Remove(alreadyFound);
                             uniqueServiceMatches.Add(match);
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
-                            var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            var newValue = string.Join(' ', match.Text!.Select(m => m.Text));
+                        }
+                        else
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseLastServiceResult:
+                        match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                        alreadyFound.AlternativeMatches = [];
+                        match.AlternativeMatches.Add(alreadyFound);
 
-                            if (newValue.Length >= existingValue.Length)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
+                        uniqueServiceMatches.Remove(alreadyFound);
+                        uniqueServiceMatches.Add(match);
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseFirstServiceResult:
+                        alreadyFound.AlternativeMatches.Add(match);
+                        match.AlternativeMatches = [];
+                        
+                        break;                        
+                    case MultipleServiceMatchBehaviour.UseLongestUseLastServiceResultIfEqual:
+                        var existingValue = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                        newValue = string.Join(' ', match.Text!.Select(m => m.Text));
 
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
-                            var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
-                            var existingDocumentLine = new DocumentLine
-                            {
-                                Columns = [
-                                    new()
-                                    {
-                                        Text = existingLicenceNumber,
-                                        Words = [new(
-                                            existingLicenceNumber,
-                                            null,
-                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                            null)]
-                                    }
-                                ]
-                            };
-                            
-                            var existingValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [existingDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var existingLicenceNumberOutput);
+                        if (newValue.Length >= existingValue.Length)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
 
-                            var existingValueIsOnlyLicenceNumber = existingValueIsValidLicenceNumber && existingLicenceNumber == existingLicenceNumberOutput.First().Text;
-                            var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
-                            var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
-                            var existingValueLength = existingLicenceNumber.Length;
-                            
-                            var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
-                            var newDocumentLine = new DocumentLine
-                            {
-                                Columns = [
-                                    new()
-                                    {
-                                        Text = newLicenceNumber,
-                                        Words = [new(
-                                            newLicenceNumber,
-                                            null,
-                                            new DocumentLineWordCoordinates(-1, -1, -1, -1),
-                                            null)]
-                                    }
-                                ]
-                            };
-                            
-                            var newValueIsValidLicenceNumber = LicenceNumber.AnyIsLicenceNumber(
-                                [newDocumentLine],
-                                new LabelToMatch(),
-                                alreadyFound.IsOcr,
-                                out var newLicenceNumberOutput);
-
-                            var newValueIsOnlyLicenceNumber = newValueIsValidLicenceNumber && newLicenceNumber == newLicenceNumberOutput.First().Text;
-                            var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
-                            var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
-                            var newValueLength = newLicenceNumber.Length;
-
-                            if (newValueLength > existingValueLength
-                                || newValueNumberOfDigits > existingValueNumberOfDigits
-                                || newValueNumberOfParts > existingValueNumberOfParts)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
-
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            
-                            break;
-                        case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
-                            var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
-                            var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
-
-                            if (existingDate == null)
-                            {
-                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                alreadyFound.AlternativeMatches = [];
-                                match.AlternativeMatches.Add(alreadyFound);
-
-                                uniqueServiceMatches.Remove(alreadyFound);
-                                uniqueServiceMatches.Add(match);
-                            }
-                            else if (newDate == null)
-                            {
-                                alreadyFound.AlternativeMatches.Add(match);
-                            }
-                            else
-                            {
-                                var existingDateHasDayField = existingDate.Value.Day > 1;
-                                var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
-                                var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
-                                
-                                var newDateHasDayField = newDate.Value.Day > 1;
-                                var newDateIsPost1911 = newDate.Value.Year >= 1911;
-                                var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
-                                
-                                if (newDateHasDayField && newDateIsPost1911
-                                    && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseBestLicenceNumberUseLastServiceResultIfEqual:
+                        var existingLicenceNumber = string.Join(' ', alreadyFound.Text!.Select(m => m.Text));
+                        var existingDocumentLine = new DocumentLine
+                        {
+                            Columns = [
+                                new()
                                 {
-                                    match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
-                                    alreadyFound.AlternativeMatches = [];
-                                    match.AlternativeMatches.Add(alreadyFound);
-
-                                    uniqueServiceMatches.Remove(alreadyFound);
-                                    uniqueServiceMatches.Add(match);
+                                    Text = existingLicenceNumber,
+                                    Words = [new(
+                                        existingLicenceNumber,
+                                        null,
+                                        new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                        null)]
                                 }
-                                else
+                            ]
+                        };
+                        
+                        var existingValueNumberOfParts = existingLicenceNumber.Split('/').Length;
+                        var existingValueNumberOfDigits = existingLicenceNumber.Count(char.IsDigit);
+                        var existingValueLength = existingLicenceNumber.Length;
+                        
+                        var newLicenceNumber = string.Join(' ', match.Text!.Select(m => m.Text));
+                        var newDocumentLine = new DocumentLine
+                        {
+                            Columns = [
+                                new()
                                 {
-                                    alreadyFound.AlternativeMatches.Add(match);
+                                    Text = newLicenceNumber,
+                                    Words = [new(
+                                        newLicenceNumber,
+                                        null,
+                                        new DocumentLineWordCoordinates(-1, -1, -1, -1),
+                                        null)]
                                 }
-                            }
+                            ]
+                        };
+                        
+                        var newValueNumberOfParts = newLicenceNumber.Split('/').Length;
+                        var newValueNumberOfDigits = newLicenceNumber.Count(char.IsDigit);
+                        var newValueLength = newLicenceNumber.Length;
+
+                        if (newValueLength > existingValueLength
+                            || newValueNumberOfDigits > existingValueNumberOfDigits
+                            || newValueNumberOfParts > existingValueNumberOfParts)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        
+                        break;
+                    case MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull:
+                        var existingDate = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                        var newDate = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                        if (existingDate == null)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else if (newDate == null)
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        else
+                        {
+                            var existingDateHasDayField = existingDate.Value.Day > 1;
+                            var existingDateIsPost1911 = existingDate.Value.Year >= 1911;
+                            var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate.Value.Year.ToString()[3].ToString()) > 0;
                             
-                            break;
-                        default:
-                            throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
-                    }
-                    
-                    continue;
+                            var newDateHasDayField = newDate.Value.Day > 1;
+                            var newDateIsPost1911 = newDate.Value.Year >= 1911;
+                            var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate.Value.Year.ToString()[3].ToString()) > 0;
+                            
+                            if (newDateHasDayField && newDateIsPost1911
+                                && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                alreadyFound.AlternativeMatches.Add(match);
+                            }
+                        }
+                        
+                        break;
+                    default:
+                        throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
                 }
-
-                uniqueServiceMatches.Add(match);
             }
         }
 
         return uniqueServiceMatches;
     }
     
-    private async Task<ImageMetadata> LoadImageMetadataFromCacheAsync(PdfDocument pdfDocument, int processRunId)
-    {
-        var metaDataFileText = await cacheService.GetNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        });
-
-        return JsonSerializer.Deserialize<ImageMetadata>(
-            metaDataFileText!,
-            JsonHelper.GetSerializerOptions())!;
-    }
-    
-    private async Task<(ImageMetadata imageMetadata, bool imageMetadataChanged)>
-        GetImageMetadataAsync(PdfDocument pdfDocument, int processRunId)
-    {
-        foreach (var page in pdfDocument.Pages)
-        {
-            await noOcrDataExtractorService.SavePageScreenshotIfDoesntExistAsync(
-                outputService,
-                pdfDocument,
-                page.Number,
-                Name,
-                processRunId);
-        }
-
-        if (pdfDocument.FromCache)
-        {
-            return (await LoadImageMetadataFromCacheAsync(pdfDocument, processRunId), false);
-        }
-
-        var imagesMetadata = new ImageMetadata();
-            
-        foreach (var page in pdfDocument.Pages)
-        {
-            // TODO should use the interface (via a factory)
-            var pageImageService = new PdfPigNoOcrPageService((UglyToad.PdfPig.Content.Page)page.PdfPigPage!);
-
-            var metadataPage = new ImageMetadataPage
-            {
-                Number = page.Number,
-                ImageReference = await outputService.GetPageScreenshotReferenceAsync(page.Number, Name, pdfDocument.PdfFilePath)
-            };
-            
-            imagesMetadata.Pages.Add(metadataPage);
-            var imageNumber = 1;
-            
-            foreach (var image in await pageImageService.GetImagesAsync())
-            {
-                var extension = await image.SaveImageBytesAsync(
-                    pdfDocument.PdfFilePath,
-                    imageNumber,
-                    page.Number,
-                    cacheService,
-                    processRunId);
-
-                if (extension == null)
-                {
-                    continue;
-                }
-                
-                var imageReference = await cacheService.GetImageReferenceAsync(
-                    page.Number,
-                    imageNumber++,
-                    pdfDocument.PdfFilePath,
-                    extension);
-                
-                metadataPage.Images.Add(imageReference);
-            }
-        }
-
-        return (imagesMetadata, true);
-    }
-    
-    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedLabels(
+    private static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetUnmatchedOrMoreWantedLabels(
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
         List<LabelGroupResult> labelGroupMatches,
         bool onlyNotFoundAtAll)
@@ -694,42 +675,22 @@ public class PdfDataExtractorService(
                 var doesntMatchAnyFound = labelGroupMatches.All(r =>
                     r.LabelGroupName != labelLookup.LabelGroupName);
                 
-                var labelFull = labelGroupMatches.FirstOrDefault(lgm =>
+                var fullLabel = labelGroupMatches.FirstOrDefault(lgm =>
                     lgm.MatchedLabel != null
                     && labelLookup.Labels.Any(l => l.Name == lgm.MatchedLabel.Name))?.MatchedLabel;
 
-                var ifMultiplePreferLast = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                var ifMultiplePreferLongest = labelFull?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
-                var canGoOverPageBoundary = labelFull?.CanGoOverPageBoundary ?? false;
-                
-                if (ifMultiplePreferLast || ifMultiplePreferLongest)
-                {
-                    
-                }
+                var ifMultiplePreferLast = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                var ifMultiplePreferLongest = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
+                var canGoOverPageBoundary = fullLabel?.CanGoOverPageBoundary ?? false;
+                var lookingForMultiple = fullLabel?.MultipleBehaviour
+                    is MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel;
                 
                 return doesntMatchAnyFound
+                    || lookingForMultiple
                     || (!onlyNotFoundAtAll && (ifMultiplePreferLast || ifMultiplePreferLongest || canGoOverPageBoundary));
             })
             .ToList();
-    }
-    
-    private async Task SaveImageMetadataIfChangedAsync(
-        bool anyChanges,
-        PdfDocument pdfDocument,
-        ImageMetadata imagesMetadata,
-        int processRunId)
-    {
-        if (!anyChanges)
-        {
-            return;
-        }
-
-        await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilePath,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        }, imagesMetadata);
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
@@ -737,9 +698,11 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
-        int processRunId)
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -776,7 +739,9 @@ public class PdfDataExtractorService(
                     labelGroupMatches,
                     licenceNumberMapping,
                     previouslyParsedPaths,
-                    processRunId);
+                    regionCode,
+                    processRunId,
+                    lookupConfiguration);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -807,9 +772,11 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
-        int processRunId)
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
         
@@ -824,23 +791,23 @@ public class PdfDataExtractorService(
         {
             if (!string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text);
+                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text, regionCode);
                 
-                if (!licenceNumberMapping.TryGetValue(stripped!, out var relatedFileName))
+                if (!licenceNumberMapping.TryGetValue(stripped!, out var dmsFileData))
                 {
                     // TODO this should log a warning
                     continue;
                 }
                 
-                relatedFileName = $"{pdfFolderPath}{relatedFileName}";
+                var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
                 
-                if (previouslyParsedPaths.Contains(relatedFileName))
+                if (previouslyParsedPaths.Contains(destinationFilePath))
                 {
                     continue;
                 }
 
-                previouslyParsedPaths.Add(relatedFileName);
-                pathsToFetch.Add(relatedFileName);
+                previouslyParsedPaths.Add(destinationFilePath);
+                pathsToFetch.Add(destinationFilePath);
             }
         }
 
@@ -853,7 +820,11 @@ public class PdfDataExtractorService(
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(LabelConfiguration.GetLabels(), licenceNumberMapping),
+                new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    licenceNumberMapping,
+                    lookupConfiguration.ValidLowercaseFirstNames,
+                    regionCode),
                 previouslyParsedPaths,
                 processRunId);
 
@@ -981,9 +952,11 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, string> licenceNumberMapping,
+        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
-        int processRunId)
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -1031,7 +1004,9 @@ public class PdfDataExtractorService(
                                 label,
                                 licenceNumberMapping,
                                 previouslyParsedPaths,
-                                processRunId);
+                                regionCode,
+                                processRunId,
+                                lookupConfiguration);
 
                             returnList.AddRange(linkedLicences);
 
@@ -1056,7 +1031,7 @@ public class PdfDataExtractorService(
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-                        
+
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -1157,7 +1132,10 @@ public class PdfDataExtractorService(
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
                         lineForPosition = fullLine,
-                        lineNumber = partialLine.LineNumber
+                        lineNumber = partialLine.LineNumber,
+                        processRunId = processRunId,
+                        regionCode = regionCode,
+                        lookupConfiguration = lookupConfiguration
                     };
                     
                     var singleValueWanted = matchedLabel.MultipleBehaviour is
@@ -1166,11 +1144,19 @@ public class PdfDataExtractorService(
                     
                     foreach (var expression in lookupExpressions)
                     {
+                        var dtStart = DateTime.Now;
+                        
                         var result = await ProcessExpressionResultAsync(
                             expression.Value,
                             request,
                             partialLine!,
                             singleValueWanted);
+                     
+                        if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
+                        {
+                            Console.WriteLine(
+                                $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+                        }
                         
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
@@ -1547,9 +1533,11 @@ public class PdfDataExtractorService(
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
-        int processRunId)
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration)
     {
         var subResults = new List<LabelGroupResult>();
         
@@ -1573,7 +1561,9 @@ public class PdfDataExtractorService(
                     subResults,
                     licenceMapping,
                     previouslyParsedPaths,
-                    processRunId);
+                    regionCode,
+                    processRunId,
+                    lookupConfiguration);
 
                 if (subLabelGroupMatch.Count > 0)
                 {
@@ -1897,37 +1887,20 @@ public class PdfDataExtractorService(
         IReadOnlyList<DocumentLine> lines)
     {
         var labelText = label.Text!
-            .Select(labelTextMatch =>
-            {
-                var text = labelTextMatch.Text;
-
-                if (text.Contains(PositionConstants.EndOfLineMarker))
-                {
-                    text = text
-                        .Replace(PositionConstants.EndOfLineMarker, string.Empty);
-                }
-                
-                if (text.Contains(PositionConstants.EndOfColumnMarker))
-                {
-                    text = text
-                        .Replace(PositionConstants.EndOfColumnMarker, string.Empty);
-                }
-                
-                return (labelTextMatch, text);
-            })
+            .Select(labelTextMatch => labelTextMatch.Text
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty)
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
             .ToList();
         
-        if (labelText.Any(tuple =>
-            tuple.text.Equals(PositionConstants.StartOfBlockMarker, StringComparison.InvariantCultureIgnoreCase)))
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.InvariantCultureIgnoreCase))
         {
             return true;
         }
+
+        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
-        return labelText.Any(tuple =>
-        {
-            return string.Join(',', lines.Select(line => line.Text)).Contains(tuple.text,
-                StringComparison.InvariantCultureIgnoreCase);
-        });
+        return labelText.Any(text => joinedLines.Contains(text,
+            StringComparison.InvariantCultureIgnoreCase));
     }
     
     public void Dispose()

@@ -147,7 +147,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
+    public async Task SavePageScreenshotAsync(int pageNumber, string noOcrServiceName, string pdfFilename,
         byte[] data, int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -171,8 +171,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request,
-        string pageLines, int processRunId)
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(
+        NoOcrServicePageCacheRequest request,
+        string data,
+        int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -189,7 +191,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 Filename = request.Filepath,
                 request.PageNumber,
                 request.NoOcrServiceName,
-                Data = pageLines,
+                Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -244,7 +246,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         return request;
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename,
+    public async Task SaveAllPagesTextAsync(string documentLinesStr, string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {
@@ -402,11 +404,14 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
+                           DELETE FROM all_pages_text;
                            DELETE FROM image_on_page;
                            DELETE FROM no_ocr_images_metadata_cache;
                            DELETE FROM no_ocr_pages_metadata_cache;
                            DELETE FROM no_ocr_page_text_cache;
                            DELETE FROM ocr_image_text_cache;
+                           DELETE FROM ocr_screenshot_text_cache;
+                           DELETE FROM page_screenshot;
                            """;
 
         await ExecuteAsync(connection, sql, 0);
@@ -422,6 +427,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM no_ocr_pages_metadata_cache WHERE filename = @Filename;
                            DELETE FROM no_ocr_page_text_cache WHERE filename = @Filename;
                            DELETE FROM ocr_image_text_cache WHERE filename = @Filename;
+                           DELETE FROM ocr_screenshot_text_cache WHERE filename = @Filename;
                            DELETE FROM page_screenshot WHERE filename = @Filename;
                            """;
         
@@ -549,7 +555,19 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.ExecuteScalarAsync<int>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.ExecuteScalarAsync<int>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -562,6 +580,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
+            
+            Console.WriteLine("WARNING ExecuteScalarAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await ExecuteScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
@@ -572,7 +592,17 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
             await connection.ExecuteAsync(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
         }
         catch (NpgsqlException ex)
         {
@@ -585,6 +615,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
+            
+            Console.WriteLine("WARNING ExecuteAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             await ExecuteAsync(GetPostgresConnection(), sql, retryNumber + 1, param);

@@ -1,0 +1,50 @@
+name: Migration Runner - Build template
+on:
+  workflow_call:
+    inputs:
+      dotnet_application_solution_name:
+        description: "dotnet application solution name"
+        required: true
+        type: string
+      environment:
+        description: "Optional environment name"
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: build
+    runs-on: windows-latest
+    environment: ${{ inputs.environment || '' }}
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      should_push: ${{ steps.check_commit.outputs.should_push }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Check last commit message for 'ecrpush'
+        id: check_commit
+        shell: bash
+        run: |
+          COMMIT_MSG="$(git log -1 --pretty=%B)"
+          echo "Last commit message: $COMMIT_MSG"
+          if [[ "$COMMIT_MSG" == *"ecrpush"* ]]; then
+            echo "should_push=true"
+            echo "should_push=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_push=false"
+            echo "should_push=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Restore NuGet packages
+        shell: pwsh
+        run: dotnet restore ${{ inputs.dotnet_application_solution_name }}.sln
+      - name: Build Solution
+        shell: pwsh
+        run: dotnet build ${{ inputs.dotnet_application_solution_name }}.sln --configuration Release

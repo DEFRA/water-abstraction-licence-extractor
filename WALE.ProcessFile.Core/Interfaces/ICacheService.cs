@@ -1,6 +1,6 @@
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -10,7 +10,15 @@ public interface ICacheService
     
     public string? CacheFolder { get; set; }
     
-    public string? ConnectionString { get; set; }
+    public string? Host { get; set; }
+    
+    public int Port { get; set; }
+    
+    public string? DatabaseName { get; set; }
+    
+    public string? Username { get; set; }
+    
+    public string? Password { get; set; }
     
     public Task SetupAsync();
 
@@ -18,13 +26,14 @@ public interface ICacheService
     
     public Task ClearCacheAsync();
     
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension);
+    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
         string pdfFilePath,
         string extension,
+        string serviceName,
         int? width = null,
         int? height = null);
     
@@ -38,6 +47,8 @@ public interface ICacheService
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
+
+    public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
 
@@ -62,7 +73,7 @@ public interface ICacheService
         string extension,
         int processRunId);
     
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     
@@ -72,7 +83,7 @@ public interface ICacheService
     
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<TextBlock> pageLines);
+        List<MinimalTextBlock> pageLines);
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,
@@ -97,4 +108,9 @@ public interface ICacheService
     Task SaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines);
+
+    Task<MetadataCollection?> GetMetadataAsync(
+        string pdfFilePath,
+        string noOcrServiceName,
+        int processRunId);
 }

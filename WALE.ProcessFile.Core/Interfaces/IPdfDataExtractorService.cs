@@ -20,9 +20,11 @@ public interface IPdfDataExtractorService
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, string> licenceMapping,
+        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
-        int processRunId);
+        int regionCode,
+        int processRunId,
+        LookupConfiguration configuration);
 
     public void Dispose();
 }

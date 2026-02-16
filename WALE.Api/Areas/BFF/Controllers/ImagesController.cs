@@ -28,12 +28,12 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             serviceName,
             fileName1);
 
-        if (data == null)
+        if (data.Count == 0)
         {
             throw new Exception($"Cannot find screenshot for {fileName1} - {serviceName} - {pageNumber}");
         }
 
-        return File(data, "image/jpeg");
+        return File(data[0], "image/jpeg");
     }
 
     [HttpGet]
@@ -53,7 +53,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             serviceName,
             fileName1);
 
-        return File(data!, "image/jpeg");
+        return File(data[0], "image/jpeg");
     }
 
     [HttpGet]

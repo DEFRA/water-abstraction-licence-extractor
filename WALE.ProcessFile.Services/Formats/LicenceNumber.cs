@@ -1,455 +1,440 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
-public static partial class LicenceNumber
+public partial class LicenceNumber : ILicenceNumberService
 {
+    private static ILicenceNumberService? _instance;
+
+    public static ILicenceNumberService Instance
+    {
+        get => _instance ??
+               throw new InvalidOperationException("LicenceNumber.Instance must be initialized before use.");
+        set => _instance = value;
+    }
+
+    private readonly Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>> _licenceIndex;
+
+    public LicenceNumber(IDatabaseReadService databaseReadService)
+    {
+        ArgumentNullException.ThrowIfNull(databaseReadService);
+        _licenceIndex = new Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>>(async () =>
+        {
+            var licences = await databaseReadService.GetNaldLicencesAsync();
+            return BuildIndex(licences);
+        });
+    }
+
+    private Task<Dictionary<string, List<LicenceIndexEntry>>> GetLicenceIndexAsync() => _licenceIndex.Value;
+
+    public class LicenceIndexEntry
+    {
+        public required NaldLicence NaldLicence { get; init; }
+        public required List<string> Segments { get; init; }
+    }
+
+    private static Dictionary<string, List<LicenceIndexEntry>> BuildIndex(List<NaldLicence> licences)
+    {
+        var index = new Dictionary<string, List<LicenceIndexEntry>>();
+
+        foreach (var licence in licences)
+        {
+            var normalizedKey = NormalizeLicenceNumber(licence.LicenceNumber);
+            var segments = ExtractSegments(licence.LicenceNumber);
+
+            var entry = new LicenceIndexEntry
+            {
+                NaldLicence = licence,
+                Segments = segments
+            };
+
+            if (!index.TryGetValue(normalizedKey, out var entries))
+            {
+                entries = [];
+                index[normalizedKey] = entries;
+            }
+
+            entries.Add(entry);
+        }
+
+        return index;
+    }
+
+    public static string NormalizeLicenceNumber(string licenceNumber)
+        => new(licenceNumber.Where(c => char.IsLetterOrDigit(c) && c != '0').ToArray());
+
+    public static List<string> ExtractSegments(string licenceNumber)
+    {
+        // Identify all separator characters (non-alphanumeric)
+        var allSeparators = licenceNumber.Where(c => !char.IsLetterOrDigit(c)).Distinct().ToList();
+
+        // If there are dots AND other separators, split on anything that is not alphanumeric or a dot,
+        // otherwise just split on non-alphanumerics - to support correct segmentation of "1.2.3.4" vs. "1/2/3.1/4"
+        var regex = allSeparators.Contains('.') && allSeparators.Count > 1
+            ? NonAlphanumericOrDotRegex()
+            : NonAlphanumericRegex();
+
+        return regex
+            .Split(licenceNumber)
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Select(s => s.TrimStart('0').Replace(".", string.Empty))
+            .ToList();
+    }
+
+    [GeneratedRegex(@"[^a-zA-Z0-9.]+")]
+    private static partial Regex NonAlphanumericOrDotRegex();
+
+    [GeneratedRegex(@"[^a-zA-Z0-9]+")]
+    private static partial Regex NonAlphanumericRegex();
+
     public const string Constant = "LicenceNumber";
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"([A-Z0-9]{1,3}[\/ .]{1,2}[A-Z0-9]{1,5}([\/ .]{1,2}[0-9]{1,4})?([\/ .]{0,2}[0-9A-Z\*]{1,4})?([\/ .]{1,2}[0-9]{1,4})?([\/ .]{1,2}[0-9A-Z]{1,3})?[\/ .]{0,2})|([A-Z0-9]{1,3}\/{1,2}[A-Z0-9]{1,3})";
+        @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    private static readonly string[] PrefixesToExclude =
-    [
-        "NT ",
-        "NU ",
-        "NY ",
-        "NGR "
-    ];
-
-    public static List<string> FindLicenceNumbers(string? text)
+    public static Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
+        IEnumerable<DocumentLine?> lines,
+        LabelToMatch label,
+        bool isOcr)
     {
-        if (string.IsNullOrEmpty(text))
+        return Instance.AnyIsLicenceNumberAsync(lines, label, isOcr);
+    }
+
+    async Task<(bool Success, List<DocumentLine> MatchedLines)> ILicenceNumberService.AnyIsLicenceNumberAsync(
+        IEnumerable<DocumentLine?> lines,
+        LabelToMatch label,
+        bool isOcr)
+    {
+        var matchedLines = new List<DocumentLine>();
+
+        // Flatten and validate columns
+        var columnsToProcess = lines
+            .Where(l => l != null)
+            .SelectMany(l => l!.Columns.Select(c => (Line: l, Column: c)))
+            .Where(x => IsValidColumnForProcessing(x.Column, isOcr));
+
+        // Flatten and validate sublines
+        var subLinesToProcess = columnsToProcess
+            .SelectMany(x => GetSubLines(x.Column.Text).Select(subLine => (x.Line, x.Column, subLine)))
+            .Where(x => IsValidSubLine(x.subLine, x.Column.Text));
+
+        var licenceIndex = await GetLicenceIndexAsync();
+
+        foreach (var (line, _, subLine) in subLinesToProcess)
+        {
+            var licenceNumberCandidates = LicenceNumbersRegex().Matches(subLine);
+
+            if (licenceNumberCandidates.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (Match match in licenceNumberCandidates)
+            {
+                var candidateText = match.Value;
+                var normalizedCandidate = NormalizeLicenceNumber(candidateText);
+
+                if (!licenceIndex.TryGetValue(normalizedCandidate, out var entries))
+                {
+                    continue;
+                }
+
+                var candidateSegments = ExtractSegments(candidateText);
+
+                foreach (var entry in entries)
+                {
+                    if (!AllChecksMatch(candidateSegments, candidateText, entry))
+                    {
+                        continue;
+                    }
+                    
+                    // Passed all checks so add a clone of the line containing the matched NALD licence number
+                    var matchedLine = line.Clone([new DocumentLineColumn(candidateText)]);
+                    matchedLine.AdditionalData ??= new Dictionary<string, object>();
+                    matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
+                        
+                    matchedLines.Add(matchedLine);
+                    
+                    // Exit early if we're looking for a single instance match
+                    if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                    {
+                        return (true, matchedLines);
+                    }
+                }
+            }
+        }
+
+        return (matchedLines.Count > 0, matchedLines);
+    }
+
+    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, short regionCode)
+    {
+        return Instance.GetNaldLicencesAsync(licenceNumber, regionCode);
+    }
+
+    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, short regionCode)
+    {
+        var normalized = NormalizeLicenceNumber(licenceNumber);
+
+        var index = await GetLicenceIndexAsync();
+        if (!index.TryGetValue(normalized, out var candidates))
         {
             return [];
         }
 
-        var result = AnyIsLicenceNumber([new DocumentLine { Columns = { new DocumentLineColumn(text) } }], new LabelToMatch(), false, out var outList);
-        return result ? outList.Select(x => x.Text).ToList() : [];
+        var segments = ExtractSegments(licenceNumber);
+        
+        return candidates
+            .Where(c => SegmentsMatch(segments, c.Segments))
+            .Select(c => c.NaldLicence)
+            .Where(l => l.RegionCode == regionCode)
+            .ToList();
     }
 
-    public static bool AnyIsLicenceNumber(
-        IEnumerable<DocumentLine?> lines,
-        LabelToMatch label,
-        bool isOcr,
-        out List<DocumentLine> matchedLines)
+    public static Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText)
     {
-        matchedLines = [];
-        var anyMatchFound = false;
-        var findSingleResult = label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+        return Instance.ExtractNaldLicencesAsync(sourceText);
+    }
 
-        foreach (var line in lines)
+    async Task<List<NaldLicence>> ILicenceNumberService.ExtractNaldLicencesAsync(string? sourceText)
+    {
+        if (string.IsNullOrEmpty(sourceText) || !sourceText.Any(char.IsDigit))
         {
-            if (line == null)
+            return [];
+        }
+
+        var subLines = GetSubLines(sourceText)
+            .Where(subLine => IsValidSubLine(subLine, sourceText));
+
+        var resultList = new List<NaldLicence>();
+        var licenceIndex = await GetLicenceIndexAsync();
+
+        foreach (var subLine in subLines)
+        {
+            var licenceNumberCandidates = LicenceNumbersRegex().Matches(subLine);
+            if (licenceNumberCandidates.Count == 0)
             {
                 continue;
             }
 
-            var anyMatchFoundForLine = false;
-            var newColumns = new List<DocumentLineColumn>();
-
-            foreach (var column in line.Columns)
+            foreach (Match match in licenceNumberCandidates)
             {
-                var anyMatchFoundForColumn = false;
+                var candidateText = match.Value;
+                var normalizedCandidate = NormalizeLicenceNumber(candidateText);
 
-                if (string.IsNullOrEmpty(column.Text)
-                    || !column.Text.Any(char.IsDigit)
-                    || DataHelper.IsCorruptedText(column.Text))
+                if (!licenceIndex.TryGetValue(normalizedCandidate, out var entries))
                 {
-                    newColumns.Add(column);
                     continue;
                 }
 
-                const string splitChar = ",";
-
-                var columnText = column.Text;
-
-                if (columnText.Contains(". "))
-                {
-                    columnText = columnText.Replace(". ", $"{splitChar} ");
-                }
-
-                if (columnText.Contains(" and"))
-                {
-                    columnText = columnText.Replace(" and", splitChar);
-                }
-
-                if (columnText.Contains(" for"))
-                {
-                    columnText = columnText.Replace(" for", splitChar);
-                }
-
-                if (columnText.Contains(" shall"))
-                {
-                    columnText = columnText.Replace(" shall", splitChar);
-                }
-
-                if (columnText.Contains(" under"))
-                {
-                    columnText = columnText.Replace(" under", splitChar);
-                }
-
-                if (columnText.Contains(" from"))
-                {
-                    columnText = columnText.Replace(" from", splitChar);
-                }
-
-                if (columnText.Contains(" ("))
-                {
-                    columnText = columnText.Replace(" (", splitChar);
-                }
-
-                var slashSpacePos = columnText.IndexOf("/ ", StringComparison.Ordinal);
-                var isSlashSpaceDigit = slashSpacePos > 0
-                                        && columnText.Length > slashSpacePos + 2
-                                        & char.IsDigit(columnText.Substring(slashSpacePos + 2, 1)[0]);
-
-                if (isSlashSpaceDigit)
-                {
-                    columnText = columnText.Replace("/ ", "/");
-                }
-
-                var subLines = columnText.Split(splitChar);
-
-                foreach (var subLine in subLines)
-                {
-                    var containsSplitter = subLine.Contains(' ')
-                                           || column.Text.Contains('/')
-                                           || column.Text.Contains('.');
-
-                    if (!containsSplitter || subLine.Length < 4)
-                    {
-                        continue;
-                    }
-
-                    var numberLine = subLine;
-
-                    if (isOcr && numberLine.Contains('/') && numberLine.Contains(' '))
-                    {
-                        numberLine = numberLine.Replace(" ", string.Empty);
-                    }
-
-                    var regexMatches = LicenceNumbersRegex().Matches(numberLine);
-                    var isMatch = regexMatches.Count >= 1;
-
-                    if (!isMatch)
-                    {
-                        continue;
-                    }
-
-                    // It's a date
-                    if (Date.IsDate(numberLine))
-                    {
-                        continue;
-                    }
-
-                    var numberLineWithSlashes = numberLine;
-
-                    // No slashes, 1 dot - is invalid format (its probably a decimal number
-                    if (!numberLineWithSlashes.Contains('/') && numberLineWithSlashes.Count(c => c == '.') == 1)
-                    {
-                        continue;
-                    }
-
-                    if (numberLineWithSlashes.Contains(' '))
-                    {
-                        numberLineWithSlashes = numberLineWithSlashes.Replace(" ", "/");
-                    }
-
-                    if (numberLineWithSlashes.Contains('.'))
-                    {
-                        numberLineWithSlashes = numberLineWithSlashes.Replace(".", "/");
-                    }
-
-                    var enoughPartsWithNumbers = numberLineWithSlashes
-                        .Split('/')
-                        .Count(section => section.Any(char.IsDigit)) >= 2;
-
-                    isMatch = enoughPartsWithNumbers;
-
-                    if (!isMatch)
-                    {
-                        continue;
-                    }
-
-                    var value = regexMatches[0].Value.Trim();
-
-                    if (subLine.Contains($"{value.Replace("/", ".")}m", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var lengthBeforePeriod = value.IndexOf(".", StringComparison.Ordinal);
-
-                    if (lengthBeforePeriod >= 10)
-                    {
-                        value = value.Split('.')[0];
-                    }
-
-                    var lengthBeforeSpace = value.IndexOf(" ", StringComparison.Ordinal);
-
-                    if (lengthBeforeSpace >= 10)
-                    {
-                        value = value.Split(' ')[0];
-                    }
-
-                    // It's a date (check again)
-                    if (Date.IsDate(value))
-                    {
-                        continue;
-                    }
-
-                    var previousCharIsLetterCount = -1;
-                    var maxSequenceLength = 0;
-
-                    maxSequenceLength = value
-                        .Select(c =>
-                        {
-                            if (c == ' ' || c == '/' || c == '.')
-                            {
-                                return maxSequenceLength;
-                            }
-
-                            if (!char.IsLetter(c))
-                            {
-                                // ReSharper disable once AccessToModifiedClosure
-                                if (previousCharIsLetterCount + 1 > maxSequenceLength)
-                                {
-                                    maxSequenceLength = previousCharIsLetterCount + 1;
-                                }
-
-                                previousCharIsLetterCount = -1;
-                                return maxSequenceLength;
-                            }
-
-                            previousCharIsLetterCount += 1;
-
-                            if (previousCharIsLetterCount + 1 > maxSequenceLength)
-                            {
-                                maxSequenceLength = previousCharIsLetterCount + 1;
-                            }
-
-                            return maxSequenceLength;
-                        })
-                        .OrderByDescending(r => r)
-                        .First();
-
-                    if (maxSequenceLength >= 3)
-                    {
-                        continue;
-                    }
-
-                    var hasInvalidComboOfSeperators = (value.Contains('.') && value.Contains(' '))
-                                                      || (value.Contains('/') && value.Contains(' '));
-                    //|| (value.Contains('/') && value.Contains('.')) -- This combination is valid e.g. 11/42/28.2/7
-
-                    if (hasInvalidComboOfSeperators)
-                    {
-                        continue;
-                    }
-
-                    // Its a value + unit
-                    if (value.Contains('.') && (value.Contains("MI") || value.Contains("M3")))
-                    {
-                        continue;
-                    }
-
-                    var sections = value.Split('/');
-
-                    // Last bit is too long - its because of a space near the end
-                    if (sections.Length == 4 && sections.Last().Length == 4)
-                    {
-                        var valueWithoutLastChar = value[..^1];
-                        var valueEndingWithSpace = $"{valueWithoutLastChar} ";
-
-                        if (subLine.Contains(valueEndingWithSpace))
-                        {
-                            value = valueWithoutLastChar;
-                        }
-                    }
-
-                    var shortLimit = value.Contains('/') ? 5 : 6;
-                    var veryShort = value.Length < shortLimit;
-                    if (veryShort)
-                    {
-                        continue;
-                    }
-
-                    var totalDigits = value.Count(char.IsDigit);
-
-                    if (totalDigits < 4)
-                    {
-                        continue;
-                    }
-
-                    var isPostcode = (value.Length == 7 || value.Length == 8)
-                                     && char.IsUpper(value[0])
-                                     && value.Count(c => c == ' ') == 1
-                                     && value.Split(' ')[1].Length == 3;
-
-                    if (isPostcode)
-                    {
-                        continue;
-                    }
-
-                    var atLeastOneDigit = value.Any(char.IsDigit);
-                    if (!atLeastOneDigit)
-                    {
-                        continue;
-                    }
-
-                    var isOsRef = (value.StartsWith('S') || value.StartsWith('T'))
-                                  && value[2] == ' '
-                                  && value.All(c => c != '/')
-                                  && value.All(c => c != '.');
-
-                    if (!isOsRef)
-                    {
-                        isOsRef =
-                            value.StartsWith("NZ ")
-                            || value.Contains(" NZ")
-                            || value.StartsWith("TA ")
-                            || value.Contains(" TA ")
-                            || value.StartsWith("SE ")
-                            || value.Contains(" SE ")
-                            || value.StartsWith("TF ")
-                            || value.Contains(" TF ")
-                            || value.StartsWith("A ")
-                            || value.StartsWith("B ")
-                            || value.StartsWith("C ")
-                            || value.StartsWith("D ")
-                            || value.StartsWith("E ")
-                            || value.StartsWith("F ")
-                            || value.StartsWith("G ")
-                            || value.StartsWith("H ")
-                            || value.StartsWith("I ")
-                            || value.StartsWith("J ")
-                            || value.StartsWith("K ")
-                            || value.StartsWith("L ")
-                            || value.StartsWith("M ")
-                            || value.StartsWith("N ")
-                            || value.StartsWith("O ")
-                            || value.StartsWith("P ")
-                            || value.StartsWith("Q ")
-                            || value.StartsWith("R ")
-                            || value.StartsWith("S ")
-                            || value.StartsWith("T ")
-                            || value.StartsWith("U ")
-                            || value.StartsWith("V ")
-                            || value.StartsWith("W ")
-                            || value.StartsWith("X ")
-                            || value.StartsWith("Y ")
-                            || value.StartsWith("Z ")
-                            || value.EndsWith(" A")
-                            || value.EndsWith(" B")
-                            || value.EndsWith(" C")
-                            || value.EndsWith(" D")
-                            || value.EndsWith(" E")
-                            || value.EndsWith(" F")
-                            || value.EndsWith(" G")
-                            || value.EndsWith(" H")
-                            || value.EndsWith(" I")
-                            || value.EndsWith(" J")
-                            || value.EndsWith(" K")
-                            || value.EndsWith(" L")
-                            || value.EndsWith(" M")
-                            || value.EndsWith(" N")
-                            || value.EndsWith(" O")
-                            || value.EndsWith(" P")
-                            || value.EndsWith(" Q")
-                            || value.EndsWith(" R")
-                            || value.EndsWith(" S")
-                            || value.EndsWith(" T")
-                            || value.EndsWith(" U")
-                            || value.EndsWith(" V")
-                            || value.EndsWith(" W")
-                            || value.EndsWith(" X")
-                            || value.EndsWith(" Y")
-                            || value.EndsWith(" Z");
-                    }
-
-                    if (isOsRef)
-                    {
-                        continue;
-                    }
-
-                    var noCharSlashOrDot = value.All(c => c != '/')
-                                           && value.All(c => c != '.')
-                                           && !value.Any(char.IsLetter);
-
-                    if (noCharSlashOrDot && value.Split(' ').Length < 3)
-                    {
-                        continue;
-                    }
-
-                    var excludedPrefixFound = PrefixesToExclude.Any(prefixToExclude =>
-                        value.StartsWith(prefixToExclude));
-
-                    if (excludedPrefixFound)
-                    {
-                        continue;
-                    }
-
-                    // Invalid end of a licence number (probably cut off)
-                    if (value.EndsWith("/R"))
-                    {
-                        continue;
-                    }
-
-                    // Invalid end of a licence number
-                    if (value.EndsWith("V", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var colText = FormattingHelper.TrimFormatting(
-                        value,
-                        true,
-                        true);
-
-                    // It's part of something bigger (like a drawing reference e.g. '13/002-The...')
-                    if (subLine.Contains($"{colText}-"))
-                    {
-                        continue;
-                    }
-
-                    var clonedColumn = new DocumentLineColumn(colText!);
-                    newColumns.Clear();
-                    newColumns.Add(clonedColumn);
-
-                    var clonedLine = line.Clone(newColumns);
-                    matchedLines.Add(clonedLine);
-
-                    newColumns = [];
-                    anyMatchFoundForColumn = true;
-                    anyMatchFoundForLine = true;
-                    anyMatchFound = true;
-                }
-
-                if (!anyMatchFoundForColumn)
-                {
-                    newColumns.Add(column);
-                }
-            }
-
-            if (!anyMatchFoundForLine)
-            {
-                continue;
-            }
-
-            if (findSingleResult)
-            {
-                return anyMatchFound;
+                var candidateSegments = ExtractSegments(candidateText);
+
+                resultList
+                    .AddRange(entries.Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
+                        .Select(entry => entry.NaldLicence));
             }
         }
 
-        return anyMatchFound;
+        return resultList
+            .DistinctBy(l => new { l.LicenceNumber, l.RegionCode })
+            .ToList();
+    }
+
+    private static bool AnySourceNumberSectionHasMoreZeroes(string sourceLinkedLicenceNumber, string naldLinkedLicenceNumber)
+    {
+        sourceLinkedLicenceNumber = sourceLinkedLicenceNumber
+            .Replace(" ", "/")
+            .Replace(".", "/");
+        
+        naldLinkedLicenceNumber = naldLinkedLicenceNumber
+            .Replace(" ", "/")
+            .Replace(".", "/");
+
+        var sourceSegments = sourceLinkedLicenceNumber.Split('/');
+        var naldSegments = naldLinkedLicenceNumber.Split('/');
+
+        if (naldSegments.Length == 1)
+        {
+            return false;
+        }
+        
+        var index = 0;
+        
+        foreach (var sourceSegment in sourceSegments)
+        {
+            if (string.IsNullOrWhiteSpace(sourceSegment))
+            {
+                continue;
+            }
+            
+            var naldSegment = naldSegments.Length > index ? naldSegments[index++] : null;
+
+            var sourceSegmentZeroCount = sourceSegment.Count(c => c == '0');
+            var naldSegmentZeroCount = naldSegment?.Count(c => c == '0') ?? 0;
+
+            if (sourceSegmentZeroCount > naldSegmentZeroCount)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private static bool NumberOfSectionsMatch(string sourceLinkedLicenceNumber, string naldLinkedLicenceNumber)
+    {
+        if (!sourceLinkedLicenceNumber.Contains('/'))
+        {
+            return true;
+        }
+        
+        var sourceParts =  sourceLinkedLicenceNumber.Split('/');
+        var naldParts = naldLinkedLicenceNumber.Split('/');
+
+        if (naldParts.Length == 1)
+        {
+            return true;
+        }
+        
+        var countsMatch = sourceParts.Count(c => !string.IsNullOrEmpty(c))
+            == naldParts.Count(c => !string.IsNullOrEmpty(c));
+
+        if (!countsMatch)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool AllChecksMatch(List<string> candidateSegments, string candidateText, LicenceIndexEntry entry)
+    {
+        if (!SegmentsMatch(candidateSegments, entry.Segments))
+        {
+            return false;
+        }
+
+        if (!NumberOfSectionsMatch(candidateText, entry.NaldLicence.LicenceNumber))
+        {
+            return false;
+        }
+
+        if (AnySourceNumberSectionHasMoreZeroes(candidateText, entry.NaldLicence.LicenceNumber))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    
+    public static bool SegmentsMatch(
+        List<string> segments1,
+        List<string> segments2)
+    {
+        var segments1String = string.Join("/", segments1);
+        var segments2String = string.Join("/", segments2);
+
+        if (segments1String == segments2String)
+        {
+            return true;
+        }
+
+        var segments1Index = 0;
+        var segments2Index = 0;
+
+        while (segments1Index < segments1String.Length
+            && segments2Index < segments2String.Length)
+        {
+            var segment1Char = segments1String[segments1Index];
+            var segment2Char = segments2String[segments2Index];
+
+            // If both characters match, advance both iterators
+            if (segment1Char == segment2Char)
+            {
+                segments1Index++;
+                segments2Index++;
+                
+                continue;
+            }
+
+            // Handle segment break in s1: s2 can have zeroes or continue with next character
+            if (segment1Char == '/')
+            {
+                if (segment2Char == '0')
+                {
+                    segments2Index++;
+                }
+                else
+                {
+                    segments1Index++;
+                }
+
+                continue;
+            }
+
+            // Handle segment break in s2: s1 can have zeroes or continue with next character
+            if (segment2Char == '/')
+            {
+                if (segment1Char == '0')
+                {
+                    segments1Index++;
+                }
+                else
+                {
+                    segments2Index++;
+                }
+
+                continue;
+            }
+
+            // Characters don't match and no special rules apply
+            return false;
+        }
+
+        // Both strings should be fully consumed
+        return segments1Index == segments1String.Length && segments2Index == segments2String.Length;
+    }
+
+    private static bool IsValidColumnForProcessing(DocumentLineColumn column, bool isOcr) =>
+        !string.IsNullOrEmpty(column.Text)
+        && column.Text.Any(char.IsDigit)
+        && !DataHelper.IsCorruptedText(column.Text, isOcr);
+
+    private static bool IsValidSubLine(string subLine, string fullText) =>
+        subLine.Length >= 4
+        && (subLine.Contains(' ')
+            || fullText.Contains('/')
+            || fullText.Contains('.'));
+
+    private static string[] GetSubLines(string text)
+    {
+        const string splitChar = ",";
+
+        text = text
+            .Replace(". ", $"{splitChar} ")
+            .Replace(" and", splitChar)
+            .Replace(" for", splitChar)
+            .Replace(" shall", splitChar)
+            .Replace(" under", splitChar)
+            .Replace(" from", splitChar)
+            .Replace(" (", splitChar);
+
+        text = SlashSpaceDigitRegex()
+            .Replace(text, "/");
+
+        var subLines = text.Split(splitChar);
+        return subLines;
     }
 
     [GeneratedRegex(YorkshireRegexPatten)]
     private static partial Regex LicenceNumbersRegex();
+
+    [GeneratedRegex(@"/ (?=\d)")]
+    private static partial Regex SlashSpaceDigitRegex();
 }

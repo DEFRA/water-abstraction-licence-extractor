@@ -1,13 +1,21 @@
 using Scalar.AspNetCore;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
-using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Output;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
 
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
 {
@@ -33,23 +41,40 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     {
         options.AddPolicy("AllowPortal", policy =>
         {
-            policy.WithOrigins(
+            policy
+                .SetIsOriginAllowed(origin => true)
+                /*.WithOrigins(
                     "http://localhost:5173",  // Vite dev server
                     "http://localhost:3000",   // Docker/production portal
                     "http://localhost:8080",
                     "http://localhost"
-                )
+                )*/
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
         });
     });
 
-    var dbConnectionString = config.GetConnectionString("PostgreSQL")
-                             ?? throw new InvalidOperationException("PostgreSQL connection string not configured");
-
+    var dbHost = config.GetValue<string>("POSTGRESQL_HOST")
+        ?? throw new InvalidOperationException("POSTGRESQL_HOST connection string not configured");
+    var dbPort = int.Parse(config.GetValue<string>("POSTGRESQL_PORT")
+        ?? throw new InvalidOperationException("POSTGRESQL_PORT connection string not configured"));
+    var dbDatabaseName = config.GetValue<string>("POSTGRESQL_DBNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_DBNAME connection string not configured");
+    var dbUsername = config.GetValue<string>("POSTGRESQL_USERNAME")
+        ?? throw new InvalidOperationException("POSTGRESQL_USERNAME connection string not configured");
+    var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
+        ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
+    
     services
-        .AddPostgreSqlServices(dbConnectionString)
+        .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddTransient<IOutputService, DatabaseOutputService>()
-        .AddTransient<ICacheService, DatabaseCacheService>();
+        .AddTransient<ICacheService>(sp => new DatabaseCacheService(
+            sp.GetRequiredService<IDatabaseReadService>(),
+            sp.GetRequiredService<IDatabaseWriteService>(),
+            dbHost,
+            dbPort,
+            dbDatabaseName,
+            dbUsername,
+            dbPassword));
 }

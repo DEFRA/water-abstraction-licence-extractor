@@ -219,7 +219,7 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
-    public static bool IsCorruptedWord(DocumentLineWord? word, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedWord(DocumentLineWord? word, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
         if (word == null)
         {
@@ -308,14 +308,15 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             word.Text,
+            isOcr,
             unacceptableIncorrectValue);
         
         return isCorrupt;
     }
     
-    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
-        if (words == null)
+        if (!isOcr || words == null)
         {
             return false;
         }
@@ -374,6 +375,7 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             string.Join(' ', words.Select(w => w?.Text)),
+            isOcr,
             unacceptableIncorrectValue);
         
         return isCorrupt;
@@ -384,6 +386,7 @@ public static partial class DataHelper
         return 
             (!char.IsLetterOrDigit(ch) || !char.IsAscii(ch))
             && ch != ' '
+            && ch != '|'
             && ch != '/'
             && ch != '.'
             && ch != '%'
@@ -401,9 +404,9 @@ public static partial class DataHelper
             && ch != '*';
     }
     
-    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedText(string? line, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
-        if (string.IsNullOrEmpty(line))
+        if (!isOcr || string.IsNullOrEmpty(line))
         {
             return false;
         }
@@ -583,5 +586,78 @@ public static partial class DataHelper
 
             NullOutSubLabels(match.SubResults);
         }
+    }
+
+    public static string? GetTextFromFirstMatchByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return GetFirstLineTextFromMatch(GetFirstMatchByLabelGroup(matches, labelGroupName));
+    }
+    
+    public static string? GetTextFromFirstMatchByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return GetFirstLineTextFromMatch(GetFirstMatchByLabel(matches, name));
+    }
+    
+    public static LabelGroupResult? GetFirstMatchByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return matches.FirstOrDefault(result => result.LabelGroupName == labelGroupName);
+    }
+    
+    public static LabelGroupResult? GetFirstMatchByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return matches.FirstOrDefault(result => result.MatchedLabel?.Name == name);
+    }
+    
+    public static IEnumerable<LabelGroupResult> GetMatchesByLabelGroup(IEnumerable<LabelGroupResult> matches, string labelGroupName)
+    {
+        return matches.Where(result => result.LabelGroupName == labelGroupName);
+    }
+    
+    public static IEnumerable<LabelGroupResult> GetMatchesByLabel(IEnumerable<LabelGroupResult> matches, string name)
+    {
+        return matches.Where(result => result.MatchedLabel?.Name == name);
+    }
+    
+    public static string? GetFirstLineTextFromMatch(LabelGroupResult? match)
+    {
+        return match?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+    }
+
+    public static bool LikelyMapPage(IReadOnlyList<DocumentLine> documentLines, int numberOfImages)
+    {
+        if (documentLines.Count == 0)
+        {
+            return false;
+        }
+
+        if (numberOfImages > 10)
+        {
+            return true;
+        }
+        
+        var containsAPhraseSuggestingItsAMap = documentLines
+            .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
+              || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase)
+              || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.InvariantCultureIgnoreCase));
+
+        if (containsAPhraseSuggestingItsAMap)
+        {
+            return true;
+        }
+                    
+        var averageLineLength = documentLines.Average(line => line.Text.Length);
+        const int minAverageLineLength = 15;
+        
+        // Short lines indicate it may be a map page,
+        // no point processing that with the other services
+        if (averageLineLength < minAverageLineLength)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

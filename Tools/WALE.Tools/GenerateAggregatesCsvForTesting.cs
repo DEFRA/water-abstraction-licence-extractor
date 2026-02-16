@@ -7,8 +7,11 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Config;
@@ -20,11 +23,8 @@ public static class GenerateAggregatesCsvForTesting
 {
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
-    private static readonly HashSet<string> DeadLicenceNumbers = [];
-    private static readonly HashSet<string> LiveLicenceNumbers = [];
-    private static readonly HashSet<string> ImpoundmentLicenceNumbers = [];
-    private static readonly Dictionary<string, NaldData> NaldData = [];
+    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
+    private static readonly Dictionary<string, List<NaldData>> NaldData = [];
     private static readonly int ProcessRunId = -1;
     
     public static async Task GenerateCsvForTestingAsync()
@@ -43,7 +43,8 @@ public static class GenerateAggregatesCsvForTesting
             OutputService,
             KeyConfig.PdfFolder);
 
-        var data = await GetYorkshire70DataAsync(pdfDataExtractor);
+        var regionCode = 3;
+        var data = await GetYorkshire70DataAsync(pdfDataExtractor, regionCode);
         //var data = await GetYorkshire6DataAsync(pdfDataExtractor);
 
         await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today:yyyyMMdd}.csv");
@@ -52,20 +53,37 @@ public static class GenerateAggregatesCsvForTesting
         await csv.WriteRecordsAsync((IEnumerable)data);
     }
 
+    private static LookupConfiguration? _lookupConfiguration;
+    
+    static LookupConfiguration LookupConfiguration
+    {
+        get
+        {
+            if (_lookupConfiguration == null)
+            {
+                _lookupConfiguration = new LookupConfiguration(
+                    LabelConfiguration.GetLabels(),
+                    FileLicenceMapping,
+                    CompanyName.GetFirstNamesCsvFromFile(),
+                    3);
+            }
+
+            return _lookupConfiguration;
+        }
+    }
+    
     static Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
     {
         var pdfFolder = KeyConfig.PdfFolder;
         
         return pdfDataExtractor.GetMatchesAsync(
             pdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                FileLicenceMapping),
+            LookupConfiguration,
             [pdfFolder + fileName],
             ProcessRunId);
     }
 
-    static async Task<List<AggregatesCsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire70DataAsync(PdfDataExtractorService pdfDataExtractor, int regionCode)
     {
         var yorkshire = YorkshireFiles();
         
@@ -84,19 +102,20 @@ public static class GenerateAggregatesCsvForTesting
         var returnList = new List<AggregatesCsvLine>();
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
+        var naldLicenceStatusData = new NaldLicenceStatusData();
+        
         foreach (var pdfFilePath in pdfFilePaths)
         {
             var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
             var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
                 internalJson,
                 FileLicenceMapping,
-                ImpoundmentLicenceNumbers,
-                DeadLicenceNumbers,
-                LiveLicenceNumbers,
+                naldLicenceStatusData,
                 NaldData,
                 pdfDataExtractor,
                 KeyConfig.PdfFolder,
-                ProcessRunId
+                ProcessRunId,
+                LookupConfiguration
             );
 
             licenceSetGroups.Add(licenceSets);
@@ -104,9 +123,9 @@ public static class GenerateAggregatesCsvForTesting
 
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            naldLicenceStatusData,
+            [],
+            regionCode);
 
         foreach (var licenceSets in licenceSetGroups)
         {
@@ -127,21 +146,23 @@ public static class GenerateAggregatesCsvForTesting
         return returnList;
     }
 
-    static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor)
+    static async Task<List<AggregatesCsvLine>> GetYorkshire6DataAsync(PdfDataExtractorService pdfDataExtractor, int regionCode)
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+        var naldLicenceStatusData = new NaldLicenceStatusData();
+
+        var firstNames = CompanyName.GetFirstNamesCsvFromFile();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets1);
         var file1 = licenceSets1[0].Licences[0];
@@ -150,13 +171,12 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets2 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets2);
         var file2 = licenceSets2[0].Licences[0];
@@ -165,13 +185,12 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets3 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
+            naldLicenceStatusData,
             NaldData,            
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets3);
         var file3 = licenceSets3[0].Licences[0];
@@ -180,13 +199,12 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets4 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets4);
         var file4 = licenceSets4[0].Licences[0];
@@ -195,13 +213,12 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets5 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets5);
         var file5 = licenceSets5[0].Licences[0];
@@ -210,22 +227,21 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSets6 = await SchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers,
-            NaldData,            
+            naldLicenceStatusData,
+            NaldData,
             pdfDataExtractor,
             KeyConfig.PdfFolder,
-            ProcessRunId);
+            ProcessRunId,
+            LookupConfiguration);
         
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];
         
         SchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
-            ImpoundmentLicenceNumbers,
-            DeadLicenceNumbers,
-            LiveLicenceNumbers);
+            naldLicenceStatusData,
+            [],
+            regionCode);
         
         return
         [

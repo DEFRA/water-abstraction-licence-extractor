@@ -18,9 +18,11 @@ public static class OcrHelper
         int maxNegativeDiffBetweenWordTopLegacyFlowOnly = -1,
         int maxPositiveDiffBetweenWordTopLegacyFlowOnly = -1)
     {
+        AutoCorrectHelper.RemoveSpacesAroundSlashes(returnLines);
+        
         if (!useNewProcessingFlow)
         {
-            return GroupLegacyFlow(
+            return LegacyGrouping(
                 returnLines,
                 pageNumber,
                 horizontalColumnGapTrigger,
@@ -47,7 +49,7 @@ public static class OcrHelper
             .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
             .Where(word => !string.IsNullOrEmpty(word?.Text))
             .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
-            .Where(word => !DataHelper.IsCorruptedWord(word))
+            .Where(word => !DataHelper.IsCorruptedWord(word, true))
             .ToList();
         
         // 0b. Remove tiny words
@@ -403,14 +405,30 @@ public static class OcrHelper
         var combinedLinesNoBlanks = combinedLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .ToList();
+
+        var previousTop = (double?)null;
+        const int maxHeightDiff = 200;
+        var returnList = new List<DocumentLine>();
+        
+        // Add in some empty seperator lines where appropriate
+        foreach (var line in combinedLinesNoBlanks)
+        {
+            if (previousTop != null && line.Top - previousTop > maxHeightDiff)
+            {
+                returnList.Add(new DocumentLine());
+            }
+            
+            returnList.Add(line);
+            previousTop = line.Top;
+        }
         
         // TODO - another pass to look for pointlessly short lines? ones without any values on or just a floating number?
         
-        return combinedLinesNoBlanks;
+        return returnList;
     }
     
-    private static IReadOnlyList<DocumentLine> GroupLegacyFlow(
-        IReadOnlyList<LineAndWords> returnLines,
+    private static IReadOnlyList<DocumentLine> LegacyGrouping(
+        IReadOnlyList<LineAndWords> inputLines,
         int pageNumber,
         int horizontalColumnGapTrigger,
         int minimumFontSize,
@@ -428,12 +446,12 @@ public static class OcrHelper
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
-        var rawLines = returnLines
+        var noneCorruptOrEmptyLines = inputLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
+            .Where(line => !DataHelper.IsCorruptedLine(line.Words, true, unacceptableIncorrectValue))
             .ToList();
         
-        var groupedLines = rawLines
+        var groupedLines = noneCorruptOrEmptyLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -453,7 +471,7 @@ public static class OcrHelper
             {
                 var words = new List<DocumentLineWord>();
                 DocumentLineWord? previousOkWord = null;
-                
+
                 foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
                 {
                     if (line.Words == null)
@@ -461,6 +479,11 @@ public static class OcrHelper
                         continue;
                     }
 
+                    if (line.Text?.Contains("25/68/1/1") == true)
+                    {
+                        
+                    }
+                    
                     var lineWords = new List<DocumentLineWord>();
                     
                     foreach (var word in line.Words)
@@ -534,7 +557,7 @@ public static class OcrHelper
                     }
                  
                     var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
-                    var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
+                    var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
                     var percentOfPrevious = previousOkWord != null ?
                         GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
                         : null;
@@ -575,7 +598,7 @@ public static class OcrHelper
 
                 return documentLine;
             })
-            .Where(line => !DataHelper.IsCorruptedText(line.Text, unacceptableIncorrectValue))
+            .Where(line => !DataHelper.IsCorruptedText(line.Text, true, unacceptableIncorrectValue))
             .ToList();
 
         return groupedLines;
@@ -597,6 +620,16 @@ public static class OcrHelper
         }
         
         return coordinates.Top + ((coordinates.Bottom - coordinates.Top) / 2);
+    }
+    
+    public static bool IsPageScreenshot(string imageReference, int pageNumber)
+    {
+        var imageReferenceLower = imageReference.ToLower();
+        
+        return 
+            imageReferenceLower.StartsWith("screenshot")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.jpg")
+            || imageReferenceLower.EndsWith($"page-{pageNumber}.png");
     }
     
     private class TopBottomPositions

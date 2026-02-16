@@ -70,7 +70,7 @@ public class AwsTextractOcrDataExtractorService
             int processRunId,
             string noOcrServiceName)
     {
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         
         var returnLines = new List<LineAndWords>();
         var request = new OcrServiceImageTextCacheRequest
@@ -96,18 +96,18 @@ public class AwsTextractOcrDataExtractorService
         }
         else
         {
-            byte[]? bytes;
+            List<byte[]> bytesList;
             
             if (isPageScreenshot)
             {
-                bytes = await _outputService.GetPageScreenshotDataAsync(
+                bytesList = await _outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     noOcrServiceName,
                     pdfFilepath);
             }
             else
             {
-                bytes = await _cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
+                var bytes = await _cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
@@ -115,16 +115,35 @@ public class AwsTextractOcrDataExtractorService
                     NoOcrServiceName = noOcrServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
+
+                bytesList =
+                [
+                    bytes!
+                ];
             }
 
-            if (bytes == null)
+            if (bytesList.Count == 0)
             {
                 throw new Exception("Image was not found");
             }
 
             try
             {
-                returnLines = await GetDataFromTextractAsync(bytes);
+                var maxNumberOfWords = -1;
+                
+                foreach (var bytes in bytesList)
+                {
+                    var returnList = await GetDataFromTextractAsync(bytes);
+                    var numberOfWords = returnList.Sum(line => line.Words!.Count);
+
+                    if (numberOfWords <= maxNumberOfWords)
+                    {
+                        continue;
+                    }
+                    
+                    maxNumberOfWords = numberOfWords;
+                    returnLines = returnList;
+                }
             }
             catch (Exception e)
             {
@@ -245,7 +264,6 @@ public class AwsTextractOcrDataExtractorService
                 }!
             };
 
-            line.Text = string.Join(" ", line.Words.Select(w => w!.Text));
             returnList.Add(line);
         }
 

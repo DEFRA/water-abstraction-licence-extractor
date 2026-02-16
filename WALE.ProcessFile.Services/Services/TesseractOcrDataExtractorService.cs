@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Tesseract;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Tesseract;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -43,7 +44,7 @@ public class TesseractOcrDataExtractorService(
             ProcessRunId = processRunId
         };
 
-        var isPageScreenshot = imageReference.StartsWith("Screenshot");
+        var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         var returnLines = new List<LineAndWords>();
 
         var cachedJson = isPageScreenshot
@@ -60,40 +61,71 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            var externalProcessRanOk = await RunSeparateTesseractProcessAsync(
-                pageNumber,
-                imageNumber,
-                imageReference,
-                pdfFilepath,
-                isPageScreenshot,
-                processRunId,
-                cacheService.UsesDatabase);
+            // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
+            // crash Tesseract and take our process down with it
+            var runTesseractInsideThisProcess = false; 
 
-            if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
+            if (runTesseractInsideThisProcess)
             {
-                // TODO - Log
-                
-                // Don't cache, should work next time
-            }
-            else if (externalProcessRanOk == ProcessResult.RepeatableError)
-            {
-                // Never going to get a result back
-                
-                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
-                await cacheService.SaveOcrImageTextAsync(request, returnLines);
+                var inprocessTesseractService = new InternalTesseractOcrDataExtractorService(
+                    outputService,
+                    cacheService,
+                    tessDataPath,
+                    pageSegMode);
+
+                returnLines = await inprocessTesseractService.ProcessAsync(
+                    PdfDataExtractorService.Name,
+                    pageNumber,
+                    imageNumber,
+                    isPageScreenshot,
+                    imageReference,
+                    pdfFilepath,
+                    processRunId);
             }
             else
             {
-                if (isPageScreenshot)
+                var externalProcessRanOk = await RunSeparateTesseractProcessAsync(
+                    pageNumber,
+                    imageNumber,
+                    imageReference,
+                    pdfFilepath,
+                    isPageScreenshot,
+                    processRunId,
+                    cacheService.UsesDatabase);
+
+                if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
-                    returnLines = await cacheService.GetTemporaryOcrScreenshotTextAsync(request);
+                    // TODO - Log
+
+                    // Don't cache, should work next time
+                }
+                else if (externalProcessRanOk == ProcessResult.RepeatableError)
+                {
+                    // Never going to get a result back
+
                     await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
+                    await cacheService.SaveOcrImageTextAsync(request, returnLines);
                 }
                 else
                 {
-                    returnLines = await cacheService.GetTemporaryOcrImageTextAsync(request);
-                    await cacheService.SaveOcrImageTextAsync(request, returnLines);
+                    if (isPageScreenshot)
+                    {
+                        returnLines = await cacheService.GetTemporaryOcrScreenshotTextAsync(request);
+                    }
+                    else
+                    {
+                        returnLines = await cacheService.GetTemporaryOcrImageTextAsync(request);
+                    }
                 }
+            }
+            
+            if (isPageScreenshot)
+            {
+                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
+            }
+            else
+            {
+                await cacheService.SaveOcrImageTextAsync(request, returnLines);
             }
         }
 
@@ -143,7 +175,11 @@ public class TesseractOcrDataExtractorService(
             $"\"{cacheService.CacheFolder}\"",
             $"\"{outputService.OutputFolder}\"",
             $"\"{tessDataPath}\"",
-            $"\"{cacheService.ConnectionString ?? "N/A"}\""
+            $"\"{cacheService.Host ?? "N/A"}\"",
+            $"\"{cacheService.Port}\"",
+            $"\"{cacheService.DatabaseName ?? "N/A"}\"",
+            $"\"{cacheService.Username ?? "N/A"}\"",
+            $"\"{cacheService.Password ?? "N/A"}\""
         });
         
         var proc = Process.Start(

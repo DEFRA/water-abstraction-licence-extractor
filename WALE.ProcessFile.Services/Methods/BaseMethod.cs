@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class BaseMethod
 {
-    public static List<LabelGroupResult> FilterIntoFormat(
+    public static async Task<List<LabelGroupResult>> FilterIntoFormatAsync(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
@@ -21,6 +21,11 @@ public static class BaseMethod
         var returnList = new List<LabelGroupResult>();
 
         if (lines.Any(line => LabelMatchingHelper.ShouldSkipBlockAsForbidden(line.Text, request.label)))
+        {
+            return returnList;
+        }
+        
+        if (request.label.SkipLineNumbers.Contains(request.line!.LineNumber))
         {
             return returnList;
         }
@@ -54,7 +59,7 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr,
+                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr, request.lookupConfiguration,
                     out var companyNameLines))
                 {
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
@@ -68,7 +73,7 @@ public static class BaseMethod
                 
                 break;
             case Number.Constant:
-                if (Number.AnyIsNumber(lines, request.label, out var numberLines))
+                if (Number.AnyIsNumber(lines, request.label, request.isOcr, out var numberLines))
                 {
                     numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
 
@@ -81,41 +86,47 @@ public static class BaseMethod
                 
                 break;
             case LicenceNumber.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    var (success, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    if (success)
                     {
-                        if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                        licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
+
+                        foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            continue;
+                            if (LabelMatchingHelper.ShouldSkipLineAsForbidden(licenceNumberLine.Text, request.label!))
+                            {
+                                continue;
+                            }
+
+                            labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                            returnList.Add(labelGroupResult);
                         }
-                        
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        returnList.Add(labelGroupResult);
                     }
                 }
                 
                 break;
             case LicenceNumberFilename.Constant:
-                if (LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr, out var licenceNumberLines2))
                 {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines)
+                    var (success, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    if (success)
                     {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text);
-                        
-                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var relatedFileName) != true)
+                        var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
+
+                        foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            continue;
+                            var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
+
+                            if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
+                            {
+                                continue;
+                            }
+
+                            licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
+                            labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+
+                            returnList.Add(labelGroupResult);
                         }
-
-                        licenceNumberLine.Columns[0].Text = relatedFileName!;
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-
-                        returnList.Add(labelGroupResult);
                     }
                 }
                 
@@ -196,7 +207,9 @@ public static class BaseMethod
                 request.labelGroupName!,
                 request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
-                request.processRunId);
+                request.regionCode,
+                request.processRunId,
+                request.lookupConfiguration!);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

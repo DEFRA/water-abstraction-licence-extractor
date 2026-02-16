@@ -379,7 +379,18 @@ public class DatabaseOutputService(
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);
+
+        if (image == null)
+        {
+            throw new FileNotFoundException("Could not load image");
+        }
+        
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+
+        if (data == null)
+        {
+            throw new FileNotFoundException("Could not encode image");
+        }
         
         await using var stream = new MemoryStream();
         data.SaveTo(stream);

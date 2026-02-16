@@ -197,14 +197,6 @@ public class PdfDataExtractorService(
                 var imageReference = pageImages[imageNumberIndex];
                 imageNumber = imageNumberIndex + 1;
                 
-                var image = allImagesInDocument
-                    .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
-                
-                if (!IsPageScan(image.width, image.height))
-                {
-                    continue;
-                }
-                
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();

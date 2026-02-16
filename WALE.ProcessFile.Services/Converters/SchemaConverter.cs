@@ -54,9 +54,11 @@ public static partial class SchemaConverter
 
         var purposes = GetPurposes(
             matches,
-            licenceNumber,
-            naldData,
-            matchesResult.RegionCode);
+            naldDataLine);
+
+        var periods = GetPeriods(
+            matches,
+            naldDataLine);
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -64,7 +66,7 @@ public static partial class SchemaConverter
             licenceVersion.LicenceVersionId,
             points,
             purposes,
-            naldData,
+            naldDataLine,
             licenceNumbersMapping,
             naldLicenceStatusData,
             matchesResult.RegionCode,
@@ -321,7 +323,7 @@ public static partial class SchemaConverter
             MeansOfAbstraction = means,
             Points = points,
             Purposes = purposes,
-            PeriodsOfAbstraction = GetPeriods(matches, licenceNumber, naldData, regionCode),
+            PeriodsOfAbstraction = periods,
             DefinitionOfYear = GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
@@ -1886,7 +1888,7 @@ public static partial class SchemaConverter
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
-        Dictionary<string, List<NaldData>> naldData,
+        NaldData? naldDataLine,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
         int regionCode,
@@ -2199,7 +2201,7 @@ public static partial class SchemaConverter
                 PrimaryType = linkedLicenceNumbers.Count >= 1
                     ? PrimaryType.LicenceToLicence
                     : PrimaryType.InLicence,
-                NaldType = GetNaldType(naldData, licenceNumber, regionCode),
+                NaldType = GetNaldType(naldDataLine),
                 AggregateSetId = PositionConstants.ReplacementMarker,
                 LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
                 Limits = aggregateLimits,
@@ -2349,9 +2351,7 @@ public static partial class SchemaConverter
 
     private static PeriodOfAbstraction[] GetPeriods(
         List<LabelGroupResult> matches,
-        string? licenceNumber,
-        Dictionary<string, List<NaldData>> naldData,
-        int regionCode)
+        NaldData? naldDataLine)
     {
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
@@ -2375,10 +2375,10 @@ public static partial class SchemaConverter
                 Inclusive = true,
                 StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
                 EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber,
-                    periodResults.Text?.FirstOrDefault()?.Text, regionCode),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber,
-                    periodResults.Text?.FirstOrDefault()?.Text, regionCode)
+                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
+                    periodResults.Text?.FirstOrDefault()?.Text),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
+                    periodResults.Text?.FirstOrDefault()?.Text)
             });
         }
 
@@ -2456,10 +2456,10 @@ public static partial class SchemaConverter
                 TimeCutoff = timeCutoff,
                 PointIds = null, // TODO set purpose ids and point ids
                 PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldData, licenceNumber,
-                    periodResults.Text?.FirstOrDefault()?.Text, regionCode),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldData, licenceNumber,
-                    periodResults.Text?.FirstOrDefault()?.Text, regionCode)
+                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
+                    periodResults.Text?.FirstOrDefault()?.Text),
+                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
+                    periodResults.Text?.FirstOrDefault()?.Text)
             });
         }
 
@@ -2738,14 +2738,8 @@ public static partial class SchemaConverter
         };
     }
 
-    private static NaldPurposeData? GetNaldPurposeData(
-        Dictionary<string, List<NaldData>> naldData,
-        string? licenceNumber,
-        string? description,
-        int regionCode)
+    private static NaldPurposeData? GetNaldPurposeData(NaldData? naldDataLine, string? description)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-
         if (naldDataLine?.Purposes.Count is null or 0)
         {
             return null;
@@ -2775,14 +2769,8 @@ public static partial class SchemaConverter
         };
     }
 
-    private static string? GetNaldPeriodStartDate(
-        Dictionary<string, List<NaldData>> naldData,
-        string? licenceNumber,
-        string? description,
-        int regionCode)
+    private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-
         if (naldDataLine == null)
         {
         }
@@ -2800,14 +2788,8 @@ public static partial class SchemaConverter
         return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
     }
 
-    private static string? GetNaldPeriodEndDate(
-        Dictionary<string, List<NaldData>> naldData,
-        string? licenceNumber,
-        string? description,
-        int regionCode)
+    private static string? GetNaldPeriodEndDate(NaldData? naldDataLine, string? description)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-
         if (naldDataLine?.Periods.Count is null or 0)
         {
             return null;
@@ -2823,9 +2805,7 @@ public static partial class SchemaConverter
 
     private static PurposeOfAbstraction[] GetPurposes(
         List<LabelGroupResult> matches,
-        string? licenceNumber,
-        Dictionary<string, List<NaldData>> naldData,
-        int regionCode)
+        NaldData? naldDataLine)
     {
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
@@ -2909,7 +2889,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
+                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
                             });
                         }
 
@@ -2929,7 +2909,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
+                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
                             });
                         }
 
@@ -2949,7 +2929,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
+                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
                             });
                         }
 
@@ -2969,7 +2949,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
+                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
                             });
                         }
 
@@ -2989,7 +2969,7 @@ public static partial class SchemaConverter
                                 Description = point.Trim(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldData, licenceNumber, point.Trim(), regionCode)
+                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
                             });
                         }
 
@@ -3003,7 +2983,7 @@ public static partial class SchemaConverter
                     Description = description,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPurposeData(naldData, licenceNumber, description, regionCode)
+                    NaldData = GetNaldPurposeData(naldDataLine, description)
                 });
             }
         }
@@ -3124,10 +3104,8 @@ public static partial class SchemaConverter
         };
     }
 
-    private static string? GetNaldType(Dictionary<string, List<NaldData>> naldData, string? licenceNumber,
-        int regionCode)
+    private static string? GetNaldType(NaldData? naldDataLine)
     {
-        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
         var naldAggregateCondition = naldDataLine?.AggregateConditions;
 
         return naldAggregateCondition?.Count > 0 && !string.IsNullOrEmpty(naldAggregateCondition[0].Condition)

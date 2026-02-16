@@ -475,13 +475,13 @@ public class FileTypeIdentifierService
 
         // Filter out excluded files and already processed files
         var filteredFiles = files
-           // .Where(f => f.Contains("53113g0080__visit sheet 1998 7535765"))
+          //  .Where(f => f.Contains("12202043__Licence - Signed Addendum 6431587"))
             .Where(file =>
         {
             var fileName = Path.GetFileName(file).ToLowerInvariant();
             return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));
         })
-            .Where(file => !processedFiles.Contains(file))
+           .Where(file => !processedFiles.Contains(file))
             .ToList();
 
         if (filteredFiles.Count == 0)

@@ -4,7 +4,7 @@
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "FilesAvailableForLicenceIdentificationExtract";
+const string workflow = "FileTypeIdentificationExtract";
 
 const int processRunId = 45;
 
@@ -47,7 +47,7 @@ switch (workflow)
         TemplateIdentificationExtract.GenerateWaterPdfsFolderInventory();
         break;
     case "TemplateFinderExtract":
-        await TemplateIdentificationExtract.GenerateTemplateFinderResult("Anglian");
+        await TemplateIdentificationExtract.GenerateTemplateFinderResult("NW");
         break;
     case "ImportNaldData":
         await ImportNaldData.ImportAsync();

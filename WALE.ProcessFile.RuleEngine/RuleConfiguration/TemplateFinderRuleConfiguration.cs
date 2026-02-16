@@ -12,12 +12,15 @@ public static class TemplateFinderRuleConfiguration
             ("EALabel", GetEALabels()),
             ("NESplitLabels", GetSplitLabels()),
             ("AnglianSplitLabels", GetAnglianSplitLabels()),
+            ("NWSplitLabels", GetNWSplitLabels()),
             ("NationalRivers", GetNationalRiversLabels()),
             ("NENRAModern1", GetNRAModern1Labels()),
             ("NENRAModern2", GetNRAModern2Labels()),
             ("AnglianNRAModern1", GetNRAAnglianModern1Labels()),
+            ("NWNRAModern1", GetNRANWModern1Labels()),
             ("AnglianNRAModern2", GetNRAAnglianModern2Labels()),
             ("NRAOld", GetNRAOldLabels()),
+            ("NWNRAOld", GetNRANWOldLabels()),
         ];
     }
     private static List<LabelToMatch> GetEALabels()
@@ -638,5 +641,161 @@ public static class TemplateFinderRuleConfiguration
             }
         ];
     }
+
+    private static List<LabelToMatch> GetNWSplitLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Mersey and Weaver River Authority",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Mersey .*and .*Weaver .*River .*Authority")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Lancaster River Authority",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Lancaster .*River .*Authority")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "North West Water Authority - River Division",
+                Format = "Text",
+                Text =
+                [
+                    new(".*North .*West .*Water .*Authority.* -.*River .*Division")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Cumberland River Authority",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Cumberland .*River .*Authority")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
     
+    private static List<LabelToMatch> GetNRANWModern1Labels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Region",
+                Format = "Text",
+                Text =
+                [
+                    new(".*North.* West.* Region.*")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Licence",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Licence.* Number.*")   {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
+    
+    
+    private static List<LabelToMatch> GetNRANWOldLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "Region",
+                Format = "Text",
+                Text =
+                [
+                    new(".*National.* .*Rivers.* Authority")
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            },
+            new LabelToMatch
+            {
+                Name = "Licence",
+                Format = "Text",
+                Text =
+                [
+                    new(".*Licence.* .*No.*")   
+                    {
+                        IsRegularExpression = true,
+                        RegularExpressionIsCaseInsensitive = true
+                    }
+                ],
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Position = LabelPosition.ActuallyLabel,
+                IncludeStartLabelText = true
+            }
+        ];
+    }
 }

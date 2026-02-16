@@ -2,6 +2,11 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class SharedHelper
 {
+    /// <summary>
+    /// (everything before first underscore)
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
     public static string? ExtractPermitNumberFromFilename(string filename)
     {
         if (string.IsNullOrEmpty(filename))

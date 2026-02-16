@@ -414,7 +414,7 @@ public static class GenerateLicenceReaderExtract
                     var licenceNumber = RuleSharedHelper.ExtractLicenceNumber(internalJson);
                     var dateOfIssue = RuleSharedHelper.ExtractDateOfIssue(internalJson);
 
-                    // Extract permit number from filename (everything before first underscore)
+                    // Extract permit number from filename
                     var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
 
                     Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Extracted - " +

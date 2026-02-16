@@ -16,7 +16,7 @@ public static class ToolHelper
     /// <param name="fileName">Name of the CSV file (without extension)</param>
     /// <param name="outputFolder">Output folder path</param>
     /// <returns>The full path of the created CSV file</returns>
-    public static async Task<string> WriteCsvAsync<T>(IEnumerable<T> data, string fileName, string outputFolder)
+    private static async Task<string> WriteCsvAsync<T>(IEnumerable<T> data, string fileName, string outputFolder)
     {
         var csvFileName = $"{fileName}-{DateTime.Today:yyyyMMdd}.csv";
         var fullPath = Path.Combine(outputFolder, csvFileName);
@@ -37,13 +37,15 @@ public static class ToolHelper
     /// <param name="data">Data to summarize</param>
     /// <param name="keySelector">Function to select the grouping key</param>
     /// <param name="summaryTitle">Title for the summary section</param>
-    public static void PrintSummary<T, TKey>(IEnumerable<T> data, Func<T, TKey> keySelector, string summaryTitle = "Summary")
+    private static void PrintSummary<T, TKey>(IEnumerable<T> data, Func<T, TKey> keySelector, string summaryTitle = "Summary")
     {
-        var summary = data.GroupBy(keySelector)
-            .Select(g => new { Key = g.Key, Count = g.Count() })
+        var summary = data
+            .GroupBy(keySelector)
+            .Select(g => new { g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count);
 
         Console.WriteLine($"\n{summaryTitle}:");
+        
         foreach (var item in summary)
         {
             Console.WriteLine($"  {item.Key}: {item.Count} items");
@@ -62,7 +64,7 @@ public static class ToolHelper
     /// <param name="processedItemsDescription">Description of what was processed (e.g., "files", "records")</param>
     /// <param name="summaryTitle">Title for the summary section</param>
     /// <returns>The full path of the created CSV file</returns>
-    public static async Task<string> GenerateCsvReportWithSummaryAsync<T, TKey>(
+    public static async Task GenerateCsvReportWithSummaryAsync<T, TKey>(
         IEnumerable<T> data,
         string fileName,
         string outputFolder,
@@ -81,8 +83,6 @@ public static class ToolHelper
 
         // Print summary
         PrintSummary(dataList, keySelector, summaryTitle);
-
-        return fullPath;
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ public class TemplateFinderInput
 {
     public string PermitNumber { get; set; } = string.Empty;
     public string FileUrl { get; set; } = string.Empty;
-    public string NaldIssueNumber { get; set; }
+    public string? NaldIssueNumber { get; set; }
     public string SignatureDate { get; set; } = string.Empty;
     public string? DateOfIssue { get; set; } = string.Empty;
     public string? FileName { get; set; } = string.Empty;
@@ -13,7 +13,7 @@ public class TemplateFinderInput
     
     public int NumberOfPages { get; set; }
     
-    public string TemplateType { get; set; }
+    public string? TemplateType { get; set; }
     
     public string? Template { get; set; } = string.Empty;
 }

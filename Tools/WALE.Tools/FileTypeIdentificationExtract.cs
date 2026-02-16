@@ -1,9 +1,12 @@
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Config;
@@ -18,7 +21,7 @@ namespace WALE.Tools;
 public static class FileTypeIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
+    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = [];
 
     /// <summary>
     /// Identifies file types in the output folder and generates a CSV report
@@ -26,7 +29,12 @@ public static class FileTypeIdentificationExtract
     public static async Task GenerateFileTypeIdentificationAsync()
     {
         Console.WriteLine("Starting file type identification...");
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
+        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+            KeyConfig.PostgresHost,
+            KeyConfig.PostgresPort,
+            KeyConfig.PostgresDbName,
+            KeyConfig.PostgresUsername,
+            KeyConfig.PostgresPassword);
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
@@ -35,7 +43,15 @@ public static class FileTypeIdentificationExtract
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, KeyConfig.PostgresConnectionString);
+        var cacheService = new DatabaseCacheService(
+            databaseReadService,
+            databaseAddService,
+            KeyConfig.PostgresHost,
+            KeyConfig.PostgresPort,
+            KeyConfig.PostgresDbName,
+            KeyConfig.PostgresUsername,
+            KeyConfig.PostgresPassword);
+        
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
 
         // Create 10 instances of PdfDataExtractorService for parallel processing
@@ -85,9 +101,15 @@ public static class FileTypeIdentificationExtract
 
         var configuration = new LookupConfiguration(
             labels,
-            FileLicenceMapping);
+            FileLicenceMapping,
+            [],
+            3);
 
-        var results = await fileTypeService.ProcessDirectoryAsync(KeyConfig.PdfFolder, configuration);
+        var results = await fileTypeService.ProcessDirectoryAsync(
+            KeyConfig.PdfFolder,
+            configuration,
+            outputService);
+        
         var csvData = new List<FileTypeIdentificationResult>();
 
         foreach (var result in results)
@@ -127,12 +149,10 @@ public static class FileTypeIdentificationExtract
     /// </summary>
     private static string GetFileNameAfterFirstUnderscore(string fileName)
     {
-        var underscoreIndex = fileName.IndexOf("__");
+        var underscoreIndex = fileName.IndexOf("__", StringComparison.Ordinal);
+        
         return underscoreIndex >= 0 && underscoreIndex < fileName.Length - 2 
-            ? fileName.Substring(underscoreIndex + 2) 
+            ? fileName[(underscoreIndex + 2)..] 
             : fileName;
     }
-
 }
-
-

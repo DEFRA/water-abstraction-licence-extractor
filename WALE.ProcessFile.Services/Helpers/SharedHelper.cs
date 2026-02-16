@@ -96,13 +96,13 @@ public static class SharedHelper
         var dateOfIssueMatch = matchesResult.Matches?
             .FirstOrDefault(m => m.LabelGroupName == "DateOfIssue");
 
-        if (dateOfIssueMatch?.Text != null && dateOfIssueMatch.Text.Count > 0)
+        if (dateOfIssueMatch?.Text?.Count > 0)
         {
             return string.Join(" ", dateOfIssueMatch.Text
                     .SelectMany(line => line.Text)
                     .Select(element => element))
                 .Trim()
-                .Replace(" ", "");
+                .Replace(" ", string.Empty);
         }
 
         return null;

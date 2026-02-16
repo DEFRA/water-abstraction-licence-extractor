@@ -1,11 +1,14 @@
 using System.Collections.Concurrent;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Config;
@@ -17,10 +20,9 @@ namespace WALE.Tools;
 public static class GenerateLicenceReaderExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly string CacheFolder = KeyConfig.CacheFolder;
-    private static readonly Dictionary<string, string> FileLicenceMapping = new() {{"", ""}};
+    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = [];
     private static readonly string ResultsCsvFileName = "licence_reader_processing_results.csv";
-    private static readonly object CsvWriteLock = new object();
+    private static readonly Lock CsvWriteLock = new();
 
     // Hard-coded list of files to exclude from processing
     private static readonly HashSet<string> ExcludedFiles = new(StringComparer.OrdinalIgnoreCase)
@@ -32,11 +34,11 @@ public static class GenerateLicenceReaderExtract
         "42901S0033R01__Application Transfer Issued Licence 18.12.24.pdf"
     };
 
-    private static string GetResultsCsvPath() => Path.Combine(KeyConfig.PdfFolder, ResultsCsvFileName);
+    private static string GetResultsCsvPath(string pdfFolder) => Path.Combine(pdfFolder, ResultsCsvFileName);
 
-    private static List<LicenceReaderCsvLine> LoadExistingResults()
+    private static List<LicenceReaderCsvLine> LoadExistingResults(string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath();
+        var csvPath = GetResultsCsvPath(pdfFolder);
         var results = new List<LicenceReaderCsvLine>();
 
         if (!File.Exists(csvPath))
@@ -48,6 +50,7 @@ public static class GenerateLicenceReaderExtract
         try
         {
             var lines = File.ReadAllLines(csvPath);
+            
             if (lines.Length <= 1)
             {
                 Console.WriteLine("Results CSV exists but is empty or has only header.");
@@ -55,9 +58,10 @@ public static class GenerateLicenceReaderExtract
             }
 
             // Skip header line
-            for (int i = 1; i < lines.Length; i++)
+            for (var i = 1; i < lines.Length; i++)
             {
                 var parts = lines[i].Split(',');
+                
                 if (parts.Length >= 4)
                 {
                     results.Add(new LicenceReaderCsvLine
@@ -81,9 +85,10 @@ public static class GenerateLicenceReaderExtract
         return results;
     }
 
-    private static void MarkFileAsProcessingInCsv(string fileName)
+    private static void MarkFileAsProcessingInCsv(string fileName, string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath();
+        var csvPath = GetResultsCsvPath(pdfFolder);
+        
         lock (CsvWriteLock)
         {
             try
@@ -107,9 +112,10 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static void UpdateFileResultInCsv(LicenceReaderCsvLine result)
+    private static void UpdateFileResultInCsv(LicenceReaderCsvLine result, string pdfFolder)
     {
-        var csvPath = GetResultsCsvPath();
+        var csvPath = GetResultsCsvPath(pdfFolder);
+        
         lock (CsvWriteLock)
         {
             try
@@ -124,15 +130,19 @@ public static class GenerateLicenceReaderExtract
                 var lines = File.ReadAllLines(csvPath).ToList();
 
                 // Find and update the row for this file
-                bool updated = false;
-                for (int i = 1; i < lines.Count; i++) // Skip header
+                var updated = false;
+                
+                for (var i = 1; i < lines.Count; i++) // Start at 1 to skip header
                 {
-                    if (lines[i].StartsWith($"\"{result.FileName}\"", StringComparison.OrdinalIgnoreCase))
+                    if (!lines[i].StartsWith($"\"{result.FileName}\"", StringComparison.OrdinalIgnoreCase))
                     {
-                        lines[i] = $"\"{result.FileName}\",\"{result.PermitNumber}\",\"{result.LicenceNumber}\",\"{result.DateOfIssue}\",\"Completed\"";
-                        updated = true;
-                        break;
+                        continue;
                     }
+                    
+                    lines[i] = $"\"{result.FileName}\",\"{result.PermitNumber}\",\"{result.LicenceNumber}\",\"{result.DateOfIssue}\",\"Completed\"";
+
+                    updated = true;
+                    break;
                 }
 
                 if (updated)
@@ -152,13 +162,11 @@ public static class GenerateLicenceReaderExtract
     }
 
     private static PdfDataExtractorService CreatePdfDataExtractorService(
-        NpgsqlDataSourceProvider postgresDataSourceProvider, int id)
+        int id,
+        ICacheService cacheService,
+        IOutputService outputService,
+        string pdfFolder)
     {
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-
-        var cacheService = new DatabaseCacheService(databaseReadService, databaseAddService, KeyConfig.PostgresConnectionString);
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
@@ -189,61 +197,88 @@ public static class GenerateLicenceReaderExtract
                     KeyConfig.AiVisionEndpoint,
                     KeyConfig.AiVisionKey,
                     cacheService,
-                    outputService)
+                    outputService,
+                    id)
             },
             cacheService,
             outputService,
-            KeyConfig.PdfFolder);
+            pdfFolder);
     }
 
-    public static async Task GenerateLicenceReaderExtractAsync()
+    public static async Task GenerateLicenceReaderExtractAsync(string pdfFolder, int regionCode)
     {
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(KeyConfig.PostgresConnectionString);
+        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
+            KeyConfig.PostgresHost,
+            KeyConfig.PostgresPort,
+            KeyConfig.PostgresDbName,
+            KeyConfig.PostgresUsername,
+            KeyConfig.PostgresPassword);
     
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-        // Create a list of PdfDataExtractorService instances for parallel processing
+        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
+        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+
+        LicenceNumber.Instance = new LicenceNumber(databaseReadService);
+        
+        var cacheService = new DatabaseCacheService(
+            databaseReadService,
+            databaseAddService,
+            KeyConfig.PostgresHost,
+            KeyConfig.PostgresPort,
+            KeyConfig.PostgresDbName,
+            KeyConfig.PostgresUsername,
+            KeyConfig.PostgresPassword);
+        
+        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        
         const int batchSize = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();
-        for (int i = 0; i < batchSize; i++)
+        
+        // Create a list of PdfDataExtractorService instances for parallel processing
+        for (var serviceIdx = 1; serviceIdx <= batchSize; serviceIdx++)
         {
-            pdfDataExtractors.Add(CreatePdfDataExtractorService(postgresDataSourceProvider, i + 1));
+            pdfDataExtractors.Add(
+                CreatePdfDataExtractorService(
+                    serviceIdx,
+                    cacheService,
+                    outputService,
+                    pdfFolder));
         }
 
-        var data = await GetLicenceReaderDataAsync(pdfDataExtractors);
+        var data = await GetLicenceReaderDataAsync(
+            pdfDataExtractors,
+            pdfFolder,
+            regionCode);
 
-        // Generate CSV report using ToolHelper
+        // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
             data,
             "LicenceReader",
             OutputFolder,
-            x => x.LicenceNumber ?? "No Licence",
+            line => line.LicenceNumber ?? "No Licence",
             "licence records",
             "Licence Processing Summary");
     }
 
-    static async Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
+    private static async Task<MatchesResult> GetMatchesAsync(
+        string fileName,
+        string pdfFolder,
+        PdfDataExtractorService pdfDataExtractor,
+        LookupConfiguration configuration)
     {
-        var pdfFolder = KeyConfig.PdfFolder;
-
         try
         {
-            Console.WriteLine($"Creating lookup configuration for {fileName}...");
-            var labels = LicenceReaderConfiguration.GetLabels();
-            Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
-
-            var configuration = new LookupConfiguration(
-                labels,
-                FileLicenceMapping);
-
-            Console.WriteLine($"Configuration created, calling PDF extractor...");
+            Console.WriteLine("Configuration created, calling PDF extractor...");
 
             var result = await pdfDataExtractor.GetMatchesAsync(
                 pdfFolder + fileName,
                 configuration,
                 [pdfFolder + fileName],
                 0);
+            
             Console.WriteLine($"PDF extraction completed successfully for {fileName}");
+            
             return result;
         }
         catch (Exception ex)
@@ -251,79 +286,115 @@ public static class GenerateLicenceReaderExtract
             Console.WriteLine($"Error in GetMatchesAsync for {fileName}:");
             Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
             Console.WriteLine($"  Message: {ex.Message}");
+            
             throw; // Re-throw to maintain the original error handling flow
         }
     }
 
-    static async Task<List<LicenceReaderCsvLine>> GetLicenceReaderDataAsync(List<PdfDataExtractorService> pdfDataExtractors)
+    private static async Task<List<LicenceReaderCsvLine>> GetLicenceReaderDataAsync(
+        List<PdfDataExtractorService> pdfDataExtractors,
+        string pdfFolder,
+        int regionCode)
     {
         // Load existing results (includes both completed and crashed files)
-        var existingResults = LoadExistingResults();
-        var processedFileNames = new HashSet<string>(existingResults.Select(x => x.FileName), StringComparer.OrdinalIgnoreCase);
+        var existingResults = LoadExistingResults(pdfFolder);
+        
+        var processedFileNames = new HashSet<string>(
+            existingResults.Select(existingResult => existingResult.FileName)!,
+            StringComparer.OrdinalIgnoreCase);
 
-        var allPdfFilePaths = Directory
-            .GetFiles(KeyConfig.PdfFolder)
-            .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            .Select(x => x.Split('/').Last())
-            .OrderBy(x => x).ToList();
+        var allPdfFileNames = Directory
+            .GetFiles(pdfFolder)
+            .Where(filePath => filePath.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            .Select(filePath => filePath.Split('/').Last())
+            .OrderBy(fileName => fileName).ToList();
 
         // Filter out files already in CSV (completed or crashed) and hard-coded excluded files
-        var pdfFilePaths = allPdfFilePaths
+        var pdfFileNames = allPdfFileNames
             .Where(fileName => !processedFileNames.Contains(fileName) && !ExcludedFiles.Contains(fileName))
             .ToList();
 
-        var excludedCount = allPdfFilePaths.Count(fileName => ExcludedFiles.Contains(fileName));
-
-        Console.WriteLine($"Found {allPdfFilePaths.Count} total PDF files");
+        Console.WriteLine($"Found {allPdfFileNames.Count} total PDF files");
         Console.WriteLine($"Already in CSV (completed or previously crashed): {existingResults.Count} files");
-        Console.WriteLine($"Hard-coded exclusions: {excludedCount} files");
-        Console.WriteLine($"Remaining to process: {pdfFilePaths.Count} files");
 
-        if (pdfFilePaths.Count == 0)
+        var excludedCount = allPdfFileNames.Count(fileName => ExcludedFiles.Contains(fileName));
+        Console.WriteLine($"Hard-coded exclusions: {excludedCount} files");
+
+        Console.WriteLine($"Remaining to process: {pdfFileNames.Count} files");
+
+        if (pdfFileNames.Count == 0)
         {
             Console.WriteLine("All files have been processed. Returning existing results.");
-            return existingResults.OrderBy(x => x.PermitNumber).ToList();
+            
+            return existingResults
+                .OrderBy(existingResult => existingResult.PermitNumber)
+                .ToList();
         }
 
+        var labels = LicenceReaderConfiguration.GetLabels();
+        Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
+        
+        var configuration = new LookupConfiguration(
+            labels,
+            FileLicenceMapping,
+            [],
+            regionCode);
+        
         var returnList = new ConcurrentBag<LicenceReaderCsvLine>();
-        int batchSize = pdfDataExtractors.Count;
+        var batchSize = pdfDataExtractors.Count;
 
         Console.WriteLine($"Processing in parallel batches of {batchSize}...");
 
-        for (int i = 0; i < pdfFilePaths.Count; i += batchSize)
+        // Loop that goes up in 10s (or whatever batch size is)
+        for (var filenameIdx = 0; filenameIdx < pdfFileNames.Count; filenameIdx += batchSize)
         {
-            var batch = pdfFilePaths.Skip(i).Take(batchSize).ToList();
-            var batchNumber = (i / batchSize) + 1;
-            var totalBatches = (int)Math.Ceiling((double)pdfFilePaths.Count / batchSize);
+            var filesBatch = pdfFileNames
+                .Skip(filenameIdx)
+                .Take(batchSize)
+                .ToList();
+            
+            var batchNumber = (filenameIdx / batchSize) + 1;
+            var totalBatches = (int)Math.Ceiling((double)pdfFileNames.Count / batchSize);
 
-            Console.WriteLine($"\n=== Processing Batch {batchNumber} of {totalBatches} ({batch.Count} files in parallel) ===");
+            Console.WriteLine($"\n=== Processing Batch {batchNumber} of {totalBatches} " +
+                $"({filesBatch.Count} files in parallel) ===");
 
             // Create tasks for parallel processing
-            var batchTasks = batch.Select(async (pdfFilePath, index) =>
+            var batchTasks = filesBatch.Select(async (pdfFilePath, indexInBatch) =>
             {
                 // Use a dedicated PdfDataExtractorService instance for this parallel task
-                var dedicatedExtractor = pdfDataExtractors[index];
+                var dedicatedExtractor = pdfDataExtractors[indexInBatch];
 
                 try
                 {
-                    var fileNumber = i + index + 1;
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Starting file: {pdfFilePath} (File {fileNumber} of {pdfFilePaths.Count}) using extractor instance {index}");
+                    var fileNumber = filenameIdx + indexInBatch + 1;
+                    
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Starting file: {pdfFilePath}" +
+                        $"(File {fileNumber} of {pdfFileNames.Count}) using extractor instance {indexInBatch}");
 
                     // Mark file as processing in CSV BEFORE we start
                     // If Tesseract crashes, this file will be in CSV and skipped on restart
-                    MarkFileAsProcessingInCsv(pdfFilePath);
+                    MarkFileAsProcessingInCsv(pdfFilePath, pdfFolder);
 
                     // Check if file exists
-                    var fullPath = KeyConfig.PdfFolder + pdfFilePath;
+                    var fullPath = pdfFolder + pdfFilePath;
+                    
                     if (!File.Exists(fullPath))
                     {
                         throw new FileNotFoundException($"PDF file not found: {fullPath}");
                     }
  
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] File exists, attempting to extract matches for {pdfFilePath}...");
-                    var internalJson = await GetMatchesAsync(pdfFilePath, dedicatedExtractor);
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] File exists, attempting " +
+                        $"to extract matches for {pdfFilePath}...");
+                    
+                    var internalJson = await GetMatchesAsync(
+                        pdfFilePath,
+                        pdfFolder,
+                        dedicatedExtractor,
+                        configuration);
 
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Matches extracted successfully, processing licence data for {pdfFilePath}...");
+                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Matches extracted " +
+                        $"successfully, processing licence data for {pdfFilePath}...");
 
                     // Extract licence number and date of issue from matches
                     var licenceNumber = SharedHelper.ExtractLicenceNumber(internalJson);
@@ -345,7 +416,7 @@ public static class GenerateLicenceReaderExtract
                     returnList.Add(result);
 
                     // Update the CSV row with actual results
-                    UpdateFileResultInCsv(result);
+                    UpdateFileResultInCsv(result, pdfFolder);
                 }
                 catch (Exception ex)
                 {
@@ -372,7 +443,7 @@ public static class GenerateLicenceReaderExtract
                     returnList.Add(failedResult);
 
                     // Update CSV with failed result
-                    UpdateFileResultInCsv(failedResult);
+                    UpdateFileResultInCsv(failedResult, pdfFolder);
                 }
             }).ToArray();
 
@@ -382,15 +453,17 @@ public static class GenerateLicenceReaderExtract
             Console.WriteLine($"Completed batch {batchNumber} of {totalBatches}. Processed {returnList.Count} files so far.");
         }
 
-        Console.WriteLine($"\nCompleted processing all {pdfFilePaths.Count} files in {Math.Ceiling((double)pdfFilePaths.Count / batchSize)} parallel batches.");
+        Console.WriteLine($"\nCompleted processing all {pdfFileNames.Count} files in {Math.Ceiling((double)pdfFileNames.Count / batchSize)} parallel batches.");
 
         // Combine existing results with newly processed results
-        var allResults = existingResults.Concat(returnList).ToList();
+        var allResults = existingResults
+            .Concat(returnList)
+            .ToList();
+        
         Console.WriteLine($"Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
 
-        return allResults.OrderBy(x => x.PermitNumber).ToList();
+        return allResults
+            .OrderBy(line => line.PermitNumber)
+            .ToList();
     }
-
-    
 }
-

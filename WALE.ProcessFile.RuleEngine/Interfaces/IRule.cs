@@ -16,7 +16,7 @@ public interface IRule<out T>
     /// <summary>
     /// Gets the name of the region for identification purposes
     /// </summary>
-    string Region { get; set; }
+    string? Region { get; set; }
 
     /// <summary>
     /// Gets the priority of the rule (higher numbers = higher priority)

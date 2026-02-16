@@ -17,18 +17,20 @@ namespace WALE.ProcessFile.RuleEngine.Services;
 public class FileTypeIdentifierService
 {
     private readonly IRuleEngine<FileTypeResult> _ruleEngine;
-    private readonly List<IPdfDataExtractorService>? _pdfExtractorService;
-    private readonly object _lockObject = new object();
-    private int _currentServiceIndex = 0;
+    private readonly List<IPdfDataExtractorService>? _pdfExtractorServices;
+    private readonly Lock _lockObject = new();
+    private int _currentServiceIndex;
 
     /// <summary>
     /// Initializes a new instance of FileTypeIdentifierService with PDF extractor service
     /// </summary>
-    /// <param name="pdfExtractorService">PDF extractor service with OCR support</param>
-    public FileTypeIdentifierService(List<IPdfDataExtractorService> pdfExtractorService)
+    /// <param name="pdfExtractorServices">PDF extractor service with OCR support</param>
+    public FileTypeIdentifierService(List<IPdfDataExtractorService> pdfExtractorServices)
     {
         _ruleEngine = new RuleEngine<FileTypeResult>();
-        _pdfExtractorService = pdfExtractorService ?? throw new ArgumentNullException(nameof(pdfExtractorService));
+        _pdfExtractorServices = pdfExtractorServices
+            ?? throw new ArgumentNullException(nameof(pdfExtractorServices));
+        
         InitializeDefaultRules();
     }
 
@@ -36,21 +38,26 @@ public class FileTypeIdentifierService
     /// Gets the page count of a PDF file without full processing
     /// </summary>
     /// <param name="filePath">The path to the PDF file</param>
+    /// <param name="outputService">TODO</param>
     /// <returns>The number of pages in the PDF</returns>
-    public async Task<int> GetPageCountAsync(string filePath)
+    private static async Task<int> GetPageCountAsync(string filePath, IOutputService outputService)
     {
         if (!File.Exists(filePath))
+        {
             throw new FileNotFoundException($"File not found: {filePath}");
+        }
 
         return await Task.Run(() =>
         {
             try
             {
-                var pdfDocument = new PdfDocument(filePath, false);
+                var pdfDocument = new PdfDocument(filePath, false, outputService); // TODO should this always load it?
                 return pdfDocument.Pages.Count;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"ERROR - {ex.Message}");
+                
                 // If we can't read the PDF, return 0 to exclude it
                 return 0;
             }
@@ -63,7 +70,7 @@ public class FileTypeIdentifierService
     /// <param name="filePath">The path to the file</param>
     /// <param name="configuration">The lookup configuration</param>
     /// <returns>The file type identification result, or null if no type could be identified or an error occurred</returns>
-    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
+    private async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
     {
         try
         {
@@ -73,7 +80,7 @@ public class FileTypeIdentifierService
                 return null;
             }
 
-            if (_pdfExtractorService == null || !_pdfExtractorService.Any())
+            if (_pdfExtractorServices == null || _pdfExtractorServices.Count == 0)
             {
                 Console.WriteLine("No PDF extractor services available");
                 return null;
@@ -84,19 +91,18 @@ public class FileTypeIdentifierService
             // Lock to ensure thread-safe access to the service list
             lock (_lockObject)
             {
-                serviceToUse = _pdfExtractorService[_currentServiceIndex % _pdfExtractorService.Count];
+                serviceToUse = _pdfExtractorServices[_currentServiceIndex % _pdfExtractorServices.Count];
                 _currentServiceIndex++;
             }
 
             var content = await serviceToUse.GetMatchesAsync(
-                filePath, configuration, new List<string>(), 0) ?? new MatchesResult();
+                filePath, configuration, [], 0);
 
             return _ruleEngine.Evaluate(content);
         }
         catch (Exception ex)
         {
-            
-
+            Console.WriteLine("ERROR - " + ex.Message);
             return null;
         }
     }
@@ -113,7 +119,7 @@ public class FileTypeIdentifierService
         public string ErrorMessage { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty; // "Success" or "Error"
         public string IdentifiedByRule { get; set; } = string.Empty;
-        public List<string> MatchedTerms { get; set; }
+        public List<string> MatchedTerms { get; set; } = [];
     
         public string? DateOfIssue { get; set; }
         public string? LicenceNumber { get; set; }
@@ -133,7 +139,7 @@ public class FileTypeIdentifierService
     /// <summary>
     /// Gets the path to the CSV tracking file
     /// </summary>
-    private string GetCsvFilePath(string directoryPath)
+    private static string GetCsvFilePath(string directoryPath)
     {
         return Path.Combine(directoryPath, "ProcessedFiles.csv");
     }
@@ -141,7 +147,7 @@ public class FileTypeIdentifierService
     /// <summary>
     /// Gets the path to the page count cache CSV file
     /// </summary>
-    private string GetPageCountCsvFilePath(string directoryPath)
+    private static string GetPageCountCsvFilePath(string directoryPath)
     {
         return Path.Combine(directoryPath, "PageCounts.csv");
     }
@@ -151,7 +157,7 @@ public class FileTypeIdentifierService
     /// </summary>
     /// <param name="directoryPath">The directory path</param>
     /// <returns>A dictionary mapping file paths to their page counts</returns>
-    private Dictionary<string, int> ReadPageCountsFromCsv(string directoryPath)
+    private static Dictionary<string, int> ReadPageCountsFromCsv(string directoryPath)
     {
         var pageCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var csvPath = GetPageCountCsvFilePath(directoryPath);
@@ -203,7 +209,7 @@ public class FileTypeIdentifierService
     /// </summary>
     /// <param name="directoryPath">The directory path</param>
     /// <param name="newPageCounts">New page counts to append</param>
-    private void WritePageCountsToCsv(string directoryPath, Dictionary<string, int> newPageCounts)
+    private static void WritePageCountsToCsv(string directoryPath, Dictionary<string, int> newPageCounts)
     {
         var csvPath = GetPageCountCsvFilePath(directoryPath);
 
@@ -214,7 +220,7 @@ public class FileTypeIdentifierService
                 HasHeaderRecord = true
             };
 
-            bool fileExists = File.Exists(csvPath);
+            var fileExists = File.Exists(csvPath);
 
             using var stream = new FileStream(csvPath, FileMode.Append, FileAccess.Write, FileShare.Read);
             using var writer = new StreamWriter(stream);
@@ -236,6 +242,7 @@ public class FileTypeIdentifierService
                     PageCount = kvp.Value,
                     CheckedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
                 };
+                
                 csv.WriteRecord(record);
                 csv.NextRecord();
             }
@@ -286,8 +293,8 @@ public class FileTypeIdentifierService
                 .Select(g => g.First())
                 .ToList();
 
-            int totalRecords = allRecords.Count;
-            int duplicateCount = totalRecords - uniqueRecords.Count;
+            var totalRecords = allRecords.Count;
+            var duplicateCount = totalRecords - uniqueRecords.Count;
 
             if (duplicateCount > 0)
             {
@@ -298,6 +305,7 @@ public class FileTypeIdentifierService
             foreach (var record in uniqueRecords)
             {
                 FileTypeResult? result = null;
+                
                 if (!string.IsNullOrEmpty(record.FileType) && record.FileType != "N/A")
                 {
                     result = new FileTypeResult 
@@ -310,6 +318,7 @@ public class FileTypeIdentifierService
                         LicenceNumber = record.LicenceNumber ?? string.Empty
                     };
                 }
+                
                 results[record.FilePath] = result;
             }
 
@@ -328,7 +337,7 @@ public class FileTypeIdentifierService
     /// </summary>
     /// <param name="directoryPath">The directory path</param>
     /// <param name="errorRecords">Dictionary of file paths to error messages</param>
-    private void WriteErrorsToCsv(string directoryPath, Dictionary<string, string> errorRecords)
+    private static void WriteErrorsToCsv(string directoryPath, Dictionary<string, string> errorRecords)
     {
         var csvPath = GetCsvFilePath(directoryPath);
 
@@ -339,7 +348,7 @@ public class FileTypeIdentifierService
                 HasHeaderRecord = true
             };
 
-            bool fileExists = File.Exists(csvPath);
+            var fileExists = File.Exists(csvPath);
 
             using var stream = new FileStream(csvPath, FileMode.Append, FileAccess.Write, FileShare.Read);
             using var writer = new StreamWriter(stream);
@@ -364,6 +373,7 @@ public class FileTypeIdentifierService
                     Status = "Error",
                     ErrorMessage = kvp.Value
                 };
+                
                 csv.WriteRecord(record);
                 csv.NextRecord();
             }
@@ -383,7 +393,7 @@ public class FileTypeIdentifierService
     /// <param name="directoryPath">The directory path</param>
     /// <param name="newResults">New results to append</param>
     /// <param name="allResults">All results including previously processed</param>
-    private void WriteResultsToCsv(string directoryPath, Dictionary<string, FileTypeResult?> newResults)
+    private static void WriteResultsToCsv(string directoryPath, Dictionary<string, FileTypeResult?> newResults)
     {
         var csvPath = GetCsvFilePath(directoryPath);
 
@@ -394,7 +404,7 @@ public class FileTypeIdentifierService
                 HasHeaderRecord = true
             };
 
-            bool fileExists = File.Exists(csvPath);
+            var fileExists = File.Exists(csvPath);
 
             using var stream = new FileStream(csvPath, FileMode.Append, FileAccess.Write, FileShare.Read);
             using var writer = new StreamWriter(stream);
@@ -422,6 +432,7 @@ public class FileTypeIdentifierService
                     DateOfIssue = kvp.Value?.DateOfIssue ?? string.Empty,
                     LicenceNumber = kvp.Value?.LicenceNumber ?? string.Empty,
                 };
+                
                 csv.WriteRecord(record);
                 csv.NextRecord();
             }
@@ -439,15 +450,21 @@ public class FileTypeIdentifierService
     /// Processes all files in a directory and identifies their types
     /// </summary>
     /// <param name="directoryPath">The directory path to process</param>
+    /// TODO other 2 params
+    /// <param name="outputService"></param>
     /// <param name="searchPattern">File search pattern (default: "*.*")</param>
+    /// <param name="lookupConfiguration"></param>
     /// <returns>A dictionary mapping file paths to their identification results</returns>
     public async Task<Dictionary<string, FileTypeResult?>> ProcessDirectoryAsync(
         string directoryPath,
         LookupConfiguration lookupConfiguration,
+        IOutputService outputService,
         string searchPattern = "*.*")
     {
         if (!Directory.Exists(directoryPath))
+        {
             throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
+        }
 
         // Load already processed files from CSV
         var results = ReadProcessedFilesFromCsv(directoryPath);
@@ -477,10 +494,10 @@ public class FileTypeIdentifierService
         var filteredFiles = files
           //  .Where(f => f.Contains("12202043__Licence - Signed Addendum 6431587"))
             .Where(file =>
-        {
-            var fileName = Path.GetFileName(file).ToLowerInvariant();
-            return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));
-        })
+            {
+                var fileName = Path.GetFileName(file).ToLowerInvariant();
+                return !excludeTerms.Any(term => fileName.Contains(term.ToLowerInvariant()));
+            })
            .Where(file => !processedFiles.Contains(file))
             .ToList();
 
@@ -504,7 +521,7 @@ public class FileTypeIdentifierService
         {
             if (cachedPageCounts.TryGetValue(file, out var cachedCount))
             {
-                if (cachedCount > 0 && cachedCount < 25)
+                if (cachedCount is > 0 and < 25)
                 {
                     pageCountFilteredFiles.Add(file);
                 }
@@ -528,16 +545,18 @@ public class FileTypeIdentifierService
 
             // Process page count checks in parallel batches
             const int pageCountBatchSize = 50;
+            
             var pageCountBatches = filesToCheckPageCount
                 .Select((file, index) => new { file, index })
                 .GroupBy(x => x.index / pageCountBatchSize)
                 .Select(g => g.Select(x => x.file).ToList())
                 .ToList();
 
-            for (int batchIndex = 0; batchIndex < pageCountBatches.Count; batchIndex++)
+            for (var batchIndex = 0; batchIndex < pageCountBatches.Count; batchIndex++)
             {
                 var batch = pageCountBatches[batchIndex];
                 var batchPosition = batchIndex + 1;
+                
                 Console.WriteLine($"Checking page counts for batch {batchPosition}/{pageCountBatches.Count} ({batch.Count} files)...");
 
                 var newPageCounts = new Dictionary<string, int>();
@@ -546,7 +565,7 @@ public class FileTypeIdentifierService
                 {
                     try
                     {
-                        var pageCount = await GetPageCountAsync(file);
+                        var pageCount = await GetPageCountAsync(file, outputService);
                         return new { File = file, PageCount = pageCount, Success = true };
                     }
                     catch (Exception ex)
@@ -561,18 +580,20 @@ public class FileTypeIdentifierService
                 // Process results and cache them
                 foreach (var result in batchResults)
                 {
-                    if (result.Success)
+                    if (!result.Success)
                     {
-                        newPageCounts[result.File] = result.PageCount;
+                        continue;
+                    }
+                    
+                    newPageCounts[result.File] = result.PageCount;
 
-                        if (result.PageCount > 0 && result.PageCount < 25)
-                        {
-                            pageCountFilteredFiles.Add(result.File);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Filtered out {Path.GetFileName(result.File)} - {result.PageCount} pages");
-                        }
+                    if (result.PageCount is > 0 and < 25)
+                    {
+                        pageCountFilteredFiles.Add(result.File);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Filtered out {Path.GetFileName(result.File)} - {result.PageCount} pages");
                     }
                 }
 
@@ -592,13 +613,14 @@ public class FileTypeIdentifierService
 
         // Process files in batches of 10
         const int batchSize = 10;
+        
         var batches = filteredFiles
             .Select((file, index) => new { file, index })
             .GroupBy(x => x.index / batchSize)
             .Select(g => g.Select(x => x.file).ToList())
             .ToList();
 
-        for (int batchIndex = 0; batchIndex < batches.Count; batchIndex++)
+        for (var batchIndex = 0; batchIndex < batches.Count; batchIndex++)
         {
             var batch = batches[batchIndex];
             var batchPosition = batchIndex + 1;
@@ -607,8 +629,8 @@ public class FileTypeIdentifierService
             var batchResultsDict = new Dictionary<string, FileTypeResult?>();
             var batchErrorsDict = new Dictionary<string, string>();
 
-            int successCount = 0;
-            int errorCount = 0;
+            var successCount = 0;
+            var errorCount = 0;
 
             // Process files sequentially instead of in parallel to isolate Tesseract crashes
             foreach (var file in batch)
@@ -651,7 +673,14 @@ public class FileTypeIdentifierService
                             }
 
                             var csvErrorMessage = errorMessage.Length > 200 ? errorMessage.Substring(0, 200) + "..." : errorMessage;
-                            return new { Success = false, Result = (FileTypeResult?)null, Error = csvErrorMessage };
+                            Console.WriteLine($"ERROR - {errorType} ({fileName})");
+                            
+                            return new
+                            {
+                                Success = false,
+                                Result = (FileTypeResult?)null,
+                                Error = csvErrorMessage
+                            }!;
                         }
                     }, cancellationTokenSource.Token);
 
@@ -660,7 +689,7 @@ public class FileTypeIdentifierService
 
                     if (completedTask == processTask)
                     {
-                        cancellationTokenSource.Cancel(); // Cancel the delay task
+                        await cancellationTokenSource.CancelAsync(); // Cancel the delay task
                         var result = await processTask;
 
                         if (result.Success)
@@ -680,10 +709,12 @@ public class FileTypeIdentifierService
                     else
                     {
                         // Timeout occurred
-                        cancellationTokenSource.Cancel();
+                        await cancellationTokenSource.CancelAsync();
+                        
                         var timeoutError = $"Processing timeout after {timeoutMinutes} minutes - possible Tesseract hang or crash";
                         batchErrorsDict[file] = timeoutError;
                         errorCount++;
+                        
                         Console.WriteLine($"    ✗ Timeout: {fileName}");
 
                         // Give extra time for cleanup after timeout
@@ -696,6 +727,7 @@ public class FileTypeIdentifierService
                     var criticalError = $"Critical error: {ex.Message}";
                     batchErrorsDict[file] = criticalError;
                     errorCount++;
+                    
                     Console.WriteLine($"    ✗ Critical Error: {fileName} - {ex.Message}");
                 }
 

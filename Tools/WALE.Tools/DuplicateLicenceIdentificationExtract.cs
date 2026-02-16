@@ -1,7 +1,5 @@
-using System.Globalization;
 using System.Security.Cryptography;
 using ClosedXML.Excel;
-using CsvHelper;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
@@ -45,7 +43,7 @@ public static class DuplicateLicenceIdentificationExtract
                 // Step 6 - Process the main file and compare with other files for duplicate analysis
                 if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
                 {
-                    var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key);
+                    var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key!);
                     csvResults.AddRange(duplicateResults);
                 }
             }
@@ -65,9 +63,9 @@ public static class DuplicateLicenceIdentificationExtract
                         ?.FirstOrDefault();
                     if (firstFile != null)
                     {
-                        var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit);
+                        var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit!);
 
-                        var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber);
+                        var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber!);
                         csvResults.AddRange(duplicateResults);
                     }
                 }
@@ -90,7 +88,8 @@ public static class DuplicateLicenceIdentificationExtract
         //
         // await csv.WriteRecordsAsync(csvResults);
     }
-    public static void CreateExcelFileFromList<T>(List<T> employees, string filePath)
+
+    private static void CreateExcelFileFromList<T>(List<T> employees, string filePath)
     {
         // 2. Create a new Excel workbook
         var workbook = new XLWorkbook();
@@ -114,6 +113,7 @@ public static class DuplicateLicenceIdentificationExtract
             Console.WriteLine($"Error saving file: {ex.Message}");
         }
     }
+    
     private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
         (string FileName, string FilePath, bool FileExists, string FileUrl) mainFile,
         List<(string FileName, string FilePath, bool FileExists, string FileUrl)> allFiles,
@@ -178,18 +178,20 @@ public static class DuplicateLicenceIdentificationExtract
 
         return results;
     }
-    private static async Task<List<LicenceDuplicateFinderInput>> ReadDuplicateResultsFromExcelAsync()
+    
+    private static Task<List<LicenceDuplicateFinderInput>> ReadDuplicateResultsFromExcelAsync()
     {
         var excelFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "DuplicateResults_Extract.xlsx");
         var duplicateInputs = new List<LicenceDuplicateFinderInput>();
 
         using var workbook = new XLWorkbook(excelFilePath);
         var worksheet = workbook.Worksheet(1);
-        var usedRange = worksheet.RangeUsed();
+        var usedRange = worksheet.RangeUsed()!;
 
         // Read header row to create column mapping
         var headerMapping = new Dictionary<string, int>(); 
-        for (int col = 1; col <= usedRange.LastColumn().ColumnNumber(); col++)
+        
+        for (var col = 1; col <= usedRange.LastColumn().ColumnNumber(); col++)
         {
             var headerValue = worksheet.Cell(1, col).GetValue<string>()?.Trim();
             if (!string.IsNullOrEmpty(headerValue))
@@ -220,7 +222,7 @@ public static class DuplicateLicenceIdentificationExtract
             });
         }
 
-        return duplicateInputs;
+        return Task.FromResult(duplicateInputs);
     }
 
     private static List<(string FileName, string FilePath, bool FileExists, string FileUrl)> ReadPdfFilesForPermit(
@@ -270,11 +272,11 @@ public static class DuplicateLicenceIdentificationExtract
         if (!string.IsNullOrEmpty(file.FileName))
         {
             return filesForPermitAndSize
-                .Where(f => f.FileSize.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) &&
-                            !f.FileUrl.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                .Where(f => f.FileSize?.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) == true &&
+                            f.FileUrl?.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase) != true).ToList();
         }
 
-        return new List<LicenceDuplicateFinderInput>();
+        return [];
     }
 
     private static (string FileName, string FilePath, bool FileExists, string FileUrl)? IdentifyMainFile(
@@ -315,7 +317,9 @@ public static class DuplicateLicenceIdentificationExtract
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
                 
                     // Compare images using hash comparison
-                    var isDuplicate = await CompareImagesAsync(new List<string>{Path.Combine(KeyConfig.PdfFolderForDuplicates,mainFile.FileName)}, new List<string>{Path.Combine(KeyConfig.PdfFolderForDuplicates,otherFile.FileName)});
+                    var isDuplicate = await CompareImagesAsync(
+                        [Path.Combine(KeyConfig.PdfFolderForDuplicates, mainFile.FileName!)],
+                        [Path.Combine(KeyConfig.PdfFolderForDuplicates, otherFile.FileName!)]);
 
                     if (isDuplicate)
                     {
@@ -356,6 +360,7 @@ public static class DuplicateLicenceIdentificationExtract
 
         return results;
     }
+    
     private static async Task<bool> CompareImagesAsync(List<string> mainFileImages, List<string> otherFileImages)
     {
         if (mainFileImages.Count != otherFileImages.Count)

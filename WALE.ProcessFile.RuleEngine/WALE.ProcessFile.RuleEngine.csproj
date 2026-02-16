@@ -17,11 +17,4 @@
       <Compile Remove="Rules\NorthumbrianWaterTemplateRule.cs" />
       <Compile Remove="Rules\YorkshireWaterTemplateRule.cs" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="WALE.ProcessFile.Services">
-        <HintPath>..\Tools\WALE.Tools\bin\Debug\net9.0\WALE.ProcessFile.Services.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

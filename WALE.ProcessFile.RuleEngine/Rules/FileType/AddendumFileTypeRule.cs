@@ -11,7 +11,7 @@ namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 public class AddendumFileTypeRule : IRule<FileTypeResult>
 {
     public string RuleName => "AddendumFileType";
-    public string Region { get; set; }
+    public string? Region { get; set; }
     public int Priority => 100;
 
     private readonly string[] _addendumTerms = { "Please keep this addendum with" };
@@ -19,7 +19,7 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
     public bool CanApply(MatchesResult content)
     {
         return content.Matches?
-            .Where(m => m.LabelGroupName == "Addendum")?.Any() == true;
+            .Where(m => m.LabelGroupName == "Addendum").Any() == true;
     }
 
     public FileTypeResult Apply(MatchesResult content)
@@ -33,7 +33,7 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
             FileType = "Addendum",
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
-            MatchedTerms = matchedTerms?.SelectMany(m => m.Text?.Select(t => t.Text))?.ToList(),
+            MatchedTerms = matchedTerms?.SelectMany(m => m.Text?.Select(t => t.Text)!).ToList()!,
             DateOfIssue = RuleSharedHelper.DateFormatConsistent(RuleSharedHelper.ExtractDateOfIssue(content)),
             LicenceNumber = RuleSharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>

@@ -15,9 +15,12 @@ public static class RuleSharedHelper
         { "NWNRAModern1", "NW Modern 1" },
         { "NWNRAOld", "Old" }
     };
-    public static string DetermineSecondaryTemplate(MatchesResult matches)
+    public static string DetermineSecondaryTemplate(MatchesResult? matches)
     {
-        if (matches == null) return string.Empty;
+        if (matches == null)
+        {
+            return string.Empty;
+        }
 
         foreach (var (labelGroupName, templateName) in TemplateMapping)
         {
@@ -32,7 +35,7 @@ public static class RuleSharedHelper
     {
         var groupMatches = matches.Matches?.Where(m => m.LabelGroupName == labelGroupName).ToList();
 
-        return groupMatches.Any(c => c.MatchedLabel?.Name == "Region");// &&
+        return groupMatches!.Any(c => c.MatchedLabel?.Name == "Region");// &&
                //groupMatches.Any(c => c.MatchedLabel?.Name == "Licence");
     }
     

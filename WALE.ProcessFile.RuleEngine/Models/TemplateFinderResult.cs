@@ -8,7 +8,7 @@ public class TemplateFinderResult
     
     public int NumberOfPages { get; set; }
     
-    public string TemplateType { get; set; }
+    public string? TemplateType { get; set; }
     
     public string? Template { get; set; } = string.Empty;
 }

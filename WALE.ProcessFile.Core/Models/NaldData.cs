@@ -19,7 +19,6 @@ public class NaldData
     
     public List<NaldDataPoint> Points { get; init; } = [];
     
-    [Obsolete("periods are specified per purpose")]
     public List<NaldDataPeriod> Periods { get; init; } = [];
     
     public List<NaldDataPurpose> Purposes { get; init; } = [];

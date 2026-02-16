@@ -186,13 +186,6 @@ public static class ExternalDataHelper
                     UseCode = purposeDataLine.ApurApusCode,
                     UseDescription = purposeDataLine.PurpUseDescr!,
                 },
-                Period = new NaldDataPeriod
-                {
-                    PeriodStartDay = purposeDataLine.PeriodStartDay,
-                    PeriodStartMonth = purposeDataLine.PeriodStartMonth,
-                    PeriodEndDay = purposeDataLine.PeriodEndDay,
-                    PeriodEndMonth = purposeDataLine.PeriodEndMonth
-                },
                 Quantity = new NaldDataQuantity
                 {
                     AnnualQty = double.TryParse(purposeDataLine.AnnualQty, out var annualQty) ? annualQty : null,
@@ -209,6 +202,26 @@ public static class ExternalDataHelper
 
             returnDict.Add(purposeDataLine.PurposeIdLookupKey, naldData);
             naldData.Purposes.Add(naldDataPurpose);
+
+            var period = new NaldDataPeriod
+            {
+                PurposeIds = [naldDataPurpose.Id],
+                PeriodStartDay = purposeDataLine.PeriodStartDay,
+                PeriodStartMonth = purposeDataLine.PeriodStartMonth,
+                PeriodEndDay = purposeDataLine.PeriodEndDay,
+                PeriodEndMonth = purposeDataLine.PeriodEndMonth
+            };
+
+            var existingPeriod = naldData.Periods.FirstOrDefault(x => x.ToString() == period.ToString());
+            
+            if (existingPeriod != null)
+            {
+                existingPeriod.PurposeIds.Add(naldDataPurpose.Id);
+            }
+            else
+            {
+                naldData.Periods.Add(period);
+            }
         }
 
         return returnDict;

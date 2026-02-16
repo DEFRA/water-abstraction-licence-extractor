@@ -49,13 +49,17 @@ public class FileTypeResultTests
     public void Metadata_ShouldSupportDifferentValueTypes()
     {
         // Arrange
-        var result = new FileTypeResult();
-
-        // Act
-        result.Metadata["StringValue"] = "test";
-        result.Metadata["IntValue"] = 42;
-        result.Metadata["DoubleValue"] = 3.14;
-        result.Metadata["BoolValue"] = true;
+        var result = new FileTypeResult
+        {
+            Metadata =
+            {
+                // Act
+                ["StringValue"] = "test",
+                ["IntValue"] = 42,
+                ["DoubleValue"] = 3.14,
+                ["BoolValue"] = true
+            }
+        };
 
         // Assert
         result.Metadata["StringValue"].Should().Be("test");

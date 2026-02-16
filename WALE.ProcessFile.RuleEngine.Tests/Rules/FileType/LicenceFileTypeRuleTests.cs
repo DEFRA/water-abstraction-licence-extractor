@@ -1,4 +1,5 @@
 using FluentAssertions;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Rules.FileType;
 using Xunit;
 
@@ -6,12 +7,7 @@ namespace WALE.ProcessFile.RuleEngine.Tests.Rules.FileType;
 
 public class LicenceFileTypeRuleTests
 {
-    private readonly LicenceFileTypeRule _rule;
-
-    public LicenceFileTypeRuleTests()
-    {
-        _rule = new LicenceFileTypeRule();
-    }
+    private readonly LicenceFileTypeRule _rule = new();
 
     [Fact]
     public void RuleName_ShouldReturnCorrectName()
@@ -33,8 +29,29 @@ public class LicenceFileTypeRuleTests
         // Arrange
         var content = "SCHEDULE OF CONDITIONS";
 
+        var documentLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(content)],
+            0,
+            0,
+            0,
+            0);
+        
+        var matchesResult = new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    Text = [documentLine],
+                    LabelGroupName = "Licence Header"
+                }
+            ]
+        };
+
         // Act
-        var result = _rule.Apply(content);
+        var result = _rule.Apply(matchesResult);
 
         // Assert
         result.Should().NotBeNull();

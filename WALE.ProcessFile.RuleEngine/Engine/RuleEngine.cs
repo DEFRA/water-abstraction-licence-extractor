@@ -10,7 +10,7 @@ namespace WALE.ProcessFile.RuleEngine.Engine;
 public class RuleEngine<T> : IRuleEngine<T>
 {
     private readonly List<IRule<T>> _rules = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <inheritdoc />
     public void AddRule(IRule<T> rule)
@@ -49,7 +49,7 @@ public class RuleEngine<T> : IRuleEngine<T>
 
         lock (_lock)
         {
-            foreach (var rule in _rules.OrderBy(r => r.Priority))
+            foreach (var rule in _rules.OrderByDescending(r => r.Priority))
             {
                 if (rule.CanApply(content))
                 {
@@ -58,7 +58,7 @@ public class RuleEngine<T> : IRuleEngine<T>
             }
         }
 
-        return default(T);
+        return default;
     }
 
     /// <inheritdoc />

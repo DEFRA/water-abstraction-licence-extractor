@@ -70,7 +70,7 @@ public class FileTypeIdentifierService
     /// <param name="filePath">The path to the file</param>
     /// <param name="configuration">The lookup configuration</param>
     /// <returns>The file type identification result, or null if no type could be identified or an error occurred</returns>
-    private async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
+    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
     {
         try
         {

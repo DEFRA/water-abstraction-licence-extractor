@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using Date = WALE.ProcessFile.Services.Formats.Date;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -335,7 +336,7 @@ public static partial class SchemaConverter
     
     private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
     {
-        return Formats.Date.DateFormatConsistent(
+        return Date.DateFormatConsistent(
             DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName));
     }
     
@@ -345,31 +346,24 @@ public static partial class SchemaConverter
     {
         return new LicenceVersion
         {
-            EffectiveDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective")),
-            ExpiryDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry")),
-            NaldExpiryDate = GetDateOrNull(naldDataLine?.ExpiryDate),
-            IssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue")),
+            EffectiveDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective")),
+            ExpiryDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry")),
+            NaldExpiryDate = Date.GetDateOrNull(naldDataLine?.ExpiryDate),
+            IssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue")),
             Issuer = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, "Issuer"),
-            OriginalIssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue")),
+            OriginalIssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue")),
             
             NaldIssueNumber = naldDataLine?.IssueNo,
             NaldIncrementNumber = naldDataLine?.IncrNo,   
             NaldUpdateReason = naldDataLine?.AabvType,
             NaldStatus = naldDataLine?.Status,
-            NaldRevocationDate = GetDateOrNull(naldDataLine?.RevocationDate),
-            NaldOrigEffectiveDate = GetDateOrNull(naldDataLine?.OrigEffDate),
-            NaldOrigSignatureDate = GetDateOrNull(naldDataLine?.OrigSigDate),
-            NaldSignatureDate = GetDateOrNull(naldDataLine?.LicSigDate),
-            NaldEffectiveStartDate = GetDateOrNull(naldDataLine?.EffStDate),
-            NaldEffectiveEndDate = GetDateOrNull(naldDataLine?.EffEndDate)
+            NaldRevocationDate = Date.GetDateOrNull(naldDataLine?.RevocationDate),
+            NaldOrigEffectiveDate = Date.GetDateOrNull(naldDataLine?.OrigEffDate),
+            NaldOrigSignatureDate = Date.GetDateOrNull(naldDataLine?.OrigSigDate),
+            NaldSignatureDate = Date.GetDateOrNull(naldDataLine?.LicSigDate),
+            NaldEffectiveStartDate = Date.GetDateOrNull(naldDataLine?.EffStDate),
+            NaldEffectiveEndDate = Date.GetDateOrNull(naldDataLine?.EffEndDate)
         };
-    }
-
-    private static DateTime? GetDateOrNull(string? dateString)
-    {
-        return !string.IsNullOrEmpty(dateString)
-            ? DateTime.TryParse(dateString, out var date) ? date : null
-            : null;
     }
 
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(

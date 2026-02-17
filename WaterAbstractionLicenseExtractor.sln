@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools.Database.Postgre
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Api", "WALE.Api\WALE.Api.csproj", "{735C29A5-8D49-45C7-9542-A5845FD71747}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.RuleEngine", "WALE.ProcessFile.RuleEngine\WALE.ProcessFile.RuleEngine.csproj", "{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.TesseractExe", "WALE.ProcessFile.Services.TesseractExe\WALE.ProcessFile.Services.TesseractExe.csproj", "{EDD89C52-726F-4A15-9963-765807DA1101}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{FBF2F0B0-857B-4B50-97FE-99A582022CAD}"
@@ -54,6 +56,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Output", "WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj", "{AE89912A-3499-4777-AF64-A4C9D4A00511}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Cache", "WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj", "{C57510AA-CA14-45CD-BC68-E8DAFA82B943}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.RuleEngine.Tests", "WALE.ProcessFile.RuleEngine.Tests\WALE.ProcessFile.RuleEngine.Tests.csproj", "{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +109,10 @@ Global
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{735C29A5-8D49-45C7-9542-A5845FD71747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDD89C52-726F-4A15-9963-765807DA1101}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -121,6 +129,10 @@ Global
 		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C57510AA-CA14-45CD-BC68-E8DAFA82B943}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}

@@ -32,10 +32,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
     private static readonly ICacheService DatabaseCacheService =
         new DatabaseCacheService(ReadService, null!);
     
-    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    private Task SetupLicenceNumbersAsync(short regionCode)
     {
-        var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");

@@ -415,6 +415,8 @@ ConfiguredServices ConfigureServices()
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
 
+    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
+
     var databaseCacheService = new DatabaseCacheService(
         databaseReadService,
         databaseAddService);
@@ -732,8 +734,7 @@ async Task MoveReportHtmlFilesAsync(
 
             foreach (DataRow row in dataTable.Rows)
             {
-                var destinationFileName = (string)row["DestinationFileName"];
-                var permitNumberField = row["PermitNumber"];
+                var permitNumberField = row["Permit Number"];
                 string permitNumber;
 
                 if (permitNumberField is string permitNumberValue)
@@ -745,19 +746,24 @@ async Task MoveReportHtmlFilesAsync(
                     permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
                 }
 
+                var dmsPath = (string)row["Definitive URL"];
+                var dmsPathFilename = dmsPath.Split('/').Last();
+                
+                var destinationFileName = $"{permitNumber}__{dmsPathFilename}";
+                
                 if (!filesInFolder.Contains(destinationFileName))
                 {
                     continue;
                 }
 
-                var naldLicenceRef = (string)row["NALD Licence Ref"];
+                var naldLicenceRef = (string)row["License Number"];
 
                 var dmsFileData = new DmsFileData
                 {
                     DestinationFileName = destinationFileName,
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
-                    DmsPath = (string)row["FullPath"],
+                    DmsPath = dmsPath,
                     StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
                 };
 

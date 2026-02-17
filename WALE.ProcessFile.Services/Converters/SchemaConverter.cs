@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using Date = WALE.ProcessFile.Services.Formats.Date;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -335,7 +336,7 @@ public static partial class SchemaConverter
     
     private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
     {
-        return Formats.Date.DateFormatConsistent(
+        return Date.DateFormatConsistent(
             DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName));
     }
     
@@ -345,31 +346,24 @@ public static partial class SchemaConverter
     {
         return new LicenceVersion
         {
-            EffectiveDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective")),
-            ExpiryDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry")),
-            NaldExpiryDate = GetDateOrNull(naldDataLine?.ExpiryDate),
-            IssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue")),
+            EffectiveDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective")),
+            ExpiryDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry")),
+            NaldExpiryDate = Date.GetDateOrNull(naldDataLine?.ExpiryDate),
+            IssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue")),
             Issuer = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, "Issuer"),
-            OriginalIssueDate = GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue")),
+            OriginalIssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue")),
             
             NaldIssueNumber = naldDataLine?.IssueNo,
             NaldIncrementNumber = naldDataLine?.IncrNo,   
             NaldUpdateReason = naldDataLine?.AabvType,
             NaldStatus = naldDataLine?.Status,
-            NaldRevocationDate = GetDateOrNull(naldDataLine?.RevocationDate),
-            NaldOrigEffectiveDate = GetDateOrNull(naldDataLine?.OrigEffDate),
-            NaldOrigSignatureDate = GetDateOrNull(naldDataLine?.OrigSigDate),
-            NaldSignatureDate = GetDateOrNull(naldDataLine?.LicSigDate),
-            NaldEffectiveStartDate = GetDateOrNull(naldDataLine?.EffStDate),
-            NaldEffectiveEndDate = GetDateOrNull(naldDataLine?.EffEndDate)
+            NaldRevocationDate = Date.GetDateOrNull(naldDataLine?.RevocationDate),
+            NaldOrigEffectiveDate = Date.GetDateOrNull(naldDataLine?.OrigEffDate),
+            NaldOrigSignatureDate = Date.GetDateOrNull(naldDataLine?.OrigSigDate),
+            NaldSignatureDate = Date.GetDateOrNull(naldDataLine?.LicSigDate),
+            NaldEffectiveStartDate = Date.GetDateOrNull(naldDataLine?.EffStDate),
+            NaldEffectiveEndDate = Date.GetDateOrNull(naldDataLine?.EffEndDate)
         };
-    }
-
-    private static DateTime? GetDateOrNull(string? dateString)
-    {
-        return !string.IsNullOrEmpty(dateString)
-            ? DateTime.TryParse(dateString, out var date) ? date : null
-            : null;
     }
 
     private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
@@ -1935,11 +1929,24 @@ public static partial class SchemaConverter
                 {
                     var words = tableLine.Text.Split(' ');
                     var abstractionPoint = words[0];
-                    var hourlyQuantity = double.Parse(words[1]);
-                    var dailyQuantity = double.Parse(words[2]);
-                    var yearlyQuantity = double.Parse(words[3]);
-                    var instantRate = double.Parse(words[4]);
+                    var hourlyQuantity = words.Length >= 2 && double.TryParse(words[1], out var hourlyQuantityDbl)
+                        ? hourlyQuantityDbl : (double?)null;
+                    var dailyQuantity = words.Length >= 3 && double.TryParse(words[2], out var dailyQuantityDbl)
+                        ? dailyQuantityDbl : (double?)null;
+                    var yearlyQuantity = words.Length >= 4 && double.TryParse(words[3], out var yearlyQuantityDbl)
+                        ? yearlyQuantityDbl : (double?)null;
+                    var instantRate = words.Length >= 5 && double.TryParse(words[4], out var instantRateDbl)
+                        ? instantRateDbl : (double?)null;
 
+                    if (hourlyQuantity == null
+                        || dailyQuantity == null
+                        || yearlyQuantity == null
+                        || instantRate == null)
+                    {
+                        Console.WriteLine("INFO - Table was not in the expected format. Skipping");
+                        continue;
+                    }
+                    
                     var points = new Point[] { new() { Id = abstractionPoint }};
                     
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup

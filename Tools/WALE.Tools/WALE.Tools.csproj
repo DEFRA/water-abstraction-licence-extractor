@@ -7,17 +7,22 @@
         <UserSecretsId>36a30afa-1c5b-40f0-bf53-adda14a53c4e</UserSecretsId>
     </PropertyGroup>
 
+      <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <Optimize>false</Optimize>
+        <DebugType>full</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+      </PropertyGroup>
+
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.66" />
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.5.25277.114" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.5.25277.114" />
-        <PackageReference Include="Npgsql" Version="10.0.1" />
         <PackageReference Include="PDFtoImage" Version="5.1.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\WALE.ProcessFile.Database.PostgreSQL\WALE.ProcessFile.Database.PostgreSQL.csproj" />
-      <ProjectReference Include="..\..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+      <ProjectReference Include="..\..\WALE.ProcessFile.RuleEngine\WALE.ProcessFile.RuleEngine.csproj" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">

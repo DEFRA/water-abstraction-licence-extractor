@@ -8,7 +8,7 @@ using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
-namespace WALE.Tools;
+namespace WALE.Tools._2ndHalf;
 
 public static class GenerateLinkedLicencesCsv
 {

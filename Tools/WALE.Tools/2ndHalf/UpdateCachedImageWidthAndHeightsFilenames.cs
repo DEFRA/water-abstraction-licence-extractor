@@ -1,9 +1,8 @@
-using Dapper;
 using Tesseract;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
-namespace WALE.Tools;
+namespace WALE.Tools._2ndHalf;
 
 public static class UpdateCachedImageWidthAndHeightsFilenames
 {

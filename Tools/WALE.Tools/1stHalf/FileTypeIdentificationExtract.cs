@@ -13,7 +13,7 @@ using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
-namespace WALE.Tools;
+namespace WALE.Tools._1stHalf;
 
 /// <summary>
 /// Tool to identify file types from output folder files using rule engine

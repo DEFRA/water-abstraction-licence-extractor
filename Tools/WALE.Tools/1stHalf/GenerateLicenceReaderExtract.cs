@@ -16,7 +16,7 @@ using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
-namespace WALE.Tools;
+namespace WALE.Tools._1stHalf;
 
 public static class GenerateLicenceReaderExtract
 {

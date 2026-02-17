@@ -1929,11 +1929,24 @@ public static partial class SchemaConverter
                 {
                     var words = tableLine.Text.Split(' ');
                     var abstractionPoint = words[0];
-                    var hourlyQuantity = double.Parse(words[1]);
-                    var dailyQuantity = double.Parse(words[2]);
-                    var yearlyQuantity = double.Parse(words[3]);
-                    var instantRate = double.Parse(words[4]);
+                    var hourlyQuantity = words.Length >= 2 && double.TryParse(words[1], out var hourlyQuantityDbl)
+                        ? hourlyQuantityDbl : (double?)null;
+                    var dailyQuantity = words.Length >= 3 && double.TryParse(words[2], out var dailyQuantityDbl)
+                        ? dailyQuantityDbl : (double?)null;
+                    var yearlyQuantity = words.Length >= 4 && double.TryParse(words[3], out var yearlyQuantityDbl)
+                        ? yearlyQuantityDbl : (double?)null;
+                    var instantRate = words.Length >= 5 && double.TryParse(words[4], out var instantRateDbl)
+                        ? instantRateDbl : (double?)null;
 
+                    if (hourlyQuantity == null
+                        || dailyQuantity == null
+                        || yearlyQuantity == null
+                        || instantRate == null)
+                    {
+                        Console.WriteLine("INFO - Table was not in the expected format. Skipping");
+                        continue;
+                    }
+                    
                     var points = new Point[] { new() { Id = abstractionPoint }};
                     
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup

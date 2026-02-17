@@ -224,10 +224,11 @@ public class PdfDataExtractorService(
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        Console.WriteLine("ERROR - " + ex);
                         
                         // TODO proper logging somewhere
-                        throw;
+                        
+                        // Don't rethrow - just carry on with the other providers and pages
                     }
                     
                     // No lines found, no point processing that with the other services

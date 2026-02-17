@@ -33,12 +33,7 @@ public class NoOcrDatabaseTests
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(
         ReadService,
-        WriteService,
-        TestConfig.PostgresHost,
-        TestConfig.PostgresPort,
-        TestConfig.PostgresDbName,
-        TestConfig.PostgresUsername,
-        TestConfig.PostgresPassword);
+        WriteService);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
@@ -52,7 +47,12 @@ public class NoOcrDatabaseTests
     public NoOcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+    
+    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    {
+        var allNaldData = await CacheService.GetNaldDataAsync(regionCode);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -78,20 +78,20 @@ public class NoOcrDatabaseTests
 
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private LookupConfiguration LookupConfiguration()
+    private async Task<LookupConfiguration> LookupConfigurationAsync()
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             FileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFileAsync(),
+            await CompanyName.GetFirstNamesCsvFromFileAsync(),
             3);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
+        return await _pdfDataExtractor.GetMatchesAsync(
             TestConfig.PdfFolder + fileName,
-            LookupConfiguration(),
+            await LookupConfigurationAsync(),
             [TestConfig.PdfFolder + fileName],
             0);
     }
@@ -100,6 +100,8 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
+        
         var processRun = await OutputService.StartProcessRunAsync(new ProcessRun
         {
             Description = "Test run",
@@ -115,6 +117,8 @@ public class NoOcrDatabaseTests
     public async Task Uncached_Then_Changed()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
+        
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
         await CacheService.ClearCacheAsync(filename);
         
@@ -124,6 +128,8 @@ public class NoOcrDatabaseTests
 
     private async Task ProcessAsync(string filename)
     {
+        await SetupLicenceNumbersAsync(3);
+        
         // Act
         var resultFull = await GetMatchesAsync(filename);
         var resultList = resultFull.Matches!;
@@ -253,7 +259,7 @@ public class NoOcrDatabaseTests
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration());
+            await LookupConfigurationAsync());
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

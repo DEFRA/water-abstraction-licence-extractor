@@ -27,9 +27,13 @@ public class AzureOpenAiOcrPdfTests
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    public AzureOpenAiOcrPdfTests()
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
+    private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+        var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -54,20 +58,20 @@ public class AzureOpenAiOcrPdfTests
 
     private string PdfFolder => TestConfig.PdfFolder;
 
-    private LookupConfiguration LookupConfiguration()
+    private async Task<LookupConfiguration> LookupConfigurationAsync()
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFileAsync(),
+            await CompanyName.GetFirstNamesCsvFromFileAsync(),
             3);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
+        return await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + fileName,
-            LookupConfiguration(),
+            await LookupConfigurationAsync(),
             
             [PdfFolder + fileName],
             0);
@@ -77,6 +81,7 @@ public class AzureOpenAiOcrPdfTests
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
@@ -158,7 +163,7 @@ public class AzureOpenAiOcrPdfTests
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration());
+            await LookupConfigurationAsync());
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

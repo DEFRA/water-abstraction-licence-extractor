@@ -18,7 +18,7 @@ public class SingletonAwsTextractFixture : IDisposable
             CacheService,
             OutputService);
 
-    public readonly HashSet<string> FirstNamesCsv = CompanyName.GetFirstNamesCsvFromFileAsync();
+    public readonly Task<HashSet<string>> FirstNamesCsvTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     
     public void Dispose()
     {

@@ -219,19 +219,15 @@ public static class GenerateLicenceReaderExtract
 
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-
-        LicenceNumber.Instance = new LicenceNumber(databaseReadService);
         
         var cacheService = new DatabaseCacheService(
             databaseReadService,
-            databaseAddService,
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
+            databaseAddService);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        
+        var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
         
         const int batchSize = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();
@@ -349,7 +345,7 @@ public static class GenerateLicenceReaderExtract
         var configuration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
             FileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFile(),
+            await CompanyName.GetFirstNamesCsvFromFileAsync(),
             regionCode);
         
         Console.WriteLine($"Retrieved {configuration.Labels.Count} label groups from configuration");

@@ -78,7 +78,7 @@ async Task ProgramAsync()
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
     await moveReportHtmlFilesTask;
-    
+
     var allNaldData =  await naldDataTask;
     LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
 
@@ -414,9 +414,7 @@ ConfiguredServices ConfigureServices()
 
     var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
     var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-
-    LicenceNumber.Instance = new LicenceNumber(databaseReadService);
-
+    
     var databaseCacheService = new DatabaseCacheService(
         databaseReadService,
         databaseAddService);

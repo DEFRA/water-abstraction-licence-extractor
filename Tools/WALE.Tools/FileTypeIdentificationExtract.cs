@@ -45,12 +45,7 @@ public static class FileTypeIdentificationExtract
     
         var cacheService = new DatabaseCacheService(
             databaseReadService,
-            databaseAddService,
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
+            databaseAddService);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
 

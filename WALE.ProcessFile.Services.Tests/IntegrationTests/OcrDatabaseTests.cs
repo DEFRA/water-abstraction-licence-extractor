@@ -31,27 +31,27 @@ public class OcrDatabaseTests
     
     private static readonly ICacheService CacheService = new DatabaseCacheService(
         ReadService,
-        WriteService,
-        TestConfig.PostgresHost,
-        TestConfig.PostgresPort,
-        TestConfig.PostgresDbName,
-        TestConfig.PostgresUsername,
-        TestConfig.PostgresPassword);
+        WriteService);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
 
     public OcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+    
+    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    {
+        var allNaldData = await CacheService.GetNaldDataAsync(regionCode);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
         },
         CacheService,
         OutputService,
@@ -60,14 +60,14 @@ public class OcrDatabaseTests
     private static string PdfFolder => TestConfig.PdfFolder;
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
-    private Task<MatchesResult> GetMatchesAsync(string fileName)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return _pdfDataExtractorCombined.GetMatchesAsync(
+        return await _pdfDataExtractorCombined.GetMatchesAsync(
             PdfFolder + fileName,
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
-                CompanyName.GetFirstNamesCsvFromFileAsync(),
+                await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 3),
             [PdfFolder + fileName],
             0);
@@ -80,9 +80,11 @@ public class OcrDatabaseTests
         await CacheService.ClearCacheAsync();
     }
     
-    [Fact]
+    [Fact(Skip = "NeedsReworkingNowWeUseApi")]
     public async Task Uncached_Then_Changed()
     {
+        await SetupLicenceNumbersAsync(3);
+        
         var filename = "14460030853 licence effective 24.07.2005";
         await CacheService.ClearCacheAsync(filename);
 

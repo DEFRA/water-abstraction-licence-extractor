@@ -92,8 +92,10 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
     string tessDataPath)
 {
     if (string.IsNullOrEmpty(tessDataPath))
+    {
         throw new NullReferenceException(tessDataPath);
-    
+    }
+
     ICacheService cacheService;
     IOutputService outputService;
     
@@ -105,7 +107,9 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
     else
     {
         if (string.IsNullOrEmpty(cacheFolderOrApiUrl))
+        {
             throw new NullReferenceException(nameof(cacheFolderOrApiUrl));
+        }
 
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(cacheFolderOrApiUrl);

@@ -81,7 +81,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         return new(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            await textractFixture.FirstNamesCsvTask,
+            await textractFixture.FirstNamesCsvTask(),
             3);
     }
 

@@ -123,7 +123,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
-            await firstNamesFixture.FirstNamesCsvTask,
+            await firstNamesFixture.FirstNamesCsvTask(),
             regionCode);
     }
     

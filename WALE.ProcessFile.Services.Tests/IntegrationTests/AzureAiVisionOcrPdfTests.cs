@@ -97,7 +97,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            await firstNamesFixture.FirstNamesCsvTask,
+            await firstNamesFixture.FirstNamesCsvTask(),
             regionCode);
     }
 

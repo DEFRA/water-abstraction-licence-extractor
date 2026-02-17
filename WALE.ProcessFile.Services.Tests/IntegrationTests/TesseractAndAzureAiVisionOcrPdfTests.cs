@@ -103,7 +103,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            await firstNamesFixture.FirstNamesCsvTask,
+            await firstNamesFixture.FirstNamesCsvTask(),
             3);
     }
 

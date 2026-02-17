@@ -18,7 +18,12 @@ public class SingletonAwsTextractFixture : IDisposable
             CacheService,
             OutputService);
 
-    public readonly Task<HashSet<string>> FirstNamesCsvTask = CompanyName.GetFirstNamesCsvFromFileAsync();
+    private Task<HashSet<string>>? _firstNamesCsvTask;
+    
+    public Task<HashSet<string>> FirstNamesCsvTask()
+    {
+        return _firstNamesCsvTask ??= CompanyName.GetFirstNamesCsvFromFileAsync();
+    }
     
     public void Dispose()
     {

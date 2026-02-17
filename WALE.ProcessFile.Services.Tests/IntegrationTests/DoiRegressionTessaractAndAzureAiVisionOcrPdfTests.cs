@@ -117,7 +117,9 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             LookupConfiguration(1));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        
         Assert.Equal("1966-05-23", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/22/3/45", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -149,6 +151,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("1966-10-14", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.False(agreedSchemaLicence.NoneSchemaData.ContainsKey("scrapedLicenceNumber"));
     }
     
     [Fact]
@@ -179,6 +182,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1966-05-11", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.False(agreedSchemaLicence.NoneSchemaData.ContainsKey("scrapedLicenceNumber"));
     }
     
     [Fact]
@@ -209,6 +213,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1966-11-08", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/23/3/75", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -239,6 +244,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1966-11-08", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/23/3/76", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -269,6 +275,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2025-06-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/001", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -299,6 +306,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2014-11-11", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/004", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -329,6 +337,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1984-03-28", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/0/10", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -359,6 +368,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2016-07-22", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/023", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -389,6 +399,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2014-12-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/052", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -419,6 +430,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1993-03-05", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/0/63", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -449,6 +461,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("1974-03-21", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/0/65", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -479,6 +492,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2025-06-17", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/068", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -510,8 +524,8 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
 
         Assert.Null(agreedSchemaLicence.LicenceVersion.IssueDate);
 
-        // TODO issue date missing
-        //Assert.Equal("1966-11-08", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Null(agreedSchemaLicence.LicenceVersion.IssueDate);
+        Assert.Equal("1/21/0/069", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
     
     [Fact]
@@ -542,5 +556,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
         Assert.Equal("2018-05-11", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
+        Assert.Equal("1/21/00/071/R01", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
     }
 }

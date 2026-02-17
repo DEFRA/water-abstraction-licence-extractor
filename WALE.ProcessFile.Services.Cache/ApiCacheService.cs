@@ -147,19 +147,49 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveOcrImageTextRaw";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Request = request,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveOcrImageText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Request = request,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveOcrScreenshotText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Request = request,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
@@ -167,14 +197,34 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveTemporaryOcrImageText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Request = request,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveTemporaryOcrScreenshotText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Request = request,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)

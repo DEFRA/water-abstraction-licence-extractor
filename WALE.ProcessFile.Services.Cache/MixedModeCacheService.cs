@@ -121,13 +121,13 @@ public class MixedModeCacheService(
     public Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request)
     {
-        return databaseCacheService.GetTemporaryOcrImageTextAsync(request);
+        return apiCacheService.GetTemporaryOcrImageTextAsync(request);
     }
 
     public Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request)
     {
-        return databaseCacheService.GetTemporaryOcrScreenshotTextAsync(request);
+        return apiCacheService.GetTemporaryOcrScreenshotTextAsync(request);
     }
 
     public Task SaveImageOnPageAsync(
@@ -206,14 +206,14 @@ public class MixedModeCacheService(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        return databaseCacheService.SaveTemporaryOcrImageTextAsync(request, pageLines);
+        return apiCacheService.SaveTemporaryOcrImageTextAsync(request, pageLines);
     }
 
     public Task SaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        return databaseCacheService.SaveTemporaryOcrScreenshotTextAsync(request, pageLines);
+        return apiCacheService.SaveTemporaryOcrScreenshotTextAsync(request, pageLines);
     }
 
     public Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)

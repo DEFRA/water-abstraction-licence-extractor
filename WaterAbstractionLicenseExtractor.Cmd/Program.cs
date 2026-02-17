@@ -62,9 +62,17 @@ async Task ProgramAsync()
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(
         regionCode);
 
+    var dtStartGetDms = DateTime.Now;
+    Console.WriteLine("Getting DMS files to process");
+    
     var (dmsFilesToProcess, allDmsData) =
         GetDmsFilesAndMapping(services, regionCode);
 
+    var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
+
+    Console.WriteLine(
+        $"Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun

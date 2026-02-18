@@ -9,47 +9,45 @@ public static class DuplicateLicenceIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
 
-    public static async Task GenerateDuplicateLicenceIdentificationExtractAsync(bool byFileName = true)
+    public static async Task GenerateDuplicateLicenceIdentificationExtractAsync(
+        string excelFilePath,
+        string pdfFolder,
+        bool byFileName)
     {
-        // Step 1: Get the input of processing by reading DuplicateResults_Extract.xlsx from
-        // KeyConfig.PdfFolderForDuplicates into a list of LicenceDuplicateFinderInput objects
-        var duplicateInputs = await ReadDuplicateResultsFromExcelAsync();
+        // Step 1: Get the input of processing by reading Excel file into a list ofLicenceDuplicateFinderInput
+        var potentialDuplicates = ReadPotentialDuplicatesFromExcel(excelFilePath);
         
         // Step 2: Group by Permit Number and loop over each group to process each group and generate
         // a result list of LicenceDuplicateCsvLine objects
         var csvResults = new List<LicenceDuplicateCsvLine>();
 
-        var groupedByPermit = duplicateInputs
-            .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
-            .GroupBy(x => x.PermitNumber); 
-        
-        var groupedByPermitAndSize = duplicateInputs
-            .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
-            .GroupBy(x => (x.PermitNumber, x.FileSize));
-
         if (byFileName)
         {
+            var groupedByPermit = potentialDuplicates
+                .Where(line => !string.IsNullOrEmpty(line.PermitNumber))
+                .GroupBy(line => line.PermitNumber); 
+            
             foreach (var permitGroup in groupedByPermit)
             {
                 // Step 3: Get the list of files for the current permit number
                 var filesForPermit = permitGroup.ToList();
             
                 // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
-                var pdfFilesData = ReadPdfFilesForPermit(filesForPermit);
+                var pdfFilesData = ReadPdfFilesForPermit(filesForPermit, pdfFolder);
             
                 // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other
                 // files are sub strings of for example 0-034 5665255.PDF is main file in a group with that
                 // and -034 5665255.PDF
-                var mainFile = IdentifyMainFile(pdfFilesData);
+                var primaryFile = IdentifyPrimaryFile(pdfFilesData);
             
                 // Step 6 - Process the main file and compare with other files for duplicate analysis
-                if (mainFile?.FileExists != true || pdfFilesData.Count <= 1)
+                if (primaryFile?.FileExists != true || pdfFilesData.Count <= 1)
                 {
                     continue;
                 }
                 
                 var duplicateResults = await ComparePdfContentAsync(
-                    mainFile.Value,
+                    primaryFile.Value,
                     pdfFilesData,
                     permitGroup.Key!);
                     
@@ -58,6 +56,10 @@ public static class DuplicateLicenceIdentificationExtract
         }
         else
         {
+            var groupedByPermitAndSize = potentialDuplicates
+                .Where(line => !string.IsNullOrEmpty(line.PermitNumber))
+                .GroupBy(line => (line.PermitNumber, line.FileSize));
+            
             foreach (var permitGroup in groupedByPermitAndSize)
             {
                 try
@@ -66,24 +68,25 @@ public static class DuplicateLicenceIdentificationExtract
                     var filesForPermit = permitGroup.ToList();
 
                     // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
-                    var firstFile = filesForPermit
+                    var primaryFile = filesForPermit
                         .FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.FileName));
 
-                    if (firstFile == null)
+                    if (primaryFile == null)
                     {
                         continue;
                     }
                     
-                    var pdfFilesData = ReadPdfFilesForPermitAndSize(
-                        firstFile,
+                    var potentialDuplicateFiles = GetPotentialDuplicatesForPermitAndSize(
+                        primaryFile,
                         filesForPermit);
                     
-                    var duplicateResults = await ComparePdfContentAsync(
-                        firstFile,
-                        pdfFilesData,
-                        permitGroup.Key.PermitNumber!);
+                    var duplicateCsvLine = await ComparePdfContentAsync(
+                        primaryFile,
+                        potentialDuplicateFiles,
+                        permitGroup.Key.PermitNumber!,
+                        pdfFolder);
 
-                    csvResults.AddRange(duplicateResults);
+                    csvResults.AddRange(duplicateCsvLine);
                 }
                 catch (Exception ex)
                 {
@@ -93,19 +96,14 @@ public static class DuplicateLicenceIdentificationExtract
             }
         }
         
-        var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.xlsx";
+        var fileName = $"Duplicate-Licence-Extract-{DateTime.Today:yyyyMMdd}.xlsx";
         var fullPath = Path.Combine(OutputFolder, fileName);
         
         // Create an Excel file with the results
         CreateExcelFileFromList(csvResults, fullPath);
-        
-        // await using var writer = new StreamWriter(fullPath);
-        // await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        //
-        // await csv.WriteRecordsAsync(csvResults);
     }
 
-    private static void CreateExcelFileFromList<T>(List<T> employees, string filePath)
+    private static void CreateExcelFileFromList<T>(List<T> results, string filePath)
     {
         // 2. Create a new Excel workbook
         var workbook = new XLWorkbook();
@@ -113,7 +111,7 @@ public static class DuplicateLicenceIdentificationExtract
         // 3. Add a new worksheet and insert the list data, including headers
         // The 'true' argument in LoadFromCollection indicates that the first row is for headers
         var worksheet = workbook.Worksheets.Add("All_Results");
-        worksheet.Cell(1, 1).InsertTable(employees);
+        worksheet.Cell(1, 1).InsertTable(results);
 
         // Optional: Adjust column widths to fit the contents
         worksheet.Columns().AdjustToContents();
@@ -143,7 +141,9 @@ public static class DuplicateLicenceIdentificationExtract
         try
         {
             // Compare with other files
-            var otherFiles = allFiles.Where(f => f.FileName != mainFile.FileName && f.FileExists).ToList();
+            var otherFiles = allFiles.Where(f =>
+                f.FileName != mainFile.FileName && f.FileExists).ToList();
+            
             Console.WriteLine($"Comparing with {otherFiles.Count} other files");
 
             foreach (var otherFile in otherFiles)
@@ -152,8 +152,8 @@ public static class DuplicateLicenceIdentificationExtract
                 {
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
 
-                    // Compare images using hash comparison
-                    var isDuplicate = await CompareImagesAsync(new List<string>{mainFile.FilePath}, new List<string>{otherFile.FilePath});
+                    // Compare files using hash comparison
+                    var isDuplicate = await CompareFileHashesAsync([mainFile.FilePath], [otherFile.FilePath]);
 
                     if (isDuplicate)
                     {
@@ -167,19 +167,19 @@ public static class DuplicateLicenceIdentificationExtract
                         });
 
                         Console.WriteLine($"✓ Duplicate found: {mainFile.FileName} == {otherFile.FileName}");
+                        continue;
                     }
-                    else
+                    
+                    results.Add(new LicenceDuplicateCsvLine
                     {
-                        results.Add(new LicenceDuplicateCsvLine
-                        {
-                            PermitNumber = permitNumber,
-                            FileName = mainFile.FileName,
-                            FileUrl = mainFile.FileUrl,
-                            DuplicateFileName = string.Empty,
-                            DuplicateFileUrl = string.Empty,
-                        });
-                        Console.WriteLine($"✗ Not duplicate: {mainFile.FileName} != {otherFile.FileName}");
-                    }
+                        PermitNumber = permitNumber,
+                        FileName = mainFile.FileName,
+                        FileUrl = mainFile.FileUrl,
+                        DuplicateFileName = string.Empty,
+                        DuplicateFileUrl = string.Empty,
+                    });
+                    
+                    Console.WriteLine($"✗ Not duplicate: {mainFile.FileName} != {otherFile.FileName}");
                 }
                 catch (Exception ex)
                 {
@@ -195,10 +195,9 @@ public static class DuplicateLicenceIdentificationExtract
         return results;
     }
     
-    private static Task<List<LicenceDuplicateFinderInput>> ReadDuplicateResultsFromExcelAsync()
+    private static List<LicenceDuplicateFinderInput> ReadPotentialDuplicatesFromExcel(string excelFilePath)
     {
-        var excelFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "DuplicateResults_Extract.xlsx");
-        var duplicateInputs = new List<LicenceDuplicateFinderInput>();
+        var potentialDuplicates = new List<LicenceDuplicateFinderInput>();
 
         using var workbook = new XLWorkbook(excelFilePath);
         var worksheet = workbook.Worksheet(1);
@@ -210,16 +209,17 @@ public static class DuplicateLicenceIdentificationExtract
         for (var col = 1; col <= usedRange.LastColumn().ColumnNumber(); col++)
         {
             var headerValue = worksheet.Cell(1, col).GetValue<string>()?.Trim();
+            
             if (!string.IsNullOrEmpty(headerValue))
             {
                 headerMapping[headerValue] = col;
             }
         }
 
-        var permitNumberCol = headerMapping["Permit Number"];
-        var fileNameCol = headerMapping["Downloaded file name"];
-        var fileUrlCol = headerMapping["File URL"];
-        var fileSizeCol = headerMapping["File Size"];
+        var permitNumberCol = headerMapping["PermitNumber"];
+        var fileNameCol = headerMapping["DestinationFileName"];
+        var fileUrlCol = headerMapping["FullPath"];
+        var fileSizeCol = headerMapping["Size"];
 
         // Read data rows starting from row 2
         for (var row = 2; row <= usedRange.LastRow().RowNumber(); row++)
@@ -229,7 +229,7 @@ public static class DuplicateLicenceIdentificationExtract
             var fileUrl = worksheet.Cell(row, fileUrlCol).GetValue<string>();
             var fileSize = worksheet.Cell(row, fileSizeCol).GetValue<string>();
 
-            duplicateInputs.Add(new LicenceDuplicateFinderInput
+            potentialDuplicates.Add(new LicenceDuplicateFinderInput
             {
                 PermitNumber = permitNumber,
                 FileName = fileName,
@@ -238,68 +238,75 @@ public static class DuplicateLicenceIdentificationExtract
             });
         }
 
-        return Task.FromResult(duplicateInputs);
+        return potentialDuplicates;
     }
 
     private static List<(string FileName, string FilePath, bool FileExists, string FileUrl)> ReadPdfFilesForPermit(
-        List<LicenceDuplicateFinderInput> filesForPermit)
+        List<LicenceDuplicateFinderInput> filesForPermit, string pdfFolder)
     {
         var pdfFilesData = new List<(string FileName, string FilePath, bool FileExists, string FileUrl)>();
 
         foreach (var file in filesForPermit)
         {
-            if (!string.IsNullOrEmpty(file.FileName))
+            if (string.IsNullOrEmpty(file.FileName))
             {
-                // Search for files that end with the expected filename after number__ prefix
-                var matchingFiles = Directory.GetFiles(KeyConfig.PdfFolderForDuplicates, $"*__{file.FileName}")
-                    .Where(f => Path.GetFileName(f).Contains("__"))
-                    .ToList();
+                continue;
+            }
+            
+            // Search for files that end with the expected filename after number__ prefix
+            var matchingFiles = Directory.GetFiles(pdfFolder, $"*__{file.FileName}")
+                .Where(f => Path.GetFileName(f).Contains("__"))
+                .ToList();
 
-                if (matchingFiles.Any())
+            if (matchingFiles.Any())
+            {
+                foreach (var matchingFile in matchingFiles)
                 {
-                    foreach (var matchingFile in matchingFiles)
-                    {
-                        var actualFileName = Path.GetFileName(matchingFile);
-                        pdfFilesData.Add((actualFileName, matchingFile, true, file.FileUrl ?? ""));
-                    }
+                    var actualFileName = Path.GetFileName(matchingFile);
+                    pdfFilesData.Add((actualFileName, matchingFile, true, file.FileUrl ?? ""));
                 }
-                else
-                {
-                    // Fallback: try direct filename match
-                    var directPath = Path.Combine(KeyConfig.PdfFolderForDuplicates, file.FileName);
-                    var directExists = File.Exists(directPath);
+                
+                continue;
+            }
+            
+            // Fallback: try direct filename match
+            var directPath = Path.Combine(pdfFolder, file.FileName);
+            var directExists = File.Exists(directPath);
 
-                    pdfFilesData.Add((file.FileName, directPath, directExists, file.FileUrl ?? ""));
+            pdfFilesData.Add((file.FileName, directPath, directExists, file.FileUrl ?? ""));
 
-                    if (!directExists)
-                    {
-                        Console.WriteLine($"Warning: PDF file not found with pattern *__{file.FileName} or direct match: {file.FileName}");
-                    }
-                }
+            if (!directExists)
+            {
+                Console.WriteLine($"Warning: PDF file not found with pattern *__{file.FileName} or direct match: {file.FileName}");
             }
         }
 
         return pdfFilesData;
     }
     
-    private static List<LicenceDuplicateFinderInput> ReadPdfFilesForPermitAndSize(
-        LicenceDuplicateFinderInput file, List<LicenceDuplicateFinderInput> filesForPermitAndSize)
+    private static List<LicenceDuplicateFinderInput> GetPotentialDuplicatesForPermitAndSize(
+        LicenceDuplicateFinderInput file,
+        List<LicenceDuplicateFinderInput> filesForPermitAndSize)
     {
-        if (!string.IsNullOrEmpty(file.FileName))
+        if (string.IsNullOrEmpty(file.FileName))
         {
-            return filesForPermitAndSize
-                .Where(f => f.FileSize?.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) == true &&
-                            f.FileUrl?.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase) != true).ToList();
+            return [];
         }
-
-        return [];
+        
+        return filesForPermitAndSize
+            .Where(
+                f => f.FileSize?.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) == true
+                    && f.FileUrl?.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase) != true)
+            .ToList();
     }
 
-    private static (string FileName, string FilePath, bool FileExists, string FileUrl)? IdentifyMainFile(
+    private static (string FileName, string FilePath, bool FileExists, string FileUrl)? IdentifyPrimaryFile(
         List<(string FileName, string FilePath, bool FileExists, string FileUrl)> pdfFilesData)
     {
         if (pdfFilesData.Count <= 1)
+        {
             return pdfFilesData.FirstOrDefault();
+        }
 
         // The main file is simply the one with the maximum number of characters
         var mainFile = pdfFilesData
@@ -311,19 +318,22 @@ public static class DuplicateLicenceIdentificationExtract
     }
 
     private static async Task<List<LicenceDuplicateCsvLine>> ComparePdfContentAsync(
-        LicenceDuplicateFinderInput mainFile,
+        LicenceDuplicateFinderInput primaryFile,
         List<LicenceDuplicateFinderInput> allFiles,
-        string permitNumber)
+        string permitNumber,
+        string pdfFolder)
     {
         var results = new List<LicenceDuplicateCsvLine>();
 
-        Console.WriteLine($"Comparing files for permit {permitNumber}");
-        Console.WriteLine($"Main file: {mainFile.FileName}");
+        Console.WriteLine($"Comparing files for permit {permitNumber} - primary file: {primaryFile.FileName}");
 
         try
         {
             // Compare with other files
-            var otherFiles = allFiles.Where(f => f.FileUrl != mainFile.FileUrl).ToList();
+            var otherFiles = allFiles
+                .Where(f => f.FileUrl != primaryFile.FileUrl)
+                .ToList();
+            
             Console.WriteLine($"Comparing with {otherFiles.Count} other files");
 
             foreach (var otherFile in otherFiles)
@@ -332,35 +342,36 @@ public static class DuplicateLicenceIdentificationExtract
                 {
                     Console.WriteLine($"Comparing with: {otherFile.FileName}");
                 
-                    // Compare images using hash comparison
-                    var isDuplicate = await CompareImagesAsync(
-                        [Path.Combine(KeyConfig.PdfFolderForDuplicates, mainFile.FileName!)],
-                        [Path.Combine(KeyConfig.PdfFolderForDuplicates, otherFile.FileName!)]);
+                    // Compare files using hash comparison
+                    var isDuplicate = await CompareFileHashesAsync(
+                        [Path.Combine(pdfFolder, primaryFile.FileName!)],
+                        [Path.Combine(pdfFolder, otherFile.FileName!)]);
 
                     if (isDuplicate)
                     {
                         results.Add(new LicenceDuplicateCsvLine
                         {
                             PermitNumber = permitNumber,
-                            FileName = mainFile.FileName,
-                            FileUrl = mainFile.FileUrl,
+                            FileName = primaryFile.FileName,
+                            FileUrl = primaryFile.FileUrl,
                             DuplicateFileName = otherFile.FileName,
                             DuplicateFileUrl = otherFile.FileUrl
                         });
 
-                        Console.WriteLine($"✓ Duplicate found: {mainFile.FileName} == {otherFile.FileName}");
+                        Console.WriteLine($"✓ Duplicate found: {primaryFile.FileName} == {otherFile.FileName}");
                     }
                     else
                     {
                         results.Add(new LicenceDuplicateCsvLine
                         {
                             PermitNumber = permitNumber,
-                            FileName = mainFile.FileName,
-                            FileUrl = mainFile.FileUrl,
+                            FileName = primaryFile.FileName,
+                            FileUrl = primaryFile.FileUrl,
                             DuplicateFileName = string.Empty,
                             DuplicateFileUrl = string.Empty,
                         });
-                        Console.WriteLine($"✗ Not duplicate: {mainFile.FileName} != {otherFile.FileName}");
+                        
+                        Console.WriteLine($"✗ Not duplicate: {primaryFile.FileName} != {otherFile.FileName}");
                     }
                 }
                 catch (Exception ex)
@@ -371,37 +382,47 @@ public static class DuplicateLicenceIdentificationExtract
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing main file {mainFile.FileName}: {ex.Message}");
+            Console.WriteLine($"Error processing main file {primaryFile.FileName}: {ex.Message}");
         }
 
         return results;
     }
     
-    private static async Task<bool> CompareImagesAsync(List<string> mainFileImages, List<string> otherFileImages)
+    private static async Task<bool> CompareFileHashesAsync(List<string> primaryFiles, List<string> otherFiles)
     {
-        if (mainFileImages.Count != otherFileImages.Count)
+        if (primaryFiles.Count != otherFiles.Count)
+        {
             return false;
+        }
 
         // Calculate hashes for all images in both sets
         var mainHashes = new List<string>();
         var otherHashes = new List<string>();
 
-        foreach (var imagePath in mainFileImages)
+        foreach (var primaryFile in primaryFiles)
         {
-            var hash = await CalculateImageHashAsync(imagePath);
+            var hash = await CalculateFileHashAsync(primaryFile);
+
             if (!string.IsNullOrEmpty(hash))
+            {
                 mainHashes.Add(hash);
+            }
         }
 
-        foreach (var imagePath in otherFileImages)
+        foreach (var otherFile in otherFiles)
         {
-            var hash = await CalculateImageHashAsync(imagePath);
+            var hash = await CalculateFileHashAsync(otherFile);
+
             if (!string.IsNullOrEmpty(hash))
+            {
                 otherHashes.Add(hash);
+            }
         }
 
         if (mainHashes.Count != otherHashes.Count)
+        {
             return false;
+        }
 
         // Sort both hash lists and compare
         mainHashes.Sort();
@@ -410,40 +431,45 @@ public static class DuplicateLicenceIdentificationExtract
         return mainHashes.SequenceEqual(otherHashes);
     }
 
-    private static async Task<string> CalculateImageHashAsync(string imagePath)
+    private static async Task<string> CalculateFileHashAsync(string filePath)
     {
         try
         {
-            Console.WriteLine($"Checking image path: {imagePath}");
+            Console.WriteLine($"Checking file path: {filePath}");
 
             // Try to resolve relative paths to absolute paths
-            var resolvedPath = imagePath;
-            if (!Path.IsPathRooted(imagePath))
+            var resolvedPath = filePath;
+            
+            if (!Path.IsPathRooted(filePath))
             {
-                resolvedPath = Path.GetFullPath(imagePath);
+                resolvedPath = Path.GetFullPath(filePath);
                 Console.WriteLine($"Resolved to absolute path: {resolvedPath}");
             }
 
             Console.WriteLine($"File exists check for: {resolvedPath} = {File.Exists(resolvedPath)}");
+            
             if (!File.Exists(resolvedPath))
             {
-                Console.WriteLine($"File not found at resolved path, trying original path: {imagePath}");
-                if (!File.Exists(imagePath))
+                Console.WriteLine($"File not found at resolved path, trying original path: {filePath}");
+                
+                if (!File.Exists(filePath))
                 {
-                    Console.WriteLine($"File not found at original path either: {imagePath}");
+                    Console.WriteLine($"File not found at original path either: {filePath}");
                     return string.Empty;
                 }
-                resolvedPath = imagePath;
+                
+                resolvedPath = filePath;
             }
 
-            using var stream = File.OpenRead(resolvedPath);
+            await using var stream = File.OpenRead(resolvedPath);
             using var sha256 = SHA256.Create();
             var hashBytes = await sha256.ComputeHashAsync(stream);
+            
             return Convert.ToHexString(hashBytes);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error calculating hash for image {imagePath}: {ex.Message}");
+            Console.WriteLine($"Error calculating hash for file {filePath}: {ex.Message}");
             return string.Empty;
         }
     }

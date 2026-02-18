@@ -219,7 +219,7 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
-    public static bool IsCorruptedWord(DocumentLineWord? word, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedWord(DocumentLineWord? word, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
         if (word == null)
         {
@@ -308,14 +308,15 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             word.Text,
+            isOcr,
             unacceptableIncorrectValue);
         
         return isCorrupt;
     }
     
-    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedLine(List<DocumentLineWord?>? words, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
-        if (words == null)
+        if (!isOcr || words == null)
         {
             return false;
         }
@@ -374,6 +375,7 @@ public static partial class DataHelper
         
         var isCorrupt = IsCorruptedText(
             string.Join(' ', words.Select(w => w?.Text)),
+            isOcr,
             unacceptableIncorrectValue);
         
         return isCorrupt;
@@ -402,9 +404,9 @@ public static partial class DataHelper
             && ch != '*';
     }
     
-    public static bool IsCorruptedText(string? line, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedText(string? line, bool isOcr, double unacceptableIncorrectValue = 50.01)
     {
-        if (string.IsNullOrEmpty(line))
+        if (!isOcr || string.IsNullOrEmpty(line))
         {
             return false;
         }

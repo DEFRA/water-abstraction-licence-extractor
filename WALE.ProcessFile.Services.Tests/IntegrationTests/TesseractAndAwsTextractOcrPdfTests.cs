@@ -16,7 +16,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 // These tests are slow as we are limited to one scan per second from AWS Textract by default
-[Collection("AWS Textract")]
+[Collection("AWS Textract 2")]
 public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     : IClassFixture<SingletonAwsTextractFixture>
 {
@@ -42,8 +42,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             textractFixture.Instance
         },
         CacheService,
@@ -54,8 +54,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
             textractFixture.Instance
         },
         CacheService,
@@ -71,9 +71,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     };
     
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
-    
-    private static string PdfFolder => TestConfig.PdfFolder;
-    
+
+    private LookupConfiguration LookupConfiguration => new(
+        LabelConfiguration.GetLabels(),
+        _fileLicenceMapping,
+        textractFixture.FirstNamesCsv,
+        3);
+
     private Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
         var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
@@ -81,10 +85,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         return pdfExtractor.GetMatchesAsync(
             folder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                _fileLicenceMapping,
-                3),
+            LookupConfiguration,
             [folder + fileName],
             0);
     }
@@ -165,7 +166,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -232,7 +234,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -320,7 +323,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -356,13 +360,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
     [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
     [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133")]
-    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 13, 0, "1/25/02/141")]
+    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 14, 0, "1/25/02/141")]
     [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120")] // TODO looks a bit wrong
     [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 0, "1/24/01/034")]
     [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 7, 0, "1/25/02/023")]
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167")]
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 14, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 15, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
     [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298")]
     [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141")]
     [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001")]
@@ -396,7 +400,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             [],
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            0);
+            0,
+            LookupConfiguration);
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLicenceNumber, licence.LicenceNumber);
@@ -443,7 +448,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldData,
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
-            0);
+            0,
+            LookupConfiguration);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);

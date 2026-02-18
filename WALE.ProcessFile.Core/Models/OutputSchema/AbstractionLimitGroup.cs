@@ -2,11 +2,11 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public class AbstractionLimitGroup
+public class AbstractionLimitGroup : PeriodAndPointRestricted
 {
     public TimePeriod? TimePeriod { get; set; }
     
-    public List<AggregateAbstractionLimit> Limits { get; init; } = [];
+    public List<AbstractionLimit> Limits { get; init; } = [];
     
     public static AbstractionLimitGroup Template => new()
     {
@@ -17,6 +17,6 @@ public class AbstractionLimitGroup
             Inclusive = true,
             PeriodType = AbstractionPeriodType.SetPeriod
         },
-        Limits = [AggregateAbstractionLimit.Template],
+        Limits = [AbstractionLimit.Template],
     };
 }

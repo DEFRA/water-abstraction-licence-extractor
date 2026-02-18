@@ -77,15 +77,21 @@ public class NoOcrDatabaseTests
         };
 
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
+
+    private LookupConfiguration LookupConfiguration()
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            FileLicenceMapping,
+            CompanyName.GetFirstNamesCsvFromFile(),
+            3);
+    }
     
     private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
     {
         return _pdfDataExtractor.GetMatchesAsync(
             TestConfig.PdfFolder + fileName,
-            new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
-                FileLicenceMapping,
-                3),
+            LookupConfiguration(),
             [TestConfig.PdfFolder + fileName],
             0);
     }
@@ -246,7 +252,8 @@ public class NoOcrDatabaseTests
             _naldData,
             _pdfDataExtractor,
             TestConfig.PdfFolder,
-            0);
+            0,
+            LookupConfiguration());
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

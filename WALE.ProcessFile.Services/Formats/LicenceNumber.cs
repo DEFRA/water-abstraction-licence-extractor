@@ -117,7 +117,7 @@ public partial class LicenceNumber : ILicenceNumberService
         var columnsToProcess = lines
             .Where(l => l != null)
             .SelectMany(l => l!.Columns.Select(c => (Line: l, Column: c)))
-            .Where(x => IsValidColumnForProcessing(x.Column));
+            .Where(x => IsValidColumnForProcessing(x.Column, isOcr));
 
         // Flatten and validate sublines
         var subLinesToProcess = columnsToProcess
@@ -401,10 +401,10 @@ public partial class LicenceNumber : ILicenceNumberService
         return segments1Index == segments1String.Length && segments2Index == segments2String.Length;
     }
 
-    private static bool IsValidColumnForProcessing(DocumentLineColumn column) =>
+    private static bool IsValidColumnForProcessing(DocumentLineColumn column, bool isOcr) =>
         !string.IsNullOrEmpty(column.Text)
         && column.Text.Any(char.IsDigit)
-        && !DataHelper.IsCorruptedText(column.Text);
+        && !DataHelper.IsCorruptedText(column.Text, isOcr);
 
     private static bool IsValidSubLine(string subLine, string fullText) =>
         subLine.Length >= 4

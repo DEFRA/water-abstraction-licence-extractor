@@ -33,14 +33,14 @@ public interface IOutputService
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
     
-    public Task SavePageScreenshotIfDoesntExistAsync(
+    public Task SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
         string pdfFilePath,
         int processRunId);
 
-    public Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
+    public Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun, int regionId);
     

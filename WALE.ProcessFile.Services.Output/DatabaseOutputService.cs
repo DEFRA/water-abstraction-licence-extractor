@@ -147,16 +147,14 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public async Task SavePageScreenshotIfDoesntExistAsync(PdfDocument pdfDocument, int pageNumber, string noOcrServiceName,
-        string pdfFilePath, int processRunId)
+    public async Task SavePageScreenshotAsync(
+        PdfDocument pdfDocument,
+        int pageNumber,
+        string noOcrServiceName,
+        string pdfFilePath,
+        int processRunId)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        var screenshot = await databaseReadService.GetPageScreenshotAsync(pageNumber, pdfFilename, noOcrServiceName);
-
-        if (screenshot != null)
-        {
-            return;
-        }
         
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
@@ -164,7 +162,7 @@ public class DatabaseOutputService(
         {
             var bytes = await GetAsJpegAsync(bitmap);
 
-            await databaseWriteService.SavePageScreenshotIfDoesntExistAsync(
+            await databaseWriteService.SavePageScreenshotAsync(
                 pageNumber,
                 providerName,
                 pdfFilename,
@@ -173,18 +171,12 @@ public class DatabaseOutputService(
         }
     }
 
-    public async Task SaveAllPagesTextIfDoesntExistAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        var data = await databaseReadService.GetAllPagesTextAsync(pdfFilename, noOcrServiceName);
-
-        if (data != null)
-        {
-            return;
-        }
         
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
-        await databaseWriteService.SaveAllPagesTextIfDoesntExistAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
+        await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
     }
 
     public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
@@ -387,7 +379,18 @@ public class DatabaseOutputService(
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);
+
+        if (image == null)
+        {
+            throw new FileNotFoundException("Could not load image");
+        }
+        
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+
+        if (data == null)
+        {
+            throw new FileNotFoundException("Could not encode image");
+        }
         
         await using var stream = new MemoryStream();
         data.SaveTo(stream);

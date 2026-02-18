@@ -11,12 +11,13 @@ public interface INoOcrDataExtractorService
         int processRunId);
     
     public Task<List<DocumentLine>>
-        GetTextLinesFromPdfAsync(
+        GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             PdfDocument pdfDocument,
             ICacheService cacheService,
+            IOutputService outputService,
             int processRunId);
 
-    public Task SavePageScreenshotIfDoesntExistAsync(
+    public Task SavePageScreenshotAsync(
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,

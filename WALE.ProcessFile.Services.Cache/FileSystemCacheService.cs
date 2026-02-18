@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Services.Cache;
 
@@ -48,7 +49,8 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             ImageNumber = imageNumber,
             Filepath = pdfFilePath,
             ProcessRunId = processRunId,
-            Extension = extension
+            Extension = extension,
+            NoOcrServiceName = serviceName
         });
 
         if (bytAry == null)
@@ -190,7 +192,54 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
-    
+
+    public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
+    {
+        var returnDictionary = new Dictionary<int, string>();
+
+        var metadataFileText = await GetNoOcrPagesMetadataAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                Filepath = request.Filepath,
+                NoOcrServiceName = request.NoOcrServiceName,
+                ProcessRunId = request.ProcessRunId
+            });
+
+        if (string.IsNullOrEmpty(metadataFileText))
+        {
+            return null;
+        }
+        
+        var pagesTextMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            metadataFileText!,
+            JsonHelper.GetSerializerOptions())!;
+
+        var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
+        
+        for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
+        {
+            var pageRequest = new NoOcrServicePageCacheRequest
+            {
+                PageNumber = pageNumber,
+                NoOcrServiceName = request.NoOcrServiceName,
+                ProcessRunId = request.ProcessRunId,
+                Filepath = request.Filepath
+            };
+            
+            var outputFilename = await GetNoOcrPageReferenceAsync(pageRequest);
+            var existsInCache = File.Exists(outputFilename);
+
+            if (!existsInCache)
+            {
+                continue;
+            }
+            
+            returnDictionary.Add(pageNumber, await File.ReadAllTextAsync(outputFilename));
+        }
+        
+        return returnDictionary;
+    }
+
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
@@ -302,7 +351,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         await File.WriteAllBytesAsync(filePath, bytes);
     }
     
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -334,17 +383,19 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<TextBlock> pageLines)
+        List<MinimalTextBlock> pageLines)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
         var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";
+
+        var data = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         
         await File.WriteAllTextAsync(
             outputFilename,
-            JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
+            data);
         
         return request;
     }
@@ -420,6 +471,15 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return File.WriteAllTextAsync(
             outputFilename,
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
+    }
+
+    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    {
+        return BaseCacheService.GetMetadataAsync(
+            this,
+            pdfFilePath,
+            noOcrServiceName,
+            processRunId);
     }
 
     private string GetFolderPath(string pdfFilePath)

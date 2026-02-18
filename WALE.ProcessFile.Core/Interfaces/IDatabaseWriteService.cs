@@ -17,16 +17,16 @@ public interface IDatabaseWriteService
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, string pdfFilePath, int processRunId);
 
-    public Task SavePageScreenshotIfDoesntExistAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
+    public Task SavePageScreenshotAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
         byte[] data, int processRunId);
 
-    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string pageLines, int processRunId);
+    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
     Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
     
     Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr, int processRunId);
    
-    Task SaveAllPagesTextIfDoesntExistAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId);
+    Task SaveAllPagesTextAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId);
 
     Task SaveImageOnPageAsync(
         byte[] bytes,

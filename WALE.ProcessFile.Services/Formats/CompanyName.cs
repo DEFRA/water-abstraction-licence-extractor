@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
@@ -15,6 +16,7 @@ public static class CompanyName
         LabelToMatch label,
         bool lineNumbersAreDescending,
         bool isOcr,
+        LookupConfiguration? lookupConfiguration,
         out IReadOnlyList<DocumentLine>? matchedLines)
     {
         // TODO get rid of any dates in here (d/m/yy)
@@ -30,7 +32,7 @@ public static class CompanyName
             {
                 continue;
             }
-
+            
             var anyLineMatch = false;
             var newColumns = new List<DocumentLineColumn>();
             
@@ -42,7 +44,7 @@ public static class CompanyName
                     continue;
                 }
             
-                if (DataHelper.IsCorruptedText(column.Text))
+                if (DataHelper.IsCorruptedText(column.Text, isOcr))
                 {
                     newColumns.Add(column);
                     
@@ -61,8 +63,8 @@ public static class CompanyName
                     ? AutoCorrectHelper.AutoCorrectText(text, true, false)
                     : text;
                 
-                if (DataHelper.IsCorruptedText(correctedText)
-                    || !TryGetCompanyOrPersonalName(correctedText, label, out var companyOrPersonalName))
+                if (DataHelper.IsCorruptedText(correctedText, isOcr)
+                    || !TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -76,7 +78,7 @@ public static class CompanyName
                     ? AutoCorrectHelper.AutoCorrectText(correctedText, true, label.AutoCorrect)
                     : text;
             
-                if (!TryGetCompanyOrPersonalName(correctedText, label, out companyOrPersonalName))
+                if (!TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -171,6 +173,7 @@ public static class CompanyName
     public static bool TryGetCompanyOrPersonalName(
         string? lineText,
         LabelToMatch label,
+        LookupConfiguration? lookupConfiguration,
         out string? matchedCompanyOrPersonalName)
     {
         matchedCompanyOrPersonalName = null;
@@ -203,7 +206,7 @@ public static class CompanyName
 
         if (looksLikeNameWithInitials && !lineText.Contains('"'))
         {
-            matchedCompanyOrPersonalName = lineText;            
+            matchedCompanyOrPersonalName = lineText;
             return true;
         }
         
@@ -212,14 +215,14 @@ public static class CompanyName
             out var delimiter);
         
         if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText)
-            || ContainsCompanyOrPersonalWord(lineText)
+            || ContainsCompanyOrPersonalWord(lineText, lookupConfiguration!.ValidLowercaseFirstNames)
             || containsDelimitter)
         {
             if (EndsWithNoneCompanyOrPersonalSuffix(lineText))
             {
                 return false;
             }
-
+            
             var text = lineText;
             
             if (containsDelimitter)
@@ -246,7 +249,7 @@ public static class CompanyName
         return false;
     }
     
-    private static bool ContainsCompanyOrPersonalWord(string? text)
+    private static bool ContainsCompanyOrPersonalWord(string? text, HashSet<string> firstNamesCsv)
     {
         if (text == null)
         {
@@ -256,7 +259,7 @@ public static class CompanyName
         var textParts = text.Split(' ');
         var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
         
-        foreach (var name in FirstNamesCsv)
+        foreach (var name in firstNamesCsv)
         {
             if (text.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase)
                 || secondWordString?.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase) == true)
@@ -329,38 +332,27 @@ public static class CompanyName
                 || char.IsDigit(text.Last()));
     }
     
-    private static HashSet<string>? firstNamesCsv { get; set; }
-
-    private static HashSet<string> FirstNamesCsv
+    public static HashSet<string> GetFirstNamesCsvFromFile()
     {
-        get
-        {
-            if (firstNamesCsv != null)
-            {
-                return firstNamesCsv;
-            }
+        var returnList = new HashSet<string>();
 
-            var returnList = new HashSet<string>();
-
-            using var reader = new StreamReader("Data/first-names.csv");
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var dtStart = DateTime.Now;
+        
+        using var reader = new StreamReader("Data/first-names.csv");
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        
+        var records = csv.GetRecords<FirstNamesRow>()
+            .Select(record => record.FirstForename!.ToLower())
+            .ToList();
             
-            var records = csv.GetRecords<FirstNamesRow>().ToList();
-                
-            foreach (var name in records.Select(record => record.FirstForename))
-            {
-                if (FirstNameAvoidWords.Contains(name!.ToLower())
-                    || name.Length <= 2)
-                {
-                    continue;
-                }
-                
-                returnList.Add(name);
-            }
-
-            firstNamesCsv = returnList;
-            return firstNamesCsv;
+        foreach (var nameLowercase in records
+            .Where(name => name.Length > 2 && !FirstNameAvoidWords.Contains(name)))
+        {
+            returnList.Add(nameLowercase);
         }
+
+        Console.WriteLine($"Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+        return returnList;
     }
     
     private static readonly List<string> Suffixes =
@@ -371,7 +363,7 @@ public static class CompanyName
         " street"
     ];
     
-    private static readonly List<string> FirstNameAvoidWords =
+    private static readonly HashSet<string> FirstNameAvoidWords =
     [
         "the", // Too generic
         "po", // PO box

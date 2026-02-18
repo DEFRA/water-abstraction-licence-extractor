@@ -435,7 +435,20 @@ public static class FormattingHelper
         
         return outputString;
     }
-    
+
+    private static bool IsMdLicenceNumber(string? licenceNumber, int regionCode)
+    {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return false;
+        }
+        
+        return licenceNumber.StartsWith("MD")
+            || licenceNumber.StartsWith("18/")
+            || licenceNumber.StartsWith("03/")
+            || licenceNumber.StartsWith("3/");            
+    }
+
     private static bool IsNeLicenceNumber(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber))
@@ -443,6 +456,11 @@ public static class FormattingHelper
             return false;
         }
 
+        if (!licenceNumber.Contains('/') && (licenceNumber.Contains(' ') || licenceNumber.Contains('.')))
+        {
+            return false;
+        }
+        
         if (licenceNumber[0] is 'm' or 'M' || licenceNumber[1] is 'd' or 'D')
         {
             return false;
@@ -476,6 +494,50 @@ public static class FormattingHelper
         }
 
         return regionCode == 3;
+    }
+
+    public static bool? IsValidLicenceNumber(string licenceNumber, int regionCode)
+    {
+        if (regionCode != 3)
+        {
+            return null;
+        }
+
+        var siblingRegions = SiblingRegions(regionCode);
+        var allRelevantRegions = siblingRegions.ToList();
+        allRelevantRegions.Add(regionCode);
+
+        foreach (var region in allRelevantRegions)
+        {
+            if (region == 2 && IsMdLicenceNumber(licenceNumber, regionCode))
+            {
+                return true;
+            }
+            
+            if (region == 3 && IsNeLicenceNumber(licenceNumber, regionCode))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static List<int> SiblingRegions(int regionCode)
+    {
+        if (regionCode == 2)
+        {
+            // North East region
+            return [3];
+        }
+        
+        if (regionCode == 3)
+        {
+            // Midlands region
+            return [2];
+        }
+
+        return [];
     }
     
     public static string? NoneSeperatedToNaldLicenceNumber(string? noneSeperatedLicenceNumber, int regionCode)

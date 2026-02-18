@@ -50,16 +50,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         },
@@ -102,16 +102,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         },
@@ -155,16 +155,16 @@
           ],
           "limits": [
             {
-              "isAverage": false,
               "periodType": "perDay",
               "value": 475,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             },
             {
-              "isAverage": false,
               "periodType": "perYear",
               "value": 173453,
-              "units": "cubic metres"
+              "units": "cubic metres",
+              "isAverage": false
             }
           ]
         }
@@ -216,22 +216,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -278,16 +278,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -353,7 +353,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false
@@ -402,22 +403,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -462,16 +463,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -535,7 +536,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false,
@@ -585,22 +587,22 @@
           {
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perHour",
                 "value": 20,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -646,16 +648,16 @@
             ],
             "limits": [
               {
-                "isAverage": false,
                 "periodType": "perDay",
                 "value": 475,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               },
               {
-                "isAverage": false,
                 "periodType": "perYear",
                 "value": 173453,
-                "units": "cubic metres"
+                "units": "cubic metres",
+                "isAverage": false
               }
             ]
           }
@@ -720,7 +722,8 @@
         "issuedToCertainty": 99,
         "ocr": "OCR",
         "servicesUsed": [
-          "PdfPig"
+          "PdfPig",
+          "Docnet"
         ]
       },
       "licenceFoundInList": false

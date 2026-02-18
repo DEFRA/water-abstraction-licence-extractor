@@ -13,6 +13,8 @@ public interface IDatabaseReadService
     
     Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
     
+    public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
+    
     Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);

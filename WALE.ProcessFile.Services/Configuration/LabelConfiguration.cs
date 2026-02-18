@@ -11,13 +11,13 @@ public static class LabelConfiguration
         return
         [
             ("Company", GetCompanyNameLabels()),
-            ("LicenceNumber", GetLicenceNumberLabels()),
+            ("LicenceNumber", SharedLabels.GetLicenceNumberLabels()),
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
             ("AbstractionLimits", GetAbstractionLimitsLabels()),
             ("Purpose", GetPurposeLabels()),
             ("Points", GetPointsLabels()),
-            ("DateOfIssue", GetDateOfIssueLabels()),
+            ("DateOfIssue", SharedLabels.GetDateOfIssueLabels()),
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
             ("DateEffective", GetDateEffectiveLabels()),
             ("DateOfExpiry", GetDateOfExpiryLabels()),
@@ -54,7 +54,8 @@ public static class LabelConfiguration
                     new("9. Further conditions"),
                     new("9. Further provisions"),
                     new("10. Further conditions"),
-                    new("10. Further provisions"),                    
+                    new("10. Further provisions"),
+                    new("10 Further provisions") { LineMustStartWith = true },                 
                     new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
@@ -135,6 +136,8 @@ public static class LabelConfiguration
                     new("IMPORTANT NOTES[END_OF_LINE]") { LineMustStartWith = true },
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -202,6 +205,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
                     new("[END_OF_BLOCK]")
@@ -301,6 +306,8 @@ public static class LabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [
@@ -409,7 +416,7 @@ public static class LabelConfiguration
                 TextStart =
                 [
                     new("10. FURTHER PROVISIONS[END_OF_LINE]"),
-                    new("10 FURTHER PROVISIONS"),
+                    new("10 FURTHER PROVISIONS") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
@@ -607,72 +614,6 @@ public static class LabelConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ApplicableToMost,
                 IncludeStartLabelText = true
-            }
-        ];
-    }
-
-    private static List<LabelToMatch> GetDateOfIssueLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Name = "DateOfIssue",
-                Format = "DateOrPurpose",
-                Text =
-                [
-                    new("Date of issue..."),
-                    new("Date of issue ..."),
-                    new("Date of Issue")
-                ],
-                PreviousLinesToFetch = 1,
-                NextLinesToFetch = 1,
-                Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
-                Remove = [
-                    new("...")
-                ],
-                IgnoreMatchIfContains = [
-                    "Date effective"
-                ]
-            },
-            new LabelToMatch
-            {
-                Name = "DateOfIssueOldStyle",
-                Format = "Text",
-                Text =
-                [
-                    new("'DATED THIS") { ColumnMustStartWith = true },
-                    new("DATED THIS") { ColumnMustStartWith = true },
-                    new("DATE THIS") { ColumnMustStartWith = true }
-                ],
-                Remove = [
-                    new("DATED THIS"),
-                    new("DATE THIS")
-                ],
-                MustContain = [
-                    new("Jan"),
-                    new("Feb"),
-                    new("Mar"),
-                    new("Apr"),
-                    new("May"),
-                    new("Nay"), //Misreading
-                    new("Hay"), //Misreading                    
-                    new("Jun"),
-                    new("Jul"),
-                    new("Aug"),
-                    new("Sep"),
-                    new("Oct"),
-                    new("Nov"),
-                    new("Dec")
-                ],
-                IgnoreMatchIfContains = [
-                    "Date effective"
-                ],
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Position = LabelPosition.ApplicableToMost,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
             }
         ];
     }
@@ -1211,50 +1152,6 @@ public static class LabelConfiguration
                         ]
                     }
                 ]
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetLicenceNumberLabels()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("licence serial no:"),
-                    new("licence serial no."),
-                    new("serial no."),
-                    new("Serial ") { LineMustStartWith = true },
-                    new("ref. no. "),
-                    new("Reference No."),
-                    new("Reference Number "),
-                    new("licence no: "),
-                    new("licence no."),
-                    new("Licence number: ")
-                ],
-                Remove = [
-                    new("Licence ")
-                ],
-                Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFirstServiceResult,
-                Format = LicenceNumber.Constant,
-                Name = "DocumentLicenceNumber",
-                PreviousLinesToFetch = 2,
-                NextLinesToFetch = 1
-            },
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Hampshire Ref")
-                ],
-                Position = LabelPosition.LabelIsAfterTextToFind,
-                Format = LicenceNumber.Constant,
-                Name = "DocumentLicenceNumberHampshire",
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0
             }
         ];
     }
@@ -1957,7 +1854,7 @@ public static class LabelConfiguration
                             }
                         ]
                     },
-                    GetLinkedLicenceAbstractionAndOrPointsLimits(),
+                    GetLinkedLicenceNumber("LinkedLicenceNumber"),
                     new()
                     {
                         Name = "LinkedLicenceFilename",
@@ -2092,6 +1989,37 @@ public static class LabelConfiguration
                         MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
                     },
+                    new()
+                    {
+                        Name = "Per5YearUnits",
+                        CategoryName = "PerUnits",
+                        Text =
+                        [
+                            new("consecutive five year"),
+                            new("five consecutive years")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
+                        Format = "Units",
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        Possibilities = new List<string>
+                        {
+                            "megalitres",
+                            "litres",
+                            "thousand cubic metres",
+                            "cubic metres",
+                            "cubic meters",
+                            "cubic metre",
+                            "cubic meter",
+                            "m\u00b3", // m3
+                            "megagallons",
+                            "thousand gallons",
+                            "million gallons",
+                            "gallons"
+                        },
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },                    
                     new()
                     {
                         Name = "PerSecondUnits",
@@ -2262,6 +2190,40 @@ public static class LabelConfiguration
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",
                         RelatedName = "PerYearUnits",
+                        Format = "Number",
+                        Remove =
+                        [
+                            new("6.1"),
+                            new("6.2"),
+                            new("6.3"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        IgnoreMatchIfContains =
+                        [
+                            "(1)",
+                            "(11)",
+                            "(111)"
+                        ],
+                        PreviousLinesToFetch = 1,
+                        NextLinesToFetch = 1,
+                        MultipleBehaviour = MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
+                        FindMultipleOnSingleLine = true
+                    },
+                    new()
+                    {
+                        Name = "Per5YearValue",
+                        CategoryName = "PerValue",
+                        Text =
+                        [
+                            new("consecutive five year"),
+                            new("five consecutive years")
+                        ],
+                        Position = LabelPosition.RelatedCategoryPosition,
+                        RelatedCategoryName = "PerUnits",
+                        RelatedName = "Per5YearUnits",
                         Format = "Number",
                         Remove =
                         [

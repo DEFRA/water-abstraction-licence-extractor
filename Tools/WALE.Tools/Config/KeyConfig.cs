@@ -14,15 +14,15 @@ public static class KeyConfig
             {
                 return _config;
             }
-
+            
             _config = new ConfigurationBuilder()
                 .AddUserSecrets<Program>()
                 .Build();
-
+            
             return _config;
         }
     }
-
+    
     private static string? _pdfFolder;
 
     public static string PdfFolder
@@ -33,12 +33,28 @@ public static class KeyConfig
             {
                 return _pdfFolder;
             }
-
+            
             _pdfFolder = Config["PdfFolder"]!;
             return _pdfFolder;
         }
     }
+    
+    private static string? _pdfFolder5;
 
+    public static string PdfFolder5
+    {
+        get
+        {
+            if (_pdfFolder5 != null)
+            {
+                return _pdfFolder5;
+            }
+            
+            _pdfFolder5 = Config["PdfFolder5"]!;
+            return _pdfFolder5;
+        }
+    }
+    
     private static string? _aiVisionEndpoint;
 
     public static string AiVisionEndpoint
@@ -49,12 +65,12 @@ public static class KeyConfig
             {
                 return _aiVisionEndpoint;
             }
-
+            
             _aiVisionEndpoint = Config["AiVisionEndpoint"]!;
             return _aiVisionEndpoint;
         }
     }
-
+    
     private static string? _aiVisionKey;
 
     public static string AiVisionKey
@@ -65,12 +81,12 @@ public static class KeyConfig
             {
                 return _aiVisionKey;
             }
-
+            
             _aiVisionKey = Config["AiVisionKey"]!;
             return _aiVisionKey;
         }
     }
-
+    
     private static string? _openAiEndpoint;
 
     public static string OpenAiEndpoint
@@ -81,12 +97,12 @@ public static class KeyConfig
             {
                 return _openAiEndpoint;
             }
-
+            
             _openAiEndpoint = Config["OpenAiEndpoint"]!;
             return _openAiEndpoint;
         }
     }
-
+    
     private static string? _openAiKey;
 
     public static string OpenAiKey
@@ -97,12 +113,12 @@ public static class KeyConfig
             {
                 return _openAiKey;
             }
-
+            
             _openAiKey = Config["OpenAiKey"]!;
             return _openAiKey;
         }
     }
-
+    
     private static string? _tesseractPrefix;
 
     public static string TesseractPrefix
@@ -113,12 +129,12 @@ public static class KeyConfig
             {
                 return _tesseractPrefix;
             }
-
+            
             _tesseractPrefix = Config["TESSDATA_PREFIX"]!;
             return _tesseractPrefix;
         }
     }
-
+    
     private static string? _outputFolder;
 
     public static string OutputFolder
@@ -129,12 +145,12 @@ public static class KeyConfig
             {
                 return _outputFolder;
             }
-
+            
             _outputFolder = Config["OutputFolder"]!;
             return _outputFolder;
         }
     }
-
+    
     private static string? _cacheFolder;
 
     public static string CacheFolder
@@ -145,7 +161,7 @@ public static class KeyConfig
             {
                 return _cacheFolder;
             }
-
+            
             _cacheFolder = Config["CacheFolder"]!;
             return _cacheFolder;
         }
@@ -223,6 +239,22 @@ public static class KeyConfig
             
             _postgresPassword = Config["POSTGRESQL_PASSWORD"]!;
             return _postgresPassword;
+        }
+    }
+
+    private static string? _pdfFolderForDuplicates;
+
+    public static string PdfFolderForDuplicates
+    {
+        get
+        {
+            if (_pdfFolderForDuplicates != null)
+            {
+                return _pdfFolderForDuplicates;
+            }
+            
+            _pdfFolderForDuplicates = Config["PdfFolderForDuplicates"]!;
+            return _pdfFolderForDuplicates;
         }
     }
 

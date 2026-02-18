@@ -49,7 +49,7 @@ public static class OcrHelper
             .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
             .Where(word => !string.IsNullOrEmpty(word?.Text))
             .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
-            .Where(word => !DataHelper.IsCorruptedWord(word))
+            .Where(word => !DataHelper.IsCorruptedWord(word, true))
             .ToList();
         
         // 0b. Remove tiny words
@@ -448,7 +448,7 @@ public static class OcrHelper
 
         var noneCorruptOrEmptyLines = inputLines
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
-            .Where(line => !DataHelper.IsCorruptedLine(line.Words, unacceptableIncorrectValue))
+            .Where(line => !DataHelper.IsCorruptedLine(line.Words, true, unacceptableIncorrectValue))
             .ToList();
         
         var groupedLines = noneCorruptOrEmptyLines
@@ -598,7 +598,7 @@ public static class OcrHelper
 
                 return documentLine;
             })
-            .Where(line => !DataHelper.IsCorruptedText(line.Text, unacceptableIncorrectValue))
+            .Where(line => !DataHelper.IsCorruptedText(line.Text, true, unacceptableIncorrectValue))
             .ToList();
 
         return groupedLines;

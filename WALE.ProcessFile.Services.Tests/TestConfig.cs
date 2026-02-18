@@ -88,6 +88,22 @@ public static class TestConfig
         }
     }
     
+    private static string? _pdfFolder5;
+
+    public static string PdfFolder5
+    {
+        get
+        {
+            if (_pdfFolder5 != null)
+            {
+                return _pdfFolder5;
+            }
+            
+            _pdfFolder5 = Config["PdfFolder5"]!;
+            return _pdfFolder5;
+        }
+    }
+    
     private static string? _aiVisionEndpoint;
 
     public static string AiVisionEndpoint

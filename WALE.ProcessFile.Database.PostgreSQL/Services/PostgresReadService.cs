@@ -2,8 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
-using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -64,6 +64,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
+        
         const string sql = """
                            SELECT data 
                            FROM no_ocr_page_text_cache 
@@ -83,6 +84,51 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.PageNumber,
                 request.NoOcrServiceName
             });
+    }
+
+    public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        
+        const string sql = """
+                           SELECT
+                                page_number
+                                , data 
+                           FROM no_ocr_page_text_cache 
+                           WHERE
+                               filename = @Filename
+                               AND no_ocr_service_name = @NoOcrServiceName;
+                           """;
+
+        var results = await QueryAsync<(int, string)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Filename = request.Filepath,
+                request.NoOcrServiceName
+            });
+
+        var resultList = results.ToList();
+        if (resultList.Count == 0)
+        {
+            return null;
+        }
+        
+        var returnDict = new Dictionary<int, string>();
+
+        foreach (var (pageNumber, data) in resultList)
+        {
+            if (!returnDict.TryAdd(pageNumber, data))
+            {
+                // TODO some weird circumstance meant that certain (not all) pages were repeated
+                // PROBABLY because of retry logic (might be limited to Ryan's machine)
+                Console.WriteLine($"WARNING - Page number {pageNumber} is duplicated in {request.Filepath}");
+            }
+        }
+        
+        return returnDict;
     }
 
     public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)
@@ -1052,7 +1098,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.QuerySingleOrDefaultAsync<T>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.QuerySingleOrDefaultAsync<T>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -1066,6 +1124,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
+            Console.WriteLine("WARNING QuerySingleOrDefaultAsync retrying");
+            
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
@@ -1075,7 +1135,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         try
         {
-            return await connection.QueryAsync<T>(sql, param);
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            
+            var result = await connection.QueryAsync<T>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
         }
         catch (NpgsqlException ex)
         {
@@ -1089,13 +1161,27 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
+            Console.WriteLine("WARNING QueryAsync retrying");
+            
             await RetryHelper.WaitWithMessageAsync(retryNumber);
             return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
-    
+
     private NpgsqlConnection GetPostgresConnection()
-        => dataSourceProvider.DataSource.CreateConnection();
+    {
+        var dtStart = DateTime.Now;
+        
+        var conn = dataSourceProvider.DataSource.OpenConnection();
+        var duration =  DateTime.Now - dtStart;
+
+        if (duration.TotalSeconds > 1)
+        {
+            Console.WriteLine($"WARNING OpenConnection took {duration.TotalMilliseconds}ms");
+        }
+
+        return conn;
+    }
 
     // TODO move to a 'Core' layer
     private static JsonSerializerOptions GetSerializerOptions() =>

@@ -858,31 +858,44 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             .ToHashSet();
     }
 
-    public async Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
+    public async Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
                                "ID" AS Id,
                                "LIC_NO" AS LicenceNo,
+                               "AREP_SUC_CODE" AS ArepSucCode,
+                               "AREP_AREA_CODE" AS ArepAreaCode,
+                               "SUSP_FROM_BILLING" AS SuspFromBilling,
+                               "AREP_LEAP_CODE" AS ArepLeapCode,
                                "EXPIRY_DATE" AS ExpiryDate,
                                "ORIG_EFF_DATE" AS OrigEffectiveDate,
                                "ORIG_SIG_DATE" AS OrigSignatureDate,
+                               "ORIG_APP_NO" AS OrigAppNo,
+                               "ORIG_LIC_NO" AS OrigLicNo,
+                               "NOTES" AS Notes,
                                "REV_DATE" AS RevDate,
                                "LAPSED_DATE" AS LapsedDate,
+                               "SUSP_FROM_RETURNS" AS SuspFromReturns,
+                               "AREP_CAMS_CODE" AS ArepCamsCode,
+                               "X_REG_IND" AS XRegInd,
+                               "PREV_LIC_NO" AS PrevLicNo,
+                               "FOLL_LIC_NO" AS FollLicNo,
+                               "AREP_EIUC_CODE" AS ArepEiucCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LICENCES"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
                            """;
 
-        return (await QueryAsync<NaldAbstractionLicenceCsvLine>(
+        return (await QueryAsync<NaldAbstractionLicenceDataLine>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicenceVersionCsvLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -893,76 +906,169 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "AABV_TYPE" AS AabvType,
                                "EFF_ST_DATE" AS EffStDate,
                                "STATUS" AS Status,
+                               "RETURNS_REQ" AS ReturnsReq,
+                               "CHARGEABLE" AS Chargeable,
+                               "ASRC_CODE" AS AsrcCode,
+                               "ACON_APAR_ID" AS AconAparId,
+                               "ACON_AADD_ID" AS AconAaddId,
+                               "ALTY_CODE" AS AltyCode,
+                               "ACCL_CODE" AS AcclCode,
+                               "MULTIPLE_LH" AS MultipleLh,
                                "LIC_SIG_DATE" AS LicSigDate,
+                               "APP_NO" AS AppNo,
+                               "LIC_DOC_FLAG" AS LicDocFlag,
                                "EFF_END_DATE" AS EffEndDate,
+                               "EXPIRY_DATE1" AS ExpiryDate1,
+                               "WA_ALTY_CODE" AS WaAltyCode,
+                               "VOL_CONV" AS VolConv,
+                               "WRT_CODE" AS WrtCode,
+                               "DEREG_CODE" AS DeregCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
-                             AND "STATUS" = 'CURR'
+                             AND "ISSUE_NO" = (
+                                 SELECT max(lic_ver_subquery."ISSUE_NO")
+                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
+                                 WHERE lic_ver_subquery."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                                   AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                                   AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                                   AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
+                                   AND lic_ver_subquery."STATUS" <> 'DRAFT'
+                             )
+                             AND "INCR_NO" = (
+                                 SELECT max(lic_ver_subquery_2."INCR_NO")
+                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery_2
+                                 WHERE lic_ver_subquery_2."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                                   AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                                   AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                                   AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
+                                   AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
+                             )
+                             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
                            """;
 
-        return (await QueryAsync<NaldLicenceVersionCsvLine>(
+        return (await QueryAsync<NaldLicenceVersionDataLine>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicencePurposeCsvLine>> GetNaldLicencePurposesAsync(short regionCode)
+    public async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
-                               "ID" AS Id,
-                               "AABV_AABL_ID" AS AabvAablId,
-                               "APUR_APSE_CODE" AS ApurApseCode,
-                               "APUR_APUS_CODE" AS ApurApusCode,
-                               "PERIOD_ST_DAY" AS PeriodStartDay,
-                               "PERIOD_ST_MONTH" AS PeriodStartMonth,
-                               "PERIOD_END_DAY" AS PeriodEndDay,
-                               "PERIOD_END_MONTH" AS PeriodEndMonth,
-                               "ANNUAL_QTY" AS AnnualQty,
-                               "ANNUAL_QTY_USABILITY" AS AnnualQtyUnits,
-                               "DAILY_QTY" AS DailyQty,
-                               "DAILY_QTY_USABILITY" AS DailyQtyUnits,
-                               "HOURLY_QTY" AS HourlyQty,
-                               "HOURLY_QTY_USABILITY" AS HourlyQtyUnits,
-                               "INST_QTY" AS InstQty,
-                               "INST_QTY_USABILITY" AS InstQtyUnits,
-                               "FGAC_REGION_CODE" AS FgacRegionCode
-                           FROM nald."NALD_ABS_LIC_PURPOSES"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                               p."ID" AS Id,
+                               p."AABV_AABL_ID" AS AabvAablId,
+                               p."AABV_ISSUE_NO" AS AabvIssueNo,
+                               p."AABV_INCR_NO" AS AabvIncrNo,
+                               p."APUR_APPR_CODE" AS ApurApprCode,
+                               p."APUR_APSE_CODE" AS ApurApseCode,
+                               p."APUR_APUS_CODE" AS ApurApusCode,
+                               p."PERIOD_ST_DAY" AS PeriodStartDay,
+                               p."PERIOD_ST_MONTH" AS PeriodStartMonth,
+                               p."PERIOD_END_DAY" AS PeriodEndDay,
+                               p."PERIOD_END_MONTH" AS PeriodEndMonth,
+                               p."AMOM_CODE" AS AmomCode,
+                               p."ANNUAL_QTY" AS AnnualQty,
+                               p."ANNUAL_QTY_USABILITY" AS AnnualQtyUsability,
+                               p."DAILY_QTY" AS DailyQty,
+                               p."DAILY_QTY_USABILITY" AS DailyQtyUsability,
+                               p."HOURLY_QTY" AS HourlyQty,
+                               p."HOURLY_QTY_USABILITY" AS HourlyQtyUsability,
+                               p."INST_QTY" AS InstQty,
+                               p."INST_QTY_USABILITY" AS InstQtyUsability,
+                               p."TIMELTD_ST_DATE" AS TimeLtdStartDate,
+                               p."TIMELTD_END_DATE" AS TimeLtdEndDate,
+                               p."LANDS" AS Lands,
+                               p."AREC_CODE" AS ArecCode,
+                               p."DISP_ORD" AS DispOrd,
+                               p."NOTES" AS Notes,
+                               p."FGAC_REGION_CODE" AS FgacRegionCode,
+                               pp."DESCR" AS PurpPrimDescr,
+                               ps."DESCR" AS PurpSecDescr,
+                               pu."DESCR" AS PurpUseDescr
+                           FROM nald."NALD_ABS_LIC_PURPOSES" p
+                           JOIN nald."NALD_PURP_PRIMS" pp
+                               ON p."APUR_APPR_CODE" = pp."CODE"
+                           JOIN nald."NALD_PURP_SECS" ps
+                               ON p."APUR_APSE_CODE" = ps."CODE"
+                           JOIN nald."NALD_PURP_USES" pu
+                               ON p."APUR_APUS_CODE" = pu."CODE"
+                           WHERE p."FGAC_REGION_CODE" = @RegionCode
                            """;
 
-        return (await QueryAsync<NaldLicencePurposeCsvLine>(
+        return (await QueryAsync<NaldLicencePurposeDataLine>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicencePointCsvLine>> GetNaldLicencePointsAsync(short regionCode)
+    public async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
-                               "AABP_ID" AS AabpId,
-                               "AAIP_ID" AS AaipId,
-                               "AMOA_CODE" AS AmoaCode,
-                               "NOTES" AS Notes,
-                               "FGAC_REGION_CODE" AS FgacRegionCode
-                           FROM nald."NALD_ABS_PURP_POINTS"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                               pp."AABP_ID" AS AabpId,
+                               pp."AAIP_ID" AS AaipId,
+                               pp."AMOA_CODE" AS AmoaCode,
+                               pp."NOTES" AS Notes,
+                               pp."FGAC_REGION_CODE" AS FgacRegionCode,
+                               p."NGR1_SHEET" AS Ngr1Sheet,
+                               p."NGR1_EAST" AS Ngr1East,
+                               p."NGR1_NORTH" AS Ngr1North,
+                               p."CART1_EAST" AS Cart1East,
+                               p."CART1_NORTH" AS Cart1North,
+                               p."LOCAL_NAME" AS LocalName,
+                               p."ASRC_CODE" AS AsrcCode,
+                               p."DISABLED" AS Disabled,
+                               p."LOCAL_NAME_WELSH" AS LocalNameWelsh,
+                               p."NGR2_SHEET" AS Ngr2Sheet,
+                               p."NGR2_EAST" AS Ngr2East,
+                               p."NGR2_NORTH" AS Ngr2North,
+                               p."CART2_EAST" AS Cart2East,
+                               p."CART2_NORTH" AS Cart2North,
+                               p."NGR3_SHEET" AS Ngr3Sheet,
+                               p."NGR3_EAST" AS Ngr3East,
+                               p."NGR3_NORTH" AS Ngr3North,
+                               p."CART3_EAST" AS Cart3East,
+                               p."CART3_NORTH" AS Cart3North,
+                               p."NGR4_SHEET" AS Ngr4Sheet,
+                               p."NGR4_EAST" AS Ngr4East,
+                               p."NGR4_NORTH" AS Ngr4North,
+                               p."CART4_EAST" AS Cart4East,
+                               p."CART4_NORTH" AS Cart4North,
+                               p."AAPC_CODE" AS AapcCode,
+                               p."AAPT_APTP_CODE" AS AaptAptpCode,
+                               p."AAPT_APTS_CODE" AS AaptAptsCode,
+                               p."ABAN_CODE" AS AbanCode,
+                               p."LOCATION_TEXT" AS LocationText,
+                               p."AADD_ID" AS AaddId,
+                               p."DEPTH" AS Depth,
+                               p."WRB_NO" AS WrbNo,
+                               p."BGS_NO" AS BgsNo,
+                               p."REG_WELL_INDEX_REF" AS RegWellIndexRef,
+                               p."HYDRO_REF" AS HydroRef,
+                               p."HYDRO_INTERCEPT_DIST" AS HydroInterceptDist,
+                               p."HYDRO_GW_OFFSET_DIST" AS HydroGwOffsetDist,
+                               p."NOTES" AS PointNotes
+                           FROM nald."NALD_ABS_PURP_POINTS" pp
+                           JOIN nald."NALD_POINTS" p
+                               ON pp."AAIP_ID" = p."ID"
+                               AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
+                           WHERE pp."FGAC_REGION_CODE" = @RegionCode
                            """;
 
-        return (await QueryAsync<NaldLicencePointCsvLine>(
+        return (await QueryAsync<NaldLicencePointDataLine>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicenceQuantitiesCsvLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    public async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -973,12 +1079,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "AABV_INCR_NO" AS AabvIncrNo,
                                "MAX_ANNUAL_QTY" AS MaxAnnualQty,
                                "MAX_DAILY_QTY" AS MaxDailyQty,
+                               "AGGREGATED_IND" AS AggregatedInd,
+                               "PURP_POINTS_IND" AS PurpPointsInd,
+                               "USER_VALID_IND" AS UserValidInd,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
                            """;
 
-        return (await QueryAsync<NaldLicenceQuantitiesCsvLine>(
+        return (await QueryAsync<NaldLicenceQuantitiesDataLine>(
             connection,
             sql,
             0,

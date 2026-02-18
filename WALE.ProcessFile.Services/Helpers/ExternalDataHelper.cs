@@ -1,3 +1,4 @@
+using UglyToad.PdfPig.Writer;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -25,10 +26,10 @@ public static class ExternalDataHelper
         var purposes = await purposesTask;
         var points = await pointsTask;
         var quantities = await quantitiesTask;
-        
+
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
-        
+
         foreach (var line in licences)
         {
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
@@ -60,9 +61,11 @@ public static class ExternalDataHelper
             returnList.Add(key, naldData);
         }
 
+        // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
         AddNaldAbstractionLicenceVersionData(versions, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicenceQuantitiesData(quantities, internalLicenceIdsNotInDataset, ref returnList);
-        var purposeToLicenceMapping = AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
+        var purposeToLicenceMapping =
+            AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
         AddNaldAbstractionLicencePointsData(points, ref purposeToLicenceMapping);
 
         var changedKeyList = new Dictionary<string, List<NaldData>>();
@@ -71,9 +74,9 @@ public static class ExternalDataHelper
         {
             var key = naldData.FgacRegionCode + "|" + naldData.LicenceIdCharsAndDigitsOnly;
 
-            if (changedKeyList.ContainsKey(key))
+            if (changedKeyList.TryGetValue(key, out var value))
             {
-                changedKeyList[key].Add(naldData);
+                value.Add(naldData);
                 continue;
             }
 
@@ -89,162 +92,279 @@ public static class ExternalDataHelper
     }
 
     private static void AddNaldAbstractionLicenceVersionData(
-        List<NaldLicenceVersionCsvLine> lines,
+        List<NaldLicenceVersionDataLine> naldCurrentVersionDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
-        foreach (var line in lines)
+        foreach (var versionDataLine in naldCurrentVersionDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AablId}";
-
-            if (licenceNumbersNotInDataset.Contains(key))
+            if (!generalNaldData.TryGetValue(versionDataLine.LookupKey, out var naldData))
             {
-                continue;
+                throw new KeyNotFoundException(versionDataLine.LookupKey);
             }
 
-            var existingData = generalNaldData.GetValueOrDefault(key);
-
-            if (existingData == null)
-            {
-                throw new KeyNotFoundException(key);
-            }
-
-            if (line.Status != "CURR")
-            {
-                continue;
-            }
-
-            existingData.AabvType = line.AabvType;
-            existingData.EffEndDate = RemoveNullWord(line.EffEndDate);
-            existingData.EffStDate = RemoveNullWord(line.EffStDate);
-            existingData.LicSigDate = RemoveNullWord(line.LicSigDate);
-            existingData.IncrNo = line.IncrNo;
-            existingData.IssueNo = line.IssueNo;
-            existingData.Status = line.Status;
+            naldData.AabvType = versionDataLine.AabvType;
+            naldData.EffEndDate = RemoveNullWord(versionDataLine.EffEndDate);
+            naldData.EffStDate = RemoveNullWord(versionDataLine.EffStDate);
+            naldData.LicSigDate = RemoveNullWord(versionDataLine.LicSigDate);
+            naldData.IncrNo = versionDataLine.IncrNo;
+            naldData.AppNo = versionDataLine.AppNo;
+            naldData.IssueNo = versionDataLine.IssueNo;
+            naldData.Status = versionDataLine.Status;
+            naldData.WaAltyCode = versionDataLine.WaAltyCode;
+            naldData.AsrcCode = versionDataLine.AsrcCode;
         }
     }
 
     private static void AddNaldAbstractionLicenceQuantitiesData(
-        List<NaldLicenceQuantitiesCsvLine> lines,
+        List<NaldLicenceQuantitiesDataLine> naldLicenceQuantitiesDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
-        foreach (var line in lines)
+        foreach (var quantitiesDataLine in naldLicenceQuantitiesDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AabvAablId}";
+            if (!generalNaldData.TryGetValue(quantitiesDataLine.LookupKey, out var naldData))
+            {
+                throw new KeyNotFoundException(quantitiesDataLine.LookupKey);
+            }
 
-            if (licenceNumbersNotInDataset.Contains(key))
+            // Ignore non-current quantity data
+            if (naldData.IncrNo != quantitiesDataLine.AabvIncrNo ||
+                naldData.IssueNo != quantitiesDataLine.AabvIssueNo)
             {
                 continue;
             }
 
-            var existingData = generalNaldData.GetValueOrDefault(key);
-
-            if (existingData == null)
+            naldData.MaxAnnualQty = quantitiesDataLine.MaxAnnualQty;
+            naldData.MaxDailyQty = quantitiesDataLine.MaxDailyQty;
+            naldData.QuantityAggregated = quantitiesDataLine.AggregatedInd;
+            naldData.QuantityUserValid = quantitiesDataLine.UserValidInd;
+            naldData.QuantityPurpPoints = quantitiesDataLine.PurpPointsInd switch
             {
-                throw new KeyNotFoundException(key);
-            }
-
-            existingData.MaxAnnualQty = RemoveNullWord(line.MaxAnnualQty) != null
-                ? double.Parse(line.MaxAnnualQty!)
-                : null;
-
-            existingData.MaxDailyQty = RemoveNullWord(line.MaxDailyQty) != null
-                ? double.Parse(line.MaxDailyQty!)
-                : null;
-        }
-    }
-
-    private static void AddNaldAbstractionLicencePointsData(
-        List<NaldLicencePointCsvLine> lines,
-        ref Dictionary<string, NaldData> purposeToLicenceMapping)
-    {
-        foreach (var line in lines)
-        {
-            var key = $"{line.FgacRegionCode}|{line.AabpId}";
-            var existingData = purposeToLicenceMapping.GetValueOrDefault(key);
-
-            if (existingData == null)
-            {
-                continue;
-            }
-
-            var naldDataPoint = new NaldDataPoint
-            {
-                PointId = int.Parse(line.AaipId!),
-                PointName = line.AmoaCode
+                '1' => "Single Point / Single Purpose",
+                '2' => "Single Point / Multiple Purposes",
+                '3' => "Multiple Points / Single Purpose",
+                '4' => "Multiple Points / Multiple Purposes",
+                _ => "Unknown"
             };
-
-            existingData.Points.Add(naldDataPoint);
         }
     }
 
     private static Dictionary<string, NaldData> AddNaldAbstractionLicencePurposeData(
-        List<NaldLicencePurposeCsvLine> lines,
+        List<NaldLicencePurposeDataLine> naldLicencePurposeDataLines,
         HashSet<string> licenceNumbersNotInDataset,
         ref Dictionary<string, NaldData> generalNaldData)
     {
         var returnDict = new Dictionary<string, NaldData>();
 
-        foreach (var line in lines)
+        foreach (var purposeDataLine in naldLicencePurposeDataLines
+                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LicenceIdLookupKey)))
         {
-            var key = $"{line.FgacRegionCode}|{line.AabvAablId}";
+            if (!generalNaldData.TryGetValue(purposeDataLine.LicenceIdLookupKey, out var naldData))
+            {
+                throw new KeyNotFoundException(purposeDataLine.LicenceIdLookupKey);
+            }
 
-            if (licenceNumbersNotInDataset.Contains(key))
+            // Ignore non-current purpose data
+            if (naldData.IncrNo != purposeDataLine.AabvIncrNo ||
+                naldData.IssueNo != purposeDataLine.AabvIssueNo)
             {
                 continue;
             }
 
-            var existingData = generalNaldData.GetValueOrDefault(key);
-
-            if (existingData == null)
-            {
-                throw new KeyNotFoundException(key);
-            }
-
-            var naldDataPeriod = new NaldDataPeriod
-            {
-                PeriodStartDay = line.PeriodStartDay,
-                PeriodStartMonth = line.PeriodStartMonth,
-                PeriodEndDay = line.PeriodEndDay,
-                PeriodEndMonth = line.PeriodEndMonth
-            };
-
-            if (existingData.Periods.All(p => p.ToString() != naldDataPeriod.ToString()))
-            {
-                existingData.Periods.Add(naldDataPeriod);
-            }
-
             var naldDataPurpose = new NaldDataPurpose
             {
-                Id = int.Parse(line.Id!),
-                PurposeId = line.ApurApusCode!.Value
+                Id = int.Parse(purposeDataLine.Id!),
+                CategoryUse = new NaldDataPurposeCategoryUse
+                {
+                    PrimaryCategoryCode = purposeDataLine.ApurApprCode!,
+                    PrimaryCategoryDescription = purposeDataLine.PurpPrimDescr!,
+                    SecondaryCategoryCode = purposeDataLine.ApurApseCode!,
+                    SecondaryCategoryDescription = purposeDataLine.PurpSecDescr!,
+                    UseCode = purposeDataLine.ApurApusCode,
+                    UseDescription = purposeDataLine.PurpUseDescr!,
+                },
+                Quantity = new NaldDataQuantity
+                {
+                    AnnualQty = double.TryParse(purposeDataLine.AnnualQty, out var annualQty) ? annualQty : null,
+                    AnnualQtyUsability = purposeDataLine.AnnualQtyUsability,
+                    DailyQty = double.TryParse(purposeDataLine.DailyQty, out var dailyQty) ? dailyQty : null,
+                    DailyQtyUsability = purposeDataLine.DailyQtyUsability,
+                    HourlyQty = double.TryParse(purposeDataLine.HourlyQty, out var hourlyQtt) ? hourlyQtt : null,
+                    HourlyQtyUsability = purposeDataLine.HourlyQtyUsability,
+                    InstQty = double.TryParse(purposeDataLine.InstQty, out var instQty) ? instQty : null,
+                    InstQtyUsability = purposeDataLine.InstQtyUsability
+                },
+                Notes = purposeDataLine.Notes
             };
 
-            if (existingData.Purposes.All(p => p.ToString() != naldDataPurpose.ToString()))
-            {
-                var purposeKey = $"{line.FgacRegionCode}|{line.Id}";
+            returnDict.Add(purposeDataLine.PurposeIdLookupKey, naldData);
+            naldData.Purposes.Add(naldDataPurpose);
 
-                returnDict.Add(purposeKey, existingData);
-                existingData.Purposes.Add(naldDataPurpose);
+            var period = new NaldDataPeriod
+            {
+                PurposeIds = [naldDataPurpose.Id],
+                PeriodStartDay = purposeDataLine.PeriodStartDay,
+                PeriodStartMonth = purposeDataLine.PeriodStartMonth,
+                PeriodEndDay = purposeDataLine.PeriodEndDay,
+                PeriodEndMonth = purposeDataLine.PeriodEndMonth
+            };
+
+            var existingPeriod = naldData.Periods.FirstOrDefault(x => x.ToString() == period.ToString());
+            
+            if (existingPeriod != null)
+            {
+                existingPeriod.PurposeIds.Add(naldDataPurpose.Id);
             }
-
-            existingData.AggregateConditions.Add(new NaldDataAggregate
+            else
             {
-                Type = "Limit",
-                Condition = line.ApurApseCode,
-                ConditionId = line.ApurApusCode,
-                AnnualQty = double.TryParse(line.AnnualQty, out var annualQty) ? annualQty : null,
-                AnnualQtyUnits = line.AnnualQtyUnits,
-                DailyQty = double.TryParse(line.DailyQty, out var dailyQty) ? dailyQty : null,
-                DailyQtyUnits = line.DailyQtyUnits,
-                HourlyQty = double.TryParse(line.HourlyQty, out var hourlyQtt) ? hourlyQtt : null,
-                HourlyQtyUnits = line.HourlyQtyUnits,
-                InstQty = double.TryParse(line.InstQty, out var instQty) ? instQty : null,
-                InstQtyUnits = line.InstQtyUnits
-            });
+                naldData.Periods.Add(period);
+            }
         }
 
         return returnDict;
+    }
+
+    private static void AddNaldAbstractionLicencePointsData(
+        List<NaldLicencePointDataLine> naldLicencePointDataLines,
+        ref Dictionary<string, NaldData> purposeToLicenceMapping)
+    {
+        foreach (var pointDataLine in naldLicencePointDataLines)
+        {
+            if (!purposeToLicenceMapping.TryGetValue(pointDataLine.PurposeIdLookupKey, out var naldData))
+            {
+                // Just skip it - might be a purpose ID linked to a non-current version
+                continue;
+            }
+
+            var purposeId = pointDataLine.PurposeId;
+
+            var naldDataPurpose = naldData.Purposes.FirstOrDefault(x => x.Id == purposeId);
+            if (naldDataPurpose == null)
+            {
+                // By definition, the NALD data discovered by the dictionary lookup should contain the purpose ID
+                // matching the dictionary key, so we should never be able to hit this exception.
+                throw new Exception("Purpose to licence mapping is corrupted");
+            }
+
+            var pointId = pointDataLine.PointId;
+            naldDataPurpose.PointIds.Add(pointId);
+
+            var naldDataPoint = naldData.Points.FirstOrDefault(x => x.PointId == pointId);
+            if (naldDataPoint == null)
+            {
+                naldDataPoint = new NaldDataPoint
+                {
+                    PointId = pointDataLine.PointId,
+                    PointName = pointDataLine.LocalName,
+                    PurposeIds = [purposeId],
+                    AaptAptpCode = pointDataLine.AaptAptpCode,
+                    AaptAptsCode = pointDataLine.AaptAptsCode,
+                    AapcCode = pointDataLine.AapcCode,
+                    NationalGridReferences = [],
+                    CartesianReferences = []
+                };
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr1Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr1East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr1North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 1,
+                        Sheet = pointDataLine.Ngr1Sheet,
+                        East = pointDataLine.Ngr1East,
+                        North = pointDataLine.Ngr1North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr2Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr2East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr2North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 2,
+                        Sheet = pointDataLine.Ngr2Sheet,
+                        East = pointDataLine.Ngr2East,
+                        North = pointDataLine.Ngr2North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr3Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr3East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr3North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 3,
+                        Sheet = pointDataLine.Ngr3Sheet,
+                        East = pointDataLine.Ngr3East,
+                        North = pointDataLine.Ngr3North
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(pointDataLine.Ngr4Sheet) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr4East) ||
+                    !string.IsNullOrWhiteSpace(pointDataLine.Ngr4North))
+                {
+                    naldDataPoint.NationalGridReferences.Add(new NationalGridReference
+                    {
+                        ReferenceIndex = 4,
+                        Sheet = pointDataLine.Ngr4Sheet,
+                        East = pointDataLine.Ngr4East,
+                        North = pointDataLine.Ngr4North
+                    });
+                }
+
+                if (pointDataLine.Cart1East.HasValue || pointDataLine.Cart1North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 1,
+                        East = pointDataLine.Cart1East,
+                        North = pointDataLine.Cart1North
+                    });
+                }
+
+                if (pointDataLine.Cart2East.HasValue || pointDataLine.Cart2North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 2,
+                        East = pointDataLine.Cart2East,
+                        North = pointDataLine.Cart2North
+                    });
+                }
+
+                if (pointDataLine.Cart3East.HasValue || pointDataLine.Cart3North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 3,
+                        East = pointDataLine.Cart3East,
+                        North = pointDataLine.Cart3North
+                    });
+                }
+
+                if (pointDataLine.Cart4East.HasValue || pointDataLine.Cart4North.HasValue)
+                {
+                    naldDataPoint.CartesianReferences.Add(new CartesianReference
+                    {
+                        ReferenceIndex = 4,
+                        East = pointDataLine.Cart4East,
+                        North = pointDataLine.Cart4North
+                    });
+                }
+
+                naldData.Points.Add(naldDataPoint);
+            }
+            else
+            {
+                naldDataPoint.PurposeIds.Add(purposeId);
+            }
+        }
     }
 }

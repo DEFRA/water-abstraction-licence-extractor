@@ -2,13 +2,15 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldDataPeriod
 {
-    public int? PeriodStartDay { get; set; }
+    public List<int> PurposeIds { get; init; } = [];
     
-    public int? PeriodStartMonth { get; set; }
+    public int? PeriodStartDay { get; init; }
     
-    public int? PeriodEndDay { get; set; }
+    public int? PeriodStartMonth { get; init; }
     
-    public int? PeriodEndMonth { get; set; }
+    public int? PeriodEndDay { get; init; }
+    
+    public int? PeriodEndMonth { get; init; }
 
     public override string ToString()
     {

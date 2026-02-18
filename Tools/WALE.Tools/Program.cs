@@ -5,7 +5,7 @@ using WALE.Tools.Config;
 //const string workflow = "GenerateAggregatesCsvForTesting";
 //const string workflow = "GenerateLinkedLicencesCsv";
 //const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "GenerateLicenceReaderExtract";
+const string workflow = "DuplicateLicenceIdentificationExtractBySize";
 
 const int processRunId = 631;
 var pdfFolder = KeyConfig.PdfFolder5;

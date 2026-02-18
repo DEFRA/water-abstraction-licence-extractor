@@ -11,78 +11,94 @@ public static class DuplicateLicenceIdentificationExtract
 
     public static async Task GenerateDuplicateLicenceIdentificationExtractAsync(bool byFileName = true)
     {
-        // Step 1: Get the input of processing by reading DuplicateResults_Extract.xlsx from KeyConfig.PdfFolderForDuplicates into a list of LicenceDuplicateFinderInput objects
+        // Step 1: Get the input of processing by reading DuplicateResults_Extract.xlsx from
+        // KeyConfig.PdfFolderForDuplicates into a list of LicenceDuplicateFinderInput objects
         var duplicateInputs = await ReadDuplicateResultsFromExcelAsync();
         
-        // Step 2: Group by Permit Number and loop over each group to process each group and generate a result list of LicenceDuplicateCsvLine objects
+        // Step 2: Group by Permit Number and loop over each group to process each group and generate
+        // a result list of LicenceDuplicateCsvLine objects
         var csvResults = new List<LicenceDuplicateCsvLine>();
 
-        var groupedByPermit = 
-             duplicateInputs
+        var groupedByPermit = duplicateInputs
             .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
             .GroupBy(x => x.PermitNumber); 
-        var groupedByPermitAndSize =
-        duplicateInputs
+        
+        var groupedByPermitAndSize = duplicateInputs
             .Where(x => !string.IsNullOrEmpty(x.PermitNumber))
             .GroupBy(x => (x.PermitNumber, x.FileSize));
 
         if (byFileName)
         {
-            foreach (var group in groupedByPermit)
+            foreach (var permitGroup in groupedByPermit)
             {
                 // Step 3: Get the list of files for the current permit number
-                var filesForPermit = group.ToList();
+                var filesForPermit = permitGroup.ToList();
             
                 // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
                 var pdfFilesData = ReadPdfFilesForPermit(filesForPermit);
             
-                // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other files are sub strings of
-                // for example 0-034 5665255.PDF is main file in a group with that and -034 5665255.PDF
+                // Step 5 - Identify the main file in pdfFilesData which is the file that has a name the other
+                // files are sub strings of for example 0-034 5665255.PDF is main file in a group with that
+                // and -034 5665255.PDF
                 var mainFile = IdentifyMainFile(pdfFilesData);
             
                 // Step 6 - Process the main file and compare with other files for duplicate analysis
-                if (mainFile.HasValue && mainFile.Value.FileExists && pdfFilesData.Count > 1)
+                if (mainFile?.FileExists != true || pdfFilesData.Count <= 1)
                 {
-                    var duplicateResults = await ComparePdfContentAsync(mainFile.Value, pdfFilesData, group.Key!);
-                    csvResults.AddRange(duplicateResults);
+                    continue;
                 }
+                
+                var duplicateResults = await ComparePdfContentAsync(
+                    mainFile.Value,
+                    pdfFilesData,
+                    permitGroup.Key!);
+                    
+                csvResults.AddRange(duplicateResults);
             }
         }
         else
         {
-            foreach (var group in groupedByPermitAndSize)
+            foreach (var permitGroup in groupedByPermitAndSize)
             {
                 try
                 {
                     // Step 3: Get the list of files for the current permit number
-                    var filesForPermit = group.ToList();
+                    var filesForPermit = permitGroup.ToList();
 
                     // Step 4: Read the pdf files for the current permit number from KeyConfig.PdfFolderForDuplicates
                     var firstFile = filesForPermit
-                        ?.Where(f => !string.IsNullOrWhiteSpace(f.FileName))
-                        ?.FirstOrDefault();
-                    if (firstFile != null)
-                    {
-                        var pdfFilesData = ReadPdfFilesForPermitAndSize(firstFile, filesForPermit!);
+                        .FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.FileName));
 
-                        var duplicateResults = await ComparePdfContentAsync(firstFile, pdfFilesData, group.Key.PermitNumber!);
-                        csvResults.AddRange(duplicateResults);
+                    if (firstFile == null)
+                    {
+                        continue;
                     }
+                    
+                    var pdfFilesData = ReadPdfFilesForPermitAndSize(
+                        firstFile,
+                        filesForPermit);
+                    
+                    var duplicateResults = await ComparePdfContentAsync(
+                        firstFile,
+                        pdfFilesData,
+                        permitGroup.Key.PermitNumber!);
+
+                    csvResults.AddRange(duplicateResults);
                 }
                 catch (Exception ex)
                 {
                     // Log the error but continue processing other files
-                    Console.WriteLine($"Error processing file {group.Key}: {ex.Message}");
+                    Console.WriteLine($"Error processing file {permitGroup.Key}: {ex.Message}");
                 }
             }
         }
         
-
         var fileName = $"Duplicate--Licence--Extract-{DateTime.Today:yyyyMMdd}.xlsx";
         var fullPath = Path.Combine(OutputFolder, fileName);
         
-        // Create an excel file with the results
+        // Create an Excel file with the results
         CreateExcelFileFromList(csvResults, fullPath);
+        
         // await using var writer = new StreamWriter(fullPath);
         // await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
         //
@@ -206,7 +222,7 @@ public static class DuplicateLicenceIdentificationExtract
         var fileSizeCol = headerMapping["File Size"];
 
         // Read data rows starting from row 2
-        for (int row = 2; row <= usedRange.LastRow().RowNumber(); row++)
+        for (var row = 2; row <= usedRange.LastRow().RowNumber(); row++)
         {
             var permitNumber = worksheet.Cell(row, permitNumberCol).GetValue<string>();
             var fileName = worksheet.Cell(row, fileNameCol).GetValue<string>();

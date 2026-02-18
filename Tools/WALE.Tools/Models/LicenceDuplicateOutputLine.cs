@@ -1,6 +1,6 @@
 namespace WALE.Tools.Models;
 
-public class LicenceDuplicateCsvLine
+public class LicenceDuplicateOutputLine
 {
     public string? PermitNumber { get; set; }
     public string? FileName { get; set; }

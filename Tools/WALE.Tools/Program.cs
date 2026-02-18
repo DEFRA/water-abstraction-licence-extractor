@@ -4,9 +4,9 @@ using WALE.Tools.Config;
 const string workflow = "DuplicateLicenceIdentificationExtractBySize";
 
 const int processRunId = 631;
+const int regionCode = 3;
 var pdfFolder = KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
-const int regionCode = 3;
 
 switch (workflow)
 {

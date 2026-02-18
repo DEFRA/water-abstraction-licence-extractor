@@ -8,10 +8,6 @@ public class PeriodOfAbstraction : TimePeriod
     
     public string? Description { get; set; }
     
-    public string? NaldPeriodStart { get; set; }
-    
-    public string? NaldPeriodEnd { get; set; }
-    
     public string[]? PointIds { get; set; } = [];
     
     public string[]? PurposeIds { get; set; } = [];
@@ -24,7 +20,6 @@ public class PeriodOfAbstraction : TimePeriod
         EndDate = string.Empty,
         Id = "6",
         Inclusive = false,
-        NaldPeriodStart = null,
         PeriodType = AbstractionPeriodType.PerYear,
         PointIds =
         [

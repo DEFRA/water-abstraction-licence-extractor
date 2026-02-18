@@ -2487,21 +2487,51 @@ linkedLicence.LicenceNumber!,
     private static PeriodOfAbstraction[] GetPeriods(List<LabelGroupResult> matches,
         NaldData? naldDataLine, ref Dictionary<string, object> noneSchemaData)
     {
-        noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
+        var naldDataPeriods = naldDataLine?.Periods ?? [];
+        noneSchemaData.Add("NaldPeriodsData", naldDataPeriods);
         
+        var periodsFromMatches = GetPeriodsFromMatches(matches);
+        
+        var returnPeriods = new List<PeriodOfAbstraction>();
+
+        foreach (var naldDataPeriod in naldDataPeriods)
+        {
+            var returnPeriod = new PeriodOfAbstraction
+            {
+                StartDate = $"{naldDataPeriod.PeriodStartDay}/{naldDataPeriod.PeriodStartMonth}",
+                EndDate = $"{naldDataPeriod.PeriodEndDay}/{naldDataPeriod.PeriodEndMonth}",
+                PurposeIds = naldDataPeriod.PurposeIds.Select(p => p.ToString()).ToArray()
+            };
+            
+            returnPeriods.Add(returnPeriod);
+            
+            // TODO: Extend returnPeriod with matching periodsFromMatches entry's properties.
+            // Attempt to match a periodsFromMatches element based on a parse of the start/end day/month from both collections.
+            // e.g. naldDataPeriod.PeriodStartDay = 1, naldDataPeriod.PeriodStartMonth = 4 => match if element.StartDate = 1 April (or similar)
+            // Only match if both the start and end date match.
+            // We can match on month only (rather than day) if the day is not specified on one or both comparables.'
+        }
+        
+        returnPeriods.AddRange(periodsFromMatches);
+
+        return returnPeriods.ToArray();
+    }
+
+    private static List<PeriodOfAbstraction> GetPeriodsFromMatches(List<LabelGroupResult> matches)
+    {
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
 
         if (periodResults == null)
         {
-            return returnList.ToArray();
+            return returnList;
         }
 
         if (periodResults.MatchedLabel?.Name == "DuringTheMonthsXToYOnlyText")
         {
             if (periodResults.SubResults.Count != 2)
             {
-                return returnList.ToArray();
+                return returnList;
             }
 
             returnList.Add(new PeriodOfAbstraction
@@ -2510,11 +2540,7 @@ linkedLicence.LicenceNumber!,
                 Description = periodResults.Text?.FirstOrDefault()?.Text,
                 Inclusive = true,
                 StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
-                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
+                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text
             });
         }
 
@@ -2592,14 +2618,10 @@ linkedLicence.LicenceNumber!,
                 TimeCutoff = timeCutoff,
                 PointIds = null, // TODO set purpose ids and point ids
                 PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
             });
         }
 
-        return returnList.ToArray();
+        return returnList;
     }
 
     private static MeanOfAbstraction[] GetMeansOfAbstraction(

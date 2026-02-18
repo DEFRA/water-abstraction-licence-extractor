@@ -269,8 +269,8 @@ public static partial class SchemaConverter
                             .First(ci => ci.SectionName == "LicenceHistory").PageNumber;
 
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
-                            .All(aci =>  aci.PageNumber == lhPageNumber
-                                && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
+                            .All(aci => aci.PageNumber == lhPageNumber
+                                        && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
 
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber,
                                    paddedLinkedLicenceNumber, regionCode)
@@ -300,6 +300,7 @@ public static partial class SchemaConverter
                     anywhereInDocumentLinkedLicence);
             }
         }
+
 // Limit to valid ones
         linkedLicences = linkedLicences
             .Where(linkedLicence =>
@@ -347,9 +348,9 @@ public static partial class SchemaConverter
     private static bool IsPlusOrMinusACoupleOfLines(int document1LineNumber, int document2LineNumber)
     {
         return document1LineNumber >= document2LineNumber - 2
-            && document1LineNumber <= document2LineNumber + 2;            
+               && document1LineNumber <= document2LineNumber + 2;
     }
-    
+
     private static string? GetDateFormatConsistent(List<LabelGroupResult> matches, string labelName)
     {
         return Date.DateFormatConsistent(
@@ -521,8 +522,8 @@ public static partial class SchemaConverter
             pdfFolder,
             previouslyParsedPaths,
             processRunId,
-lookupConfiguration);
-        
+            lookupConfiguration);
+
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
 
@@ -1087,7 +1088,7 @@ lookupConfiguration);
                     linkedLicence.LicenceNumber!,
                     lookupConfiguration.RegionCode) != false)
             .ToList();
-        
+
         return returnLicences;
     }
 
@@ -1963,13 +1964,17 @@ lookupConfiguration);
                     var words = tableLine.Text.Split(' ');
                     var abstractionPoint = words[0];
                     var hourlyQuantity = words.Length >= 2 && double.TryParse(words[1], out var hourlyQuantityDbl)
-                        ? hourlyQuantityDbl : (double?)null;
+                        ? hourlyQuantityDbl
+                        : (double?)null;
                     var dailyQuantity = words.Length >= 3 && double.TryParse(words[2], out var dailyQuantityDbl)
-                        ? dailyQuantityDbl : (double?)null;
+                        ? dailyQuantityDbl
+                        : (double?)null;
                     var yearlyQuantity = words.Length >= 4 && double.TryParse(words[3], out var yearlyQuantityDbl)
-                        ? yearlyQuantityDbl : (double?)null;
+                        ? yearlyQuantityDbl
+                        : (double?)null;
                     var instantRate = words.Length >= 5 && double.TryParse(words[4], out var instantRateDbl)
-                        ? instantRateDbl : (double?)null;
+                        ? instantRateDbl
+                        : (double?)null;
 
                     if (hourlyQuantity == null
                         || dailyQuantity == null
@@ -1979,9 +1984,9 @@ lookupConfiguration);
                         Console.WriteLine("INFO - Table was not in the expected format. Skipping");
                         continue;
                     }
-                    
-                    var points = new Point[] { new() { Id = abstractionPoint }};
-                    
+
+                    var points = new Point[] { new() { Id = abstractionPoint } };
+
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup
                     {
                         Points = points,
@@ -2027,20 +2032,20 @@ lookupConfiguration);
             }
 
             var siblings = abstractionLimitPointSub.SubResults;
-            
+
             var purposeCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
-                    
+
             var purposeConditionSub = purposeCondition?
                 .SubResults
                 .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
                 .ToList();
-                    
-            var limitPurposes = purposeConditionSub?.Count > 0 ?
-                purposeConditionSub.Select(pcs =>
+
+            var limitPurposes = purposeConditionSub?.Count > 0
+                ? purposeConditionSub.Select(pcs =>
                     new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
-                    
+
             var pointCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
 
@@ -2048,18 +2053,18 @@ lookupConfiguration);
                 .SubResults
                 .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
                 .ToList();
-                    
-            var limitPoints = pointConditionSub?.Count > 0 ?
-                pointConditionSub.Select(pcs =>
+
+            var limitPoints = pointConditionSub?.Count > 0
+                ? pointConditionSub.Select(pcs =>
                     new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
-            
+
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")
-                    || t.Text.Contains("The quantities detailed below are in aggregate")
-                    || t.Text.Contains("quantity equal to the difference between")) == true;
+                          || t.Text.Contains("The quantities detailed below are in aggregate")
+                          || t.Text.Contains("quantity equal to the difference between")) == true;
 
-            
+
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList(); // E.g. Jan, Feb etc..
@@ -2160,13 +2165,12 @@ lookupConfiguration);
                 .ToList();
 
             linkedLicenceNumbers = linkedLicenceNumbers
-
-            .Where(linkedLicence =>
+                .Where(linkedLicence =>
                     FormattingHelper.IsValidLicenceNumber(
-linkedLicence.LicenceNumber!,
+                        linkedLicence.LicenceNumber!,
                         regionCode) != false)
                 .ToList();
-            
+
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
 
             var relatedNamesDict = new Dictionary<string, int>();
@@ -2179,19 +2183,19 @@ linkedLicence.LicenceNumber!,
             {
                 var allDuplicates = valueResults
                     .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
-                        && vr.PageNumber == valueResult.PageNumber
-                        && vr.LineNumber == valueResult.LineNumber)
+                                 && vr.PageNumber == valueResult.PageNumber
+                                 && vr.LineNumber == valueResult.LineNumber)
                     .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
                         sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
-                .ToList();
+                    .ToList();
 
-            var bestResult = allDuplicates
+                var bestResult = allDuplicates
                     .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
                     .First();
 
                 if (!newValueResults.Contains(bestResult.vr))
                 {
-                    newValueResults.Add(bestResult.vr);                    
+                    newValueResults.Add(bestResult.vr);
                 }
             }
 
@@ -2243,39 +2247,39 @@ linkedLicence.LicenceNumber!,
                 {
                     var anyPointsSpecified = abstractionLimit.Points?.Length > 1;
                     var limitedByPoints = anyPointsSpecified
-                        && abstractionLimit.Points!.Length != allPoints.Length;
+                                          && abstractionLimit.Points!.Length != allPoints.Length;
 
                     var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
                     var limitedByPurpose = anyPurposesSpecified
-                        && abstractionLimit.Purposes!.Length != allPurposes.Length;
+                                           && abstractionLimit.Purposes!.Length != allPurposes.Length;
 
                     var containsUnderThisLicenceText = abstractionLimitPointSub.Text?
                         .Any(t => t.Text.Contains("under this licence")) == true;
-                    
+
                     isAggregate = limitedByPoints || limitedByPurpose || containsUnderThisLicenceText;
                 }
-                
+
                 if (isAggregate)
                 {
                     aggregateAbstractionLimits.Add(abstractionLimit);
                     continue;
                 }
-                
+
                 var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
                 var individualGroup = individualGroups[pos];
-                
+
                 var groupPointsStr = individualGroup.Points?.Length > 0
                     ? string.Join(',', individualGroup.Points.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var limitPointsStr = abstractionLimit.Points?.Length > 0
                     ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var groupPurposesStr = individualGroup.Purposes?.Length > 0
                     ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
                     ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
                     : string.Empty;
@@ -2288,7 +2292,7 @@ linkedLicence.LicenceNumber!,
                         groupPointsStr = ig.Points?.Length > 0
                             ? string.Join(',', ig.Points.Select(p => p.Id))
                             : string.Empty;
-                        
+
                         groupPurposesStr = ig.Purposes?.Length > 0
                             ? string.Join(',', ig.Purposes.Select(p => p.Id))
                             : string.Empty;
@@ -2308,14 +2312,14 @@ linkedLicence.LicenceNumber!,
                         individualGroups.Add(individualGroup);
                     }
                 }
-                
+
                 individualGroup.Limits.Add(abstractionLimit);
             }
 
             var notIncluded = individualGroups
                 .Where(ig => !allIndividualGroups.Contains(ig))
                 .ToList();
-            
+
             allIndividualGroups.AddRange(notIncluded);
 
             if (aggregateAbstractionLimits.Count == 0)
@@ -2489,9 +2493,10 @@ linkedLicence.LicenceNumber!,
     {
         var naldDataPeriods = naldDataLine?.Periods ?? [];
         noneSchemaData.Add("NaldPeriodsData", naldDataPeriods);
-        
+
         var periodsFromMatches = GetPeriodsFromMatches(matches);
-        
+        noneSchemaData.Add("ScrapedPeriodsData", periodsFromMatches.ToArray());
+
         var returnPeriods = new List<PeriodOfAbstraction>();
 
         foreach (var naldDataPeriod in naldDataPeriods)
@@ -2502,19 +2507,114 @@ linkedLicence.LicenceNumber!,
                 EndDate = $"{naldDataPeriod.PeriodEndDay}/{naldDataPeriod.PeriodEndMonth}",
                 PurposeIds = naldDataPeriod.PurposeIds.Select(p => p.ToString()).ToArray()
             };
-            
+
+            var matchingPeriod = periodsFromMatches.FirstOrDefault(p => IsMatchingPeriod(p, naldDataPeriod));
+
+            if (matchingPeriod != null)
+            {
+                returnPeriod.Id = matchingPeriod.Id;
+                returnPeriod.Description = matchingPeriod.Description;
+                returnPeriod.PeriodType = matchingPeriod.PeriodType;
+                returnPeriod.Inclusive = matchingPeriod.Inclusive;
+                returnPeriod.TimeCutoff = matchingPeriod.TimeCutoff;
+
+                periodsFromMatches.Remove(matchingPeriod);
+            }
+
             returnPeriods.Add(returnPeriod);
-            
-            // TODO: Extend returnPeriod with matching periodsFromMatches entry's properties.
-            // Attempt to match a periodsFromMatches element based on a parse of the start/end day/month from both collections.
-            // e.g. naldDataPeriod.PeriodStartDay = 1, naldDataPeriod.PeriodStartMonth = 4 => match if element.StartDate = 1 April (or similar)
-            // Only match if both the start and end date match.
-            // We can match on month only (rather than day) if the day is not specified on one or both comparables.'
         }
-        
+
         returnPeriods.AddRange(periodsFromMatches);
 
         return returnPeriods.ToArray();
+    }
+
+    private static bool IsMatchingPeriod(PeriodOfAbstraction p, NaldDataPeriod naldDataPeriod)
+    {
+        if (p.PeriodType == AbstractionPeriodType.PerYear && IsWholeYear(naldDataPeriod))
+        {
+            return true;
+        }
+
+        return IsDateMatch(p.StartDate, naldDataPeriod.PeriodStartDay, naldDataPeriod.PeriodStartMonth) &&
+               IsDateMatch(p.EndDate, naldDataPeriod.PeriodEndDay, naldDataPeriod.PeriodEndMonth);
+    }
+
+    private static bool IsWholeYear(NaldDataPeriod naldDataPeriod)
+    {
+        if (naldDataPeriod.PeriodStartDay == null || naldDataPeriod.PeriodStartMonth == null ||
+            naldDataPeriod.PeriodEndDay == null || naldDataPeriod.PeriodEndMonth == null)
+        {
+            return false;
+        }
+
+        var startDay = naldDataPeriod.PeriodStartDay.Value;
+        var startMonth = naldDataPeriod.PeriodStartMonth.Value;
+        var endDay = naldDataPeriod.PeriodEndDay.Value;
+        var endMonth = naldDataPeriod.PeriodEndMonth.Value;
+
+        const int year = 2000;
+
+        try
+        {
+            var startDate = new DateTime(year, startMonth, startDay);
+            var endDate = new DateTime(year, endMonth, endDay);
+
+            return startDate == endDate || 
+                   startDate == endDate.AddDays(1) || 
+                   startDate == endDate.AddDays(1).AddYears(-1);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsDateMatch(string? dateStr, int? naldDay, int? naldMonth)
+    {
+        if (string.IsNullOrEmpty(dateStr))
+        {
+            return false;
+        }
+
+        var formattedDate = Date.DateFormatConsistent(dateStr);
+        if (string.IsNullOrEmpty(formattedDate))
+        {
+            return false;
+        }
+
+        var parts = formattedDate.Split('/');
+        if (parts.Length < 2)
+        {
+            return false;
+        }
+
+        if (!int.TryParse(parts[1], out var month))
+        {
+            // Try to match month name
+            var months = new[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+            var monthName = parts[1].ToLower();
+            for (var i = 0; i < months.Length; i++)
+            {
+                if (monthName.StartsWith(months[i]))
+                {
+                    month = i + 1;
+                    break;
+                }
+            }
+        }
+
+        if (month == 0 || month != naldMonth)
+        {
+            return false;
+        }
+
+        if (naldDay.HasValue && int.TryParse(parts[0], out var day))
+        {
+            return day == naldDay.Value;
+        }
+
+        return true;
     }
 
     private static List<PeriodOfAbstraction> GetPeriodsFromMatches(List<LabelGroupResult> matches)
@@ -2593,10 +2693,10 @@ linkedLicence.LicenceNumber!,
             var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
             //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
-            var inclusive = text?.Contains("inclusive",
-                StringComparison.InvariantCultureIgnoreCase) ?? false;
-
             var allYear = text == "All year";
+
+            var inclusive = 
+                allYear || (text?.Contains("inclusive", StringComparison.InvariantCultureIgnoreCase) ?? false);
 
             // TODO next bit should be done in config
             var dateParts = text?
@@ -2714,7 +2814,7 @@ linkedLicence.LicenceNumber!,
         ref Dictionary<string, object> noneSchemaData)
     {
         noneSchemaData.Add("NaldPointsData", naldDataLine?.Points ?? []);
-        
+
         var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
         var returnList = new List<PointOfAbstraction>();
 
@@ -2967,7 +3067,7 @@ linkedLicence.LicenceNumber!,
         NaldData? naldDataLine, ref Dictionary<string, object> noneSchemaData)
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
-        
+
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
 

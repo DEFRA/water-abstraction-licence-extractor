@@ -54,11 +54,13 @@ public static partial class SchemaConverter
 
         var purposes = GetPurposes(
             matches,
-            naldDataLine);
+            naldDataLine,
+            ref noneSchemaData);
 
         var periods = GetPeriods(
             matches,
-            naldDataLine);
+            naldDataLine,
+            ref noneSchemaData);
 
         var (aggregates, individual) = GetAbstractionLimits(
             matches,
@@ -2349,10 +2351,11 @@ public static partial class SchemaConverter
         };
     }
 
-    private static PeriodOfAbstraction[] GetPeriods(
-        List<LabelGroupResult> matches,
-        NaldData? naldDataLine)
+    private static PeriodOfAbstraction[] GetPeriods(List<LabelGroupResult> matches,
+        NaldData? naldDataLine, ref Dictionary<string, object> noneSchemaData)
     {
+        noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
+        
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
 
@@ -2555,6 +2558,8 @@ public static partial class SchemaConverter
         NaldData? naldDataLine,
         ref Dictionary<string, object> noneSchemaData)
     {
+        noneSchemaData.Add("NaldPointsData", naldDataLine?.Points ?? []);
+        
         var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
         var returnList = new List<PointOfAbstraction>();
 
@@ -2803,10 +2808,11 @@ public static partial class SchemaConverter
         return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
     }
 
-    private static PurposeOfAbstraction[] GetPurposes(
-        List<LabelGroupResult> matches,
-        NaldData? naldDataLine)
+    private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches,
+        NaldData? naldDataLine, ref Dictionary<string, object> noneSchemaData)
     {
+        noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
+        
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
 

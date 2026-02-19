@@ -108,6 +108,7 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
+        var extractorSemaphore = new SemaphoreSlim(maxConcurrentScrapers, maxConcurrentScrapers);
 
         foreach (var (filePath, _) in dmsFilesToProcess)
         {
@@ -124,7 +125,8 @@ async Task ProgramAsync()
                     pdfDataExtractors,
                     firstNamesCsv,
                     processRun,
-                    extractorLock));
+                    extractorLock,
+                    extractorSemaphore));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -523,23 +525,26 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     List<IPdfDataExtractorService> pdfDataExtractors,
     HashSet<string> firstNamesCsv,
     ProcessRun processRun,
-    Lock extractorLock)
+    Lock extractorLock,
+    SemaphoreSlim extractorSemaphore)
 {
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
     var dtStart = DateTime.Now;
     Console.WriteLine($"Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
-    IPdfDataExtractorService pdfDataExtractor;
-
-    lock (extractorLock)
-    {
-        pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
-        pdfDataExtractor.InUse = true;
-    }
+    IPdfDataExtractorService? pdfDataExtractor = null;
 
     try
     {
+        await extractorSemaphore.WaitAsync();
+
+        lock (extractorLock)
+        {
+            pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+            pdfDataExtractor.InUse = true;
+        }
+
         var previouslyParsedPaths = new List<string>
         {
             pdfFilePath
@@ -553,7 +558,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             firstNamesCsv,
             regionCode);
 
-        var matchesFull = await pdfDataExtractor.GetMatchesAsync(
+        var matchesFull = await pdfDataExtractor!.GetMatchesAsync(
             pdfFilePath,
             lookupConfig,
             previouslyParsedPaths,
@@ -585,7 +590,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             licenceMapping,
             naldLicenceStatusData,
             naldData,
-            pdfDataExtractor,
+            pdfDataExtractor!,
             pdfFolder,
             processRun.ProcessRunId,
             lookupConfig);
@@ -594,7 +599,15 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
     finally
     {
-        pdfDataExtractor.InUse = false;
+        lock (extractorLock)
+        {
+            if (pdfDataExtractor != null)
+            {
+                pdfDataExtractor.InUse = false;
+            }
+        }
+
+        extractorSemaphore.Release();
     }
 }
 

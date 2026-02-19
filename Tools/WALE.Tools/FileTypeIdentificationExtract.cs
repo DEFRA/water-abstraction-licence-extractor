@@ -8,8 +8,8 @@ using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
@@ -58,7 +58,8 @@ public static class FileTypeIdentificationExtract
 
         // Create 10 instances of PdfDataExtractorService for parallel processing
         var pdfDataExtractors = new List<IPdfDataExtractorService>();
-        for (int i = 0; i < 10; i++)
+        
+        for (var i = 0; i < 10; i++)
         {
             var pdfDataExtractor = new PdfDataExtractorService(
                 new PdfPigNoOcrDataExtractorService(),

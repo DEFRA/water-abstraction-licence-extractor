@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.PdfPig;
 
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Services.PdfPig.Helpers;
 
 public static class DocumentLineWordCoordinatesHelper
 {

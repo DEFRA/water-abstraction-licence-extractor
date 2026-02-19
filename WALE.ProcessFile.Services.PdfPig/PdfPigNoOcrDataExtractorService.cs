@@ -6,10 +6,10 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.PdfPig;
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.PdfPig.Helpers;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
 
-namespace WALE.ProcessFile.Services.Services.PdfPig;
+namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {

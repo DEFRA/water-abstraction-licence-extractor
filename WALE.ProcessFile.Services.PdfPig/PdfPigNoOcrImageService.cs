@@ -1,10 +1,10 @@
-using System.IO.Compression;
 using Tesseract;
 using UglyToad.PdfPig.Content;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 
-namespace WALE.ProcessFile.Services.Services.PdfPig;
+namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
 {
@@ -101,7 +101,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
             pix.Width,
             pix.Height,
             folderPath,
-            PdfDataExtractorService.Name,
+            GeneralConstants.PdfDataExtractorServiceName,
             imageNumber,
             pageNumber,
             returnExtension,

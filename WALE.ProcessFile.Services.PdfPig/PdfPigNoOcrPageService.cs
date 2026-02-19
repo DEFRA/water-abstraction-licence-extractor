@@ -2,7 +2,7 @@ using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using WALE.ProcessFile.Core.Interfaces;
 
-namespace WALE.ProcessFile.Services.Services.PdfPig;
+namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrPageService(Page page) : INoOcrPdfPageService
 {

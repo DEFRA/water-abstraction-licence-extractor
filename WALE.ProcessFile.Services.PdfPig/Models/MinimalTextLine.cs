@@ -1,6 +1,6 @@
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 
-namespace WALE.ProcessFile.Core.Models.PdfPig;
+namespace WALE.ProcessFile.Services.PdfPig.Models;
 
 /// <summary>
 /// A line of text.

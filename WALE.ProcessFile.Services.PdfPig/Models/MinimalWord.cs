@@ -1,7 +1,6 @@
 using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.Core;
 
-namespace WALE.ProcessFile.Core.Models.PdfPig;
+namespace WALE.ProcessFile.Services.PdfPig.Models;
 
 /// <summary>
 /// A word.

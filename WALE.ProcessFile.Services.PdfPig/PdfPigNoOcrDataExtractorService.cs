@@ -5,8 +5,8 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
 using WALE.ProcessFile.Services.PdfPig.Helpers;
+using WALE.ProcessFile.Services.PdfPig.Models;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;
 
 namespace WALE.ProcessFile.Services.PdfPig;

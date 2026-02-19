@@ -1,5 +1,5 @@
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.PdfPig;
+using WALE.ProcessFile.Services.PdfPig.Models;
 
 namespace WALE.ProcessFile.Services.PdfPig.Helpers;
 

@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
         <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
         <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1"/>
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />

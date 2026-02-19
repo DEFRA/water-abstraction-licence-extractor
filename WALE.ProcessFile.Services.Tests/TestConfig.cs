@@ -136,6 +136,38 @@ public static class TestConfig
         }
     }
     
+    private static string? _aiServicesEndpoint;
+
+    public static string AiServicesEndpoint
+    {
+        get
+        {
+            if (_aiServicesEndpoint != null)
+            {
+                return _aiServicesEndpoint;
+            }
+            
+            _aiServicesEndpoint = Config["AiServicesEndpoint"]!;
+            return _aiServicesEndpoint;
+        }
+    }
+    
+    private static string? _aiServicesKey;
+
+    public static string AiServicesKey
+    {
+        get
+        {
+            if (_aiServicesKey != null)
+            {
+                return _aiServicesKey;
+            }
+            
+            _aiServicesKey = Config["AiServicesKey"]!;
+            return _aiServicesKey;
+        }
+    }
+    
     private static string? _awsAccessKey;
 
     public static string AwsAccessKey

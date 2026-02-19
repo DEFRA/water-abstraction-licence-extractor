@@ -2834,9 +2834,19 @@ public static partial class SchemaConverter
             {
                 Id = naldPointData.PointId.ToString(),
                 NaldPointId = naldPointData.PointId,
-                CartesianReferences = naldPointData.CartesianReferences.Select(r => new CartesianReference()).ToList(),
-                NationalGridReferences = naldPointData.NationalGridReferences.Select(r => new NationalGridReference())
-                    .ToList(),
+                CartesianReferences = naldPointData.CartesianReferences.Select(r => new CartesianReference
+                {
+                    ReferenceIndex = r.ReferenceIndex,
+                    East = r.East,
+                    North = r.North
+                }).ToList(),
+                NationalGridReferences = naldPointData.NationalGridReferences.Select(r => new NationalGridReference
+                {
+                    ReferenceIndex = r.ReferenceIndex,
+                    Sheet = r.Sheet,
+                    East = r.East,
+                    North = r.North
+                }).ToList(),
                 Description = naldPointData.PointName,
                 Name = naldPointData.PointName
             };
@@ -2867,7 +2877,15 @@ public static partial class SchemaConverter
 
     private static bool IsMatchingPoint(PointOfAbstraction pointOfAbstraction, NaldDataPoint naldPointData)
     {
-        throw new NotImplementedException();
+        var description = pointOfAbstraction.Description?.ToLower();
+        
+        if (description == null)
+        {
+            return false;
+        }
+
+        return naldPointData.NationalGridReferences.Any(ngr => description.Contains(ngr.ToString().ToLower())) || 
+               naldPointData.CartesianReferences.Any(cr => description.Contains(cr.ToString()));
     }
 
     private static List<PointOfAbstraction> GetPointsFromMatches(List<LabelGroupResult> matches,

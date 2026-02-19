@@ -8,7 +8,9 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using CartesianReference = WALE.ProcessFile.Core.Models.OutputSchema.CartesianReference;
 using Date = WALE.ProcessFile.Services.Formats.Date;
+using NationalGridReference = WALE.ProcessFile.Core.Models.OutputSchema.NationalGridReference;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -2502,7 +2504,7 @@ public static partial class SchemaConverter
         foreach (var naldDataPeriod in naldDataPeriods)
         {
             var purposeIds = naldDataPeriod.PurposeIds.Select(p => $"NaldPurposeId:{p}").ToList();
-            
+
             var returnPeriod = new PeriodOfAbstraction
             {
                 StartDate = $"{naldDataPeriod.PeriodStartDay}/{naldDataPeriod.PeriodStartMonth}",
@@ -2563,8 +2565,8 @@ public static partial class SchemaConverter
             var startDate = new DateTime(year, startMonth, startDay);
             var endDate = new DateTime(year, endMonth, endDay);
 
-            return startDate == endDate || 
-                   startDate == endDate.AddDays(1) || 
+            return startDate == endDate ||
+                   startDate == endDate.AddDays(1) ||
                    startDate == endDate.AddDays(1).AddYears(-1);
         }
         catch (ArgumentOutOfRangeException)
@@ -2698,7 +2700,7 @@ public static partial class SchemaConverter
 
             var allYear = text == "All year";
 
-            var inclusive = 
+            var inclusive =
                 allYear || (text?.Contains("inclusive", StringComparison.InvariantCultureIgnoreCase) ?? false);
 
             // TODO next bit should be done in config
@@ -2816,14 +2818,67 @@ public static partial class SchemaConverter
         NaldData? naldDataLine,
         ref Dictionary<string, object> noneSchemaData)
     {
-        noneSchemaData.Add("NaldPointsData", naldDataLine?.Points ?? []);
+        var naldPointsData = naldDataLine?.Points ?? [];
+        noneSchemaData.Add("NaldPointsData", naldPointsData);
 
+        var pointsFromMatches = GetPointsFromMatches(matches, ref noneSchemaData);
+        noneSchemaData.Add("ScrapedPointsData", pointsFromMatches.ToArray());
+
+        var returnPoints = new List<PointOfAbstraction>();
+
+        foreach (var naldPointData in naldPointsData)
+        {
+            var purposeIds = naldPointData.PurposeIds.Select(p => $"NaldPurposeId:{p}").ToList();
+
+            var returnPoint = new PointOfAbstraction
+            {
+                Id = naldPointData.PointId.ToString(),
+                NaldPointId = naldPointData.PointId,
+                CartesianReferences = naldPointData.CartesianReferences.Select(r => new CartesianReference()).ToList(),
+                NationalGridReferences = naldPointData.NationalGridReferences.Select(r => new NationalGridReference())
+                    .ToList(),
+                Description = naldPointData.PointName,
+                Name = naldPointData.PointName
+            };
+
+            var matchingPoints = pointsFromMatches
+                .Where(p => IsMatchingPoint(p, naldPointData)).ToList();
+
+            if (matchingPoints.Count > 0)
+            {
+                returnPoint.Id = string.Join(',', matchingPoints.Select(p => p.Id));
+                returnPoint.Description = string.Join(',', matchingPoints.Select(p => p.Description));
+                returnPoint.TimeCutoff = matchingPoints.FirstOrDefault(m => m.TimeCutoff != null)?.TimeCutoff;
+
+                foreach (var matchingPoint in matchingPoints)
+                {
+                    purposeIds.AddRange(matchingPoint.PurposeIds ?? []);
+                    pointsFromMatches.Remove(matchingPoint);
+                }
+            }
+
+            returnPoint.PurposeIds = purposeIds.ToArray();
+            returnPoints.Add(returnPoint);
+        }
+
+        returnPoints.AddRange(pointsFromMatches);
+        return returnPoints.ToArray();
+    }
+
+    private static bool IsMatchingPoint(PointOfAbstraction pointOfAbstraction, NaldDataPoint naldPointData)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static List<PointOfAbstraction> GetPointsFromMatches(List<LabelGroupResult> matches,
+        ref Dictionary<string, object> noneSchemaData)
+    {
         var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
         var returnList = new List<PointOfAbstraction>();
 
         if (pointsResults == null)
         {
-            return returnList.ToArray();
+            return returnList;
         }
 
         foreach (var pointPurposeGroup in pointsResults.SubResults)
@@ -2900,9 +2955,7 @@ public static partial class SchemaConverter
                             Description = tableLine.Text,
                             Id = $"{pointNumber} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldDataLine,
-                                tableLine.Text) // TODO needs to get the correct point
+                            TimeCutoff = timeCutoff
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -2932,13 +2985,12 @@ public static partial class SchemaConverter
                     Description = description,
                     Id = pointNumber,
                     PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description) // TODO needs to get the correct point
+                    TimeCutoff = timeCutoff
                 });
             }
         }
 
-        return returnList.ToArray();
+        return returnList;
     }
 
     private static NaldData? GetNaldDataLine(
@@ -2954,51 +3006,6 @@ public static partial class SchemaConverter
                && naldData.TryGetValue(naldDataKey, out var naldDataLine)
             ? naldDataLine.First()
             : null;
-    }
-
-    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)
-    {
-        if (naldDataLine?.Points.Count is null or 0)
-        {
-            return null;
-        }
-
-        var points = naldDataLine.Points;
-        NaldDataPoint point;
-
-        if (points.Count == 1)
-        {
-            point = points[0];
-        }
-        else
-        {
-            // TODO - Work out which point matches the description
-
-            point = points
-                .First(p => p.PointId != 0);
-        }
-
-        return new NaldPointData
-        {
-            Id = point.PointId.ToString(),
-            Name = point.PointName,
-            NationalGridReferences = point.NationalGridReferences.Select(n =>
-                new NaldNationalGridReference
-                {
-                    ReferenceIndex = n.ReferenceIndex,
-                    Sheet = n.Sheet,
-                    East = n.East,
-                    North = n.North
-                }).ToList(),
-            CartesianReferences = point.CartesianReferences.Select(c =>
-                new NaldCartesianReference
-                {
-                    ReferenceIndex = c.ReferenceIndex,
-                    East = c.East,
-                    North = c.North
-                }).ToList(),
-            NaldPurposeIds = point.PurposeIds
-        };
     }
 
     private static NaldPurposeData? GetNaldPurposeData(NaldData? naldDataLine, string? description)
@@ -3030,40 +3037,6 @@ public static partial class SchemaConverter
             UseCode = purpose.CategoryUse.UseCode.ToString(),
             UseDescription = purpose.CategoryUse.UseDescription
         };
-    }
-
-    private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
-    {
-        if (naldDataLine == null)
-        {
-        }
-
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodStartDay != null);
-
-        return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
-    }
-
-    private static string? GetNaldPeriodEndDate(NaldData? naldDataLine, string? description)
-    {
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodEndDay != null);
-
-        return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
     }
 
     private static PurposeOfAbstraction[] GetPurposes(List<LabelGroupResult> matches,

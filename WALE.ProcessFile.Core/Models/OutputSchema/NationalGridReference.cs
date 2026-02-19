@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public class NaldNationalGridReference
+public class NationalGridReference
 {
     public int ReferenceIndex { get; set; }
     public string? Sheet { get; set; }

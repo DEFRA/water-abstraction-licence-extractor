@@ -2501,11 +2501,12 @@ public static partial class SchemaConverter
 
         foreach (var naldDataPeriod in naldDataPeriods)
         {
+            var purposeIds = naldDataPeriod.PurposeIds.Select(p => $"NaldPurposeId:{p}").ToList();
+            
             var returnPeriod = new PeriodOfAbstraction
             {
                 StartDate = $"{naldDataPeriod.PeriodStartDay}/{naldDataPeriod.PeriodStartMonth}",
-                EndDate = $"{naldDataPeriod.PeriodEndDay}/{naldDataPeriod.PeriodEndMonth}",
-                PurposeIds = naldDataPeriod.PurposeIds.Select(p => p.ToString()).ToArray()
+                EndDate = $"{naldDataPeriod.PeriodEndDay}/{naldDataPeriod.PeriodEndMonth}"
             };
 
             var matchingPeriod = periodsFromMatches.FirstOrDefault(p => IsMatchingPeriod(p, naldDataPeriod));
@@ -2517,10 +2518,12 @@ public static partial class SchemaConverter
                 returnPeriod.PeriodType = matchingPeriod.PeriodType;
                 returnPeriod.Inclusive = matchingPeriod.Inclusive;
                 returnPeriod.TimeCutoff = matchingPeriod.TimeCutoff;
+                purposeIds.AddRange(matchingPeriod.PurposeIds ?? []);
 
                 periodsFromMatches.Remove(matchingPeriod);
             }
 
+            returnPeriod.PurposeIds = purposeIds.ToArray();
             returnPeriods.Add(returnPeriod);
         }
 

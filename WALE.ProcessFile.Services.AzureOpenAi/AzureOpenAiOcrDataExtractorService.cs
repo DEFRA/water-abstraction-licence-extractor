@@ -7,7 +7,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
-namespace WALE.ProcessFile.Services.Services;
+namespace WALE.ProcessFile.Services.AzureOpenAi;
 
 public class AzureOpenAiOcrDataExtractorService(
     string endpoint,
@@ -143,7 +143,7 @@ public class AzureOpenAiOcrDataExtractorService(
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
             Filepath = pdfFilepath,
-            NoOcrServiceName = PdfDataExtractorService.Name,
+            NoOcrServiceName = GeneralConstants.PdfDataExtractorServiceName,
             Extension = FileHelper.GetImageExtension(imageReference)
         });
         

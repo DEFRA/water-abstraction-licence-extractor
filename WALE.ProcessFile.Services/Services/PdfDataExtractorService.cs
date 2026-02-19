@@ -24,7 +24,7 @@ public class PdfDataExtractorService(
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
-    public static string Name => "PdfPig";
+    public static string Name => GeneralConstants.PdfDataExtractorServiceName;
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,

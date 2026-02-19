@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Services.Enums;
+namespace WALE.ProcessFile.Core.Enums;
 
 public enum ProcessResult
 {

@@ -1,14 +1,15 @@
 using System.Text.Json;
 using Azure;
 using Azure.AI.DocumentIntelligence;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
+using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.Models;
 using DocumentLine = Azure.AI.DocumentIntelligence.DocumentLine;
 
-namespace WALE.ProcessFile.Services.Services;
+namespace WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 
 public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
     string endpoint,
@@ -64,7 +65,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             {
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
-                    PdfDataExtractorService.Name,
+                    GeneralConstants.PdfDataExtractorServiceName,
                     pdfFilepath);
             }
             else
@@ -74,7 +75,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
                     Filepath = pdfFilepath,
-                    NoOcrServiceName = PdfDataExtractorService.Name,
+                    NoOcrServiceName = GeneralConstants.PdfDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
 
@@ -154,7 +155,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 request.PageNumber,
                 request.ProcessRunId,
                 FileHelper.GetImageExtension(imageReference),
-                PdfDataExtractorService.Name);
+                GeneralConstants.PdfDataExtractorServiceName);
 
             var analyzeDocumentOptions = new AnalyzeDocumentOptions(
                 "prebuilt-read",

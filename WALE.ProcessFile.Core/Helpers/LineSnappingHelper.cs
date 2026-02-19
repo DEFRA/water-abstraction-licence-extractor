@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Services.Helpers;
+namespace WALE.ProcessFile.Core.Helpers;
 
 public static class LineSnappingHelper
 {

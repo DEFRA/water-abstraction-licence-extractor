@@ -6,9 +6,8 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
 
-namespace WALE.ProcessFile.Services.Services;
+namespace WALE.ProcessFile.Services.AzureComputerVision;
 
 public class AzureAiVisionOcrDataExtractorService(
     string endpoint,
@@ -66,7 +65,7 @@ public class AzureAiVisionOcrDataExtractorService(
             {
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
-                    PdfDataExtractorService.Name,
+                    GeneralConstants.PdfDataExtractorServiceName,
                     pdfFilepath);
             }
             else
@@ -76,7 +75,7 @@ public class AzureAiVisionOcrDataExtractorService(
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
                     Filepath = pdfFilepath,
-                    NoOcrServiceName = PdfDataExtractorService.Name,
+                    NoOcrServiceName = GeneralConstants.PdfDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
 
@@ -185,7 +184,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 request.PageNumber,
                 request.ProcessRunId,
                 FileHelper.GetImageExtension(imageReference),
-                PdfDataExtractorService.Name);
+                GeneralConstants.PdfDataExtractorServiceName);
 
             await using var stream = new MemoryStream(bytes);
             textHeaders = await _client.ReadInStreamAsync(stream);

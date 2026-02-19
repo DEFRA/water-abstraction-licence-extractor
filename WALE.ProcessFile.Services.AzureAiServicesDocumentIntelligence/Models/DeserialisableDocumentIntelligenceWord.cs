@@ -1,6 +1,6 @@
 using Azure.AI.DocumentIntelligence;
 
-namespace WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
+namespace WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.Models;
 
 public class DeserialisableDocumentIntelligenceWord
 {

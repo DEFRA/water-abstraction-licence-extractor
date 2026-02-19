@@ -59,6 +59,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.RuleEngine.Tests", "WALE.ProcessFile.RuleEngine.Tests\WALE.ProcessFile.RuleEngine.Tests.csproj", "{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence", "WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj", "{7EBBF79A-4A3A-4457-95AC-DED2C7BE0F53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AzureComputerVision", "WALE.ProcessFile.Services.AzureComputerVision\WALE.ProcessFile.Services.AzureComputerVision.csproj", "{982B3BD4-8B8B-4E7F-8F77-BBD83E369643}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AzureOpenAi", "WALE.ProcessFile.Services.AzureOpenAi\WALE.ProcessFile.Services.AzureOpenAi.csproj", "{8EB4AE9E-8677-4E12-8B5C-2721C99ACE05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +139,18 @@ Global
 		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C2F5C28-2726-4D0B-BF72-A07E9719D8F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EBBF79A-4A3A-4457-95AC-DED2C7BE0F53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EBBF79A-4A3A-4457-95AC-DED2C7BE0F53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EBBF79A-4A3A-4457-95AC-DED2C7BE0F53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EBBF79A-4A3A-4457-95AC-DED2C7BE0F53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{982B3BD4-8B8B-4E7F-8F77-BBD83E369643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{982B3BD4-8B8B-4E7F-8F77-BBD83E369643}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{982B3BD4-8B8B-4E7F-8F77-BBD83E369643}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{982B3BD4-8B8B-4E7F-8F77-BBD83E369643}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB4AE9E-8677-4E12-8B5C-2721C99ACE05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB4AE9E-8677-4E12-8B5C-2721C99ACE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB4AE9E-8677-4E12-8B5C-2721C99ACE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB4AE9E-8677-4E12-8B5C-2721C99ACE05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {083AE369-520B-4A83-A5F3-6A94E22FAAA3}

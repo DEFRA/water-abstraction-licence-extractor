@@ -12,6 +12,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 
 namespace WALE.Tools;

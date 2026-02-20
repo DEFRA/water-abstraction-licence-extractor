@@ -2,15 +2,15 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldDataCollection
 {
-    public List<NaldAbstractionLicenceCsvLine>? Licences { get; set; }
+    public List<NaldAbstractionLicenceDataLine>? Licences { get; set; }
     
     public List<NaldLicence>? LicencesAlternateFormat { get; set; }
 
-    public List<NaldLicenceVersionCsvLine>? LicenceVersions { get; set; }
+    public List<NaldLicenceVersionDataLine>? LicenceVersions { get; set; }
 
-    public List<NaldLicencePurposeCsvLine>? LicencePurposes { get; set; }
+    public List<NaldLicencePurposeDataLine>? LicencePurposes { get; set; }
 
-    public List<NaldLicencePointCsvLine>? LicencePoints { get; set; }
+    public List<NaldLicencePointDataLine>? LicencePoints { get; set; }
 
-    public List<NaldLicenceQuantitiesCsvLine>? LicenceQuantities { get; set; }
+    public List<NaldLicenceQuantitiesDataLine>? LicenceQuantities { get; set; }
 }

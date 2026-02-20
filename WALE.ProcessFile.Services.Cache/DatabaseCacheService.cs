@@ -288,27 +288,27 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
     }
 
-    public Task<List<NaldAbstractionLicenceCsvLine>> GetNaldAbsLicencesAsync(short regionCode)
+    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
     }
 
-    public Task<List<NaldLicenceVersionCsvLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
     {
         return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
     }
 
-    public Task<List<NaldLicencePurposeCsvLine>> GetNaldLicencePurposesAsync(short regionCode)
+    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
     {
         return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
     }
 
-    public Task<List<NaldLicencePointCsvLine>> GetNaldLicencePointsAsync(short regionCode)
+    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
     {
         return databaseReadService.GetNaldLicencePointsAsync(regionCode);
     }
 
-    public Task<List<NaldLicenceQuantitiesCsvLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
     {
         return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
     }

@@ -10,25 +10,10 @@ public static class ExternalDataHelper
         Dictionary<string, DmsFileData> licenceNumbersWithFilenames,
         int regionCode)
     {
-        // Fetch all data in parallel
-        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync((short)regionCode);
-        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync((short)regionCode);
-        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync((short)regionCode);
-        var pointsTask = databaseReadService.GetNaldLicencePointsAsync((short)regionCode);
-        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync((short)regionCode);
-
-        await Task.WhenAll(licencesTask, versionsTask, purposesTask, pointsTask, quantitiesTask);
-
-        var licences = await licencesTask;
-        var versions = await versionsTask;
-        var purposes = await purposesTask;
-        var points = await pointsTask;
-        var quantities = await quantitiesTask;
-
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
 
-        foreach (var line in licences)
+        foreach (var line in data.Licences!)
         {
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
             var key = $"{line.FgacRegionCode}|{line.Id}";
@@ -59,6 +44,7 @@ public static class ExternalDataHelper
             returnList.Add(key, naldData);
         }
 
+        // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
         AddNaldAbstractionLicenceVersionData(
             data.LicenceVersions!,
             internalLicenceIdsNotInDataset,
@@ -68,22 +54,15 @@ public static class ExternalDataHelper
             data.LicenceQuantities!,
             internalLicenceIdsNotInDataset,
             ref returnList);
-
+        
         var purposeToLicenceMapping = AddNaldAbstractionLicencePurposeData(
             data.LicencePurposes!,
             internalLicenceIdsNotInDataset,
             ref returnList);
-
+        
         AddNaldAbstractionLicencePointsData(
             data.LicencePoints!,
             ref purposeToLicenceMapping);
-            
-        // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
-        AddNaldAbstractionLicenceVersionData(versions, internalLicenceIdsNotInDataset, ref returnList);
-        AddNaldAbstractionLicenceQuantitiesData(quantities, internalLicenceIdsNotInDataset, ref returnList);
-        var purposeToLicenceMapping =
-            AddNaldAbstractionLicencePurposeData(purposes, internalLicenceIdsNotInDataset, ref returnList);
-        AddNaldAbstractionLicencePointsData(points, ref purposeToLicenceMapping);
 
         var changedKeyList = new Dictionary<string, List<NaldData>>();
 

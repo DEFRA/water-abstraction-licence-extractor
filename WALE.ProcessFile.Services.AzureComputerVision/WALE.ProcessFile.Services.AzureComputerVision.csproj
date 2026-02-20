@@ -13,5 +13,4 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
     </ItemGroup>
-
 </Project>

@@ -1,5 +1,4 @@
-namespace WALE.ProcessFile.Core.Models;
-
+namespace WALE.ProcessFile.Core.Interfaces;
 public interface IInternalPdfImage
 {
     /// <summary>

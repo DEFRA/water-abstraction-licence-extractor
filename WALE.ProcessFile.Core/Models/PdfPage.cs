@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Core.Models;
 

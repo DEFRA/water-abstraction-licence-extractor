@@ -1,5 +1,5 @@
 using UglyToad.PdfPig.Content;
-using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 

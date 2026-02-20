@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -17,5 +18,5 @@ public class PdfPage
     public List<PdfPageProvider> Providers { get; set; } = [];
     
     [JsonIgnore]
-    public object? PdfPigPage { get; set; }
+    public IInternalPdfDocumentPage? InternalPage { get; set; }
 }

@@ -1,11 +1,9 @@
 using System.Text.Json;
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Services.Cache;
 
@@ -383,7 +381,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<MinimalTextBlock> pageLines)
+        string pageLines)
     {
         var fileCacheFolder= GetFolderPath(request.Filepath!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";

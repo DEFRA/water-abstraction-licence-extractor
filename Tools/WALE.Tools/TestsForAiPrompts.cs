@@ -5,13 +5,16 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 
 namespace WALE.Tools;
@@ -529,6 +532,7 @@ public static class TestsForAiPrompts
     {
         var cacheService = new FileSystemCacheService("Cache/");
         var outputService = new FileSystemOutputService("Output/");
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
@@ -543,7 +547,8 @@ public static class TestsForAiPrompts
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
             true,
-            outputService);
+            outputService,
+            pdfPigDocumentService);
         
         var imagePrompts = new List<ChatMessageContentPart>();
                 
@@ -583,7 +588,7 @@ public static class TestsForAiPrompts
                     1,
                     mockPdfDocument,
                     -1,
-                    PdfDataExtractorService.Name)).ToList();
+                    GeneralConstants.PdfPigDataExtractorServiceName)).ToList();
 
             var averageLineLength = lines.Average(line
                 => line.Text.Length);

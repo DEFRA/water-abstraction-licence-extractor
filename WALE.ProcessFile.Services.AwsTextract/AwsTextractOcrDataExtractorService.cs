@@ -174,13 +174,15 @@ public class AwsTextractOcrDataExtractorService
             considerableOverlapAmount);
     }
     
-    private static async Task<AnalyzeDocumentResponse> AnalyzeDocumentAsync(AmazonTextractClient client, AnalyzeDocumentRequest analyzeDocumentRequest)
+    private static async Task<DetectDocumentTextResponse> DetectDocumentTextAsync(
+        AmazonTextractClient client,
+        DetectDocumentTextRequest detectDocumentTextRequest)
     {
         await RequestLock.WaitAsync();
 
         try
         {
-            return await client.AnalyzeDocumentAsync(analyzeDocumentRequest);
+            return await client.DetectDocumentTextAsync(detectDocumentTextRequest);
         }
         finally
         {
@@ -218,23 +220,22 @@ public class AwsTextractOcrDataExtractorService
     {
         var stream = new MemoryStream(bytes);
         
-        var analyzeDocumentRequest = new AnalyzeDocumentRequest
+        var detectDocumentTextRequest = new DetectDocumentTextRequest
         {
             Document = new Document
             {
                 Bytes = stream
-            },
-            FeatureTypes = [FeatureType.FORMS]
+            }
         };
 
         const double coordinatesFormatMultiplier = 1_000.0;
 
         var client = GetTextractClient(_accessKey, _secretKey);
-        var analyzeDocumentResponse = await AnalyzeDocumentAsync(client, analyzeDocumentRequest);
+        var detectDocumentTextResponse = await DetectDocumentTextAsync(client, detectDocumentTextRequest);
         
         var returnList = new List<LineAndWords>();
         
-        foreach (var block in analyzeDocumentResponse.Blocks)
+        foreach (var block in detectDocumentTextResponse.Blocks)
         {
             if (block.BlockType != BlockType.WORD)
             {

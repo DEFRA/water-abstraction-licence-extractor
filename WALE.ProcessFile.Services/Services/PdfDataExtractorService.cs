@@ -19,12 +19,13 @@ public class PdfDataExtractorService(
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
     ICacheService cacheService,
     IOutputService outputService,
+    INoOcrPdfDocumentService noOcrPdfDocumentService,
     string pdfFolderPath,
     int id = -1) : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
-    public static string Name => "PdfPig";
+    public string Name => noOcrPdfDocumentService.Name!;
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
@@ -38,6 +39,7 @@ public class PdfDataExtractorService(
             pdfFilePath,
             outputService,
             cacheService,
+            noOcrPdfDocumentService,
             processRunId);
 
         Console.WriteLine(
@@ -62,7 +64,7 @@ public class PdfDataExtractorService(
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
-            ServicesUsed = [ noOcrDataExtractorService.Name, "Docnet" ] // TODO, tidy this up
+            ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
         };
         
         var isOcr = false;

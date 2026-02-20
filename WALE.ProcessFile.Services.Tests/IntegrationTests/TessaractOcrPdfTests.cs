@@ -9,7 +9,8 @@ using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -35,7 +36,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
- 
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined1 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -58,6 +60,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined3 = new PdfDataExtractorService(
@@ -69,6 +72,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder3);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined4 = new PdfDataExtractorService(
@@ -80,6 +84,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder4);
     
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()

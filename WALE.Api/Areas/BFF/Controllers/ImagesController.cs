@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.BFF.Models;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Services;
@@ -60,12 +61,13 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
     public async Task<ActionResult<IEnumerable<PageImage>>> PageImages([FromQuery] string filename,
         [FromQuery] int? pageNumber)
     {
-        var pageImages = await cacheService.GetImagesAsync(new OcrServiceImageDataCacheRequest
-        {
-            PageNumber = pageNumber,
-            Filepath = filename,
-            NoOcrServiceName = PdfDataExtractorService.Name
-        });
+        var pageImages = await cacheService.GetImagesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                Filepath = filename,
+                NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName
+            });
 
         var pageImagesUnique = pageImages
             .GroupBy(pi => new { pi.pageNumber, pi.imageNumber })
@@ -88,14 +90,15 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
     public async Task<ActionResult> PartialPageImage([FromQuery] string filename, [FromQuery] string extension,
         [FromQuery] int pageNumber, [FromQuery] int imageNumber)
     {
-        var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-        {
-            PageNumber = pageNumber,
-            ImageNumber = imageNumber,
-            Filepath = filename,
-            NoOcrServiceName = PdfDataExtractorService.Name,
-            Extension = extension
-        });
+        var bytes = await cacheService.GetImageBytesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filename,
+                NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
+                Extension = extension
+            });
 
         if (bytes == null)
         {

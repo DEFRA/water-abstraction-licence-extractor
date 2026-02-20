@@ -9,8 +9,8 @@ using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -41,12 +41,14 @@ public class NoOcrDatabaseTests
         TestConfig.PostgresPassword);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
-
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
 
     public NoOcrDatabaseTests()

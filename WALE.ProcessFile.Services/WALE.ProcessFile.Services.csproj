@@ -6,12 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
-        <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1"/>
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
-        <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="1.0.2" />        
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     </ItemGroup>
 
@@ -81,8 +76,12 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.AzureComputerVision\WALE.ProcessFile.Services.AzureComputerVision.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.AzureOpenAi\WALE.ProcessFile.Services.AzureOpenAi.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.PdfPig\WALE.ProcessFile.Services.PdfPig.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
     </ItemGroup>
 </Project>

@@ -8,6 +8,7 @@ public interface INoOcrDataExtractorService
         string pdfFilePath,
         IOutputService outputService,
         ICacheService cacheService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
         int processRunId);
     
     public Task<List<DocumentLine>>

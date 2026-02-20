@@ -1,5 +1,6 @@
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -37,16 +38,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         var result1 = $"{imgOutputPath}page-{pageNumber}.jpg";
         
-        imgOutputPath = $"{folderName}/Docnet/Images/";
-
+        imgOutputPath = $"{folderName}/{GeneralConstants.DocnetExtractorServiceName}/Images/";
         Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
-
         var result2 = $"{imgOutputPath}page-{pageNumber}.jpg";
         
         return
         [
             (pdfServiceName, result1),
-            ("Docnet",result2),
+            (GeneralConstants.DocnetExtractorServiceName, result2),
         ];
     }
     

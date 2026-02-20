@@ -9,6 +9,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
@@ -16,8 +17,9 @@ using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WaterAbstractionLicenseExtractor.Cmd;
 
 await ProgramAsync();
@@ -435,7 +437,8 @@ ConfiguredServices ConfigureServices()
     var apiOutputService = new ApiOutputService(httpClient);
 
     var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
-    
+
+    var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -481,6 +484,7 @@ ConfiguredServices ConfigureServices()
             ],
             cacheService,
             outputService,
+            pdfPigDocumentService,
             pdfFolderPath,
             id);
 

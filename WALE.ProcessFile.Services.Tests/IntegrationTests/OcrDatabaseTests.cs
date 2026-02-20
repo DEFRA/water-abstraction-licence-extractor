@@ -7,8 +7,9 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -39,7 +40,8 @@ public class OcrDatabaseTests
         TestConfig.PostgresPassword);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
-
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     public OcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -55,6 +57,7 @@ public class OcrDatabaseTests
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;

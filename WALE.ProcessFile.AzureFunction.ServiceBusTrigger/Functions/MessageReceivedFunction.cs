@@ -5,17 +5,16 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
-/*using Microsoft.Extensions.Logging;*/
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 
 namespace WALE.ProcessFile.AzureFunction.ServiceBusTrigger.Functions;
 
@@ -68,6 +67,7 @@ public class MessageReceivedFunction(
             pdfFilePath
         };
         
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
         var pdfDataExtractor = new PdfDataExtractorService(
@@ -78,6 +78,7 @@ public class MessageReceivedFunction(
             ],
             cacheService,
             outputService,
+            pdfPigDocumentService,
             pdfFolderPath);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(

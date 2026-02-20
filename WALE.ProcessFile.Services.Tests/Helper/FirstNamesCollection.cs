@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Services.Tests.Helper;
 
 [CollectionDefinition("First Names 1", DisableParallelization = false)]
 [EnableParallelization] // This enables the parallel execution of classes in a collection
-public class FirstNamesCollection1 : ICollectionFixture<BaseFixture>
+public class FirstNamesCollection1 : ICollectionFixture<SingletonFirstNamesFixture>
 {
 }
 

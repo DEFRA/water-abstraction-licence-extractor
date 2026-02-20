@@ -386,11 +386,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";
 
-        var data = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
-        
         await File.WriteAllTextAsync(
             outputFilename,
-            data);
+            pageLines);
         
         return request;
     }

@@ -4,11 +4,13 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
@@ -48,10 +50,12 @@ public static class FileTypeIdentificationExtract
             databaseAddService);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        
         // Create 10 instances of PdfDataExtractorService for parallel processing
         var pdfDataExtractors = new List<IPdfDataExtractorService>();
-        for (int i = 0; i < 10; i++)
+        
+        for (var i = 0; i < 10; i++)
         {
             var pdfDataExtractor = new PdfDataExtractorService(
                 new PdfPigNoOcrDataExtractorService(),
@@ -83,6 +87,7 @@ public static class FileTypeIdentificationExtract
                 },
                 cacheService, 
                 outputService,
+                pdfPigDocumentService,
                 KeyConfig.PdfFolder);
 
             pdfDataExtractors.Add(pdfDataExtractor);
@@ -103,7 +108,8 @@ public static class FileTypeIdentificationExtract
         var results = await fileTypeService.ProcessDirectoryAsync(
             KeyConfig.PdfFolder,
             configuration,
-            outputService);
+            outputService,
+            pdfPigDocumentService);
         
         var csvData = new List<FileTypeIdentificationResult>();
 

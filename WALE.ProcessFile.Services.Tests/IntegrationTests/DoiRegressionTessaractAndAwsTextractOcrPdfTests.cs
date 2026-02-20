@@ -7,8 +7,9 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -37,7 +38,8 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
- 
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined5 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -48,6 +50,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder4);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();

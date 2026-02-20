@@ -16,5 +16,4 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj" />
     </ItemGroup>
-
 </Project>

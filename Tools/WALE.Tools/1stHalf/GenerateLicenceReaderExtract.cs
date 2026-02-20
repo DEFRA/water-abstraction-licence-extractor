@@ -5,13 +5,15 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Helpers;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
@@ -166,6 +168,7 @@ public static class GenerateLicenceReaderExtract
         int id,
         ICacheService cacheService,
         IOutputService outputService,
+        INoOcrPdfDocumentService documentService,
         string pdfFolder)
     {
         var dotnetPath = KeyConfig.DotnetPath;
@@ -203,6 +206,7 @@ public static class GenerateLicenceReaderExtract
             },
             cacheService,
             outputService,
+            documentService,
             pdfFolder);
     }
 
@@ -225,6 +229,7 @@ public static class GenerateLicenceReaderExtract
             databaseAddService);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         
         var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
@@ -240,6 +245,7 @@ public static class GenerateLicenceReaderExtract
                     serviceIdx,
                     cacheService,
                     outputService,
+                    pdfPigDocumentService,
                     pdfFolder));
         }
 

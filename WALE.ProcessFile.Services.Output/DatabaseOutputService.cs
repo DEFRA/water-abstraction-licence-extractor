@@ -1,5 +1,6 @@
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -26,8 +27,10 @@ public class DatabaseOutputService(
 
         return
         [
-            (pdfServiceName, $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
-            ("Docnet", $"Screenshot-{pdfFilename}-Docnet-{pageNumber}")
+            (pdfServiceName,
+                $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
+            (GeneralConstants.DocnetExtractorServiceName,
+                $"Screenshot-{pdfFilename}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
         ];
     }
 
@@ -43,7 +46,7 @@ public class DatabaseOutputService(
         var bytes2 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
             pdfFilename,
-            "Docnet");
+            GeneralConstants.DocnetExtractorServiceName);// TODO tidy this up
         
         return [
             bytes1!,

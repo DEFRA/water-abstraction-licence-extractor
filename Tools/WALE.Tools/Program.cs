@@ -2,15 +2,12 @@
 using WALE.Tools._2ndHalf;
 using WALE.Tools.Config;
 
-//const string workflow = "TestsForAiPrompts";
-//const string workflow = "GenerateAggregatesCsvForTesting";
-//const string workflow = "GenerateLinkedLicencesCsv";
-//const string workflow = "GenerateUnknownSectionLinkedLicencesCsv";
-const string workflow = "GenerateLicenceReaderExtract";
+const string workflow = "DuplicateLicenceIdentificationExtractBySize";
 
 const int processRunId = 631;
-var pdfFolder = KeyConfig.PdfFolder5;
 const int regionCode = 3;
+var pdfFolder = KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
+var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 
 switch (workflow)
 {
@@ -18,11 +15,17 @@ switch (workflow)
     case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be uses in Live Licence Identification
         await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(pdfFolder, regionCode);
         break;
-    case "DuplicateLicenceIdentificationExtract": // We don't run anymore
-        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync();
+    case "DuplicateLicenceIdentificationExtract": // Identify duplicates by name (NOTE We don't run anymore)
+        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
+            duplicateResultsFilePath,
+            KeyConfig.PdfFolderForDuplicates,
+            true);
         break;
     case "DuplicateLicenceIdentificationExtractBySize": // Identify duplicates by file size
-        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(false);
+        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
+            duplicateResultsFilePath,
+            pdfFolder,
+            false);
         break;
     case "FileTypeIdentificationExtract": // Version File Type Identification
         await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();

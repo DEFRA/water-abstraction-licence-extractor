@@ -14,5 +14,5 @@ public class LookupConfiguration(
 
     public readonly int RegionCode = regionCode;
 
-    public HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
+    public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
 }

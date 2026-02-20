@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.BFF.Models;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Services;
@@ -65,7 +66,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             {
                 PageNumber = pageNumber,
                 Filepath = filename,
-                NoOcrServiceName = PdfDataExtractorService.Name
+                NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName
             });
 
         var pageImagesUnique = pageImages
@@ -92,14 +93,15 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber)
     {
-        var bytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-        {
-            PageNumber = pageNumber,
-            ImageNumber = imageNumber,
-            Filepath = filename,
-            NoOcrServiceName = PdfDataExtractorService.Name,
-            Extension = extension
-        });
+        var bytes = await cacheService.GetImageBytesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filename,
+                NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
+                Extension = extension
+            });
 
         if (bytes == null)
         {

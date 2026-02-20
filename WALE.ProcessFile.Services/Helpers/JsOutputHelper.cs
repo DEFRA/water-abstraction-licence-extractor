@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -21,7 +22,7 @@ public static class JsOutputHelper
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
         var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
         var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData,"ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", PdfDataExtractorService.Name);
+        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", GeneralConstants.PdfPigDataExtractorServiceName);
 
         var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
@@ -131,7 +132,7 @@ public static class JsOutputHelper
 
             var listRow = new OutputListDataItem
             {
-                imagePath = $"{filename}/{PdfDataExtractorService.Name}/Images/page-1.jpg",
+                imagePath = $"{filename}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
                 filename = filename,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}<br><span style=\"color: silver\">{outputLine.NaldLicenceNumber}</span>",

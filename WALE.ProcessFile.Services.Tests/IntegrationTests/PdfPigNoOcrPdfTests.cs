@@ -11,8 +11,8 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -41,12 +41,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
@@ -54,6 +56,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder2);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
@@ -61,6 +64,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder3);
 
     private static int NoneNeRegionCode = 1;

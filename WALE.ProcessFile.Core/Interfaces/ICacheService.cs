@@ -1,6 +1,5 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -73,7 +72,7 @@ public interface ICacheService
     
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
-        List<MinimalTextBlock> pageLines);
+        string pageLines);
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,

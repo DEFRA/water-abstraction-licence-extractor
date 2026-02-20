@@ -3,10 +3,12 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
@@ -323,6 +325,8 @@ public static class TemplateIdentificationExtract
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
 
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        
         foreach (var batch in batches)
         {
             Console.WriteLine($"Processing batch with {batch.Count} files...");
@@ -364,6 +368,7 @@ public static class TemplateIdentificationExtract
                     },
                     cacheService,
                     outputService,
+                    pdfPigDocumentService,
                     KeyConfig.PdfFolder);
 
                 //pdfDataExtractors.Add(extractor);

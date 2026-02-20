@@ -39,8 +39,12 @@ public class FileTypeIdentifierService
     /// </summary>
     /// <param name="filePath">The path to the PDF file</param>
     /// <param name="outputService">TODO</param>
+    /// <param name="documentService"></param>
     /// <returns>The number of pages in the PDF</returns>
-    private static async Task<int> GetPageCountAsync(string filePath, IOutputService outputService)
+    private static async Task<int> GetPageCountAsync(
+        string filePath,
+        IOutputService outputService,
+        INoOcrPdfDocumentService documentService)
     {
         if (!File.Exists(filePath))
         {
@@ -51,7 +55,8 @@ public class FileTypeIdentifierService
         {
             try
             {
-                var pdfDocument = new PdfDocument(filePath, false, outputService); // TODO should this always load it?
+                // TODO should this always load it?
+                var pdfDocument = new PdfDocument(filePath, false, outputService, documentService);
                 return pdfDocument.Pages.Count;
             }
             catch (Exception ex)
@@ -459,6 +464,7 @@ public class FileTypeIdentifierService
         string directoryPath,
         LookupConfiguration lookupConfiguration,
         IOutputService outputService,
+        INoOcrPdfDocumentService documentService,
         string searchPattern = "*.*")
     {
         if (!Directory.Exists(directoryPath))
@@ -565,7 +571,7 @@ public class FileTypeIdentifierService
                 {
                     try
                     {
-                        var pageCount = await GetPageCountAsync(file, outputService);
+                        var pageCount = await GetPageCountAsync(file, outputService, documentService);
                         return new { File = file, PageCount = pageCount, Success = true };
                     }
                     catch (Exception ex)

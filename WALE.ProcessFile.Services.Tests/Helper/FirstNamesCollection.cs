@@ -25,3 +25,8 @@ public class FirstNamesCollection3 : ICollectionFixture<SingletonFirstNamesFixtu
 public class FirstNamesCollection4 : ICollectionFixture<SingletonFirstNamesFixture>
 {
 }
+
+[CollectionDefinition("First Names 5", DisableParallelization = false)]
+public class FirstNamesCollection5 : ICollectionFixture<SingletonFirstNamesFixture>
+{
+}

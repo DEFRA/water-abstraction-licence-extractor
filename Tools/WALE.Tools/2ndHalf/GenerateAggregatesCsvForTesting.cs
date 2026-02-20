@@ -7,13 +7,14 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
@@ -23,6 +24,8 @@ public static class GenerateAggregatesCsvForTesting
 {
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
     private static readonly Dictionary<string, List<NaldData>> NaldData = [];
     private static readonly int ProcessRunId = -1;
@@ -41,6 +44,7 @@ public static class GenerateAggregatesCsvForTesting
             },
             CacheService,
             OutputService,
+            DocumentService,
             KeyConfig.PdfFolder);
 
         var regionCode = 3;

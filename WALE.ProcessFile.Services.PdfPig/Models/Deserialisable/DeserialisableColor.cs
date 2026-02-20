@@ -1,6 +1,6 @@
 using UglyToad.PdfPig.Graphics.Colors;
 
-namespace WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
+namespace WALE.ProcessFile.Services.PdfPig.Models.Deserialisable;
 
 public class DeserialisableColor : IColor
 {

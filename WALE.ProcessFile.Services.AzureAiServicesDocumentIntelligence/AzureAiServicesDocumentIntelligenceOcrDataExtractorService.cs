@@ -65,7 +65,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             {
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
-                    GeneralConstants.PdfDataExtractorServiceName,
+                    GeneralConstants.PdfPigDataExtractorServiceName,
                     pdfFilepath);
             }
             else
@@ -75,7 +75,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
                     Filepath = pdfFilepath,
-                    NoOcrServiceName = GeneralConstants.PdfDataExtractorServiceName,
+                    NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
 
@@ -155,7 +155,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 request.PageNumber,
                 request.ProcessRunId,
                 FileHelper.GetImageExtension(imageReference),
-                GeneralConstants.PdfDataExtractorServiceName);
+                GeneralConstants.PdfPigDataExtractorServiceName);
 
             var analyzeDocumentOptions = new AnalyzeDocumentOptions(
                 "prebuilt-read",

@@ -73,7 +73,7 @@ public class TesseractOcrDataExtractorService(
                     pageSegMode);
 
                 returnLines = await inprocessTesseractService.ProcessAsync(
-                    GeneralConstants.PdfDataExtractorServiceName,
+                    GeneralConstants.PdfPigDataExtractorServiceName,
                     pageNumber,
                     imageNumber,
                     isPageScreenshot,

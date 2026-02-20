@@ -9,10 +9,13 @@
 
     <ItemGroup>
         <PackageReference Include="CsvHelper" Version="33.0.1" />
-        <PackageReference Include="Docnet.Core" Version="2.6.0" />
         <PackageReference Include="ExcelDataReader" Version="3.8.0" />
         <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
         <PackageReference Include="SkiaSharp" Version="3.119.2" />
         <PackageReference Include="WeCantSpell.Hunspell" Version="5.2.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Docnet\WALE.ProcessFile.Services.Docnet.csproj" />
     </ItemGroup>
 </Project>

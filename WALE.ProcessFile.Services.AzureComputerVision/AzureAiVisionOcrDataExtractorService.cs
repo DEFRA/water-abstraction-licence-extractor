@@ -65,7 +65,7 @@ public class AzureAiVisionOcrDataExtractorService(
             {
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
-                    GeneralConstants.PdfDataExtractorServiceName,
+                    GeneralConstants.PdfPigDataExtractorServiceName,
                     pdfFilepath);
             }
             else
@@ -75,7 +75,7 @@ public class AzureAiVisionOcrDataExtractorService(
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
                     Filepath = pdfFilepath,
-                    NoOcrServiceName = GeneralConstants.PdfDataExtractorServiceName,
+                    NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
 
@@ -184,7 +184,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 request.PageNumber,
                 request.ProcessRunId,
                 FileHelper.GetImageExtension(imageReference),
-                GeneralConstants.PdfDataExtractorServiceName);
+                GeneralConstants.PdfPigDataExtractorServiceName);
 
             await using var stream = new MemoryStream(bytes);
             textHeaders = await _client.ReadInStreamAsync(stream);

@@ -1,5 +1,6 @@
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Rendering.Skia;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.PdfPig.Models;
 
@@ -21,4 +22,6 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
         document.AddSkiaPageFactory();
         return new PdfPigInternalPdfDocument(document);
     }
+
+    public string? Name { get; set; } = GeneralConstants.PdfPigDataExtractorServiceName;
 }

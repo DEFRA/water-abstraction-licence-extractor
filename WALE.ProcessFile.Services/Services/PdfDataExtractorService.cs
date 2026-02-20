@@ -25,7 +25,7 @@ public class PdfDataExtractorService(
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
-    public static string Name => GeneralConstants.PdfDataExtractorServiceName;
+    public string Name => noOcrPdfDocumentService.Name!;
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
@@ -64,7 +64,7 @@ public class PdfDataExtractorService(
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
-            ServicesUsed = [ noOcrDataExtractorService.Name, "Docnet" ] // TODO, tidy this up
+            ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
         };
         
         var isOcr = false;

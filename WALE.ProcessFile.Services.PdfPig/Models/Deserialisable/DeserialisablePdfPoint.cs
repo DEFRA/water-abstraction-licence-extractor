@@ -1,6 +1,6 @@
 using UglyToad.PdfPig.Core;
 
-namespace WALE.ProcessFile.Services.Models.PdfPig.Deserialisable;
+namespace WALE.ProcessFile.Services.PdfPig.Models.Deserialisable;
 
 public class DeserialisablePdfPoint
 {

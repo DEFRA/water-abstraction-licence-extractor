@@ -101,7 +101,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             pix.Width,
             pix.Height,
             folderPath,
-            GeneralConstants.PdfDataExtractorServiceName,
+            GeneralConstants.PdfPigDataExtractorServiceName,
             imageNumber,
             pageNumber,
             returnExtension,

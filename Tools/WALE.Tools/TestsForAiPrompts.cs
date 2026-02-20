@@ -5,6 +5,7 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -587,7 +588,7 @@ public static class TestsForAiPrompts
                     1,
                     mockPdfDocument,
                     -1,
-                    PdfDataExtractorService.Name)).ToList();
+                    GeneralConstants.PdfPigDataExtractorServiceName)).ToList();
 
             var averageLineLength = lines.Average(line
                 => line.Text.Length);

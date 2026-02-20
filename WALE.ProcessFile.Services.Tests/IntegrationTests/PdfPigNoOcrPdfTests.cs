@@ -18,6 +18,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 [Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {

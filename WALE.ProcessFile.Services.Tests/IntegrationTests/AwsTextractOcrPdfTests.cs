@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -15,6 +16,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [Collection("AWS Textract 1")]
+[EnableParallelization] // TODO remove this if it causes an issue
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

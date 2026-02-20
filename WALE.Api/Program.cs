@@ -17,7 +17,7 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 
-if (true || app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();

@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -15,7 +16,8 @@ using WALE.ProcessFile.Services.Tests.Helper;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
-[Collection("First Names 2")]
+[EnableParallelization]
+[Collection("First Names 1")]
 public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

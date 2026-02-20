@@ -1,7 +1,9 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 public class FormattingHelperTests
 {
     [Fact]

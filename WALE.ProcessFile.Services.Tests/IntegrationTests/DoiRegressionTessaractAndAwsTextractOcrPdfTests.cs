@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -15,7 +16,8 @@ using WALE.ProcessFile.Services.Tests.Helper;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 // These tests are slow as we are limited to one scan per second from AWS Textract by default
-[Collection("AWS Textract 2")]
+[Collection("AWS Textract 1")]
+[EnableParallelization]
 public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

@@ -35,6 +35,7 @@ public class AzureOpenAiOcrPdfTests
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -47,8 +48,9 @@ public class AzureOpenAiOcrPdfTests
                 TestConfig.OpenAiDeploymentName,
                 CacheService)
         },
-        CacheService,        
+        CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
     
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};

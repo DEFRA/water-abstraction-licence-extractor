@@ -1,10 +1,10 @@
-using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 
-public class PdfPigNoOcrPageService(Page page) : INoOcrPdfPageService
+public class PdfPigNoOcrPageService(IInternalPdfDocumentPage page) : INoOcrPdfPageService
 {
     public Task<IReadOnlyList<INoOcrPdfImageService>> GetImagesAsync()
     {

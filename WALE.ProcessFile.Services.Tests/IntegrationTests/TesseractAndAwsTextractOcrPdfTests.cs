@@ -38,6 +38,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -49,6 +50,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
@@ -61,6 +63,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder3);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    

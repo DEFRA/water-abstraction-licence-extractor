@@ -19,6 +19,7 @@ public class PdfDataExtractorService(
     IEnumerable<IOcrDataExtractorService> ocrDataExtractorServices,
     ICacheService cacheService,
     IOutputService outputService,
+    INoOcrPdfDocumentService noOcrPdfDocumentService,
     string pdfFolderPath,
     int id = -1) : IPdfDataExtractorService
 {
@@ -38,6 +39,7 @@ public class PdfDataExtractorService(
             pdfFilePath,
             outputService,
             cacheService,
+            noOcrPdfDocumentService,
             processRunId);
 
         Console.WriteLine(

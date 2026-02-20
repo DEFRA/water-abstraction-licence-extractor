@@ -41,12 +41,14 @@ public class NoOcrDatabaseTests
         TestConfig.PostgresPassword);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
-
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder);
 
     public NoOcrDatabaseTests()

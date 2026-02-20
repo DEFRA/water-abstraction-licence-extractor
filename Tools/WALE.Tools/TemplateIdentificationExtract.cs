@@ -330,6 +330,8 @@ public static class TemplateIdentificationExtract
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
 
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        
         foreach (var batch in batches)
         {
             Console.WriteLine($"Processing batch with {batch.Count} files...");
@@ -371,6 +373,7 @@ public static class TemplateIdentificationExtract
                     },
                     cacheService,
                     outputService,
+                    pdfPigDocumentService,
                     KeyConfig.PdfFolder);
 
                 //pdfDataExtractors.Add(extractor);

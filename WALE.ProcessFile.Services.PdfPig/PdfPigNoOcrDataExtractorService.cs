@@ -20,10 +20,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         string pdfFilePath,
         IOutputService outputService,
         ICacheService cacheService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
         int processRunId)
     {
         var metadata = await cacheService.GetMetadataAsync(pdfFilePath, Name, processRunId);
-        var pdfDocument = new PdfDocument(pdfFilePath, metadata != null, outputService);
+        var pdfDocument = new PdfDocument(
+            pdfFilePath,
+            metadata != null,
+            outputService,
+            noOcrPdfDocumentService);
         
         if (pdfDocument.FromCache)
         {
@@ -284,14 +289,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         if (FormattingHelper.IsPageEmpty(page.DigitalText))
         {
-            await cacheService.SaveNoOcrPageTextLines(pageRequest, []);
+            await cacheService.SaveNoOcrPageTextLines(pageRequest, "[]");
             return [];
         }
 
-        var pdfPigPageLines = await GetPageLinesAsync((Page)page.PdfPigPage!);
+        var pdfPigPageLines = await GetPageLinesAsync((Page)page.InternalPage!.UnderlyingObject!);
         var pageLines = pdfPigPageLines.Select(MinimalTextBlock.FromPdfPigTextBlock).ToList();
-            
-        await cacheService.SaveNoOcrPageTextLines(pageRequest, pageLines);
+        var serialisedPageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
+        
+        await cacheService.SaveNoOcrPageTextLines(pageRequest, serialisedPageLines);
             
         if (pdfPigPageLines.Count == 0)
         {
@@ -322,7 +328,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         foreach (var page in pdfDocument.Pages)
         {
             // TODO should use the interface (via a factory)
-            var pageImageService = new PdfPigNoOcrPageService((Page)page.PdfPigPage!);
+            var pageImageService = new PdfPigNoOcrPageService(page.InternalPage!);
 
             var metadataPage = new ImageMetadataPage
             {

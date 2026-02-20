@@ -168,6 +168,7 @@ public static class GenerateLicenceReaderExtract
         int id,
         ICacheService cacheService,
         IOutputService outputService,
+        INoOcrPdfDocumentService documentService,
         string pdfFolder)
     {
         var dotnetPath = KeyConfig.DotnetPath;
@@ -205,6 +206,7 @@ public static class GenerateLicenceReaderExtract
             },
             cacheService,
             outputService,
+            documentService,
             pdfFolder);
     }
 
@@ -234,6 +236,7 @@ public static class GenerateLicenceReaderExtract
             KeyConfig.PostgresPassword);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         
         const int batchSize = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();
@@ -246,6 +249,7 @@ public static class GenerateLicenceReaderExtract
                     serviceIdx,
                     cacheService,
                     outputService,
+                    pdfPigDocumentService,
                     pdfFolder));
         }
 

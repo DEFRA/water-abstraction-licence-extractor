@@ -74,7 +74,7 @@ public class PdfDocument
                     
                     var pdfPage = new PdfPage
                     {
-                        PdfPigPage = page,
+                        InternalPage = page,
                         Number = page.Number,
                         NumberOfImages = page.NumberOfImages,
                         DigitalText = page.Text,

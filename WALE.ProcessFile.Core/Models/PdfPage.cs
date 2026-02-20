@@ -17,5 +17,5 @@ public class PdfPage
     public List<PdfPageProvider> Providers { get; set; } = [];
     
     [JsonIgnore]
-    public object? PdfPigPage { get; set; }
+    public IInternalPdfDocumentPage? InternalPage { get; set; }
 }

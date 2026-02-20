@@ -55,7 +55,8 @@ public static class FileTypeIdentificationExtract
             KeyConfig.PostgresPassword);
         
         var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        
         // Create 10 instances of PdfDataExtractorService for parallel processing
         var pdfDataExtractors = new List<IPdfDataExtractorService>();
         
@@ -91,6 +92,7 @@ public static class FileTypeIdentificationExtract
                 },
                 cacheService, 
                 outputService,
+                pdfPigDocumentService,
                 KeyConfig.PdfFolder);
 
             pdfDataExtractors.Add(pdfDataExtractor);
@@ -111,7 +113,8 @@ public static class FileTypeIdentificationExtract
         var results = await fileTypeService.ProcessDirectoryAsync(
             KeyConfig.PdfFolder,
             configuration,
-            outputService);
+            outputService,
+            pdfPigDocumentService);
         
         var csvData = new List<FileTypeIdentificationResult>();
 

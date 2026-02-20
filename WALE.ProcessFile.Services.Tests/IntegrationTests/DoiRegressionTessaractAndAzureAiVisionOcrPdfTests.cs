@@ -36,7 +36,8 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
- 
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined5 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -51,6 +52,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         },
         CacheService,
         OutputService,
+        DocumentService,
         TestConfig.PdfFolder4);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();

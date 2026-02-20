@@ -19,6 +19,6 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
             });
 
         document.AddSkiaPageFactory();
-        return document;
+        return new PdfPigInternalPdfDocument(document);
     }
 }

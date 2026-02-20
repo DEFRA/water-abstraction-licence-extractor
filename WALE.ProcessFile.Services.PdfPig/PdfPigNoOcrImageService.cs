@@ -1,12 +1,12 @@
 using Tesseract;
-using UglyToad.PdfPig.Content;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 
-public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageService
+public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfImageService
 {
     public async Task<string?> SaveImageBytesAsync(string folderPath, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
     {
@@ -18,7 +18,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         byte[]? bytes;
 
         Pix? pix;
-        
+
         try
         {
             if (imageData.TryGetPng(out bytes))
@@ -37,7 +37,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
                     }
 
                     returnExtension = jpgExtension;
-                    bytes = ImageHelper.Deflate(bytes);
+                    bytes = ImageHelper.Deflate(bytes!);
                     pix = Pix.LoadFromMemory(bytes);
                 }
             }
@@ -97,7 +97,7 @@ public class PdfPigNoOcrImageService(IPdfImage imageData) : INoOcrPdfImageServic
         }
         
         await cacheService.SaveImageOnPageAsync(
-            bytes,
+            bytes!,
             pix.Width,
             pix.Height,
             folderPath,

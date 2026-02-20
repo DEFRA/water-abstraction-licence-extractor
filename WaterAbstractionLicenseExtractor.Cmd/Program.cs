@@ -437,7 +437,8 @@ ConfiguredServices ConfigureServices()
     var apiOutputService = new ApiOutputService(httpClient);
 
     var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
-    
+
+    var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -483,6 +484,7 @@ ConfiguredServices ConfigureServices()
             ],
             cacheService,
             outputService,
+            pdfPigDocumentService,
             pdfFolderPath,
             id);
 

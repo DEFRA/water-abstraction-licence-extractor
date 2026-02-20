@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IInternalPdfDocument : IDisposable
 {
-    public List<InternalPdfDocumentPage> GetPages();
+    public List<IInternalPdfDocumentPage> GetPages();
 
-    public SKBitmap GetPageAsSKBitmap(int pageNumber, float quality);
+    public SKBitmap GetPageAsSKBitmap(int pageNumber, float scale);
 }

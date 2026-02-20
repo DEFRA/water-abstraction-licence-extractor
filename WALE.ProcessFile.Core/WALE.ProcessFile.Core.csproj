@@ -15,8 +15,4 @@
         <PackageReference Include="SkiaSharp" Version="3.119.2" />
         <PackageReference Include="WeCantSpell.Hunspell" Version="5.2.1"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Models\Services\" />
-    </ItemGroup>
 </Project>

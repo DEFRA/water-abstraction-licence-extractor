@@ -206,9 +206,7 @@ public class DatabaseCacheService(
         string pageLines)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-        
-        var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
-        return await databaseWriteService.SaveNoOcrPageAsync(request, pageLinesStr, request.ProcessRunId);
+        return await databaseWriteService.SaveNoOcrPageAsync(request, pageLines, request.ProcessRunId);
     }
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)

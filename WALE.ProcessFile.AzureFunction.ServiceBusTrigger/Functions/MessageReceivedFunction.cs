@@ -67,6 +67,7 @@ public class MessageReceivedFunction(
             pdfFilePath
         };
         
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
         var pdfDataExtractor = new PdfDataExtractorService(
@@ -77,6 +78,7 @@ public class MessageReceivedFunction(
             ],
             cacheService,
             outputService,
+            pdfPigDocumentService,
             pdfFolderPath);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(

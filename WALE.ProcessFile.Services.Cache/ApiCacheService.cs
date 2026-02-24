@@ -115,14 +115,31 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return content;
     }
 
-    public Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        
+        var path = $"/Extractor/Images/GetTemporaryImageText?pageNumber={request.PageNumber}"
+            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var path = $"/Extractor/Images/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
+            + $"&filepath={filepath}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName,

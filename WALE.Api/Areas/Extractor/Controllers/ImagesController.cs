@@ -51,9 +51,30 @@ public class ImagesController(
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetScreenshotTextAsync(
+    public async Task<IActionResult> GetTemporaryImageTextAsync(
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
+        [FromQuery] string filepath,
+        [FromQuery] string ocrServiceName,
+        [FromQuery] int processRunId)
+    {
+        var imageText = await cacheService.GetTemporaryOcrImageTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filepath = filepath,
+                OcrServiceName = ocrServiceName,
+                ProcessRunId = processRunId
+            }); 
+
+        var content = JsonSerializer.Serialize(imageText, JsonHelper.GetSerializerOptions());
+        return Ok(content);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetScreenshotTextAsync(
+        [FromQuery] int pageNumber,
         [FromQuery] string filepath,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
@@ -62,7 +83,25 @@ public class ImagesController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,
-                ImageNumber = imageNumber,
+                Filepath = filepath,
+                OcrServiceName = ocrServiceName,
+                ProcessRunId = processRunId
+            }); 
+
+        return Ok(imageText);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetTemporaryScreenshotTextAsync(
+        [FromQuery] int pageNumber,
+        [FromQuery] string filepath,
+        [FromQuery] string ocrServiceName,
+        [FromQuery] int processRunId)
+    {
+        var imageText = await cacheService.GetTemporaryOcrScreenshotTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = pageNumber,
                 Filepath = filepath,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
@@ -112,7 +151,7 @@ public class ImagesController(
     }
     
     [HttpPost]
-    public async Task<ActionResult> SaveTemporaryOcrImageText(
+    public async Task<ActionResult> SaveTemporaryOcrImageTextAsync(
         [FromBody] SaveTemporaryOcrImageTextRequest request)
     {
         var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(
@@ -134,7 +173,7 @@ public class ImagesController(
     }
     
     [HttpPost]
-    public async Task<ActionResult> SaveTemporaryOcrScreenshotText(
+    public async Task<ActionResult> SaveTemporaryOcrScreenshotTextAsync(
         [FromBody] SaveTemporaryOcrImageTextRequest request)
     {
         var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(

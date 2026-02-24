@@ -97,7 +97,7 @@ public class TesseractOcrDataExtractorService(
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
                     // TODO - Log
-                    Console.WriteLine("ERROR - Tesseract - Transient error occured (see above)");
+                    Console.WriteLine($"ERROR - {Name} - Transient error occured (see above)");
 
                     // Don't cache, should work next time
                     canSave = false;
@@ -173,7 +173,7 @@ public class TesseractOcrDataExtractorService(
 
         if (!showDebugMessages)
         {
-            Console.WriteLine($"INFO - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
+            Console.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
         }
         
         var fileMode = isDbBased ? "Database" : "File";
@@ -221,21 +221,21 @@ public class TesseractOcrDataExtractorService(
 
                 if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
                 {
-                    Console.WriteLine($"WARNING - Tesseract - Failed with error: {line}");
+                    Console.WriteLine($"WARNING - {Name} - Failed with error: {line}");
                     return ProcessResult.RepeatableError;
                 }
                 
                 proc.Kill();
 
                 var exceptionMessage = line[line.IndexOf(errorPrefix, StringComparison.Ordinal)..];
-                Console.WriteLine($"ERROR - Tesseract - External Tesseract process gave error: {exceptionMessage}");
+                Console.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
                 
                 return ProcessResult.UnknownOrTransientError;
             }
 
             if (showDebugMessages)
             {
-                Console.WriteLine($"DEBUG - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
+                Console.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
             }
         }
         

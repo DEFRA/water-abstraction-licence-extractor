@@ -198,7 +198,9 @@ public class PdfDataExtractorService(
             pageNumber = pageNumberIndex + 1;
            
             var breakPageLoop = false;
+            
             var pageImages = page.Images.ToList();
+            var servicesUsed = new List<string>();
             
             if (pageImages.Count > 10)
             {
@@ -234,6 +236,11 @@ public class PdfDataExtractorService(
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
                 {
+                    if (!servicesUsed.Contains(ocrService.Name))
+                    {
+                        servicesUsed.Add(ocrService.Name);
+                    }
+                    
                     if (!returnResult.ServicesUsed.Contains(ocrService.Name))
                     {
                         returnResult.ServicesUsed.Add(ocrService.Name);
@@ -398,19 +405,13 @@ public class PdfDataExtractorService(
                 labelGroupMatches,
                 true);
 
-            if (labelsNotMatchedAtAll3.Count == 0)
+            if (breakPageLoop || labelsNotMatchedAtAll3.Count == 0)
             {
-                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
+                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument, servicesUsed);
                 break;
             }
             
-            if (breakPageLoop)
-            {
-                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
-                break;
-            }
-            
-            ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
+            ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument, servicesUsed);
         }
         
         noOcrDataExtractorService.Release(pdfDocument);
@@ -419,7 +420,12 @@ public class PdfDataExtractorService(
         return returnResult;      
     }
 
-    private static void ProfilePageIfSlow(DateTime dtStart, int pageNumber, int numberOfImages, PdfDocument pdfDocument)
+    private static void ProfilePageIfSlow(
+        DateTime dtStart,
+        int pageNumber,
+        int numberOfImages,
+        PdfDocument pdfDocument,
+        List<string> servicesUsed)
     {
         var duration = DateTime.Now - dtStart;
 
@@ -428,8 +434,8 @@ public class PdfDataExtractorService(
             return;
         }
         
-        Console.WriteLine($"INFO - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
-            $" - {pdfDocument.PdfFilePath}");
+        Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
+            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilePath}");
     }
     
     private static bool IsPageScan(int imageWidth, int imageHeight)

@@ -150,7 +150,7 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public async Task SavePageScreenshotAsync(
+    public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
@@ -158,7 +158,6 @@ public class DatabaseOutputService(
         int processRunId)
     {
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
         foreach (var (providerName, bitmap) in images)
@@ -172,6 +171,8 @@ public class DatabaseOutputService(
                 bytes,
                 processRunId);
         }
+        
+        return images.Sum(i => i.Bitmap.ByteCount);
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)

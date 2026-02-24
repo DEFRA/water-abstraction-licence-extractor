@@ -77,12 +77,12 @@ public static class GenerateLicenceReaderExtract
                 }
             }
 
-            Console.WriteLine($"Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading existing results CSV: {ex.Message}");
-            Console.WriteLine("Starting fresh.");
+            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - loading existing results CSV: {ex.Message}");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting fresh.");
         }
 
         return results;
@@ -212,6 +212,8 @@ public static class GenerateLicenceReaderExtract
 
     public static async Task GenerateLicenceReaderExtractAsync(string pdfFolder, int regionCode)
     {
+        var dtStart = DateTime.Now;
+        
         var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
             KeyConfig.PostgresHost,
             KeyConfig.PostgresPort,
@@ -267,6 +269,9 @@ public static class GenerateLicenceReaderExtract
             line => line.LicenceNumber ?? "No Licence Number scraped",
             "licence records",
             "Licence Processing Summary");
+
+        var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
     }
 
     private static async Task<MatchesResult> GetMatchesAsync(
@@ -283,7 +288,7 @@ public static class GenerateLicenceReaderExtract
                 [pdfFolder + fileName],
                 0);
             
-            Console.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName}");
+            Console.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName} at {DateTime.Now}");
             return result;
         }
         catch (Exception ex)
@@ -330,17 +335,17 @@ public static class GenerateLicenceReaderExtract
                 fileName.StartsWith("42901S0026"))
             .ToList();*/
         
-        Console.WriteLine($"Found {allPdfFileNames.Count} total PDF files");
-        Console.WriteLine($"Already in CSV (completed or previously crashed): {existingResults.Count} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFileNames.Count(fileName => ExcludedFiles.Contains(fileName));
-        Console.WriteLine($"Hard-coded exclusions: {excludedCount} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
 
-        Console.WriteLine($"Remaining to process: {pdfFileNames.Count} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process: {pdfFileNames.Count} files");
 
         if (pdfFileNames.Count == 0)
         {
-            Console.WriteLine("All files have been processed. Returning existing results.");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
             
             return existingResults
                 .OrderBy(existingResult => existingResult.PermitNumber)
@@ -353,13 +358,11 @@ public static class GenerateLicenceReaderExtract
             CompanyName.GetFirstNamesCsvFromFile(),
             regionCode);
         
-        Console.WriteLine($"Retrieved {configuration.Labels.Count} label groups from configuration");
-
-        var batchSize = pdfDataExtractors.Count;
+        Console.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
 
         Console.WriteLine($"\n=== Processing {pdfFileNames.Count} files in parallel ===");
         
-        Console.WriteLine($"Processing in parallel batches of {batchSize}...");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...");
         var filenameIdx = 1;
         
         var scrapingTasks = new List<Task<LicenceReaderCsvLine>>();
@@ -371,7 +374,7 @@ public static class GenerateLicenceReaderExtract
         
         foreach (var pdfFileName in pdfFileNames)
         {
-            Console.WriteLine($"INFO - Generate licence reader extract - Starting file: {pdfFileName}" +
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
                 $"(File {filenameIdx++} of {pdfFileNames.Count})");
             
             scrapingTasks.Add(ScrapeDocumentAsync(pdfFileName, pdfFolder, configuration, pdfDataExtractors, extractorLock));
@@ -400,14 +403,14 @@ public static class GenerateLicenceReaderExtract
             scrapingTasks.Clear();
         }
 
-        Console.WriteLine($"\nINFO - Generate licence reader extract - Completed processing all {pdfFileNames.Count} files.");
+        Console.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
 
         // Combine existing results with newly processed results
         var allResults = existingResults
             .Concat(returnList)
             .ToList();
         
-        Console.WriteLine($"INFO - Generate licence reader extract - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
 
         return allResults
             .OrderBy(line => line.PermitNumber)
@@ -440,7 +443,7 @@ public static class GenerateLicenceReaderExtract
             
             if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException($"PDF file not found: {fullPath}");
+                throw new FileNotFoundException($"ERROR - {nameof(GenerateLicenceReaderExtract)} - PDF file not found: {fullPath}");
             }
             
             var internalJson = await GetMatchesAsync(
@@ -456,7 +459,7 @@ public static class GenerateLicenceReaderExtract
             // Extract permit number from filename
             var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
 
-            Console.WriteLine($"INFO - Generate licence reader extract - Extracted - " +
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Extracted - " +
                 $"File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
 
             var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
@@ -477,7 +480,7 @@ public static class GenerateLicenceReaderExtract
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Error processing file {pdfFilePath}:");
+            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {pdfFilePath}:");
             Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
             Console.WriteLine($"  Message: {ex.Message}");
             Console.WriteLine($"  Stack Trace: {ex.StackTrace}");

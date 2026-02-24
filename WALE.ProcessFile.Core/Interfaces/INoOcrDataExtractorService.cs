@@ -18,7 +18,7 @@ public interface INoOcrDataExtractorService
             IOutputService outputService,
             int processRunId);
 
-    public Task SavePageScreenshotAsync(
+    public Task<int> SavePageScreenshotAsync(
         IOutputService outputService,
         PdfDocument pdfDocument,
         int pageNumber,

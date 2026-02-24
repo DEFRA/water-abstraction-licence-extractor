@@ -114,7 +114,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public async Task SavePageScreenshotAsync(
+    public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
@@ -131,7 +131,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         if (exists1 && exists2)
         {
-            return;
+            return -1;
         }
         
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
@@ -144,6 +144,8 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             
             await SaveAsJpegAsync(bitmap, imgOutputFilename);
         }
+
+        return images.Sum(i => i.Bitmap.ByteCount);
     }
     
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)

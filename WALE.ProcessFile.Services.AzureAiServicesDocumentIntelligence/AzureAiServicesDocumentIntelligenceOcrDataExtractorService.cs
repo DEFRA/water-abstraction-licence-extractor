@@ -144,7 +144,8 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         {
             Console.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
             
-            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase)
+                && !imageReference.Contains("-jpg", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw;
             }

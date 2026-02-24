@@ -173,7 +173,7 @@ public class TesseractOcrDataExtractorService(
 
         if (!showDebugMessages)
         {
-            Console.WriteLine($"INFO - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called (showDebugMessages {showDebugMessages})");
+            Console.WriteLine($"INFO - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
         }
         
         var fileMode = isDbBased ? "Database" : "File";

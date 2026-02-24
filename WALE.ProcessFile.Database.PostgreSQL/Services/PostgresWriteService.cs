@@ -564,7 +564,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -581,9 +581,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
             
-            Console.WriteLine("WARNING ExecuteScalarAsync retrying");
+            Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteScalarAsync retrying");
 
-            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresWriteService));
             return await ExecuteScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
@@ -601,7 +601,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
         }
         catch (NpgsqlException ex)
@@ -616,9 +616,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
             
-            Console.WriteLine("WARNING ExecuteAsync retrying");
+            Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteAsync retrying");
 
-            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             await ExecuteAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }

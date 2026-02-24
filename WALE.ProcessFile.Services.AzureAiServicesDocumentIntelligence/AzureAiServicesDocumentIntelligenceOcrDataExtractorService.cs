@@ -169,7 +169,8 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 throw;
             }
             
-            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase)
+                && !imageReference.Contains("-jpg", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw;
             }

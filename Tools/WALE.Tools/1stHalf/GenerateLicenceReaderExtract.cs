@@ -77,12 +77,12 @@ public static class GenerateLicenceReaderExtract
                 }
             }
 
-            Console.WriteLine($"Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading existing results CSV: {ex.Message}");
-            Console.WriteLine("Starting fresh.");
+            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - loading existing results CSV: {ex.Message}");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting fresh.");
         }
 
         return results;
@@ -212,6 +212,8 @@ public static class GenerateLicenceReaderExtract
 
     public static async Task GenerateLicenceReaderExtractAsync(string pdfFolder, int regionCode)
     {
+        var dtStart = DateTime.Now;
+        
         var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
             KeyConfig.PostgresHost,
             KeyConfig.PostgresPort,
@@ -235,10 +237,11 @@ public static class GenerateLicenceReaderExtract
         LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
         
         const int batchSize = 10;
+        var maxConcurrentScrapers = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         
         // Create a list of PdfDataExtractorService instances for parallel processing
-        for (var serviceIdx = 1; serviceIdx <= batchSize; serviceIdx++)
+        for (var serviceIdx = 1; serviceIdx <= maxConcurrentScrapers; serviceIdx++)
         {
             pdfDataExtractors.Add(
                 CreatePdfDataExtractorService(
@@ -252,7 +255,8 @@ public static class GenerateLicenceReaderExtract
         var lines = await GetLicenceReaderDataAsync(
             pdfDataExtractors,
             pdfFolder,
-            regionCode);
+            regionCode,
+            maxConcurrentScrapers);
 
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
@@ -262,26 +266,26 @@ public static class GenerateLicenceReaderExtract
             line => line.LicenceNumber ?? "No Licence Number scraped",
             "licence records",
             "Licence Processing Summary");
+
+        var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
     }
 
     private static async Task<MatchesResult> GetMatchesAsync(
         string fileName,
         string pdfFolder,
-        PdfDataExtractorService pdfDataExtractor,
+        IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
     {
         try
         {
-            Console.WriteLine("Configuration created, calling PDF extractor...");
-
             var result = await pdfDataExtractor.GetMatchesAsync(
                 pdfFolder + fileName,
                 configuration,
                 [pdfFolder + fileName],
                 0);
             
-            Console.WriteLine($"PDF extraction completed successfully for {fileName}");
-            
+            Console.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName} at {DateTime.Now}");
             return result;
         }
         catch (Exception ex)
@@ -297,7 +301,8 @@ public static class GenerateLicenceReaderExtract
     private static async Task<List<LicenceReaderCsvLine>> GetLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         string pdfFolder,
-        int regionCode)
+        int regionCode,
+        int maxConcurrentScrapers)
     {
         // Load existing results (includes both completed and crashed files) - bookmarking system
         var existingResults = LoadExistingResults(pdfFolder);
@@ -318,30 +323,26 @@ public static class GenerateLicenceReaderExtract
         
         // Filter out files already in CSV (completed or crashed) and hard-coded excluded files
         var pdfFileNames = allPdfFileNames
-            .Where(fileName => !processedFileNames.Contains(fileName) && !ExcludedFiles.Contains(fileName))
+            .Where(fileName => !processedFileNames.Contains(fileName) && !ExcludedFiles.Contains(fileName)) // Comment out this line if debugging a certain file
             .ToList();
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
         /*pdfFileNames = pdfFileNames
             .Where(fileName =>
-                fileName.StartsWith("12203045__")
-                    || fileName.StartsWith("12205044__")
-                    || fileName.StartsWith("12303008__")
-                    || fileName.StartsWith("12303075__")
-                    || fileName.StartsWith("12303076__"))
+                fileName.StartsWith("42901S0026"))
             .ToList();*/
         
-        Console.WriteLine($"Found {allPdfFileNames.Count} total PDF files");
-        Console.WriteLine($"Already in CSV (completed or previously crashed): {existingResults.Count} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFileNames.Count(fileName => ExcludedFiles.Contains(fileName));
-        Console.WriteLine($"Hard-coded exclusions: {excludedCount} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
 
-        Console.WriteLine($"Remaining to process: {pdfFileNames.Count} files");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process: {pdfFileNames.Count} files");
 
         if (pdfFileNames.Count == 0)
         {
-            Console.WriteLine("All files have been processed. Returning existing results.");
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
             
             return existingResults
                 .OrderBy(existingResult => existingResult.PermitNumber)
@@ -354,136 +355,159 @@ public static class GenerateLicenceReaderExtract
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             regionCode);
         
-        Console.WriteLine($"Retrieved {configuration.Labels.Count} label groups from configuration");
+        Console.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
+
+        Console.WriteLine($"\n=== Processing {pdfFileNames.Count} files in parallel ===");
         
-        var returnList = new ConcurrentBag<LicenceReaderCsvLine>();
-        var batchSize = pdfDataExtractors.Count;
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...");
+        var filenameIdx = 1;
+        
+        var scrapingTasks = new List<Task<LicenceReaderCsvLine>>();
 
-        Console.WriteLine($"Processing in parallel batches of {batchSize}...");
-
-        // Loop that goes up in 10s (or whatever batch size is)
-        for (var filenameIdx = 0; filenameIdx < pdfFileNames.Count; filenameIdx += batchSize)
+        var minimumToFreeUp = maxConcurrentScrapers / 3;
+        
+        var returnList = new List<LicenceReaderCsvLine>();
+        var extractorLock = new Lock();
+        
+        foreach (var pdfFileName in pdfFileNames)
         {
-            var filesBatch = pdfFileNames
-                .Skip(filenameIdx)
-                .Take(batchSize)
-                .ToList();
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
+                $"(File {filenameIdx++} of {pdfFileNames.Count})");
             
-            var batchNumber = (filenameIdx / batchSize) + 1;
-            var totalBatches = (int)Math.Ceiling((double)pdfFileNames.Count / batchSize);
-
-            Console.WriteLine($"\n=== Processing Batch {batchNumber} of {totalBatches} " +
-                $"({filesBatch.Count} files in parallel) ===");
-
-            // Create tasks for parallel processing
-            var batchTasks = filesBatch.Select(async (pdfFilePath, indexInBatch) =>
+            scrapingTasks.Add(ScrapeDocumentAsync(pdfFileName, pdfFolder, configuration, pdfDataExtractors, extractorLock));
+            
+            if (scrapingTasks.Count != maxConcurrentScrapers)
             {
-                // Use a dedicated PdfDataExtractorService instance for this parallel task
-                var dedicatedExtractor = pdfDataExtractors[indexInBatch];
+                continue;
+            }
 
-                try
-                {
-                    var fileNumber = filenameIdx + indexInBatch + 1;
-                    
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Starting file: {pdfFilePath}" +
-                        $"(File {fileNumber} of {pdfFileNames.Count}) using extractor instance {indexInBatch}");
-
-                    // Mark file as processing in CSV BEFORE we start
-                    // If Tesseract crashes, this file will be in CSV and skipped on restart
-                    MarkFileAsProcessingInCsv(pdfFilePath, pdfFolder);
-
-                    // Check if file exists
-                    var fullPath = pdfFolder + pdfFilePath;
-                    
-                    if (!File.Exists(fullPath))
-                    {
-                        throw new FileNotFoundException($"PDF file not found: {fullPath}");
-                    }
- 
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] File exists, attempting " +
-                        $"to extract matches for {pdfFilePath}...");
-                    
-                    var internalJson = await GetMatchesAsync(
-                        pdfFilePath,
-                        pdfFolder,
-                        dedicatedExtractor,
-                        configuration);
-
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Matches extracted " +
-                        $"successfully, processing licence data for {pdfFilePath}...");
-
-                    // Extract licence number and date of issue from matches
-                    var licenceNumber = RuleSharedHelper.ExtractLicenceNumber(internalJson);
-                    var dateOfIssue = RuleSharedHelper.ExtractDateOfIssue(internalJson);
-
-                    // Extract permit number from filename
-                    var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
-
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Extracted - " +
-                        $"File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
-
-                    var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
-                    var dateOnly = datetime != null ? DateOnly.FromDateTime(datetime.Value) : (DateOnly?)null;
-                    
-                    var result = new LicenceReaderCsvLine
-                    {
-                        LicenceNumber = licenceNumber,
-                        PermitNumber = permitNumber,
-                        DateOfIssue = dateOnly,
-                        FileName = pdfFilePath
-                    };
-
-                    returnList.Add(result);
-
-                    // Update the CSV row with actual results
-                    UpdateInProgressFileResultsCsv(result, pdfFolder);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[Thread {Environment.CurrentManagedThreadId}] Error processing file {pdfFilePath}:");
-                    Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-                    Console.WriteLine($"  Message: {ex.Message}");
-                    Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
-
-                    if (ex.InnerException != null)
-                    {
-                        Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
-                        Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
-                    }
-
-                    // Add entry with filename but null values to track failed files
-                    var failedResult = new LicenceReaderCsvLine
-                    {
-                        LicenceNumber = null,
-                        PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath),
-                        DateOfIssue = null,
-                        FileName = pdfFilePath
-                    };
-
-                    returnList.Add(failedResult);
-
-                    // Update CSV with failed result
-                    UpdateInProgressFileResultsCsv(failedResult, pdfFolder);
-                }
-            }).ToArray();
-
-            // Wait for all tasks in the batch to complete
-            await Task.WhenAll(batchTasks);
-
-            Console.WriteLine($"Completed batch {batchNumber} of {totalBatches}. Processed {returnList.Count} files so far.");
+            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            {
+                var finishedTask = await Task.WhenAny(scrapingTasks);
+                
+                returnList.Add(await finishedTask);
+                scrapingTasks.Remove(finishedTask);
+            }
+        }
+        
+        if (scrapingTasks.Count != 0)
+        {
+            foreach (var scrapingTask in scrapingTasks)
+            {
+                returnList.Add(await scrapingTask);
+            }
+            
+            scrapingTasks.Clear();
         }
 
-        Console.WriteLine($"\nCompleted processing all {pdfFileNames.Count} files in {Math.Ceiling((double)pdfFileNames.Count / batchSize)} parallel batches.");
+        Console.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
 
         // Combine existing results with newly processed results
         var allResults = existingResults
             .Concat(returnList)
             .ToList();
         
-        Console.WriteLine($"Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
 
         return allResults
             .OrderBy(line => line.PermitNumber)
             .ToList();
+    }
+
+    private static async Task<LicenceReaderCsvLine> ScrapeDocumentAsync(
+        string pdfFilePath,
+        string pdfFolder,
+        LookupConfiguration configuration,
+        List<PdfDataExtractorService> pdfDataExtractors,
+        Lock extractorLock)
+    {
+        IPdfDataExtractorService? pdfDataExtractor = null;
+        
+        try
+        {
+            lock (extractorLock)
+            {
+                pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+                pdfDataExtractor.InUse = true;
+            }
+            
+            // Mark file as processing in CSV BEFORE we start
+            // If Tesseract crashes, this file will be in CSV and skipped on restart
+            MarkFileAsProcessingInCsv(pdfFilePath, pdfFolder);
+
+            // Check if file exists
+            var fullPath = pdfFolder + pdfFilePath;
+            
+            if (!File.Exists(fullPath))
+            {
+                throw new FileNotFoundException($"ERROR - {nameof(GenerateLicenceReaderExtract)} - PDF file not found: {fullPath}");
+            }
+            
+            var internalJson = await GetMatchesAsync(
+                pdfFilePath,
+                pdfFolder,
+                pdfDataExtractor,
+                configuration);
+
+            // Extract licence number and date of issue from matches
+            var licenceNumber = RuleSharedHelper.ExtractLicenceNumber(internalJson);
+            var dateOfIssue = RuleSharedHelper.ExtractDateOfIssue(internalJson);
+
+            // Extract permit number from filename
+            var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
+
+            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Extracted - " +
+                $"File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
+
+            var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
+            var dateOnly = datetime != null ? DateOnly.FromDateTime(datetime.Value) : (DateOnly?)null;
+            
+            var result = new LicenceReaderCsvLine
+            {
+                LicenceNumber = licenceNumber,
+                PermitNumber = permitNumber,
+                DateOfIssue = dateOnly,
+                FileName = pdfFilePath
+            };
+
+            // Update the CSV row with actual results
+            UpdateInProgressFileResultsCsv(result, pdfFolder);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {pdfFilePath}:");
+            Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"  Message: {ex.Message}");
+            Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
+
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
+                Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+            }
+
+            // Add entry with filename but null values to track failed files
+            var failedResult = new LicenceReaderCsvLine
+            {
+                LicenceNumber = null,
+                PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath),
+                DateOfIssue = null,
+                FileName = pdfFilePath
+            };
+
+            // Update CSV with failed result
+            UpdateInProgressFileResultsCsv(failedResult, pdfFolder);
+            
+            return failedResult;
+        }
+        finally
+        {
+            if (pdfDataExtractor != null)
+            {
+                pdfDataExtractor.InUse = false;
+            }
+        }
     }
 }

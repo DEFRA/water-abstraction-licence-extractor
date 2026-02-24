@@ -81,7 +81,7 @@ public class MixedModeOutputService(
         return databaseOutputService.SaveListDataAsync(listData, processRunId);
     }
 
-    public Task SavePageScreenshotAsync(
+    public Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,

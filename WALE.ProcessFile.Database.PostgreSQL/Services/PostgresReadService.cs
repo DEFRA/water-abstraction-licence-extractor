@@ -123,7 +123,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 // TODO some weird circumstance meant that certain (not all) pages were repeated
                 // PROBABLY because of retry logic (might be limited to Ryan's machine)
-                Console.WriteLine($"WARNING - Page number {pageNumber} is duplicated in {request.Filepath}");
+                Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.Filepath}");
             }
         }
         
@@ -184,6 +184,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND ocr_service_name = @OcrServiceName 
                              AND page_number = @PageNumber 
                              AND image_number = @ImageNumber
+                           ORDER BY date_time_utc desc
                            LIMIT 1;
                            """;
 
@@ -209,6 +210,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE filename = @Filename
                              AND ocr_service_name = @OcrServiceName
                              AND page_number = @PageNumber
+                           ORDER BY date_time_utc desc
                            LIMIT 1;
                            """;
 
@@ -1106,7 +1108,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -1123,9 +1125,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
-            Console.WriteLine("WARNING QuerySingleOrDefaultAsync retrying");
+            Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - QuerySingleOrDefaultAsync retrying");
             
-            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
@@ -1143,7 +1145,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -1160,9 +1162,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
 
-            Console.WriteLine("WARNING QueryAsync retrying");
+            Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - QueryAsync retrying");
             
-            await RetryHelper.WaitWithMessageAsync(retryNumber);
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
@@ -1176,7 +1178,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         if (duration.TotalSeconds > 1)
         {
-            Console.WriteLine($"WARNING OpenConnection took {duration.TotalMilliseconds}ms");
+            Console.WriteLine($"WARNING - {nameof(PostgresReadService)} - OpenConnection took {duration.TotalMilliseconds}ms");
         }
 
         return conn;

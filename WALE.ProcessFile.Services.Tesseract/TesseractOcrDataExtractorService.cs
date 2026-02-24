@@ -60,6 +60,8 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
+            var canSave = true;
+            
             // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
             // crash Tesseract and take our process down with it
             var runTesseractInsideThisProcess = false; 
@@ -94,9 +96,11 @@ public class TesseractOcrDataExtractorService(
 
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
-                    Console.WriteLine("WARNING - Transient error occured with the standalone Tesseract process");
+                    // TODO - Log
+                    Console.WriteLine("ERROR - Tesseract - Transient error occured (see above)");
 
                     // Don't cache, should work next time
+                    canSave = false;
                 }
                 else if (externalProcessRanOk == ProcessResult.RepeatableError)
                 {
@@ -117,14 +121,19 @@ public class TesseractOcrDataExtractorService(
                     }
                 }
             }
-            
-            if (isPageScreenshot)
+
+            if (canSave)
             {
-                await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
-            }
-            else
-            {
-                await cacheService.SaveOcrImageTextAsync(request, returnLines);
+                if (isPageScreenshot)
+                {
+                    await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
+                    //await cacheService.DeleteTemporaryOcrScreenshotTextAsync(request);                    
+                }
+                else
+                {
+                    await cacheService.SaveOcrImageTextAsync(request, returnLines);
+                    //await cacheService.DeleteOcrImageTextAsync(request, returnLines);
+                }
             }
         }
 
@@ -159,7 +168,16 @@ public class TesseractOcrDataExtractorService(
         int processRunId,
         bool isDbBased)
     {
+        var pdfFileNameOnly = Path.GetFileNameWithoutExtension(pdfFilePath);
+        var showDebugMessages = false;
+
+        if (!showDebugMessages)
+        {
+            Console.WriteLine($"INFO - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
+        }
+        
         var fileMode = isDbBased ? "Database" : "File";
+        
         var argumentsList = string.Join(" ", new List<string>
         {
             tesseractExeName,
@@ -203,18 +221,22 @@ public class TesseractOcrDataExtractorService(
 
                 if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
                 {
+                    Console.WriteLine($"WARNING - Tesseract - Failed with error: {line}");
                     return ProcessResult.RepeatableError;
                 }
                 
                 proc.Kill();
 
                 var exceptionMessage = line[line.IndexOf(errorPrefix, StringComparison.Ordinal)..];
-                Console.WriteLine($"ERROR - External process gave error '{exceptionMessage}'");
+                Console.WriteLine($"ERROR - Tesseract - External Tesseract process gave error: {exceptionMessage}");
                 
                 return ProcessResult.UnknownOrTransientError;
             }
-            
-            Console.WriteLine(line);
+
+            if (showDebugMessages)
+            {
+                Console.WriteLine($"DEBUG - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
+            }
         }
         
         if (proc.ExitCode == 0)

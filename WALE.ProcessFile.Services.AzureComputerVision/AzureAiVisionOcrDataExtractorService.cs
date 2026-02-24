@@ -50,12 +50,16 @@ public class AzureAiVisionOcrDataExtractorService(
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {
-            var cachedPage = JsonSerializer.Deserialize<ReadResult>(
-                cacheFileText,
-                JsonHelper.GetSerializerOptions());
+            // Handle the case we didn't get a real result, so we made one up
+            if (cacheFileText != "{}")
+            {
+                var cachedPage = JsonSerializer.Deserialize<ReadResult>(
+                    cacheFileText,
+                    JsonHelper.GetSerializerOptions());
 
-            var pageLines = ToPageLines(cachedPage!);
-            returnLines.AddRange(pageLines);
+                var pageLines = ToPageLines(cachedPage!);
+                returnLines.AddRange(pageLines);
+            }
         }
         else
         {
@@ -139,7 +143,8 @@ public class AzureAiVisionOcrDataExtractorService(
         OcrServiceImageTextCacheRequest request)
     {
         ReadInStreamHeaders? textHeaders;
-
+        Console.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filepath}");
+        
         try
         {
             await using var stream = new MemoryStream(bytes);
@@ -147,7 +152,7 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
             
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
@@ -169,25 +174,49 @@ public class AzureAiVisionOcrDataExtractorService(
                         
                     return [];
                 }
-
-                throw;
+                
+                // Let invalid image try deflate
+                if (errorCode != "InvalidImage")
+                {
+                    throw;
+                }
             }
             
-            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase)
+                && !imageReference.Contains("-jpg", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw;
             }
-            
-            bytes = await cacheService.DeflateImageAsync(
-                request.Filepath!,
-                request.ImageNumber,
-                request.PageNumber,
-                request.ProcessRunId,
-                FileHelper.GetImageExtension(imageReference),
-                GeneralConstants.PdfPigDataExtractorServiceName);
 
-            await using var stream = new MemoryStream(bytes);
-            textHeaders = await _client.ReadInStreamAsync(stream);
+            try
+            {
+                // Try deflate
+                bytes = await cacheService.DeflateImageAsync(
+                    request.Filepath!,
+                    request.ImageNumber,
+                    request.PageNumber,
+                    request.ProcessRunId,
+                    FileHelper.GetImageExtension(imageReference),
+                    GeneralConstants.PdfPigDataExtractorServiceName);
+
+                await using var stream = new MemoryStream(bytes);
+                textHeaders = await _client.ReadInStreamAsync(stream);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - After deflate attempt, {e.Message}");
+
+                if (isPageScreenshot)
+                {
+                    await cacheService.SaveOcrScreenshotTextAsync(request, "{}");
+                }
+                else
+                {
+                    await cacheService.SaveOcrImageTextAsync(request, "{}");
+                }
+                
+                return [];
+            }
         }
 
         const int waitBeforeCheck = 2000;

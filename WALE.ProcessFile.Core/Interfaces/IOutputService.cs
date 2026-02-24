@@ -33,7 +33,7 @@ public interface IOutputService
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
     
-    public Task SavePageScreenshotAsync(
+    public Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,

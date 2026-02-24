@@ -105,7 +105,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task SavePageScreenshotAsync(
+    public Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,

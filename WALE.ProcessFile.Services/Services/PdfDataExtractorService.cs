@@ -41,19 +41,19 @@ public class PdfDataExtractorService(
             cacheService,
             noOcrPdfDocumentService,
             processRunId);
-
+        
         Console.WriteLine(
-            $"Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilePath}");
         
         if (pdfDocument.DocumentLines == null)
         {
-            throw new Exception("TextLines hasn't been initialized");
+            throw new Exception($"ERROR - {nameof(PdfDataExtractorService)} - TextLines hasn't been initialized");
         }
         
         if (pdfDocument.ImagesMetadata == null)
         {
-            throw new Exception("ImagesMetadata hasn't been initialized");
+            throw new Exception($"ERROR - {nameof(PdfDataExtractorService)} - ImagesMetadata hasn't been initialized");
         }
         
         dtStart = DateTime.Now;
@@ -66,6 +66,12 @@ public class PdfDataExtractorService(
             RegionCode = configuration.RegionCode,
             ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
         };
+        
+        if (returnResult.Pages.Count > configuration.SkipDocumentsWithMoreThenThisManyPages)
+        {
+            returnResult.ErrorMessage = "TooManyPages";
+            return returnResult;
+        }
         
         var isOcr = false;
         
@@ -81,7 +87,7 @@ public class PdfDataExtractorService(
             configuration);
 
         Console.WriteLine(
-            $"Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilePath}");
         
         dtStart = DateTime.Now;
@@ -112,16 +118,16 @@ public class PdfDataExtractorService(
                 NoOcrServiceName = Name
             });
         
-        var isTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
 
         int pageNumber;
         int imageNumber;
         
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
-        if (isTextFile)
+        if (isLikelyTextFile)
         {
-            // There are no images
+            // There are no images - we have finished with looking at text only
             if (allImagesInDocument.Count == 0)
             {
                 returnResult.Matches = labelGroupMatches;
@@ -407,9 +413,6 @@ public class PdfDataExtractorService(
             
             ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument);
         }
-
-        // TODO - dont think this line does anything, as the collection isn't created at that point
-        //await SaveImageMetadataIfChangedAsync(imageMetadataChanged, pdfDocument, imagesMetadata, processRunId);
         
         noOcrDataExtractorService.Release(pdfDocument);
 

@@ -6,7 +6,8 @@ public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
     Dictionary<string, DmsFileData> licenceNumberMapping,
     HashSet<string> validLowercaseFirstNames,
-    int regionCode)
+    int regionCode,
+    int skipDocumentsWithMoreThenThisManyPages = 20)
 {
     public Dictionary<string, DmsFileData> LicenceNumberMapping { get; } = licenceNumberMapping;
 
@@ -15,4 +16,6 @@ public class LookupConfiguration(
     public readonly int RegionCode = regionCode;
 
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
+
+    public readonly int SkipDocumentsWithMoreThenThisManyPages = skipDocumentsWithMoreThenThisManyPages;
 }

@@ -185,6 +185,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND ocr_service_name = @OcrServiceName 
                              AND page_number = @PageNumber 
                              AND image_number = @ImageNumber
+                           ORDER BY date_time_utc desc
                            LIMIT 1;
                            """;
 
@@ -210,6 +211,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE filename = @Filename
                              AND ocr_service_name = @OcrServiceName
                              AND page_number = @PageNumber
+                           ORDER BY date_time_utc desc
                            LIMIT 1;
                            """;
 

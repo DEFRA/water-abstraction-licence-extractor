@@ -28,8 +28,10 @@ public static class AutoCorrectHelper
 
             foreach (var wordText in wordTexts)
             {
-                var wordBefore = returnLine.Words!.FirstOrDefault(x => x!.Text == wordText)
-                    ?? returnLine.Words!.FirstOrDefault(w => wordText.StartsWith(w!.Text));
+                var wordBefore = returnLine.Words!.FirstOrDefault(w => w!.Text == wordText)
+                    ?? returnLine.Words!.FirstOrDefault(w => wordText.StartsWith(w!.Text))
+                    ?? returnLine.Words!.FirstOrDefault(w => w!.Text.StartsWith(wordText))
+                    ?? returnLine.Words!.First();             
 
                 var newWord = new DocumentLineWord(
                     wordText,

@@ -257,6 +257,22 @@ public static class KeyConfig
             return _pdfFolderForDuplicates;
         }
     }
+    
+    private static string? _pdfFolderForOverrides;
+
+    public static string PdfFolderForOverrides
+    {
+        get
+        {
+            if (_pdfFolderForOverrides != null)
+            {
+                return _pdfFolderForOverrides;
+            }
+            
+            _pdfFolderForOverrides = Config["PdfFolderForOverrides"]!;
+            return _pdfFolderForOverrides;
+        }
+    }
 
     private static string? _naldDataDumpFolder;
 

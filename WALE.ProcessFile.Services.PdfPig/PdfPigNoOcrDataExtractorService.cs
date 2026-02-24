@@ -223,6 +223,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         var pagesMetadata = new List<Dictionary<string, object>>();
         var dtStart = DateTime.Now;
+
+        var pages = pdfDocument.Pages;
+        var getPagesDuration = DateTime.Now - dtStart;
         
         var processPageTasks = pdfDocument.Pages
             .Select(page => ProcessPageAsync(
@@ -239,6 +242,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             documentLines.AddRange(await processPageTask);
         }
         
+        var dtMetadataStart = DateTime.Now;
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
@@ -254,7 +258,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         Console.WriteLine(
             $"Saving screenshots and getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
-            $" - {pdfDocument.PdfFilePath}");
+            $" ({(DateTime.Now - dtMetadataStart).TotalMilliseconds}ms was for saving metadata, {getPagesDuration.TotalMilliseconds}ms was for getting pages in code)- {pdfDocument.PdfFilePath}");
         
         return documentLines;
     }

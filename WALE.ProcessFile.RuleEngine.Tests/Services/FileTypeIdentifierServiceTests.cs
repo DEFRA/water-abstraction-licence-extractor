@@ -125,7 +125,12 @@ public class FileTypeIdentifierServiceTests
     private static MatchesResult CreateMockMatchesResult(string content)
     {
         var documentLine = new DocumentLine();
-        var documentLineColumn = new DocumentLineColumn(content, []);
+        var documentLineColumn = new DocumentLineColumn([new(
+            content,
+            null,
+            DocumentLineWordCoordinates.NotKnown(),
+            null)]);
+        
         documentLine.Columns.Add(documentLineColumn);
 
         var labelGroupResult = new LabelGroupResult

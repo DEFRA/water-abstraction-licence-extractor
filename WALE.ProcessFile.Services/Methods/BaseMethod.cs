@@ -122,7 +122,17 @@ public static class BaseMethod
                                 continue;
                             }
 
-                            licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
+                            var coords = licenceNumberLine
+                                .Columns
+                                .First()
+                                .Words
+                                .First()
+                                .Coordinates;
+                            
+                            licenceNumberLine.Columns[0].Words.Clear();
+                            licenceNumberLine.Columns[0].Words.Add(
+                                new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
+                            
                             labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
 
                             returnList.Add(labelGroupResult);

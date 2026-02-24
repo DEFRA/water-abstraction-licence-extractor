@@ -88,9 +88,15 @@ public static class TextToFindIsBetweenLabels
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {
                 var firstBetweenLine = betweenText[0];
-                var firstColumn = firstBetweenLine.Columns[0];
-                var firstColumnText = FormattingHelper.TrimFormatting(firstColumn.Text, true, false);
-                var text = $"{labelText} {firstColumnText}";
+                var firstColumn = firstBetweenLine.Columns.Count > 0 ? firstBetweenLine.Columns[0] : null;
+                var firstColumnText = firstColumn != null ?
+                    FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
+                var text = labelText;
+
+                if (!string.IsNullOrEmpty(firstColumnText))
+                {
+                    text += $" {firstColumnText}";
+                }
                 
                 if (request.label.IncludeEndLabelText)
                 {
@@ -98,7 +104,14 @@ public static class TextToFindIsBetweenLabels
                     text += $" {endText}";
                 }
 
-                betweenText[0].Columns[0] = new DocumentLineColumn(text);
+                if (betweenText[0].Columns.Count == 0)
+                {
+                    betweenText[0].Columns.Add(new DocumentLineColumn(text));
+                }
+                else
+                {
+                    betweenText[0].Columns[0] = new DocumentLineColumn(text);   
+                }
             }
         }
 

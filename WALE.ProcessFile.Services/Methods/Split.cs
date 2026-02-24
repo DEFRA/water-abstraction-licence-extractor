@@ -94,7 +94,7 @@ public static class Split
 
                 var leftColumns = new List<DocumentLineColumn>
                 {
-                    new(leftPart, leftPartWords)
+                    new(leftPartWords)
                 };
 
                 var leftLine = request.line.Clone(leftColumns);
@@ -117,7 +117,7 @@ public static class Split
 
                     var rightColumns = new List<DocumentLineColumn>
                     {
-                        new(rightPart, rightPartWords)
+                        new(rightPartWords)
                     };
                     
                     var rightLine = request.line.Clone(rightColumns);

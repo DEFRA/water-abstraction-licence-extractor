@@ -78,10 +78,18 @@ public static class Number
             {
                 continue;
             }
+
+            var coords = returnLine
+                .OriginalLine
+                .Columns
+                .First()
+                .Words
+                .First()
+                .Coordinates;
             
             var columns = new List<DocumentLineColumn>
             {
-                new(returnLine.Text,[])
+                new([new(returnLine.Text, null, coords, null)])
             };
 
             var documentLine = new DocumentLine(

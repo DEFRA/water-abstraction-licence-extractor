@@ -253,8 +253,7 @@ public class PdfDataExtractorService(
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("ERROR - " + ex);
-                        
+                        Console.WriteLine($"ERROR - {ocrService.Name} - {ex}");
                         // TODO proper logging somewhere
                         
                         // Don't rethrow - just carry on with the other providers and pages
@@ -596,7 +595,6 @@ public class PdfDataExtractorService(
                             Columns = [
                                 new()
                                 {
-                                    Text = existingLicenceNumber,
                                     Words = [new(
                                         existingLicenceNumber,
                                         null,
@@ -616,7 +614,6 @@ public class PdfDataExtractorService(
                             Columns = [
                                 new()
                                 {
-                                    Text = newLicenceNumber,
                                     Words = [new(
                                         newLicenceNumber,
                                         null,

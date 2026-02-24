@@ -3,20 +3,28 @@ using WALE.ProcessFile.Core.Constants;
 
 namespace WALE.ProcessFile.Core.Models;
 
-public class DocumentLineColumn(string text, List<DocumentLineWord> words)
+public class DocumentLineColumn(List<DocumentLineWord> words)
 {
-    public DocumentLineColumn(string text) : this(text, TextToWords(text)) { }
+    public DocumentLineColumn(string text) : this(TextToWords(text)) { }
     
-    public DocumentLineColumn() : this(string.Empty, []) { }
+    public DocumentLineColumn() : this([]) { }
 
     [JsonIgnore]
-    public string Text { get; set; } = text; // TODO remove eventually    
+    public string Text
+    {
+        get
+        {
+            return Words.Count == 0 ?
+                string.Empty
+                : string.Join(' ', Words.Select(column => column.Text));
+        }
+    }
     
     public List<DocumentLineWord> Words { get; set; } = words;
 
     public DocumentLineColumn Clone()
     {
-        return new DocumentLineColumn(Text, Words.ToList());
+        return new DocumentLineColumn(Words.ToList());
     }
 
     public DocumentLine AsDocumentLine(DocumentLine line)

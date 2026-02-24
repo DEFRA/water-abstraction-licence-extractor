@@ -218,11 +218,6 @@ public static class OcrHelper
 
                 previousWord = word;
             }
-
-            foreach (var column in columns)
-            {
-                column.Text = string.Join(' ', column.Words.Select(w => w.Text));
-            }
             
             var firstWordCoords = orderedWords.First().Coordinates;
             
@@ -329,8 +324,6 @@ public static class OcrHelper
                             nextLineColumnClosestSibling!.Words.Add(word);
                             nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                                 .OrderBy(w => w.Coordinates.Left).ToList();
-                            
-                            nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
                         }
                         else
                         {
@@ -343,8 +336,6 @@ public static class OcrHelper
                         nextLineColumnClosestSibling!.Words.Add(word);
                         nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                             .OrderBy(w => w.Coordinates.Left).ToList();
-                        
-                        nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
                     }
                     else
                     {
@@ -358,7 +349,6 @@ public static class OcrHelper
                 }
 
                 column.Words = newWords;
-                column.Text = string.Join(' ', column.Words.Select(w => w.Text));
             }
 
             combinedLines.Add(line);
@@ -397,7 +387,6 @@ public static class OcrHelper
                 if (anyColumnChange)
                 {
                     column.Words = newWordList;
-                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
             }
         }
@@ -578,11 +567,6 @@ public static class OcrHelper
                     column.Words.Add(word);
 
                     previousOkWord = word;
-                }
-
-                foreach (var column in columns)
-                {
-                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
                 
                 var firstWordCoords = columns.FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates;

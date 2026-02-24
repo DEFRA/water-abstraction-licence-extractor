@@ -89,7 +89,6 @@ public static class AutoCorrectHelper
                 }
 
                 column.Words = newWords;
-                column.Text = string.Join(' ', newWords.Select(w => w.Text));
             }
         }
     }

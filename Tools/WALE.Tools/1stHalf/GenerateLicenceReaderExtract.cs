@@ -236,7 +236,6 @@ public static class GenerateLicenceReaderExtract
         var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
         
-        const int batchSize = 10;
         var maxConcurrentScrapers = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         

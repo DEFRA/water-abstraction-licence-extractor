@@ -453,7 +453,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     var documentLineToAdd = new DocumentLine(
                         lineNumber++,
                         pageNumber,
-                        [new(string.Empty, [])],
+                        [],
                         firstLine.BoundingBox.Top,
                         firstLine.BoundingBox.Right,
                         firstLine.BoundingBox.Bottom,
@@ -491,11 +491,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     ));
 
                     previousWord2 = word;
-                }
-
-                foreach (var column in columns)
-                {
-                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
 
                 var documentLine = new DocumentLine(

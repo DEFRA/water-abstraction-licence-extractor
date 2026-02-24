@@ -263,7 +263,15 @@ public static class ApplicableToMost
                             continue;
                         }
 
-                        licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
+                        var coords = documentLine
+                            .Columns
+                            .First()
+                            .Words
+                            .First()
+                            .Coordinates;
+                        
+                        licenceNumberLine.Columns[0].Words.Clear();
+                        licenceNumberLine.Columns[0].Words.Add(new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
@@ -277,7 +285,21 @@ public static class ApplicableToMost
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
             {
-                documentLine.Columns[0].Text = request.isSingleWord ? t.Split(' ')[0] : t;
+                var coords = request
+                    .line
+                    .Columns
+                    .First()
+                    .Words
+                    .First()
+                    .Coordinates;
+                
+                documentLine.Columns[0].Words.Clear();
+                documentLine.Columns[0].Words.Add(new DocumentLineWord(
+                    request.isSingleWord ? t.Split(' ')[0] : t,
+                    null,
+                    coords,
+                    null));
+                
                 labelGroupResult.Clone([documentLine]);
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
@@ -392,7 +414,19 @@ public static class ApplicableToMost
                     MatchType.SameLineIsCompany2Lines
                     : MatchType.SameLineIsCompany1Line;
 
-                documentLine.Columns[0].Text = outputText!;
+                var coords = documentLine
+                    .Columns
+                    .First()
+                    .Words
+                    .First()
+                    .Coordinates;
+                
+                documentLine.Columns[0].Words.Clear();
+                documentLine.Columns[0].Words.Add(new DocumentLineWord(
+                    outputText!,
+                    null,
+                    coords,
+                    null));
                 
                 labelGroupResult.Text = [documentLine];
                 labelGroupResult.MatchType = matchType;
@@ -419,7 +453,15 @@ public static class ApplicableToMost
                 && !string.IsNullOrEmpty(trimmedWords[0])
                 && request.isCompanyType)
             {
-                documentLine.Columns[0].Text = outputText;
+                var coords = documentLine
+                    .Columns
+                    .First()
+                    .Words
+                    .First()
+                    .Coordinates;
+                
+                documentLine.Columns[0].Words.Clear();
+                documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
                 
                 labelGroupResult.Text = [documentLine];
                 labelGroupResult.MatchType = MatchType.SameLineSingleWord;
@@ -444,7 +486,16 @@ public static class ApplicableToMost
             {
                 if (request.label?.Text?.FirstOrDefault()?.Text == null)
                 {
-                    documentLine.Columns[0].Text = outputText;
+                    var coords = documentLine
+                        .Columns
+                        .First()
+                        .Words
+                        .First()
+                        .Coordinates;
+                    
+                    documentLine.Columns[0].Words.Clear();
+                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    
                     var lineMatch = labelGroupResult.Clone([documentLine]);
                     lineMatch.MatchType = MatchType.Between;
                     
@@ -454,7 +505,16 @@ public static class ApplicableToMost
                 }
                 else if (request.label?.Format == Text.Constant)
                 {
-                    documentLine.Columns[0].Text = outputText;
+                    var coords = documentLine
+                        .Columns
+                        .First()
+                        .Words
+                        .First()
+                        .Coordinates;
+                    
+                    documentLine.Columns[0].Words.Clear();
+                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    
                     var lineMatch = labelGroupResult.Clone([documentLine]);
 
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));

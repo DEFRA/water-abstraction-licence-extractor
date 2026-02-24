@@ -1,6 +1,9 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
@@ -106,5 +109,42 @@ public class ImagesController(
             fileName);
 
         return Ok(data);
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult> SaveTemporaryOcrImageText(
+        [FromBody] SaveTemporaryOcrImageTextRequest request)
+    {
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(
+            request.text!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await cacheService.SaveTemporaryOcrImageTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = request.pageNumber,
+                ImageNumber = request.imageNumber,
+                Filepath = request.filepath,
+                OcrServiceName = request.ocrServiceName,
+                ProcessRunId = request.processRunId
+            },
+            linesAndWords);
+
+        return Ok();
+    }
+    
+    public class SaveTemporaryOcrImageTextRequest
+    {
+        public string? filepath { get; set; }
+        
+        public int processRunId { get; set; }
+        
+        public int pageNumber { get; set; }
+        
+        public int imageNumber { get; set; }
+        
+        public string? ocrServiceName { get; set; }
+        
+        public string? text { get; set; }
     }
 }

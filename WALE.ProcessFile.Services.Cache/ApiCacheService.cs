@@ -196,7 +196,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public async Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines)
     {
         var path = "/Extractor/Images/SaveTemporaryOcrImageText";
 
@@ -215,14 +217,19 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrScreenshotTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines)
     {
         var path = "/Extractor/Images/SaveTemporaryOcrScreenshotText";
 
         var json = JsonSerializer.Serialize(new
         {
-            Request = request,
-            PageLines = pageLines
+            request.PageNumber,
+            request.Filepath,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

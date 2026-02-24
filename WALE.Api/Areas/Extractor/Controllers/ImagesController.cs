@@ -133,6 +133,27 @@ public class ImagesController(
         return Ok();
     }
     
+    [HttpPost]
+    public async Task<ActionResult> SaveTemporaryOcrScreenshotText(
+        [FromBody] SaveTemporaryOcrImageTextRequest request)
+    {
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(
+            request.text!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await cacheService.SaveTemporaryOcrScreenshotTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = request.pageNumber,
+                Filepath = request.filepath,
+                OcrServiceName = request.ocrServiceName,
+                ProcessRunId = request.processRunId
+            },
+            linesAndWords);
+
+        return Ok();
+    }
+    
     public class SaveTemporaryOcrImageTextRequest
     {
         public string? filepath { get; set; }

@@ -186,7 +186,7 @@ public class DatabaseCacheService(
         await databaseWriteService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {

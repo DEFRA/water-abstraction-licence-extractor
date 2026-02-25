@@ -92,7 +92,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
-        var path = $"/Extractor/Images/GetImageText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
@@ -105,7 +105,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
-        var path = $"/Extractor/Images/GetScreenshotText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetScreenshotText?pageNumber={request.PageNumber}"
            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
@@ -119,7 +119,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
         
-        var path = $"/Extractor/Images/GetTemporaryImageText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetTemporaryImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
@@ -132,7 +132,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
-        var path = $"/Extractor/Images/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
             + $"&filepath={filepath}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
@@ -183,14 +183,31 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(NoOcrServicePageCacheRequest request, string pageLines)
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
+        NoOcrServicePageCacheRequest request,
+        string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveNoOcrPageTextLines";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filepath,
+            request.PageNumber,
+            request.NoOcrServiceName,
+            request.ProcessRunId,
+            pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+
+        return request;
     }
 
     public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var path = "/Extractor/Images/SaveOcrImageTextRaw";
+        var path = "/Extractor/Ocr/SaveOcrImageTextRaw";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -205,7 +222,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var path = "/Extractor/Images/SaveOcrImageText";
+        var path = "/Extractor/Ocr/SaveOcrImageText";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -220,7 +237,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var path = "/Extractor/Images/SaveOcrScreenshotText";
+        var path = "/Extractor/Ocr/SaveOcrScreenshotText";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -242,7 +259,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        var path = "/Extractor/Images/SaveTemporaryOcrImageText";
+        var path = "/Extractor/Ocr/SaveTemporaryOcrImageText";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -263,7 +280,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        var path = "/Extractor/Images/SaveTemporaryOcrScreenshotText";
+        var path = "/Extractor/Ocr/SaveTemporaryOcrScreenshotText";
 
         var json = JsonSerializer.Serialize(new
         {

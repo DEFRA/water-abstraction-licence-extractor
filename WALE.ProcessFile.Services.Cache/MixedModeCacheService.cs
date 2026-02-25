@@ -166,11 +166,11 @@ public class MixedModeCacheService(
         return apiCacheService.SaveNoOcrImagesMetadata(request, imagesMetadata);
     }
 
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
-        return apiCacheService.SaveNoOcrPageTextLines(request, pageLines);
+        return apiCacheService.SaveNoOcrPageTextLinesAsync(request, pageLines);
     }
 
     public Task SaveOcrImageTextAsync(

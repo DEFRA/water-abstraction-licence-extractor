@@ -297,7 +297,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         if (FormattingHelper.IsPageEmpty(page.DigitalText))
         {
-            await cacheService.SaveNoOcrPageTextLines(pageRequest, "[]");
+            await cacheService.SaveNoOcrPageTextLinesAsync(pageRequest, "[]");
             return [];
         }
 
@@ -310,7 +310,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var serialisedPageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         
         dtStart = DateTime.Now;
-        await cacheService.SaveNoOcrPageTextLines(pageRequest, serialisedPageLines);
+        await cacheService.SaveNoOcrPageTextLinesAsync(pageRequest, serialisedPageLines);
         Console.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SaveNoOcrPageTextLines ({serialisedPageLines.Length / 1024}kb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
         

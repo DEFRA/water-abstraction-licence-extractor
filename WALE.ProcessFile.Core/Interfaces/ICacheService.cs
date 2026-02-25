@@ -70,7 +70,7 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
     
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines);
 

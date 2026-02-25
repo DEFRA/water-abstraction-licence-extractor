@@ -62,9 +62,20 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Licence/SaveLicenceSets";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            pdfFilePath,
+            processRunId,
+            licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)

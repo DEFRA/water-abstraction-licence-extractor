@@ -12,7 +12,8 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class LicenceController(IOutputService outputService) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> SaveAsync([FromBody] SaveLicenceRequest request)
+    public async Task<IActionResult> SaveAsync(
+        [FromBody] SaveLicenceRequest request)
     {
         var licence = JsonSerializer.Deserialize<Licence>(
             request.licence!,
@@ -24,6 +25,31 @@ public class LicenceController(IOutputService outputService) : Controller
             request.processRunId);
 
         return Ok(returnId);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> SaveLicenceSetsAsync(
+        [FromBody] SaveLicenceSetsRequest request)
+    {
+        var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(
+            request.licenceSets!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await outputService.SaveLicenceSetsAsync(
+            licenceSets,
+            request.pdfFilePath!,
+            request.processRunId);
+
+        return Ok();
+    }
+    
+    public class SaveLicenceSetsRequest
+    {
+        public string? licenceSets { get; set; }
+        
+        public string? pdfFilePath { get; set; }
+        
+        public int processRunId { get; set; }
     }
     
     public class SaveLicenceRequest

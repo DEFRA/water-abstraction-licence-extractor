@@ -275,47 +275,39 @@ public class DatabaseOutputService(
             var licenceSetLicenceIds = allLicenceSetLicences
                 .Where(lsl => lsl.LicenceSetId == licenceSetSimple.LicenceSetId);
             
-            try
-            {
-                var licences = new List<Licence>();
+            var licences = new List<Licence>();
 
-                foreach (var licenceSetLicence in licenceSetLicenceIds)
+            foreach (var licenceSetLicence in licenceSetLicenceIds)
+            {
+                var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licence = allLicences.FirstOrDefault(l =>
-                    {
-                        var licenceId = (int)l.NoneSchemaData["licenceId"];
-                        return licenceId == licenceSetLicence.LicenceId;
-                    });
+                    var licenceId = (int)l.NoneSchemaData["licenceId"];
+                    return licenceId == licenceSetLicence.LicenceId;
+                });
 
-                    if (licence == null)
-                    {
-                        continue;
-                    }
-                    
-                    licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
-                    licences.Add(licence);
+                if (licence == null)
+                {
+                    continue;
                 }
-
-                licenceSet.Licences = licences
-                    .ToArray();
                 
-                licenceSet.LicenceSetTypes = allLicenceSetTypes
-                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                    .Select(lst => lst.Type)
-                    .ToArray();
-                
-                licenceSet.AggregateSets = allAggregateSets
-                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                    .Select(lst => lst.AggregateSet)
-                    .ToArray();
+                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                licences.Add(licence);
+            }
 
-                returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            licenceSet.Licences = licences
+                .ToArray();
+            
+            licenceSet.LicenceSetTypes = allLicenceSetTypes
+                .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                .Select(lst => lst.Type)
+                .ToArray();
+            
+            licenceSet.AggregateSets = allAggregateSets
+                .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                .Select(lst => lst.AggregateSet)
+                .ToArray();
+
+            returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);
         }
 
         return returnList;

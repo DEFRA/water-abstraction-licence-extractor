@@ -172,13 +172,25 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return bytes;
     }
 
-    public Task SaveAllPagesTextAsync(
+    public async Task SaveAllPagesTextAsync(
         List<DocumentLine> documentLines,
         string pdfFilePath,
         string noOcrServiceName,
         int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveAllPagesText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
+            pdfFilePath,
+            noOcrServiceName,
+            processRunId
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)

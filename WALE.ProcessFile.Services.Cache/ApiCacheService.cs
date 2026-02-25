@@ -283,7 +283,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             request.ImageNumber,
             request.OcrServiceName,
             request.ProcessRunId,
-            PageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
+            PageLines = pageLines
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

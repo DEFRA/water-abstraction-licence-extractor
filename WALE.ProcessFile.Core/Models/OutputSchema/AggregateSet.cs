@@ -66,7 +66,7 @@ public class AggregateSet
         AggregateSetId = outputSb.ToString();
     }
 
-    public string? AggregateSetId { get; private set; }
+    public string? AggregateSetId { get; set; }
     
     /*public string? VersionNumber { get; set; }*/
 

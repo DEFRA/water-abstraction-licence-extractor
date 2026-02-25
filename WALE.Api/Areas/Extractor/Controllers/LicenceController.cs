@@ -34,6 +34,15 @@ public class LicenceController(IOutputService outputService) : Controller
         var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(
             request.licenceSets!,
             JsonHelper.GetSerializerOptions())!;
+
+        foreach (var licenceSet in licenceSets)
+        {
+            foreach (var licence in licenceSet.Value.Licences)
+            {
+                licence.NoneSchemaData = JsonHelper.MakeJsonElementDictionaryNative(
+                    licence.NoneSchemaData);
+            }
+        }
         
         await outputService.SaveLicenceSetsAsync(
             licenceSets,

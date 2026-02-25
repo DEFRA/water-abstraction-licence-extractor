@@ -252,42 +252,8 @@ public class DatabaseOutputService(
 
         foreach (var licence in licences)
         {
-            var newNoneSchemaData = new Dictionary<string, object>();
-            
-            foreach (var kvp in licence.NoneSchemaData)
-            {
-                object? value;
-                
-                if (kvp.Value is JsonElement jsonElement)
-                {
-                    value = jsonElement.ValueKind switch
-                    {
-                        JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
-                        JsonValueKind.Number => jsonElement.GetDouble(),
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonElement.GetString(),
-                        JsonValueKind.Object => jsonElement.GetRawText(),
-                        _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
-                    };
-                }
-                else if (kvp.Value is int intValue)
-                {
-                    value = intValue;
-                }
-                else if (kvp.Value is string strValue)
-                {
-                    value = strValue;
-                }
-                else
-                {
-                    throw new Exception($"Unknown type - {kvp.Value.GetType().Name}");
-                }
-                
-                newNoneSchemaData.Add(kvp.Key, value!);
-            }
-
-            licence.NoneSchemaData = newNoneSchemaData;
+            licence.NoneSchemaData = JsonHelper.MakeJsonElementDictionaryNative(
+                licence.NoneSchemaData);
         }
         
         return licences;

@@ -159,10 +159,6 @@ public class OcrController(
     public async Task<ActionResult> SaveOcrScreenshotTextAsync(
         [FromBody] SaveOcrImageTextRequest request)
     {
-        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(
-            request.pageLines!,
-            JsonHelper.GetSerializerOptions())!;
-        
         await cacheService.SaveOcrScreenshotTextAsync(
             new OcrServiceImageTextCacheRequest
             {
@@ -171,7 +167,7 @@ public class OcrController(
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
-            linesAndWords);
+            request.pageLines!);
 
         return Ok();
     }

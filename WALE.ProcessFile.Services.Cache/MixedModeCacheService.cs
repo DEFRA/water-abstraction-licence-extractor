@@ -66,7 +66,7 @@ public class MixedModeCacheService(
     public Task<byte[]?> GetImageBytesAsync(
         OcrServiceImageDataCacheRequest request)
     {
-        return databaseCacheService.GetImageBytesAsync(request);
+        return apiCacheService.GetImageBytesAsync(request);
     }
 
     public Task<List<ImageDetails>>
@@ -84,25 +84,25 @@ public class MixedModeCacheService(
     public Task<string?> GetNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request)
     {
-        return databaseCacheService.GetNoOcrPagesMetadataAsync(request);
+        return apiCacheService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request)
     {
-        return databaseCacheService.GetNoOcrImagesMetadataAsync(request);
+        return apiCacheService.GetNoOcrImagesMetadataAsync(request);
     }
 
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(
         NoOcrServiceMetadataCacheRequest request)
     {
-        return databaseCacheService.GetNoOcrAllPagesTextLinesAsync(request);
+        return apiCacheService.GetNoOcrAllPagesTextLinesAsync(request);
     }
 
     public Task<string?> GetNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request)
     {
-        return databaseCacheService.GetNoOcrPageTextLinesAsync(request);
+        return apiCacheService.GetNoOcrPageTextLinesAsync(request);
     }
 
     public Task<string?> GetOcrImageTextAsync(
@@ -140,7 +140,7 @@ public class MixedModeCacheService(
         string extension,
         int processRunId)
     {
-        return databaseCacheService.SaveImageOnPageAsync(
+        return apiCacheService.SaveImageOnPageAsync(
             bytes,
             width,
             height,
@@ -156,49 +156,49 @@ public class MixedModeCacheService(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        return databaseCacheService.SaveNoOcrPagesMetadataAsync(request, pagesMetadata);
+        return apiCacheService.SaveNoOcrPagesMetadataAsync(request, pagesMetadata);
     }
 
     public Task SaveNoOcrImagesMetadata(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata)
     {
-        return databaseCacheService.SaveNoOcrImagesMetadata(request, imagesMetadata);
+        return apiCacheService.SaveNoOcrImagesMetadata(request, imagesMetadata);
     }
 
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
-        return databaseCacheService.SaveNoOcrPageTextLines(request, pageLines);
+        return apiCacheService.SaveNoOcrPageTextLines(request, pageLines);
     }
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,
         string pageLines)
     {
-        return databaseCacheService.SaveOcrImageTextAsync(request, pageLines);
+        return apiCacheService.SaveOcrImageTextAsync(request, pageLines);
     }
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        return databaseCacheService.SaveOcrImageTextAsync(request, pageLines);
+        return apiCacheService.SaveOcrImageTextAsync(request, pageLines);
     }
 
     public Task SaveOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         string pageLines)
     {
-        return databaseCacheService.SaveOcrScreenshotTextAsync(request, pageLines);
+        return apiCacheService.SaveOcrScreenshotTextAsync(request, pageLines);
     }
 
     public Task SaveOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request,
         List<LineAndWords> pageLines)
     {
-        return databaseCacheService.SaveOcrScreenshotTextAsync(request, pageLines);
+        return apiCacheService.SaveOcrScreenshotTextAsync(request, pageLines);
     }
 
     public Task SaveTemporaryOcrImageTextAsync(
@@ -239,30 +239,5 @@ public class MixedModeCacheService(
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         return databaseCacheService.GetNaldLicenceNumbersAsync(regionCode);
-    }
-
-    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
-    {
-        return databaseCacheService.GetNaldAbsLicencesAsync(regionCode);
-    }
-
-    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
-    {
-        return databaseCacheService.GetNaldLicenceVersionsAsync(regionCode);
-    }
-
-    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
-    {
-        return databaseCacheService.GetNaldLicencePurposesAsync(regionCode);
-    }
-
-    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
-    {
-        return databaseCacheService.GetNaldLicencePointsAsync(regionCode);
-    }
-
-    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
-    {
-        return databaseCacheService.GetNaldLicenceQuantitiesAsync(regionCode);
     }
 }

@@ -26,10 +26,9 @@ public class PdfDataExtractorService(
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
-    public string Name => noOcrPdfDocumentService.Name!;
+    private string Name => noOcrPdfDocumentService.Name!;
 
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
-    private static readonly SemaphoreSlim DictionaryAccessLock = new(1, 1);
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFilePath,
@@ -38,19 +37,8 @@ public class PdfDataExtractorService(
         int processRunId)
     {
         var dtStart = DateTime.Now;
-
-        SemaphoreSlim pathLock;
-        await DictionaryAccessLock.WaitAsync();
-
-        try
-        {
-            pathLock = PathLocks.GetOrAdd(pdfFilePath, _ => new SemaphoreSlim(1, 1));
-        }
-        finally
-        {
-            DictionaryAccessLock.Release();            
-        }
-
+        
+        var pathLock = PathLocks.GetOrAdd(pdfFilePath, _ => new SemaphoreSlim(1, 1));
         await pathLock.WaitAsync();
 
         try

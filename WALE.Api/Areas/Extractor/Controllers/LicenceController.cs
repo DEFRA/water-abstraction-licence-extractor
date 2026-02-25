@@ -1,0 +1,35 @@
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
+
+namespace WALE.Api.Areas.Extractor.Controllers;
+
+[ApiController]
+[Area("Extractor")]
+[Route("/[area]/[controller]/[action]")]
+public class LicenceController(IOutputService outputService) : Controller
+{
+    [HttpPost]
+    public async Task<IActionResult> SaveAsync([FromBody] SaveLicenceRequest request)
+    {
+        var licence = JsonSerializer.Deserialize<Licence>(
+            request.licence!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        var returnId = await outputService.SaveLicenceAsync(
+            licence,
+            request.pdfFilePath,
+            request.processRunId);
+
+        return Ok(returnId);
+    }
+    
+    public class SaveLicenceRequest
+    {
+        public string? pdfFilePath { get; set; }
+        public int processRunId { get; set; }
+        public string? licence  { get; set; }
+    }
+}

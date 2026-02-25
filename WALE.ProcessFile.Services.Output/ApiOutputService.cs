@@ -67,9 +67,23 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Licence/Save";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            pdfFilePath,
+            processRunId,
+            licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
     }
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)

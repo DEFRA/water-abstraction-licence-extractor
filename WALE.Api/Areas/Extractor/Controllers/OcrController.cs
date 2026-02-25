@@ -155,6 +155,27 @@ public class OcrController(
         return Ok();
     }
     
+    [HttpPost]
+    public async Task<ActionResult> SaveOcrScreenshotTextAsync(
+        [FromBody] SaveOcrImageTextRequest request)
+    {
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(
+            request.pageLines!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await cacheService.SaveOcrScreenshotTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = request.pageNumber,
+                Filepath = request.filepath,
+                OcrServiceName = request.ocrServiceName,
+                ProcessRunId = request.processRunId
+            },
+            linesAndWords);
+
+        return Ok();
+    }
+    
     public class SaveOcrImageTextRequest
     {
         public string? filepath { get; set; }

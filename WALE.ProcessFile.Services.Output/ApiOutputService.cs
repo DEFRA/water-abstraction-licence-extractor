@@ -77,9 +77,21 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
+    public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Match/Save";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            matchesResultId,
+            labelName,
+            labelGroupName,
+            data = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)

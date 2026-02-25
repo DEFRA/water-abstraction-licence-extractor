@@ -369,7 +369,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return request;
     }
 
-    public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         return File.WriteAllTextAsync(
             GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filepath!)),

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
@@ -66,6 +67,34 @@ public class NoOcrController(
 
         return Ok();
     }
+    
+    [HttpPost]
+    public async Task<ActionResult> SaveNoOcrImagesMetadataAsync(
+        [FromBody] SaveNoOcrImagesMetadataRequest request)
+    {
+        var imagesMetadata = JsonSerializer.Deserialize<ImageMetadata>(
+            request.imagesMetadata!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await cacheService.SaveNoOcrImagesMetadataAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                Filepath = request.filepath,
+                NoOcrServiceName = request.noOcrServiceName,
+                ProcessRunId = request.processRunId
+            },
+            imagesMetadata);
+
+        return Ok();
+    }
+}
+
+public class SaveNoOcrImagesMetadataRequest
+{
+    public string? imagesMetadata { get; set; }
+    public string? filepath { get; set; }
+    public int processRunId { get; set; }
+    public string? noOcrServiceName  { get; set; }
 }
 
 public class SaveAllPagesTextRequest

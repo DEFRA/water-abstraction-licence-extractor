@@ -171,7 +171,7 @@ public class DatabaseCacheService(
         return await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
     }
 
-    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
      

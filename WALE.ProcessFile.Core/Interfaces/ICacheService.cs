@@ -66,7 +66,7 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     
-    public Task SaveNoOcrImagesMetadata(
+    public Task SaveNoOcrImagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
     

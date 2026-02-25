@@ -139,7 +139,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         int processRunId,
         ICacheService cacheService)
     {
-        await cacheService.SaveNoOcrImagesMetadata(new NoOcrServiceMetadataCacheRequest
+        await cacheService.SaveNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
         {
             Filepath = pdfDocument.PdfFilePath,
             NoOcrServiceName = Name,

@@ -195,9 +195,21 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return request;
     }
 
-    public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveNoOcrImagesMetadata";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filepath,
+            request.NoOcrServiceName,
+            request.ProcessRunId,
+            ImagesMetadata = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
@@ -224,11 +236,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var path = "/Extractor/Ocr/SaveOcrImageTextRaw";
+        var path = "/Extractor/Ocr/SaveOcrImageText";
 
         var json = JsonSerializer.Serialize(new
         {
-            Request = request,
+            request.Filepath,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            request.PageNumber,
+            request.ImageNumber,
             PageLines = pageLines
         }, JsonHelper.GetSerializerOptions());
         
@@ -243,8 +259,12 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            Request = request,
-            PageLines = pageLines
+            request.Filepath,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            request.PageNumber,
+            request.ImageNumber,
+            PageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

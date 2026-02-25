@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -26,8 +27,54 @@ public class PdfDataExtractorService(
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
     public string Name => noOcrPdfDocumentService.Name!;
+
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
+    private static readonly SemaphoreSlim DictionaryAccessLock = new(1, 1);
     
     public async Task<MatchesResult> GetMatchesAsync(
+        string pdfFilePath,
+        LookupConfiguration configuration,
+        List<string> previouslyParsedPaths,
+        int processRunId)
+    {
+        var dtStart = DateTime.Now;
+
+        SemaphoreSlim pathLock;
+        await DictionaryAccessLock.WaitAsync();
+
+        try
+        {
+            pathLock = PathLocks.GetOrAdd(pdfFilePath, _ => new SemaphoreSlim(1, 1));
+        }
+        finally
+        {
+            DictionaryAccessLock.Release();            
+        }
+
+        await pathLock.WaitAsync();
+
+        try
+        {
+            var lockWaitDuration = DateTime.Now.Subtract(dtStart);
+            
+            if (lockWaitDuration.TotalMilliseconds > 1000)
+            {
+                Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFilePath}");
+            }
+            
+            return await GetMatchesInternalAsync(
+                pdfFilePath,
+                configuration,
+                previouslyParsedPaths,
+                processRunId);
+        }
+        finally
+        {
+            pathLock.Release();
+        }
+    }
+
+    private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFilePath,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,

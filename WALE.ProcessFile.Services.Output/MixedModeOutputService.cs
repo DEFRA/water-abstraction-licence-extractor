@@ -42,7 +42,7 @@ public class MixedModeOutputService(
         string pdfFilePath,
         int processRunId)
     {
-        return databaseOutputService.SaveLicenceSetsAsync(licenceSets, pdfFilePath, processRunId);
+        return apiOutputService.SaveLicenceSetsAsync(licenceSets, pdfFilePath, processRunId);
     }
 
     public Task<int> SaveLicenceAsync(
@@ -50,7 +50,7 @@ public class MixedModeOutputService(
         string? pdfFilePath,
         int processRunId)
     {
-        return databaseOutputService.SaveLicenceAsync(licence, pdfFilePath, processRunId);
+        return apiOutputService.SaveLicenceAsync(licence, pdfFilePath, processRunId);
     }
 
     public Task UpdateLicenceAsync(
@@ -59,7 +59,7 @@ public class MixedModeOutputService(
         string? pdfFilePath,
         int processRunId)
     {
-        return databaseOutputService.UpdateLicenceAsync(licence, licenceId, pdfFilePath, processRunId);
+        return apiOutputService.UpdateLicenceAsync(licence, licenceId, pdfFilePath, processRunId);
     }
 
     public Task SaveMatchAsync(
@@ -68,7 +68,7 @@ public class MixedModeOutputService(
         string? labelGroupName,
         LabelGroupResult data)
     {
-        return databaseOutputService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, data);
+        return apiOutputService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, data);
     }
 
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
@@ -78,7 +78,7 @@ public class MixedModeOutputService(
 
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
     {
-        return databaseOutputService.SaveListDataAsync(listData, processRunId);
+        return apiOutputService.SaveListDataAsync(listData, processRunId);
     }
 
     public Task<int> SavePageScreenshotAsync(
@@ -88,12 +88,18 @@ public class MixedModeOutputService(
         string pdfFilePath,
         int processRunId)
     {
-        return databaseOutputService.SavePageScreenshotAsync(
+        return apiOutputService.SavePageScreenshotAsync(
             pdfDocument,
             pageNumber,
             noOcrServiceName,
             pdfFilePath,
             processRunId);
+    }
+
+    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+        int processRunId)
+    {
+        throw new NotImplementedException();
     }
 
     public Task SaveAllPagesTextAsync(
@@ -102,7 +108,7 @@ public class MixedModeOutputService(
         string noOcrServiceName,
         int processRunId)
     {
-        return databaseOutputService.SaveAllPagesTextAsync(
+        return apiOutputService.SaveAllPagesTextAsync(
             documentLines,
             pdfFilePath,
             noOcrServiceName,
@@ -116,33 +122,33 @@ public class MixedModeOutputService(
 
     public Task<List<ProcessRun>> GetProcessRunsAsync()
     {
-        return databaseOutputService.GetProcessRunsAsync();
+        return apiOutputService.GetProcessRunsAsync();
     }
 
     public Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
-        return databaseOutputService.GetLicencesAsync(processRunId);
+        return apiOutputService.GetLicencesAsync(processRunId);
     }
 
     public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(
         int processRunId,
         List<Licence> licences)
     {
-        return databaseOutputService.GetLicenceSetsAsync(processRunId, licences);
+        return apiOutputService.GetLicenceSetsAsync(processRunId, licences);
     }
 
     public Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
     {
-        return databaseOutputService.GetLicenceSetsAsync(filename);
+        return apiOutputService.GetLicenceSetsAsync(filename);
     }
 
     public Task<Licence?> GetLicenceAsync(string filename)
     {
-        return databaseOutputService.GetLicenceAsync(filename);
+        return apiOutputService.GetLicenceAsync(filename);
     }
 
     public Task<MatchesResult?> GetMatchesResult(string filename)
     {
-        return databaseOutputService.GetMatchesResult(filename);
+        return apiOutputService.GetMatchesResult(filename);
     }
 }

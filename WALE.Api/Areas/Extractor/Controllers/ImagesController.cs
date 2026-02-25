@@ -193,6 +193,68 @@ public class ImagesController(
         return Ok();
     }
     
+    [HttpPost]
+    public async Task<ActionResult> SaveImageOnPageAsync(
+        [FromBody] SaveImageOnPageRequest request)
+    {
+        await cacheService.SaveImageOnPageAsync(
+            request.bytes,
+            request.width,
+            request.height,
+            request.pdfFilePath!,
+            request.noOcrServiceName!,
+            request.imageNumber,
+            request.pageNumber,
+            request.extension!,
+            request.processRunId);
+
+        return Ok();
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult> SavePageScreenshotAsync(
+        [FromBody] SavePageScreenshotRequest request)
+    {
+        await outputService.SavePageScreenshotInternalAsync(
+            request.pageNumber,
+            request.noOcrServiceName!,
+            request.pdfFilename!,
+            request.data,
+            request.processRunId);
+
+        return Ok();
+    }
+    
+    public class SavePageScreenshotRequest
+    {
+        public int pageNumber { get; set; }
+        public string? noOcrServiceName { get; set; }
+        public string? pdfFilename { get; set; }
+        public byte[] data { get; set; }
+        public int processRunId { get; set; }
+    }
+    
+    public class SaveImageOnPageRequest
+    {
+        public byte[] bytes { get; set; }
+
+        public int width { get; set; }
+
+        public int height { get; set; }
+
+        public string? pdfFilePath { get; set; }
+
+        public string? noOcrServiceName { get; set; }
+
+        public int imageNumber { get; set; }
+
+        public int pageNumber { get; set; }
+
+        public string? extension { get; set; }
+
+        public int processRunId { get; set; }
+    }
+    
     public class SaveTemporaryOcrImageTextRequest
     {
         public string? filepath { get; set; }

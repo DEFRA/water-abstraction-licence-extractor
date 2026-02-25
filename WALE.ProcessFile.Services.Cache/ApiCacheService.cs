@@ -142,10 +142,35 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName,
-        int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task SaveImageOnPageAsync(
+        byte[] bytes,
+        int width,
+        int height,
+        string pdfFilePath,
+        string noOcrServiceName,
+        int imageNumber,
+        int pageNumber,
+        string extension,
+        int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveImageOnPage";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Bytes = bytes,
+            Width = width,
+            Height = height,
+            PdfFilePath = pdfFilePath,
+            NoOcrServiceName = noOcrServiceName,
+            ImageNumber = imageNumber,
+            PageNumber = pageNumber,
+            Extension = extension,
+            ProcessRunId = processRunId
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
     public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, List<Dictionary<string, object>> pagesMetadata)

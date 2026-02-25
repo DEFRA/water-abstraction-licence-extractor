@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SkiaSharp;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -105,14 +106,70 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> SavePageScreenshotAsync(
+    public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
         string pdfFilePath,
         int processRunId)
     {
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+
+        foreach (var (providerName, bitmap) in images)
+        {
+            var bytes = await GetAsJpegAsync(bitmap);
+            const string path = "/Extractor/Images/SavePageScreenshot";
+
+            var json = JsonSerializer.Serialize(new
+            {
+                PageNumber = pageNumber,
+                NoOcrServiceName = providerName,
+                PdfFilename = pdfFilename,
+                Data = bytes,
+                ProcessRunId = processRunId
+            }, JsonHelper.GetSerializerOptions());
+            
+            var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+            response.EnsureSuccessStatusCode();
+        }
+        
+        return images.Sum(i => i.Bitmap.ByteCount);
+    }
+
+    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+        int processRunId)
+    {
         throw new NotImplementedException();
+    }
+
+    private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
+    {
+        using var image = SKImage.FromBitmap(bitmap);
+
+        if (image == null)
+        {
+            throw new FileNotFoundException("Could not load image");
+        }
+        
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
+
+        if (data == null)
+        {
+            throw new FileNotFoundException("Could not encode image");
+        }
+        
+        await using var stream = new MemoryStream();
+        data.SaveTo(stream);
+        
+        await stream.FlushAsync();
+
+        stream.Position = 0;
+        var bytes = stream.ToArray();
+        stream.Close();
+
+        return bytes;
     }
 
     public Task SaveAllPagesTextAsync(

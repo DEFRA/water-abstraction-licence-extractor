@@ -164,15 +164,30 @@ public class DatabaseOutputService(
         {
             var bytes = await GetAsJpegAsync(bitmap);
 
-            await databaseWriteService.SavePageScreenshotAsync(
+            await SavePageScreenshotInternalAsync(
                 pageNumber,
-                providerName,
+                noOcrServiceName,
                 pdfFilename,
                 bytes,
                 processRunId);
         }
         
         return images.Sum(i => i.Bitmap.ByteCount);
+    }
+
+    public async Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        string pdfFilename,
+        byte[] data,
+        int processRunId)
+    {
+        await databaseWriteService.SavePageScreenshotAsync(
+            pageNumber,
+            noOcrServiceName,
+            pdfFilename,
+            data,
+            processRunId);
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)

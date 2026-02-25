@@ -27,7 +27,7 @@ return;
 
 async Task ProgramAsync()
 {
-    Console.WriteLine("Started");
+    Console.WriteLine("INFO - WALE.Cmd - Started");
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
@@ -65,7 +65,7 @@ async Task ProgramAsync()
         regionCode);
 
     var dtStartGetDms = DateTime.Now;
-    Console.WriteLine("Getting DMS files to process");
+    Console.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
         GetDmsFilesAndMapping(services, regionCode);
@@ -73,7 +73,7 @@ async Task ProgramAsync()
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
     Console.WriteLine(
-        $"Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        $"INFO - WALE.Cmd - Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
     var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
@@ -173,11 +173,11 @@ async Task ProgramAsync()
     }
     catch (Exception e)
     {
-        Console.WriteLine(e);
+        Console.WriteLine("ERROR - WALE.Cmd - Error during scraping: {e}");
         throw;
     }
 
-    Console.WriteLine($"All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
     var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
@@ -185,7 +185,7 @@ async Task ProgramAsync()
         allDmsData,
         regionCode);
 
-    Console.WriteLine($"Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
     var outputLines = new List<IntermediateOutputLicence>();
 
@@ -313,7 +313,7 @@ async Task ProgramAsync()
         outputLines.Add(outputLine);
     }
 
-    Console.WriteLine($"Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     const bool saveListsToFile = false;
 
     if (saveListsToFile)
@@ -328,14 +328,14 @@ async Task ProgramAsync()
             saveListsToFile);
     }
 
-    Console.WriteLine($"Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
     processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun, regionCode);
 
-    Console.WriteLine($"Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     Console.WriteLine(
-        $"Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+        $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
 
     //Console.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
@@ -535,7 +535,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
     var dtStart = DateTime.Now;
-    Console.WriteLine($"Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"INFO - WALE.Cmd - Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
     IPdfDataExtractorService pdfDataExtractor;
 
@@ -591,12 +591,12 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             if (saveDuration >= 1000)
             {
                 Console.WriteLine(
-                    $"Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             }
         }
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        Console.WriteLine($"Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        Console.WriteLine($"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
             matchesFull,

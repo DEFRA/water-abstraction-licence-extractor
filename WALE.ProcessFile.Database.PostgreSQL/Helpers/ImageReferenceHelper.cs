@@ -18,4 +18,20 @@ public static class ImageReferenceHelper
                 $"Screenshot-{pdfFilename}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
         ];
     }
+    
+    public static string GetImageReference(
+        int pageNumber,
+        int imageNumber,
+        string pdfFilePath,
+        string extension)
+    {
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        return $"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}";
+    }
+    
+    public static string GetNoOcrPageReferenceAsync(string filepath, string noOcrServiceName, int pageNumber)
+    {
+        var pdfFilename = FileHelper.GetFilenameWithoutExtension(filepath);
+        return $"NoOcrPageReference-{pdfFilename}-{noOcrServiceName}-{pageNumber}";
+    }
 }

@@ -3,17 +3,18 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Cache;
 
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true;
+    public bool UsesDatabase { get; set; } = true; // Because its back by a DB
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
     public Task SetupAsync()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public Task ClearCacheAsync(string pdfFilename)
@@ -35,7 +36,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension, string serviceName,
         int? width = null, int? height = null)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilePath, extension));
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
@@ -66,7 +68,11 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(
+            ImageReferenceHelper.GetNoOcrPageReferenceAsync(
+                request.Filepath!,
+                request.NoOcrServiceName!,
+                request.PageNumber));
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)

@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Cache;
 
@@ -73,8 +74,8 @@ public class DatabaseCacheService(
         int? width = null,
         int? height = null)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilePath, extension));
     }
     
     public Task<List<ImageDetails>>
@@ -104,8 +105,11 @@ public class DatabaseCacheService(
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-        return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetNoOcrPageReferenceAsync(
+                request.Filepath!,
+                request.NoOcrServiceName!,
+                request.PageNumber));
     }
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)

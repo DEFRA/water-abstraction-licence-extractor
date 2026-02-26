@@ -14,7 +14,7 @@ public class MixedModeCacheService(
 
     public Task SetupAsync()
     {
-        return databaseCacheService.SetupAsync();
+        return apiCacheService.SetupAsync();
     }
 
     public Task ClearCacheAsync(string pdfFilename)
@@ -53,7 +53,7 @@ public class MixedModeCacheService(
         int? width = null,
         int? height = null)
     {
-        return databaseCacheService.GetImageReferenceAsync(
+        return apiCacheService.GetImageReferenceAsync(
             pageNumber,
             imageNumber,
             pdfFilePath,
@@ -78,7 +78,7 @@ public class MixedModeCacheService(
     public Task<string> GetNoOcrPageReferenceAsync(
         NoOcrServicePageCacheRequest request)
     {
-        return databaseCacheService.GetNoOcrPageReferenceAsync(request);
+        return apiCacheService.GetNoOcrPageReferenceAsync(request);
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(
@@ -238,6 +238,6 @@ public class MixedModeCacheService(
     public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
-        return databaseCacheService.GetNaldLicenceNumbersAsync(regionCode);
+        return apiCacheService.GetNaldLicenceNumbersAsync(regionCode);
     }
 }

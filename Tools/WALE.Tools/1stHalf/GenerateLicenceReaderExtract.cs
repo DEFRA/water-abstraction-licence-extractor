@@ -115,7 +115,7 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static void UpdateInProgressFileResultsCsv(LicenceReaderCsvLine result, string pdfFolder)
+    private static void UpdateInProgressFileResultsCsv(LicenceReaderCsvLine result, string pdfFolder, string status)
     {
         var csvPath = GetInProgressResultsCsvPath(pdfFolder);
         
@@ -137,12 +137,14 @@ public static class GenerateLicenceReaderExtract
                 
                 for (var i = 1; i < lines.Count; i++) // Start at 1 to skip header
                 {
-                    if (!lines[i].StartsWith($"\"{result.FileName}\"", StringComparison.OrdinalIgnoreCase))
+                    var line = lines[i];
+                    
+                    if (!line.StartsWith($"\"{result.FileName}\"", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
                     
-                    lines[i] = $"\"{result.FileName}\",\"{result.PermitNumber}\",\"{result.LicenceNumber}\",\"{result.DateOfIssue}\",\"Completed\"";
+                    lines[i] = $"\"{result.FileName}\",\"{result.PermitNumber}\",\"{result.LicenceNumber}\",\"{result.DateOfIssue}\",\"{status}\"";
 
                     updated = true;
                     break;
@@ -297,7 +299,7 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static async Task<List<LicenceReaderCsvLine>> GetLicenceReaderDataAsync(
+    private static async Task<List<LicenceReaderCsvLineWithoutStatus>> GetLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         string pdfFolder,
         int regionCode,
@@ -309,8 +311,12 @@ public static class GenerateLicenceReaderExtract
         // NOTE - Next line for debugging only
         //existingResults.Clear();
         
+        var completedResults = existingResults
+            .Where(er => er.ProcessingStatus == "Completed")
+            .ToList();
+        
         var processedFileNames = new HashSet<string>(
-            existingResults.Select(existingResult => existingResult.FileName)!,
+            completedResults.Select(existingResult => existingResult.FileName)!,
             StringComparer.OrdinalIgnoreCase);
 
         var allPdfFileNames = Directory
@@ -322,14 +328,16 @@ public static class GenerateLicenceReaderExtract
         
         // Filter out files already in CSV (completed or crashed) and hard-coded excluded files
         var pdfFileNames = allPdfFileNames
-            .Where(fileName => !processedFileNames.Contains(fileName) && !ExcludedFiles.Contains(fileName)) // Comment out this line if debugging a certain file
+            .Where(fileName => !processedFileNames.Contains(fileName)
+                && !ExcludedFiles.Contains(fileName)) // Comment out this line if debugging a certain file
             .ToList();
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        /*pdfFileNames = pdfFileNames
-            .Where(fileName =>
-                fileName.StartsWith("42901S0026"))
-            .ToList();*/
+        pdfFileNames = pdfFileNames
+            /*.Where(fileName =>
+                fileName.StartsWith("42901G0003"))
+            .Take(100)*/
+            .ToList();
         
         Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
         Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
@@ -356,13 +364,12 @@ public static class GenerateLicenceReaderExtract
         
         Console.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
 
-        Console.WriteLine($"\n=== Processing {pdfFileNames.Count} files in parallel ===");
+        Console.WriteLine($"\n=== Processing {pdfFileNames.Count} files ===");
+        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...\n");
         
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...");
         var filenameIdx = 1;
         
         var scrapingTasks = new List<Task<LicenceReaderCsvLine>>();
-
         var minimumToFreeUp = maxConcurrentScrapers / 3;
         
         var returnList = new List<LicenceReaderCsvLine>();
@@ -389,15 +396,13 @@ public static class GenerateLicenceReaderExtract
             }
         }
         
-        if (scrapingTasks.Count != 0)
+        // Finish any remaining
+        foreach (var scrapingTask in scrapingTasks)
         {
-            foreach (var scrapingTask in scrapingTasks)
-            {
-                returnList.Add(await scrapingTask);
-            }
-            
-            scrapingTasks.Clear();
+            returnList.Add(await scrapingTask);
         }
+        
+        scrapingTasks.Clear();
 
         Console.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
 
@@ -410,6 +415,7 @@ public static class GenerateLicenceReaderExtract
 
         return allResults
             .OrderBy(line => line.PermitNumber)
+            .Select(line => (LicenceReaderCsvLineWithoutStatus)line)
             .ToList();
     }
 
@@ -466,11 +472,12 @@ public static class GenerateLicenceReaderExtract
                 LicenceNumber = licenceNumber,
                 PermitNumber = permitNumber,
                 DateOfIssue = dateOnly,
-                FileName = pdfFilePath
+                FileName = pdfFilePath,
+                ProcessingStatus = "Completed"
             };
 
             // Update the CSV row with actual results
-            UpdateInProgressFileResultsCsv(result, pdfFolder);
+            UpdateInProgressFileResultsCsv(result, pdfFolder, result.ProcessingStatus);
 
             return result;
         }
@@ -497,7 +504,7 @@ public static class GenerateLicenceReaderExtract
             };
 
             // Update CSV with failed result
-            UpdateInProgressFileResultsCsv(failedResult, pdfFolder);
+            UpdateInProgressFileResultsCsv(failedResult, pdfFolder, "Failed");
             
             return failedResult;
         }

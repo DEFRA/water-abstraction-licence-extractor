@@ -22,7 +22,7 @@ public static class ToolHelper
         var fullPath = Path.Combine(outputFolder, csvFileName);
 
         await using var writer = new StreamWriter(fullPath);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
 

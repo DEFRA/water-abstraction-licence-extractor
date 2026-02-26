@@ -5,14 +5,14 @@ using WALE.Tools.Config;
 const string workflow = "GenerateLicenceReaderExtract";
 
 const int processRunId = 631;
-const int regionCode = 3;
-var pdfFolder = KeyConfig.PdfFolderForOverrides; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
+const int regionCode = 1; // Anglia=1, NE=3
+var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 
 switch (workflow)
 {
     // 1st half of process tools
-    case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be uses in Live Licence Identification
+    case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be used in Live Licence Identification
         await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(pdfFolder, regionCode);
         break;
     case "DuplicateLicenceIdentificationExtract": // Identify duplicates by name (NOTE We don't run anymore)

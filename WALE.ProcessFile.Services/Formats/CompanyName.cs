@@ -338,7 +338,7 @@ public static class CompanyName
         var dtStart = DateTime.Now;
         
         using var reader = new StreamReader("Data/first-names.csv");
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new CsvReader(reader, new CultureInfo("en-GB"));
         
         var data = csv.GetRecordsAsync<FirstNamesRow>();
         

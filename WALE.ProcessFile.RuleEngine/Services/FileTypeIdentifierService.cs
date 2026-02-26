@@ -175,7 +175,7 @@ public class FileTypeIdentifierService
 
         try
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(new CultureInfo("en-GB"))
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
@@ -220,7 +220,7 @@ public class FileTypeIdentifierService
 
         try
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(new CultureInfo("en-GB"))
             {
                 HasHeaderRecord = true
             };
@@ -279,7 +279,7 @@ public class FileTypeIdentifierService
 
         try
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(new CultureInfo("en-GB"))
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
@@ -348,7 +348,7 @@ public class FileTypeIdentifierService
 
         try
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(new CultureInfo("en-GB"))
             {
                 HasHeaderRecord = true
             };
@@ -404,7 +404,7 @@ public class FileTypeIdentifierService
 
         try
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(new CultureInfo("en-GB"))
             {
                 HasHeaderRecord = true
             };

@@ -52,7 +52,7 @@ public static class GenerateAggregatesCsvForTesting
         //var data = await GetYorkshire6DataAsync(pdfDataExtractor);
 
         await using var writer = new StreamWriter($"Yorkshire-{DateTime.Today:yyyyMMdd}.csv");
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync((IEnumerable)data);
     }

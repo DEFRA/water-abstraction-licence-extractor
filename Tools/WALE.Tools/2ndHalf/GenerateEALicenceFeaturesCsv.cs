@@ -29,7 +29,7 @@ public static class GenerateEaLicenceFeaturesCsv
         var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter($"EaLicenceFeatures-{DateTime.Today:yyyyMMdd}.csv");
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
         Console.WriteLine("Finished generating EA licence features csv");

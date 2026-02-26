@@ -33,7 +33,7 @@ public static class GenerateLinkedLicencesCsv
             $"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv",
             false,
             Encoding.Unicode);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
         Console.WriteLine("Finished generating linked licences csv");

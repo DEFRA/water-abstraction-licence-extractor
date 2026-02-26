@@ -477,7 +477,7 @@ public static class GenerateLicenceReaderExtract
                 PermitNumber = permitNumber,
                 DateOfIssue = dateOnly,
                 FileName = pdfFilePath,
-                ProcessingStatus = "Competed"
+                ProcessingStatus = "Completed"
             };
 
             // Update the CSV row with actual results

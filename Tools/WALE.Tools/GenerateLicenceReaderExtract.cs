@@ -303,7 +303,7 @@ public static class GenerateLicenceReaderExtract
         }
     }
 
-    private static async Task<List<LicenceReaderCsvLine>> GetLicenceReaderDataAsync(
+    private static async Task<List<LicenceReaderCsvLineWithoutStatus>> GetLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         string pdfFolder,
         int regionCode,
@@ -419,6 +419,7 @@ public static class GenerateLicenceReaderExtract
 
         return allResults
             .OrderBy(line => line.PermitNumber)
+            .Select(line => (LicenceReaderCsvLineWithoutStatus)line)
             .ToList();
     }
 
@@ -475,11 +476,12 @@ public static class GenerateLicenceReaderExtract
                 LicenceNumber = licenceNumber,
                 PermitNumber = permitNumber,
                 DateOfIssue = dateOnly,
-                FileName = pdfFilePath
+                FileName = pdfFilePath,
+                ProcessingStatus = "Competed"
             };
 
             // Update the CSV row with actual results
-            UpdateInProgressFileResultsCsv(result, pdfFolder, "Completed");
+            UpdateInProgressFileResultsCsv(result, pdfFolder, result.ProcessingStatus);
 
             return result;
         }

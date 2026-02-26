@@ -18,9 +18,16 @@ public static class GenerateEaLicenceFeaturesCsv
         KeyConfig.PostgresUsername,
         KeyConfig.PostgresPassword);
 
-    private static readonly IOutputService OutputService = new DatabaseOutputService(
-        new PostgresReadService(NpgsqlDataSourceProvider),
-        new PostgresWriteService(NpgsqlDataSourceProvider));
+    private static readonly HttpClient HttpClient = new()
+    {
+        BaseAddress = new Uri(KeyConfig.ApiBaseUrl)
+    };
+    
+    private static readonly IOutputService OutputService = new MixedModeOutputService(
+        new ApiOutputService(HttpClient),
+        new DatabaseOutputService(
+            new PostgresReadService(NpgsqlDataSourceProvider),
+            new PostgresWriteService(NpgsqlDataSourceProvider)));
     
     public static async Task GenerateCsvAsync(int processRunId)
     {

@@ -316,11 +316,20 @@ public static class TemplateIdentificationExtract
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
         
-        var cacheService = new DatabaseCacheService(
+        var databaseCacheService = new DatabaseCacheService(
             databaseReadService,
             databaseAddService);
         
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
+    
+        var apiCacheService = new ApiCacheService(httpClient);
+        var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
+
+        var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var apiOutputService = new ApiOutputService(httpClient);
+        var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
+        
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;

@@ -237,7 +237,6 @@ public static class GenerateLicenceReaderExtract
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
     
         var apiCacheService = new ApiCacheService(httpClient);
-        
         var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
 
         var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);

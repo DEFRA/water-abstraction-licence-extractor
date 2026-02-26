@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Output;
 
+[Obsolete]
 public class MixedModeOutputService(
     ApiOutputService apiOutputService,
     DatabaseOutputService databaseOutputService)
@@ -13,7 +14,7 @@ public class MixedModeOutputService(
     
     public Task SetupAsync()
     {
-        return databaseOutputService.SetupAsync();
+        return apiOutputService.SetupAsync();
     }
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
@@ -21,7 +22,7 @@ public class MixedModeOutputService(
         string pdfServiceName,
         string pdfFilePath)
     {
-        return databaseOutputService.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
+        return apiOutputService.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
     }
 
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
@@ -96,10 +97,19 @@ public class MixedModeOutputService(
             processRunId);
     }
 
-    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+    public Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        string pdfFilename,
+        byte[] data,
         int processRunId)
     {
-        throw new NotImplementedException();
+        return apiOutputService.SavePageScreenshotInternalAsync(
+            pageNumber,
+            noOcrServiceName,
+            pdfFilename,
+            data,
+            processRunId);
     }
 
     public Task SaveAllPagesTextAsync(

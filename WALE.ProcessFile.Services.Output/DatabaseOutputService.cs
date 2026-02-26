@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Output;
 
@@ -20,18 +21,12 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(int pageNumber, string pdfServiceName,
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
+        int pageNumber,
+        string pdfServiceName,
         string pdfFilePath)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-
-        return
-        [
-            (pdfServiceName,
-                $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
-            (GeneralConstants.DocnetExtractorServiceName,
-                $"Screenshot-{pdfFilename}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
-        ];
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)

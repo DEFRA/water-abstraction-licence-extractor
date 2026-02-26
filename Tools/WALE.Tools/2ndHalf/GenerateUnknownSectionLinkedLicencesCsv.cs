@@ -24,12 +24,8 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
     {
         BaseAddress = new Uri(KeyConfig.ApiBaseUrl)
     };
-    
-    private static readonly IOutputService OutputService = new MixedModeOutputService(
-        new ApiOutputService(HttpClient),
-        new DatabaseOutputService(
-            new PostgresReadService(NpgsqlDataSourceProvider),
-            new PostgresWriteService(NpgsqlDataSourceProvider)));
+
+    private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
     
     public static async Task GenerateCsvAsync(int processRunId)
     {

@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Output;
 
@@ -13,7 +14,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     
     public Task SetupAsync()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
@@ -21,7 +22,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         string pdfServiceName,
         string pdfFilePath)
     {
-        throw new NotImplementedException();
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(

@@ -239,9 +239,7 @@ public static class GenerateLicenceReaderExtract
         var apiCacheService = new ApiCacheService(httpClient);
         var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
 
-        var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-        var apiOutputService = new ApiOutputService(httpClient);
-        var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
+        var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         

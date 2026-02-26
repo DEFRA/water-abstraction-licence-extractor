@@ -152,14 +152,14 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
-            
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
                 var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
 
                 if (errorCode == "InvalidImageDimension")
                 {
+                    Console.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Azure AI Vision reported back image dimensions were too small");
+                    
                     var data = JsonSerializer.Serialize(new ReadResult { Lines = [] },
                         JsonHelper.GetSerializerOptions());
 
@@ -178,6 +178,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 // Let invalid image try deflate
                 if (errorCode != "InvalidImage")
                 {
+                    Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
                     throw;
                 }
             }
@@ -190,6 +191,8 @@ public class AzureAiVisionOcrDataExtractorService(
 
             try
             {
+                Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
+                
                 // Try deflate
                 bytes = await cacheService.DeflateImageAsync(
                     request.Filepath!,

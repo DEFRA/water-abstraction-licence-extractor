@@ -18,7 +18,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
-[Collection("First Names 1")]
+[Collection("First Names 5")]
 public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

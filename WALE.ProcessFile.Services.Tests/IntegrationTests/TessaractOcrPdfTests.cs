@@ -17,7 +17,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
-[Collection("First Names 1")]
+[Collection("First Names 2")]
 public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

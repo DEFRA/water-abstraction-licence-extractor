@@ -17,20 +17,40 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return Task.CompletedTask;
     }
 
-    public Task ClearCacheAsync(string pdfFilename)
+    public async Task ClearCacheAsync(string pdfFilename)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Cache/ClearSingle?pdfFilePath={pdfFilename}";
+       
+        var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task ClearCacheAsync()
+    public async Task ClearCacheAsync()
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Cache/ClearAll";
+       
+        var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension,
+    public async Task<byte[]> DeflateImageAsync(
+        string pdfFilePath,
+        int imageNumber,
+        int pageNumber,
+        int processRunId,
+        string extension,
         string serviceName)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/DeflateImage?pdfFilePath={pdfFilePath}"
+           + $"&imageNumber={imageNumber}&pageNumber={pageNumber}"
+           + $"&processRunId={processRunId}&extension={extension}&serviceName={serviceName}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
     public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension, string serviceName,

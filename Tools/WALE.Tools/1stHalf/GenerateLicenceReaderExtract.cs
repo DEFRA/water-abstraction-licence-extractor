@@ -1,9 +1,7 @@
-using System.Collections.Concurrent;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Helpers;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -217,28 +215,10 @@ public static class GenerateLicenceReaderExtract
     {
         var dtStart = DateTime.Now;
         
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
-    
-        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-        
-        var databaseCacheService = new DatabaseCacheService(
-            databaseReadService,
-            databaseAddService);
-        
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
     
-        var apiCacheService = new ApiCacheService(httpClient);
-        var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
-
+        var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();

@@ -3,7 +3,6 @@ using System.Text;
 using CsvHelper;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
@@ -12,13 +11,6 @@ namespace WALE.Tools._2ndHalf;
 
 public static class GenerateLinkedLicencesCsv
 {
-    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider = new(
-        KeyConfig.PostgresHost,
-        KeyConfig.PostgresPort,
-        KeyConfig.PostgresDbName,
-        KeyConfig.PostgresUsername,
-        KeyConfig.PostgresPassword);
-
     private static readonly HttpClient HttpClient = new()
     {
         BaseAddress = new Uri(KeyConfig.ApiBaseUrl)

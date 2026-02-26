@@ -8,7 +8,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
@@ -389,16 +388,6 @@ ConfiguredServices ConfigureServices()
                                  ?? throw new NullReferenceException("ThumbnailImageDataPath");
     var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
                             ?? throw new NullReferenceException("FullImageDataPath");
-    var postgresHost = Environment.GetEnvironmentVariable("POSTGRESQL_HOST")
-                       ?? throw new NullReferenceException("POSTGRESQL_HOST");
-    var postgresPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRESQL_PORT")
-                                 ?? throw new NullReferenceException("POSTGRESQL_PORT"));
-    var postgresDatabaseName = Environment.GetEnvironmentVariable("POSTGRESQL_DBNAME")
-                               ?? throw new NullReferenceException("POSTGRESQL_DBNAME");
-    var postgresUsername = Environment.GetEnvironmentVariable("POSTGRESQL_USERNAME")
-                           ?? throw new NullReferenceException("POSTGRESQL_USERNAME");
-    var postgresPassword = Environment.GetEnvironmentVariable("POSTGRESQL_PASSWORD")
-                           ?? throw new NullReferenceException("POSTGRESQL_PASSWORD");
     var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
                           ?? throw new NullReferenceException("FileMappingPath");
     var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
@@ -411,30 +400,11 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
-
-    // This provider should have singleton lifetime and be shared for proper connection pooling
-    var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
-        postgresHost,
-        postgresPort,
-        postgresDatabaseName,
-        postgresUsername,
-        postgresPassword);
-
-    Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-
-    var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-    var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
     
-    var databaseCacheService = new DatabaseCacheService(
-        databaseReadService,
-        databaseAddService);
-
     var httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri(apiBaseUrl);
     
-    var apiCacheService = new ApiCacheService(httpClient);
-    
-    var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
+    var cacheService = new ApiCacheService(httpClient);
     var outputService = new ApiOutputService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -494,7 +464,6 @@ ConfiguredServices ConfigureServices()
     {
         CacheService = cacheService,
         OutputService = outputService,
-        DatabaseReadService = databaseReadService,
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

@@ -51,6 +51,26 @@ public class ImagesController(
     
         return File(bytes, "image/jpeg");
     }
+
+    [HttpGet]
+    public async Task<ActionResult> DeflateImageAsync(
+        [FromQuery] string pdfFilePath,
+        [FromQuery] int imageNumber,
+        [FromQuery] int pageNumber,
+        [FromQuery] int processRunId,
+        [FromQuery] string extension,
+        [FromQuery] string serviceName)
+    {
+        var bytes = await cacheService.DeflateImageAsync(
+            pdfFilePath,
+            imageNumber,
+            pageNumber,
+            processRunId,
+            extension,
+            serviceName);
+
+        return File(bytes, "image/jpeg");
+    }
     
     [HttpGet]
     public async Task<ActionResult> GetPageScreenshotAsync(

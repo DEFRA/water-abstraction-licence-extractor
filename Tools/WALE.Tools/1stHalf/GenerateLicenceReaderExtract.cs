@@ -72,7 +72,8 @@ public static class GenerateLicenceReaderExtract
                         FileName = parts[0].Trim('"'),
                         PermitNumber = parts[1].Trim('"'),
                         LicenceNumber = string.IsNullOrEmpty(parts[2]) || parts[2] == "\"\"" ? null : parts[2].Trim('"'),
-                        DateOfIssue = string.IsNullOrEmpty(parts[3]) || parts[3] == "\"\"" ? null : DateOnly.Parse(parts[3].Trim('"'))
+                        DateOfIssue = string.IsNullOrEmpty(parts[3]) || parts[3] == "\"\"" ? null : DateOnly.Parse(parts[3].Trim('"')),
+                        ProcessingStatus = parts[4].Trim('"'),
                     });
                 }
             }
@@ -228,11 +229,21 @@ public static class GenerateLicenceReaderExtract
         var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
         var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
         
-        var cacheService = new DatabaseCacheService(
+        var databaseCacheService = new DatabaseCacheService(
             databaseReadService,
             databaseAddService);
         
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
+    
+        var apiCacheService = new ApiCacheService(httpClient);
+        
+        var cacheService = new MixedModeCacheService(apiCacheService, databaseCacheService);
+
+        var databaseOutputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var apiOutputService = new ApiOutputService(httpClient);
+        var outputService = new MixedModeOutputService(apiOutputService, databaseOutputService);
+        
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         
         var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
@@ -335,8 +346,8 @@ public static class GenerateLicenceReaderExtract
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
         pdfFileNames = pdfFileNames
             /*.Where(fileName =>
-                fileName.StartsWith("42901G0003"))
-            .Take(100)*/
+                fileName.StartsWith("42901G0003"))*/
+            .Take(100)
             .ToList();
         
         Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
@@ -353,6 +364,7 @@ public static class GenerateLicenceReaderExtract
             
             return existingResults
                 .OrderBy(existingResult => existingResult.PermitNumber)
+                .Select(line => (LicenceReaderCsvLineWithoutStatus)line)
                 .ToList();
         }
         

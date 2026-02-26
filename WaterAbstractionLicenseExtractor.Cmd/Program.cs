@@ -410,7 +410,7 @@ ConfiguredServices ConfigureServices()
     var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
-                         ?? throw new NullReferenceException("ApiBaseUrl");    
+                         ?? throw new NullReferenceException("ApiBaseUrl");
 
     // This provider should have singleton lifetime and be shared for proper connection pooling
     var postgresDataSourceProvider = new NpgsqlDataSourceProvider(

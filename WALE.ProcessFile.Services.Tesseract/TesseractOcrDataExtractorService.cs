@@ -177,6 +177,12 @@ public class TesseractOcrDataExtractorService(
         }
         
         var fileMode = isDbBased ? "Database" : "File";
+
+        if (string.IsNullOrWhiteSpace(cacheService.CacheFolderOrUrl))
+        {
+            Console.WriteLine("ERROR - TesseractOcr - Tesseract Exe cannot be used when using DB cache locally");
+            throw new Exception("Tesseract Exe cannot be used when using DB cache locally");
+        }
         
         var argumentsList = string.Join(" ", new List<string>
         {

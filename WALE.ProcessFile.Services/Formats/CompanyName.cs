@@ -11,17 +11,16 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
-    public static bool AnyIsCompanyOrPersonalName(
+    public static async Task<(bool, IReadOnlyList<DocumentLine>)> AnyIsCompanyOrPersonalNameAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool lineNumbersAreDescending,
         bool isOcr,
-        LookupConfiguration? lookupConfiguration,
-        out IReadOnlyList<DocumentLine>? matchedLines)
+        LookupConfiguration? lookupConfiguration)
     {
         // TODO get rid of any dates in here (d/m/yy)
         
-        matchedLines = null;
+        var matchedLines = new List<DocumentLine>();
         var matched = false;
         
         var initialMatchedLines = new List<DocumentLine>();
@@ -60,7 +59,7 @@ public static class CompanyName
 
                 // For speed, first check without dictionary
                 var correctedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(text, true, false)
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(text, true, false)
                     : text;
                 
                 if (DataHelper.IsCorruptedText(correctedText, isOcr)
@@ -75,7 +74,7 @@ public static class CompanyName
                 }
                 
                 correctedText = isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(correctedText, true, label.AutoCorrect)
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedText, true, label.AutoCorrect)
                     : text;
             
                 if (!TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out companyOrPersonalName))
@@ -167,7 +166,7 @@ public static class CompanyName
             matchedLines = returnList;
         }
         
-        return matched;
+        return (matched, matchedLines);
     }
     
     public static bool TryGetCompanyOrPersonalName(

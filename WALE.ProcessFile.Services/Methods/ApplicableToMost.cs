@@ -317,7 +317,7 @@ public static class ApplicableToMost
             if (matchedLabel.Possibilities?.Any() == true)
             {
                 var autoCorrectedOutputText = request.isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(
                         documentLine.Text,
                         false,
                         request.label?.AutoCorrect ?? false)
@@ -387,7 +387,7 @@ public static class ApplicableToMost
             }
             
             outputText = request.isOcr
-                ? AutoCorrectHelper.AutoCorrectText(outputText!, request.isCompanyType, request.label.AutoCorrect)
+                ? await AutoCorrectHelper.AutoCorrectTextAsync(outputText!, request.isCompanyType, request.label.AutoCorrect)
                 : outputText;
             
             if (request.isCompanyType

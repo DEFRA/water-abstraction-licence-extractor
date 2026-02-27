@@ -127,7 +127,7 @@ public class AzureAiVisionOcrDataExtractorService(
         const int minFontSize = 15;
         const int considerableOverlapAmount = 19;
 
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLinesInFormat,
             true,
             pageNumber,

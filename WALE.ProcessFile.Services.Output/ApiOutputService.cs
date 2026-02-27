@@ -155,29 +155,51 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
         var byteSize = 0;
+        var tasks = new List<Task<int>>();
         
         foreach (var (providerName, bitmap) in images)
         {
-            var bytes = await GetAsJpegAsync(bitmap);
-            byteSize += bytes.Length;
-            
-            const string path = "/Extractor/Images/SavePageScreenshot";
-
-            var json = JsonSerializer.Serialize(new
-            {
-                PageNumber = pageNumber,
-                NoOcrServiceName = providerName,
-                PdfFilename = pdfFilename,
-                Data = bytes,
-                ProcessRunId = processRunId
-            }, JsonHelper.GetSerializerOptions());
-            
-            var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
-            response.EnsureSuccessStatusCode();
+            tasks.Add(SavePageScreenshotTaskAsync(
+                providerName,
+                bitmap,
+                pageNumber, 
+                pdfFilename,
+                processRunId));
         }
 
+        foreach (var task in tasks)
+        {
+            byteSize += await task;
+        }
+        
         return byteSize;
+    }
+
+    private async Task<int> SavePageScreenshotTaskAsync(
+        string providerName,
+        SKBitmap bitmap,
+        int pageNumber,
+        string pdfFilename,
+        int processRunId)
+    {
+        var bytes = await GetAsJpegAsync(bitmap);
+            
+        const string path = "/Extractor/Images/SavePageScreenshot";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            PageNumber = pageNumber,
+            NoOcrServiceName = providerName,
+            PdfFilename = pdfFilename,
+            Data = bytes,
+            ProcessRunId = processRunId
+        }, JsonHelper.GetSerializerOptions());
+            
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+
+        return bytes.Length;
     }
 
     public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,

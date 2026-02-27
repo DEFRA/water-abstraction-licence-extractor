@@ -146,7 +146,7 @@ public class TesseractOcrDataExtractorService(
         const int maxPositiveDiffBetweenWordTop = 100;
         const int considerableOverlapAmount = 3; // TODO check and tweak
 
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLines,
             false,
             pageNumber,

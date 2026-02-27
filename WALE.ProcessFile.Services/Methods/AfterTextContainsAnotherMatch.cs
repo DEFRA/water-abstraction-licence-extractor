@@ -64,11 +64,6 @@ public static class AfterTextContainsAnotherMatch
                 StringComparison.InvariantCultureIgnoreCase);
             
             result.CharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
-
-            if (result.CharPosition == 124)
-            {
-                
-            }
             
             result.MatchedLabel.Position = valueInAfterTextPosition > labelInAfterTextPosition ?
                 LabelPosition.LabelIsBeforeTextToFind : LabelPosition.LabelIsAfterTextToFind;

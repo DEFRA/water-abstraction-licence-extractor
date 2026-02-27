@@ -165,7 +165,7 @@ public class AwsTextractOcrDataExtractorService
         const int minFontSize = 5; // Can't really go lower, this is tiny
         const int considerableOverlapAmount = 3;
         
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLines,
             true,
             pageNumber,

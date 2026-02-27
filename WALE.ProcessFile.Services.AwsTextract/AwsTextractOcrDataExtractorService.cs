@@ -147,7 +147,7 @@ public class AwsTextractOcrDataExtractorService
             }
             catch (Exception e)
             {
-                Console.WriteLine($"ERROR - {nameof(AwsTextract)} - {e}");
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - {e}");
                 throw;
             }
 

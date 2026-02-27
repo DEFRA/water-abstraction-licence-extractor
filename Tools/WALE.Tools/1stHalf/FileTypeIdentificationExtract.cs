@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Services;
@@ -29,7 +30,7 @@ public static class FileTypeIdentificationExtract
     /// </summary>
     public static async Task GenerateFileTypeIdentificationAsync()
     {
-        Console.WriteLine("Starting file type identification...");
+        ConsoleHelper.WriteLine("Starting file type identification...");
         
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
@@ -89,7 +90,7 @@ public static class FileTypeIdentificationExtract
 
         // Process all files in the output folder
         var labels = LicenceReaderConfiguration.GetLabels();
-        Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
+        ConsoleHelper.WriteLine($"Retrieved {labels.Count} label groups from configuration");
 
         var configuration = new LookupConfiguration(
             labels,

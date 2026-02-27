@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
@@ -32,17 +33,17 @@ public static class ImportNaldData
 
     public static async Task ImportAsync()
     {
-        Console.WriteLine("Starting NALD data import...");
+        ConsoleHelper.WriteLine("Starting NALD data import...");
         var dumpFolder = KeyConfig.NaldDataDumpFolder;
 
         if (!Directory.Exists(dumpFolder))
         {
-            Console.WriteLine($"Error: NALD dump folder not found at {dumpFolder}");
+            ConsoleHelper.WriteLine($"Error: NALD dump folder not found at {dumpFolder}");
             return;
         }
 
         var files = Directory.GetFiles(dumpFolder, "NALD_*.txt");
-        Console.WriteLine($"Found {files.Length} files to import.");
+        ConsoleHelper.WriteLine($"Found {files.Length} files to import.");
 
         NpgsqlDataSourceProvider npgsqlDataSourceProvider = new(
             KeyConfig.PostgresHost,
@@ -64,7 +65,7 @@ public static class ImportNaldData
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
-            Console.WriteLine($"Truncating {fileName}...");
+            ConsoleHelper.WriteLine($"Truncating {fileName}...");
 
             try
             {
@@ -72,7 +73,7 @@ public static class ImportNaldData
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error truncating {fileName}: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error truncating {fileName}: {ex.Message}");
             }
         }
 
@@ -80,7 +81,7 @@ public static class ImportNaldData
         foreach (var filePath in files)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
-            Console.WriteLine($"Importing {fileName}...");
+            ConsoleHelper.WriteLine($"Importing {fileName}...");
 
             try
             {
@@ -88,13 +89,13 @@ public static class ImportNaldData
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error importing {fileName}: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error importing {fileName}: {ex.Message}");
             }
         }
 
         await RecreateForeignKeysAsync(dataSource);
 
-        Console.WriteLine("NALD data import completed.");
+        ConsoleHelper.WriteLine("NALD data import completed.");
     }
 
     private static async Task LoadSchemaAsync(NpgsqlDataSource dataSource)
@@ -127,7 +128,7 @@ public static class ImportNaldData
 
     private static async Task StoreForeignKeysAsync(NpgsqlDataSource dataSource)
     {
-        Console.WriteLine("Storing foreign key definitions...");
+        ConsoleHelper.WriteLine("Storing foreign key definitions...");
 
         var sql = @"
             SELECT
@@ -160,7 +161,7 @@ public static class ImportNaldData
         await using var connection = await dataSource.OpenConnectionAsync();
         _foreignKeys = (await connection.QueryAsync<ForeignKeyDefinition>(sql)).ToList();
 
-        Console.WriteLine($"Stored {_foreignKeys.Count} foreign key definitions.");
+        ConsoleHelper.WriteLine($"Stored {_foreignKeys.Count} foreign key definitions.");
     }
 
     private static NpgsqlTypes.NpgsqlDbType MapPostgresTypeToNpgsqlDbType(string dataType, string udtName)
@@ -235,7 +236,7 @@ public static class ImportNaldData
 
     private static async Task DropForeignKeysAsync(NpgsqlDataSource dataSource)
     {
-        Console.WriteLine("Dropping all foreign keys in nald schema...");
+        ConsoleHelper.WriteLine("Dropping all foreign keys in nald schema...");
         
         var sql = @"
             DO $$ 
@@ -258,11 +259,11 @@ public static class ImportNaldData
     {
         if (_foreignKeys == null || _foreignKeys.Count == 0)
         {
-            Console.WriteLine("No foreign keys to recreate.");
+            ConsoleHelper.WriteLine("No foreign keys to recreate.");
             return;
         }
 
-        Console.WriteLine($"Re-creating {_foreignKeys.Count} foreign keys...");
+        ConsoleHelper.WriteLine($"Re-creating {_foreignKeys.Count} foreign keys...");
 
         await using var connection = await dataSource.OpenConnectionAsync();
         foreach (var fk in _foreignKeys)
@@ -284,15 +285,15 @@ public static class ImportNaldData
                     REFERENCES nald.""{fk.ReferencedTableName}"" ({string.Join(", ", fk.ReferencedColumnNames.Split(", ").Select(c => $"\"{c}\""))}){onDeleteClause};";
 
                 await connection.ExecuteAsync(sql);
-                Console.WriteLine($"Recreated FK: {fk.ConstraintName} on {fk.TableName}");
+                ConsoleHelper.WriteLine($"Recreated FK: {fk.ConstraintName} on {fk.TableName}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error recreating FK {fk.ConstraintName} on {fk.TableName}: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error recreating FK {fk.ConstraintName} on {fk.TableName}: {ex.Message}");
             }
         }
 
-        Console.WriteLine("Foreign key recreation completed.");
+        ConsoleHelper.WriteLine("Foreign key recreation completed.");
     }
 
     private static async Task TruncateTableAsync(NpgsqlDataSource dataSource, string tableName)
@@ -395,7 +396,7 @@ public static class ImportNaldData
         {
             if (values.Count > 1 || !string.IsNullOrWhiteSpace(values[0]))
             {
-                Console.WriteLine(
+                ConsoleHelper.WriteLine(
                     $"Warning: Line in {tableName} has {values.Count} columns, expected {allColumnsInFile.Length}. Skipping.");
             }
 
@@ -429,7 +430,7 @@ public static class ImportNaldData
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(
+                    ConsoleHelper.WriteLine(
                         $"Error parsing value '{value}' for column '{columnName}' in table '{tableName}' as type '{npgsqlType}': {ex.Message}. Writing as null.");
                     await writer.WriteNullAsync();
                 }

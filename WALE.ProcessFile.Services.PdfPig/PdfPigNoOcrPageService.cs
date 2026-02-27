@@ -1,4 +1,5 @@
 using UglyToad.PdfPig.Core;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -21,12 +22,12 @@ public class PdfPigNoOcrPageService(IInternalPdfDocumentPage page) : INoOcrPdfPa
         }
         catch (PdfDocumentFormatException exception)
         {
-            Console.WriteLine($"ERROR (PdfPig) - PdfDocumentFormatException getting images - {exception.Message}");
+            ConsoleHelper.WriteLine($"ERROR (PdfPig) - PdfDocumentFormatException getting images - {exception.Message}");
             return Task.FromResult((IReadOnlyList<INoOcrPdfImageService>)[]);
         }
         catch (IndexOutOfRangeException exception)
         {
-            Console.WriteLine($"ERROR (PdfPig) - IndexOutOfRangeException getting images - {exception.Message}");
+            ConsoleHelper.WriteLine($"ERROR (PdfPig) - IndexOutOfRangeException getting images - {exception.Message}");
             return Task.FromResult((IReadOnlyList<INoOcrPdfImageService>)[]);
         }
     }

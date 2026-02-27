@@ -21,7 +21,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
     
     public static async Task GenerateCsvAsync(int processRunId)
     {
-        Console.WriteLine("Started generating unknown section linked licences csv");
+        ConsoleHelper.WriteLine("Started generating unknown section linked licences csv");
 
         var data = await GetDataAsync(processRunId);
 
@@ -29,7 +29,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
-        Console.WriteLine("Finished generating unknown section linked licences csv");
+        ConsoleHelper.WriteLine("Finished generating unknown section linked licences csv");
     }
 
     private static async Task<List<UnknownSectionLinkedLicencesCsvLine>> GetDataAsync(int processRunId)

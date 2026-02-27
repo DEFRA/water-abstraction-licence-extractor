@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Configuration;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.RuleEngine.Services;
 
@@ -61,7 +62,7 @@ public class FileTypeIdentifierService
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR - {ex.Message}");
+                ConsoleHelper.WriteLine($"ERROR - {ex.Message}");
                 
                 // If we can't read the PDF, return 0 to exclude it
                 return 0;
@@ -81,13 +82,13 @@ public class FileTypeIdentifierService
         {
             if (!File.Exists(filePath))
             {
-                Console.WriteLine($"File not found: {filePath}");
+                ConsoleHelper.WriteLine($"File not found: {filePath}");
                 return null;
             }
 
             if (_pdfExtractorServices == null || _pdfExtractorServices.Count == 0)
             {
-                Console.WriteLine("No PDF extractor services available");
+                ConsoleHelper.WriteLine("No PDF extractor services available");
                 return null;
             }
 
@@ -107,7 +108,7 @@ public class FileTypeIdentifierService
         }
         catch (Exception ex)
         {
-            Console.WriteLine("ERROR - " + ex.Message);
+            ConsoleHelper.WriteLine("ERROR - " + ex.Message);
             return null;
         }
     }
@@ -169,7 +170,7 @@ public class FileTypeIdentifierService
 
         if (!File.Exists(csvPath))
         {
-            Console.WriteLine($"Page count cache not found at {csvPath}. Will check all files.");
+            ConsoleHelper.WriteLine($"Page count cache not found at {csvPath}. Will check all files.");
             return pageCounts;
         }
 
@@ -199,11 +200,11 @@ public class FileTypeIdentifierService
                 pageCounts[record.FilePath] = record.PageCount;
             }
 
-            Console.WriteLine($"Loaded {pageCounts.Count} cached page counts from CSV.");
+            ConsoleHelper.WriteLine($"Loaded {pageCounts.Count} cached page counts from CSV.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error reading page count cache: {ex.Message}. Will check all files.");
+            ConsoleHelper.WriteLine($"Error reading page count cache: {ex.Message}. Will check all files.");
         }
 
         return pageCounts;
@@ -253,11 +254,11 @@ public class FileTypeIdentifierService
             }
 
             writer.Flush();
-            Console.WriteLine($"Saved {newPageCounts.Count} page counts to cache.");
+            ConsoleHelper.WriteLine($"Saved {newPageCounts.Count} page counts to cache.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error writing page counts to cache: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error writing page counts to cache: {ex.Message}");
         }
     }
 
@@ -273,7 +274,7 @@ public class FileTypeIdentifierService
 
         if (!File.Exists(csvPath))
         {
-            Console.WriteLine($"CSV tracking file not found at {csvPath}. Starting fresh.");
+            ConsoleHelper.WriteLine($"CSV tracking file not found at {csvPath}. Starting fresh.");
             return results;
         }
 
@@ -303,7 +304,7 @@ public class FileTypeIdentifierService
 
             if (duplicateCount > 0)
             {
-                Console.WriteLine($"Found {duplicateCount} duplicate entries in CSV. Using first occurrence for each file.");
+                ConsoleHelper.WriteLine($"Found {duplicateCount} duplicate entries in CSV. Using first occurrence for each file.");
             }
 
             // Add all unique records to results regardless of status
@@ -327,11 +328,11 @@ public class FileTypeIdentifierService
                 results[record.FilePath] = result;
             }
 
-            Console.WriteLine($"Loaded {uniqueRecords.Count} unique processed files from CSV (will be skipped).");
+            ConsoleHelper.WriteLine($"Loaded {uniqueRecords.Count} unique processed files from CSV (will be skipped).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error reading CSV file: {ex.Message}. Starting fresh.");
+            ConsoleHelper.WriteLine($"Error reading CSV file: {ex.Message}. Starting fresh.");
         }
 
         return results;
@@ -384,11 +385,11 @@ public class FileTypeIdentifierService
             }
 
             writer.Flush();
-            Console.WriteLine($"Logged {errorRecords.Count} errors to CSV at {csvPath}");
+            ConsoleHelper.WriteLine($"Logged {errorRecords.Count} errors to CSV at {csvPath}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error writing errors to CSV file: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error writing errors to CSV file: {ex.Message}");
         }
     }
 
@@ -443,11 +444,11 @@ public class FileTypeIdentifierService
             }
 
             writer.Flush();
-            Console.WriteLine($"Saved {newResults.Count} new results to CSV at {csvPath}");
+            ConsoleHelper.WriteLine($"Saved {newResults.Count} new results to CSV at {csvPath}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error writing to CSV file: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error writing to CSV file: {ex.Message}");
         }
     }
 
@@ -509,11 +510,11 @@ public class FileTypeIdentifierService
 
         if (filteredFiles.Count == 0)
         {
-            Console.WriteLine("No new files to process. All files have already been processed.");
+            ConsoleHelper.WriteLine("No new files to process. All files have already been processed.");
             return results;
         }
 
-        Console.WriteLine($"Found {filteredFiles.Count} new files to process (excluding {processedFiles.Count} already processed files)");
+        ConsoleHelper.WriteLine($"Found {filteredFiles.Count} new files to process (excluding {processedFiles.Count} already processed files)");
 
         // Load cached page counts
         var cachedPageCounts = ReadPageCountsFromCsv(directoryPath);
@@ -533,7 +534,7 @@ public class FileTypeIdentifierService
                 }
                 else
                 {
-                    Console.WriteLine($"Filtered out {Path.GetFileName(file)} - {cachedCount} pages (cached)");
+                    ConsoleHelper.WriteLine($"Filtered out {Path.GetFileName(file)} - {cachedCount} pages (cached)");
                 }
             }
             else
@@ -542,11 +543,11 @@ public class FileTypeIdentifierService
             }
         }
 
-        Console.WriteLine($"Using {pageCountFilteredFiles.Count} files from page count cache.");
+        ConsoleHelper.WriteLine($"Using {pageCountFilteredFiles.Count} files from page count cache.");
 
         if (filesToCheckPageCount.Count > 0)
         {
-            Console.WriteLine($"Checking page counts for {filesToCheckPageCount.Count} uncached files...");
+            ConsoleHelper.WriteLine($"Checking page counts for {filesToCheckPageCount.Count} uncached files...");
             var pageCountStart = DateTime.Now;
 
             // Process page count checks in parallel batches
@@ -563,7 +564,7 @@ public class FileTypeIdentifierService
                 var batch = pageCountBatches[batchIndex];
                 var batchPosition = batchIndex + 1;
                 
-                Console.WriteLine($"Checking page counts for batch {batchPosition}/{pageCountBatches.Count} ({batch.Count} files)...");
+                ConsoleHelper.WriteLine($"Checking page counts for batch {batchPosition}/{pageCountBatches.Count} ({batch.Count} files)...");
 
                 var newPageCounts = new Dictionary<string, int>();
 
@@ -576,7 +577,7 @@ public class FileTypeIdentifierService
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error getting page count for {Path.GetFileName(file)}: {ex.Message}");
+                        ConsoleHelper.WriteLine($"Error getting page count for {Path.GetFileName(file)}: {ex.Message}");
                         return new { File = file, PageCount = 0, Success = false };
                     }
                 });
@@ -599,7 +600,7 @@ public class FileTypeIdentifierService
                     }
                     else
                     {
-                        Console.WriteLine($"Filtered out {Path.GetFileName(result.File)} - {result.PageCount} pages");
+                        ConsoleHelper.WriteLine($"Filtered out {Path.GetFileName(result.File)} - {result.PageCount} pages");
                     }
                 }
 
@@ -611,10 +612,10 @@ public class FileTypeIdentifierService
             }
 
             var pageCountDuration = (DateTime.Now - pageCountStart).TotalSeconds;
-            Console.WriteLine($"Page count checking completed in {pageCountDuration:F2} seconds");
+            ConsoleHelper.WriteLine($"Page count checking completed in {pageCountDuration:F2} seconds");
         }
 
-        Console.WriteLine($"Processing {pageCountFilteredFiles.Count} files (filtered from {filteredFiles.Count} based on page count < 25)");
+        ConsoleHelper.WriteLine($"Processing {pageCountFilteredFiles.Count} files (filtered from {filteredFiles.Count} based on page count < 25)");
         filteredFiles = pageCountFilteredFiles;
 
         // Process files in batches of 10
@@ -630,7 +631,7 @@ public class FileTypeIdentifierService
         {
             var batch = batches[batchIndex];
             var batchPosition = batchIndex + 1;
-            Console.WriteLine($"Processing batch {batchPosition}/{batches.Count} ({batch.Count} files)...");
+            ConsoleHelper.WriteLine($"Processing batch {batchPosition}/{batches.Count} ({batch.Count} files)...");
            
             var batchResultsDict = new Dictionary<string, FileTypeResult?>();
             var batchErrorsDict = new Dictionary<string, string>();
@@ -642,7 +643,7 @@ public class FileTypeIdentifierService
             foreach (var file in batch)
             {
                 var fileName = Path.GetFileName(file);
-                Console.WriteLine($"  Processing file: {fileName}");
+                ConsoleHelper.WriteLine($"  Processing file: {fileName}");
 
                 try
                 {
@@ -679,7 +680,7 @@ public class FileTypeIdentifierService
                             }
 
                             var csvErrorMessage = errorMessage.Length > 200 ? errorMessage.Substring(0, 200) + "..." : errorMessage;
-                            Console.WriteLine($"ERROR - {errorType} ({fileName})");
+                            ConsoleHelper.WriteLine($"ERROR - {errorType} ({fileName})");
                             
                             return new
                             {
@@ -703,13 +704,13 @@ public class FileTypeIdentifierService
                             results[file] = result.Result;
                             batchResultsDict[file] = result.Result;
                             successCount++;
-                            Console.WriteLine($"    ✓ Success: {fileName}");
+                            ConsoleHelper.WriteLine($"    ✓ Success: {fileName}");
                         }
                         else
                         {
                             batchErrorsDict[file] = result.Error ?? "Unknown error";
                             errorCount++;
-                            Console.WriteLine($"    ✗ Error: {fileName} - {result.Error}");
+                            ConsoleHelper.WriteLine($"    ✗ Error: {fileName} - {result.Error}");
                         }
                     }
                     else
@@ -721,7 +722,7 @@ public class FileTypeIdentifierService
                         batchErrorsDict[file] = timeoutError;
                         errorCount++;
                         
-                        Console.WriteLine($"    ✗ Timeout: {fileName}");
+                        ConsoleHelper.WriteLine($"    ✗ Timeout: {fileName}");
 
                         // Give extra time for cleanup after timeout
                         await Task.Delay(2000);
@@ -734,7 +735,7 @@ public class FileTypeIdentifierService
                     batchErrorsDict[file] = criticalError;
                     errorCount++;
                     
-                    Console.WriteLine($"    ✗ Critical Error: {fileName} - {ex.Message}");
+                    ConsoleHelper.WriteLine($"    ✗ Critical Error: {fileName} - {ex.Message}");
                 }
 
                 // Small delay between files to allow cleanup and GC
@@ -758,7 +759,7 @@ public class FileTypeIdentifierService
                     }
                     catch (Exception csvEx)
                     {
-                        Console.WriteLine($"Error saving intermediate results: {csvEx.Message}");
+                        ConsoleHelper.WriteLine($"Error saving intermediate results: {csvEx.Message}");
                     }
                 }
             }
@@ -776,11 +777,11 @@ public class FileTypeIdentifierService
                     WriteErrorsToCsv(directoryPath, batchErrorsDict);
                 }
 
-                Console.WriteLine($"Batch {batchPosition}/{batches.Count} completed: {successCount} successful, {errorCount} errors. Saved to CSV.");
+                ConsoleHelper.WriteLine($"Batch {batchPosition}/{batches.Count} completed: {successCount} successful, {errorCount} errors. Saved to CSV.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving batch results: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error saving batch results: {ex.Message}");
             }
         }
 

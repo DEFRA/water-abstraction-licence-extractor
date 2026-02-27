@@ -1,4 +1,5 @@
 using Tesseract;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
@@ -15,7 +16,7 @@ public static class UpdateCachedImageWidthAndHeightsFilenames
     
     public static async Task PopulateWidthAndHeightsAsync()
     {
-        Console.WriteLine("Started updating filename image width and heights");
+        ConsoleHelper.WriteLine("Started updating filename image width and heights");
 
         var folderPaths = GetFolderPaths();
         var totalFoldersDone = 0;
@@ -69,11 +70,11 @@ public static class UpdateCachedImageWidthAndHeightsFilenames
 
             if (anythingToDo)
             {
-                Console.WriteLine($"1 folder done - {++totalFoldersDone} in total");   
+                ConsoleHelper.WriteLine($"1 folder done - {++totalFoldersDone} in total");   
             }
         }
 
-        Console.WriteLine("Finished updating filename image width and heights");
+        ConsoleHelper.WriteLine("Finished updating filename image width and heights");
     }
     
     private static (int Width, int Height) GetWidthAndHeight(byte[] bytes)

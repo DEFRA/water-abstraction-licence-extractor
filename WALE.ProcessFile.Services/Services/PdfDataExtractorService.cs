@@ -47,7 +47,7 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFilePath}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFilePath}");
             }
             
             return await GetMatchesInternalAsync(
@@ -77,7 +77,7 @@ public class PdfDataExtractorService(
             noOcrPdfDocumentService,
             processRunId);
         
-        Console.WriteLine(
+        ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilePath}");
         
@@ -121,7 +121,7 @@ public class PdfDataExtractorService(
             processRunId,
             configuration);
 
-        Console.WriteLine(
+        ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilePath}");
         
@@ -218,7 +218,7 @@ public class PdfDataExtractorService(
 
         if ((DateTime.Now - dtStart).TotalMilliseconds >= 1000)
         {
-            Console.WriteLine(
+            ConsoleHelper.WriteLine(
                 $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
                 $" - {pdfDocument.PdfFilePath}");
         }
@@ -239,7 +239,7 @@ public class PdfDataExtractorService(
             
             if (pageImages.Count > 10)
             {
-                Console.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
+                ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
                     $" - {pdfDocument.PdfFilePath}");
                 
                 pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
@@ -295,7 +295,7 @@ public class PdfDataExtractorService(
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"ERROR - {ocrService.Name} - {ex}");
+                        ConsoleHelper.WriteLine($"ERROR - {ocrService.Name} - {ex}");
                         // TODO proper logging somewhere
                         
                         // Don't rethrow - just carry on with the other providers and pages
@@ -469,7 +469,7 @@ public class PdfDataExtractorService(
             return;
         }
         
-        Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
+        ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
             $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilePath}");
     }
     
@@ -1228,7 +1228,7 @@ public class PdfDataExtractorService(
                      
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
-                            Console.WriteLine(
+                            ConsoleHelper.WriteLine(
                                 $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
                         }
                         

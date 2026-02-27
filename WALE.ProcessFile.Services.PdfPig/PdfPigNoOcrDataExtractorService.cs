@@ -256,7 +256,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var lineNumber = 0;
         documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
         
-        Console.WriteLine(
+        ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Saving screenshots and getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
             $" ({(DateTime.Now - dtMetadataStart).TotalMilliseconds}ms was for saving metadata, {getPagesDuration.TotalMilliseconds}ms was for getting pages in code)- {pdfDocument.PdfFilePath}");
         
@@ -274,8 +274,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var dtStart = DateTime.Now;
         var size = await SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);
         
-        Console.WriteLine(
-            $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SavePageScreenshotAsync ({size / 1024.0 / 1024.0}mb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
+        ConsoleHelper.WriteLine(
+            $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SavePageScreenshotAsync P{page.Number} ({size / 1024.0 / 1024}mb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
         
         var pageRequest = new NoOcrServicePageCacheRequest
         {
@@ -303,7 +303,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         dtStart = DateTime.Now;
         var pdfPigPageLines = await GetPageLinesAsync((Page)page.InternalPage!.UnderlyingObject);
-        Console.WriteLine(
+        ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - GetPageLinesAsync took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
         
         var pageLines = pdfPigPageLines.Select(MinimalTextBlock.FromPdfPigTextBlock).ToList();
@@ -311,7 +311,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         dtStart = DateTime.Now;
         await cacheService.SaveNoOcrPageTextLinesAsync(pageRequest, serialisedPageLines);
-        Console.WriteLine(
+        ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SaveNoOcrPageTextLines ({serialisedPageLines.Length / 1024}kb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilePath}");
         
         if (pdfPigPageLines.Count == 0)

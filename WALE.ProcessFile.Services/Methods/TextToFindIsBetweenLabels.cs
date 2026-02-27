@@ -186,7 +186,7 @@ public static class TextToFindIsBetweenLabels
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            ConsoleHelper.WriteLine($"ERROR - TextToFindIsBetweenLabels - {e}");
             throw;
         }
 
@@ -285,7 +285,7 @@ public static class TextToFindIsBetweenLabels
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    ConsoleHelper.WriteLine($"ERROR - TextToFindIsBetweenLabels - {e}");
                     throw;
                 }
                 

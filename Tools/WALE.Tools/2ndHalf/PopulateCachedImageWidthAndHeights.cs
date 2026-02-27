@@ -1,5 +1,6 @@
 using Dapper;
 using Tesseract;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
@@ -16,7 +17,7 @@ public static class PopulateCachedImageWidthAndHeights
     
     public static async Task PopulateWidthAndHeightsAsync()
     {
-        Console.WriteLine("Started populating image width and heights");
+        ConsoleHelper.WriteLine("Started populating image width and heights");
 
         var list = await GetBatchOfImagesAsync();
         var totalUpdated = 0;
@@ -26,12 +27,12 @@ public static class PopulateCachedImageWidthAndHeights
             await GetAndUpdateWidthsAndHeights(list);
             totalUpdated += 100;
             
-            Console.WriteLine($"Updated 100 - Total {totalUpdated}");
+            ConsoleHelper.WriteLine($"Updated 100 - Total {totalUpdated}");
             
             list = await GetBatchOfImagesAsync();
         }
 
-        Console.WriteLine("Finished populating image width and heights");
+        ConsoleHelper.WriteLine("Finished populating image width and heights");
     }
 
     private static async Task GetAndUpdateWidthsAndHeights(List<(int Id, byte[] Bytes)> list)

@@ -286,7 +286,6 @@ public static class JsOutputHelper
     
     private static void Log(string message, StringBuilder outputStringBuilder)
     {
-        //Console.WriteLine(message);
         outputStringBuilder.Append(message);
     }
 

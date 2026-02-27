@@ -75,24 +75,32 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                 try
                 {
+                    ConsoleHelper.WriteToBuffer = true;
                     pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
+                    ConsoleHelper.RemoveLastLine();
+
                     if (!ex.Message.Contains("Failed to load image from memory."))
                     {
+                        Console.WriteLine($"ERROR - {nameof(PdfPigNoOcrImageService)} - {ex}");
                         throw;
                     }
 
                     bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
                 }
+                finally
+                {
+                    ConsoleHelper.WriteToBuffer = false;                    
+                }
             }
         }
         catch (Exception exception)
         {
             // TODO - throw?
-            Console.WriteLine("ERROR - " + exception);
+            ConsoleHelper.WriteLine("ERROR - " + exception);
             return null;
         }
         

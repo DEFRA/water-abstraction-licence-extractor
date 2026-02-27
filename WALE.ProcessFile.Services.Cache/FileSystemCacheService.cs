@@ -318,7 +318,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
         catch
         {
-            Console.WriteLine($"MALFORMED JSON ERROR - {content}");
+            ConsoleHelper.WriteLine($"MALFORMED JSON ERROR - {content}");
             throw;
         }
     }
@@ -446,7 +446,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         Directory.CreateDirectory(folder);
     
         var outputFilename = $"{folder}/temporary-ocr-page-{request.PageNumber}-image-{request.ImageNumber}.json";
-        Console.WriteLine($"Writing to {fileCacheFolder}");
+        ConsoleHelper.WriteLine($"Writing to {fileCacheFolder}");
         
         return File.WriteAllTextAsync(
             outputFilename,

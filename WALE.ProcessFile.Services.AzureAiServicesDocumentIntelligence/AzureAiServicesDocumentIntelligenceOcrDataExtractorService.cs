@@ -142,7 +142,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
+            ConsoleHelper.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
             
             if (ex is RequestFailedException ocrEx)
             {

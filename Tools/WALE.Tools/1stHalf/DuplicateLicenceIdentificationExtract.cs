@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using ClosedXML.Excel;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
@@ -91,7 +92,7 @@ public static class DuplicateLicenceIdentificationExtract
                 catch (Exception ex)
                 {
                     // Log the error but continue processing other files
-                    Console.WriteLine($"Error processing file {permitGroup.Key}: {ex.Message}");
+                    ConsoleHelper.WriteLine($"Error processing file {permitGroup.Key}: {ex.Message}");
                 }
             }
         }
@@ -120,11 +121,11 @@ public static class DuplicateLicenceIdentificationExtract
         try
         {
             workbook.SaveAs(filePath);
-            Console.WriteLine($"Excel file successfully created at: {filePath}");
+            ConsoleHelper.WriteLine($"Excel file successfully created at: {filePath}");
         }
         catch (IOException ex)
         {
-            Console.WriteLine($"Error saving file: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error saving file: {ex.Message}");
         }
     }
     
@@ -135,8 +136,8 @@ public static class DuplicateLicenceIdentificationExtract
     {
         var outputResults = new List<LicenceDuplicateOutputLine>();
 
-        Console.WriteLine($"Comparing files for permit {permitNumber}");
-        Console.WriteLine($"Primary file: {primaryFile.FileName}");
+        ConsoleHelper.WriteLine($"Comparing files for permit {permitNumber}");
+        ConsoleHelper.WriteLine($"Primary file: {primaryFile.FileName}");
 
         try
         {
@@ -144,13 +145,13 @@ public static class DuplicateLicenceIdentificationExtract
             var otherFiles = allFiles.Where(f =>
                 f.FileName != primaryFile.FileName && f.FileExists).ToList();
             
-            Console.WriteLine($"Comparing with {otherFiles.Count} other files");
+            ConsoleHelper.WriteLine($"Comparing with {otherFiles.Count} other files");
 
             foreach (var otherFile in otherFiles)
             {
                 try
                 {
-                    Console.WriteLine($"Comparing with: {otherFile.FileName}");
+                    ConsoleHelper.WriteLine($"Comparing with: {otherFile.FileName}");
 
                     // Compare files using hash comparison
                     var isDuplicate = await CompareFileHashesAsync([primaryFile.FilePath], [otherFile.FilePath]);
@@ -166,7 +167,7 @@ public static class DuplicateLicenceIdentificationExtract
                             DuplicateFileUrl = otherFile.FileUrl
                         });
 
-                        Console.WriteLine($"✓ Duplicate found: {primaryFile.FileName} == {otherFile.FileName}");
+                        ConsoleHelper.WriteLine($"✓ Duplicate found: {primaryFile.FileName} == {otherFile.FileName}");
                         continue;
                     }
                     
@@ -179,17 +180,17 @@ public static class DuplicateLicenceIdentificationExtract
                         DuplicateFileUrl = string.Empty,
                     });
                     
-                    Console.WriteLine($"✗ Not duplicate: {primaryFile.FileName} != {otherFile.FileName}");
+                    ConsoleHelper.WriteLine($"✗ Not duplicate: {primaryFile.FileName} != {otherFile.FileName}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
+                    ConsoleHelper.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing primary file {primaryFile.FileName}: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error processing primary file {primaryFile.FileName}: {ex.Message}");
         }
 
         return outputResults;
@@ -278,7 +279,7 @@ public static class DuplicateLicenceIdentificationExtract
 
             if (!directExists)
             {
-                Console.WriteLine($"Warning: PDF file not found with pattern *__{file.FileName} or direct match: {file.FileName}");
+                ConsoleHelper.WriteLine($"Warning: PDF file not found with pattern *__{file.FileName} or direct match: {file.FileName}");
             }
         }
 
@@ -328,7 +329,7 @@ public static class DuplicateLicenceIdentificationExtract
     {
         var outputResults = new List<LicenceDuplicateOutputLine>();
 
-        Console.WriteLine($"Comparing files for permit {permitNumber} - primary file: {primaryFile.FileName}");
+        ConsoleHelper.WriteLine($"Comparing files for permit {permitNumber} - primary file: {primaryFile.FileName}");
 
         try
         {
@@ -337,13 +338,13 @@ public static class DuplicateLicenceIdentificationExtract
                 .Where(f => f.FileUrl != primaryFile.FileUrl)
                 .ToList();
             
-            Console.WriteLine($"Comparing with {otherFiles.Count} other files");
+            ConsoleHelper.WriteLine($"Comparing with {otherFiles.Count} other files");
 
             foreach (var otherFile in otherFiles)
             {
                 try
                 {
-                    Console.WriteLine($"Comparing with: {otherFile.FileName}");
+                    ConsoleHelper.WriteLine($"Comparing with: {otherFile.FileName}");
                 
                     // Compare files using hash comparison
                     var isDuplicate = await CompareFileHashesAsync(
@@ -361,7 +362,7 @@ public static class DuplicateLicenceIdentificationExtract
                             DuplicateFileUrl = otherFile.FileUrl
                         });
 
-                        Console.WriteLine($"✓ Duplicate found: {primaryFile.FileName} == {otherFile.FileName}");
+                        ConsoleHelper.WriteLine($"✓ Duplicate found: {primaryFile.FileName} == {otherFile.FileName}");
                     }
                     else
                     {
@@ -374,18 +375,18 @@ public static class DuplicateLicenceIdentificationExtract
                             DuplicateFileUrl = string.Empty,
                         });
                         
-                        Console.WriteLine($"✗ Not duplicate: {primaryFile.FileName} != {otherFile.FileName}");
+                        ConsoleHelper.WriteLine($"✗ Not duplicate: {primaryFile.FileName} != {otherFile.FileName}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
+                    ConsoleHelper.WriteLine($"Error comparing {otherFile.FileName}: {ex.Message}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing primary file {primaryFile.FileName}: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error processing primary file {primaryFile.FileName}: {ex.Message}");
         }
 
         return outputResults;
@@ -438,7 +439,7 @@ public static class DuplicateLicenceIdentificationExtract
     {
         try
         {
-            Console.WriteLine($"Checking file path: {filePath}");
+            ConsoleHelper.WriteLine($"Checking file path: {filePath}");
 
             // Try to resolve relative paths to absolute paths
             var resolvedPath = filePath;
@@ -446,18 +447,18 @@ public static class DuplicateLicenceIdentificationExtract
             if (!Path.IsPathRooted(filePath))
             {
                 resolvedPath = Path.GetFullPath(filePath);
-                Console.WriteLine($"Resolved to absolute path: {resolvedPath}");
+                ConsoleHelper.WriteLine($"Resolved to absolute path: {resolvedPath}");
             }
 
-            Console.WriteLine($"File exists check for: {resolvedPath} = {File.Exists(resolvedPath)}");
+            ConsoleHelper.WriteLine($"File exists check for: {resolvedPath} = {File.Exists(resolvedPath)}");
             
             if (!File.Exists(resolvedPath))
             {
-                Console.WriteLine($"File not found at resolved path, trying original path: {filePath}");
+                ConsoleHelper.WriteLine($"File not found at resolved path, trying original path: {filePath}");
                 
                 if (!File.Exists(filePath))
                 {
-                    Console.WriteLine($"File not found at original path either: {filePath}");
+                    ConsoleHelper.WriteLine($"File not found at original path either: {filePath}");
                     return string.Empty;
                 }
                 
@@ -472,7 +473,7 @@ public static class DuplicateLicenceIdentificationExtract
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error calculating hash for file {filePath}: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error calculating hash for file {filePath}: {ex.Message}");
             return string.Empty;
         }
     }

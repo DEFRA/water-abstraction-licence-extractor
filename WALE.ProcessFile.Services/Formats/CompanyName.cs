@@ -353,7 +353,7 @@ public static class CompanyName
             returnList.Add(name);
         }
 
-        Console.WriteLine($"INFO - {nameof(CompanyName)} - Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+        ConsoleHelper.WriteLine($"INFO - {nameof(CompanyName)} - Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
         return returnList;
     }
     

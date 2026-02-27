@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.Configuration;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
@@ -129,7 +130,7 @@ static async Task WriteLogFileIfDebugModeAsync(string filename, string content, 
 {
     if (shouldConsoleWrite)
     {
-        Console.WriteLine(content);
+        ConsoleHelper.WriteLine($"UNKNOWN - TesseractExe - {content}");
     }
 
     if (!shouldWriteFile)

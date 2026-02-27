@@ -1,5 +1,6 @@
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -564,7 +565,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -581,7 +582,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
             
-            Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteScalarAsync retrying");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteScalarAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresWriteService));
             return await ExecuteScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
@@ -601,7 +602,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
             if (duration.TotalSeconds > 1)
             {
-                Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
         }
         catch (NpgsqlException ex)
@@ -616,7 +617,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 throw;
             }
             
-            Console.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteAsync retrying");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             await ExecuteAsync(GetPostgresConnection(), sql, retryNumber + 1, param);

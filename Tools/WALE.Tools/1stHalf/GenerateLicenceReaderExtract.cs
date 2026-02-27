@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Helpers;
@@ -44,7 +45,7 @@ public static class GenerateLicenceReaderExtract
 
         if (!File.Exists(csvPath))
         {
-            Console.WriteLine("No existing results CSV found. Starting fresh.");
+            ConsoleHelper.WriteLine("No existing results CSV found. Starting fresh.");
             return results;
         }
 
@@ -54,7 +55,7 @@ public static class GenerateLicenceReaderExtract
             
             if (lines.Length <= 1)
             {
-                Console.WriteLine("Results CSV exists but is empty or has only header.");
+                ConsoleHelper.WriteLine("Results CSV exists but is empty or has only header.");
                 return results;
             }
 
@@ -76,12 +77,12 @@ public static class GenerateLicenceReaderExtract
                 }
             }
 
-            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - loading existing results CSV: {ex.Message}");
-            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting fresh.");
+            ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - loading existing results CSV: {ex.Message}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting fresh.");
         }
 
         return results;
@@ -109,7 +110,7 @@ public static class GenerateLicenceReaderExtract
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error marking file as processing in CSV: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error marking file as processing in CSV: {ex.Message}");
             }
         }
     }
@@ -124,7 +125,7 @@ public static class GenerateLicenceReaderExtract
             {
                 if (!File.Exists(csvPath))
                 {
-                    Console.WriteLine($"Warning: CSV file does not exist when trying to update {result.FileName}");
+                    ConsoleHelper.WriteLine($"Warning: CSV file does not exist when trying to update {result.FileName}");
                     return;
                 }
 
@@ -155,12 +156,12 @@ public static class GenerateLicenceReaderExtract
                 }
                 else
                 {
-                    Console.WriteLine($"Warning: Could not find row to update for {result.FileName}");
+                    ConsoleHelper.WriteLine($"Warning: Could not find row to update for {result.FileName}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating file result in CSV: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error updating file result in CSV: {ex.Message}");
             }
         }
     }
@@ -257,7 +258,7 @@ public static class GenerateLicenceReaderExtract
             "Licence Processing Summary");
 
         var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
     }
 
     private static async Task<MatchesResult> GetMatchesAsync(
@@ -274,14 +275,14 @@ public static class GenerateLicenceReaderExtract
                 [pdfFolder + fileName],
                 0);
             
-            Console.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName} at {DateTime.Now}");
+            ConsoleHelper.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName} at {DateTime.Now}");
             return result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in GetMatchesAsync for {fileName}:");
-            Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-            Console.WriteLine($"  Message: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error in GetMatchesAsync for {fileName}:");
+            ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
+            ConsoleHelper.WriteLine($"  Message: {ex.Message}");
             
             throw;
         }
@@ -327,17 +328,17 @@ public static class GenerateLicenceReaderExtract
             .Take(100)
             .ToList();
         
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFileNames.Count(fileName => ExcludedFiles.Contains(fileName));
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
 
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process: {pdfFileNames.Count} files");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process: {pdfFileNames.Count} files");
 
         if (pdfFileNames.Count == 0)
         {
-            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
             
             return existingResults
                 .OrderBy(existingResult => existingResult.PermitNumber)
@@ -351,10 +352,10 @@ public static class GenerateLicenceReaderExtract
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             regionCode);
         
-        Console.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
+        ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
 
-        Console.WriteLine($"\n=== Processing {pdfFileNames.Count} files ===");
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...\n");
+        ConsoleHelper.WriteLine($"\n=== Processing {pdfFileNames.Count} files ===");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...\n");
         
         var filenameIdx = 1;
         
@@ -366,7 +367,7 @@ public static class GenerateLicenceReaderExtract
         
         foreach (var pdfFileName in pdfFileNames)
         {
-            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
                 $"(File {filenameIdx++} of {pdfFileNames.Count})");
             
             scrapingTasks.Add(ScrapeDocumentAsync(pdfFileName, pdfFolder, configuration, pdfDataExtractors, extractorLock));
@@ -393,14 +394,14 @@ public static class GenerateLicenceReaderExtract
         
         scrapingTasks.Clear();
 
-        Console.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
+        ConsoleHelper.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
 
         // Combine existing results with newly processed results
         var allResults = existingResults
             .Concat(returnList)
             .ToList();
         
-        Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
 
         return allResults
             .OrderBy(line => line.PermitNumber)
@@ -450,7 +451,7 @@ public static class GenerateLicenceReaderExtract
             // Extract permit number from filename
             var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilePath);
 
-            Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Extracted - " +
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Extracted - " +
                 $"File: {pdfFilePath}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
 
             var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
@@ -472,15 +473,15 @@ public static class GenerateLicenceReaderExtract
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {pdfFilePath}:");
-            Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-            Console.WriteLine($"  Message: {ex.Message}");
-            Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
+            ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {pdfFilePath}:");
+            ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
+            ConsoleHelper.WriteLine($"  Message: {ex.Message}");
+            ConsoleHelper.WriteLine($"  Stack Trace: {ex.StackTrace}");
 
             if (ex.InnerException != null)
             {
-                Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
-                Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+                ConsoleHelper.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
+                ConsoleHelper.WriteLine($"  Inner Message: {ex.InnerException.Message}");
             }
 
             // Add entry with filename but null values to track failed files

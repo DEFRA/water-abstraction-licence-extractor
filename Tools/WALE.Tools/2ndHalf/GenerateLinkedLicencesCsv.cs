@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using CsvHelper;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
@@ -20,7 +21,7 @@ public static class GenerateLinkedLicencesCsv
     
     public static async Task GenerateCsvAsync(int processRunId)
     {
-        Console.WriteLine("Started generating linked licences csv");
+        ConsoleHelper.WriteLine("Started generating linked licences csv");
 
         var data = await GetDataAsync(processRunId);
 
@@ -31,7 +32,7 @@ public static class GenerateLinkedLicencesCsv
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
-        Console.WriteLine("Finished generating linked licences csv");
+        ConsoleHelper.WriteLine("Finished generating linked licences csv");
     }
 
     private static async Task<List<LinkedLicencesCsvLine>> GetDataAsync(int processRunId)

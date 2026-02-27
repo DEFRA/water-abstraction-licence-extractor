@@ -154,9 +154,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
+        var byteSize = 0;
+        
         foreach (var (providerName, bitmap) in images)
         {
             var bytes = await GetAsJpegAsync(bitmap);
+            byteSize += bytes.Length;
+            
             const string path = "/Extractor/Images/SavePageScreenshot";
 
             var json = JsonSerializer.Serialize(new
@@ -172,8 +176,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
             response.EnsureSuccessStatusCode();
         }
-        
-        return images.Sum(i => i.Bitmap.ByteCount);
+
+        return byteSize;
     }
 
     public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,

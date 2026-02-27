@@ -101,7 +101,7 @@ public class ImagesController(
             request.extension!,
             request.processRunId);
 
-        return Ok();
+        return Ok(request.bytes.Length);
     }
     
     [HttpPost]

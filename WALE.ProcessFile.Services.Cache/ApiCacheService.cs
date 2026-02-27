@@ -168,7 +168,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task SaveImageOnPageAsync(
+    public async Task<int> SaveImageOnPageAsync(
         byte[] bytes,
         int width,
         int height,
@@ -197,6 +197,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(

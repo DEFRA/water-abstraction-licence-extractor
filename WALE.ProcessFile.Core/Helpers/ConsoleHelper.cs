@@ -3,7 +3,8 @@ namespace WALE.ProcessFile.Core.Helpers;
 public static class ConsoleHelper
 {
     public static bool WriteToBuffer;
-
+    private static readonly Lock BufferLock = new();
+    
     private static int _writeCount;
     private static readonly List<string> Buffer = [];
     
@@ -11,17 +12,27 @@ public static class ConsoleHelper
     {
         if (WriteToBuffer)
         {
-            Buffer.Add(text.ToString()!);
+            lock (BufferLock)
+            {
+                Buffer.Add(text.ToString()!);
+            }
+
             return;
         }
 
-        foreach (var bufferLine in Buffer)
+        if (Buffer.Count > 0)
         {
-            Console.WriteLine(bufferLine);
-            _writeCount += 1;
+            lock (BufferLock)
+            {
+                foreach (var bufferLine in Buffer)
+                {
+                    Console.WriteLine(bufferLine);
+                    _writeCount += 1;
+                }
+
+                Buffer.Clear();
+            }
         }
-        
-        Buffer.Clear();
 
         Console.WriteLine(text);
         _writeCount += 1;

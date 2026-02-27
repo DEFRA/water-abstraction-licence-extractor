@@ -2,7 +2,6 @@ using Tesseract;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 
@@ -104,7 +103,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             return null;
         }
         
-        await cacheService.SaveImageOnPageAsync(
+        var size = await cacheService.SaveImageOnPageAsync(
             bytes!,
             pix.Width,
             pix.Height,
@@ -114,6 +113,11 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             pageNumber,
             returnExtension,
             processRunId);
+        
+        var filename = FileHelper.GetFilenameWithoutExtension(folderPath)!;
+        var roundedSizeKb = (size / 1024.0).ToString("0.0");
+        
+        ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} ({roundedSizeKb}kb) - {filename}");
         
         return returnExtension;
     }

@@ -340,10 +340,12 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, noOcrServiceName, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
+
+        return bytes.Length;
     }
     
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(

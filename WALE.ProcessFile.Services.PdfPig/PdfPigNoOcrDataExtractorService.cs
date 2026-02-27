@@ -350,54 +350,84 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             ICacheService cacheService)
     {
         var imagesMetadata = new ImageMetadata();
-            
+        var pageTasks = new List<Task<ImageMetadataPage>>();    
+        
         foreach (var page in pdfDocument.Pages)
         {
-            // TODO should use the interface (via a factory)
-            var pageImageService = new PdfPigNoOcrPageService(page.InternalPage!);
+            pageTasks.Add(GetPageMetadataAsync(
+                page,
+                pdfDocument,
+                outputService,
+                cacheService,
+                processRunId));
+        }
 
-            var metadataPage = new ImageMetadataPage
-            {
-                Number = page.Number,
-                ScreenshotReferences = outputService
-                    .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilePath)
-                    .Select(sr => new ImageMetadataPageScreenshot
-                    {
-                        ImageReference = sr.ImageReference,
-                        ProviderName = sr.ProviderName
-                    })
-                    .ToList()
-            };
-            
-            imagesMetadata.Pages.Add(metadataPage);
-            var imageNumber = 1;
-            
-            foreach (var image in await pageImageService.GetImagesAsync())
-            {
-                var extension = await image.SaveImageBytesAsync(
-                    pdfDocument.PdfFilePath,
-                    imageNumber,
-                    page.Number,
-                    cacheService,
-                    processRunId);
-
-                if (extension == null)
-                {
-                    continue;
-                }
-                
-                var imageReference = await cacheService.GetImageReferenceAsync(
-                    page.Number,
-                    imageNumber++,
-                    pdfDocument.PdfFilePath,
-                    extension,
-                    Name);
-                
-                metadataPage.Images.Add(imageReference);
-            }
+        foreach (var pageTask in pageTasks)
+        {
+            imagesMetadata.Pages.Add(await pageTask);
         }
 
         return imagesMetadata;
+    }
+
+    private async Task<ImageMetadataPage> GetPageMetadataAsync(
+        PdfPage page,
+        PdfDocument pdfDocument,
+        IOutputService outputService,
+        ICacheService cacheService,
+        int processRunId)
+    {
+        // TODO should use the interface (via a factory)
+        var pageImageService = new PdfPigNoOcrPageService(page.InternalPage!);
+
+        var metadataPage = new ImageMetadataPage
+        {
+            Number = page.Number,
+            ScreenshotReferences = outputService
+                .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilePath)
+                .Select(sr => new ImageMetadataPageScreenshot
+                {
+                    ImageReference = sr.ImageReference,
+                    ProviderName = sr.ProviderName
+                })
+                .ToList()
+        };
+        
+        var imageNumber = 1;
+        var imageSaveTasks = new List<Task<string?>>();
+
+        foreach (var image in await pageImageService.GetImagesAsync())
+        {
+            imageSaveTasks.Add(image.SaveImageBytesAsync(
+                pdfDocument.PdfFilePath,
+                imageNumber++,
+                page.Number,
+                cacheService,
+                processRunId));
+        }
+        
+        imageNumber = 1;
+        
+        foreach (var imageSaveTask in imageSaveTasks)
+        {
+            var extension = await imageSaveTask;
+        
+            if (extension == null)
+            {
+                continue;
+            }
+                
+            var imageReference = await cacheService.GetImageReferenceAsync(
+                page.Number,
+                imageNumber++,
+                pdfDocument.PdfFilePath,
+                extension,
+                Name);
+                
+            metadataPage.Images.Add(imageReference);
+        }
+        
+        return metadataPage;
     }
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(

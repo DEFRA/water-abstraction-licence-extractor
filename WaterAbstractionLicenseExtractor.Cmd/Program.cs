@@ -59,6 +59,9 @@ async Task ProgramAsync()
     // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
     // when we want to handle more than one region)
     const short regionCode = 3;
+
+    var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
+    var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(
         regionCode);
@@ -74,8 +77,6 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-    var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
-    var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
         Description = $"Run using {services.PdfFolderPath}",

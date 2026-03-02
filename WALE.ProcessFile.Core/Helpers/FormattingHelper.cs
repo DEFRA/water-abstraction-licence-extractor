@@ -6,6 +6,15 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
+    public static string? RemoveSeperators(string? licenceNumber)
+    {
+        return licenceNumber?
+            .Replace(".", string.Empty)
+            .Replace(" ", string.Empty)
+            .Replace("-", string.Empty)
+            .Replace("/", string.Empty);
+    }
+    
     public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
@@ -82,11 +91,7 @@ public static class FormattingHelper
 
         var origSectionLengths = licenceNumber.Split('/');
 
-        licenceNumber = licenceNumber
-            .Replace(".", string.Empty)
-            .Replace(" ", string.Empty)
-            .Replace("-", string.Empty)
-            .Replace("/", string.Empty);
+        licenceNumber = RemoveSeperators(licenceNumber)!;
         
         var parts = new List<string>();
         var remainingLicenceNumber = licenceNumber;

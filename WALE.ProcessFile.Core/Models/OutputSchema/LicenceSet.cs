@@ -1,5 +1,6 @@
 using System.Text;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
@@ -12,10 +13,7 @@ public class LicenceSet
             var licencesAlphabetical = Licences
                 .OrderBy(licence =>
                 {
-                    var licenceNumber = licence.LicenceNumber?
-                        .Replace(" ", string.Empty)
-                        .Replace("/", string.Empty);
-                    
+                    var licenceNumber = FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
                     return licenceNumber + licence.LicenceVersion.LicenceVersionId;
                 });
 
@@ -28,11 +26,9 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                var licenceNumber = licence.LicenceNumber?
-                    .Replace(" ", string.Empty)
-                    .Replace("/", string.Empty);
-
+                var licenceNumber = FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
                 var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
+                
                 outputSb.Append($"{licenceNumber}-{licenceVersionId}");
             }
 
@@ -45,7 +41,7 @@ public class LicenceSet
         get
         {
             var licencesAlphabetical = Licences
-                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
+                .OrderBy(licence => licence.LicenceNumber?.Value + licence.LicenceVersion.LicenceVersionId);
 
             var outputSb = new StringBuilder();
             
@@ -56,7 +52,7 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                var licenceNumberParts = licence.LicenceNumber?
+                var licenceNumberParts = licence.LicenceNumber?.Value?
                     .Replace(" ", "/")
                     .Replace(".", "/")
                     .Split('/');

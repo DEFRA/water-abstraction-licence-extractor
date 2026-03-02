@@ -138,7 +138,7 @@ public static class GenerateAggregatesCsvForTesting
             returnList.Add(new()
             {
                 Filename = file.Filename,
-                LicenceNumber = file.LicenceNumber,
+                LicenceNumber = file.LicenceNumber?.Value,
                 HasAggregate = file.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -252,7 +252,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file1.Filename,
-                LicenceNumber = file1.LicenceNumber,
+                LicenceNumber = file1.LicenceNumber?.Value,
                 HasAggregate = file1.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file1.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file1.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -262,7 +262,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file2.Filename,
-                LicenceNumber = file2.LicenceNumber,
+                LicenceNumber = file2.LicenceNumber?.Value,
                 HasAggregate = file2.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file2.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file2.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -272,7 +272,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file3.Filename,
-                LicenceNumber = file3.LicenceNumber,
+                LicenceNumber = file3.LicenceNumber?.Value,
                 HasAggregate = file3.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file3.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file3.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -282,7 +282,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file4.Filename,
-                LicenceNumber = file4.LicenceNumber,
+                LicenceNumber = file4.LicenceNumber?.Value,
                 HasAggregate = file4.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file4.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file4.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -292,7 +292,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file5.Filename,
-                LicenceNumber = file5.LicenceNumber,
+                LicenceNumber = file5.LicenceNumber?.Value,
                 HasAggregate = file5.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file5.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file5.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),
@@ -302,7 +302,7 @@ public static class GenerateAggregatesCsvForTesting
             new()
             {
                 Filename = file6.Filename,
-                LicenceNumber = file6.LicenceNumber,
+                LicenceNumber = file6.LicenceNumber?.Value,
                 HasAggregate = file6.AbstractionLimits.Aggregates?.Length > 0,
                 AggregateData = JsonSerializer.Serialize(file6.AbstractionLimits.Aggregates, JsonHelper.GetSerializerOptions()),
                 IndividualLimits = JsonSerializer.Serialize(file6.AbstractionLimits.Individual, JsonHelper.GetSerializerOptions()),

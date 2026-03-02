@@ -36,8 +36,9 @@ public class AggregateSet
                         continue;
                     }
 
-                    var lookedUpLicence =
-                        allLicences.FirstOrDefault(l => l.LicenceNumber == linkedLicence.LicenceNumber);
+                    var lookedUpLicence = allLicences.FirstOrDefault(
+                            al => al.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+
                     licencesDict.Add(linkedLicence.LicenceNumber!,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
                 }

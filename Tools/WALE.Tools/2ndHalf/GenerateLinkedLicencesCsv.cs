@@ -57,7 +57,7 @@ public static class GenerateLinkedLicencesCsv
             {
                 Filename = licence.Filename,
                 DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
-                LicenceNumber = licence.LicenceNumber,
+                LicenceNumber = licence.LicenceNumber?.Value,
                 ScrapedLicenceNumber = licenceNumber,
                 NaldLicenceNumber = licence.NaldLicenceNumber,
                 DateOfIssue = licence.LicenceVersion.IssueDate?.ToString("dd/MM/yyyy"),

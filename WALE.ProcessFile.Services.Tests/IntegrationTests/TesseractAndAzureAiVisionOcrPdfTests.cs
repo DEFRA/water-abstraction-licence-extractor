@@ -487,7 +487,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.NotNull(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal(expectedLicenceNumber, agreedSchemaLicence.LicenceNumber);
+        Assert.Equal(expectedLicenceNumber, agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Equal(expectedLinkedLicenceCount, agreedSchemaLicence.LinkedLicences.Length);
     }
@@ -628,7 +628,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
-        Assert.Equal("2/27/28/008", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("2/27/28/008", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal("2/27/28/008", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);
@@ -664,7 +664,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
-        Assert.Equal("1/22/02/087", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("1/22/02/087", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal("1/22/02/087", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"].ToString());
         
         Assert.NotNull(agreedSchemaLicence.DefinitionOfYear);

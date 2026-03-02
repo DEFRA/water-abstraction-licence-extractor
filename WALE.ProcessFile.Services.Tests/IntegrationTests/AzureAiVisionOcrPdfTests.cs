@@ -1138,7 +1138,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("8/36/19/S/101", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
-        Assert.Equal("08/36/19/S/0101", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("08/36/19/S/0101", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("8/36/19/S/130", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -1320,7 +1320,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(filename, agreedSchemaLicence.Filename);
-        Assert.Equal("2/26/32/126", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("2/26/32/126", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(new DateTime(2005, 07, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2005, 02, 02), agreedSchemaLicence.LicenceVersion.EffectiveDate);
@@ -1560,7 +1560,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal("2/27/29/012", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("2/27/29/012", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(filename, agreedSchemaLicence.Filename);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
@@ -1715,7 +1715,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
-        Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("2/27/20/211", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 }

@@ -419,7 +419,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             await LookupConfigurationAsync());
 
         var licence = schemaData[0].Licences[0];
-        Assert.Equal(expectedLicenceNumber, licence.LicenceNumber);
+        Assert.Equal(expectedLicenceNumber, licence.LicenceNumber?.Value);
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());

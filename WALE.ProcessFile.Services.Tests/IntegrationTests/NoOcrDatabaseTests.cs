@@ -267,7 +267,7 @@ public class NoOcrDatabaseTests
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
-        Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber?.Value);
 
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
 

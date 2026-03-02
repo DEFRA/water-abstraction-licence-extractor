@@ -345,7 +345,9 @@ public static partial class WalSchemaConverter
         {
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
-            LicenceNumber = licenceNumber,
+            LicenceNumber = !string.IsNullOrEmpty(licenceNumber) 
+                ? new ValueWithConfidence<string>(licenceNumber)
+                : null,
             NaldLicenceNumber = dmsFileData?.PermitNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
@@ -595,7 +597,7 @@ lookupConfiguration);
         returnList.Add(singleLicenceOnlySet);
 
         var hasExplicitlyReferencedLicenceSet = allLicences.Count > 1
-                                                || allLicences[0].LicenceNumber != primaryLicence.LicenceNumber;
+            || allLicences[0].LicenceNumber?.Value != primaryLicence.LicenceNumber?.Value;
 
         var explicitlyReferencedLicenceSet = hasExplicitlyReferencedLicenceSet
             ? new LicenceSet
@@ -613,10 +615,11 @@ lookupConfiguration);
 
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
-                linkedLicence.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits) ==
+                linkedLicence.ContainedIn?.Any(ci =>
+                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits) ==
                 true)
             .Select(ll => ll.LicenceNumber)
-            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber == ln))
+            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
             .Where(ln => ln != null)
             .Select(ln => ln!)
             .ToList();
@@ -647,8 +650,8 @@ lookupConfiguration);
                 foreach (var newSetLicence in newSet.Licences)
                 {
                     if (!oldSet.Licences
-                            .Select(l => l.LicenceNumber)
-                            .Contains(newSetLicence.LicenceNumber))
+                        .Select(l => l.LicenceNumber?.Value)
+                        .Contains(newSetLicence.LicenceNumber?.Value))
                     {
                         var updatedLicences = oldSet.Licences.ToList();
                         updatedLicences.Add(newSetLicence);
@@ -743,7 +746,7 @@ lookupConfiguration);
         var allLicencesInSets = licenceSetGroups
             .SelectMany(ls => ls)
             .SelectMany(ls => ls.Licences)
-            .GroupBy(l => l.LicenceNumber)
+            .GroupBy(l => l.LicenceNumber?.Value)
             .Select(lg => lg.First())
             .ToList();
 
@@ -760,7 +763,7 @@ lookupConfiguration);
 
                     var incomingLinks = GetLicencesThatReferenceLicence(
                         allLicencesInSets,
-                        licence.LicenceNumber!);
+                        licence.LicenceNumber?.Value!);
 
                     var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
 
@@ -867,7 +870,7 @@ lookupConfiguration);
 
         foreach (var licence in licences)
         {
-            if (!licenceNumbers.Contains(licence.LicenceNumber))
+            if (!licenceNumbers.Contains(licence.LicenceNumber?.Value))
             {
                 continue;
             }
@@ -885,7 +888,7 @@ lookupConfiguration);
 
         foreach (var licence in licences)
         {
-            if (licence.LicenceNumber == licenceNumber)
+            if (licence.LicenceNumber?.Value == licenceNumber)
             {
                 continue;
             }
@@ -893,8 +896,8 @@ lookupConfiguration);
             if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
             {
                 returnList.Add((
-                    licence.LicenceNumber!,
-                    licence.LicenceNumber!,
+                    licence.LicenceNumber!.Value!,
+                    licence.LicenceNumber!.Value!,
                     licence.NaldLicenceNumber!,
                     licence.Filename));
             }
@@ -937,12 +940,12 @@ lookupConfiguration);
             var relevantAggregates = licence.AbstractionLimits.Aggregates;
             if (excludeAnyLinksNotInSet)
             {
-                relevantAggregates = relevantAggregates.Where(agg => agg.LinkedLicences == null
-                                                                     || agg.LinkedLicences.Length == 0
-                                                                     || agg.LinkedLicences.All(linkedLicence =>
-                                                                         licences.Any(l =>
-                                                                             l.LicenceNumber ==
-                                                                             linkedLicence.LicenceNumber))).ToArray();
+                relevantAggregates = relevantAggregates
+                    .Where(agg => agg.LinkedLicences == null
+                        || agg.LinkedLicences.Length == 0
+                        || agg.LinkedLicences.All(
+                            ll => licences.Any(l => l.LicenceNumber?.Value == ll.LicenceNumber)))
+                    .ToArray();
             }
 
             aggregates.AddRange(relevantAggregates);
@@ -1034,8 +1037,8 @@ lookupConfiguration);
                             FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
 
                         // Don't process ones we've already found
-                        if (licenceNumberTransformed == primaryLicence.LicenceNumber
-                            || returnLicences.Any(licence => licence.LicenceNumber == licenceNumberTransformed))
+                        if (licenceNumberTransformed == primaryLicence.LicenceNumber?.Value
+                            || returnLicences.Any(licence => licence.LicenceNumber?.Value == licenceNumberTransformed))
                         {
                             continue;
                         }
@@ -1047,7 +1050,9 @@ lookupConfiguration);
                         {
                             returnLicences.Add(new Licence
                             {
-                                LicenceNumber = licenceNumber,
+                                LicenceNumber = !string.IsNullOrEmpty(licenceNumber) 
+                                    ? new ValueWithConfidence<string>(licenceNumber)
+                                    : null,
                                 Status = LicenceStatus.NotFound
                             });
 
@@ -1091,7 +1096,9 @@ lookupConfiguration);
 
             // Already found it
             if (returnLicences.Any(returnLicence =>
-                    FormattingHelper.StripForComparison(returnLicence.LicenceNumber, matchesResult.RegionCode)
+                    FormattingHelper.StripForComparison(
+                        returnLicence.LicenceNumber?.Value,
+                        matchesResult.RegionCode)
                     == strippedLlNumber))
             {
                 continue;
@@ -1106,7 +1113,7 @@ lookupConfiguration);
             {
                 returnLicences.Add(new Licence
                 {
-                    LicenceNumber = linkedLicence.LicenceNumber,
+                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber),
                     Status = LicenceStatus.NotFound
                 });
 
@@ -1143,7 +1150,7 @@ lookupConfiguration);
         returnLicences = returnLicences
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(
-                    linkedLicence.LicenceNumber!,
+                    linkedLicence.LicenceNumber!.Value!,
                     lookupConfiguration.RegionCode) != false)
             .ToList();
         
@@ -1287,7 +1294,7 @@ lookupConfiguration);
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                     : null;
 
-                noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
+                noneSchemaData.Add($"Confidence:LinkedLicence_ReasonsForConditions_{count++}", linkedLicenceNumber.Confidence);
                 
                 return new LinkedLicence
                 {
@@ -3081,11 +3088,13 @@ linkedLicence.LicenceNumber!,
             return returnList.ToArray();
         }
 
-        var pointCount = 0;
-        var pointPurposeGroupCount = 0;
+        var pointPurposeGroupCount = -1;
 
         foreach (var purposePointGroup in purposeResults.SubResults)
         {
+            pointPurposeGroupCount += 1;
+            var pointCount = 0;
+            
             var pointGroupName = purposePointGroup.SubResults
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PointGroupName");
 
@@ -3102,6 +3111,8 @@ linkedLicence.LicenceNumber!,
 
             foreach (var purpose in purposes)
             {
+                pointCount += 1;
+                
                 var purposeNumber = purpose.SubResults
                     .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeNumber");
 
@@ -3425,7 +3436,7 @@ linkedLicence.LicenceNumber!,
 
             var licence = licenceSetGroup.First().Licences.First();
             var licenceSetsForLicence = GetAllLicenceSetsForLicence(
-                licence.LicenceNumber!,
+                licence.LicenceNumber!.Value!,
                 distinctLicenceSets);
 
             var updatedLicenceSetIds = AddImplicitAndExplicitLicenceSets(licence, licenceSetsForLicence);
@@ -3442,7 +3453,7 @@ linkedLicence.LicenceNumber!,
 
         foreach (var licenceSet in licenceSets)
         {
-            if (licenceSet.Licences.All(l => l.LicenceNumber != licenceNumber))
+            if (licenceSet.Licences.All(l => l.LicenceNumber?.Value != licenceNumber))
             {
                 continue;
             }
@@ -3585,7 +3596,7 @@ linkedLicence.LicenceNumber!,
                 if (!licenceContainsSet)
                 {
                     var fullyEncompassedIn = licence1.LinkedLicences
-                        .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber));
+                        .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber?.Value));
 
                     var type = fullyEncompassedIn
                         ? LicenceSetType.FullyEncompassedIn
@@ -3640,8 +3651,8 @@ linkedLicence.LicenceNumber!,
             }
 
             var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
-                .All(l => licence1.LicenceNumber == l.LicenceNumber
-                          || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+                .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
+                    || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             if (!allLinkedLicenceOfLicence)
             {
@@ -3649,10 +3660,10 @@ linkedLicence.LicenceNumber!,
             }
 
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
-                .All(l => licence1.LicenceNumber == l.LicenceNumber
-                          || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                                  ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
-                              .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber));
+                .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
+                  || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
+                          ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
+                      .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];
 

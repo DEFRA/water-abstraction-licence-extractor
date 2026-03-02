@@ -69,7 +69,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 returnList.Add(new UnknownSectionLinkedLicencesCsvLine
                 {
                     Filename = licence.Filename,
-                    LicenceNumber = licence.LicenceNumber,
+                    LicenceNumber = licence.LicenceNumber?.Value,
                     ScrapedLicenceNumber = scrapedLicenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = licence.LicenceFoundInList,

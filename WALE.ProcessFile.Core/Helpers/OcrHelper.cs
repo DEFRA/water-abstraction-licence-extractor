@@ -16,8 +16,7 @@ public static class OcrHelper
         int lineHeightLegacyFlowOnly = -1,
         int maxDiffPercentFontSizeLegacyFlowOnly = -1,
         int maxNegativeDiffBetweenWordTopLegacyFlowOnly = -1,
-        int maxPositiveDiffBetweenWordTopLegacyFlowOnly = -1,
-        int multiplyConfidenceBy = 1)
+        int maxPositiveDiffBetweenWordTopLegacyFlowOnly = -1)
     {
         AutoCorrectHelper.RemoveSpacesAroundSlashes(returnLines);
         
@@ -31,8 +30,7 @@ public static class OcrHelper
                 lineHeightLegacyFlowOnly,
                 maxDiffPercentFontSizeLegacyFlowOnly,
                 maxNegativeDiffBetweenWordTopLegacyFlowOnly,
-                maxPositiveDiffBetweenWordTopLegacyFlowOnly,
-                multiplyConfidenceBy);
+                maxPositiveDiffBetweenWordTopLegacyFlowOnly);
         }
         
         var lineNumber = 0;
@@ -465,8 +463,7 @@ public static class OcrHelper
         int lineHeight,
         int maxDiffPercentFontSize,
         int maxNegativeDiffBetweenWordTop,
-        int maxPositiveDiffBetweenWordTop,
-        int multiplyConfidenceBy)
+        int maxPositiveDiffBetweenWordTop)
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
@@ -515,7 +512,7 @@ public static class OcrHelper
 
                 foreach (var word in line.Words)
                 {
-                    wordTasks.Add(CorrectWord(word!, minimumFontSize, multiplyConfidenceBy));
+                    wordTasks.Add(CorrectWord(word!, minimumFontSize));
                 }
             }
 
@@ -598,8 +595,7 @@ public static class OcrHelper
     
     private static Task<DocumentLineWord?> CorrectWord(
         DocumentLineWord word,
-        double minimumFontSize,
-        int multiplyConfidenceBy)
+        double minimumFontSize)
     {
         var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
                         
@@ -614,10 +610,8 @@ public static class OcrHelper
             .Replace(";", string.Empty)
             .Replace("'", string.Empty)
             .Replace("\"", string.Empty);
-
-        var ocrConfidence = word.OcrConfidence * multiplyConfidenceBy;
         
-        if (ocrConfidence < 40
+        if (word.OcrConfidence < 40
             && word.Text.Length > 3
             && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
             && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation)
@@ -633,7 +627,7 @@ public static class OcrHelper
                 {
                     return Task.FromResult(new DocumentLineWord(
                         topSuggestion,
-                        ocrConfidence,
+                        word.OcrConfidence,
                         word.Coordinates,
                         word.HandwrittenOrTyped))!;
                 }

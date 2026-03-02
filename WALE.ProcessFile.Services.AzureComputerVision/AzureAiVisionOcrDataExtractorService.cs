@@ -133,8 +133,7 @@ public class AzureAiVisionOcrDataExtractorService(
             pageNumber,
             horizontalColumnGap,
             minFontSize,
-            considerableOverlapAmount,
-            multiplyConfidenceBy: 100);
+            considerableOverlapAmount);
     }
 
     private async Task<List<(string Text, IList<Word> Words)>> GetTextLinesAsync(

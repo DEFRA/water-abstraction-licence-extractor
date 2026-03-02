@@ -179,7 +179,7 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
         allDmsData,
@@ -564,7 +564,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
         ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             licenceMapping,
             naldLicenceStatusData,

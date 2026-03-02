@@ -42,7 +42,7 @@ public class Licence
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
-    public Dictionary<string, object> NoneSchemaData { get; set; } = [];
+    public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
     
     public bool? IsLiveLicence { get; set; }
     

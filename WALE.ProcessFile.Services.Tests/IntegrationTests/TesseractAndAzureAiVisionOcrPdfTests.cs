@@ -14,7 +14,6 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -235,7 +234,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -283,7 +282,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("H. W. Butter Farms Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("( hereinafter referred to as \"The Licence Holder\" )", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -328,7 +327,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -407,7 +406,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             _naldLicenceStatusData,
@@ -460,7 +459,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             _naldLicenceStatusData,
@@ -475,7 +474,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -519,7 +518,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
@@ -576,7 +575,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -611,7 +610,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -647,7 +646,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -738,7 +737,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -785,7 +784,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true,
             }
         ];

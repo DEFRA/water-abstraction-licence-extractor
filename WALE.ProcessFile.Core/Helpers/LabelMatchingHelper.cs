@@ -283,7 +283,7 @@ public static class LabelMatchingHelper
             
             var isLastLine = lineCount == howManyLinesTotal - 1;
                 
-            if (position == LabelPosition.Split && isLastLine)
+            if (position == LabelPosition.SplitAtLabel && isLastLine)
             {
                 return true;
             }

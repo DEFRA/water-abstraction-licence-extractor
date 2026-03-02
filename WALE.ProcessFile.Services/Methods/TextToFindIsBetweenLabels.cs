@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -82,7 +81,7 @@ public static class TextToFindIsBetweenLabels
             && beforeTextContainsLabel != true)
         {
             var labelText = request.textBeforeAtAndAfterLabel?
-                .FirstOrDefault(x => x.Label?.Position == LabelPosition.ActuallyLabel)?
+                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
                 .ColumnsText![0];
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
@@ -170,7 +169,7 @@ public static class TextToFindIsBetweenLabels
         }
         
         labelGroupResult.Text = betweenText.ToList();
-        labelGroupResult.MatchType = MatchType.Between;
+        labelGroupResult.MatchedPosition = MatchedPosition.BetweenLabels;
         labelGroupResult.MatchedLabel = request.label.Clone();
 
         try

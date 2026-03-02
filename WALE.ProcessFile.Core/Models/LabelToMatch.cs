@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -46,12 +47,17 @@ public class LabelToMatch
     public bool DoNotTrimLines { get; init; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+    public MultipleMatchBehaviour MultipleMatchBehaviour { get; init; } = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue;
     public bool FindMultipleOnSingleLine { get; init; }
         
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     public bool AutoCorrect { get; init; }
+    public ConfidenceType ConfidenceType { get; init; } = ConfidenceType.NotSet;
+
+    public int NoOcrConfidence { get; init; } = 100;
+    
+    public double? ConfidenceIfMatched { get; init; }
     public IReadOnlyList<int> SkipLineNumbers { get; set; } = [];
 
     public LabelToMatch Clone()
@@ -84,12 +90,15 @@ public class LabelToMatch
             Possibilities = Possibilities?.ToList(),
             PreviousLinesToFetch = PreviousLinesToFetch,
             NextLinesToFetch = NextLinesToFetch,
-            MultipleBehaviour = MultipleBehaviour,
+            MultipleMatchBehaviour = MultipleMatchBehaviour,
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
             DoNotTrimLines = DoNotTrimLines,
             AutoCorrect = AutoCorrect,
-            SkipLineNumbers = SkipLineNumbers
+            SkipLineNumbers = SkipLineNumbers,
+            ConfidenceIfMatched = ConfidenceIfMatched,
+            ConfidenceType = ConfidenceType,
+            NoOcrConfidence = NoOcrConfidence
         };
     }    
 }

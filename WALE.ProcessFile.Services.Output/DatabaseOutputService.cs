@@ -219,7 +219,7 @@ public class DatabaseOutputService(
                 continue;
             }
             
-            missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"];
+            missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
             await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
         }
         
@@ -276,7 +276,7 @@ public class DatabaseOutputService(
             {
                 var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licenceId = (int)l.NoneSchemaData["licenceId"];
+                    var licenceId = (int)l.NoneSchemaData["licenceId"]!;
                     return licenceId == licenceSetLicence.LicenceId;
                 });
 

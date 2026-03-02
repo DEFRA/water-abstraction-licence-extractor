@@ -157,7 +157,7 @@ public partial class LicenceNumber : ILicenceNumberService
                     matchedLines.Add(matchedLine);
                     
                     // Exit early if we're looking for a single instance match
-                    if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                    if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                     {
                         return (true, matchedLines);
                     }

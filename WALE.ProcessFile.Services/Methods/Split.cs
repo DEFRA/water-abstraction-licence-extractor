@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -31,7 +30,7 @@ public static class Split
             nextLine,
             request.lineForPosition!,
             request.label.Text,
-            LabelPosition.Split,
+            LabelPosition.SplitAtLabel,
             UnknownLinesTotal,
             int.MaxValue,
             out _,
@@ -51,7 +50,7 @@ public static class Split
                     null,
                     line,
                     request.label.Text,
-                    LabelPosition.Split,
+                    LabelPosition.SplitAtLabel,
                     UnknownLinesTotal,
                     int.MaxValue,
                     out _,
@@ -149,8 +148,8 @@ public static class Split
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(
-            MatchType.NotApplicable,
-            LabelPosition.Split,
+            MatchedPosition.NotApplicable,
+            LabelPosition.SplitAtLabel,
             request.label,
             leftPartLines);
         
@@ -169,8 +168,8 @@ public static class Split
         if (rightPartLines.Count > 0)
         {
             var rightPartResult = request.labelGroupResult.Clone(
-                MatchType.NotApplicable,
-                LabelPosition.Split,
+                MatchedPosition.NotApplicable,
+                LabelPosition.SplitAtLabel,
                 request.label,
                 rightPartLines);
             

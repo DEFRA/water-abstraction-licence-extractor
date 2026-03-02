@@ -111,7 +111,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("23rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -145,7 +145,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("14IEH day of OCTOBER, 1966", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -176,7 +176,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11th day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -208,7 +208,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -240,7 +240,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 1966", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -272,7 +272,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -304,7 +304,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 November 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -336,7 +336,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("28 DAY OF March 1984", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -368,7 +368,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("22 July 2016", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -400,7 +400,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 December 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -432,7 +432,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("5th AY OF March 1993", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -464,7 +464,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("21st day of March 1974", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -496,7 +496,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -528,7 +528,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("30 June 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -560,7 +560,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 May 2018", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,

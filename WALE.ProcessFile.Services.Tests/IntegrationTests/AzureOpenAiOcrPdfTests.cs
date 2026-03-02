@@ -12,7 +12,6 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -111,7 +110,7 @@ public class AzureOpenAiOcrPdfTests
         Assert.EndsWith(" Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("(hereinafter referred to as \"the Authority\")", nameResult.MatchedLabel!.Text!.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -158,7 +157,7 @@ public class AzureOpenAiOcrPdfTests
         
         // TODO - other 2 things
 
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             new NaldLicenceStatusData(),

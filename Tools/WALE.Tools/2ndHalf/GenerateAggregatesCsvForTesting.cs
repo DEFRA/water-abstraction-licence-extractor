@@ -111,7 +111,7 @@ public static class GenerateAggregatesCsvForTesting
         foreach (var pdfFilePath in pdfFilePaths)
         {
             var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
-            var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+            var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
                 internalJson,
                 FileLicenceMapping,
                 naldLicenceStatusData,
@@ -125,7 +125,7 @@ public static class GenerateAggregatesCsvForTesting
             licenceSetGroups.Add(licenceSets);
         }
 
-        SchemaConverter.AddAdditionalLicenceSets(
+        WalSchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
             [],
@@ -158,7 +158,7 @@ public static class GenerateAggregatesCsvForTesting
         var firstNames = CompanyName.GetFirstNamesCsvFromFileAsync();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
-        var licenceSets1 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets1 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -172,7 +172,7 @@ public static class GenerateAggregatesCsvForTesting
         var file1 = licenceSets1[0].Licences[0];
 
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
-        var licenceSets2 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets2 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -186,7 +186,7 @@ public static class GenerateAggregatesCsvForTesting
         var file2 = licenceSets2[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
-        var licenceSets3 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets3 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -200,7 +200,7 @@ public static class GenerateAggregatesCsvForTesting
         var file3 = licenceSets3[0].Licences[0];
 
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
-        var licenceSets4 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets4 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -214,7 +214,7 @@ public static class GenerateAggregatesCsvForTesting
         var file4 = licenceSets4[0].Licences[0];
         
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
-        var licenceSets5 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets5 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -228,7 +228,7 @@ public static class GenerateAggregatesCsvForTesting
         var file5 = licenceSets5[0].Licences[0];
         
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
-        var licenceSets6 = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets6 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
@@ -241,7 +241,7 @@ public static class GenerateAggregatesCsvForTesting
         licenceSetGroups.Add(licenceSets6);
         var file6 = licenceSets6[0].Licences[0];
         
-        SchemaConverter.AddAdditionalLicenceSets(
+        WalSchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
             [],

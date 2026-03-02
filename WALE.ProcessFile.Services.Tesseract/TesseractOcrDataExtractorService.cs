@@ -156,7 +156,8 @@ public class TesseractOcrDataExtractorService(
             lineHeight,
             maxPercentHeightDiff,
             maxNegativeDiffBetweenWordTop,
-            maxPositiveDiffBetweenWordTop);
+            maxPositiveDiffBetweenWordTop,
+            multiplyConfidenceBy: 1);
     }
     
     private async Task<ProcessResult> RunSeparateTesseractProcessAsync(

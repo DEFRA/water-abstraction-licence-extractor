@@ -12,7 +12,6 @@ using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -126,7 +125,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(nameResult.IsOcr);
         Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel!.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
@@ -171,7 +170,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/22/271", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -240,7 +239,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -330,7 +329,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -409,7 +408,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             _naldLicenceStatusData,
@@ -458,7 +457,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,

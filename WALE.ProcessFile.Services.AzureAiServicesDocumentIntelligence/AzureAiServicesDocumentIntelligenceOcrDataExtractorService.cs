@@ -119,7 +119,8 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             pageNumber,
             horizontalColumnGap,
             minFontSize,
-            considerableOverlapAmount);
+            considerableOverlapAmount,
+            multiplyConfidenceBy: 1); // TODO check
     }
     
     private async Task<List<DocumentIntelligenceLineWithWords>> GetTextLinesAsync(

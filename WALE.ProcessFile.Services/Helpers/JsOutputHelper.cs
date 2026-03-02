@@ -313,7 +313,7 @@ public static class JsOutputHelper
     }
     
     private static T2? GetValueOrDefault<T, T2>(
-        Dictionary<string, object> data,
+        Dictionary<string, object?> data,
         string fieldName,
         T2? defaultValue)
     {

@@ -14,7 +14,6 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -183,7 +182,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Ingleby Greenhow Water Society Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         Assert.Equal(59, nameResult.LineNumber);
         
         // Note no other licence mentioned
@@ -252,7 +251,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         
@@ -272,7 +271,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults[1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -362,7 +361,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(", ", nameResult.Text!.Select(x => x.Text)));
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
 
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -462,13 +461,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         var firstPurposePointGroup = purposeResult.SubResults.Single();
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", firstPurposePointGroup.Text!.Single().Text);
 
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -568,7 +567,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("T Wilson & Sons (Farmers)", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -728,7 +727,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         var firstPurposePointGroup = purposeResult.SubResults.First();
@@ -736,7 +735,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', firstPurposePointGroup.Text!.Select(x => x.Text).ToArray()));
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -801,7 +800,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("The Bourne United Charities", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -924,7 +923,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         var firstPurposePointGroup = purposeResult.SubResults.Single();
@@ -932,7 +931,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below.",
             string.Join(' ', firstPurposePointGroup.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -991,7 +990,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("E.W.Porter and Son", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
 
         var abstractionLimitsSection = resultList.FirstOrDefault(result =>
             result.LabelGroupName == "AbstractionLimits");
@@ -1423,7 +1422,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         var purposePointGroup = purposeResult.SubResults.Single();
@@ -1440,7 +1439,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.2 Filling a reservoir for subsequent trickle irrigation.",
             string.Join(' ', purpose2.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -1536,7 +1535,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Waldersey Farms Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -1792,7 +1791,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("DocumentPurposesAll", purposeResult.MatchedLabel!.Name);
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         var allPurposeText = string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!);
         
@@ -1971,7 +1970,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         //...
         Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2070,7 +2069,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Environment Agency", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -2231,7 +2230,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO 4 more sections
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2287,7 +2286,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Armstrongs Aggregates Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -2337,7 +2336,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO expand this section + add others
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2385,7 +2384,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Rolawn Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2440,7 +2439,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NE/027/0028/059", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMappingWithout52,
             _naldLicenceStatusData,
@@ -2490,7 +2489,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.1 Fish farm and fishery.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         Assert.Equal("4.1", purposeResult.SubResults[0].SubResults[0].SubResults[0].Text!.First().Text);
         Assert.Equal("Fish farm and fishery", purposeResult.SubResults[0].SubResults[0].SubResults[1].Text!.First().Text);
         
@@ -2520,7 +2519,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("J & S Accessories Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimits = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2585,7 +2584,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2744,7 +2743,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Philip John Hobbs", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2790,7 +2789,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("16/51/007/S/011", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2836,7 +2835,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Chillingham Water Users", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2883,7 +2882,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NE/021/0000/036", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -2929,7 +2928,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Christopher Marler", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -2975,7 +2974,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("4/29/04/*S/0098/R01", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3022,7 +3021,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(", ", nameResult.Text!.Select(x => x.Text)));
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel!.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -3078,7 +3077,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("SO/042/0036/022", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3144,7 +3143,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Canterbury Golf Club Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -3190,7 +3189,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("SO/040/0009/016", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3238,7 +3237,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("D.& M.Gedney Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -3280,7 +3279,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("9/40/01/0500/G", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3328,7 +3327,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.1 Public water supply.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
 
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");     
         
@@ -3337,7 +3336,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Thames Water Utilities Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -3403,7 +3402,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("08/37/54/0025", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3452,7 +3451,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Brett Aggregates Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -3495,13 +3494,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.1 Transfer for the purpose of dewatering.", purposeResult.Text?[1].Text);
         Assert.Equal(["PURPOSE OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
         
         Assert.Single(purposeResult.SubResults);
         var firstPurposePointGroup = purposeResult.SubResults.First();
         Assert.Equal("4.1 Transfer for the purpose of dewatering.", firstPurposePointGroup.Text!.First().Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3546,7 +3545,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("South West Water Limited", companyName?.Text?.FirstOrDefault()?.Text);
 
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3674,7 +3673,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Lakeminster Park Limited", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3768,7 +3767,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3887,7 +3886,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -3983,7 +3982,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4057,7 +4056,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4151,7 +4150,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4201,7 +4200,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4. PURPOSE OF ABSTRACTION 4.1 Cooling water make up (68% returned to source).",
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4235,7 +4234,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(additionalInformation);
         Assert.Equal(37, additionalInformation.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4275,7 +4274,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(additionalInformation);
         Assert.Equal(36, additionalInformation.Text!.Count);
 
-        var licenceGroups = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceGroups = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4374,7 +4373,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("9.4 The minimum value for the quantity of water authorised to be abstracted", furtherConditions.SubResults[3].Text!.First().Text);
 
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4517,7 +4516,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("8.2 The Licence Holder shall send a copy of the record or summary data from it to", records.SubResults[1].Text!.FirstOrDefault()!.Text);
         Assert.Equal("8.3 Each record shall be kept and be made available during all reasonable", records.SubResults[2].Text!.FirstOrDefault()!.Text);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4571,7 +4570,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4674,7 +4673,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4717,7 +4716,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4762,7 +4761,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 1, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4808,7 +4807,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4850,7 +4849,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4902,7 +4901,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4937,7 +4936,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -4972,7 +4971,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5007,7 +5006,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5092,7 +5091,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5218,7 +5217,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5255,7 +5254,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5293,7 +5292,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5333,7 +5332,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5372,7 +5371,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5409,7 +5408,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5454,7 +5453,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
         Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5492,7 +5491,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5527,7 +5526,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5562,7 +5561,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5597,7 +5596,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5632,7 +5631,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5667,7 +5666,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,
@@ -5702,7 +5701,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             FileLicenceMapping,
             _naldLicenceStatusData,

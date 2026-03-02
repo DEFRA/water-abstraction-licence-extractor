@@ -13,7 +13,6 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -196,7 +195,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         Assert.Equal(2, perHourValuesAll.Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -263,7 +262,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Single(purpose.Text!); // TODO its 2 on the Ai Vision side, not sure which is right
         Assert.Equal("irrigation", purpose.Text!.First().Text); // NOTE - its missing 'Spray '
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -304,7 +303,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(records);
         Assert.Equal(12, records.Text!.Count);
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -390,7 +389,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -438,7 +437,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -503,7 +502,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -547,7 +546,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("SHERBORNE SCHOOL", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearNextLineIsMatch, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearNextLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -631,7 +630,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -667,7 +666,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("H.H. Henderson & C. Wentworth-Stanley", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["Succession to licence", "as amended by"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.NearPreviousLineIsCompany, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.OnOrNearPreviousLine, nameResult.MatchedPosition);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
@@ -708,7 +707,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -735,7 +734,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -783,7 +782,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("Mr T M C Davey", nameResult.Text?[0]?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -838,7 +837,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -950,7 +949,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -995,7 +994,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("Mr T M C Davey", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -1013,7 +1012,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1064,7 +1063,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("A A C McArthur", nameResult.Text?.FirstOrDefault()?.Text); // TODO should be just A A C McArthur
         Assert.Equal(["Licensee"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.SameLineIsCompany1Line, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.Null(abstractionLimitsSection);
@@ -1076,7 +1075,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1116,7 +1115,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(pointResult);
         Assert.True(pointResult.IsOcr);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1298,7 +1297,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1539,7 +1538,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal(2, purpose.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1608,7 +1607,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1638,7 +1637,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1666,7 +1665,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,
@@ -1694,7 +1693,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultFull = await GetMatchesAsync(filename, 2, 2);
         Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
 
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _fileLicenceMapping,
             _naldLicenceStatusData,

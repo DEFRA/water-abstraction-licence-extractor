@@ -171,7 +171,8 @@ public class AwsTextractOcrDataExtractorService
             pageNumber,
             horizontalColumnGap,
             minFontSize,
-            considerableOverlapAmount);
+            considerableOverlapAmount,
+            multiplyConfidenceBy: 1); // TODO check
     }
     
     private static async Task<DetectDocumentTextResponse> DetectDocumentTextAsync(

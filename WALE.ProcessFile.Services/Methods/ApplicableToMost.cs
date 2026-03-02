@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -17,7 +16,7 @@ public static class ApplicableToMost
      
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
-            or LabelPosition.Split
+            or LabelPosition.SplitAtLabel
             or LabelPosition.RelatedCategoryPosition)
         {
             return [];
@@ -54,9 +53,9 @@ public static class ApplicableToMost
             textBeforeAtAndAfterLabel.Reverse();
         }
         
-        var isMultiple = request.label?.MultipleBehaviour is
-            MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
-                or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+        var isMultiple = request.label?.MultipleMatchBehaviour is
+            MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
         
         foreach (var item in textBeforeAtAndAfterLabel)
         {
@@ -64,7 +63,7 @@ public static class ApplicableToMost
             var text = item.ColumnsText![0];
             
             var labelGroupResult = request.labelGroupResult;
-            labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+            labelGroupResult.MatchedPosition = MatchedPosition.FullyOnSameLine;
             labelGroupResult.MatchedLabel = matchedLabel;
             
             var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
@@ -349,7 +348,7 @@ public static class ApplicableToMost
                     documentLine.Columns.Add(new DocumentLineColumn(outputText));
                 
                     labelGroupResult.Text = [documentLine];
-                    labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                    labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
                 
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [outputText];
@@ -411,8 +410,8 @@ public static class ApplicableToMost
                 }*/
                 
                 var matchType = over2Lines ?
-                    MatchType.SameLineIsCompany2Lines
-                    : MatchType.SameLineIsCompany1Line;
+                    MatchedPosition.PartiallyOnSameLine
+                    : MatchedPosition.FullyOnSameLine;
 
                 var coords = documentLine
                     .Columns
@@ -429,7 +428,7 @@ public static class ApplicableToMost
                     null));
                 
                 labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchType = matchType;
+                labelGroupResult.MatchedPosition = matchType;
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
@@ -464,7 +463,7 @@ public static class ApplicableToMost
                 documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
                 
                 labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
@@ -497,7 +496,7 @@ public static class ApplicableToMost
                     documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
                     
                     var lineMatch = labelGroupResult.Clone([documentLine]);
-                    lineMatch.MatchType = MatchType.Between;
+                    lineMatch.MatchedPosition = MatchedPosition.BetweenLabels;
                     
                     FormattingHelper.RemoveRemoves(lineMatch, removedLines);
 

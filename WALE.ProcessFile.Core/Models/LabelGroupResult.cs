@@ -36,8 +36,6 @@ public class LabelGroupResult
 
             switch (MatchedLabel.ConfidenceType)
             {
-                case ConfidenceType.NotSet:
-                    return null;
                 case ConfidenceType.Static:
                     return MatchedLabel.ConfidenceIfMatched;
                 case ConfidenceType.OcrConfidencePassthrough:
@@ -55,6 +53,8 @@ public class LabelGroupResult
 
                     var averageConfidence = GetAverageConfidence();
                     return (MatchedLabel.ConfidenceIfMatched / 100.0) * averageConfidence;
+                case ConfidenceType.NotSet:
+                    return null;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -69,7 +69,7 @@ public class LabelGroupResult
         }
                     
         var totalConfidence = Text.Sum(t => t.OcrConfidence
-                                            ?? MatchedLabel.NoOcrConfidence);
+            ?? MatchedLabel.NoOcrConfidence);
 
         return totalConfidence / Text.Count;
     }   

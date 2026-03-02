@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
@@ -33,7 +34,9 @@ public static class SharedLabels
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
-                NextLinesToFetch = 1
+                NextLinesToFetch = 1,
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 85
             },
             new LabelToMatch
             {
@@ -45,7 +48,9 @@ public static class SharedLabels
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumberHampshire",
                 PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0
+                NextLinesToFetch = 0,
+                ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
+                ConfidenceIfMatched = 95
             }
         ];
     }

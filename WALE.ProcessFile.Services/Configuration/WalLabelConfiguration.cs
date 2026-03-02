@@ -1190,7 +1190,7 @@ public static class LabelConfiguration
                     new("hereby grant a licence to")
                 ],
                 ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
-                ConfidenceIfMatched = 93
+                ConfidenceIfMatched = 85
             },
             new LabelToMatch
             {
@@ -1215,7 +1215,7 @@ public static class LabelConfiguration
                     "abstract water"
                 ],
                 ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
-                ConfidenceIfMatched = 94
+                ConfidenceIfMatched = 90
             },
             new LabelToMatch
             {
@@ -1238,7 +1238,7 @@ public static class LabelConfiguration
                     "abstract water"
                 ],
                 ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
-                ConfidenceIfMatched = 95
+                ConfidenceIfMatched = 85
             },
             new LabelToMatch
             {
@@ -1254,7 +1254,7 @@ public static class LabelConfiguration
                 MatchAllText = true,
                 Name = "IsSuccession",
                 ConfidenceType = ConfidenceType.OcrConfidenceMultiplied,
-                ConfidenceIfMatched = 85
+                ConfidenceIfMatched = 95
             }
         ];
     }

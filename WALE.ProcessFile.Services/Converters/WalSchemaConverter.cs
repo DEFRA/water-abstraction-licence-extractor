@@ -91,15 +91,7 @@ public static partial class WalSchemaConverter
                 noneSchemaData.Add("issuedTo", issuedTo);
             }
 
-            var issuedToConfidence = companyNameMatch
-                .Text?
-                .FirstOrDefault()?
-                .OcrConfidence;
-
-            if (issuedToConfidence != null)
-            {
-                noneSchemaData.Add("issuedToConfidence", issuedToConfidence);
-            }
+            noneSchemaData.Add("issuedToConfidence", companyNameMatch.Confidence);
 
             var issuedToMatchedLabelText = companyNameMatch.MatchedLabel?.Text?.FirstOrDefault()?.Text ?? string.Empty;
             noneSchemaData.Add("issuedToMatchedLabelText", issuedToMatchedLabelText);
@@ -109,17 +101,6 @@ public static partial class WalSchemaConverter
 
             var issuedToCertainty = (int)companyNameMatchType / 100;
             noneSchemaData.Add("issuedToCertainty", issuedToCertainty);
-        }
-
-        var licenceNumberOcrConfidence = matchesResult.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceNumber")?
-            .Text?
-            .FirstOrDefault()?
-            .OcrConfidence;
-
-        if (licenceNumberOcrConfidence != null)
-        {
-            noneSchemaData.Add("licenceNumberConfidence", licenceNumberOcrConfidence);
         }
 
         var ocr = matchesResult.ScannedFile ? "OCR" : "NoOCR";
@@ -396,8 +377,12 @@ public static partial class WalSchemaConverter
         Dictionary<string, object?>? noneSchemaData = null)
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var matchedLabel);
-        noneSchemaData?.Add($"Confidence:{labelName}", matchedLabel?.Confidence);
-        
+
+        if (setConfidence)
+        {
+            noneSchemaData?.Add($"Confidence:{labelName}", matchedLabel?.Confidence);
+        }
+
         return Date.DateFormatConsistent(text);
     }
 
@@ -3555,7 +3540,13 @@ linkedLicence.LicenceNumber!,
             "LicenceNumber",
             out var licenceNumberMatch);
 
-        noneSchemaData?.Add("Confidence:LicenceNumber", licenceNumberMatch?.Confidence);
+        const string confidenceKey = "Confidence:LicenceNumber";
+        
+        if (noneSchemaData?.ContainsKey(confidenceKey) == false)
+        {
+            noneSchemaData.Add(confidenceKey, licenceNumberMatch?.Confidence);
+        }
+
         return text;
     }
 

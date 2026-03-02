@@ -36,9 +36,16 @@ public static partial class WalSchemaConverter
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
 
-        var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult, noneSchemaData);
-        var licenceNumber = GetLicenceNumber(matchesResult, noneSchemaData);
+        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence) =
+            GetLicenceNumber(matchesResult, noneSchemaData);
 
+        var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
+            ? new ValueWithConfidence<string>(
+                licenceNumber,
+                ocrConfidence!.Value,
+                confidence!.Value)
+            : null;
+        
         var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
         var licenceVersion = GetLicenceVersion(matches, naldDataLine, noneSchemaData);
 
@@ -345,9 +352,7 @@ public static partial class WalSchemaConverter
         {
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
-            LicenceNumber = !string.IsNullOrEmpty(licenceNumber) 
-                ? new ValueWithConfidence<string>(licenceNumber)
-                : null,
+            LicenceNumber = licenceNumberWithConfidence,
             NaldLicenceNumber = dmsFileData?.PermitNumber,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
@@ -556,8 +561,10 @@ public static partial class WalSchemaConverter
     {
         var returnList = new List<LicenceSet>();
 
-        var licenceNumber = GetLicenceNumber(matchesResult);
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
+        var (licenceNumber, _, _, _) = GetLicenceNumber(matchesResult);
+        var strippedLicenceNumber = FormattingHelper.StripForComparison(
+            licenceNumber,
+            matchesResult.RegionCode);
 
         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
             ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
@@ -1007,7 +1014,7 @@ lookupConfiguration);
                     {
                         var matches = ToMatchesResult(linkedLicenceData);
 
-                        var licenceNumber = GetLicenceNumber(matches);
+                        var (licenceNumber, _, _, _) = GetLicenceNumber(matches);
                         var strippedLicenceNumber =
                             FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
 
@@ -1051,7 +1058,7 @@ lookupConfiguration);
                             returnLicences.Add(new Licence
                             {
                                 LicenceNumber = !string.IsNullOrEmpty(licenceNumber) 
-                                    ? new ValueWithConfidence<string>(licenceNumber)
+                                    ? new ValueWithConfidence<string>(licenceNumber, -1, -1) // TODO
                                     : null,
                                 Status = LicenceStatus.NotFound
                             });
@@ -1113,7 +1120,7 @@ lookupConfiguration);
             {
                 returnLicences.Add(new Licence
                 {
-                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber),
+                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
                     Status = LicenceStatus.NotFound
                 });
 
@@ -3484,12 +3491,16 @@ linkedLicence.LicenceNumber!,
         return returnList;
     }
 
-    private static string? GetLicenceNumber(
+    private static (string? LicenceNumber,
+        string? ScrapedLicenceNumber,
+        double? Confidence,
+        double? OcrConfidence) GetLicenceNumber(
         MatchesResult matchesResult,
         Dictionary<string, object?>? noneSchemaData = null)
     {
         string? licenceNumber = null;
-        var scrapedLicenceNumber = GetScrapedLicenceNumber(matchesResult, noneSchemaData);
+        var (scrapedLicenceNumber, confidence, ocrConfidence) =
+            GetScrapedLicenceNumber(matchesResult);
 
         if (!string.IsNullOrEmpty(scrapedLicenceNumber))
         {
@@ -3504,8 +3515,8 @@ linkedLicence.LicenceNumber!,
             var filenameParts = matchesResult.Filename!.Replace(" ", "_").Split('_');
             var licenceNumberPart = filenameParts[0];
             var isPartALicenceNumber = licenceNumberPart.Length > 5
-                                       && !licenceNumberPart.Contains('.')
-                                       && licenceNumberPart.Count(char.IsDigit) >= 3;
+                && !licenceNumberPart.Contains('.')
+                && licenceNumberPart.Count(char.IsDigit) >= 3;
 
             // Leave the below, we can't trust the bit in the filename for old files
 
@@ -3556,26 +3567,21 @@ linkedLicence.LicenceNumber!,
 
         licenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode)?.ToUpper();
         
-        return licenceNumber;
+        return (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence);
     }
 
-    private static string? GetScrapedLicenceNumber(
-        MatchesResult matches,
-        Dictionary<string, object?>?noneSchemaData)
+    private static (string? ScrapedLicenceNumber, double? Confidence, double? OcrConfidence)
+        GetScrapedLicenceNumber(MatchesResult matches)
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(
             matches.Matches!,
             "LicenceNumber",
             out var licenceNumberMatch);
-
-        const string confidenceKey = "Confidence:LicenceNumber";
         
-        if (noneSchemaData?.ContainsKey(confidenceKey) == false)
-        {
-            noneSchemaData.Add(confidenceKey, licenceNumberMatch?.Confidence);
-        }
-
-        return text;
+        return (
+            text,
+            licenceNumberMatch?.Confidence,
+            licenceNumberMatch?.Text?.FirstOrDefault()?.OcrConfidence);
     }
 
     private static List<LicenceSetReference> AddEncompassingLicenceSets(

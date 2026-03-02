@@ -241,11 +241,14 @@ public class PdfDataExtractorService(
                 ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
                     $" - {pdfDocument.PdfFilePath}");
                 
-                pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
+                pageImages = page.ScreenshotReferences
+                    .Select(sr => sr.ImageReference)
+                    .ToList()!;
 
                 foreach (var pageImage in pageImages)
                 {
                     var extension = pageImage.Split('.').Last();
+                    
                     allImagesInDocument.Insert(0, new ImageDetails
                     {
                         pageNumber = pageNumber,
@@ -1484,9 +1487,13 @@ public class PdfDataExtractorService(
 
                         if (newPartialLineText != string.Empty)
                         {
+                            var partialLineWords = partialLine.Columns
+                                .SelectMany(c => c.Words)
+                                .ToList(); // TODO check this is right
+                            
                             partialLine = partialLine.Clone();
                             partialLine.Columns.Clear();
-                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
+                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText, partialLineWords));
 
                             newPartialLine = partialLine;
                             continuePartialLoop = true;

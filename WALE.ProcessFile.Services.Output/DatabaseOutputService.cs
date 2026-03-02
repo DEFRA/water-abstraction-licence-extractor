@@ -336,7 +336,10 @@ public class DatabaseOutputService(
                 var licence = new Licence
                 {
                     LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber) 
-                        ? new ValueWithConfidence<string>(licenceSetLicence.LicenceNumber)
+                        ? new ValueWithConfidence<string>(
+                            licenceSetLicence.LicenceNumber,
+                            -1, // TODO
+                            -1) // TODO
                         : null
                 };
                 

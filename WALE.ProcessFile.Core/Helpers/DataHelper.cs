@@ -56,7 +56,7 @@ public static partial class DataHelper
                     isLastColumn && trimPunctuation,
                     out var removesUsedLoop);
                 
-                var clonedColumn = new DocumentLineColumn(alteredText);
+                var clonedColumn = new DocumentLineColumn(alteredText, column.Words);
                 newColumns.Add(clonedColumn);
 
                 if (removesUsedLoop != null)

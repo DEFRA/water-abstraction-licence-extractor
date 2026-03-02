@@ -101,7 +101,7 @@ public static class CompanyName
                     continue;
                 }
 
-                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
+                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!, column.Words); // TODO - too many words?
                 newColumns.Add(clonedColumn);
 
                 anyLineMatch = true;

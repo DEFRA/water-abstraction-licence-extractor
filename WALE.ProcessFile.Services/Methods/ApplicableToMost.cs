@@ -13,7 +13,6 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-     
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.SplitAtLabel

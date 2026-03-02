@@ -50,7 +50,12 @@ public static class Units
                             continue;
                         }
 
-                        var clonedColumn = new DocumentLineColumn(possibility);
+                        var possibilityWords = column.Words
+                            .Where(cw => possibility.Contains(cw.Text,
+                                StringComparison.InvariantCultureIgnoreCase))
+                            .ToList();
+                        
+                        var clonedColumn = new DocumentLineColumn(possibility, possibilityWords);
                         newColumns.Add(clonedColumn);
 
                         matchedPossibilityForLine = possibility;
@@ -71,7 +76,15 @@ public static class Units
                 if (string.IsNullOrEmpty(matchedPossibilityForLine))
                 {
                     var previousLine = lines.FirstOrDefault(l => l.LineNumber == line.LineNumber - 1);
+                    var linesToLookAt = new List<DocumentLine>();
 
+                    if (previousLine != null)
+                    {
+                        linesToLookAt.Add(previousLine);
+                    }
+                    
+                    linesToLookAt.Add(line);
+                    
                     // Look at this and the last line together for a match
                     var multipleLineText = $"{previousLine?.Text} {line.Text}";
 
@@ -81,8 +94,15 @@ public static class Units
                         {
                             continue;
                         }
-
-                        var clonedColumn = new DocumentLineColumn(possibility);
+                        
+                        var possibilityWords = linesToLookAt
+                            .SelectMany(l => l.Columns)
+                            .SelectMany(c => c.Words)
+                            .Where(cw => possibility.Contains(cw.Text,
+                                StringComparison.InvariantCultureIgnoreCase))
+                            .ToList();
+                        
+                        var clonedColumn = new DocumentLineColumn(possibility, possibilityWords);
                         newColumns.Clear();
                         newColumns.Add(clonedColumn);
 

@@ -58,6 +58,8 @@ public class LabelToMatch
     public int NoOcrConfidence { get; init; } = 100;
     
     public double? ConfidenceIfMatched { get; init; }
+
+    public double OcrConfidenceMinusNPerLine { get; init; } = 1;
     public IReadOnlyList<int> SkipLineNumbers { get; set; } = [];
 
     public LabelToMatch Clone()
@@ -97,6 +99,7 @@ public class LabelToMatch
             AutoCorrect = AutoCorrect,
             SkipLineNumbers = SkipLineNumbers,
             ConfidenceIfMatched = ConfidenceIfMatched,
+            OcrConfidenceMinusNPerLine = OcrConfidenceMinusNPerLine,
             ConfidenceType = ConfidenceType,
             NoOcrConfidence = NoOcrConfidence
         };

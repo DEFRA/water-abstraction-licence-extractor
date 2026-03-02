@@ -39,20 +39,14 @@ public class LabelGroupResult
                 case ConfidenceType.Static:
                     return MatchedLabel.ConfidenceIfMatched;
                 case ConfidenceType.OcrConfidencePassthrough:
-                    if (Text == null || Text.Count == 0 || MatchedLabel == null)
-                    {
-                        return null;
-                    }
-
                     return GetAverageConfidence();
+                case ConfidenceType.OcrConfidencePassthroughMinusNPerLine:
+                    return GetAverageConfidence() - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
                 case ConfidenceType.OcrConfidenceMultiplied:
-                    if (Text == null || Text.Count == 0 || MatchedLabel == null)
-                    {
-                        return null;
-                    }
-
-                    var averageConfidence = GetAverageConfidence();
-                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * averageConfidence;
+                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                case ConfidenceType.OcrConfidenceMultipliedMinusNPerLine:
+                    var returnFull = (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                    return returnFull - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
                 case ConfidenceType.NotSet:
                     return null;
                 default:

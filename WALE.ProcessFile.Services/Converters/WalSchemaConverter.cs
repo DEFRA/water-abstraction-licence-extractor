@@ -393,12 +393,6 @@ public static partial class WalSchemaConverter
     {
         return new LicenceVersion
         {
-            EffectiveDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateEffective", true, noneSchemaData)),
-            ExpiryDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfExpiry", true, noneSchemaData)),
-            NaldExpiryDate = Date.GetDateOrNull(naldDataLine?.ExpiryDate),
-            IssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfIssue", true, noneSchemaData)),
-            Issuer = GetTextAndSetConfidence(matches, "Issuer", noneSchemaData),
-            OriginalIssueDate = Date.GetDateOrNull(GetDateFormatConsistent(matches, "DateOfOriginalIssue", true, noneSchemaData)),
             NaldIssueNumber = naldDataLine?.IssueNo,
             NaldIncrementNumber = naldDataLine?.IncrNo,
             NaldUpdateReason = naldDataLine?.AabvType,
@@ -408,7 +402,30 @@ public static partial class WalSchemaConverter
             NaldOrigSignatureDate = Date.GetDateOrNull(naldDataLine?.OrigSigDate),
             NaldSignatureDate = Date.GetDateOrNull(naldDataLine?.LicSigDate),
             NaldEffectiveStartDate = Date.GetDateOrNull(naldDataLine?.EffStDate),
-            NaldEffectiveEndDate = Date.GetDateOrNull(naldDataLine?.EffEndDate)
+            NaldEffectiveEndDate = Date.GetDateOrNull(naldDataLine?.EffEndDate),
+            EffectiveDate = Date.GetDateOrNull(
+                GetDateFormatConsistent(matches,
+                    "DateEffective",
+                    true,
+                    noneSchemaData)),
+            ExpiryDate = Date.GetDateOrNull(
+                GetDateFormatConsistent(matches,
+                    "DateOfExpiry",
+                    true,
+                    noneSchemaData)),
+            NaldExpiryDate = Date.GetDateOrNull(naldDataLine?.ExpiryDate),
+            IssueDate = Date.GetDateOrNull(
+                GetDateFormatConsistent(matches,
+                    "DateOfIssue",
+                    true,
+                    noneSchemaData)),
+            Issuer = GetTextAndSetConfidence(matches,
+                "Issuer", noneSchemaData),
+            OriginalIssueDate = Date.GetDateOrNull(
+                GetDateFormatConsistent(matches,
+                    "DateOfOriginalIssue",
+                    true,
+                    noneSchemaData)),
         };
     }
 

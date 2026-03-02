@@ -5,5 +5,7 @@ public enum ConfidenceType
     NotSet,
     OcrConfidencePassthrough,
     OcrConfidenceMultiplied,
+    OcrConfidenceMultipliedMinusNPerLine,
+    OcrConfidencePassthroughMinusNPerLine,
     Static
 }

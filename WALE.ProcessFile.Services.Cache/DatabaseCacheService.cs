@@ -4,31 +4,17 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Cache;
 
 public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService,
-    string host,
-    int port,
-    string databaseName,
-    string username,
-    string password) : ICacheService
+    IDatabaseWriteService databaseWriteService) : ICacheService
 {
     public bool UsesDatabase { get; set; } = true;
 
-    public string? CacheFolder { get; set; } = null;
-
-    public string? Host { get; set; } = host;
-    
-    public int Port { get; set; } = port;
-    
-    public string? DatabaseName { get; set; } = databaseName;
-    
-    public string? Username { get; set; } = username;
-    
-    public string? Password { get; set; } = password;
+    public string? CacheFolderOrUrl { get; set; } = null;
 
     public Task SetupAsync()
     {
@@ -88,11 +74,11 @@ public class DatabaseCacheService(
         int? width = null,
         int? height = null)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilePath, extension));
     }
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
@@ -119,8 +105,11 @@ public class DatabaseCacheService(
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-        return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetNoOcrPageReferenceAsync(
+                request.Filepath!,
+                request.NoOcrServiceName!,
+                request.PageNumber));
     }
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
@@ -186,7 +175,7 @@ public class DatabaseCacheService(
         return await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
     }
 
-    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
      
@@ -201,7 +190,7 @@ public class DatabaseCacheService(
         await databaseWriteService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
@@ -233,10 +222,12 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
-    public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        return databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+        await databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+
+        return bytes.Length;
     }
     
     public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
@@ -261,5 +252,70 @@ public class DatabaseCacheService(
             pdfFilePath,
             noOcrServiceName,
             processRunId);
+    }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
+ 
+        return data
+            .Where(dataLine => dataLine.RegionCode == regionCode)
+            .ToList();
+    }
+
+    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
+        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+        var licencesAlternateFormatTask = databaseReadService.GetNaldLicencesAsync();
+        
+        return new NaldDataCollection
+        {
+            Licences = await licencesTask,
+            LicencesAlternateFormat = await licencesAlternateFormatTask,
+            LicenceVersions = await versionsTask,
+            LicencePurposes = await purposesTask,
+            LicencePoints = await pointsTask,
+            LicenceQuantities = await quantitiesTask
+        };
+    }
+
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
+    }
+
+    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePointsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
     }
 }

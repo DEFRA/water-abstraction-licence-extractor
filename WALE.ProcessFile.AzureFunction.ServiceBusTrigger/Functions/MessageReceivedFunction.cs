@@ -86,7 +86,7 @@ public class MessageReceivedFunction(
             new LookupConfiguration(
                 LabelConfiguration.GetLabels(),
                 fileLicenceMapping,
-                CompanyName.GetFirstNamesCsvFromFile(),
+                await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 1),
             previouslyParsedPaths,
             0);

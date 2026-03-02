@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.Configuration;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Tesseract;
@@ -14,11 +14,6 @@ try
     var writeToFile = configuration.GetValue<bool>("writeDebugLogs");
     
     var argsStringForLogging = string.Join(' ', args);
-    if (args.Length >= 16)
-    {
-        var postgresPasswordTemp = args[15];
-        argsStringForLogging = argsStringForLogging.Replace(postgresPasswordTemp, "*****");
-    }
 
     await WriteLogFileIfDebugModeAsync(
         "Started.txt",
@@ -26,7 +21,7 @@ try
         writeToConsole,
         writeToFile);
 
-    if (args.Length < 16)
+    if (args.Length < 11)
     {
         throw new Exception("Not enough arguments provided");
     }
@@ -39,28 +34,18 @@ try
     var pdfFilepath = args[5];
     var isPageScreenshot = bool.Parse(args[6]);
     var processRunId = int.Parse(args[7]);
-    var cacheFolder = args[8];
+    var cacheFolderOrApiUrl = args[8];
     var outputFolder = args[9];
     var tessDataPath = args[10];
-    var postgresHost = args[11];
-    var postgresPort = int.Parse(args[12]);
-    var postgresDatabaseName = args[13];
-    var postgresUsername = args[14];
-    var postgresPassword = args[15];
 
     var isFileMode = bytesMode.Equals("file", StringComparison.InvariantCultureIgnoreCase);
     
     var tesseractService = GetTesseractService(
         isFileMode,
         pageSegMode,
-        cacheFolder,
+        cacheFolderOrApiUrl,
         outputFolder,
-        tessDataPath,
-        postgresHost,
-        postgresPort,
-        postgresDatabaseName,
-        postgresUsername,
-        postgresPassword);
+        tessDataPath);
 
     var textLines = await tesseractService.ProcessAsync(
         "PdfPig",
@@ -103,61 +88,35 @@ static IConfiguration GetConfiguration()
 static InternalTesseractOcrDataExtractorService GetTesseractService(
     bool isFileMode,
     WALE.ProcessFile.Core.Enums.PageSegMode pageSegMode,
-    string cacheFolder,
+    string cacheFolderOrApiUrl,
     string outputFolder,
-    string tessDataPath,
-    string postgresHost,
-    int postgresPort,
-    string postgresDatabaseName,
-    string postgresUsername,
-    string postgresPassword)
+    string tessDataPath)
 {
     if (string.IsNullOrEmpty(tessDataPath))
+    {
         throw new NullReferenceException(tessDataPath);
-    
+    }
+
     ICacheService cacheService;
     IOutputService outputService;
     
     if (isFileMode)
     {
         outputService = new FileSystemOutputService(outputFolder);
-        cacheService = new FileSystemCacheService(cacheFolder);
+        cacheService = new FileSystemCacheService(cacheFolderOrApiUrl);
     }
     else
     {
-        if (string.IsNullOrEmpty(postgresHost))
-            throw new NullReferenceException(nameof(postgresHost));
+        if (string.IsNullOrEmpty(cacheFolderOrApiUrl))
+        {
+            throw new NullReferenceException(nameof(cacheFolderOrApiUrl));
+        }
 
-        if (string.IsNullOrEmpty(postgresDatabaseName))
-            throw new NullReferenceException(nameof(postgresDatabaseName));
-
-        if (string.IsNullOrEmpty(postgresUsername))
-            throw new NullReferenceException(nameof(postgresUsername));
-
-        if (string.IsNullOrEmpty(postgresPassword))
-            throw new NullReferenceException(nameof(postgresPassword));
-
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
-            postgresHost,
-            postgresPort,
-            postgresDatabaseName,
-            postgresUsername,
-            postgresPassword);
-
-        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-
-        outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
-        cacheService = new DatabaseCacheService(
-            databaseReadService,
-            databaseAddService,
-            postgresHost,
-            postgresPort,
-            postgresDatabaseName,
-            postgresUsername,
-            postgresPassword);
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(cacheFolderOrApiUrl);
+        
+        outputService = new ApiOutputService(httpClient);
+        cacheService = new ApiCacheService(httpClient);
     }
     
     return new InternalTesseractOcrDataExtractorService(
@@ -171,7 +130,7 @@ static async Task WriteLogFileIfDebugModeAsync(string filename, string content, 
 {
     if (shouldConsoleWrite)
     {
-        Console.WriteLine(content);
+        ConsoleHelper.WriteLine($"UNKNOWN - TesseractExe - {content}");
     }
 
     if (!shouldWriteFile)

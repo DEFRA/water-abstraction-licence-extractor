@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Output;
 
@@ -20,18 +21,12 @@ public class DatabaseOutputService(
         return Task.CompletedTask;
     }
 
-    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(int pageNumber, string pdfServiceName,
+    public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
+        int pageNumber,
+        string pdfServiceName,
         string pdfFilePath)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-
-        return
-        [
-            (pdfServiceName,
-                $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
-            (GeneralConstants.DocnetExtractorServiceName,
-                $"Screenshot-{pdfFilename}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
-        ];
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
@@ -54,7 +49,7 @@ public class DatabaseOutputService(
         ];
     }
 
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
     {
         return databaseWriteService.AddProcessRunAsync(processRun);
     }
@@ -164,15 +159,30 @@ public class DatabaseOutputService(
         {
             var bytes = await GetAsJpegAsync(bitmap);
 
-            await databaseWriteService.SavePageScreenshotAsync(
+            await SavePageScreenshotInternalAsync(
                 pageNumber,
-                providerName,
+                noOcrServiceName,
                 pdfFilename,
                 bytes,
                 processRunId);
         }
         
         return images.Sum(i => i.Bitmap.ByteCount);
+    }
+
+    public async Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        string pdfFilename,
+        byte[] data,
+        int processRunId)
+    {
+        await databaseWriteService.SavePageScreenshotAsync(
+            pageNumber,
+            noOcrServiceName,
+            pdfFilename,
+            data,
+            processRunId);
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
@@ -237,42 +247,8 @@ public class DatabaseOutputService(
 
         foreach (var licence in licences)
         {
-            var newNoneSchemaData = new Dictionary<string, object>();
-            
-            foreach (var kvp in licence.NoneSchemaData)
-            {
-                object? value;
-                
-                if (kvp.Value is JsonElement jsonElement)
-                {
-                    value = jsonElement.ValueKind switch
-                    {
-                        JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
-                        JsonValueKind.Number => jsonElement.GetDouble(),
-                        JsonValueKind.True => true,
-                        JsonValueKind.False => false,
-                        JsonValueKind.String => jsonElement.GetString(),
-                        JsonValueKind.Object => jsonElement.GetRawText(),
-                        _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
-                    };
-                }
-                else if (kvp.Value is int intValue)
-                {
-                    value = intValue;
-                }
-                else if (kvp.Value is string strValue)
-                {
-                    value = strValue;
-                }
-                else
-                {
-                    throw new Exception($"Unknown type - {kvp.Value.GetType().Name}");
-                }
-                
-                newNoneSchemaData.Add(kvp.Key, value!);
-            }
-
-            licence.NoneSchemaData = newNoneSchemaData;
+            licence.NoneSchemaData = JsonHelper.MakeJsonElementDictionaryNative(
+                licence.NoneSchemaData);
         }
         
         return licences;
@@ -294,47 +270,39 @@ public class DatabaseOutputService(
             var licenceSetLicenceIds = allLicenceSetLicences
                 .Where(lsl => lsl.LicenceSetId == licenceSetSimple.LicenceSetId);
             
-            try
-            {
-                var licences = new List<Licence>();
+            var licences = new List<Licence>();
 
-                foreach (var licenceSetLicence in licenceSetLicenceIds)
+            foreach (var licenceSetLicence in licenceSetLicenceIds)
+            {
+                var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licence = allLicences.FirstOrDefault(l =>
-                    {
-                        var licenceId = (int)l.NoneSchemaData["licenceId"];
-                        return licenceId == licenceSetLicence.LicenceId;
-                    });
+                    var licenceId = (int)l.NoneSchemaData["licenceId"];
+                    return licenceId == licenceSetLicence.LicenceId;
+                });
 
-                    if (licence == null)
-                    {
-                        continue;
-                    }
-                    
-                    licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
-                    licences.Add(licence);
+                if (licence == null)
+                {
+                    continue;
                 }
-
-                licenceSet.Licences = licences
-                    .ToArray();
                 
-                licenceSet.LicenceSetTypes = allLicenceSetTypes
-                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                    .Select(lst => lst.Type)
-                    .ToArray();
-                
-                licenceSet.AggregateSets = allAggregateSets
-                    .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                    .Select(lst => lst.AggregateSet)
-                    .ToArray();
+                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                licences.Add(licence);
+            }
 
-                returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            licenceSet.Licences = licences
+                .ToArray();
+            
+            licenceSet.LicenceSetTypes = allLicenceSetTypes
+                .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                .Select(lst => lst.Type)
+                .ToArray();
+            
+            licenceSet.AggregateSets = allAggregateSets
+                .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
+                .Select(lst => lst.AggregateSet)
+                .ToArray();
+
+            returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);
         }
 
         return returnList;

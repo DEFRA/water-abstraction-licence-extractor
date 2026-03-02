@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -9,7 +10,6 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -18,6 +18,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 [Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
@@ -31,9 +32,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    static PdfPigNoOcrPdfTests()
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
+    private Task SetupLicenceNumbersAsync(short regionCode)
     {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -118,16 +122,16 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     
     private static readonly Dictionary<string, List<NaldData>> NaldData = [];
 
-    private LookupConfiguration LookupConfiguration(int regionCode, int fileLicenceMapping)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping)
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
-            firstNamesFixture.FirstNamesCsv,
+            await firstNamesFixture.FirstNamesCsvTask(),
             regionCode);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1, int fileLicenceMapping = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1, int fileLicenceMapping = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
@@ -135,9 +139,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var service = number == 1 ? _pdfDataExtractor : _pdfDataExtractor2;
         if (number == 3) service = _pdfDataExtractor3;
         
-        return service.GetMatchesAsync(
+        return await service.GetMatchesAsync(
             pdfFolder + fileName,
-            LookupConfiguration(regionCode, fileLicenceMapping),
+            await LookupConfigurationAsync(regionCode, fileLicenceMapping),
             [pdfFolder + fileName],
             0);
     }
@@ -146,6 +150,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenX_NotCheckingAbstractionLimits_ThenFoundCorrectly_IncludesAgreedSchema()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
 
         // Act
@@ -275,7 +280,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1));
+            await LookupConfigurationAsync(1, 1));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 
@@ -323,6 +328,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LongLicenceHolderName_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - Minor Variation -Application New Licence Issued 24_12_2019 00_00_00 11164372.pdf";
 
         // Act
@@ -470,7 +476,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.LicenceSetId);
         
@@ -533,6 +539,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task X_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application – Transfer – Issued Licence – 07.07.2022.pdf";
 
         // Act
@@ -737,7 +744,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -765,6 +772,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LicenceToCharity_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application new Issued licence 04052017 AN0300012011 9781525.pdf";
 
         // Act
@@ -932,7 +940,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -954,6 +962,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task EWPorterAndSon_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - NA Formal Variation - Issued Licence [26_3_21] 11759321.pdf";
 
         // Act
@@ -1439,7 +1448,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
@@ -1455,6 +1464,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WalderseyFarmsLimited_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application – Renewal – Licence Issued – 24062022.pdf";
 
         // Act
@@ -1969,7 +1979,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
@@ -2031,6 +2041,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LicenceToEA_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Renewal Issued Licence- 25.01.2024.pdf";
 
         // Act
@@ -2228,7 +2239,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2238,6 +2249,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearNextLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - Minor Variation  Issued licence -007-13122023.pdf";
 
         // Act
@@ -2333,7 +2345,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2343,6 +2355,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearPreviousLineIsCompany_SimpleAbstractionLimits1LicenceToLicenceLink_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
@@ -2435,7 +2448,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 2))).Last();
+            await LookupConfigurationAsync(1, 2))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -2455,6 +2468,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XXXWhenSameLineIsCompany1Line_AndAbstractionLimitsToBeFoundWithSpellingMistake_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf";
 
         // Act
@@ -2579,7 +2593,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
@@ -2701,6 +2715,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenSameLineIsCompany1Line_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Vesting Licence Issued November 2017 011 10045454.pdf";
 
         // Act
@@ -2783,7 +2798,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2792,6 +2807,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenObscureCompanyName_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application NA New Issued Licence 11765926.pdf";
         
         // Act
@@ -2875,7 +2891,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2884,6 +2900,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenPersonalNameNoTitle_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - New - Issued Licence 31.01.2017 9655530.pdf";
         
         // Act
@@ -2966,7 +2983,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -2975,6 +2992,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenMultipleNamesWithNoTitle_And3ConditionsOfAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Issued New Licence 2 23.2.2024.pdf";
         
         // Act
@@ -3068,7 +3086,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3097,6 +3115,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenCompanyNameBeforeLabelWhenUsuallyAfter_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application New Licence July 2017 9867755.pdf";
 
         // Act
@@ -3179,7 +3198,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3190,6 +3209,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenX_EveyrhtingFoundButListSayingOtherwise_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application NA Formal Variation Licence 08122021.pdf";
 
         // Act
@@ -3268,7 +3288,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -3278,6 +3298,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Z_Z_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - formal variation - issue licence 9227047.pdf";
         
         // Act
@@ -3390,7 +3411,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -3406,6 +3427,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenABC_DEF_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "06_transfer_application_new_licence_issued_2112018_10555534.pdf";
 
         // Act
@@ -3487,7 +3509,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1));
+            await LookupConfigurationAsync(1, 1));
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
@@ -3515,6 +3537,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenABCD_DEF_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "1.3-licence-07.02.2023.pdf";
 
         // Act
@@ -3531,7 +3554,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1));
+            await LookupConfigurationAsync(1, 1));
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -3599,6 +3622,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_AbstractionLicence7310604_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Abstraction Licence 7310604.pdf";
 
         // Act
@@ -3658,7 +3682,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
         Assert.Equal("2/26/32/328", agreedSchemaLicenceGroup.Licences[0].LicenceNumber);
@@ -3713,6 +3737,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_YorkshireWaterCompany3_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - New - Licence Issued 30092021.pdf";
 
         // Act
@@ -3751,7 +3776,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -3847,6 +3872,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_YorkshireWaterCompany4_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Formal Variation Issued Licence 07032023 (1).pdf";
 
         // Act
@@ -3869,7 +3895,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -3935,6 +3961,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_YorkshireWaterCompany5_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Formal Variation Issued Licence 07032023.pdf";
 
         // Act
@@ -3964,7 +3991,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -4014,6 +4041,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_YorkshireWaterCompany6_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application Minor Variation Issued Licence 03.10.24.pdf";
 
         // Act
@@ -4037,7 +4065,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -4100,6 +4128,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FileThatErrored_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application - Minor Variation -Application New Licence Issued 28_04_2021 00_00_00 11794555.pdf";
 
         // Act
@@ -4130,7 +4159,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 1))).Last();
+            await LookupConfigurationAsync(1, 1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -4146,6 +4175,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FileThatDidntGetPurposes_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "22718045__Application - Reduction -Application New Licence Issued 24_06_2019 00_00_00 10897641.pdf";
 
         // Act
@@ -4179,7 +4209,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1, 2))).Last();
+            await LookupConfigurationAsync(1, 2))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -4190,6 +4220,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_PurposeHasAnUptoInIt_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22719149__Application Formal Variation - Issued Licence [04-09-2018] 10474343.pdf";
 
         // Act
@@ -4212,7 +4243,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
         
@@ -4229,6 +4260,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_PurposeHasPointsInIt_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf";
 
         // Act
@@ -4251,7 +4283,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         Assert.Equal(3, licenceGroups.Count);
 
@@ -4309,6 +4341,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_GettingFurtherConditions_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0260034056__Application New Issued Licence 10.09.2020 11497061.pdf";
 
         // Act
@@ -4349,7 +4382,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -4465,6 +4498,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_GettingRecords_ShouldFindOne()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22718033__Application - Minor Variation - Issued Licence - 16022023.pdf";
 
         // Act
@@ -4491,7 +4525,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3, 2))).Last();
+            await LookupConfigurationAsync(3, 2))).Last();
         
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
         
@@ -4530,6 +4564,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_BackLinkX_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
 
         // Act
@@ -4544,7 +4579,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4632,6 +4667,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_XBackLinkX_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0270023043__Application New Licence Issued 18.12.2018 10623801.pdf";
 
         // Act
@@ -4646,7 +4682,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             -1,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         Assert.Single(licenceSets);
         
@@ -4674,6 +4710,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_LookingForCorrectDefinitionOfYear()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf";
 
         // Act
@@ -4688,7 +4725,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             -1,
-            LookupConfiguration(3, 2));
+            await LookupConfigurationAsync(3, 2));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4718,6 +4755,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingAdditionalInformationExtraReason()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100074R01__Application WR Abstraction Licence Issued 11042025.pdf";
 
         // Act
@@ -4732,7 +4770,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4763,6 +4801,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingAdditionalInformationExtraReason2()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "12100073R01__Application - New -  Issued Licence 31.03.2015 8814302.pdf";
 
         // Act
@@ -4777,7 +4816,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4804,6 +4843,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingFutherConditionsExtraReason()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "12100068__Application Normal Variation Licence Issued 17062025.docx.pdf";
 
         // Act
@@ -4818,7 +4858,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4855,6 +4895,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingRecordsExtraReason()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22631079__Application – Transfer – Issued Licence – 240223.pdf";
 
         // Act
@@ -4869,7 +4910,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -4889,6 +4930,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingRecordsExtraReason4()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "12304073__Application –  New – Issued licence – November  2015 9083023.pdf";
 
         // Act
@@ -4903,7 +4945,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -4923,6 +4965,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_FindingRecordsExtraReason5()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "12504142__Application Minor Variation Issued Licence - 27052025.pdf";
 
         // Act
@@ -4937,7 +4980,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -4957,6 +5000,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenA_FindingRecordsExtraReason5()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "12504008__Application - Minor Variation - Issued Licence PDF Copy 9211405.pdf";
 
         // Act
@@ -4971,7 +5015,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -5041,6 +5085,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenB_FindingRecordsExtraReason5()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22702039__Application Formal Variation Issue Licence 30062023.pdf";
 
         // Act
@@ -5055,7 +5100,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -5166,6 +5211,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_A()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22722265__Application - new - issue licence 9393610.pdf";
 
         // Act
@@ -5180,7 +5226,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5202,6 +5248,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_C()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0270024056__Application Formal Variation Issued Licence - [11072017] - (11072017).pdf";
 
         // Act
@@ -5216,7 +5263,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5239,6 +5286,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_D()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22708052__Application - Formal Variation - Issued Licence 24.01.2017 9644004.pdf";
 
         // Act
@@ -5253,7 +5301,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5278,6 +5326,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_E()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22728270R01__Application - New - Issued Licence 24.06.2015 8918352.pdf";
 
         // Act
@@ -5292,7 +5341,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5316,6 +5365,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_F()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "ne0230003031__Application – NA New – Issued Licence-22072022.pdf";
 
         // Act
@@ -5330,7 +5380,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -5352,6 +5402,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_G()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0210000014__Application NA New Issued Licence 31-03-2021 11765884.pdf";
 
         // Act
@@ -5366,7 +5417,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5386,6 +5437,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_H()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0270024044__Application Variation Issued Licence June 2017.pdf";
 
         // Act
@@ -5410,7 +5462,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -5433,6 +5485,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_I()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0240005016__Application - Formal Variation -Application New Licence Issued 24_03_2021 00_00_00 11751498.pdf";
 
         // Act
@@ -5447,7 +5500,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5467,6 +5520,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_J()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0230001007__Application – NA New – Issued Licence-22072022.pdf";
 
         // Act
@@ -5481,7 +5535,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5501,6 +5555,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_K()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22722562R01__Application - Minor Variation -Application New Licence Issued 25_06_2019 00_00_00 10900765.pdf";
 
         // Act
@@ -5515,7 +5570,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5535,6 +5590,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_M()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0240005010__Application - New HEP Licence - Issued Licence 6 June 2013 7844848.pdf";
 
         // Act
@@ -5549,7 +5605,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5569,6 +5625,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_N()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22724199__Drax licence document - Amended 6065605.pdf";
 
         // Act
@@ -5583,7 +5640,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5603,6 +5660,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenZ_O()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "NE0270007008__Application New Issued Licence 31.03.2014 8288333.pdf";
 
         // Act
@@ -5617,7 +5675,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Single(licenceSets);
         
@@ -5637,6 +5695,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task FileWithALotOfLinkedLicenceAggregates()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22718077__Application - Minor Variation - Issued Licence 25.10.2016 9535704.pdf";
 
         // Act
@@ -5651,7 +5710,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             -1,
-            LookupConfiguration(3, 3));
+            await LookupConfigurationAsync(3, 3));
         
         Assert.Equal(2, licenceSets.Count);
         

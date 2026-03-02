@@ -877,58 +877,61 @@ public static class FormattingHelper
 
         foreach (var column in columns)
         {
-            column.Text = column.Text.Trim();
+            foreach (var word in column.Words)
+            {
+                word.Text = word.Text.Trim();
 
-            if (column.Text.Contains("‘‘"))
-            {
-                column.Text = column.Text.Replace("‘‘", doubleQuoteChar);
-            }
-            
-            if (column.Text.Contains("’’"))
-            {
-                column.Text = column.Text.Replace("’’", doubleQuoteChar);
-            }
-            
-            if (column.Text.Contains('‘'))
-            {
-                column.Text = column.Text.Replace("‘", singleQuoteChar);
-            }
-                
-            if (column.Text.Contains('’'))
-            {
-                column.Text = column.Text.Replace("’", singleQuoteChar);
-            }
-            
-            if (column.Text.Contains('“'))
-            {
-                column.Text = column.Text.Replace("“", doubleQuoteChar);
-            }
-            
-            if (column.Text.Contains('”'))
-            {
-                column.Text = column.Text.Replace("”", doubleQuoteChar);
-            }
-            
-            if (column.Text.Contains("'\""))
-            {
-                column.Text = column.Text.Replace("'\"", doubleQuoteChar);
-            }
-            
-            if (column.Text.Contains('°'))
-            {
-                column.Text =
-                    column.Text.Replace("\u00b0",
-                        asteriskString); // degree character, OCR thinks it sees it for some small text
-            }
-            
-            if (column.Text.Contains("  "))
-            {
-                column.Text = column.Text.Replace("  ", PositionConstants.SpaceString);
-            }
+                if (word.Text.Contains("‘‘"))
+                {
+                    word.Text = word.Text.Replace("‘‘", doubleQuoteChar);
+                }
 
-            if (column.Text.Contains("\"\""))
-            {
-                column.Text = column.Text.Replace("\"\"", doubleQuoteChar);
+                if (word.Text.Contains("’’"))
+                {
+                    word.Text = word.Text.Replace("’’", doubleQuoteChar);
+                }
+
+                if (word.Text.Contains('‘'))
+                {
+                    word.Text = word.Text.Replace("‘", singleQuoteChar);
+                }
+
+                if (word.Text.Contains('’'))
+                {
+                    word.Text = word.Text.Replace("’", singleQuoteChar);
+                }
+
+                if (word.Text.Contains('“'))
+                {
+                    word.Text = word.Text.Replace("“", doubleQuoteChar);
+                }
+
+                if (word.Text.Contains('”'))
+                {
+                    word.Text = word.Text.Replace("”", doubleQuoteChar);
+                }
+
+                if (word.Text.Contains("'\""))
+                {
+                    word.Text = word.Text.Replace("'\"", doubleQuoteChar);
+                }
+
+                if (word.Text.Contains('°'))
+                {
+                    word.Text =
+                        word.Text.Replace("\u00b0",
+                            asteriskString); // degree character, OCR thinks it sees it for some small text
+                }
+
+                if (word.Text.Contains("  "))
+                {
+                    word.Text = word.Text.Replace("  ", PositionConstants.SpaceString);
+                }
+
+                if (word.Text.Contains("\"\""))
+                {
+                    word.Text = word.Text.Replace("\"\"", doubleQuoteChar);
+                }
             }
         }
     }

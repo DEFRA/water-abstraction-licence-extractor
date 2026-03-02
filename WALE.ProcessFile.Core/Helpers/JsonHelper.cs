@@ -22,6 +22,47 @@ public static class JsonHelper
     {
         return JsonSerializer.Serialize(licenceSets.Values, GetSerializerOptions());
     }
+
+    public static Dictionary<string, object> MakeJsonElementDictionaryNative(
+        Dictionary<string, object> inputDictionary)
+    {
+        var nativeDictionary = new Dictionary<string, object>();
+            
+        foreach (var kvp in inputDictionary)
+        {
+            object? value;
+                
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                value = jsonElement.ValueKind switch
+                {
+                    JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
+                    JsonValueKind.Number => jsonElement.GetInt32(), // NOTE - Used to be double
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.String => jsonElement.GetString(),
+                    JsonValueKind.Object => jsonElement.GetRawText(),
+                    _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
+                };
+            }
+            else if (kvp.Value is int intValue)
+            {
+                value = intValue;
+            }
+            else if (kvp.Value is string strValue)
+            {
+                value = strValue;
+            }
+            else
+            {
+                throw new Exception($"Unknown type - {kvp.Value.GetType().Name}");
+            }
+                
+            nativeDictionary.Add(kvp.Key, value!);
+        }
+
+        return nativeDictionary;
+    }
     
     public static JsonSerializerOptions GetSerializerOptions()
     {

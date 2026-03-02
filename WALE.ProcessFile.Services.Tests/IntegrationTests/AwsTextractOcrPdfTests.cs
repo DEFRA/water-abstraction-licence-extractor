@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -6,7 +7,6 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -16,6 +16,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [Collection("AWS Textract 1")]
+[EnableParallelization] // TODO remove this if it causes an issue
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -28,9 +29,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    static AwsTextractOcrPdfTests()
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
+    private Task SetupLicenceNumbersAsync(short regionCode)
     {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+        return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -61,20 +65,23 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
-    private LookupConfiguration LookupConfiguration(int regionCode) => new(
-        LabelConfiguration.GetLabels(),
-        _fileLicenceMapping,
-        textractFixture.FirstNamesCsv,
-        regionCode);
-    
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode)
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            await textractFixture.FirstNamesCsvTask(),
+            regionCode);
+    }
+
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         var pdfService = number == 1 ? _pdfDataExtractor1 : _pdfDataExtractor3;
         
-        return pdfService.GetMatchesAsync(
+        return await pdfService.GetMatchesAsync(
             pdfFolder + fileName,
-            LookupConfiguration(regionCode),
+            await LookupConfigurationAsync(regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -83,6 +90,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task WhenA_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -195,7 +203,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1))).Last();
+            await LookupConfigurationAsync(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -214,6 +222,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults, int expectedLinkedLicenceLength)
     {
         // Act
+        await SetupLicenceNumbersAsync(3);
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         var resultList = resultFull.Matches!;
         
@@ -233,7 +242,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0,
-            LookupConfiguration(3));
+            await LookupConfigurationAsync(3));
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLinkedLicenceLength, licence.LinkedLicences.Length);

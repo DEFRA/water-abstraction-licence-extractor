@@ -1,7 +1,7 @@
 using ClosedXML.Excel;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -12,7 +12,7 @@ using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
 
-namespace WALE.Tools;
+namespace WALE.Tools._1stHalf;
 
 public static class TemplateIdentificationExtract
 {
@@ -51,11 +51,11 @@ public static class TemplateIdentificationExtract
                 }
             }
 
-            Console.WriteLine($"Found {processedFiles.Count} already processed files in CSV");
+            ConsoleHelper.WriteLine($"Found {processedFiles.Count} already processed files in CSV");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error reading processed files from CSV: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error reading processed files from CSV: {ex.Message}");
         }
 
         return processedFiles;
@@ -84,11 +84,11 @@ public static class TemplateIdentificationExtract
                 writer.WriteLine(line);
                 writer.Flush();
 
-                Console.WriteLine($"Saved result to CSV: {result.PermitNumber}");
+                ConsoleHelper.WriteLine($"Saved result to CSV: {result.PermitNumber}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing to CSV: {ex.Message}");
+                ConsoleHelper.WriteLine($"Error writing to CSV: {ex.Message}");
             }
         }
     }
@@ -130,7 +130,7 @@ public static class TemplateIdentificationExtract
 
     public static void GenerateWaterPdfsFolderInventory()
     {
-        Console.WriteLine("Starting WaterPdfs folder inventory generation...");
+        ConsoleHelper.WriteLine("Starting WaterPdfs folder inventory generation...");
 
         try
         {
@@ -140,34 +140,34 @@ public static class TemplateIdentificationExtract
 
             if (parentDirectory == null || !parentDirectory.Exists)
             {
-                Console.WriteLine($"Parent directory not found for: {OutputFolder}");
+                ConsoleHelper.WriteLine($"Parent directory not found for: {OutputFolder}");
                 return;
             }
 
-            Console.WriteLine($"Scanning parent directory: {parentDirectory.FullName}");
+            ConsoleHelper.WriteLine($"Scanning parent directory: {parentDirectory.FullName}");
 
             // Get all directories that start with "WaterPdfs"
             var waterPdfsFolders = parentDirectory.GetDirectories("WaterPdfs*");
 
             if (waterPdfsFolders.Length == 0)
             {
-                Console.WriteLine("No folders starting with 'WaterPdfs' found.");
+                ConsoleHelper.WriteLine("No folders starting with 'WaterPdfs' found.");
                 return;
             }
 
-            Console.WriteLine($"Found {waterPdfsFolders.Length} folder(s) starting with 'WaterPdfs'");
+            ConsoleHelper.WriteLine($"Found {waterPdfsFolders.Length} folder(s) starting with 'WaterPdfs'");
 
             // Collect all file information
             var fileInventory = new List<(string FolderName, string FileName, string PermitNumber, long FileSize, DateTime ModifiedTime)>();
 
             foreach (var folder in waterPdfsFolders.Where(d => d.Name != "WaterPdfsDuplicates"))
             {
-                Console.WriteLine($"Processing folder: {folder.Name}");
+                ConsoleHelper.WriteLine($"Processing folder: {folder.Name}");
 
                 try
                 {
                     var files = folder.GetFiles("*.pdf", SearchOption.AllDirectories);
-                    Console.WriteLine($"  Found {files.Length} file(s) in {folder.Name}");
+                    ConsoleHelper.WriteLine($"  Found {files.Length} file(s) in {folder.Name}");
 
                     foreach (var file in files)
                     {
@@ -184,7 +184,7 @@ public static class TemplateIdentificationExtract
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"  Error processing folder {folder.Name}: {ex.Message}");
+                    ConsoleHelper.WriteLine($"  Error processing folder {folder.Name}: {ex.Message}");
                 }
             }
 
@@ -205,24 +205,24 @@ public static class TemplateIdentificationExtract
                 }
             }
 
-            Console.WriteLine($"Inventory CSV created successfully: {csvFilePath}");
-            Console.WriteLine($"Total files processed: {fileInventory.Count}");
+            ConsoleHelper.WriteLine($"Inventory CSV created successfully: {csvFilePath}");
+            ConsoleHelper.WriteLine($"Total files processed: {fileInventory.Count}");
 
             // Print summary by folder
             var summary = fileInventory.GroupBy(f => f.FolderName)
                 .Select(g => new { FolderName = g.Key, FileCount = g.Count(), TotalSize = g.Sum(f => f.FileSize) });
 
-            Console.WriteLine("\nSummary by folder:");
+            ConsoleHelper.WriteLine("\nSummary by folder:");
             
             foreach (var item in summary)
             {
-                Console.WriteLine($"  {item.FolderName}: {item.FileCount} files, {item.TotalSize:N0} bytes");
+                ConsoleHelper.WriteLine($"  {item.FolderName}: {item.FileCount} files, {item.TotalSize:N0} bytes");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error generating WaterPdfs folder inventory: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            ConsoleHelper.WriteLine($"Error generating WaterPdfs folder inventory: {ex.Message}");
+            ConsoleHelper.WriteLine($"Stack trace: {ex.StackTrace}");
         }
     }
 
@@ -243,11 +243,11 @@ public static class TemplateIdentificationExtract
         try
         {
             workbook.SaveAs(filePath);
-            Console.WriteLine($"Excel file successfully created at: {filePath}");
+            ConsoleHelper.WriteLine($"Excel file successfully created at: {filePath}");
         }
         catch (IOException ex)
         {
-            Console.WriteLine($"Error saving file: {ex.Message}");
+            ConsoleHelper.WriteLine($"Error saving file: {ex.Message}");
         }
     }
 
@@ -287,11 +287,11 @@ public static class TemplateIdentificationExtract
             })
             .ToList();
 
-        Console.WriteLine($"Total PDF files: {allPdfFiles.Count}, Already processed: {processedFiles.Count}, Remaining: {filesToProcess.Count}");
+        ConsoleHelper.WriteLine($"Total PDF files: {allPdfFiles.Count}, Already processed: {processedFiles.Count}, Remaining: {filesToProcess.Count}");
 
         if (filesToProcess.Count == 0)
         {
-            Console.WriteLine("All files have been processed!");
+            ConsoleHelper.WriteLine("All files have been processed!");
             return returnList;
         }
 
@@ -303,29 +303,14 @@ public static class TemplateIdentificationExtract
             .Select(g => g.Select(x => x.templateFile).ToList())
             .ToList();
 
-        Console.WriteLine($"Processing {filesToProcess.Count} files in {batches.Count} batches of {batchSize}");
-
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
+        ConsoleHelper.WriteLine($"Processing {filesToProcess.Count} files in {batches.Count} batches of {batchSize}");
         
-        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
+    
+        var cacheService = new ApiCacheService(httpClient);
+        var outputService = new ApiOutputService(httpClient);
         
-        var cacheService = new DatabaseCacheService(
-            databaseReadService,
-            databaseAddService,
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
-        
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
@@ -334,7 +319,7 @@ public static class TemplateIdentificationExtract
         
         foreach (var batch in batches)
         {
-            Console.WriteLine($"Processing batch with {batch.Count} files...");
+            ConsoleHelper.WriteLine($"Processing batch with {batch.Count} files...");
 
             var templateTypeServices = new List<TemplateTypeIdentifierService>();
 
@@ -390,7 +375,7 @@ public static class TemplateIdentificationExtract
 
                     try
                     {
-                        Console.WriteLine($"Processing file: {pdfFileName}");
+                        ConsoleHelper.WriteLine($"Processing file: {pdfFileName}");
 
                         // Check if file exists
                         var fullPath = Path.Combine(KeyConfig.PdfFolder, pdfFileName);
@@ -399,13 +384,13 @@ public static class TemplateIdentificationExtract
                             throw new FileNotFoundException($"PDF file not found: {fullPath}");
                         }
 
-                        Console.WriteLine($"File exists, attempting to identify template...");
+                        ConsoleHelper.WriteLine($"File exists, attempting to identify template...");
 
                         // Use the TemplateTypeIdentifierService to identify the template
                         // The service will use configurations from RuleConfiguration folder internally
                         var templateResult = await templateTypeService.IdentifyTemplateTypeAsync(fullPath);
 
-                        Console.WriteLine($"Template identification completed successfully for {pdfFileName}");
+                        ConsoleHelper.WriteLine($"Template identification completed successfully for {pdfFileName}");
 
                         TemplateFinderInput result;
                         if (templateResult != null)
@@ -448,15 +433,15 @@ public static class TemplateIdentificationExtract
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error processing file {pdfFileName}:");
-                        Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-                        Console.WriteLine($"  Message: {ex.Message}");
-                        Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
+                        ConsoleHelper.WriteLine($"Error processing file {pdfFileName}:");
+                        ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
+                        ConsoleHelper.WriteLine($"  Message: {ex.Message}");
+                        ConsoleHelper.WriteLine($"  Stack Trace: {ex.StackTrace}");
 
                         if (ex.InnerException != null)
                         {
-                            Console.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
-                            Console.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+                            ConsoleHelper.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
+                            ConsoleHelper.WriteLine($"  Inner Message: {ex.InnerException.Message}");
                         }
 
                         // Return a failed result for tracking
@@ -488,7 +473,7 @@ public static class TemplateIdentificationExtract
                 .ToList();
 
             returnList.AddRange(validResults!);
-            Console.WriteLine($"Batch completed. Processed {validResults.Count} files successfully.");
+            ConsoleHelper.WriteLine($"Batch completed. Processed {validResults.Count} files successfully.");
         }
 
         return returnList;

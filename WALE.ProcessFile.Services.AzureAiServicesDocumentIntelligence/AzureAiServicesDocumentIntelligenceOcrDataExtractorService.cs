@@ -113,7 +113,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         const int minFontSize = 15;
         const int considerableOverlapAmount = 19;
 
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLinesInFormat,
             true,
             pageNumber,
@@ -142,7 +142,32 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
+            ConsoleHelper.WriteLine($"ERROR - {ex.GetType().Name} - {ex.Message}");
+            
+            if (ex is RequestFailedException ocrEx)
+            {
+                var errorCode = ocrEx.Message;
+
+                if (errorCode.Contains("InvalidContentDimensions", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var dataEmpty = JsonSerializer.Serialize(
+                        new List<DocumentIntelligenceLineWithWords>(),
+                        JsonHelper.GetSerializerOptions());
+
+                    if (isPageScreenshot)
+                    {
+                        await cacheService.SaveOcrScreenshotTextAsync(request, dataEmpty);                
+                    }
+                    else
+                    {
+                        await cacheService.SaveOcrImageTextAsync(request, dataEmpty);                
+                    }
+                        
+                    return [];
+                }
+
+                throw;
+            }
             
             if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase)
                 && !imageReference.Contains("-jpg", StringComparison.InvariantCultureIgnoreCase))

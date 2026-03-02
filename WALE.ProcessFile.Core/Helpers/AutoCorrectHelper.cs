@@ -89,7 +89,6 @@ public static class AutoCorrectHelper
                 }
 
                 column.Words = newWords;
-                column.Text = string.Join(' ', newWords.Select(w => w.Text));
             }
         }
     }
@@ -244,7 +243,7 @@ public static class AutoCorrectHelper
         return word;
     }
 
-    public static string? AutoCorrectText(
+    public static async Task<string?> AutoCorrectTextAsync(
         string? lineText,
         bool removeFirstWordIfLowercase,
         bool checkDictionary)
@@ -309,7 +308,12 @@ public static class AutoCorrectHelper
                     continue;
                 }
 
-                var wordSpeltCorrectly = !checkDictionary || CustomDictionary.Check(word) || Dictionary.Check(word);
+                var wordSpeltCorrectly = true;
+
+                if (checkDictionary)
+                {
+                    wordSpeltCorrectly = CustomDictionary.Check(word) || Dictionary.Check(word);
+                }
                 
                 if (
                     !string.IsNullOrWhiteSpace(nextWord)
@@ -319,13 +323,17 @@ public static class AutoCorrectHelper
                     && (word.Length == 1 || !wordSpeltCorrectly))
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
-
-                    if (checkDictionary && (CustomDictionary.Check(removedSpaceCombinedWord) || Dictionary.Check(removedSpaceCombinedWord)))
+                    
+                    if (checkDictionary)
                     {
-                        newWords.Add(removedSpaceCombinedWord);
-                        skipNextWord = true;
+                        if (CustomDictionary.Check(removedSpaceCombinedWord)
+                            || Dictionary.Check(removedSpaceCombinedWord))
+                        {
+                            newWords.Add(removedSpaceCombinedWord);
+                            skipNextWord = true;
 
-                        continue;
+                            continue;
+                        }
                     }
                 }
 

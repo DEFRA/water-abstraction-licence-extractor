@@ -7,17 +7,7 @@ public interface ICacheService
 {
     public bool UsesDatabase { get; set; }
     
-    public string? CacheFolder { get; set; }
-    
-    public string? Host { get; set; }
-    
-    public int Port { get; set; }
-    
-    public string? DatabaseName { get; set; }
-    
-    public string? Username { get; set; }
-    
-    public string? Password { get; set; }
+    public string? CacheFolderOrUrl { get; set; }
     
     public Task SetupAsync();
 
@@ -38,7 +28,7 @@ public interface ICacheService
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
@@ -61,7 +51,7 @@ public interface ICacheService
     Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request);
 
-    public Task SaveImageOnPageAsync(
+    public Task<int> SaveImageOnPageAsync(
         byte[] bytes,
         int width,
         int height,
@@ -76,11 +66,11 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     
-    public Task SaveNoOcrImagesMetadata(
+    public Task SaveNoOcrImagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
     
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines);
 
@@ -112,4 +102,13 @@ public interface ICacheService
         string pdfFilePath,
         string noOcrServiceName,
         int processRunId);
+    
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
+
+    Task<NaldDataCollection> GetNaldDataAsync(short regionCode);
+    
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode);
+    
+    Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> 
+        GetNaldLicenceNumbersAsync(short? regionCode);
 }

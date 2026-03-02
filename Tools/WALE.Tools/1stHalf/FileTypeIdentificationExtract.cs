@@ -1,8 +1,8 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -15,7 +15,7 @@ using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
-namespace WALE.Tools;
+namespace WALE.Tools._1stHalf;
 
 /// <summary>
 /// Tool to identify file types from output folder files using rule engine
@@ -30,31 +30,19 @@ public static class FileTypeIdentificationExtract
     /// </summary>
     public static async Task GenerateFileTypeIdentificationAsync()
     {
-        Console.WriteLine("Starting file type identification...");
-        var postgresDataSourceProvider = new NpgsqlDataSourceProvider(
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
+        ConsoleHelper.WriteLine("Starting file type identification...");
+        
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
     
-        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        var databaseReadService = new PostgresReadService(postgresDataSourceProvider);
-        var databaseAddService = new PostgresWriteService(postgresDataSourceProvider);
-    
-        var cacheService = new DatabaseCacheService(
-            databaseReadService,
-            databaseAddService,
-            KeyConfig.PostgresHost,
-            KeyConfig.PostgresPort,
-            KeyConfig.PostgresDbName,
-            KeyConfig.PostgresUsername,
-            KeyConfig.PostgresPassword);
         
-        var outputService = new DatabaseOutputService(databaseReadService, databaseAddService);
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
+    
+        var cacheService = new ApiCacheService(httpClient);
+        var outputService = new ApiOutputService(httpClient);
+        
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         
         // Create 10 instances of PdfDataExtractorService for parallel processing
@@ -102,7 +90,7 @@ public static class FileTypeIdentificationExtract
 
         // Process all files in the output folder
         var labels = LicenceReaderConfiguration.GetLabels();
-        Console.WriteLine($"Retrieved {labels.Count} label groups from configuration");
+        ConsoleHelper.WriteLine($"Retrieved {labels.Count} label groups from configuration");
 
         var configuration = new LookupConfiguration(
             labels,

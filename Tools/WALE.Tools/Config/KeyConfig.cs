@@ -337,4 +337,19 @@ public static class KeyConfig
             return _tesseractExeDirectory;
         }
     }
+
+    private static string? _apiBaseUrl;
+    
+    public static string ApiBaseUrl{
+        get
+        {
+            if (_apiBaseUrl != null)
+            {
+                return _apiBaseUrl;
+            }
+
+            _apiBaseUrl = Config["ApiBaseUrl"]!;
+            return _apiBaseUrl;
+        }
+    }
 }

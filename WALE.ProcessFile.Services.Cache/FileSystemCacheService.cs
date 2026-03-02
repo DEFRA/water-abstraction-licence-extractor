@@ -11,21 +11,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 {
     public bool UsesDatabase { get; set; } = false;
 
-    public string? CacheFolder { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
-
-    public string? Host { get; set; } = null;
-    
-    public int Port { get; set; }
-
-    public string? DatabaseName { get; set; } = null;
-    
-    public string? Username { get; set; } = null;
-    
-    public string? Password { get; set; } = null;
+    public string? CacheFolderOrUrl { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
     public Task SetupAsync()
     {
-        Directory.CreateDirectory(CacheFolder!);
+        Directory.CreateDirectory(CacheFolderOrUrl!);
         return Task.CompletedTask;
     }
 
@@ -89,7 +79,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return Task.FromResult(outputFilename);
     }
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
         // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
@@ -100,7 +90,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
         files = files.Where(f => f.StartsWith("page-") && f.Contains("-image-")).ToList();
         
-        var returnList = new List<(int pageNumber, int imageNumber, string extension, int width, int height)>();
+        var returnList = new List<ImageDetails>();
 
         foreach (var filename in files)
         {
@@ -116,7 +106,14 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             
             var imageNumber = int.Parse(parts[1]);
 
-            returnList.Add((pageNumber, imageNumber, extension, width, height));
+            returnList.Add(new ImageDetails
+            {
+                pageNumber = pageNumber,
+                imageNumber = imageNumber,
+                extension = extension,
+                width = width,
+                height = height
+            });
         }
 
         return Task.FromResult(returnList);
@@ -321,7 +318,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
         catch
         {
-            Console.WriteLine($"MALFORMED JSON ERROR - {content}");
+            ConsoleHelper.WriteLine($"MALFORMED JSON ERROR - {content}");
             throw;
         }
     }
@@ -343,10 +340,12 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
         var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, noOcrServiceName, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
+
+        return bytes.Length;
     }
     
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
@@ -372,14 +371,14 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return request;
     }
 
-    public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         return File.WriteAllTextAsync(
             GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filepath!)),
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
@@ -389,11 +388,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         var outputFilename = $"{txtCacheFolder}/page-{request.PageNumber}.json";
 
-        var data = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
-        
         await File.WriteAllTextAsync(
             outputFilename,
-            data);
+            pageLines);
         
         return request;
     }
@@ -451,7 +448,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         Directory.CreateDirectory(folder);
     
         var outputFilename = $"{folder}/temporary-ocr-page-{request.PageNumber}-image-{request.ImageNumber}.json";
-        Console.WriteLine($"Writing to {fileCacheFolder}");
+        ConsoleHelper.WriteLine($"Writing to {fileCacheFolder}");
         
         return File.WriteAllTextAsync(
             outputFilename,
@@ -480,9 +477,29 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             processRunId);
     }
 
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(string pdfFilePath)
     {
-        var fileOutputFolder = Path.Combine(CacheFolder!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
+        var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);
         return fileOutputFolder.Trim();
     }
     

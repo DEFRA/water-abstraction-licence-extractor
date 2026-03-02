@@ -59,10 +59,13 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                if (CompanyName.AnyIsCompanyOrPersonalName(lines, request.label, lineNumbersAreDescending, request.isOcr, request.lookupConfiguration,
-                    out var companyNameLines))
+                var result1 = await CompanyName.AnyIsCompanyOrPersonalNameAsync(lines, request.label, lineNumbersAreDescending,
+                    request.isOcr, request.lookupConfiguration);
+                
+                if (result1.Item1)
                 {
-                    companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines!);
+                    var companyNameLines = result1.Item2;
+                    companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines);
 
                     if (companyNameLines.Count > 0)
                     {
@@ -87,7 +90,7 @@ public static class BaseMethod
                 break;
             case LicenceNumber.Constant:
                 {
-                    var (success, licenceNumberLines) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
                     if (success)
                     {
                         licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -108,7 +111,7 @@ public static class BaseMethod
                 break;
             case LicenceNumberFilename.Constant:
                 {
-                    var (success, licenceNumberLines2) = await LicenceNumber.AnyIsLicenceNumberAsync(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
                     if (success)
                     {
                         var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
@@ -122,7 +125,17 @@ public static class BaseMethod
                                 continue;
                             }
 
-                            licenceNumberLine.Columns[0].Text = dmsFileData!.DestinationFileName!;
+                            var coords = licenceNumberLine
+                                .Columns
+                                .First()
+                                .Words
+                                .First()
+                                .Coordinates;
+                            
+                            licenceNumberLine.Columns[0].Words.Clear();
+                            licenceNumberLine.Columns[0].Words.Add(
+                                new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
+                            
                             labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
 
                             returnList.Add(labelGroupResult);

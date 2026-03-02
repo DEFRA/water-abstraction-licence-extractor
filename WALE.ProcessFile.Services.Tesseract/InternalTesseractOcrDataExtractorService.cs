@@ -75,7 +75,7 @@ public class InternalTesseractOcrDataExtractorService(
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - {e}");
                 // TODO log
             }
         }

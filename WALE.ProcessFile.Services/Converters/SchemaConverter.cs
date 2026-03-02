@@ -1976,7 +1976,7 @@ lookupConfiguration);
                         || yearlyQuantity == null
                         || instantRate == null)
                     {
-                        Console.WriteLine("INFO - Table was not in the expected format. Skipping");
+                        ConsoleHelper.WriteLine("INFO - Table was not in the expected format. Skipping");
                         continue;
                     }
                     

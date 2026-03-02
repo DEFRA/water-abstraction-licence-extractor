@@ -97,7 +97,7 @@ public class TesseractOcrDataExtractorService(
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
                     // TODO - Log
-                    Console.WriteLine("ERROR - Tesseract - Transient error occured (see above)");
+                    ConsoleHelper.WriteLine($"ERROR - {Name} - Transient error occured (see above)");
 
                     // Don't cache, should work next time
                     canSave = false;
@@ -146,7 +146,7 @@ public class TesseractOcrDataExtractorService(
         const int maxPositiveDiffBetweenWordTop = 100;
         const int considerableOverlapAmount = 3; // TODO check and tweak
 
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLines,
             false,
             pageNumber,
@@ -173,10 +173,16 @@ public class TesseractOcrDataExtractorService(
 
         if (!showDebugMessages)
         {
-            Console.WriteLine($"INFO - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
+            ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
         }
         
         var fileMode = isDbBased ? "Database" : "File";
+
+        if (string.IsNullOrWhiteSpace(cacheService.CacheFolderOrUrl))
+        {
+            ConsoleHelper.WriteLine("ERROR - TesseractOcr - Tesseract Exe cannot be used when using DB cache locally");
+            throw new Exception("Tesseract Exe cannot be used when using DB cache locally");
+        }
         
         var argumentsList = string.Join(" ", new List<string>
         {
@@ -189,14 +195,9 @@ public class TesseractOcrDataExtractorService(
             $"\"{pdfFilePath}\"",
             isPageScreenshot.ToString(),
             processRunId.ToString(),
-            $"\"{cacheService.CacheFolder}\"",
+            $"\"{cacheService.CacheFolderOrUrl}\"",
             $"\"{outputService.OutputFolder}\"",
-            $"\"{tessDataPath}\"",
-            $"\"{cacheService.Host ?? "N/A"}\"",
-            $"\"{cacheService.Port}\"",
-            $"\"{cacheService.DatabaseName ?? "N/A"}\"",
-            $"\"{cacheService.Username ?? "N/A"}\"",
-            $"\"{cacheService.Password ?? "N/A"}\""
+            $"\"{tessDataPath}\""
         });
         
         var proc = Process.Start(
@@ -226,21 +227,21 @@ public class TesseractOcrDataExtractorService(
 
                 if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
                 {
-                    Console.WriteLine($"WARNING - Tesseract - Failed with error: {line}");
+                    ConsoleHelper.WriteLine($"WARNING - {Name} - Failed with error: {line}");
                     return ProcessResult.RepeatableError;
                 }
                 
                 proc.Kill();
 
                 var exceptionMessage = line[line.IndexOf(errorPrefix, StringComparison.Ordinal)..];
-                Console.WriteLine($"ERROR - Tesseract - External Tesseract process gave error: {exceptionMessage}");
+                ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
                 
                 return ProcessResult.UnknownOrTransientError;
             }
 
             if (showDebugMessages)
             {
-                Console.WriteLine($"DEBUG - Tesseract (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
+                ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
             }
         }
         
@@ -249,7 +250,7 @@ public class TesseractOcrDataExtractorService(
             return ProcessResult.Ok;
         }
         
-        Console.WriteLine($"ERROR - External process errored with exit code {proc.ExitCode}");
+        ConsoleHelper.WriteLine($"ERROR - External process errored with exit code {proc.ExitCode}");
         // TODO - Log error
         
         return ProcessResult.UnknownOrTransientError;

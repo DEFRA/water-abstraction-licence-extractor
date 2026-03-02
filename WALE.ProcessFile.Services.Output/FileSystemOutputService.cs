@@ -49,7 +49,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         ];
     }
     
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun)
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
     {
         // This mode doesn't need to do anything here
         return Task.FromResult(processRun);
@@ -147,7 +147,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         return images.Sum(i => i.Bitmap.ByteCount);
     }
-    
+
+    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+        int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
     {
         using var image = SKImage.FromBitmap(bitmap);

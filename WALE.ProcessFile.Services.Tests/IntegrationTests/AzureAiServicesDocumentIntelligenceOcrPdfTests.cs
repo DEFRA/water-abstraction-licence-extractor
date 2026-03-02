@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -8,7 +9,6 @@ using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -17,6 +17,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 [Collection("First Names 5")]
 public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
@@ -30,11 +31,9 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    static AzureAiServicesDocumentIntelligenceOcrPdfTests()
-    {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
-    }
-
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -93,13 +92,21 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
     
-    private LookupConfiguration LookupConfiguration(int regionCode) => new(
-        LabelConfiguration.GetLabels(),
-        _fileLicenceMapping,
-        firstNamesFixture.FirstNamesCsv,
-        regionCode);
+    private Task SetupLicenceNumbersAsync(short regionCode)
+    {
+        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
+    }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode)
+    {
+        return new LookupConfiguration(
+            LabelConfiguration.GetLabels(),
+            _fileLicenceMapping,
+            await firstNamesFixture.FirstNamesCsvTask(),
+            regionCode);
+    }
+    
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
@@ -107,9 +114,9 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var service = number == 1 ? _pdfDataExtractor : _pdfDataExtractor2;
         if (number == 3) service = _pdfDataExtractor3;
         
-        return service.GetMatchesAsync(
+        return await service.GetMatchesAsync(
             pdfFolder + fileName,
-            LookupConfiguration(regionCode),
+            await LookupConfigurationAsync(regionCode),
             [pdfFolder + fileName],
             0);
     }
@@ -118,6 +125,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_LabelOver2Lines()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
         
         // Act
@@ -196,7 +204,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0,
-            LookupConfiguration(3));
+            await LookupConfigurationAsync(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -240,6 +248,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
         
         // Act
@@ -262,7 +271,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(3))).Last();
+            await LookupConfigurationAsync(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -272,6 +281,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly2()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22632235__Application Renewal - Licence Issued - 11112024.pdf";
         
         // Act
@@ -302,7 +312,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(3))).Last();
+            await LookupConfigurationAsync(3))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -312,6 +322,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
@@ -387,7 +398,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1))).Last();
+            await LookupConfigurationAsync(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -398,6 +409,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task VeryFaintText_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
@@ -499,7 +511,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1))).Last();
+            await LookupConfigurationAsync(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
@@ -509,6 +521,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task X_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
@@ -626,7 +639,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1))).Last();
+            await LookupConfigurationAsync(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -636,6 +649,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Succession_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -702,7 +716,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1))).Last();
+            await LookupConfigurationAsync(1))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -712,6 +726,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenZ_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
         
         // Act
@@ -728,7 +743,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -742,6 +757,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -830,7 +846,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -847,6 +863,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -941,7 +958,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -957,6 +974,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z1_X2_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
@@ -1003,7 +1021,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1019,6 +1037,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z2_X3_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
@@ -1065,7 +1084,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1078,6 +1097,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z3_X3_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "08-36-19-S-0101 5826949.PDF";
 
         // Act
@@ -1104,7 +1124,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1124,6 +1144,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task ScannedFileUploaded_ThenFindXuncorn_DebuggingTest()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "Licence - Old 6082700.PDF";
 
         if (File.Exists("Licence - Old 6082700/PdfPig/Text/cache-metadata.json"))
@@ -1158,6 +1179,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_YorkshireWaterCompany1_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "2-26-32-126 6937559.PDF";
 
         // Act
@@ -1284,7 +1306,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1389,6 +1411,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_YorkshireWaterCompany2_ThenY()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "2-27-29-012 7003124.PDF";
 
         // Act
@@ -1524,7 +1547,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1578,6 +1601,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22713185__Non-Application Licence Documents (20.12.1996).pdf";
 
         // Act
@@ -1592,7 +1616,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1622,7 +1646,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(3));
+            await LookupConfigurationAsync(3));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1635,6 +1659,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt44_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "2671311013__Non-Application Licence Document (09.01.1985).pdf";
 
         // Act
@@ -1649,7 +1674,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1662,6 +1687,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_LinkedLicenceLooksSuspect_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
 
         // Act
@@ -1676,7 +1702,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _pdfDataExtractor2,
             TestConfig.PdfFolder2,
             0,
-            LookupConfiguration(2));
+            await LookupConfigurationAsync(2));
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

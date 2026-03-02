@@ -23,9 +23,12 @@ public class LabelToMatch
     public IReadOnlyList<string>? MustContain { get; set; }
     public int? MinimumSubMatches { get; init; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public MultipleServiceMatchBehaviour MultipleServiceMatchBehaviour { get; init; } =
         MultipleServiceMatchBehaviour.UseLastServiceResult;
     public bool CanGoOverPageBoundary { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LabelPosition Position { get; set; }
     public string? RelatedCategoryName { get; init; }
     public string? RelatedName { get; init; }
@@ -41,6 +44,8 @@ public class LabelToMatch
     public int PreviousLinesToFetch { get; init; } = 2;
     public int NextLinesToFetch { get; init; } = 4;
     public bool DoNotTrimLines { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
     public bool FindMultipleOnSingleLine { get; init; }
         

@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -6,7 +7,6 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.PdfPig;
@@ -16,6 +16,7 @@ using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 [Collection("First Names 2")]
 public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
@@ -29,9 +30,12 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    static TessaractOcrPdfTests()
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
+    private Task SetupLicenceNumbersAsync(short regionCode)
     {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -105,16 +109,16 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private LookupConfiguration LookupConfiguration(int regionCode)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode)
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            firstNamesFixture.FirstNamesCsv,
+            await firstNamesFixture.FirstNamesCsvTask(),
             regionCode);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
         string f;
         IPdfDataExtractorService extractor;
@@ -137,9 +141,9 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 throw new Exception("Number not known");
         }
         
-        return extractor.GetMatchesAsync(
+        return await extractor.GetMatchesAsync(
             f + fileName,
-            LookupConfiguration(regionCode),
+            await LookupConfigurationAsync(regionCode),
             [f + fileName],
             0);
     }
@@ -148,6 +152,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -255,7 +260,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -268,6 +273,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Alternate_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
@@ -314,7 +320,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -336,6 +342,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task FaintText_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
@@ -378,7 +385,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -398,6 +405,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "34_236CA_LICENCE 8463615 (2007).pdf";
 
         // Act
@@ -446,7 +454,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -462,6 +470,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "original licence (12.03.1975).PDF";
 
         // Act
@@ -507,7 +516,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -521,6 +530,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task JMStrongAndPartners_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence Original 5796052.PDF";
 
         // Act
@@ -569,7 +579,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -584,6 +594,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task CroxleyHallFarm_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "28-39-28-0507 5609942.PDF";
 
         // Act
@@ -635,7 +646,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -653,6 +664,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task MRJEWard_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6081901.PDF";
 
         // Act
@@ -704,7 +716,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -722,6 +734,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Original Licence 5646512.PDF";
 
         // Act
@@ -772,7 +785,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);
@@ -793,6 +806,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ4_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
@@ -842,7 +856,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -855,6 +869,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ6_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document Licence document 28112002.PDF";
 
         // Act
@@ -903,7 +918,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -921,6 +936,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ5_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6083958.PDF";
 
         // Act
@@ -950,7 +966,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup); // NOTE - There are a few in this licence, but OCR doesnt read right
         // The one it does read (25/68/5/7) cant be found in NALD
@@ -967,6 +983,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ2_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document [Licence] (25112008).PDF";
 
         // Act
@@ -1011,7 +1028,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1024,6 +1041,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ3_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
@@ -1061,7 +1079,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1075,6 +1093,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Y_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Original 5809134.PDF";
 
         // Act
@@ -1101,7 +1120,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1119,6 +1138,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task X_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
@@ -1168,7 +1188,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1181,6 +1201,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AttachedSticker_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence Original 5652046.pdf";
 
         // Act
@@ -1222,7 +1243,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1235,6 +1256,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenIsSuccession_ThenNotFound()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -1274,7 +1296,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1287,6 +1309,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -1320,7 +1343,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1338,6 +1361,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task ReallyOldPrinting_WhenCantBeRead_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Application New Licence Issued - 22-07-1966 - 22-07-1966.pdf";
 
         // Act
@@ -1367,7 +1391,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1390,6 +1414,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task CantLoadImage_NearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "permit_01_01_1998.pdf";
 
         // Act
@@ -1428,7 +1453,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1446,6 +1471,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AttachedStickerDifferent_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "2938010008 5641759.pdf";
 
         // Act
@@ -1484,7 +1510,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1497,6 +1523,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task SingleWordCompany_WhenOcrSameLineSingleWord_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
@@ -1542,7 +1569,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1555,6 +1582,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task EstateCompany_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (22.05.2001).PDF";
 
         // Act
@@ -1601,7 +1629,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1614,6 +1642,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Handsigned_WhenCantBeReadByTesseract_ThenDoesNotGiveResult()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
 
         // Act
@@ -1644,7 +1673,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1658,6 +1687,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task VeryFaintText_WhenCantBeReadByTesseract_ThenDoesNotGiveResult()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
@@ -1695,7 +1725,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1721,6 +1751,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Z_X_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "08-36-19-S-0130 5827009.PDF";
 
         // Act
@@ -1772,7 +1803,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1790,6 +1821,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task A1_B2_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (12.09.1979).pdf";
 
         // Act
@@ -1821,7 +1853,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1834,6 +1866,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task A3_B4_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "Non-Application Licence Document (14.09.1992).PDF";
 
         // Act
@@ -1870,7 +1903,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             TestConfig.PdfFolder,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
 
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Equal("283922427-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
@@ -1893,6 +1926,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AAA3_B4_ThenFoundCorrectly()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         // Act
@@ -1922,7 +1956,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined4,
             TestConfig.PdfFolder4,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
@@ -1938,6 +1972,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task FileWithImageWithSmallDimensions()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12202043__Licence - Signed Addendum 6431587.pdf";
 
         // Act
@@ -1971,7 +2006,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined4,
             TestConfig.PdfFolder4,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12202043-LV20110419", agreedSchemaLicenceGroup[0].LicenceSetId);

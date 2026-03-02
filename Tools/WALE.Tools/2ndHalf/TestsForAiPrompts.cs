@@ -17,7 +17,7 @@ using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 
-namespace WALE.Tools;
+namespace WALE.Tools._2ndHalf;
 
 public static class TestsForAiPrompts
 {
@@ -73,61 +73,61 @@ public static class TestsForAiPrompts
                     pdfFilename,
                     pageImageGroups);
                 
-                Console.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
+                ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 
                 var allDocumentText = await GetDocumentTextAsync(
                     chatClient,
                     modelName,
                     imagePrompts);
 
-                Console.WriteLine($"Found document text - {allDocumentText?.Length} lines");
+                ConsoleHelper.WriteLine($"Found document text - {allDocumentText?.Length} lines");
                 
                 if (string.IsNullOrEmpty(allDocumentText))
                 {
-                    Console.WriteLine("Moving on to the next record");
+                    ConsoleHelper.WriteLine("Moving on to the next record");
                     break;
                 }
                 
-                Console.WriteLine("Looking up abstraction limits section");
+                ConsoleHelper.WriteLine("Looking up abstraction limits section");
                 
                 var abstractionLimitsSectionText = await GetAbstractionLimitsTextAsync(
                     chatClient,
                     modelName,
                     allDocumentText);
 
-                Console.WriteLine($"Found abstraction limits section - {abstractionLimitsSectionText?.Length} lines");
+                ConsoleHelper.WriteLine($"Found abstraction limits section - {abstractionLimitsSectionText?.Length} lines");
                 
                 if (string.IsNullOrEmpty(abstractionLimitsSectionText))
                 {
-                    Console.WriteLine("Moving on to the next record");
+                    ConsoleHelper.WriteLine("Moving on to the next record");
                     break;
                 }
                 
-                Console.WriteLine("Looking up points");
+                ConsoleHelper.WriteLine("Looking up points");
                 var pointsTask = GetPointsAsync(chatClient, modelName, allDocumentText);
                 
-                Console.WriteLine("Looking up purposes");
+                ConsoleHelper.WriteLine("Looking up purposes");
                 var purposesTask = GetPurposesAsync(chatClient, modelName, allDocumentText);
                 
-                Console.WriteLine("Looking up licence version");
+                ConsoleHelper.WriteLine("Looking up licence version");
                 var licenceVersionTask = GetLicenceVersionAsync(chatClient, modelName, allDocumentText);
                 
-                Console.WriteLine("Looking up general licence data");
+                ConsoleHelper.WriteLine("Looking up general licence data");
                 var baseLicenceDataTask = GetBaseLicenceDataAsync(chatClient, modelName, allDocumentText);
                 
-                Console.WriteLine("Looking up means of abstraction");
+                ConsoleHelper.WriteLine("Looking up means of abstraction");
                 var meansOfAbstractionTask = GetMeansOfAbstractionAsync(chatClient, modelName, allDocumentText);
                 
-                Console.WriteLine("Looking up periods of abstraction");
+                ConsoleHelper.WriteLine("Looking up periods of abstraction");
                 var periodsOfAbstractionTask = GetPeriodsOfAbstractionAsync(chatClient, modelName, allDocumentText);
 
                 var points = await pointsTask;
-                Console.WriteLine($"Found {points.Length} points");
+                ConsoleHelper.WriteLine($"Found {points.Length} points");
                 
                 var purposes = await purposesTask;
-                Console.WriteLine($"Found {purposes.Length} purposes");
+                ConsoleHelper.WriteLine($"Found {purposes.Length} purposes");
                 
-                Console.WriteLine("Looking up individual limits");
+                ConsoleHelper.WriteLine("Looking up individual limits");
                 var individualLimitsTask = GetIndividualAbstractionLimitsAsync(
                     chatClient,
                     modelName,
@@ -135,7 +135,7 @@ public static class TestsForAiPrompts
                     points,
                     purposes);
                 
-                Console.WriteLine("Looking up aggregate limits");
+                ConsoleHelper.WriteLine("Looking up aggregate limits");
                 var aggregateLimitsTask = GetAggregateLimitsAsync(
                     chatClient,
                     modelName,
@@ -144,22 +144,22 @@ public static class TestsForAiPrompts
                     purposes);
                 
                 var individualLimits = await individualLimitsTask;
-                Console.WriteLine($"Found {individualLimits.Length} individual abstraction limit(s)");
+                ConsoleHelper.WriteLine($"Found {individualLimits.Length} individual abstraction limit(s)");
                 
                 var aggregateLimits = await aggregateLimitsTask;
-                Console.WriteLine($"Found {aggregateLimits.Length} aggregate limit(s)");
+                ConsoleHelper.WriteLine($"Found {aggregateLimits.Length} aggregate limit(s)");
                 
                 var meansOfAbstraction = await meansOfAbstractionTask;
-                Console.WriteLine($"Found {meansOfAbstraction.Length} means of abstraction");
+                ConsoleHelper.WriteLine($"Found {meansOfAbstraction.Length} means of abstraction");
                 
                 var periodsOfAbstraction = await periodsOfAbstractionTask;
-                Console.WriteLine($"Found {periodsOfAbstraction.Length} periods of abstraction");
+                ConsoleHelper.WriteLine($"Found {periodsOfAbstraction.Length} periods of abstraction");
                 
                 var licenceVersion =  await licenceVersionTask;
-                Console.WriteLine("Found licence version");
+                ConsoleHelper.WriteLine("Found licence version");
                 
                 var baseLicenceData = await baseLicenceDataTask;
-                Console.WriteLine("Found general licence data");
+                ConsoleHelper.WriteLine("Found general licence data");
                 
                 var schema = new Licence
                 {
@@ -191,7 +191,7 @@ public static class TestsForAiPrompts
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ConsoleHelper.WriteLine(e);
                 throw;
             }
         }
@@ -639,7 +639,7 @@ public static class TestsForAiPrompts
         {
             if (chatResponse.Value?.FinishReason != ChatFinishReason.Stop)
             {
-                Console.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
+                ConsoleHelper.WriteLine($"ERROR - Response truncated {chatResponse.Value?.FinishReason}");
                 Console.Write(textResponse);
 
                 return null;
@@ -647,7 +647,7 @@ public static class TestsForAiPrompts
 
             if (!textResponse!.EndsWith('}'))
             {
-                Console.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
+                ConsoleHelper.WriteLine($"ERROR - Malformed JSON returned {chatResponse.Value?.FinishReason}");
                 Console.Write(textResponse);
 
                 return null;

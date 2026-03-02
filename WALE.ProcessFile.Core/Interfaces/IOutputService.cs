@@ -19,7 +19,7 @@ public interface IOutputService
         string pdfServiceName,
         string pdfFilePath);
     
-    public Task<ProcessRun> SaveProcessRunAsync(ProcessRun processRun);
+    public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
 
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId);
     
@@ -40,6 +40,9 @@ public interface IOutputService
         string pdfFilePath,
         int processRunId);
 
+    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
+        byte[] data, int processRunId);
+    
     public Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun, int regionId);

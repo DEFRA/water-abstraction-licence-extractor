@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -18,19 +17,15 @@ public partial class LicenceNumber : ILicenceNumberService
         set => _instance = value;
     }
 
-    private readonly Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>> _licenceIndex;
+    private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex;
 
-    public LicenceNumber(IDatabaseReadService databaseReadService)
+    public LicenceNumber(List<NaldLicence> licences)
     {
-        ArgumentNullException.ThrowIfNull(databaseReadService);
-        _licenceIndex = new Lazy<Task<Dictionary<string, List<LicenceIndexEntry>>>>(async () =>
-        {
-            var licences = await databaseReadService.GetNaldLicencesAsync();
-            return BuildIndex(licences);
-        });
+        ArgumentNullException.ThrowIfNull(licences);
+        _licenceIndex = BuildIndex(licences);
     }
 
-    private Task<Dictionary<string, List<LicenceIndexEntry>>> GetLicenceIndexAsync() => _licenceIndex.Value;
+    private Dictionary<string, List<LicenceIndexEntry>> GetLicenceIndex() => _licenceIndex;
 
     public class LicenceIndexEntry
     {
@@ -98,15 +93,15 @@ public partial class LicenceNumber : ILicenceNumberService
     public const string YorkshireRegexPatten =
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    public static Task<(bool Success, List<DocumentLine> MatchedLines)> AnyIsLicenceNumberAsync(
+    public static (bool Success, List<DocumentLine> MatchedLines) AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr)
     {
-        return Instance.AnyIsLicenceNumberAsync(lines, label, isOcr);
+        return Instance.AnyIsLicenceNumber(lines, label, isOcr);
     }
 
-    async Task<(bool Success, List<DocumentLine> MatchedLines)> ILicenceNumberService.AnyIsLicenceNumberAsync(
+    (bool Success, List<DocumentLine> MatchedLines) ILicenceNumberService.AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr)
@@ -124,7 +119,7 @@ public partial class LicenceNumber : ILicenceNumberService
             .SelectMany(x => GetSubLines(x.Column.Text).Select(subLine => (x.Line, x.Column, subLine)))
             .Where(x => IsValidSubLine(x.subLine, x.Column.Text));
 
-        var licenceIndex = await GetLicenceIndexAsync();
+        var licenceIndex = GetLicenceIndex();
 
         foreach (var (line, _, subLine) in subLinesToProcess)
         {
@@ -173,16 +168,16 @@ public partial class LicenceNumber : ILicenceNumberService
         return (matchedLines.Count > 0, matchedLines);
     }
 
-    public static Task<List<NaldLicence>> GetNaldLicencesAsync(string licenceNumber, short regionCode)
+    public static List<NaldLicence> GetNaldLicences(string licenceNumber, short regionCode)
     {
-        return Instance.GetNaldLicencesAsync(licenceNumber, regionCode);
+        return Instance.GetNaldLicences(licenceNumber, regionCode);
     }
 
-    async Task<List<NaldLicence>> ILicenceNumberService.GetNaldLicencesAsync(string licenceNumber, short regionCode)
+    List<NaldLicence> ILicenceNumberService.GetNaldLicences(string licenceNumber, short regionCode)
     {
         var normalized = NormalizeLicenceNumber(licenceNumber);
 
-        var index = await GetLicenceIndexAsync();
+        var index = GetLicenceIndex();
         if (!index.TryGetValue(normalized, out var candidates))
         {
             return [];
@@ -197,12 +192,12 @@ public partial class LicenceNumber : ILicenceNumberService
             .ToList();
     }
 
-    public static Task<List<NaldLicence>> ExtractNaldLicencesAsync(string? sourceText)
+    public static List<NaldLicence> ExtractNaldLicences(string? sourceText)
     {
-        return Instance.ExtractNaldLicencesAsync(sourceText);
+        return Instance.ExtractNaldLicences(sourceText);
     }
 
-    async Task<List<NaldLicence>> ILicenceNumberService.ExtractNaldLicencesAsync(string? sourceText)
+    List<NaldLicence> ILicenceNumberService.ExtractNaldLicences(string? sourceText)
     {
         if (string.IsNullOrEmpty(sourceText) || !sourceText.Any(char.IsDigit))
         {
@@ -213,7 +208,7 @@ public partial class LicenceNumber : ILicenceNumberService
             .Where(subLine => IsValidSubLine(subLine, sourceText));
 
         var resultList = new List<NaldLicence>();
-        var licenceIndex = await GetLicenceIndexAsync();
+        var licenceIndex = GetLicenceIndex();
 
         foreach (var subLine in subLines)
         {

@@ -127,7 +127,7 @@ public class AzureAiVisionOcrDataExtractorService(
         const int minFontSize = 15;
         const int considerableOverlapAmount = 19;
 
-        return OcrHelper.Group(
+        return await OcrHelper.GroupAsync(
             returnLinesInFormat,
             true,
             pageNumber,
@@ -143,7 +143,7 @@ public class AzureAiVisionOcrDataExtractorService(
         OcrServiceImageTextCacheRequest request)
     {
         ReadInStreamHeaders? textHeaders;
-        Console.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filepath}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filepath}");
         
         try
         {
@@ -152,14 +152,14 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
-            
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
                 var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
 
                 if (errorCode == "InvalidImageDimension")
                 {
+                    ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Azure AI Vision reported back image dimensions were too small");
+                    
                     var data = JsonSerializer.Serialize(new ReadResult { Lines = [] },
                         JsonHelper.GetSerializerOptions());
 
@@ -178,6 +178,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 // Let invalid image try deflate
                 if (errorCode != "InvalidImage")
                 {
+                    ConsoleHelper.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
                     throw;
                 }
             }
@@ -190,6 +191,8 @@ public class AzureAiVisionOcrDataExtractorService(
 
             try
             {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - {ex.Message}");
+                
                 // Try deflate
                 bytes = await cacheService.DeflateImageAsync(
                     request.Filepath!,
@@ -204,7 +207,7 @@ public class AzureAiVisionOcrDataExtractorService(
             }
             catch (Exception e)
             {
-                Console.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - After deflate attempt, {e.Message}");
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - After deflate attempt, {e.Message}");
 
                 if (isPageScreenshot)
                 {

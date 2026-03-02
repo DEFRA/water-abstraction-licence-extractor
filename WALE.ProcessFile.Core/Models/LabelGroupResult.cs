@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
 using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
@@ -7,6 +8,7 @@ public class LabelGroupResult
 {
     public IReadOnlyList<DocumentLine>? Text { get; set; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public MatchType MatchType { get; set; }
 
     public bool IsOcr { get; init; }

@@ -75,4 +75,38 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
                     null))
             .ToList();
     }
+
+    public static List<DocumentLineWord> FilterWordsFromText(List<DocumentLineWord> inputWords, string inputText)
+    {
+        var inputTextWords = TextToWords(inputText, null);
+        var inputWordsCopy = inputWords.ToList();
+            
+        foreach (var inputTextWord in inputTextWords)
+        {
+            var position = inputWordsCopy.FindIndex(lw => lw.Text == inputTextWord.Text);
+                
+            if (position == -1)
+            {
+                throw new Exception($"Words doesn't contain '{inputTextWord}'");
+            }
+
+            inputWordsCopy = inputWordsCopy.Slice(position, inputWordsCopy.Count - position);
+        }
+
+        var outputWords = new List<DocumentLineWord>();
+            
+        foreach (var inputWord in inputWords)
+        {
+            var exists = inputTextWords.Any(ots => ots.Text == inputWord.Text);
+
+            if (!exists)
+            {
+                continue;
+            }
+                
+            outputWords.Add(inputWord);
+        }
+
+        return outputWords;
+    }
 }

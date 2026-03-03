@@ -99,29 +99,8 @@ public static class ApplicableToMost
             var lineWords = request.line!.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
-            
-            var outputTextSplit = DocumentLineColumn.TextToWords(
-                outputText,
-                null);
 
-            var lineWordsCopy = lineWords.ToList();
-            
-            foreach (var outputTextWord in outputTextSplit)
-            {
-                var position = lineWordsCopy.FindIndex(lw => lw.Text == outputTextWord.Text);
-                
-                if (position == -1)
-                {
-                    throw new Exception($"Words doesn't contain '{outputTextWord}'");
-                }
-
-                lineWordsCopy = lineWordsCopy.Slice(position, lineWords.Count - position);
-            }
-            
-            if (outputText == "4.2- Filling a reservoir for subsequent trickle irrigation.")
-            {
-                
-            }
+            lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);
             
             System.Diagnostics.Debug.Assert(outputText == string.Join(' ', lineWords.Select(w => w.Text)), outputText);
             

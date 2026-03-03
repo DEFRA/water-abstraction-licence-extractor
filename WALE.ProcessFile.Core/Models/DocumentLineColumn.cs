@@ -140,7 +140,8 @@ public class DocumentLineColumn
                 
             if (position == -1)
             {
-                throw new Exception($"Words doesn't contain '{inputTextWordTrimmedText}' from the input text '{inputText}'");
+                var inputWordsForDisplay = string.Join(' ', inputWords.Select(iw => iw.Text));
+                throw new Exception($"Words don't contain input text '{inputTextWordTrimmedText}';\n\nWords - '{inputWordsForDisplay}'\nText  - '{inputText}'");
             }
 
             var startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase);

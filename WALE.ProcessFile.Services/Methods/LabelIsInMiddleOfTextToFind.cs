@@ -43,8 +43,7 @@ public static class LabelIsInMiddleOfTextToFind
             {
                 var afterOnSameLine = request.textBeforeAtAndAfterLabel![1];
                 
-                var afterOnSameLineWords = inputLines
-                    .SelectMany(il => il.Columns)
+                var afterOnSameLineWords = request.line.Columns
                     .SelectMany(c => c.Words)
                     .ToList();
                 

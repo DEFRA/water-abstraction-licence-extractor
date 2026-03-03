@@ -135,7 +135,8 @@ public class DocumentLineColumn
             }
             
             var position = inputWordsTrimmedCopy.FindIndex(
-                lw => lw.Text.StartsWith(inputTextWordTrimmedText!) || lw.Text.EndsWith(inputTextWordTrimmedText!));
+                lw => lw.Text.StartsWith(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase)
+                      || lw.Text.EndsWith(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase));
                 
             if (position == -1)
             {
@@ -163,7 +164,9 @@ public class DocumentLineColumn
         var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
         var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
         
-        System.Diagnostics.Debug.Assert(inputTextTrimmed == outputWordsTextTrimmed, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed} ");
+        System.Diagnostics.Debug.Assert(
+            inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.InvariantCultureIgnoreCase),
+            $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
         return outputWords;
     }
 }

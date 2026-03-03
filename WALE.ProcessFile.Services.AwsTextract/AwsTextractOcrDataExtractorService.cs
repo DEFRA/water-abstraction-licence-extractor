@@ -246,23 +246,25 @@ public class AwsTextractOcrDataExtractorService
             {
                 continue;
             }
+
+            var words = blockWord.Text
+                .Split(' ')
+                .Select(wordText => (DocumentLineWord?)new DocumentLineWord(
+                    wordText,
+                    blockWord.Confidence,
+                    new DocumentLineWordCoordinates(
+                    (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
+                    (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
+                    (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
+                    (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
+                    ),
+                    blockWord.TextType.Value
+                    ))
+                .ToList();
             
             var line = new LineAndWords
             {
-                Words = new List<DocumentLineWord>
-                {
-                    new(
-                        blockWord.Text,
-                        blockWord.Confidence,
-                        new DocumentLineWordCoordinates(
-                            (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
-                               (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
-                                (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
-                            (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
-                        ),
-                        blockWord.TextType.Value
-                    )
-                }!
+                Words = words
             };
 
             returnList.Add(line);

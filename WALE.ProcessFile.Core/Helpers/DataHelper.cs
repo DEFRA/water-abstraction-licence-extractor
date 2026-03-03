@@ -206,6 +206,24 @@ public static partial class DataHelper
 
                 if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
                 {
+                    var indexOf = returnStr.IndexOf(
+                        textToMatch.Text,
+                        StringComparison.InvariantCultureIgnoreCase);
+
+                    if (indexOf == -1)
+                    {
+                        continue;
+                    }
+                    
+                    var isCharBefore = indexOf >= 1 && !char.IsWhiteSpace(returnStr[indexOf - 1]);
+                    var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
+                        && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
+
+                    if (isCharBefore && isCharAfter)
+                    {
+                        continue;
+                    }
+                    
                     returnStr = returnStr.Replace(
                         textToMatch.Text,
                         string.Empty,

@@ -148,7 +148,16 @@ public class DocumentLineColumn
 
             if (startPos == -1)
             {
+                position = inputWordsCopy.FindIndex(
+                    lw => lw.Text.StartsWith(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase)
+                          || lw.Text.EndsWith(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase));
+
+                startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase);
                 
+                if (startPos == -1)
+                {
+                    throw new Exception("Issue with difference between punctuation and none-punctuation versions");
+                }
             }
             
             var substring = inputWordsCopy[position].Text.Substring(startPos, inputTextWord.Text.Length);

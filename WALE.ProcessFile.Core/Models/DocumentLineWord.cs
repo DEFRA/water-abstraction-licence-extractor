@@ -27,7 +27,7 @@ public class DocumentLineWord
         get => _text!;
         set
         {
-            if (value.Contains(' '))
+            if (value != " " && value.Contains(' '))
             {
                 throw new Exception($"Word cannot contain space ('{value}')");
             }

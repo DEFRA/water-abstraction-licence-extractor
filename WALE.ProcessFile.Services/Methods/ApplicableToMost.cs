@@ -328,13 +328,10 @@ public static class ApplicableToMost
                         request.label?.AutoCorrect ?? false)
                     : documentLine.Text;
 
-                //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;
-                
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
                     if (!outputText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
                         && !autoCorrectedOutputText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        )//&& !matchedLabelText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

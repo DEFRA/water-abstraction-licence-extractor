@@ -585,7 +585,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var perDayUnits1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("gallons", perDayUnits1?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("Gallons", perDayUnits1?.Text?.FirstOrDefault()?.Text);
 
         var perDayValue1 = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");

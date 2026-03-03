@@ -86,7 +86,7 @@ public static class ApplicableToMost
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(
                 matchedLabel,
-                t!,
+                t,
                 true,
                 false,
                 out var removedLines);
@@ -96,9 +96,13 @@ public static class ApplicableToMost
                 continue;
             }
 
-            var documentLine = request.line!.Clone();
+            var words = request.line!.Columns
+                .SelectMany(c => c.Words)
+                .ToList();
+
+            var documentLine = request.line.Clone();
             documentLine.Columns.Clear();
-            documentLine.Columns.Add(new DocumentLineColumn(outputText));
+            documentLine.Columns.Add(new DocumentLineColumn(outputText, words));
             
             if (request.isDateLookup)
             {
@@ -343,8 +347,12 @@ public static class ApplicableToMost
             {
                 if (isPossiblity)
                 {
+                    var dLineWords = documentLine.Columns
+                        .SelectMany(c => c.Words)
+                        .ToList();
+                    
                     documentLine.Columns.Clear();
-                    documentLine.Columns.Add(new DocumentLineColumn(outputText));
+                    documentLine.Columns.Add(new DocumentLineColumn(dLineWords));
                 
                     labelGroupResult.Text = [documentLine];
                     labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;

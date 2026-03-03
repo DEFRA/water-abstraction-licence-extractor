@@ -27,7 +27,9 @@ public static class LabelIsInMiddleOfTextToFind
 
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLine.ColumnsText![0]));
+            clonedLine.Columns.Add(new DocumentLineColumn(
+                beforeOnSameLine.ColumnsText![0],
+                request.line.Columns.SelectMany(c => c.Words).ToList())); // TODO doesnt limit enough
             
             inputLines.Add(clonedLine);
 
@@ -37,7 +39,9 @@ public static class LabelIsInMiddleOfTextToFind
                 
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLine.ColumnsText![0]));
+                clonedLine.Columns.Add(new DocumentLineColumn(
+                    afterOnSameLine.ColumnsText![0],
+                    request.line.Columns.SelectMany(c => c.Words).ToList())); // TODO doesnt limit enough
                 
                 inputLines.Add(clonedLine);
             }

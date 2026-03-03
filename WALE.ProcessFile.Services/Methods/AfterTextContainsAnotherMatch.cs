@@ -23,17 +23,26 @@ public static class AfterTextContainsAnotherMatch
             return returnListTop;
         }
 
-        var originalText = request.line!.Text;
+        var originalWords = request.line!.Columns
+            .SelectMany(c => c.Words)
+            .ToList();
+        
+        var originalText = request.line.Text;
         request.line?.Columns.Clear();
 
         if (request.label.Text == null || request.label.Text.Count == 0)
         {
             return returnListTop;
         }
+        
+        var usedWords = originalWords
+            .Where(cw => afterText.Contains(cw.Text,
+                StringComparison.InvariantCultureIgnoreCase))
+            .ToList();
 
         var asLine = new DocumentLine
         {
-            Columns = [new DocumentLineColumn(afterText)]
+            Columns = [new DocumentLineColumn(afterText, usedWords)]
         };
 
         var nextLine = request.nextLines?.FirstOrDefault();

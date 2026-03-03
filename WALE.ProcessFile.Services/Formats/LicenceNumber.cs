@@ -148,9 +148,11 @@ public partial class LicenceNumber : ILicenceNumberService
                     {
                         continue;
                     }
+
+                    var words = line.Columns.SelectMany(c => c.Words).ToList();
                     
                     // Passed all checks so add a clone of the line containing the matched NALD licence number
-                    var matchedLine = line.Clone([new DocumentLineColumn(candidateText)]);
+                    var matchedLine = line.Clone([new DocumentLineColumn(candidateText, words)]);
                     matchedLine.AdditionalData ??= new Dictionary<string, object>();
                     matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
                         

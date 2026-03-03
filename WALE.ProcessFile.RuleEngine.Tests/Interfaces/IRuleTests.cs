@@ -68,7 +68,7 @@ public class IRuleTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn(string.Empty)],
+            [new DocumentLineColumn(string.Empty, [])],
             0,
             0,
             0,
@@ -101,7 +101,7 @@ public class IRuleTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("   ")],
+            [new DocumentLineColumn("   ", [])],
             0,
             0,
             0,

@@ -112,7 +112,7 @@ public class RuleEngineTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("This document contains change in conditions")],
+            [new DocumentLineColumn("This document contains change in conditions", [])],
             0,
             0,
             0,
@@ -149,7 +149,7 @@ public class RuleEngineTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("This document contains no matching terms")],
+            [new DocumentLineColumn("This document contains no matching terms", [])],
             0,
             0,
             0,
@@ -187,7 +187,7 @@ public class RuleEngineTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("This is a test document")],
+            [new DocumentLineColumn("This is a test document", [])],
             0,
             0,
             0,
@@ -227,7 +227,7 @@ public class RuleEngineTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("This is a test document")],
+            [new DocumentLineColumn("This is a test document", [])],
             0,
             0,
             0,

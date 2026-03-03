@@ -96,13 +96,38 @@ public static class ApplicableToMost
                 continue;
             }
 
-            var words = request.line!.Columns
+            var lineWords = request.line!.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
+            
+            var outputTextSplit = DocumentLineColumn.TextToWords(
+                outputText,
+                null);
 
+            var lineWordsCopy = lineWords.ToList();
+            
+            foreach (var outputTextWord in outputTextSplit)
+            {
+                var position = lineWordsCopy.FindIndex(lw => lw.Text == outputTextWord.Text);
+                
+                if (position == -1)
+                {
+                    throw new Exception($"Words doesn't contain '{outputTextWord}'");
+                }
+
+                lineWordsCopy = lineWordsCopy.Slice(position, lineWords.Count - position);
+            }
+            
+            if (outputText == "4.2- Filling a reservoir for subsequent trickle irrigation.")
+            {
+                
+            }
+            
+            System.Diagnostics.Debug.Assert(outputText == string.Join(' ', lineWords.Select(w => w.Text)), outputText);
+            
             var documentLine = request.line.Clone();
             documentLine.Columns.Clear();
-            documentLine.Columns.Add(new DocumentLineColumn(outputText, words));
+            documentLine.Columns.Add(new DocumentLineColumn(lineWords));
             
             if (request.isDateLookup)
             {
@@ -349,7 +374,11 @@ public static class ApplicableToMost
                 {
                     var dLineWords = documentLine.Columns
                         .SelectMany(c => c.Words)
+                        .Where(cw => outputText.Contains(cw.Text,
+                            StringComparison.InvariantCultureIgnoreCase))
                         .ToList();
+                 
+                    System.Diagnostics.Debug.Assert(outputText == string.Join(' ', dLineWords.Select(w => w.Text)));
                     
                     documentLine.Columns.Clear();
                     documentLine.Columns.Add(new DocumentLineColumn(dLineWords));

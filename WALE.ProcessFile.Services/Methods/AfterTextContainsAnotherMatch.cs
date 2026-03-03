@@ -35,14 +35,16 @@ public static class AfterTextContainsAnotherMatch
             return returnListTop;
         }
         
-        var usedWords = originalWords
+        var afterTextWords = originalWords
             .Where(cw => afterText.Contains(cw.Text,
                 StringComparison.InvariantCultureIgnoreCase))
             .ToList();
 
+        System.Diagnostics.Debug.Assert(afterText == string.Join(' ', afterTextWords.Select(w => w.Text)));
+        
         var asLine = new DocumentLine
         {
-            Columns = [new DocumentLineColumn(afterText, usedWords)]
+            Columns = [new DocumentLineColumn(afterTextWords)]
         };
 
         var nextLine = request.nextLines?.FirstOrDefault();

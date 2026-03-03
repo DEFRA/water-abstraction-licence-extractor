@@ -25,11 +25,17 @@ public static class LabelIsInMiddleOfTextToFind
         {
             var beforeOnSameLine = request.textBeforeAtAndAfterLabel![0];
 
+            var beforeOnSameLineWords = request.line!.Columns
+                .SelectMany(c => c.Words)
+                .Where(cw => beforeOnSameLine.ColumnsText![0].Contains(cw.Text,
+                    StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+            
+            System.Diagnostics.Debug.Assert(beforeOnSameLine.ColumnsText![0] == string.Join(' ', beforeOnSameLineWords.Select(w => w.Text)));
+            
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(
-                beforeOnSameLine.ColumnsText![0],
-                request.line.Columns.SelectMany(c => c.Words).ToList())); // TODO doesnt limit enough
+            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLineWords));
             
             inputLines.Add(clonedLine);
 
@@ -37,11 +43,18 @@ public static class LabelIsInMiddleOfTextToFind
             {
                 var afterOnSameLine = request.textBeforeAtAndAfterLabel![1];
                 
+                var afterOnSameLineWords = inputLines
+                    .SelectMany(il => il.Columns)
+                    .SelectMany(c => c.Words)
+                    .Where(cw => afterOnSameLine.ColumnsText![0].Contains(cw.Text,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .ToList();
+                
+                System.Diagnostics.Debug.Assert(afterOnSameLine.ColumnsText![0] == string.Join(' ', afterOnSameLineWords.Select(w => w.Text)));
+                
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(
-                    afterOnSameLine.ColumnsText![0],
-                    request.line.Columns.SelectMany(c => c.Words).ToList())); // TODO doesnt limit enough
+                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLineWords));
                 
                 inputLines.Add(clonedLine);
             }

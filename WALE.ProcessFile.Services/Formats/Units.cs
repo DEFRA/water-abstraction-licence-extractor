@@ -55,7 +55,9 @@ public static class Units
                                 StringComparison.InvariantCultureIgnoreCase))
                             .ToList();
                         
-                        var clonedColumn = new DocumentLineColumn(possibility, possibilityWords);
+                        System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                        
+                        var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Add(clonedColumn);
 
                         matchedPossibilityForLine = possibility;
@@ -102,7 +104,9 @@ public static class Units
                                 StringComparison.InvariantCultureIgnoreCase))
                             .ToList();
                         
-                        var clonedColumn = new DocumentLineColumn(possibility, possibilityWords);
+                        System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                        
+                        var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Clear();
                         newColumns.Add(clonedColumn);
 

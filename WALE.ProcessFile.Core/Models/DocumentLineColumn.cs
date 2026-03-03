@@ -5,8 +5,6 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class DocumentLineColumn(List<DocumentLineWord> words)
 {
-    public DocumentLineColumn(string text, List<DocumentLineWord> words) : this(words) { }
-    
     public DocumentLineColumn() : this([]) { }
 
     [JsonIgnore]
@@ -65,7 +63,7 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
         };
     }
     
-    public static List<DocumentLineWord> TextToWords(string text, double ocrConfidence)
+    public static List<DocumentLineWord> TextToWords(string text, double? ocrConfidence)
     {
         return text
             .Split(' ')

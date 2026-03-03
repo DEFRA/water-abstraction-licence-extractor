@@ -92,24 +92,47 @@ public static class TextToFindIsBetweenLabels
                     FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
                 var text = labelText;
 
+                var words = new List<DocumentLineWord>
+                {
+                    new(
+                        labelText,
+                        null,
+                        DocumentLineWordCoordinates.NotKnown(),
+                        null)
+                };
+                
                 if (!string.IsNullOrEmpty(firstColumnText))
                 {
                     text += $" {firstColumnText}";
+                    words.AddRange(firstBetweenLine.Columns[0].Words);
                 }
                 
                 if (request.label.IncludeEndLabelText)
                 {
                     var endText = matchedEndText?.matchedEndText.Text;
+
                     text += $" {endText}";
+                    words.Add(new(
+                        endText!,
+                        null,
+                        DocumentLineWordCoordinates.NotKnown(),
+                        null));
                 }
 
                 if (betweenText[0].Columns.Count == 0)
                 {
-                    betweenText[0].Columns.Add(new DocumentLineColumn(text, []));
+                    betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
                 }
                 else
                 {
-                    betweenText[0].Columns[0] = new DocumentLineColumn(text, firstColumn!.Words);   
+                    var textWords = words
+                        .Where(cw => text.Contains(cw.Text,
+                            StringComparison.InvariantCultureIgnoreCase))
+                        .ToList();
+                 
+                    System.Diagnostics.Debug.Assert(text == string.Join(' ', textWords.Select(w => w.Text)));
+                    
+                    betweenText[0].Columns[0] = new DocumentLineColumn(textWords);   
                 }
             }
         }
@@ -228,14 +251,18 @@ public static class TextToFindIsBetweenLabels
             var text = FormattingHelper.
                 TrimFormatting(firstLineTextAfterLabel, false, false)!;
             
-            var words = lineInput.Columns
+            var textWords = lineInput.Columns
                 .SelectMany(c => c.Words)
+                .Where(cw => text.Contains(cw.Text,
+                    StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
+            
+            System.Diagnostics.Debug.Assert(text == string.Join(' ', textWords.Select(w => w.Text)));
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(text, words));
+            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
             
             linesLoop.Add(clonedLine);
         }
@@ -311,13 +338,17 @@ public static class TextToFindIsBetweenLabels
 
                             if (!isOneDigitNumberAndWeDontWantNumber)
                             {
-                                var words = line.Columns
+                                var ctWords = line.Columns
                                     .SelectMany(c => c.Words)
+                                    .Where(cw => ct!.Contains(cw.Text,
+                                        StringComparison.InvariantCultureIgnoreCase))
                                     .ToList();
+                                
+                                System.Diagnostics.Debug.Assert(ct == string.Join(' ', ctWords.Select(w => w.Text)));
                                 
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ct!, words));
+                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
 
                                 returnList.Add(clonedLine2);
                             }
@@ -334,7 +365,15 @@ public static class TextToFindIsBetweenLabels
             foreach (var column in line.Columns)
             {
                 var columnText = FormattingHelper.TrimFormatting(column.Text, false, false)!;
-                clonedLine.Columns.Add(new DocumentLineColumn(columnText, column.Words));
+                
+                var columnTextWords = column.Words
+                    .Where(cw => columnText.Contains(cw.Text,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .ToList();
+                
+                System.Diagnostics.Debug.Assert(columnText == string.Join(' ', columnTextWords.Select(w => w.Text)));
+                
+                clonedLine.Columns.Add(new DocumentLineColumn(columnTextWords));
             }
             
             returnList.Add(clonedLine);

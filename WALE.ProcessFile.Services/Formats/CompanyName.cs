@@ -89,7 +89,7 @@ public static class CompanyName
                 
                 // It's only the company suffix with nothing else
                 if (CompanyNameHelper.CompanySuffixes.Any(companySuffix =>
-                        companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
+                    companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     newColumns.Add(column);
 
@@ -101,7 +101,14 @@ public static class CompanyName
                     continue;
                 }
 
-                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!, column.Words); // TODO - too many words?
+                var companyOrPersonalNameWords = column.Words
+                    .Where(cw => companyOrPersonalName!.Contains(cw.Text,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .ToList();
+
+                System.Diagnostics.Debug.Assert(companyOrPersonalName == string.Join(' ', companyOrPersonalNameWords.Select(w => w.Text)));
+                
+                var clonedColumn = new DocumentLineColumn(companyOrPersonalNameWords);
                 newColumns.Add(clonedColumn);
 
                 anyLineMatch = true;

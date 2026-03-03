@@ -21,4 +21,14 @@ public class DocumentLineWord(
     public string? HandwrittenOrTyped { get; set; } = handwrittenOrTyped;
     
     public bool Autocorrected { get; set; }
+    
+    public DocumentLineWord Clone()
+    {
+        var cloned = new DocumentLineWord(Text, OcrConfidence, Coordinates, HandwrittenOrTyped)
+        {
+            Autocorrected = Autocorrected
+        };
+
+        return cloned;
+    }
 }

@@ -1487,13 +1487,17 @@ public class PdfDataExtractorService(
 
                         if (newPartialLineText != string.Empty)
                         {
-                            var partialLineWords = partialLine.Columns
+                            var newPartialLineTextWords = partialLine.Columns
                                 .SelectMany(c => c.Words)
-                                .ToList(); // TODO check this is right
+                                .Where(cw => newPartialLineText.Contains(cw.Text,
+                                    StringComparison.InvariantCultureIgnoreCase))
+                                .ToList();
+                            
+                            System.Diagnostics.Debug.Assert(newPartialLineText == string.Join(' ', newPartialLineTextWords.Select(w => w.Text)));
                             
                             partialLine = partialLine.Clone();
                             partialLine.Columns.Clear();
-                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText, partialLineWords));
+                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineTextWords));
 
                             newPartialLine = partialLine;
                             continuePartialLoop = true;

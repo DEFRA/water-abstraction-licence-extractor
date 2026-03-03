@@ -191,9 +191,11 @@ public static class BaseMethod
                         StringComparison.InvariantCultureIgnoreCase))
                     .ToList();
                 
+                System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                
                 var clonedLine = line.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(possibility, possibilityWords));
+                clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
                 return clonedLine;
             })
@@ -259,9 +261,17 @@ public static class BaseMethod
             var possibility = request.label.Possibilities
                 .First(possibility => result.Text!.First().Text.Contains(possibility));
             
+            var possibilityWords = result.Text!.First().Columns
+                .SelectMany(c => c.Words)
+                .Where(cw => possibility.Contains(cw.Text,
+                    StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+            
+            System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+            
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(possibility, [])); // TODO this is wrong (not enough info coming in)
+            clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
             var clonedResult = result.Clone();
             clonedResult.Text = [clonedLine];
@@ -292,9 +302,17 @@ public static class BaseMethod
                 var possibility = request.label.Possibilities
                     .First(possibility => lineText.Contains(possibility));
 
+                var possibilityWords = result.Text!.First().Columns
+                    .SelectMany(c => c.Words)
+                    .Where(cw => possibility.Contains(cw.Text,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .ToList();
+                
+                System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                
                 var clonedLine = result.Text!.First().Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(possibility, [])); // TODO this is wrong (not enough info coming in)
+                clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
                 
                 var clonedResult = result.Clone();
                 clonedResult.Text = [clonedLine];

@@ -21,9 +21,7 @@ public static class SingleWord
 
         foreach (var column in line.Columns)
         {
-            var text = column.Text.Split(' ')[0];
-
-            var clonedColumn = new DocumentLineColumn(text, column.Words);
+            var clonedColumn = new DocumentLineColumn(column.Words);
             var clonedLine = line.Clone([clonedColumn]);
 
             labelGroupResult = labelGroupResult.Clone([clonedLine]);

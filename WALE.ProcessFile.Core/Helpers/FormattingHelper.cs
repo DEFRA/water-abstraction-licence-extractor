@@ -837,6 +837,27 @@ public static class FormattingHelper
 
         return returnList;
     }
+
+    public static List<DocumentLineWord> TrimFormatting(List<DocumentLineWord> words)
+    {
+        var newWords = new List<DocumentLineWord>();
+
+        foreach (var word in words)
+        {
+            var isFirstWord = words[0] == word;
+            var isLastWord = words.Last() == word;
+            
+            var returnWord = word.Clone();
+            returnWord.Text = TrimFormatting(
+                word.Text,
+                isFirstWord,
+                isLastWord)!;
+            
+            newWords.Add(returnWord);
+        }
+        
+        return newWords;
+    }
     
     public static string? TrimFormatting(
         string? text,

@@ -27,12 +27,14 @@ public class DocumentLineWord
         get => _text!;
         set
         {
-            if (value != " " && value.Contains(' '))
+            var trimmedText = value.Trim();
+            
+            if (trimmedText != " " && trimmedText.Contains(' '))
             {
-                throw new Exception($"Word cannot contain space ('{value}')");
+                throw new Exception($"Word cannot contain space ('{trimmedText}')");
             }
             
-            _text = value;
+            _text = trimmedText;
         }
     }
 

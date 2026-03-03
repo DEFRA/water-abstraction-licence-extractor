@@ -433,11 +433,10 @@ public static class ApplicableToMost
                     .Coordinates;
                 
                 documentLine.Columns[0].Words.Clear();
-                documentLine.Columns[0].Words.Add(new DocumentLineWord(
+                documentLine.Columns[0].Words.AddRange(DocumentLineColumn.TextToWords(
                     outputText!,
                     null,
-                    coords,
-                    null));
+                    coords));
                 
                 labelGroupResult.Text = [documentLine];
                 labelGroupResult.MatchedPosition = matchType;

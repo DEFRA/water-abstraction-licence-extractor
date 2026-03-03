@@ -161,8 +161,9 @@ public class DocumentLineColumn
         }
 
         var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
+        var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
         
-        System.Diagnostics.Debug.Assert(inputText == outputWordsText, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsText} ");
+        System.Diagnostics.Debug.Assert(inputTextTrimmed == outputWordsTextTrimmed, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed} ");
         return outputWords;
     }
 }

@@ -894,6 +894,14 @@ public static class FormattingHelper
             }
         }
 
+        const string space = " ";
+        const string doubleSpace = "  ";
+        
+        while (trimmed?.Contains(doubleSpace) == true)
+        {
+            trimmed = trimmed.Replace(doubleSpace, space);
+        }
+        
         return trimmed;
     }
     

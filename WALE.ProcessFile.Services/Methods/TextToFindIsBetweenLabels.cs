@@ -92,14 +92,7 @@ public static class TextToFindIsBetweenLabels
                     FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
                 var text = labelText;
 
-                var words = new List<DocumentLineWord>
-                {
-                    new(
-                        labelText,
-                        null,
-                        DocumentLineWordCoordinates.NotKnown(),
-                        null)
-                };
+                var words = DocumentLineColumn.TextToWords(labelText, null);
                 
                 if (!string.IsNullOrEmpty(firstColumnText))
                 {

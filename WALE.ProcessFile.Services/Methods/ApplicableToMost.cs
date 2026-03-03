@@ -524,10 +524,10 @@ public static class ApplicableToMost
                         .Coordinates;
                     
                     documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    documentLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(outputText, null, coords));
                     
                     var lineMatch = labelGroupResult.Clone([documentLine]);
-
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
             }

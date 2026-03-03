@@ -4,7 +4,7 @@ public class ValueWithConfidence<T>
 {
     public ValueWithConfidence() {}
 
-    public ValueWithConfidence(T? value, double ocrConfidence, double confidence)
+    public ValueWithConfidence(T? value, double? ocrConfidence, double confidence)
     {
         Value = value;
         OcrConfidence = ocrConfidence;

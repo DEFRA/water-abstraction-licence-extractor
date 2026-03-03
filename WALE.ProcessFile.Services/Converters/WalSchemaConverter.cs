@@ -42,7 +42,7 @@ public static partial class WalSchemaConverter
         var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
             ? new ValueWithConfidence<string>(
                 licenceNumber,
-                ocrConfidence!.Value,
+                ocrConfidence,
                 confidence!.Value)
             : null;
         

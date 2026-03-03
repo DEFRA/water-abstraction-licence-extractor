@@ -104,40 +104,65 @@ public class DocumentLineColumn
     public static List<DocumentLineWord> FilterWordsFromText(List<DocumentLineWord> inputWords, string inputText)
     {
         var inputTextTrimmed = FormattingHelper.TrimFormatting(inputText, true, true);
-        var inputTextWords = TextToWords(inputTextTrimmed!, null);
-
+        
+        if (string.IsNullOrEmpty(inputTextTrimmed))
+        {
+            return [];
+        }
+        
+        var inputTextWords = TextToWords(inputText, null);
         var inputWordsTrimmed = FormattingHelper.TrimFormatting(inputWords.ToList());
-        var inputWordsCopy = inputWordsTrimmed.ToList();
-            
+
+        // The following 2 should reflect each other
+        var inputWordsCopy = inputWords.ToList();
+        var inputWordsTrimmedCopy = inputWordsTrimmed.ToList();
+        
+        var outputWords = new List<DocumentLineWord>();
+        
         foreach (var inputTextWord in inputTextWords)
         {
-            var position = inputWordsCopy.FindIndex(lw => lw.Text == inputTextWord.Text);
-                
-            if (position == -1)
-            {
-                throw new Exception($"Words doesn't contain '{inputTextWord.Text}' from the input text '{inputTextTrimmed}'");
-            }
+            var isFirstWord = inputTextWords[0] == inputTextWord;
+            var isLastWord = inputTextWords.Last() == inputTextWord;
 
-            inputWordsCopy = inputWordsCopy.Slice(position, inputWordsCopy.Count - position);
-        }
+            var inputTextWordTrimmedText = FormattingHelper.TrimFormatting(
+                inputTextWord.Text,
+                isFirstWord,
+                isLastWord);
 
-        var outputWords = new List<DocumentLineWord>();
-            
-        foreach (var inputWord in inputWordsTrimmed)
-        {
-            var exists = inputTextWords.Any(ots => ots.Text == inputWord.Text);
-
-            if (!exists)
+            if (string.IsNullOrEmpty(inputTextWordTrimmedText))
             {
                 continue;
             }
+            
+            var position = inputWordsTrimmedCopy.FindIndex(
+                lw => lw.Text.StartsWith(inputTextWordTrimmedText!) || lw.Text.EndsWith(inputTextWordTrimmedText!));
                 
-            outputWords.Add(inputWord);
+            if (position == -1)
+            {
+                throw new Exception($"Words doesn't contain '{inputTextWordTrimmedText}' from the input text '{inputText}'");
+            }
+
+            var startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase);
+
+            if (startPos == -1)
+            {
+                
+            }
+            
+            var substring = inputWordsCopy[position].Text.Substring(startPos, inputTextWord.Text.Length);
+
+            var inputWordsCopyClone = inputWordsCopy[position].Clone();
+            inputWordsCopyClone.Text = substring;
+            
+            outputWords.Add(inputWordsCopyClone);
+            
+            inputWordsCopy = inputWordsCopy.Slice(position + 1, inputWordsCopy.Count - position - 1);
+            inputWordsTrimmedCopy = inputWordsTrimmedCopy.Slice(position + 1, inputWordsTrimmedCopy.Count - position - 1);
         }
 
         var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
         
-        System.Diagnostics.Debug.Assert(inputTextTrimmed == outputWordsText, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsText} ");
+        System.Diagnostics.Debug.Assert(inputText == outputWordsText, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsText} ");
         return outputWords;
     }
 }

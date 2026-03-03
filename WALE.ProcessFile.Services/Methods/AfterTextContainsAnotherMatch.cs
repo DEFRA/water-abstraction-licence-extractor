@@ -60,7 +60,10 @@ public static class AfterTextContainsAnotherMatch
             return returnListTop;
         }
         
-        var results = await ApplicableToMost.FunctionAsync(request);
+        var clonedRequest = request.Clone();
+        clonedRequest.line = asLine;
+        
+        var results = await ApplicableToMost.FunctionAsync(clonedRequest);
         
         foreach (var result in results)
         {

@@ -43,7 +43,7 @@ public static partial class WalSchemaConverter
             ? new ValueWithConfidence<string>(
                 licenceNumber,
                 ocrConfidence,
-                confidence!.Value)
+                confidence)
             : null;
         
         var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);

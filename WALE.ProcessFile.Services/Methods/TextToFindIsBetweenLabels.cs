@@ -125,12 +125,7 @@ public static class TextToFindIsBetweenLabels
                 }
                 else
                 {
-                    var textWords = words
-                        .Where(cw => text.Contains(cw.Text,
-                            StringComparison.InvariantCultureIgnoreCase))
-                        .ToList();
-                 
-                    System.Diagnostics.Debug.Assert(text == string.Join(' ', textWords.Select(w => w.Text)));
+                    var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
                     
                     betweenText[0].Columns[0] = new DocumentLineColumn(textWords);   
                 }
@@ -253,11 +248,9 @@ public static class TextToFindIsBetweenLabels
             
             var textWords = lineInput.Columns
                 .SelectMany(c => c.Words)
-                .Where(cw => text.Contains(cw.Text,
-                    StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
             
-            System.Diagnostics.Debug.Assert(text == string.Join(' ', textWords.Select(w => w.Text)));
+            textWords = DocumentLineColumn.FilterWordsFromText(textWords, text);
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
@@ -340,11 +333,9 @@ public static class TextToFindIsBetweenLabels
                             {
                                 var ctWords = line.Columns
                                     .SelectMany(c => c.Words)
-                                    .Where(cw => ct!.Contains(cw.Text,
-                                        StringComparison.InvariantCultureIgnoreCase))
                                     .ToList();
                                 
-                                System.Diagnostics.Debug.Assert(ct == string.Join(' ', ctWords.Select(w => w.Text)));
+                                ctWords = DocumentLineColumn.FilterWordsFromText(ctWords, ct!);
                                 
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
@@ -365,13 +356,7 @@ public static class TextToFindIsBetweenLabels
             foreach (var column in line.Columns)
             {
                 var columnText = FormattingHelper.TrimFormatting(column.Text, false, false)!;
-                
-                var columnTextWords = column.Words
-                    .Where(cw => columnText.Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
-                
-                System.Diagnostics.Debug.Assert(columnText == string.Join(' ', columnTextWords.Select(w => w.Text)));
+                var columnTextWords = DocumentLineColumn.FilterWordsFromText(column.Words, columnText);
                 
                 clonedLine.Columns.Add(new DocumentLineColumn(columnTextWords));
             }

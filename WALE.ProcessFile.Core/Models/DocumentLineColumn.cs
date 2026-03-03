@@ -1,10 +1,16 @@
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models;
 
-public class DocumentLineColumn(List<DocumentLineWord> words)
+public class DocumentLineColumn
 {
+    public DocumentLineColumn(List<DocumentLineWord> words)
+    {
+        Words = words;
+    }
+    
     public DocumentLineColumn() : this([]) { }
 
     [JsonIgnore]
@@ -17,8 +23,24 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
                 : string.Join(' ', Words.Select(column => column.Text));
         }
     }
-    
-    public List<DocumentLineWord> Words { get; set; } = words;
+
+    private List<DocumentLineWord>? _words;
+    public List<DocumentLineWord> Words
+    {
+        get => _words!;
+        set
+        {
+            foreach (var word in value)
+            {
+                if (word.Text.Contains(' '))
+                {
+                    throw new Exception($"Word cannot contain space ('{word.Text}')");
+                }
+            }
+            
+            _words = value;
+        }
+    }
 
     public double? OcrConfidence
     {
@@ -63,7 +85,10 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
         };
     }
     
-    public static List<DocumentLineWord> TextToWords(string text, double? ocrConfidence)
+    public static List<DocumentLineWord> TextToWords(
+        string text,
+        double? ocrConfidence,
+        DocumentLineWordCoordinates? coordinates = null)
     {
         return text
             .Split(' ')
@@ -71,15 +96,18 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
                 new DocumentLineWord(
                     word,
                     ocrConfidence,
-                    PositionConstants.UnknownCoordinates,
+                    coordinates ?? PositionConstants.UnknownCoordinates,
                     null))
             .ToList();
     }
 
     public static List<DocumentLineWord> FilterWordsFromText(List<DocumentLineWord> inputWords, string inputText)
     {
-        var inputTextWords = TextToWords(inputText, null);
-        var inputWordsCopy = inputWords.ToList();
+        var inputTextTrimmed = FormattingHelper.TrimFormatting(inputText, true, true);
+        var inputTextWords = TextToWords(inputTextTrimmed!, null);
+
+        var inputWordsTrimmed = FormattingHelper.TrimFormatting(inputWords.ToList());
+        var inputWordsCopy = inputWordsTrimmed.ToList();
             
         foreach (var inputTextWord in inputTextWords)
         {
@@ -87,7 +115,7 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
                 
             if (position == -1)
             {
-                throw new Exception($"Words doesn't contain '{inputTextWord}'");
+                throw new Exception($"Words doesn't contain '{inputTextWord.Text}' from the input text '{inputTextTrimmed}'");
             }
 
             inputWordsCopy = inputWordsCopy.Slice(position, inputWordsCopy.Count - position);
@@ -95,7 +123,7 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
 
         var outputWords = new List<DocumentLineWord>();
             
-        foreach (var inputWord in inputWords)
+        foreach (var inputWord in inputWordsTrimmed)
         {
             var exists = inputTextWords.Any(ots => ots.Text == inputWord.Text);
 
@@ -107,6 +135,9 @@ public class DocumentLineColumn(List<DocumentLineWord> words)
             outputWords.Add(inputWord);
         }
 
+        var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
+        
+        System.Diagnostics.Debug.Assert(inputTextTrimmed == outputWordsText, $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsText} ");
         return outputWords;
     }
 }

@@ -1489,11 +1489,9 @@ public class PdfDataExtractorService(
                         {
                             var newPartialLineTextWords = partialLine.Columns
                                 .SelectMany(c => c.Words)
-                                .Where(cw => newPartialLineText.Contains(cw.Text,
-                                    StringComparison.InvariantCultureIgnoreCase))
                                 .ToList();
                             
-                            System.Diagnostics.Debug.Assert(newPartialLineText == string.Join(' ', newPartialLineTextWords.Select(w => w.Text)));
+                            newPartialLineTextWords = DocumentLineColumn.FilterWordsFromText(newPartialLineTextWords, newPartialLineText);
                             
                             partialLine = partialLine.Clone();
                             partialLine.Columns.Clear();

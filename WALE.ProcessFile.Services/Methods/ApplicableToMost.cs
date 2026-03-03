@@ -102,8 +102,6 @@ public static class ApplicableToMost
 
             lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);
             
-            System.Diagnostics.Debug.Assert(outputText == string.Join(' ', lineWords.Select(w => w.Text)), outputText);
-            
             var documentLine = request.line.Clone();
             documentLine.Columns.Clear();
             documentLine.Columns.Add(new DocumentLineColumn(lineWords));
@@ -353,11 +351,9 @@ public static class ApplicableToMost
                 {
                     var dLineWords = documentLine.Columns
                         .SelectMany(c => c.Words)
-                        .Where(cw => outputText.Contains(cw.Text,
-                            StringComparison.InvariantCultureIgnoreCase))
                         .ToList();
                  
-                    System.Diagnostics.Debug.Assert(outputText == string.Join(' ', dLineWords.Select(w => w.Text)));
+                    dLineWords = DocumentLineColumn.FilterWordsFromText(dLineWords, outputText);
                     
                     documentLine.Columns.Clear();
                     documentLine.Columns.Add(new DocumentLineColumn(dLineWords));
@@ -508,7 +504,8 @@ public static class ApplicableToMost
                         .Coordinates;
                     
                     documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    documentLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(outputText, null, coords));
                     
                     var lineMatch = labelGroupResult.Clone([documentLine]);
                     lineMatch.MatchedPosition = MatchedPosition.BetweenLabels;

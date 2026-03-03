@@ -101,12 +101,9 @@ public static class CompanyName
                     continue;
                 }
 
-                var companyOrPersonalNameWords = column.Words
-                    .Where(cw => companyOrPersonalName!.Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
-
-                System.Diagnostics.Debug.Assert(companyOrPersonalName == string.Join(' ', companyOrPersonalNameWords.Select(w => w.Text)));
+                var companyOrPersonalNameWords = DocumentLineColumn.FilterWordsFromText(
+                    column.Words,
+                    companyOrPersonalName!);
                 
                 var clonedColumn = new DocumentLineColumn(companyOrPersonalNameWords);
                 newColumns.Add(clonedColumn);

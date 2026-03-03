@@ -27,11 +27,11 @@ public static class LabelIsInMiddleOfTextToFind
 
             var beforeOnSameLineWords = request.line!.Columns
                 .SelectMany(c => c.Words)
-                .Where(cw => beforeOnSameLine.ColumnsText![0].Contains(cw.Text,
-                    StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
             
-            System.Diagnostics.Debug.Assert(beforeOnSameLine.ColumnsText![0] == string.Join(' ', beforeOnSameLineWords.Select(w => w.Text)));
+            beforeOnSameLineWords = DocumentLineColumn.FilterWordsFromText(
+                beforeOnSameLineWords,
+                beforeOnSameLine.ColumnsText![0]);
             
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
@@ -46,11 +46,11 @@ public static class LabelIsInMiddleOfTextToFind
                 var afterOnSameLineWords = inputLines
                     .SelectMany(il => il.Columns)
                     .SelectMany(c => c.Words)
-                    .Where(cw => afterOnSameLine.ColumnsText![0].Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
                     .ToList();
                 
-                System.Diagnostics.Debug.Assert(afterOnSameLine.ColumnsText![0] == string.Join(' ', afterOnSameLineWords.Select(w => w.Text)));
+                afterOnSameLineWords = DocumentLineColumn.FilterWordsFromText(
+                    afterOnSameLineWords,
+                    afterOnSameLine.ColumnsText![0]);
                 
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();

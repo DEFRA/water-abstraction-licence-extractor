@@ -56,14 +56,9 @@ public static partial class DataHelper
                     isLastColumn && trimPunctuation,
                     out var removesUsedLoop);
 
-                var trimmedColumnWords = FormattingHelper.TrimFormatting(column.Words);
-                
-                var alteredTextWords = trimmedColumnWords
-                    .Where(cw => alteredText.Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
-                
-                System.Diagnostics.Debug.Assert(alteredText == string.Join(' ', alteredTextWords.Select(w => w.Text)));
+                var alteredTextWords = DocumentLineColumn.FilterWordsFromText(
+                    column.Words,
+                    alteredText);
                 
                 var clonedColumn = new DocumentLineColumn(alteredTextWords);
                 newColumns.Add(clonedColumn);

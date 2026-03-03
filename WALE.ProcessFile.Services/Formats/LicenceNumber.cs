@@ -151,11 +151,11 @@ public partial class LicenceNumber : ILicenceNumberService
 
                     var candidateTextWords = line.Columns
                         .SelectMany(c => c.Words)
-                        .Where(cw => candidateText.Contains(cw.Text,
-                            StringComparison.InvariantCultureIgnoreCase))
                         .ToList();
                     
-                    System.Diagnostics.Debug.Assert(candidateText == string.Join(' ', candidateTextWords.Select(w => w.Text)));
+                    candidateTextWords = DocumentLineColumn.FilterWordsFromText(
+                        candidateTextWords,
+                        candidateText);
                     
                     // Passed all checks so add a clone of the line containing the matched NALD licence number
                     var matchedLine = line.Clone([new DocumentLineColumn(candidateTextWords)]);

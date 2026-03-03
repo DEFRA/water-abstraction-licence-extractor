@@ -50,12 +50,9 @@ public static class Units
                             continue;
                         }
 
-                        var possibilityWords = column.Words
-                            .Where(cw => possibility.Contains(cw.Text,
-                                StringComparison.InvariantCultureIgnoreCase))
-                            .ToList();
-                        
-                        System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                        var possibilityWords = DocumentLineColumn.FilterWordsFromText(
+                            column.Words,
+                            possibility);
                         
                         var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Add(clonedColumn);
@@ -100,11 +97,11 @@ public static class Units
                         var possibilityWords = linesToLookAt
                             .SelectMany(l => l.Columns)
                             .SelectMany(c => c.Words)
-                            .Where(cw => possibility.Contains(cw.Text,
-                                StringComparison.InvariantCultureIgnoreCase))
                             .ToList();
                         
-                        System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                        possibilityWords = DocumentLineColumn.FilterWordsFromText(
+                            possibilityWords,
+                            possibility);
                         
                         var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Clear();

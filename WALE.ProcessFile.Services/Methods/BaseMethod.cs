@@ -187,11 +187,9 @@ public static class BaseMethod
 
                 var possibilityWords = line.Columns
                     .SelectMany(c => c.Words)
-                    .Where(cw => possibility.Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
                     .ToList();
                 
-                System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
                 
                 var clonedLine = line.Clone();
                 clonedLine.Columns.Clear();
@@ -263,11 +261,9 @@ public static class BaseMethod
             
             var possibilityWords = result.Text!.First().Columns
                 .SelectMany(c => c.Words)
-                .Where(cw => possibility.Contains(cw.Text,
-                    StringComparison.InvariantCultureIgnoreCase))
                 .ToList();
             
-            System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+            possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
             
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
@@ -304,11 +300,9 @@ public static class BaseMethod
 
                 var possibilityWords = result.Text!.First().Columns
                     .SelectMany(c => c.Words)
-                    .Where(cw => possibility.Contains(cw.Text,
-                        StringComparison.InvariantCultureIgnoreCase))
                     .ToList();
                 
-                System.Diagnostics.Debug.Assert(possibility == string.Join(' ', possibilityWords.Select(w => w.Text)));
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
                 
                 var clonedLine = result.Text!.First().Clone();
                 clonedLine.Columns.Clear();

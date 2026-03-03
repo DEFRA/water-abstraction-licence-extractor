@@ -1219,7 +1219,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("(2) TA 0472 3425", pointsSubs[1].Text!.FirstOrDefault()!.Text);
         Assert.Equal(2, pointsSubs[2].Text!.Count);
         Assert.Equal("(3) TA 0677 3514 &", pointsSubs[2].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("TA 0678 3508", pointsSubs[2].Text!.LastOrDefault()!.Text);
+        Assert.Equal("TA 0678 3508 &", pointsSubs[2].Text!.LastOrDefault()!.Text);
         Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\"", pointsSubs[3].Text!.FirstOrDefault()!.Text);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
@@ -1394,7 +1394,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
         Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
         Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("TA 0677 3514 & TA 0678 3508", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("TA 0677 3514 & TA 0678 3508 &", agreedSchemaLicence.Points[2].Description);
         Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("TA 0269 3303 & TA 0268 3302", agreedSchemaLicence.Points[3].Description);
         

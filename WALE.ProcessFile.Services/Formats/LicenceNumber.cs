@@ -149,16 +149,14 @@ public partial class LicenceNumber : ILicenceNumberService
                         continue;
                     }
 
-                    var candidateTextWords = line.Columns
-                        .SelectMany(c => c.Words)
-                        .ToList();
-                    
-                    candidateTextWords = DocumentLineColumn.FilterWordsFromText(
-                        candidateTextWords,
-                        candidateText);
+                    var existingColumn = line.Columns.FirstOrDefault();
+                    var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
+                        candidateText,
+                        existingColumn?.OcrConfidence,
+                        existingColumn?.Words.FirstOrDefault()?.Coordinates));
                     
                     // Passed all checks so add a clone of the line containing the matched NALD licence number
-                    var matchedLine = line.Clone([new DocumentLineColumn(candidateTextWords)]);
+                    var matchedLine = line.Clone([candidateTextColumn]);
                     matchedLine.AdditionalData ??= new Dictionary<string, object>();
                     matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
                         

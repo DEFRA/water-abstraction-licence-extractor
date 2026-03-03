@@ -569,17 +569,17 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.NotNull(abstractionLimitsSection.SubResults);
         
         Assert.Single(abstractionLimitsSection.SubResults);
-        var section1Sub1 = abstractionLimitsSection.SubResults![0];
+        var section1Sub1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(16, section1Sub1.SubResults.Count);
         
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerMonthValue"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearUnits"));
-        Assert.Equal(2, section1Sub1.SubResults?.Count(x => x.MatchedLabel!.Name == "PerYearValue"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerHourUnits"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerHourValue"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerDayUnits"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerDayValue"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerMonthUnits"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerMonthValue"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerYearUnits"));
+        Assert.Equal(2, section1Sub1.SubResults.Count(x => x.MatchedLabel!.Name == "PerYearValue"));
         
         var perHourUnits = section1Sub1.SubResults?
             .FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");

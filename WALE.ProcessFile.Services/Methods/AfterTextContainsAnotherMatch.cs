@@ -41,7 +41,9 @@ public static class AfterTextContainsAnotherMatch
 
         var asLine = new DocumentLine
         {
-            Columns = [new DocumentLineColumn(afterTextWords)]
+            Columns = [new DocumentLineColumn(afterTextWords)],
+            PageNumber = request.line!.PageNumber,
+            LineNumber = request.line.LineNumber
         };
 
         var nextLine = request.nextLines?.FirstOrDefault();

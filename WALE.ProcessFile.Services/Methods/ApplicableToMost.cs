@@ -275,7 +275,8 @@ public static class ApplicableToMost
                             .Coordinates;
                         
                         licenceNumberLine.Columns[0].Words.Clear();
-                        licenceNumberLine.Columns[0].Words.Add(new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
+                        licenceNumberLine.Columns[0].Words.AddRange(
+                            DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));

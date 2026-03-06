@@ -176,6 +176,8 @@ public static class BaseMethod
         {
             return lines.ToList();
         }
+        
+
 
         return lines
             .Where(line => possibilities

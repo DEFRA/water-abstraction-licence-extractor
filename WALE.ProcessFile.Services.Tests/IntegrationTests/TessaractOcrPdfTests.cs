@@ -481,7 +481,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Wessex Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("WESSEX WATER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         // TODO try it with Azure AI Vision
         
@@ -748,7 +748,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text); // National Rivers Authority
+        Assert.Equal("ENVIRONMENT AGENC", issuerResult.Text?.FirstOrDefault()?.Text); // National Rivers Authority
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -947,7 +947,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("MERSEY AND WEAVER RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -994,7 +994,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("National Rivers Authority", issuerResult.Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("NATIONAL RIVERS AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);        
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1216,7 +1216,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("LEE CONSERVANCY CATCHMENT BOARD", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -1380,7 +1380,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         // Assert.Equal("8/37/43/33", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var issuer = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
-        Assert.Equal("Essex River Authority", issuer!.Text!.FirstOrDefault()?.Text);
+        Assert.Equal("ESSEX RIVER AUTHORITY", issuer!.Text!.FirstOrDefault()?.Text);
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1482,7 +1482,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Lee Conservancy Catchment Board", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("LEE CONSERVANCY CATCHMENT BOARD", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -1832,13 +1832,13 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Wessex Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("WESSEX WATER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         // TODO: It doesn't find this because in the DB it's `13/43/037/S/110` - should we be matching it without the /S/ ?
         // var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         // Assert.NotNull(licenceNumberResult);
         // Assert.True(licenceNumberResult.IsOcr);
-        // Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
+        // Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);
         // Assert.Equal("13/43/37/110", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
@@ -1877,7 +1877,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Thames Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("THAMES WATER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
 
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -1941,7 +1941,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Northumbrian River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("NORTHUMBRIAN RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         // Tesseract can't get a good result on this
         var dateOfIssue = resultFull.Matches!

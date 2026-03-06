@@ -70,7 +70,7 @@ public static class LabelIsInMiddleOfTextToFind
             out var removedLines);
         
         var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedLines, false);
-
+        
         foreach (var item in returnList)
         {
             FormattingHelper.RemoveRemoves(item, removedLines);

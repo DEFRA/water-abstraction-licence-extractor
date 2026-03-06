@@ -259,13 +259,14 @@ public static class OcrHelper
             }
             
             var firstWordCoords = orderedWords.First().Coordinates;
+            var lastWordCoords = orderedWords.Last().Coordinates;
             
             var documentLine = new DocumentLine(
                 lineNumber++,
                 pageNumber,
                 columns,
                 firstWordCoords.Top,
-                firstWordCoords.Right,
+                lastWordCoords.Right,
                 firstWordCoords.Bottom,
                 firstWordCoords.Left);
             
@@ -574,13 +575,14 @@ public static class OcrHelper
             }
 
             var firstWordCoords = columns.FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates;
+            var lastWordCoords = columns.LastOrDefault()?.Words.LastOrDefault()?.Coordinates;
 
             var documentLine = new DocumentLine(
                 lineNumber++,
                 pageNumber,
                 columns,
                 firstWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
-                firstWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                lastWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
                 firstWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
                 firstWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
 

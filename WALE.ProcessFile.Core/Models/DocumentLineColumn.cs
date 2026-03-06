@@ -133,10 +133,9 @@ public class DocumentLineColumn
             {
                 continue;
             }
-            
-            var position = inputWordsTrimmedCopy.FindIndex(
-                lw => lw.Text.StartsWith(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase)
-                      || lw.Text.EndsWith(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase));
+
+            var position = inputWordsTrimmedCopy.FindIndex(lw =>
+                lw.Text.Contains(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase));
                 
             if (position == -1)
             {

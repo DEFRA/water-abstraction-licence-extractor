@@ -54,16 +54,16 @@ public static class CompanyName
                 
                     continue;
                 }
-                
-                var text = FormattingHelper.TrimFormatting(column.Text, true, true)!;
+
+                var trimmedWords = FormattingHelper.TrimFormatting(column.Words);
 
                 // For speed, first check without dictionary
-                var correctedText = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(text, true, false)
-                    : text;
+                var correctedWords = isOcr
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(trimmedWords, true, false)
+                    : trimmedWords;
                 
-                if (DataHelper.IsCorruptedText(correctedText, isOcr)
-                    || !TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out var companyOrPersonalName))
+                if (DataHelper.IsCorruptedText(correctedWords, isOcr)
+                    || !TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -73,11 +73,11 @@ public static class CompanyName
                     continue;
                 }
                 
-                correctedText = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedText, true, label.AutoCorrect)
-                    : text;
+                correctedWords = isOcr
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedWords, true, label.AutoCorrect)
+                    : trimmedWords;
             
-                if (!TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out companyOrPersonalName))
+                if (!TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out companyOrPersonalName))
                 {
                     if (matched)
                     {

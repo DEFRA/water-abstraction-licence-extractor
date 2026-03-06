@@ -10,13 +10,7 @@ public class LicenceSet
     {
         get
         {
-            var licencesAlphabetical = Licences
-                .OrderBy(licence =>
-                {
-                    var licenceNumber = FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
-                    return licenceNumber + licence.LicenceVersion.LicenceVersionId;
-                });
-
+            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
             var outputSb = new StringBuilder();
             
             foreach (var licence in licencesAlphabetical)
@@ -26,10 +20,7 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                var licenceNumber = FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
-                var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
-                
-                outputSb.Append($"{licenceNumber}-{licenceVersionId}");
+                outputSb.Append(licence.Id);
             }
 
             return outputSb.ToString();
@@ -40,9 +31,7 @@ public class LicenceSet
     {
         get
         {
-            var licencesAlphabetical = Licences
-                .OrderBy(licence => licence.LicenceNumber?.Value + licence.LicenceVersion.LicenceVersionId);
-
+            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
             var outputSb = new StringBuilder();
             
             foreach (var licence in licencesAlphabetical)

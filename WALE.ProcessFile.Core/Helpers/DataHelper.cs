@@ -328,9 +328,10 @@ public static partial class DataHelper
             return true;
         }
         
-        var isCorrupt = IsCorruptedWord(
-            word,
-            isOcr);
+        var isCorrupt = IsCorruptedWordText(
+            word.Text,
+            isOcr,
+            out _);
         
         return isCorrupt;
     }
@@ -434,7 +435,7 @@ public static partial class DataHelper
         
         var hasCorruptedWord = words.Any(word =>
         {
-            var isCorrupt = IsCorruptedWord(word.Text, isOcr, out var wordText);
+            var isCorrupt = IsCorruptedWordText(word.Text, isOcr, out var wordText);
 
             var newWord = word.Clone();
             newWord.Text = wordText!;
@@ -452,7 +453,7 @@ public static partial class DataHelper
         return IsCorruptedLine(lineText, isOcr, unacceptableIncorrectValue);
     }
 
-    public static bool IsCorruptedWord(string? wordText, bool isOcr, out string? wordTextTweaked)
+    public static bool IsCorruptedWordText(string? wordText, bool isOcr, out string? wordTextTweaked)
     {
         if (!isOcr || string.IsNullOrEmpty(wordText))
         {

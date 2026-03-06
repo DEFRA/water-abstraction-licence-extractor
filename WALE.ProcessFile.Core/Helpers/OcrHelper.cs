@@ -258,17 +258,34 @@ public static class OcrHelper
                 previousWord = word;
             }
             
-            var firstWordCoords = orderedWords.First().Coordinates;
-            var lastWordCoords = orderedWords.Last().Coordinates;
+            var mostTopWordCoords = orderedWords
+                .OrderBy(w => w.Coordinates.Top)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostBottomWordCoords = orderedWords
+                .OrderByDescending(w => w.Coordinates.Bottom)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostLeftWordCoords = orderedWords
+                .OrderBy(w => w.Coordinates.Left)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostRightWordCoords = orderedWords
+                .OrderByDescending(w => w.Coordinates.Right)
+                .FirstOrDefault()?
+                .Coordinates;
             
             var documentLine = new DocumentLine(
                 lineNumber++,
                 pageNumber,
                 columns,
-                firstWordCoords.Top,
-                lastWordCoords.Right,
-                firstWordCoords.Bottom,
-                firstWordCoords.Left);
+                mostTopWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
+                mostRightWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                mostBottomWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
+                mostLeftWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
             
             orderedLines.Add(documentLine);
         }
@@ -574,17 +591,38 @@ public static class OcrHelper
                 previousOkWord = word;
             }
 
-            var firstWordCoords = columns.FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates;
-            var lastWordCoords = columns.LastOrDefault()?.Words.LastOrDefault()?.Coordinates;
-
+            var allWords = columns
+                .SelectMany(c => c.Words)
+                .ToList();
+            
+            var mostTopWordCoords = allWords
+                .OrderBy(w => w.Coordinates.Top)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostBottomWordCoords = allWords
+                .OrderByDescending(w => w.Coordinates.Bottom)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostLeftWordCoords = allWords
+                .OrderBy(w => w.Coordinates.Left)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostRightWordCoords = allWords
+                .OrderByDescending(w => w.Coordinates.Right)
+                .FirstOrDefault()?
+                .Coordinates;
+            
             var documentLine = new DocumentLine(
                 lineNumber++,
                 pageNumber,
                 columns,
-                firstWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
-                lastWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
-                firstWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
-                firstWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
+                mostTopWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
+                mostRightWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                mostBottomWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
+                mostLeftWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
 
             if (!DataHelper.IsCorruptedWords(
                 documentLine.Columns.SelectMany(c => c.Words).ToList(),

@@ -247,16 +247,26 @@ public class AwsTextractOcrDataExtractorService
                 continue;
             }
 
-            var words = blockWord.Text
-                .Split(' ')
-                .Select(wordText => (DocumentLineWord?)new DocumentLineWord(
+            var top = (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier;
+            var bottom = (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier;
+
+            var origLeft = (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier;
+            var origRight = (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier;
+            
+            var individualWords = blockWord.Text.Split(' ');
+            var totalWidth = origRight - origLeft;
+            var widthPerWord = totalWidth / individualWords.Length;
+            const int dividerWidth = 10;
+            
+            var words = individualWords
+                .Select((wordText, index) => (DocumentLineWord?)new DocumentLineWord(
                     wordText,
                     blockWord.Confidence,
                     new DocumentLineWordCoordinates(
-                    (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
-                    (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
-                    (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
-                    (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
+                        top,
+                        origLeft + ((index + 1) * widthPerWord),
+                        bottom,
+                        origLeft + (index * widthPerWord) + (index > 0 ? dividerWidth : 0)
                     ),
                     blockWord.TextType.Value
                     ))

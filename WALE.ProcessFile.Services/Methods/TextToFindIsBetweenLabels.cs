@@ -163,7 +163,7 @@ public static class TextToFindIsBetweenLabels
         }
         
         betweenText = betweenText
-            .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text, request.isOcr))
+            .Where(betweenLine => !DataHelper.IsCorruptedLine(betweenLine.Text, request.isOcr))
             .ToList();
         
         betweenText = DataHelper.RemoveExcludesAndNotContains(

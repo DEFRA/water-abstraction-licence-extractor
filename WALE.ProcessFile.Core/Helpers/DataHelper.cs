@@ -241,9 +241,9 @@ public static partial class DataHelper
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]
     private static partial Regex CharDigitCharRegex();
 
-    public static bool IsCorruptedWord(DocumentLineWord? word, bool isOcr, double unacceptableIncorrectValue = 50.01)
+    public static bool IsCorruptedWord(DocumentLineWord? word, bool isOcr)
     {
-        if (word == null)
+        if (word == null || !isOcr)
         {
             return false;
         }
@@ -328,10 +328,9 @@ public static partial class DataHelper
             return true;
         }
         
-        var isCorrupt = IsCorruptedText(
-            word.Text,
-            isOcr,
-            unacceptableIncorrectValue);
+        var isCorrupt = IsCorruptedWord(
+            word,
+            isOcr);
         
         return isCorrupt;
     }
@@ -395,7 +394,7 @@ public static partial class DataHelper
             return true;
         }
         
-        var isCorrupt = IsCorruptedText(
+        var isCorrupt = IsCorruptedLine(
             string.Join(' ', words.Select(w => w?.Text)),
             isOcr,
             unacceptableIncorrectValue);
@@ -425,37 +424,97 @@ public static partial class DataHelper
             && ch != '&'
             && ch != '*';
     }
-    
-    public static bool IsCorruptedText(string? line, bool isOcr, double unacceptableIncorrectValue = 50.01)
+
+    public static bool IsCorruptedWords(
+        List<DocumentLineWord> words,
+        bool isOcr,
+        double unacceptableIncorrectValue = 50.01)
     {
-        if (!isOcr || string.IsNullOrEmpty(line))
+        var tweakedWords = new List<DocumentLineWord>();
+        
+        var hasCorruptedWord = words.Any(word =>
         {
+            var isCorrupt = IsCorruptedWord(word.Text, isOcr, out var wordText);
+
+            var newWord = word.Clone();
+            newWord.Text = wordText!;
+            tweakedWords.Add(newWord);
+            
+            return isCorrupt;
+        });
+
+        if (hasCorruptedWord)
+        {
+            return true;
+        }
+        
+        var lineText = string.Join(' ', tweakedWords.Select(w => w.Text));
+        return IsCorruptedLine(lineText, isOcr, unacceptableIncorrectValue);
+    }
+
+    public static bool IsCorruptedWord(string? wordText, bool isOcr, out string? wordTextTweaked)
+    {
+        if (!isOcr || string.IsNullOrEmpty(wordText))
+        {
+            wordTextTweaked = wordText;
             return false;
         }
         
-        if (line.Contains('—'))
+        if (wordText.Contains('—'))
         {
-            line = line.Replace("—", "-");
+            wordText = wordText.Replace("—", "-");
         }
         
-        if (line.Contains('”'))
+        if (wordText.Contains('”'))
         {
-            line = line.Replace("”", "\"");
+            wordText = wordText.Replace("”", "\"");
         }
         
-        if (line.Contains('’'))
+        if (wordText.Contains('’'))
         {
-            line = line.Replace("’", "'");
+            wordText = wordText.Replace("’", "'");
         }
+
+        wordTextTweaked = wordText;
         
-        if (IsSpecialCharacter(line[0]))
+        if (IsSpecialCharacter(wordText[0]))
         {
             return true;
         }
 
-        var specialCharCount = line.Count(IsSpecialCharacter);
+        return false;
+    }
 
-        if (line.Length < 8 && CharDigitCharRegex().IsMatch(line))
+    public static bool IsCorruptedLine(string? lineText, bool isOcr, double unacceptableIncorrectValue = 50.01)
+    {
+        if (!isOcr || string.IsNullOrEmpty(lineText))
+        {
+            return false;
+        }
+        
+        if (lineText.Contains('—'))
+        {
+            lineText = lineText.Replace("—", "-");
+        }
+        
+        if (lineText.Contains('”'))
+        {
+            lineText = lineText.Replace("”", "\"");
+        }
+        
+        if (lineText.Contains('’'))
+        {
+            lineText = lineText.Replace("’", "'");
+        }
+        
+        if (IsSpecialCharacter(lineText[0]))
+        {
+            return true;
+        }
+
+        var specialCharCount = lineText.Count(IsSpecialCharacter);
+
+        if (lineText.Length < 8 && CharDigitCharRegex().IsMatch(lineText))
         {
             return true;
         }
@@ -465,17 +524,17 @@ public static partial class DataHelper
             return true;
         }
         
-        if ((char.IsLower(line[0]) || char.IsDigit(line[0])) && specialCharCount >= 1)
+        if ((char.IsLower(lineText[0]) || char.IsDigit(lineText[0])) && specialCharCount >= 1)
         {
             return true;
         }
         
-        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(line))
+        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText))
         {
             return false;
         }
 
-        if (CompanyNameHelper.EndsWithCompanyOrPersonalSuffix(line))
+        if (CompanyNameHelper.EndsWithCompanyOrPersonalSuffix(lineText))
         {
             return false;
         }
@@ -485,12 +544,12 @@ public static partial class DataHelper
         var charIndex = 0;
         var anySpacesInserted = false;
         
-        foreach (var c in line)
+        foreach (var c in lineText)
         {
             if (
                 char.IsAsciiLetter(c)
                 && charIndex > 0
-                && char.IsDigit(line[charIndex - 1]))
+                && char.IsDigit(lineText[charIndex - 1]))
             {
                 newLine.Append(' ');
                 anySpacesInserted = true;
@@ -502,10 +561,10 @@ public static partial class DataHelper
 
         if (anySpacesInserted)
         {
-           line = newLine.ToString();
+           lineText = newLine.ToString();
         }
         
-        var wordsSplit = GetNoneDigitOrCertain2LetterWords(line.Split(' '));
+        var wordsSplit = GetNoneDigitOrCertain2LetterWords(lineText.Split(' '));
         var percentagePerWord = 100.0 / wordsSplit.Count;
         
         var countOfVeryShortWordsOrSymbols = wordsSplit.Count(word => word.Length <= 2);

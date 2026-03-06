@@ -91,7 +91,7 @@ public static class ApplicableToMost
                 false,
                 out var removedLines);
             
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText, request.isOcr))
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
             {
                 continue;
             }
@@ -321,17 +321,19 @@ public static class ApplicableToMost
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
-                var autoCorrectedOutputText = request.isOcr
+                var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
+                
+                var autoCorrectedOutput = request.isOcr
                     ? await AutoCorrectHelper.AutoCorrectTextAsync(
-                        documentLine.Text,
+                        words,
                         false,
                         request.label?.AutoCorrect ?? false)
-                    : documentLine.Text;
+                    : words;
 
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
                     if (!outputText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        && !autoCorrectedOutputText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
+                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         continue;
                     }
@@ -385,7 +387,6 @@ public static class ApplicableToMost
                 }
 
                 labelGroupResult = labelGroupResult.Clone([documentLine]);
-                
                 return CheckContains(request.label, r);
             }
             
@@ -393,10 +394,20 @@ public static class ApplicableToMost
             {
                 outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
             }
-            
-            outputText = request.isOcr
-                ? await AutoCorrectHelper.AutoCorrectTextAsync(outputText!, request.isCompanyType, request.label.AutoCorrect)
-                : outputText;
+
+            var tWords = DocumentLineColumn.FilterWordsFromText(
+                documentLine.Columns.SelectMany(c => c.Words).ToList(),
+                outputText!);
+
+            if (request.isOcr)
+            {
+                tWords = await AutoCorrectHelper.AutoCorrectTextAsync(
+                    tWords,
+                    request.isCompanyType,
+                    request.label.AutoCorrect);
+            }
+
+            outputText = string.Join(' ', tWords.Select(tw => tw.Text));
             
             if (request.isCompanyType
                 && CompanyName.TryGetCompanyOrPersonalName(

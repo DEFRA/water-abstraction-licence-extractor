@@ -43,7 +43,7 @@ public static class CompanyName
                     continue;
                 }
             
-                if (DataHelper.IsCorruptedText(column.Text, isOcr))
+                if (DataHelper.IsCorruptedLine(column.Text, isOcr))
                 {
                     newColumns.Add(column);
                     
@@ -62,7 +62,7 @@ public static class CompanyName
                     ? await AutoCorrectHelper.AutoCorrectTextAsync(trimmedWords, true, false)
                     : trimmedWords;
                 
-                if (DataHelper.IsCorruptedText(correctedWords, isOcr)
+                if (DataHelper.IsCorruptedWords(correctedWords, isOcr)
                     || !TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out var companyOrPersonalName))
                 {
                     if (matched)
@@ -172,7 +172,17 @@ public static class CompanyName
         
         return (matched, matchedLines);
     }
-    
+
+    public static bool TryGetCompanyOrPersonalName(
+        List<DocumentLineWord> words,
+        LabelToMatch label,
+        LookupConfiguration? lookupConfiguration,
+        out string? matchedCompanyOrPersonalName)
+    {
+        var combinedText = string.Join(' ', words.Select(w => w.Text));
+        return TryGetCompanyOrPersonalName(combinedText, label, lookupConfiguration, out matchedCompanyOrPersonalName);
+    }
+
     public static bool TryGetCompanyOrPersonalName(
         string? lineText,
         LabelToMatch label,

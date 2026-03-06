@@ -405,7 +405,7 @@ public partial class LicenceNumber : ILicenceNumberService
     private static bool IsValidColumnForProcessing(DocumentLineColumn column, bool isOcr) =>
         !string.IsNullOrEmpty(column.Text)
         && column.Text.Any(char.IsDigit)
-        && !DataHelper.IsCorruptedText(column.Text, isOcr);
+        && !DataHelper.IsCorruptedLine(column.Text, isOcr);
 
     private static bool IsValidSubLine(string subLine, string fullText) =>
         subLine.Length >= 4

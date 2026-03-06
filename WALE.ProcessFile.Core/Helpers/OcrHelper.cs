@@ -67,19 +67,19 @@ public static class OcrHelper
             correctedWords.Add(await task);
         }
         
-        var checkForCorruptedTasks = new List<Task<(bool Corrupted, DocumentLineWord? Word)>>();
+        var checkForCorruptedWordsTasks = new List<Task<(bool Corrupted, DocumentLineWord? Word)>>();
         
         foreach (var word in correctedWords)
         {
             var task = Task.Run(() =>
                 (DataHelper.IsCorruptedWord(word, true), word));
             
-            checkForCorruptedTasks.Add(task);
+            checkForCorruptedWordsTasks.Add(task);
         }
         
         var autoCorrectedWords = new List<DocumentLineWord?>();
         
-        foreach (var task in checkForCorruptedTasks)
+        foreach (var task in checkForCorruptedWordsTasks)
         {
             var (corrupted, word) = await task;
 
@@ -584,7 +584,10 @@ public static class OcrHelper
                 firstWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
                 firstWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
 
-            if (!DataHelper.IsCorruptedText(documentLine.Text, true, unacceptableIncorrectValue))
+            if (!DataHelper.IsCorruptedWords(
+                documentLine.Columns.SelectMany(c => c.Words).ToList(),
+                true,
+                unacceptableIncorrectValue))
             {
                 groupedLines.Add(documentLine);   
             }

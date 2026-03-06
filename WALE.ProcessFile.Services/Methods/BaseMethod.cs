@@ -59,14 +59,18 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                var result1 = await CompanyName.AnyIsCompanyOrPersonalNameAsync(lines, request.label, lineNumbersAreDescending,
-                    request.isOcr, request.lookupConfiguration);
+                var (anyFound, companyNameLines) =
+                    await CompanyName.AnyIsCompanyOrPersonalNameAsync(
+                        lines,
+                        request.label,
+                        lineNumbersAreDescending,
+                        request.isOcr,
+                        request.lookupConfiguration);
                 
-                if (result1.Item1)
+                if (anyFound)
                 {
-                    var companyNameLines = result1.Item2;
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines);
-
+                    
                     if (companyNameLines.Count > 0)
                     {
                         labelGroupResult = labelGroupResult.Clone(companyNameLines);

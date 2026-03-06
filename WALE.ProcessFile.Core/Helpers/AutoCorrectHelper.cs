@@ -282,7 +282,11 @@ public static class AutoCorrectHelper
             {
                 isFirstWord = false;
 
-                if (removeFirstWordIfLowercase && wordText.Length > 0 && char.IsLower(wordText[0]))
+                if (removeFirstWordIfLowercase
+                    && wordText.Length >= 1
+                    && char.IsLower(wordText[0])
+                    && !CompanyNameHelper.CompanyWords.Any(companyWord =>
+                        companyWord.Contains($"{wordText} ", StringComparison.InvariantCultureIgnoreCase)))
                 {
                     continue;
                 }

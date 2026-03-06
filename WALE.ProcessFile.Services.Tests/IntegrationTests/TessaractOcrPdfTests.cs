@@ -303,7 +303,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count); // TODO should be 5
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1732,18 +1732,15 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         //Assert.Equal("25/63/1/158", agreedSchemaLicence.LicenceNumber); - NULL as doesn't read with OCR correctly
         
-        Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("25/68/1/1", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO should be 25/68/1/153
+        Assert.Equal(6, agreedSchemaLicence.LinkedLicences.Length);
+        Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("25/68/1/155", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("25/68/1/156", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        Assert.Equal("25/68/1/159", agreedSchemaLicence.LinkedLicences[3].LicenceNumber);
+        Assert.Equal("25/68/1/180", agreedSchemaLicence.LinkedLicences[4].LicenceNumber);
+        Assert.Equal("25/68/1/184", agreedSchemaLicence.LinkedLicences[5].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("UnknownPage1", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
-        
-        // TODO: Investigate linked licences. Looks like quite a few in the PDF so not sure why we're just looking for 1
-        //var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        //Assert.Equal("25/63/1/158", agreedSchemaLicence.LicenceNumber);
-        // Assert.Single(agreedSchemaLicence.LinkedLicences);
-        // Assert.Equal("25/68/1/153", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        // Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        // Assert.Equal("UnknownPage1", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("UnknownPage3", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
     }
     
     [Fact]

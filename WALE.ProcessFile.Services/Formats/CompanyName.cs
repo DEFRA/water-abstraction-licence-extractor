@@ -11,7 +11,7 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
-    public static async Task<(bool, IReadOnlyList<DocumentLine>)> AnyIsCompanyOrPersonalNameAsync(
+    public static async Task<(bool AnyFound, IReadOnlyList<DocumentLine> FoundLines)> AnyIsCompanyOrPersonalNameAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool lineNumbersAreDescending,

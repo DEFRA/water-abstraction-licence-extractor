@@ -325,7 +325,7 @@ public static class AutoCorrectHelper
                     && nextWordText.All(char.IsLetterOrDigit)
                     && (wordText.Length == 1 || !wordKnownToBeSpeltCorrectly))
                 {
-                    var removedSpaceCombinedWord = $"{word}{nextWord}";
+                    var removedSpaceCombinedWord = $"{word.Text}{nextWord?.Text}";
                     
                     if (checkDictionary)
                     {

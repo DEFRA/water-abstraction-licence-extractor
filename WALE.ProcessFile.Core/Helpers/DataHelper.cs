@@ -474,6 +474,12 @@ public static partial class DataHelper
         {
             wordText = wordText.Replace("’", "'");
         }
+        
+        // Swap out to a shared method to do this, as its done in 3 places
+        if (wordText.Contains('“'))
+        {
+            wordText = wordText.Replace("“", "\"");
+        }
 
         wordTextTweaked = wordText;
         
@@ -505,6 +511,11 @@ public static partial class DataHelper
         if (lineText.Contains('’'))
         {
             lineText = lineText.Replace("’", "'");
+        }
+        
+        if (lineText.Contains('“'))
+        {
+            lineText = lineText.Replace("“", "\"");
         }
         
         if (IsSpecialCharacter(lineText[0]))

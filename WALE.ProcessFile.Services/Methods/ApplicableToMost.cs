@@ -82,7 +82,7 @@ public static class ApplicableToMost
                         .Trim();
                 }
             }
-
+            
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(
                 matchedLabel,
@@ -395,8 +395,19 @@ public static class ApplicableToMost
                 outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
             }
 
+            var previousLine = request.previousLines!.FirstOrDefault();
+            
+            var inputWords = over2Lines && previousLine != null
+                ? new List<DocumentLine> { previousLine, documentLine }
+                    .SelectMany(dl => dl.Columns)
+                    .SelectMany(c => c.Words)
+                    .ToList()
+                : documentLine.Columns
+                    .SelectMany(c => c.Words)
+                    .ToList();
+            
             var tWords = DocumentLineColumn.FilterWordsFromText(
-                documentLine.Columns.SelectMany(c => c.Words).ToList(),
+                inputWords,
                 outputText!);
 
             if (request.isOcr)

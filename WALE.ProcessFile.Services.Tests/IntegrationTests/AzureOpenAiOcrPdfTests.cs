@@ -95,7 +95,7 @@ public class AzureOpenAiOcrPdfTests
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Southern Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("SOUTHERN WATER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");

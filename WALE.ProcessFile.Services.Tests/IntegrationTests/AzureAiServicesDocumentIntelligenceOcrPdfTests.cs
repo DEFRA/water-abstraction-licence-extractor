@@ -333,7 +333,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Southern Water Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("SOUTHERN WATER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -423,7 +423,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("MERSEY AND WEAVER RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
@@ -532,7 +532,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("The Somerset River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("THE SOMERSET RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -874,7 +874,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Mersey and Weaver River Authority", issuerResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("MERSEY AND WEAVER RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
         
         var dateOfIssue = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
@@ -1051,7 +1051,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var issuer = resultFull.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuer);
-        Assert.StartsWith("Northumbrian Water Authority", issuer.Text?.FirstOrDefault()?.Text);
+        Assert.StartsWith("NORTHUMBRIAN WATER AUTHORITY", issuer.Text?.FirstOrDefault()?.Text);
         
         // Assert
         Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);

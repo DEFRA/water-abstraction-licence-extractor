@@ -102,7 +102,7 @@ public static class CompanyName
                 }
 
                 var companyOrPersonalNameWords = DocumentLineColumn.FilterWordsFromText(
-                    column.Words,
+                    correctedWords,
                     companyOrPersonalName!);
                 
                 var clonedColumn = new DocumentLineColumn(companyOrPersonalNameWords);

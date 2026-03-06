@@ -305,11 +305,11 @@ public static class AutoCorrectHelper
                     continue;
                 }
 
-                var wordSpeltCorrectly = true;
+                var wordKnownToBeSpeltCorrectly = true;
 
                 if (checkDictionary)
                 {
-                    wordSpeltCorrectly = CustomDictionary.Check(wordText) || Dictionary.Check(wordText);
+                    wordKnownToBeSpeltCorrectly = CustomDictionary.Check(wordText) || Dictionary.Check(wordText);
                 }
                 
                 var nextWordText = nextWord?.Text;
@@ -319,7 +319,7 @@ public static class AutoCorrectHelper
                     && (wordText.Length > 1 || nextWordText.Length > 1)
                     && wordText.All(char.IsLetterOrDigit)
                     && nextWordText.All(char.IsLetterOrDigit)
-                    && (wordText.Length == 1 || !wordSpeltCorrectly))
+                    && (wordText.Length == 1 || !wordKnownToBeSpeltCorrectly))
                 {
                     var removedSpaceCombinedWord = $"{word}{nextWord}";
                     
@@ -366,7 +366,9 @@ public static class AutoCorrectHelper
 
                 string? topSuggestion;
 
-                if (!wordSpeltCorrectly && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(wordText)))
+                if (!wordKnownToBeSpeltCorrectly
+                    && word.OcrConfidence < 90
+                    && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(wordText)))
                 {
                     if (topSuggestion.Equals($"{wordText}s", StringComparison.InvariantCultureIgnoreCase)
                         || $"{topSuggestion}s".Equals(wordText, StringComparison.InvariantCultureIgnoreCase))

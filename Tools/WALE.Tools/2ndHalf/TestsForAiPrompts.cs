@@ -172,7 +172,8 @@ public static class TestsForAiPrompts
                         Individual = individualLimits,
                         Aggregates = aggregateLimits
                     },
-                    LicenceNumber = baseLicenceData.LicenceNumber,
+                    LicenceNumber = new ValueWithConfidence<string>(
+                        baseLicenceData.LicenceNumber, -1, -1),
                     MeansOfAbstraction = meansOfAbstraction,
                     DefinitionOfYear = baseLicenceData.DefinitionOfYear,
                     PeriodsOfAbstraction = periodsOfAbstraction

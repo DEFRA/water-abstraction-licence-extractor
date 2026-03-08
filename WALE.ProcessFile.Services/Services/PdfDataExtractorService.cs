@@ -11,7 +11,6 @@ using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
 using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -242,11 +241,14 @@ public class PdfDataExtractorService(
                 ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
                     $" - {pdfDocument.PdfFilePath}");
                 
-                pageImages = page.ScreenshotReferences.Select(x => x.ImageReference).ToList()!;
+                pageImages = page.ScreenshotReferences
+                    .Select(sr => sr.ImageReference)
+                    .ToList()!;
 
                 foreach (var pageImage in pageImages)
                 {
                     var extension = pageImage.Split('.').Last();
+                    
                     allImagesInDocument.Insert(0, new ImageDetails
                     {
                         pageNumber = pageNumber,
@@ -756,9 +758,9 @@ public class PdfDataExtractorService(
                 var ifMultiplePreferLast = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
                 var ifMultiplePreferLongest = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
                 var canGoOverPageBoundary = fullLabel?.CanGoOverPageBoundary ?? false;
-                var lookingForMultiple = fullLabel?.MultipleBehaviour
-                    is MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
-                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel;
+                var lookingForMultiple = fullLabel?.MultipleMatchBehaviour
+                    is MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
+                        or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel;
                 
                 return doesntMatchAnyFound
                     || lookingForMultiple
@@ -1092,7 +1094,7 @@ public class PdfDataExtractorService(
                     if (FormattingHelper.IsLineEmpty(partialLine)
                         && label.Text?.Any(text =>
                             text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
-                        && !(label.Position == LabelPosition.Split && lineCount == totalLineCount - 1))
+                        && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
                     {
                         partialLine = null;
                         continue;
@@ -1212,9 +1214,9 @@ public class PdfDataExtractorService(
                         lookupConfiguration = lookupConfiguration
                     };
                     
-                    var singleValueWanted = matchedLabel.MultipleBehaviour is
-                        MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue
-                        or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+                    var singleValueWanted = matchedLabel.MultipleMatchBehaviour is
+                        MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue
+                        or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
                     
                     foreach (var expression in lookupExpressions)
                     {
@@ -1234,7 +1236,7 @@ public class PdfDataExtractorService(
                         
                         if (request.label.FindMultipleOnSingleLine
                             && request.textBeforeAtAndAfterLabel.Count >= 1
-                            && request.label.Position is not LabelPosition.Split
+                            && request.label.Position is not LabelPosition.SplitAtLabel
                             and not LabelPosition.TextToFindIsBetweenLabels
                             and not LabelPosition.RelatedCategoryPosition)
                         {
@@ -1318,8 +1320,8 @@ public class PdfDataExtractorService(
         var atLeastOneResultFound = returnList.Count > 1;
         
         var allAreSingleLabelMultipleLines = returnList.All(match =>
-            match.MatchedLabel?.MultipleBehaviour is
-                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
+            match.MatchedLabel?.MultipleMatchBehaviour is
+                MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
 
         if (atLeastOneResultFound && allAreSingleLabelMultipleLines)
         {
@@ -1338,7 +1340,7 @@ public class PdfDataExtractorService(
                 {
                     MatchedLabel = returnItem.MatchedLabel!.Clone(),
                     LabelGroupName = returnItem.LabelGroupName,
-                    MatchType = returnItem.MatchType,
+                    MatchedPosition = returnItem.MatchedPosition,
                     PageNumber = returnItem.PageNumber,
                     ServiceName = returnItem.ServiceName,
                     Text = textList
@@ -1417,8 +1419,8 @@ public class PdfDataExtractorService(
 
         if (singleValueWanted && results.Count >= 1)
         {
-            if (request.label!.MultipleBehaviour is
-                MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+            if (request.label!.MultipleMatchBehaviour is
+                MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
             {
                 // Prefer ones that have some text (important in split logic)
                 var singleValueResult = new List<LabelGroupResult>
@@ -1444,7 +1446,7 @@ public class PdfDataExtractorService(
             };
         }                        
                         
-        returnList.AddRange(results.Where(result => result.MatchType != MatchType.NotFound));
+        returnList.AddRange(results.Where(result => result.MatchedPosition != MatchedPosition.NotFound));
 
         // NOTE - It may first appear we can do the following - but we need to keep looking because
         // of the way we look up labels per page
@@ -1485,9 +1487,15 @@ public class PdfDataExtractorService(
 
                         if (newPartialLineText != string.Empty)
                         {
+                            var newPartialLineTextWords = partialLine.Columns
+                                .SelectMany(c => c.Words)
+                                .ToList();
+                            
+                            newPartialLineTextWords = DocumentLineColumn.FilterWordsFromText(newPartialLineTextWords, newPartialLineText);
+                            
                             partialLine = partialLine.Clone();
                             partialLine.Columns.Clear();
-                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineText));
+                            partialLine.Columns.Add(new DocumentLineColumn(newPartialLineTextWords));
 
                             newPartialLine = partialLine;
                             continuePartialLoop = true;
@@ -1516,7 +1524,7 @@ public class PdfDataExtractorService(
             int Order)>
         {
             (LabelPosition.ApplicableToMost, ApplicableToMost.FunctionAsync, 0),
-            (LabelPosition.Split, Split.FunctionAsync, 0),
+            (LabelPosition.SplitAtLabel, Split.FunctionAsync, 0),
             (LabelPosition.RelatedCategoryPosition, RelatedCategoryPosition.FunctionAsync, 0),
             (LabelPosition.TextToFindIsBetweenLabels, TextToFindIsBetweenLabels.FunctionAsync, 0),
             (LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore, LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore.FunctionAsync, -1),
@@ -1541,8 +1549,8 @@ public class PdfDataExtractorService(
                     case LabelPosition.RelatedCategoryPosition
                         when expression.Position is LabelPosition.RelatedCategoryPosition:
                         return true;
-                    case LabelPosition.Split
-                        when expression.Position is LabelPosition.Split:
+                    case LabelPosition.SplitAtLabel
+                        when expression.Position is LabelPosition.SplitAtLabel:
                         return true;
                     case LabelPosition.LabelIsBeforeTextToFind
                         when expression.Position is LabelPosition.LabelIsBeforeTextToFind:
@@ -1561,7 +1569,7 @@ public class PdfDataExtractorService(
                         return true;
                     default:
                         return expression.Position is LabelPosition.ApplicableToMost
-                           && label.Position != LabelPosition.Split
+                           && label.Position != LabelPosition.SplitAtLabel
                            && label.Position != LabelPosition.RelatedCategoryPosition
                            && label.Position != LabelPosition.TextToFindIsBetweenLabels;
                 }
@@ -1697,7 +1705,7 @@ public class PdfDataExtractorService(
         }
 
         if (label.Text?.FirstOrDefault()?.IsRegularExpression == true &&
-            label.Position == LabelPosition.ActuallyLabel)
+            label.Position == LabelPosition.LabelIsActuallyResult)
         {
             var options = label.Text.First().RegularExpressionIsCaseInsensitive
                 ? RegexOptions.IgnoreCase
@@ -1874,7 +1882,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
                 or LabelPosition.ApplicableToMost
-                or LabelPosition.Split)
+                or LabelPosition.SplitAtLabel)
         {
             var returnLabel = label.Clone();
             returnLabel.Position = label.Position is
@@ -1894,7 +1902,7 @@ public class PdfDataExtractorService(
         if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
         {
             var returnLabel = label.Clone();
-            returnLabel.Position = LabelPosition.ActuallyLabel;
+            returnLabel.Position = LabelPosition.LabelIsActuallyResult;
 
             returnItems.Add(new TextAndLabel
             {
@@ -1912,7 +1920,7 @@ public class PdfDataExtractorService(
                 or LabelPosition.ContractIsSuccession
                 or LabelPosition.RelatedCategoryPosition
                 or LabelPosition.ApplicableToMost
-                or LabelPosition.Split)
+                or LabelPosition.SplitAtLabel)
         {
             var returnLabel = label.Clone();
             returnLabel.Position = label.Position is

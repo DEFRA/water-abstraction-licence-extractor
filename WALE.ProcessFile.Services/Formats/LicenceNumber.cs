@@ -148,16 +148,22 @@ public partial class LicenceNumber : ILicenceNumberService
                     {
                         continue;
                     }
+
+                    var existingColumn = line.Columns.FirstOrDefault();
+                    var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
+                        candidateText,
+                        existingColumn?.OcrConfidence,
+                        existingColumn?.Words.FirstOrDefault()?.Coordinates));
                     
                     // Passed all checks so add a clone of the line containing the matched NALD licence number
-                    var matchedLine = line.Clone([new DocumentLineColumn(candidateText)]);
+                    var matchedLine = line.Clone([candidateTextColumn]);
                     matchedLine.AdditionalData ??= new Dictionary<string, object>();
                     matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
                         
                     matchedLines.Add(matchedLine);
                     
                     // Exit early if we're looking for a single instance match
-                    if (label.MultipleBehaviour is MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                    if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                     {
                         return (true, matchedLines);
                     }
@@ -399,7 +405,7 @@ public partial class LicenceNumber : ILicenceNumberService
     private static bool IsValidColumnForProcessing(DocumentLineColumn column, bool isOcr) =>
         !string.IsNullOrEmpty(column.Text)
         && column.Text.Any(char.IsDigit)
-        && !DataHelper.IsCorruptedText(column.Text, isOcr);
+        && !DataHelper.IsCorruptedLine(column.Text, isOcr);
 
     private static bool IsValidSubLine(string subLine, string fullText) =>
         subLine.Length >= 4

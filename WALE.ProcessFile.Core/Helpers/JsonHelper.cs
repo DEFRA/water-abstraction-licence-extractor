@@ -23,10 +23,10 @@ public static class JsonHelper
         return JsonSerializer.Serialize(licenceSets.Values, GetSerializerOptions());
     }
 
-    public static Dictionary<string, object> MakeJsonElementDictionaryNative(
-        Dictionary<string, object> inputDictionary)
+    public static Dictionary<string, object?> MakeJsonElementDictionaryNative(
+        Dictionary<string, object?> inputDictionary)
     {
-        var nativeDictionary = new Dictionary<string, object>();
+        var nativeDictionary = new Dictionary<string, object?>();
             
         foreach (var kvp in inputDictionary)
         {
@@ -55,7 +55,7 @@ public static class JsonHelper
             }
             else
             {
-                throw new Exception($"Unknown type - {kvp.Value.GetType().Name}");
+                throw new Exception($"Unknown type - {kvp.Value?.GetType().Name}");
             }
                 
             nativeDictionary.Add(kvp.Key, value!);

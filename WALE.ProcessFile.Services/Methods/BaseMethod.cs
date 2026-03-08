@@ -59,14 +59,18 @@ public static class BaseMethod
                 
                 break;
             case CompanyName.Constant:
-                var result1 = await CompanyName.AnyIsCompanyOrPersonalNameAsync(lines, request.label, lineNumbersAreDescending,
-                    request.isOcr, request.lookupConfiguration);
+                var (anyFound, companyNameLines) =
+                    await CompanyName.AnyIsCompanyOrPersonalNameAsync(
+                        lines,
+                        request.label,
+                        lineNumbersAreDescending,
+                        request.isOcr,
+                        request.lookupConfiguration);
                 
-                if (result1.Item1)
+                if (anyFound)
                 {
-                    var companyNameLines = result1.Item2;
                     companyNameLines = RestrictToPossibilities(request.label?.Possibilities, companyNameLines);
-
+                    
                     if (companyNameLines.Count > 0)
                     {
                         labelGroupResult = labelGroupResult.Clone(companyNameLines);
@@ -133,8 +137,8 @@ public static class BaseMethod
                                 .Coordinates;
                             
                             licenceNumberLine.Columns[0].Words.Clear();
-                            licenceNumberLine.Columns[0].Words.Add(
-                                new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
+                            licenceNumberLine.Columns[0].Words.AddRange(
+                                DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
                             
                             labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
 
@@ -176,6 +180,8 @@ public static class BaseMethod
         {
             return lines.ToList();
         }
+        
+
 
         return lines
             .Where(line => possibilities
@@ -185,9 +191,15 @@ public static class BaseMethod
                 var possibility = possibilities
                     .First(possibility => line.Text.Contains(possibility));
 
+                var possibilityWords = line.Columns
+                    .SelectMany(c => c.Words)
+                    .ToList();
+                
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+                
                 var clonedLine = line.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+                clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
                 return clonedLine;
             })
@@ -252,10 +264,16 @@ public static class BaseMethod
         {
             var possibility = request.label.Possibilities
                 .First(possibility => result.Text!.First().Text.Contains(possibility));
-
+            
+            var possibilityWords = result.Text!.First().Columns
+                .SelectMany(c => c.Words)
+                .ToList();
+            
+            possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+            
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+            clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
             var clonedResult = result.Clone();
             clonedResult.Text = [clonedLine];
@@ -286,9 +304,15 @@ public static class BaseMethod
                 var possibility = request.label.Possibilities
                     .First(possibility => lineText.Contains(possibility));
 
+                var possibilityWords = result.Text!.First().Columns
+                    .SelectMany(c => c.Words)
+                    .ToList();
+                
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+                
                 var clonedLine = result.Text!.First().Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(possibility));
+                clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
                 
                 var clonedResult = result.Clone();
                 clonedResult.Text = [clonedLine];

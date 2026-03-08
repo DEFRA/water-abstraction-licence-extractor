@@ -50,7 +50,11 @@ public static class Units
                             continue;
                         }
 
-                        var clonedColumn = new DocumentLineColumn(possibility);
+                        var possibilityWords = DocumentLineColumn.FilterWordsFromText(
+                            column.Words,
+                            possibility);
+                        
+                        var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Add(clonedColumn);
 
                         matchedPossibilityForLine = possibility;
@@ -71,7 +75,15 @@ public static class Units
                 if (string.IsNullOrEmpty(matchedPossibilityForLine))
                 {
                     var previousLine = lines.FirstOrDefault(l => l.LineNumber == line.LineNumber - 1);
+                    var linesToLookAt = new List<DocumentLine>();
 
+                    if (previousLine != null)
+                    {
+                        linesToLookAt.Add(previousLine);
+                    }
+                    
+                    linesToLookAt.Add(line);
+                    
                     // Look at this and the last line together for a match
                     var multipleLineText = $"{previousLine?.Text} {line.Text}";
 
@@ -81,8 +93,17 @@ public static class Units
                         {
                             continue;
                         }
-
-                        var clonedColumn = new DocumentLineColumn(possibility);
+                        
+                        var possibilityWords = linesToLookAt
+                            .SelectMany(l => l.Columns)
+                            .SelectMany(c => c.Words)
+                            .ToList();
+                        
+                        possibilityWords = DocumentLineColumn.FilterWordsFromText(
+                            possibilityWords,
+                            possibility);
+                        
+                        var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Clear();
                         newColumns.Add(clonedColumn);
 

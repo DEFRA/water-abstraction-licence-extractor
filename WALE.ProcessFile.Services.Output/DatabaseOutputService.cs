@@ -71,7 +71,7 @@ public class DatabaseOutputService(
                     ? (int?)licenceIdOut
                     : null;
                 
-                if (string.IsNullOrEmpty(licence.LicenceNumber) && licenceId == null)
+                if (string.IsNullOrEmpty(licence.LicenceNumber?.Value) && licenceId == null)
                 {
                     // TODO log
                     continue;
@@ -80,7 +80,7 @@ public class DatabaseOutputService(
                 await databaseWriteService.InsertLicenceSetLicenceAsync(
                     licenceSetId,
                     licenceId,
-                    licence.LicenceNumber,
+                    licence.LicenceNumber?.Value,
                     licence.LicenceVersion.LicenceVersionId,
                     processRunId);   
             }
@@ -122,7 +122,11 @@ public class DatabaseOutputService(
         var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.SaveLicenceAsync(licence.LicenceNumber, licenceStr, pdfFilename, processRunId);
+        return databaseWriteService.SaveLicenceAsync(
+            licence.LicenceNumber?.Value,
+            licenceStr,
+            pdfFilename,
+            processRunId);
     }
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
@@ -219,7 +223,7 @@ public class DatabaseOutputService(
                 continue;
             }
             
-            missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"];
+            missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
             await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
         }
         
@@ -276,7 +280,7 @@ public class DatabaseOutputService(
             {
                 var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licenceId = (int)l.NoneSchemaData["licenceId"];
+                    var licenceId = (int)l.NoneSchemaData["licenceId"]!;
                     return licenceId == licenceSetLicence.LicenceId;
                 });
 
@@ -331,7 +335,12 @@ public class DatabaseOutputService(
             {
                 var licence = new Licence
                 {
-                    LicenceNumber = licenceSetLicence.LicenceNumber
+                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber) 
+                        ? new ValueWithConfidence<string>(
+                            licenceSetLicence.LicenceNumber,
+                            -1, // TODO
+                            -1) // TODO
+                        : null
                 };
                 
                 licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);

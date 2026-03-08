@@ -76,7 +76,7 @@ public static class JsOutputHelper
             Duration = durationInMSeconds,
             MatchedLabelText = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
             MatchedLabelPosition = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
-            LicenceNumber = licenceNumber,
+            LicenceNumber = licenceNumber?.Value,
             NaldLicenceNumber = licence.NaldLicenceNumber,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
@@ -313,7 +313,7 @@ public static class JsOutputHelper
     }
     
     private static T2? GetValueOrDefault<T, T2>(
-        Dictionary<string, object> data,
+        Dictionary<string, object?> data,
         string fieldName,
         T2? defaultValue)
     {

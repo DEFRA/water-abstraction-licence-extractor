@@ -32,7 +32,7 @@ public class LicenceFileTypeRuleTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn(content)],
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(content, null))],
             0,
             0,
             0,

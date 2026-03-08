@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
@@ -8,10 +9,7 @@ public class Licence
     {
         get
         {
-            var licenceNumber = LicenceNumber?
-                .Replace(" ", string.Empty)
-                .Replace("/", string.Empty);
-            
+            var licenceNumber = FormattingHelper.RemoveSeperators(LicenceNumber?.Value);
             return $"{licenceNumber}-{LicenceVersion.LicenceVersionId}";
         }
     }
@@ -20,7 +18,7 @@ public class Licence
     
     public string? NaldLicenceNumber { get; init; }
     
-    public string? LicenceNumber { get; init; }
+    public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
     public string? Filename { get; set; }
 
@@ -42,7 +40,7 @@ public class Licence
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
-    public Dictionary<string, object> NoneSchemaData { get; set; } = [];
+    public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
     
     public bool? IsLiveLicence { get; set; }
     

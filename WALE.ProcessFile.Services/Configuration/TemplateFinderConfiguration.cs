@@ -54,7 +54,7 @@ public static class TemplateFinderConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];

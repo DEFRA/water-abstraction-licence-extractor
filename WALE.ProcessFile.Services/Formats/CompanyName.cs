@@ -11,7 +11,7 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
-    public static async Task<(bool, IReadOnlyList<DocumentLine>)> AnyIsCompanyOrPersonalNameAsync(
+    public static async Task<(bool AnyFound, IReadOnlyList<DocumentLine> FoundLines)> AnyIsCompanyOrPersonalNameAsync(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool lineNumbersAreDescending,
@@ -43,7 +43,7 @@ public static class CompanyName
                     continue;
                 }
             
-                if (DataHelper.IsCorruptedText(column.Text, isOcr))
+                if (DataHelper.IsCorruptedLine(column.Text, isOcr))
                 {
                     newColumns.Add(column);
                     
@@ -54,16 +54,16 @@ public static class CompanyName
                 
                     continue;
                 }
-                
-                var text = FormattingHelper.TrimFormatting(column.Text, true, true)!;
+
+                var trimmedWords = FormattingHelper.TrimFormatting(column.Words);
 
                 // For speed, first check without dictionary
-                var correctedText = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(text, true, false)
-                    : text;
+                var correctedWords = isOcr
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(trimmedWords, true, false)
+                    : trimmedWords;
                 
-                if (DataHelper.IsCorruptedText(correctedText, isOcr)
-                    || !TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out var companyOrPersonalName))
+                if (DataHelper.IsCorruptedWords(correctedWords, isOcr)
+                    || !TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out var companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -73,11 +73,11 @@ public static class CompanyName
                     continue;
                 }
                 
-                correctedText = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedText, true, label.AutoCorrect)
-                    : text;
+                correctedWords = isOcr
+                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedWords, true, label.AutoCorrect)
+                    : trimmedWords;
             
-                if (!TryGetCompanyOrPersonalName(correctedText, label, lookupConfiguration, out companyOrPersonalName))
+                if (!TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out companyOrPersonalName))
                 {
                     if (matched)
                     {
@@ -89,7 +89,7 @@ public static class CompanyName
                 
                 // It's only the company suffix with nothing else
                 if (CompanyNameHelper.CompanySuffixes.Any(companySuffix =>
-                        companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
+                    companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     newColumns.Add(column);
 
@@ -101,7 +101,11 @@ public static class CompanyName
                     continue;
                 }
 
-                var clonedColumn = new DocumentLineColumn(companyOrPersonalName!);
+                var companyOrPersonalNameWords = DocumentLineColumn.FilterWordsFromText(
+                    correctedWords,
+                    companyOrPersonalName!);
+                
+                var clonedColumn = new DocumentLineColumn(companyOrPersonalNameWords);
                 newColumns.Add(clonedColumn);
 
                 anyLineMatch = true;
@@ -168,7 +172,17 @@ public static class CompanyName
         
         return (matched, matchedLines);
     }
-    
+
+    public static bool TryGetCompanyOrPersonalName(
+        List<DocumentLineWord> words,
+        LabelToMatch label,
+        LookupConfiguration? lookupConfiguration,
+        out string? matchedCompanyOrPersonalName)
+    {
+        var combinedText = string.Join(' ', words.Select(w => w.Text));
+        return TryGetCompanyOrPersonalName(combinedText, label, lookupConfiguration, out matchedCompanyOrPersonalName);
+    }
+
     public static bool TryGetCompanyOrPersonalName(
         string? lineText,
         LabelToMatch label,

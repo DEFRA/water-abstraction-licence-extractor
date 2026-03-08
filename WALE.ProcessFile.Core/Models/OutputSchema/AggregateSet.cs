@@ -1,4 +1,5 @@
 using System.Text;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
@@ -16,7 +17,8 @@ public class AggregateSet
         {
             if (licence.LicenceNumber == null)
             {
-                // TODO log, shouldn't get here ideally
+                // Shouldn't get here ideally
+                Console.WriteLine("WARNING - AggregateSet - LicenceNumber is null");
                 continue;
             }
             
@@ -36,8 +38,9 @@ public class AggregateSet
                         continue;
                     }
 
-                    var lookedUpLicence =
-                        allLicences.FirstOrDefault(l => l.LicenceNumber == linkedLicence.LicenceNumber);
+                    var lookedUpLicence = allLicences.FirstOrDefault(
+                        al => al.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+
                     licencesDict.Add(linkedLicence.LicenceNumber!,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
                 }
@@ -45,22 +48,19 @@ public class AggregateSet
         }
             
         var licencesAlphabetical = licencesDict
-            .OrderBy(licence => licence.Key + licence.Value);
+            .OrderBy(licence => $"{licence.Key}-{licence.Value}");
 
         var outputSb = new StringBuilder();
         
-        foreach (var (key, licenceVersionId) in licencesAlphabetical)
+        foreach (var (licenceNumber, licenceVersionId) in licencesAlphabetical)
         {
             if (outputSb.Length > 0)
             {
                 outputSb.Append('-');
             }
 
-            var licenceNumber = key
-                .Replace(" ", string.Empty)
-                .Replace("/", string.Empty);
-
-            outputSb.Append($"{licenceNumber}-{licenceVersionId}");
+            var licenceNumberOutput = FormattingHelper.RemoveSeperators(licenceNumber);
+            outputSb.Append($"{licenceNumberOutput}-{licenceVersionId}");
         }
 
         AggregateSetId = outputSb.ToString();

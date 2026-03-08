@@ -179,7 +179,7 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = SchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
         allDmsData,
@@ -211,7 +211,7 @@ async Task ProgramAsync()
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
                 var linkedLicences =
-                    naldLinkedLicenceHelper.GetLinkedLicences(licenceLoop.LicenceNumber);
+                    naldLinkedLicenceHelper.GetLinkedLicences(licenceLoop.LicenceNumber?.Value);
                 
                 if (linkedLicences.Count != 0)
                 {
@@ -221,13 +221,13 @@ async Task ProgramAsync()
                 var filename = licenceLoop.Filename;
 
                 if (licenceLoop.LicenceNumber != null
-                    && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _)
+                    && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out _)
                         || (licenceLoop.Status == LicenceStatus.Ok &&
-                            notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out _))))
+                            notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out _))))
                 {
                     int loopLicenceId;
                     var savedVersionIsStatusNotFound =
-                        notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber, out var existingLicenceId);
+                        notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out var existingLicenceId);
 
                     if (savedVersionIsStatusNotFound && licenceLoop.Status == LicenceStatus.Ok)
                     {
@@ -247,7 +247,7 @@ async Task ProgramAsync()
                             processRun.ProcessRunId);
                     }
 
-                    savedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber, loopLicenceId);
+                    savedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber?.Value!, loopLicenceId);
 
                     if (!string.IsNullOrWhiteSpace(filename))
                     {
@@ -256,11 +256,11 @@ async Task ProgramAsync()
 
                     if (licenceLoop.Status == LicenceStatus.NotFound)
                     {
-                        notFoundSavedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber, loopLicenceId);
+                        notFoundSavedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber?.Value!, loopLicenceId);
                     }
                     else
                     {
-                        notFoundSavedLicenceNumbers.Remove(licenceLoop.LicenceNumber);
+                        notFoundSavedLicenceNumbers.Remove(licenceLoop.LicenceNumber?.Value!);
                     }
 
                     licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
@@ -564,7 +564,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
         ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        var licenceSets = await SchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             licenceMapping,
             naldLicenceStatusData,

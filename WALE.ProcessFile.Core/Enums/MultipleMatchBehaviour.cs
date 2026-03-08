@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Enums;
 
-public enum MultipleBehaviour
+public enum MultipleMatchBehaviour
 {
     FindSingleInstanceOfLabelWithASingleValue,
     FindSingleInstanceOfLabelWithASingleValueButMultipleLines,

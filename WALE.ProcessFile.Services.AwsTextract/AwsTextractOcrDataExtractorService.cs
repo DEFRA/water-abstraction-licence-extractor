@@ -164,7 +164,7 @@ public class AwsTextractOcrDataExtractorService
         const int horizontalColumnGap = 100;
         const int minFontSize = 5; // Can't really go lower, this is tiny
         const int considerableOverlapAmount = 3;
-        
+
         return await OcrHelper.GroupAsync(
             returnLines,
             true,
@@ -235,34 +235,46 @@ public class AwsTextractOcrDataExtractorService
         
         var returnList = new List<LineAndWords>();
         
-        foreach (var block in detectDocumentTextResponse.Blocks)
+        foreach (var blockWord in detectDocumentTextResponse.Blocks)
         {
-            if (block.BlockType != BlockType.WORD)
+            if (blockWord.BlockType != BlockType.WORD)
             {
                 continue;
             }
             
-            if (block.Text == null)
+            if (blockWord.Text == null)
             {
                 continue;
             }
+
+            var top = (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier;
+            var bottom = (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier;
+
+            var origLeft = (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier;
+            var origRight = (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier;
+            
+            var individualWords = blockWord.Text.Split(' ');
+            var totalWidth = origRight - origLeft;
+            var widthPerWord = totalWidth / individualWords.Length;
+            const int dividerWidth = 10;
+            
+            var words = individualWords
+                .Select((wordText, index) => (DocumentLineWord?)new DocumentLineWord(
+                    wordText,
+                    blockWord.Confidence,
+                    new DocumentLineWordCoordinates(
+                        top,
+                        origLeft + ((index + 1) * widthPerWord),
+                        bottom,
+                        origLeft + (index * widthPerWord) + (index > 0 ? dividerWidth : 0)
+                    ),
+                    blockWord.TextType.Value
+                    ))
+                .ToList();
             
             var line = new LineAndWords
             {
-                Words = new List<DocumentLineWord>
-                {
-                    new(
-                        block.Text,
-                        block.Confidence,
-                        new DocumentLineWordCoordinates(
-                            (block.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
-                               (block.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
-                                (block.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
-                            (block.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
-                        ),
-                        block.TextType.Value
-                    )
-                }!
+                Words = words
             };
 
             returnList.Add(line);

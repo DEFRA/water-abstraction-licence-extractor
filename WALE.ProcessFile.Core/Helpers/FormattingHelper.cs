@@ -6,6 +6,15 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
+    public static string? RemoveSeperators(string? licenceNumber)
+    {
+        return licenceNumber?
+            .Replace(".", string.Empty)
+            .Replace(" ", string.Empty)
+            .Replace("-", string.Empty)
+            .Replace("/", string.Empty);
+    }
+    
     public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
@@ -82,11 +91,7 @@ public static class FormattingHelper
 
         var origSectionLengths = licenceNumber.Split('/');
 
-        licenceNumber = licenceNumber
-            .Replace(".", string.Empty)
-            .Replace(" ", string.Empty)
-            .Replace("-", string.Empty)
-            .Replace("/", string.Empty);
+        licenceNumber = RemoveSeperators(licenceNumber)!;
         
         var parts = new List<string>();
         var remainingLicenceNumber = licenceNumber;
@@ -832,6 +837,27 @@ public static class FormattingHelper
 
         return returnList;
     }
+
+    public static List<DocumentLineWord> TrimFormatting(List<DocumentLineWord> words)
+    {
+        var newWords = new List<DocumentLineWord>();
+
+        foreach (var word in words)
+        {
+            var isFirstWord = words[0] == word;
+            var isLastWord = words.Last() == word;
+            
+            var returnWord = word.Clone();
+            returnWord.Text = TrimFormatting(
+                word.Text,
+                isFirstWord,
+                isLastWord)!;
+            
+            newWords.Add(returnWord);
+        }
+        
+        return newWords;
+    }
     
     public static string? TrimFormatting(
         string? text,
@@ -844,6 +870,7 @@ public static class FormattingHelper
         {
             while (trimmed?.Length >= 1
                && trimmed[0] != '('
+               && trimmed[0] != '&'               
                && (char.IsPunctuation(trimmed[0])
                    || char.IsSymbol(trimmed[0])
                    || char.IsWhiteSpace(trimmed[0])))
@@ -857,6 +884,7 @@ public static class FormattingHelper
             while (trimmed?.Length >= 1
                && trimmed[^1] != ')'
                && trimmed[^1] != ':'
+               && trimmed[^1] != '&'               
                && trimmed[^1] != '/'
                && (char.IsPunctuation(trimmed[^1])
                    || char.IsSymbol(trimmed[^1])
@@ -866,6 +894,14 @@ public static class FormattingHelper
             }
         }
 
+        const string space = " ";
+        const string doubleSpace = "  ";
+        
+        while (trimmed?.Contains(doubleSpace) == true)
+        {
+            trimmed = trimmed.Replace(doubleSpace, space);
+        }
+        
         return trimmed;
     }
     

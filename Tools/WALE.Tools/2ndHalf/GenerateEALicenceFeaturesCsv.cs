@@ -68,7 +68,7 @@ public static class GenerateEaLicenceFeaturesCsv
             returnList.Add(new EALicenceFeaturesCsvLine
             {
                 Filename = licence.Filename,
-                LicenceNumber = licence.LicenceNumber,
+                LicenceNumber = licence.LicenceNumber?.Value,
                 HasPointTable = hasPointsTable,
                 HasLimitsPointTable = hasLimitsPointsTable,
                 HasMeansPointTable = hasMeansPointsTable,

@@ -41,7 +41,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -65,7 +65,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -82,7 +82,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -99,7 +99,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -116,7 +116,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -140,7 +140,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -164,7 +164,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -180,7 +180,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -204,7 +204,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -220,7 +220,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -244,7 +244,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -261,7 +261,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -285,7 +285,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -302,7 +302,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -319,7 +319,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -336,7 +336,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -353,7 +353,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -370,7 +370,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -387,7 +387,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -404,7 +404,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -421,7 +421,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -438,7 +438,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -455,7 +455,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -472,7 +472,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -489,7 +489,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -506,7 +506,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -523,7 +523,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -540,7 +540,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -557,7 +557,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -580,7 +580,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -596,7 +596,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -620,7 +620,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -636,7 +636,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -660,7 +660,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -677,7 +677,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -694,7 +694,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -711,7 +711,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -735,7 +735,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -751,7 +751,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];
@@ -776,7 +776,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             },
             new LabelToMatch
@@ -793,7 +793,7 @@ public static class TemplateFinderRuleConfiguration
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
-                Position = LabelPosition.ActuallyLabel,
+                Position = LabelPosition.LabelIsActuallyResult,
                 IncludeStartLabelText = true
             }
         ];

@@ -11,7 +11,6 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -122,7 +121,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         Assert.Equal("Mr T MC Davey", nameResult.Text?[0]?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
 
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
 
@@ -195,7 +194,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         // See notes RE licence
         
-        var agreedSchemaLicenceGroup = (await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             new NaldLicenceStatusData(),
@@ -234,7 +233,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await SchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             [],
             new NaldLicenceStatusData(),

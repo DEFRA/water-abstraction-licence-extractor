@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -14,10 +13,9 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-     
         
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
-            or LabelPosition.Split
+            or LabelPosition.SplitAtLabel
             or LabelPosition.RelatedCategoryPosition)
         {
             return [];
@@ -54,9 +52,9 @@ public static class ApplicableToMost
             textBeforeAtAndAfterLabel.Reverse();
         }
         
-        var isMultiple = request.label?.MultipleBehaviour is
-            MultipleBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
-                or MultipleBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+        var isMultiple = request.label?.MultipleMatchBehaviour is
+            MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
         
         foreach (var item in textBeforeAtAndAfterLabel)
         {
@@ -64,7 +62,7 @@ public static class ApplicableToMost
             var text = item.ColumnsText![0];
             
             var labelGroupResult = request.labelGroupResult;
-            labelGroupResult.MatchType = MatchType.SameLineIsCompany1Line;
+            labelGroupResult.MatchedPosition = MatchedPosition.FullyOnSameLine;
             labelGroupResult.MatchedLabel = matchedLabel;
             
             var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
@@ -84,23 +82,29 @@ public static class ApplicableToMost
                         .Trim();
                 }
             }
-
+            
             var over2Lines = false;
             var outputText = DataHelper.RemoveExcludes(
                 matchedLabel,
-                t!,
+                t,
                 true,
                 false,
                 out var removedLines);
             
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedText(outputText, request.isOcr))
+            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
             {
                 continue;
             }
 
-            var documentLine = request.line!.Clone();
+            var lineWords = request.line!.Columns
+                .SelectMany(c => c.Words)
+                .ToList();
+
+            lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);
+            
+            var documentLine = request.line.Clone();
             documentLine.Columns.Clear();
-            documentLine.Columns.Add(new DocumentLineColumn(outputText));
+            documentLine.Columns.Add(new DocumentLineColumn(lineWords));
             
             if (request.isDateLookup)
             {
@@ -271,7 +275,8 @@ public static class ApplicableToMost
                             .Coordinates;
                         
                         licenceNumberLine.Columns[0].Words.Clear();
-                        licenceNumberLine.Columns[0].Words.Add(new DocumentLineWord(dmsFileData!.DestinationFileName!, null, coords, null));
+                        licenceNumberLine.Columns[0].Words.AddRange(
+                            DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
                         labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
                         returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
@@ -316,20 +321,19 @@ public static class ApplicableToMost
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
-                var autoCorrectedOutputText = request.isOcr
+                var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
+                
+                var autoCorrectedOutput = request.isOcr
                     ? await AutoCorrectHelper.AutoCorrectTextAsync(
-                        documentLine.Text,
+                        words,
                         false,
                         request.label?.AutoCorrect ?? false)
-                    : documentLine.Text;
+                    : words;
 
-                //var matchedLabelText = matchedLabel.Text?.FirstOrDefault()?.Text;
-                
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
                     if (!outputText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        && !autoCorrectedOutputText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        )//&& !matchedLabelText!.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         continue;
                     }
@@ -345,11 +349,17 @@ public static class ApplicableToMost
             {
                 if (isPossiblity)
                 {
+                    var dLineWords = documentLine.Columns
+                        .SelectMany(c => c.Words)
+                        .ToList();
+                 
+                    dLineWords = DocumentLineColumn.FilterWordsFromText(dLineWords, outputText);
+                    
                     documentLine.Columns.Clear();
-                    documentLine.Columns.Add(new DocumentLineColumn(outputText));
+                    documentLine.Columns.Add(new DocumentLineColumn(dLineWords));
                 
                     labelGroupResult.Text = [documentLine];
-                    labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                    labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
                 
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                     labelGroupResult.MatchedLabel.Possibilities = [outputText];
@@ -377,7 +387,6 @@ public static class ApplicableToMost
                 }
 
                 labelGroupResult = labelGroupResult.Clone([documentLine]);
-                
                 return CheckContains(request.label, r);
             }
             
@@ -385,10 +394,31 @@ public static class ApplicableToMost
             {
                 outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
             }
+
+            var previousLine = request.previousLines!.FirstOrDefault();
             
-            outputText = request.isOcr
-                ? await AutoCorrectHelper.AutoCorrectTextAsync(outputText!, request.isCompanyType, request.label.AutoCorrect)
-                : outputText;
+            var inputWords = over2Lines && previousLine != null
+                ? new List<DocumentLine> { previousLine, documentLine }
+                    .SelectMany(dl => dl.Columns)
+                    .SelectMany(c => c.Words)
+                    .ToList()
+                : documentLine.Columns
+                    .SelectMany(c => c.Words)
+                    .ToList();
+            
+            var tWords = DocumentLineColumn.FilterWordsFromText(
+                inputWords,
+                outputText!);
+
+            if (request.isOcr)
+            {
+                tWords = await AutoCorrectHelper.AutoCorrectTextAsync(
+                    tWords,
+                    request.isCompanyType,
+                    request.label.AutoCorrect);
+            }
+
+            outputText = string.Join(' ', tWords.Select(tw => tw.Text));
             
             if (request.isCompanyType
                 && CompanyName.TryGetCompanyOrPersonalName(
@@ -411,8 +441,8 @@ public static class ApplicableToMost
                 }*/
                 
                 var matchType = over2Lines ?
-                    MatchType.SameLineIsCompany2Lines
-                    : MatchType.SameLineIsCompany1Line;
+                    MatchedPosition.PartiallyOnSameLine
+                    : MatchedPosition.FullyOnSameLine;
 
                 var coords = documentLine
                     .Columns
@@ -422,14 +452,13 @@ public static class ApplicableToMost
                     .Coordinates;
                 
                 documentLine.Columns[0].Words.Clear();
-                documentLine.Columns[0].Words.Add(new DocumentLineWord(
+                documentLine.Columns[0].Words.AddRange(DocumentLineColumn.TextToWords(
                     outputText!,
                     null,
-                    coords,
-                    null));
+                    coords));
                 
                 labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchType = matchType;
+                labelGroupResult.MatchedPosition = matchType;
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
@@ -464,7 +493,7 @@ public static class ApplicableToMost
                 documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
                 
                 labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchType = MatchType.SameLineSingleWord;
+                labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
@@ -494,10 +523,11 @@ public static class ApplicableToMost
                         .Coordinates;
                     
                     documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    documentLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(outputText, null, coords));
                     
                     var lineMatch = labelGroupResult.Clone([documentLine]);
-                    lineMatch.MatchType = MatchType.Between;
+                    lineMatch.MatchedPosition = MatchedPosition.BetweenLabels;
                     
                     FormattingHelper.RemoveRemoves(lineMatch, removedLines);
 
@@ -513,10 +543,10 @@ public static class ApplicableToMost
                         .Coordinates;
                     
                     documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+                    documentLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(outputText, null, coords));
                     
                     var lineMatch = labelGroupResult.Clone([documentLine]);
-
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
             }

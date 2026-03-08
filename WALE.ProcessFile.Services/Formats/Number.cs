@@ -26,7 +26,7 @@ public static class Number
         
         foreach (var line in linesList)
         {
-            if (DataHelper.IsCorruptedText(line?.Text, isOcr))
+            if (DataHelper.IsCorruptedLine(line?.Text, isOcr))
             {
                 if (matched)
                 {

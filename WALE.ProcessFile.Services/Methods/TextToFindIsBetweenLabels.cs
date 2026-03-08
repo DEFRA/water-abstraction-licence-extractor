@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -82,7 +81,7 @@ public static class TextToFindIsBetweenLabels
             && beforeTextContainsLabel != true)
         {
             var labelText = request.textBeforeAtAndAfterLabel?
-                .FirstOrDefault(x => x.Label?.Position == LabelPosition.ActuallyLabel)?
+                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
                 .ColumnsText![0];
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
@@ -93,24 +92,35 @@ public static class TextToFindIsBetweenLabels
                     FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
                 var text = labelText;
 
+                var words = DocumentLineColumn.TextToWords(labelText, null);
+                
                 if (!string.IsNullOrEmpty(firstColumnText))
                 {
                     text += $" {firstColumnText}";
+                    words.AddRange(firstBetweenLine.Columns[0].Words);
                 }
                 
                 if (request.label.IncludeEndLabelText)
                 {
                     var endText = matchedEndText?.matchedEndText.Text;
+
                     text += $" {endText}";
+                    words.Add(new(
+                        endText!,
+                        null,
+                        DocumentLineWordCoordinates.NotKnown(),
+                        null));
                 }
 
                 if (betweenText[0].Columns.Count == 0)
                 {
-                    betweenText[0].Columns.Add(new DocumentLineColumn(text));
+                    betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
                 }
                 else
                 {
-                    betweenText[0].Columns[0] = new DocumentLineColumn(text);   
+                    var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
+                    
+                    betweenText[0].Columns[0] = new DocumentLineColumn(textWords);   
                 }
             }
         }
@@ -153,7 +163,7 @@ public static class TextToFindIsBetweenLabels
         }
         
         betweenText = betweenText
-            .Where(betweenLine => !DataHelper.IsCorruptedText(betweenLine.Text, request.isOcr))
+            .Where(betweenLine => !DataHelper.IsCorruptedLine(betweenLine.Text, request.isOcr))
             .ToList();
         
         betweenText = DataHelper.RemoveExcludesAndNotContains(
@@ -170,7 +180,7 @@ public static class TextToFindIsBetweenLabels
         }
         
         labelGroupResult.Text = betweenText.ToList();
-        labelGroupResult.MatchType = MatchType.Between;
+        labelGroupResult.MatchedPosition = MatchedPosition.BetweenLabels;
         labelGroupResult.MatchedLabel = request.label.Clone();
 
         try
@@ -229,10 +239,16 @@ public static class TextToFindIsBetweenLabels
             var text = FormattingHelper.
                 TrimFormatting(firstLineTextAfterLabel, false, false)!;
             
+            var textWords = lineInput.Columns
+                .SelectMany(c => c.Words)
+                .ToList();
+            
+            textWords = DocumentLineColumn.FilterWordsFromText(textWords, text);
+            
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(text));
+            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
             
             linesLoop.Add(clonedLine);
         }
@@ -308,9 +324,15 @@ public static class TextToFindIsBetweenLabels
 
                             if (!isOneDigitNumberAndWeDontWantNumber)
                             {
+                                var ctWords = line.Columns
+                                    .SelectMany(c => c.Words)
+                                    .ToList();
+                                
+                                ctWords = DocumentLineColumn.FilterWordsFromText(ctWords, ct!);
+                                
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ct!));
+                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
 
                                 returnList.Add(clonedLine2);
                             }
@@ -327,7 +349,9 @@ public static class TextToFindIsBetweenLabels
             foreach (var column in line.Columns)
             {
                 var columnText = FormattingHelper.TrimFormatting(column.Text, false, false)!;
-                clonedLine.Columns.Add(new DocumentLineColumn(columnText));
+                var columnTextWords = DocumentLineColumn.FilterWordsFromText(column.Words, columnText);
+                
+                clonedLine.Columns.Add(new DocumentLineColumn(columnTextWords));
             }
             
             returnList.Add(clonedLine);

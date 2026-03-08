@@ -90,7 +90,7 @@ public static partial class Date
                 dateOnlyDigits = dateOnlyDigits[..2];
             }
 
-            if (dateOnlyDigits.StartsWith("4"))
+            if (dateOnlyDigits.Length >=2 && dateOnlyDigits.StartsWith("4"))
             {
                 dateOnlyDigits = $"1{dateOnlyDigits[1..]}";
             }

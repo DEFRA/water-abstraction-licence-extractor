@@ -116,7 +116,7 @@ public static class SharedLabels
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ApplicableToMost,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull
             }
         ];
     }

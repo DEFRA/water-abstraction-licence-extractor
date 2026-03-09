@@ -101,12 +101,6 @@ public class PdfDataExtractorService(
             ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
         };
         
-        if (returnResult.Pages.Count > configuration.SkipDocumentsWithMoreThenThisManyPages)
-        {
-            returnResult.ErrorMessage = "TooManyPages";
-            return returnResult;
-        }
-        
         var isOcr = false;
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
@@ -151,11 +145,11 @@ public class PdfDataExtractorService(
                 Filepath = pdfFilePath,
                 NoOcrServiceName = Name
             });
-        
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
 
         int pageNumber;
         int imageNumber;
+        
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
         
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
@@ -223,8 +217,15 @@ public class PdfDataExtractorService(
         }
 
         var documentLines = new List<DocumentLine>();
+        var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
-        for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
+        if (!isLikelyTextFile
+            && returnResult.Pages.Count > configuration.MaxPagesToProcessWhenOcrNeeded)
+        {
+            totalPagesToProcess = configuration.MaxPagesToProcessWhenOcrNeeded;
+        }
+        
+        for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
         {
             dtStart = DateTime.Now;
             

@@ -72,7 +72,7 @@ public static class SharedLabels
                 PreviousLinesToFetch = 1,
                 NextLinesToFetch = 1,
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull,
                 Remove = [
                     new("...")
                 ],

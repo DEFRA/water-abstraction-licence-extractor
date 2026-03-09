@@ -634,7 +634,7 @@ public static class LabelConfiguration
                     new("Date of original issue")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -659,7 +659,7 @@ public static class LabelConfiguration
                     new("Date effective")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -683,7 +683,7 @@ public static class LabelConfiguration
                     new("Date of expiry ...")
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull,
                 Remove = [
                     new("...")
                 ],

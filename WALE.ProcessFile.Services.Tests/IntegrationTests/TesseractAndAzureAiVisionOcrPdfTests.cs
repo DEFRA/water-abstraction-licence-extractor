@@ -622,7 +622,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         Assert.Single(licenceSets);
         
-        Assert.Equal("22728008-LV20070511", licenceSets[0].LicenceSetId);
+        Assert.Equal("22728008-LV20070501", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
 
         var agreedSchemaLicenceGroup = licenceSets[0];

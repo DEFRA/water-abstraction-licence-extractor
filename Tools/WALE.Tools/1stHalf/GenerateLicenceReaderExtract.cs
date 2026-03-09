@@ -322,11 +322,11 @@ public static class GenerateLicenceReaderExtract
             .ToList();
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        pdfFileNames = pdfFileNames
-            /*.Where(fileName =>
-                fileName.StartsWith("42901G0003"))*/
+        /*pdfFileNames = pdfFileNames
+            .Where(fileName =>
+                fileName.StartsWith("AN0370024013"))
             .Take(100)
-            .ToList();
+            .ToList();*/
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
@@ -370,7 +370,13 @@ public static class GenerateLicenceReaderExtract
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
                 $"(File {filenameIdx++} of {pdfFileNames.Count})");
             
-            scrapingTasks.Add(ScrapeDocumentAsync(pdfFileName, pdfFolder, configuration, pdfDataExtractors, extractorLock));
+            scrapingTasks.Add(
+                ScrapeDocumentAsync(
+                    pdfFileName,
+                    pdfFolder,
+                    configuration,
+                    pdfDataExtractors,
+                    extractorLock));
             
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {

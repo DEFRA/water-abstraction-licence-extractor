@@ -101,12 +101,6 @@ public class PdfDataExtractorService(
             ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
         };
         
-        if (returnResult.Pages.Count > configuration.SkipDocumentsWithMoreThenThisManyPages)
-        {
-            returnResult.ErrorMessage = "TooManyPages";
-            return returnResult;
-        }
-        
         var isOcr = false;
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
@@ -151,11 +145,18 @@ public class PdfDataExtractorService(
                 Filepath = pdfFilePath,
                 NoOcrServiceName = Name
             });
-        
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
 
         int pageNumber;
         int imageNumber;
+        
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
+        
+        if (!isLikelyTextFile
+            && returnResult.Pages.Count > configuration.MaxPagesToProcessWhenOcrNeeded)
+        {
+            totalPagesToProcess = configuration.MaxPagesToProcessWhenOcrNeeded;
+        }
         
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
@@ -170,7 +171,7 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = true;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
+            for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
             {
                 var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
                 pageNumber = pageNumberIndex + 1;
@@ -224,7 +225,7 @@ public class PdfDataExtractorService(
 
         var documentLines = new List<DocumentLine>();
         
-        for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
+        for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
         {
             dtStart = DateTime.Now;
             
@@ -531,6 +532,30 @@ public class PdfDataExtractorService(
         return subResultCount;
     }
 
+    private static void AddHighestConfidenceResult(
+        LabelGroupResult match,
+        LabelGroupResult alreadyFound,
+        List<LabelGroupResult> uniqueServiceMatches)
+    {
+        var existingConfidence = alreadyFound.Text?.FirstOrDefault()?.OcrConfidence;
+        var newConfidence = match.Text?.FirstOrDefault()?.OcrConfidence;
+
+        if (newConfidence > existingConfidence)
+        {
+            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+            alreadyFound.AlternativeMatches = [];
+            match.AlternativeMatches.Add(alreadyFound);
+
+            uniqueServiceMatches.Remove(alreadyFound);
+            uniqueServiceMatches.Add(match);
+                            
+            return;
+        }
+                        
+        alreadyFound.AlternativeMatches.Add(match);
+        match.AlternativeMatches = [];
+    }
+    
     private static List<LabelGroupResult> GetUniqueServiceMatches(
         Dictionary<IOcrDataExtractorService, List<LabelGroupResult>> serviceMatchesDict)
     {
@@ -543,7 +568,7 @@ public class PdfDataExtractorService(
             foreach (var match in serviceMatches)
             {
                 var alreadyFound = uniqueServiceMatches
-                    .FirstOrDefault(x => x.LabelGroupName == match.LabelGroupName);
+                    .FirstOrDefault(usm => usm.LabelGroupName == match.LabelGroupName);
 
                 if (alreadyFound == null)
                 {
@@ -555,6 +580,9 @@ public class PdfDataExtractorService(
                 
                 switch (alreadyFound.MatchedLabel!.MultipleServiceMatchBehaviour)
                 {
+                    case MultipleServiceMatchBehaviour.UseHighestOcrConfidence:
+                        AddHighestConfidenceResult(match, alreadyFound, uniqueServiceMatches);
+                        break;
                     case MultipleServiceMatchBehaviour.UseAllUnique:
                         var multipleAlreadyFound = uniqueServiceMatches
                             .Where(x => x.LabelGroupName == match.LabelGroupName)
@@ -731,6 +759,50 @@ public class PdfDataExtractorService(
                         }
                         
                         break;
+                    case MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull:
+                        var existingDate1 = Date.GetDateFromString(alreadyFound.Text?.FirstOrDefault()?.Text);
+                        var newDate1 = Date.GetDateFromString(match.Text?.FirstOrDefault()?.Text);
+
+                        if (existingDate1 == null)
+                        {
+                            match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                            alreadyFound.AlternativeMatches = [];
+                            match.AlternativeMatches.Add(alreadyFound);
+
+                            uniqueServiceMatches.Remove(alreadyFound);
+                            uniqueServiceMatches.Add(match);
+                        }
+                        else if (newDate1 == null)
+                        {
+                            alreadyFound.AlternativeMatches.Add(match);
+                        }
+                        else
+                        {
+                            var existingDateHasDayField = existingDate1.Value.Day > 1;
+                            var existingDateIsPost1911 = existingDate1.Value.Year >= 1911;
+                            var existingDateYearHasLastDigitSet = existingDateIsPost1911 && int.Parse(existingDate1.Value.Year.ToString()[3].ToString()) > 0;
+                            
+                            var newDateHasDayField = newDate1.Value.Day > 1;
+                            var newDateIsPost1911 = newDate1.Value.Year >= 1911;
+                            var newDateYearHasLastDigitSet = newDateIsPost1911 && int.Parse(newDate1.Value.Year.ToString()[3].ToString()) > 0;
+                            
+                            if (newDateHasDayField && newDateIsPost1911
+                                && (!existingDateHasDayField || !existingDateIsPost1911 || (newDateYearHasLastDigitSet && !existingDateYearHasLastDigitSet)))
+                            {
+                                match.AlternativeMatches.AddRange(alreadyFound.AlternativeMatches);
+                                alreadyFound.AlternativeMatches = [];
+                                match.AlternativeMatches.Add(alreadyFound);
+
+                                uniqueServiceMatches.Remove(alreadyFound);
+                                uniqueServiceMatches.Add(match);
+                            }
+                            else
+                            {
+                                AddHighestConfidenceResult(match, alreadyFound, uniqueServiceMatches);
+                            }
+                        }
+                        
+                        break;                    
                     default:
                         throw new Exception("MultipleServiceMatchBehaviour is not set, or not known");
                 }

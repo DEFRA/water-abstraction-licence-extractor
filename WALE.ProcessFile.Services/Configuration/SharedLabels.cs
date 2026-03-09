@@ -30,7 +30,7 @@ public static class SharedLabels
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFirstServiceResult,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseHighestOcrConfidence,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,
@@ -72,7 +72,7 @@ public static class SharedLabels
                 PreviousLinesToFetch = 1,
                 NextLinesToFetch = 1,
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull,
                 Remove = [
                     new("...")
                 ],
@@ -116,7 +116,7 @@ public static class SharedLabels
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Position = LabelPosition.ApplicableToMost,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseLastServiceResultIfMultipleFull
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFullestDateUseHighestOcrConfidenceIfMultipleFull
             }
         ];
     }

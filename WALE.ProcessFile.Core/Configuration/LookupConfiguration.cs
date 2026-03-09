@@ -7,7 +7,7 @@ public class LookupConfiguration(
     Dictionary<string, DmsFileData> licenceNumberMapping,
     HashSet<string> validLowercaseFirstNames,
     int regionCode,
-    int skipDocumentsWithMoreThenThisManyPages = 20)
+    int maxPagesToProcessWhenOcrNeeded = 20)
 {
     public Dictionary<string, DmsFileData> LicenceNumberMapping { get; } = licenceNumberMapping;
 
@@ -17,5 +17,5 @@ public class LookupConfiguration(
 
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
 
-    public readonly int SkipDocumentsWithMoreThenThisManyPages = skipDocumentsWithMoreThenThisManyPages;
+    public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
 }

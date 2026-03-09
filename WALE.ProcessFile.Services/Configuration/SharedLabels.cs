@@ -30,7 +30,7 @@ public static class SharedLabels
                     new("Licence ")
                 ],
                 Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
-                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseFirstServiceResult,
+                MultipleServiceMatchBehaviour = MultipleServiceMatchBehaviour.UseHighestOcrConfidence,
                 Format = LicenceNumber.Constant,
                 Name = "DocumentLicenceNumber",
                 PreviousLinesToFetch = 2,

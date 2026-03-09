@@ -1911,8 +1911,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("28/39/22/427", agreedSchemaLicence.LicenceNumber!.Value);
-        Assert.Equal(51.381388473510739, agreedSchemaLicence.LicenceNumber.Confidence);
-        Assert.Equal(60.448692321777344, agreedSchemaLicence.LicenceNumber.OcrConfidence);
+        Assert.Equal(71.551469802856445, agreedSchemaLicence.LicenceNumber.Confidence);
+        Assert.Equal(84.178199768066406, agreedSchemaLicence.LicenceNumber.OcrConfidence);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 

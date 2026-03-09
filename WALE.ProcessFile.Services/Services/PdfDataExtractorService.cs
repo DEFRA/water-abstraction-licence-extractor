@@ -150,6 +150,13 @@ public class PdfDataExtractorService(
         int imageNumber;
         
         var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
+        
+        if (!isLikelyTextFile
+            && returnResult.Pages.Count > configuration.MaxPagesToProcessWhenOcrNeeded)
+        {
+            totalPagesToProcess = configuration.MaxPagesToProcessWhenOcrNeeded;
+        }
         
         // Some PDFs have a text component but are mainly scans (not sure how this has come about)
         // So we need to work out if it's predominately a text file (and there are no big images), we don't need to go off and do image lookups
@@ -164,7 +171,7 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = true;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < pdfDocument.ImagesMetadata!.Pages.Count; pageNumberIndex++)
+            for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
             {
                 var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
                 pageNumber = pageNumberIndex + 1;
@@ -217,13 +224,6 @@ public class PdfDataExtractorService(
         }
 
         var documentLines = new List<DocumentLine>();
-        var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
-        
-        if (!isLikelyTextFile
-            && returnResult.Pages.Count > configuration.MaxPagesToProcessWhenOcrNeeded)
-        {
-            totalPagesToProcess = configuration.MaxPagesToProcessWhenOcrNeeded;
-        }
         
         for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
         {

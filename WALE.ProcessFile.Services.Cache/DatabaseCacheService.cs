@@ -126,19 +126,19 @@ public class DatabaseCacheService(
 
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetOcrScreenshotTextAsync(request);
     }
     
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetOcrImageTextAsync(request);
     }
     
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var content = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
         return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
@@ -146,7 +146,7 @@ public class DatabaseCacheService(
 
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var content = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
         return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
@@ -200,25 +200,25 @@ public class DatabaseCacheService(
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrScreenshotTextAsync(request, pageLines, request.ProcessRunId);
     }
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
@@ -232,13 +232,13 @@ public class DatabaseCacheService(
     
     public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveTemporaryOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId); // TODO
     }
     
     public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveTemporaryOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
 

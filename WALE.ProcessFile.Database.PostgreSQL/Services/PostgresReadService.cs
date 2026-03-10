@@ -195,7 +195,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 request.PageNumber,
                 request.ImageNumber
@@ -221,7 +221,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 request.PageNumber
             });
@@ -246,7 +246,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 request.PageNumber,
                 request.ImageNumber
@@ -271,7 +271,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 request.PageNumber
             });

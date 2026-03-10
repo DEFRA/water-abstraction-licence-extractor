@@ -296,7 +296,6 @@ public class PdfDataExtractorService(
                         serviceImageLines =
                             (await ocrService.GetTextLinesFromImageAsync(
                                 imageReference,
-                                pdfFileName,
                                 pageNumber,
                                 imageNumber,
                                 pdfDocument,

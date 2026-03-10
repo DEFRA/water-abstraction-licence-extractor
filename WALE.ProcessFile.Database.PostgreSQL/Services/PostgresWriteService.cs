@@ -321,7 +321,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -345,7 +345,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,
@@ -368,7 +368,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -392,7 +392,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,

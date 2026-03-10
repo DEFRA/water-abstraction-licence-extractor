@@ -25,7 +25,6 @@ public class AzureAiVisionOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
@@ -39,7 +38,7 @@ public class AzureAiVisionOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -70,7 +69,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     GeneralConstants.PdfPigDataExtractorServiceName,
-                    pdfFilepath);
+                    pdfDocument.PdfFilename);
             }
             else
             {
@@ -78,7 +77,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
+                    Filepath = pdfDocument.PdfFilename,
                     NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
@@ -143,7 +142,7 @@ public class AzureAiVisionOcrDataExtractorService(
         OcrServiceImageTextCacheRequest request)
     {
         ReadInStreamHeaders? textHeaders;
-        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filepath}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filename}");
         
         try
         {
@@ -195,7 +194,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 
                 // Try deflate
                 bytes = await cacheService.DeflateImageAsync(
-                    request.Filepath!,
+                    request.Filename!,
                     request.ImageNumber,
                     request.PageNumber,
                     request.ProcessRunId,

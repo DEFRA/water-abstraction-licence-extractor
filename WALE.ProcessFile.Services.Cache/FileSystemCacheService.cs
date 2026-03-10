@@ -267,7 +267,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -283,7 +283,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -299,7 +299,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -325,7 +325,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -397,7 +397,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -410,7 +410,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -420,7 +420,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -433,7 +433,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -443,7 +443,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -457,7 +457,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     

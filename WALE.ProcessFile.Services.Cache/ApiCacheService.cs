@@ -117,7 +117,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&filepath={filenameNoExtension}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
@@ -130,7 +130,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetScreenshotText?pageNumber={request.PageNumber}"
            + $"&imageNumber={request.ImageNumber}&filepath={filenameNoExtension}"
            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
@@ -143,7 +143,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         
         var path = $"/Extractor/Ocr/GetTemporaryImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&filepath={filenameNoExtension}"
@@ -157,7 +157,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
             + $"&filepath={filenameNoExtension}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
@@ -269,7 +269,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            Filepath = request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             request.PageNumber,
@@ -288,7 +288,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            Filepath = request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             request.PageNumber,
@@ -307,7 +307,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            Filepath = request.Filename,
             request.PageNumber,
             request.ImageNumber,
             request.OcrServiceName,
@@ -326,7 +326,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            Filepath = request.Filename,
             request.PageNumber,
             request.ImageNumber,
             request.OcrServiceName,
@@ -349,7 +349,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         {
             request.PageNumber,
             request.ImageNumber,
-            request.Filepath,
+            Filepath = request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
@@ -369,7 +369,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var json = JsonSerializer.Serialize(new
         {
             request.PageNumber,
-            request.Filepath,
+            Filepath = request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())

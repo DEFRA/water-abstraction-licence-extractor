@@ -26,7 +26,7 @@ public class OcrController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filepath,
+                Filename = filepath,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -47,7 +47,7 @@ public class OcrController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filepath,
+                Filename = filepath,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -67,7 +67,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,
-                Filepath = filepath,
+                Filename = filepath,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -86,7 +86,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,
-                Filepath = filepath,
+                Filename = filepath,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -107,7 +107,7 @@ public class OcrController(
             {
                 PageNumber = request.pageNumber,
                 ImageNumber = request.imageNumber,
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -128,7 +128,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = request.pageNumber,
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -144,7 +144,7 @@ public class OcrController(
         await cacheService.SaveOcrImageTextAsync(
             new OcrServiceImageTextCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId,
                 PageNumber = request.pageNumber,
@@ -163,7 +163,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = request.pageNumber,
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },

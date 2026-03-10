@@ -23,7 +23,6 @@ public class AzureOpenAiOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
@@ -37,7 +36,7 @@ public class AzureOpenAiOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -69,7 +68,7 @@ public class AzureOpenAiOcrDataExtractorService(
             var imagePrompt = await GetImagePromptAsync(
                 pageNumber,
                 imageNumber,
-                pdfFilepath,
+                pdfDocument.PdfFilename,
                 imageReference);
             
             userPrompts.Add(imagePrompt);

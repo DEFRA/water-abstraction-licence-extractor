@@ -12,12 +12,12 @@ public interface IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath);
+        string pdfFilename);
     
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath);
+        string pdfFilename);
     
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
 

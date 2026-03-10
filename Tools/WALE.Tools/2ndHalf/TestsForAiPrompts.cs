@@ -593,7 +593,6 @@ public static class TestsForAiPrompts
             var lines =
                 (await tesseractOcr.GetTextLinesFromImageAsync(
                     pdfImageName,
-                    pdfFilename,
                     pageNumber,
                     1,
                     mockPdfDocument,

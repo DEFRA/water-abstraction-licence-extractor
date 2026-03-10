@@ -27,7 +27,6 @@ public class TesseractOcrDataExtractorService(
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
@@ -38,7 +37,7 @@ public class TesseractOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -80,7 +79,7 @@ public class TesseractOcrDataExtractorService(
                     imageNumber,
                     isPageScreenshot,
                     imageReference,
-                    pdfFilepath,
+                    pdfDocument.PdfFilename,
                     processRunId);
             }
             else
@@ -89,7 +88,7 @@ public class TesseractOcrDataExtractorService(
                     pageNumber,
                     imageNumber,
                     imageReference,
-                    pdfFilepath,
+                    pdfDocument.PdfFilename,
                     isPageScreenshot,
                     processRunId,
                     cacheService.UsesDatabase);

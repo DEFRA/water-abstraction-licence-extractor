@@ -53,7 +53,7 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{PdfFolder}/{PdfFilename}");
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{PdfFolder}{PdfFilename}");
     }
 
     private IReadOnlyList<PdfPage>? _pages;

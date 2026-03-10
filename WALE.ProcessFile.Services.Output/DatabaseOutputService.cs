@@ -24,14 +24,14 @@ public class DatabaseOutputService(
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilename);
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilename)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         
         var bytes1 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,

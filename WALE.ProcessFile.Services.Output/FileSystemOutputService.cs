@@ -21,9 +21,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilePath);
+        return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilename);
     }
 
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
@@ -204,12 +204,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilename)
     {
         var pageScreenshotPaths = GetPageScreenshotPaths(
             pageNumber,
             pdfServiceName,
-            pdfFilePath);
+            pdfFilename);
 
         var returnList = new List<byte[]>();
         

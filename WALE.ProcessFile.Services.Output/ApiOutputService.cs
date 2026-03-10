@@ -20,17 +20,17 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilename);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilePath}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
+        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilename}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();

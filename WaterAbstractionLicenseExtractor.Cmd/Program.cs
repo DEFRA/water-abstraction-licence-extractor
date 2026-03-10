@@ -536,7 +536,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesFull,
-            pdfFilePath,
+            pdfFilename,
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;

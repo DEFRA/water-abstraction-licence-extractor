@@ -120,7 +120,7 @@ public class PdfDocument
             pageNumber,
             3F);
 
-        var docnetBitmap = new DocnetBitmap().GetPageAsSKBitmap(
+        var docnetBitmap = new DocnetBitmap().GetPageAsSkBitmap(
             PdfFolder + PdfFilename,
             new PageDimensions(1080, 1920),
             pageNumber);

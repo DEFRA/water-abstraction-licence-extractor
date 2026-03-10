@@ -32,16 +32,17 @@ public class DatabaseCacheService(
         return databaseWriteService.ClearCacheAsync(pdfFilename);
     }
     
-    public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId,  string extension, string serviceName)
+    public async Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId,  string extension, string serviceName)
     {
-        var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-        {
-            PageNumber = pageNumber,
-            ImageNumber = imageNumber,
-            Filepath = pdfFilePath,
-            Extension = extension,
-            NoOcrServiceName = serviceName
-        });
+        var bytAry = await GetImageBytesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filename = pdfFilename,
+                Extension = extension,
+                NoOcrServiceName = serviceName
+            });
 
         if (bytAry == null)
         {
@@ -55,7 +56,7 @@ public class DatabaseCacheService(
             deflatedBytes,
             pix.Width,
             pix.Height,
-            pdfFilePath, 
+            pdfFilename, 
             serviceName,
             imageNumber,
             pageNumber,
@@ -68,26 +69,26 @@ public class DatabaseCacheService(
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
         int? height = null)
     {
         return Task.FromResult(
-            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilePath, extension));
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilename, extension));
     }
     
     public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetImagesAsync(request);
     }
 
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetImageBytesAsync(request);
     }
 
@@ -222,9 +223,9 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
-    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilename, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         await databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
 
         return bytes.Length;
@@ -243,13 +244,13 @@ public class DatabaseCacheService(
     }
 
     public Task<MetadataCollection?> GetMetadataAsync(
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {
         return BaseCacheService.GetMetadataAsync(
             this,
-            pdfFilePath,
+            pdfFilename,
             noOcrServiceName,
             processRunId);
     }

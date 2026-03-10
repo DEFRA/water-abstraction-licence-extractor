@@ -63,13 +63,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilename, int processRunId)
     {
         var path = "/Extractor/Licence/SaveLicenceSets";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath,
+            pdfFilePath = pdfFilename,
             processRunId,
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -79,13 +79,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
     {
         var path = "/Extractor/Licence/Save";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath,
+            pdfFilePath = pdfFilename,
             processRunId,
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -98,7 +98,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -120,14 +120,14 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
     {
         var path = "/Extractor/MatchResult/Save";
 
         var json = JsonSerializer.Serialize(new
         {
             Matches = matchesResult,
-            PdfFilePath = pdfFilePath,
+            PdfFilePath = pdfFilename,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
         
@@ -238,7 +238,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task SaveAllPagesTextAsync(
         List<DocumentLine> documentLines,
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {
@@ -247,7 +247,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
-            pdfFilePath,
+            pdfFilePath = pdfFilename,
             noOcrServiceName,
             processRunId
         }, JsonHelper.GetSerializerOptions());

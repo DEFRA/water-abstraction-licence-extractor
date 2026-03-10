@@ -19,7 +19,7 @@ public class ImagesController(
         var pageImages = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filepath = filename,
+                Filename = filename,
                 NoOcrServiceName = noOcrServiceName
             });
         
@@ -39,7 +39,7 @@ public class ImagesController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filename,
+                Filename = filename,
                 NoOcrServiceName = noOcrServiceName,
                 Extension = extension
             });
@@ -54,7 +54,7 @@ public class ImagesController(
 
     [HttpGet]
     public async Task<ActionResult> DeflateImageAsync(
-        [FromQuery] string pdfFilePath,
+        [FromQuery] string pdfFilename,
         [FromQuery] int imageNumber,
         [FromQuery] int pageNumber,
         [FromQuery] int processRunId,
@@ -62,7 +62,7 @@ public class ImagesController(
         [FromQuery] string serviceName)
     {
         var bytes = await cacheService.DeflateImageAsync(
-            pdfFilePath,
+            pdfFilename,
             imageNumber,
             pageNumber,
             processRunId,
@@ -94,7 +94,7 @@ public class ImagesController(
             request.bytes,
             request.width,
             request.height,
-            request.pdfFilePath!,
+            request.pdfFilename!,
             request.noOcrServiceName!,
             request.imageNumber,
             request.pageNumber,
@@ -135,7 +135,7 @@ public class ImagesController(
 
         public int height { get; set; }
 
-        public string? pdfFilePath { get; set; }
+        public string? pdfFilename { get; set; }
 
         public string? noOcrServiceName { get; set; }
 

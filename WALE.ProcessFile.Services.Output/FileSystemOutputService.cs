@@ -57,20 +57,20 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task SaveLicenceSetsAsync(
         Dictionary<string, LicenceSet> licenceSets,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
         var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         
         return File.WriteAllTextAsync(
             $"{outputFolder}/{filenameNoExtension}/licence-sets.jsonp",
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
         
         var licenceJson = JsonHelper.GetAsString(licence);
@@ -82,7 +82,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return -1;
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -92,9 +92,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
 
         var internalJson = JsonHelper.GetAsString(matchesResult);
@@ -171,9 +171,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         stream.Close();
     }
 
-    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilename, string noOcrServiceName, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
         
         var folder = $"{outputFolder}/{filenameNoExtension}/Text";

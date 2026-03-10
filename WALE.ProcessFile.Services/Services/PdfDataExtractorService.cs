@@ -149,7 +149,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filepath = pdfFileName,
+                Filename = pdfFileName,
                 NoOcrServiceName = Name
             });
 

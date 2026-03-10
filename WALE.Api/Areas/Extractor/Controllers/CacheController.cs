@@ -17,9 +17,9 @@ public class CacheController(ICacheService cacheService) : Controller
     
     [HttpPost]
     public async Task<IActionResult> ClearSingleAsync(
-        [FromQuery] string pdfFilePath)
+        [FromQuery] string pdfFilename)
     {
-        await cacheService.ClearCacheAsync(pdfFilePath);
+        await cacheService.ClearCacheAsync(pdfFilename);
         return Ok();
     }
 }

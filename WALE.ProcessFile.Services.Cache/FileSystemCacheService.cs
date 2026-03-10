@@ -29,13 +29,13 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
     
-    public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName)
+    public async Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilePath,
+            Filename = pdfFilename,
             ProcessRunId = processRunId,
             Extension = extension,
             NoOcrServiceName = serviceName
@@ -48,7 +48,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         var deflated = ImageHelper.Deflate(bytAry);
 
-        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var fileCacheFolder= GetFolderPath(pdfFilename);
         var outputFolderFull = $"{fileCacheFolder}/{serviceName}/Images";
         var imagePath = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
         
@@ -62,13 +62,13 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
         int? height = null)
     {
-        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var fileCacheFolder= GetFolderPath(pdfFilename);
         var outputFolderFull = $"{fileCacheFolder}/{serviceName}/Images";
         Directory.CreateDirectory(outputFolderFull);
 
@@ -84,7 +84,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     {
         // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
         
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
 
         var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
@@ -134,7 +134,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var filePath = await GetImageReferenceAsync(
             request.PageNumber!.Value,
             request.ImageNumber!.Value,
-            request.Filepath!,
+            request.Filename!,
             request.Extension!,
             request.NoOcrServiceName!);
 
@@ -340,9 +340,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilename, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, noOcrServiceName, width, height);
+        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilename, extension, noOcrServiceName, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
 
         return bytes.Length;
@@ -468,11 +468,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
 
-    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilename, string noOcrServiceName, int processRunId)
     {
         return BaseCacheService.GetMetadataAsync(
             this,
-            pdfFilePath,
+            pdfFilename,
             noOcrServiceName,
             processRunId);
     }

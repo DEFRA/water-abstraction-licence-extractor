@@ -36,7 +36,7 @@ public class InternalTesseractOcrDataExtractorService(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = pdfFilename,
+                Filename = pdfFilename,
                 NoOcrServiceName = noOcrServiceName,
                 Extension = FileHelper.GetImageExtension(imageReference)
             });

@@ -140,7 +140,7 @@ public class AzureOpenAiOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfFilepath,
             NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
             Extension = FileHelper.GetImageExtension(imageReference)
         });

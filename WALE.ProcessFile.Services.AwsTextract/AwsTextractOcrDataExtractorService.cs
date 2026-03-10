@@ -110,7 +110,7 @@ public class AwsTextractOcrDataExtractorService
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfDocument.PdfFilename,
+                    Filename = pdfDocument.PdfFilename,
                     NoOcrServiceName = noOcrServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });

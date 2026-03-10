@@ -77,7 +77,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfDocument.PdfFilename,
+                    Filename = pdfDocument.PdfFilename,
                     NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });

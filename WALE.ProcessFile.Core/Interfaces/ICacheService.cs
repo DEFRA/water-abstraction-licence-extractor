@@ -15,12 +15,12 @@ public interface ICacheService
     
     public Task ClearCacheAsync();
     
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
+    public Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
@@ -55,7 +55,7 @@ public interface ICacheService
         byte[] bytes,
         int width,
         int height,
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int imageNumber,
         int pageNumber,
@@ -99,7 +99,7 @@ public interface ICacheService
         List<LineAndWords> pageLines);
 
     Task<MetadataCollection?> GetMetadataAsync(
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId);
     

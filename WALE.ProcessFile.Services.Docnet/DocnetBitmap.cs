@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.Docnet;
 
 public class DocnetBitmap
 {
-    public SKBitmap GetPageAsSKBitmap(string pdfFilePath, PageDimensions pageDimensions, int pageNumber)
+    public SKBitmap GetPageAsSkBitmap(string pdfFilePath, PageDimensions pageDimensions, int pageNumber)
     {
         var docLibInstance = new DocLibInstance();
         using var docReader = docLibInstance.GetDocReader(pdfFilePath, pageDimensions);

@@ -30,14 +30,14 @@ public class PdfDataExtractorService(
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
     
     public async Task<MatchesResult> GetMatchesAsync(
-        string pdfFilePath,
+        string pdfFileName,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(pdfFilePath, _ => new SemaphoreSlim(1, 1));
+        var pathLock = PathLocks.GetOrAdd(pdfFileName, _ => new SemaphoreSlim(1, 1));
         await pathLock.WaitAsync();
 
         try
@@ -46,11 +46,11 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFilePath}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFileName}");
             }
             
             return await GetMatchesInternalAsync(
-                pdfFilePath,
+                pdfFileName,
                 configuration,
                 previouslyParsedPaths,
                 processRunId);
@@ -62,7 +62,7 @@ public class PdfDataExtractorService(
     }
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
-        string pdfFilePath,
+        string pdfFileName,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
@@ -70,15 +70,16 @@ public class PdfDataExtractorService(
         var dtStart = DateTime.Now;
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
-            pdfFilePath,
+            pdfFileName,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
+            configuration,
             processRunId);
         
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-            $" - {pdfDocument.PdfFilePath}");
+            $" - {pdfDocument.PdfFilename}");
         
         if (pdfDocument.DocumentLines == null)
         {
@@ -94,7 +95,7 @@ public class PdfDataExtractorService(
         
         var returnResult = new MatchesResult
         {
-            Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
+            Filename = FileHelper.GetFilenameWithExtension(pdfFileName),
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
@@ -116,7 +117,7 @@ public class PdfDataExtractorService(
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-            $" - {pdfDocument.PdfFilePath}");
+            $" - {pdfDocument.PdfFilename}");
         
         dtStart = DateTime.Now;
         
@@ -142,7 +143,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filepath = pdfFilePath,
+                Filepath = pdfFileName,
                 NoOcrServiceName = Name
             });
 
@@ -220,7 +221,7 @@ public class PdfDataExtractorService(
         {
             ConsoleHelper.WriteLine(
                 $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-                $" - {pdfDocument.PdfFilePath}");
+                $" - {pdfDocument.PdfFilename}");
         }
 
         var documentLines = new List<DocumentLine>();
@@ -240,7 +241,7 @@ public class PdfDataExtractorService(
             if (pageImages.Count > 10)
             {
                 ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
-                    $" - {pdfDocument.PdfFilePath}");
+                    $" - {pdfDocument.PdfFilename}");
                 
                 pageImages = page.ScreenshotReferences
                     .Select(sr => sr.ImageReference)
@@ -289,7 +290,7 @@ public class PdfDataExtractorService(
                         serviceImageLines =
                             (await ocrService.GetTextLinesFromImageAsync(
                                 imageReference,
-                                pdfFilePath,
+                                pdfFileName,
                                 pageNumber,
                                 imageNumber,
                                 pdfDocument,
@@ -473,7 +474,7 @@ public class PdfDataExtractorService(
         }
         
         ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
-            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilePath}");
+            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilename}");
     }
     
     private static bool IsPageScan(int imageWidth, int imageHeight)
@@ -972,6 +973,7 @@ public class PdfDataExtractorService(
                     LabelConfiguration.GetLabels(),
                     licenceNumberMapping,
                     lookupConfiguration.ValidLowercaseFirstNames,
+                    lookupConfiguration.PdfFolder,
                     regionCode),
                 previouslyParsedPaths,
                 processRunId);

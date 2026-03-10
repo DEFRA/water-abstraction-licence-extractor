@@ -519,15 +519,17 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         };
 
         var pdfFolder = pdfFilePath[..(pdfFilePath.LastIndexOf('/') + 1)];
-
+        var pdfFilename = pdfFolder.Split('/').Last();
+        
         var lookupConfig = new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             licenceMapping,
             firstNamesCsv,
+            pdfFolder,
             regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
-            pdfFilePath,
+            pdfFilename,
             lookupConfig,
             previouslyParsedPaths,
             processRun.ProcessRunId);

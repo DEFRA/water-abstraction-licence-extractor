@@ -350,6 +350,7 @@ public static class GenerateLicenceReaderExtract
             LicenceReaderConfiguration.GetLabels(),
             FileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            pdfFolder,
             regionCode);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");

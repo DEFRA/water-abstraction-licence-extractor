@@ -5,6 +5,7 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
@@ -71,7 +72,13 @@ public static class TestsForAiPrompts
 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
-                    pageImageGroups);
+                    pageImageGroups,
+                    new LookupConfiguration(
+                        [],
+                        [],
+                        [],
+                        KeyConfig.PdfFolder,
+                        -1));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 
@@ -529,7 +536,8 @@ public static class TestsForAiPrompts
 
     static async Task<List<ChatMessageContentPart>> GetImagePromptsAsync(
         string pdfFilename,
-        List<List<SKBitmap>> pageImageGroups)
+        List<List<SKBitmap>> pageImageGroups,
+        LookupConfiguration lookupConfiguration)
     {
         var cacheService = new FileSystemCacheService("Cache/");
         var outputService = new FileSystemOutputService("Output/");
@@ -549,7 +557,8 @@ public static class TestsForAiPrompts
             "[NOT_USED]",
             true,
             outputService,
-            pdfPigDocumentService);
+            pdfPigDocumentService,
+            lookupConfiguration);
         
         var imagePrompts = new List<ChatMessageContentPart>();
                 

@@ -69,6 +69,7 @@ public static class GenerateAggregatesCsvForTesting
                     LabelConfiguration.GetLabels(),
                     FileLicenceMapping,
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
+                    KeyConfig.PdfFolder,
                     3);
             }
 

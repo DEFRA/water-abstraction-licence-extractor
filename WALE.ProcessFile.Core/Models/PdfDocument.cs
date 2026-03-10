@@ -1,5 +1,6 @@
 using Docnet.Core.Models;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -10,23 +11,25 @@ namespace WALE.ProcessFile.Core.Models;
 public class PdfDocument
 {
     public bool FromCache { get; }
-    public string PdfFilePath { get; }
+    public string PdfFilename { get; }
+    
+    public string PdfFolder { get; }
     
     private IInternalPdfDocument? InternalDocument { get; set; }
     
     private IOutputService OutputService { get; set; }
     
     INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; }
-
-    private readonly DocLibInstance DocLibInstance = new();
     
     public PdfDocument(
-        string pdfFilePath,
+        string pdfFilename,
         bool fromCache,
         IOutputService outputService,
-        INoOcrPdfDocumentService noOcrPdfDocumentService)
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        LookupConfiguration configuration)
     {
-        PdfFilePath = pdfFilePath;
+        PdfFilename = pdfFilename;
+        PdfFolder = configuration.PdfFolder;
         FromCache = fromCache;
         OutputService = outputService;
         NoOcrPdfDocumentService = noOcrPdfDocumentService;
@@ -46,7 +49,7 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(PdfFilePath);
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(PdfFilename);
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -71,7 +74,7 @@ public class PdfDocument
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
-                        PdfFilePath);
+                        PdfFilename);
                     
                     var pdfPage = new PdfPage
                     {
@@ -114,7 +117,7 @@ public class PdfDocument
             3F);
 
         var docnetBitmap = new DocnetBitmap().GetPageAsSKBitmap(
-            PdfFilePath,
+            PdfFilename,
             new PageDimensions(1080, 1920),
             pageNumber);
 

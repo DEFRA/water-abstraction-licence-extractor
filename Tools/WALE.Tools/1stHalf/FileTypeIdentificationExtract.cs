@@ -36,7 +36,6 @@ public static class FileTypeIdentificationExtract
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
     
-        
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
     
@@ -96,6 +95,7 @@ public static class FileTypeIdentificationExtract
             labels,
             FileLicenceMapping,
             [],
+            KeyConfig.PdfFolder,
             3);
 
         var results = await fileTypeService.ProcessDirectoryAsync(

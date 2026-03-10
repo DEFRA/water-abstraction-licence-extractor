@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Interfaces;
@@ -5,10 +6,11 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface INoOcrDataExtractorService
 {
     public Task<PdfDocument> GetPdfDocumentAsync(
-        string pdfFilePath,
+        string pdfFileName,
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
+        LookupConfiguration configuration,
         int processRunId);
     
     public Task<List<DocumentLine>>

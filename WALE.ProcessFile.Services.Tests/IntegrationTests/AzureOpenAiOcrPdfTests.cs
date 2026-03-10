@@ -60,12 +60,13 @@ public class AzureOpenAiOcrPdfTests
 
     private string PdfFolder => TestConfig.PdfFolder;
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync()
+    private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            pdfFolder,            
             3);
     }
     
@@ -73,7 +74,7 @@ public class AzureOpenAiOcrPdfTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             PdfFolder + fileName,
-            await LookupConfigurationAsync(),
+            await LookupConfigurationAsync(PdfFolder),
             
             [PdfFolder + fileName],
             0);
@@ -164,7 +165,7 @@ public class AzureOpenAiOcrPdfTests
             _pdfDataExtractor,
             TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

@@ -64,12 +64,13 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             LabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
+            pdfFolder,
             regionCode);
     }
 
@@ -80,7 +81,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         return await pdfService.GetMatchesAsync(
             pdfFolder + fileName,
-            await LookupConfigurationAsync(regionCode),
+            await LookupConfigurationAsync(regionCode, pdfFolder),
             [pdfFolder + fileName],
             0);
     }
@@ -202,7 +203,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor1,
             TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync(1))).Last();
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -241,7 +242,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor3,
             TestConfig.PdfFolder3,
             0,
-            await LookupConfigurationAsync(3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLinkedLicenceLength, licence.LinkedLicences.Length);

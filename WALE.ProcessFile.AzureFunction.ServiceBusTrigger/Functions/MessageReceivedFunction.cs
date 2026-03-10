@@ -87,6 +87,7 @@ public class MessageReceivedFunction(
                 LabelConfiguration.GetLabels(),
                 fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
+                pdfFolderPath,
                 1),
             previouslyParsedPaths,
             0);

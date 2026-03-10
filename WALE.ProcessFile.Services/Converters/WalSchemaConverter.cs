@@ -1079,6 +1079,7 @@ lookupConfiguration);
                                 LabelConfiguration.GetLabels(),
                                 licenceNumberMapping,
                                 lookupConfiguration.ValidLowercaseFirstNames,
+                                lookupConfiguration.PdfFolder,
                                 matchesResult.RegionCode),
                             previouslyParsedPaths,
                             processRunId);
@@ -1140,6 +1141,7 @@ lookupConfiguration);
                     LabelConfiguration.GetLabels(),
                     licenceNumberMapping,
                     lookupConfiguration.ValidLowercaseFirstNames,
+                    lookupConfiguration.PdfFolder,
                     matchesResult.RegionCode),
                 previouslyParsedPaths,
                 processRunId);

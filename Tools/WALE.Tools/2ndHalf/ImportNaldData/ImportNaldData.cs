@@ -1,49 +1,139 @@
 using System.Globalization;
 using System.Text;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.Textract;
 using Dapper;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using ICSharpCode.SharpZipLib.Zip;
 using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 
-namespace WALE.Tools._2ndHalf;
+namespace WALE.Tools._2ndHalf.ImportNaldData;
 
 public static class ImportNaldData
 {
     private static Dictionary<string, Dictionary<string, NpgsqlTypes.NpgsqlDbType>>? _schemaCache;
     private static List<ForeignKeyDefinition>? _foreignKeys;
 
-    private class ForeignKeyDefinition
+    private static AmazonS3Client GetS3Client()
     {
-        public string ConstraintName { get; set; } = string.Empty;
-        public string TableName { get; set; } = string.Empty;
-        public string ColumnNames { get; set; } = string.Empty;
-        public string ReferencedTableName { get; set; } = string.Empty;
-        public string ReferencedColumnNames { get; set; } = string.Empty;
-        public string OnDeleteAction { get; set; } = string.Empty;
+        var awsCredentials = new BasicAWSCredentials(KeyConfig.AwsS3AccessKey, KeyConfig.AwsS3SecretKey);
+        var client = new AmazonS3Client(awsCredentials, new AmazonS3Config
+        {
+            RegionEndpoint = RegionEndpoint.EUWest1
+        });
+        
+        return client;
     }
-
-    private class SchemaColumn
+    
+    // Method to decompress files from a ZIP file
+    private static void Decompress(string zipFilePath, string extractPath, string? password)
     {
-        public string TableName { get; set; } = string.Empty;
-        public string ColumnName { get; set; } = string.Empty;
-        public string DataType { get; set; } = string.Empty;
-        public string UdtName { get; set; } = string.Empty;
+        using var zipInputStream = new ZipInputStream(File.OpenRead(zipFilePath));
+
+        if (!string.IsNullOrEmpty(password))
+        {
+            zipInputStream.Password = password;
+        }
+
+        // Read entries from the ZIP archive
+        while (zipInputStream.GetNextEntry() is { } entry)
+        {
+            var entryPath = Path.Combine(extractPath, entry.Name);
+            
+            // Process files
+            if (entry.IsFile)
+            {
+                using var fileStream = File.Create(entryPath);
+                
+                // Buffer for reading entries
+                var buffer = new byte[4096];
+                int bytesRead;
+                
+                // Read from ZIP stream and write to file
+                while ((bytesRead = zipInputStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    fileStream.Write(buffer, 0, bytesRead);
+                }
+            }
+            else if (entry.IsDirectory) // Process directories
+            {
+                Directory.CreateDirectory(entryPath);
+            }
+        }
     }
 
     public static async Task ImportAsync()
     {
         ConsoleHelper.WriteLine("Starting NALD data import...");
-        var dumpFolder = KeyConfig.NaldDataDumpFolder;
+        var fileSource = "s3";
 
-        if (!Directory.Exists(dumpFolder))
+        var files = new List<string>();
+        
+        if (fileSource == "file")
         {
-            ConsoleHelper.WriteLine($"Error: NALD dump folder not found at {dumpFolder}");
-            return;
-        }
+            var dumpFolder = KeyConfig.NaldDataDumpFolder;
 
-        var files = Directory.GetFiles(dumpFolder, "NALD_*.txt");
-        ConsoleHelper.WriteLine($"Found {files.Length} files to import.");
+            if (!Directory.Exists(dumpFolder))
+            {
+                ConsoleHelper.WriteLine($"Error: NALD dump folder not found at {dumpFolder}");
+                return;
+            }
+
+            files.AddRange(Directory.GetFiles(dumpFolder, "NALD_*.txt"));
+            ConsoleHelper.WriteLine($"Found {files.Count} files to import.");
+        }
+        else if (fileSource == "s3")
+        {
+            var client = GetS3Client();
+            var response = await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    BucketName = KeyConfig.AwsS3BucketName
+                });
+
+            Directory.CreateDirectory("Temp");
+            
+            // There will actually only be one
+            foreach (var s3Object in response.S3Objects)
+            {
+                var file = await client.GetObjectAsync(
+                    new GetObjectRequest
+                    {
+                        BucketName = KeyConfig.AwsS3BucketName,
+                        Key = s3Object.Key
+                    });
+
+                await file.WriteResponseStreamToFileAsync(
+                    $"Temp/{s3Object.Key}",
+                    false,
+                    CancellationToken.None);
+            }
+
+            var folderPath = "Temp/wal_nald_data_release";
+            
+            var zipPath = $"{folderPath}/nald_enc.zip";
+            Decompress(zipPath, "Temp",  KeyConfig.AwsS3ZipPassword);
+            File.Delete(zipPath);
+            Directory.Delete(folderPath);
+            
+            zipPath = "Temp/NALD.zip";
+            Decompress(zipPath, "Temp", null);
+
+            folderPath = "Temp/NALD";
+            files = Directory.GetFiles(folderPath, "*.txt").ToList();
+            
+            File.Delete(zipPath);
+        }
+        else
+        {
+            throw new NotImplementedException($"NALD data import {fileSource} is not implemented yet.");
+        }
 
         NpgsqlDataSourceProvider npgsqlDataSourceProvider = new(
             KeyConfig.PostgresHost,

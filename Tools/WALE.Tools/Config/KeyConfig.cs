@@ -340,7 +340,8 @@ public static class KeyConfig
 
     private static string? _apiBaseUrl;
     
-    public static string ApiBaseUrl{
+    public static string ApiBaseUrl
+    {
         get
         {
             if (_apiBaseUrl != null)
@@ -350,6 +351,70 @@ public static class KeyConfig
 
             _apiBaseUrl = Config["ApiBaseUrl"]!;
             return _apiBaseUrl;
+        }
+    }
+
+    private static string? _awsAccessKey;
+    
+    public static string AwsS3AccessKey
+    {
+        get
+        {
+            if (_awsAccessKey != null)
+            {
+                return _awsAccessKey;
+            }
+
+            _awsAccessKey = Config["AwsS3AccessKey"]!;
+            return _awsAccessKey;
+        }
+    }
+    
+    private static string? _awsSecretKey;
+    
+    public static string AwsS3SecretKey
+    {
+        get
+        {
+            if (_awsSecretKey != null)
+            {
+                return _awsSecretKey;
+            }
+
+            _awsSecretKey = Config["AwsS3SecretKey"]!;
+            return _awsSecretKey;
+        }
+    }
+    
+    private static string? _awsS3BucketName;
+    
+    public static string AwsS3BucketName
+    {
+        get
+        {
+            if (_awsS3BucketName != null)
+            {
+                return _awsS3BucketName;
+            }
+
+            _awsS3BucketName = Config["AwsS3BucketName"]!;
+            return _awsS3BucketName;
+        }
+    }
+    
+    private static string? _awsS3ZipPassword;
+    
+    public static string AwsS3ZipPassword
+    {
+        get
+        {
+            if (_awsS3ZipPassword != null)
+            {
+                return _awsS3ZipPassword;
+            }
+
+            _awsS3ZipPassword = Config["AwsS3ZipPassword"]!;
+            return _awsS3ZipPassword;
         }
     }
 }

@@ -164,7 +164,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
@@ -173,7 +173,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
         Directory.CreateDirectory(imgCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -195,7 +195,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var metadataFileText = await GetNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.Filepath,
+                Filename = request.Filename,
                 NoOcrServiceName = request.NoOcrServiceName,
                 ProcessRunId = request.ProcessRunId
             });
@@ -218,7 +218,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
                 PageNumber = pageNumber,
                 NoOcrServiceName = request.NoOcrServiceName,
                 ProcessRunId = request.ProcessRunId,
-                Filepath = request.Filepath
+                Filename = request.Filename
             };
             
             var outputFilename = await GetNoOcrPageReferenceAsync(pageRequest);
@@ -237,7 +237,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -352,7 +352,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -374,7 +374,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         return File.WriteAllTextAsync(
-            GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filepath!)),
+            GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filename!)),
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
@@ -382,7 +382,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         

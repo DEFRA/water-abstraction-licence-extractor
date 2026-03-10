@@ -97,8 +97,8 @@ public static class GenerateAggregatesCsvForTesting
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName =>
             {
-                var filenameToUse = FileHelper.GetFilenameWithoutExtension(fileName);
-                return yorkshire.Contains(filenameToUse, StringComparer.InvariantCultureIgnoreCase);
+                var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(fileName);
+                return yorkshire.Contains(filenameNoExtension, StringComparer.InvariantCultureIgnoreCase);
                 
             })
             .Select(FileHelper.GetFilenameWithoutExtension)

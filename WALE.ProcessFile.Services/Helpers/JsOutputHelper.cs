@@ -128,12 +128,12 @@ public static class JsOutputHelper
                 $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
                 resultFileStringBuilder);
 
-            var filename = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
+            var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
             var listRow = new OutputListDataItem
             {
-                imagePath = $"{filename}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
-                filename = filename,
+                imagePath = $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
+                filename = filenameNoExtension,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}<br><span style=\"color: silver\">{outputLine.NaldLicenceNumber}</span>",
                 licenceHolder =

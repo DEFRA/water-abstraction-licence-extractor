@@ -189,7 +189,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.PageNumber,
                 request.NoOcrServiceName,
                 Data = data,
@@ -215,7 +215,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
         new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName,
                 Response = imagesMetadataStr,
                 DateTimeUtc = DateTime.UtcNow,
@@ -237,7 +237,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName,
                 Response = dataStr,
                 DateTimeUtc = DateTime.UtcNow,

@@ -31,16 +31,16 @@ public class DatabaseOutputService(
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         
         var bytes1 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
-            pdfFilename,
+            filenameNoExtension,
             pdfServiceName);
         
         var bytes2 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
-            pdfFilename,
+            filenameNoExtension,
             GeneralConstants.DocnetExtractorServiceName);// TODO tidy this up
         
         return [
@@ -111,21 +111,21 @@ public class DatabaseOutputService(
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, pdfFilename, processRunId);
+        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, filenameNoExtension, processRunId);
     }
     
     public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
             licenceStr,
-            pdfFilename,
+            filenameNoExtension,
             processRunId);
     }
     
@@ -137,10 +137,10 @@ public class DatabaseOutputService(
 
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, pdfFilename, processRunId);
+        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, filenameNoExtension, processRunId);
     }
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
@@ -153,10 +153,10 @@ public class DatabaseOutputService(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
         foreach (var (providerName, bitmap) in images)
@@ -166,7 +166,7 @@ public class DatabaseOutputService(
             await SavePageScreenshotInternalAsync(
                 pageNumber,
                 noOcrServiceName,
-                pdfFilename,
+                filenameNoExtension,
                 bytes,
                 processRunId);
         }
@@ -191,10 +191,10 @@ public class DatabaseOutputService(
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
         
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
-        await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
+        await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, filenameNoExtension, noOcrServiceName, processRunId);
     }
 
     public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)

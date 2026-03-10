@@ -148,10 +148,10 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = pdfDocument.PdfFilenameNoExtension;
         var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
 
         var byteSize = 0;
@@ -163,7 +163,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
                 providerName,
                 bitmap,
                 pageNumber, 
-                pdfFilename,
+                filenameNoExtension,
                 processRunId));
         }
 

@@ -498,10 +498,10 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     ProcessRun processRun,
     Lock extractorLock)
 {
-    var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
 
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
     IPdfDataExtractorService pdfDataExtractor;
 

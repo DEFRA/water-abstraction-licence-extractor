@@ -95,8 +95,8 @@ public class MessageReceivedFunction(
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        var jsonFileName = $"{filenameOnlyNoExtension}.json";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var jsonFileName = $"{filenameNoExtension}.json";
 
         var assetsClient = blobClient.GetBlobContainerClient("assets");
         await assetsClient.DeleteBlobIfExistsAsync(jsonFileName);

@@ -32,7 +32,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
         {
-            Filename = request.Filepath,
+            Filename = request.Filename,
             request.NoOcrServiceName
         });
     }
@@ -80,7 +80,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.PageNumber,
                 request.NoOcrServiceName
             });
@@ -106,7 +106,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName
             });
 
@@ -124,7 +124,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 // TODO some weird circumstance meant that certain (not all) pages were repeated
                 // PROBABLY because of retry logic (might be limited to Ryan's machine)
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.Filepath}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.Filename}");
             }
         }
         
@@ -170,7 +170,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName
             });
     }

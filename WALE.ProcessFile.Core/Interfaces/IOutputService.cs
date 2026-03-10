@@ -37,7 +37,7 @@ public interface IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId);
 
     public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 

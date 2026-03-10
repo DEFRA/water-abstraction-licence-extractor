@@ -35,6 +35,12 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
+        if (pdfFileName.Split('/').Length > 1)
+        {
+            Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Pdf file name should not contain full path");
+            pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
+        }
+        
         var dtStart = DateTime.Now;
         
         var pathLock = PathLocks.GetOrAdd(pdfFileName, _ => new SemaphoreSlim(1, 1));
@@ -95,7 +101,7 @@ public class PdfDataExtractorService(
         
         var returnResult = new MatchesResult
         {
-            Filename = FileHelper.GetFilenameWithExtension(pdfFileName),
+            Filename = pdfFileName,
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,

@@ -21,7 +21,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrPageTextLinesAsync(
             new NoOcrServicePageCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 PageNumber = request.pageNumber,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
@@ -42,7 +42,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -79,7 +79,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrImagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filepath,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
             },

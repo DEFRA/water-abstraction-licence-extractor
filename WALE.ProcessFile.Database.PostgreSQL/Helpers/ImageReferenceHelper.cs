@@ -5,33 +5,38 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class ImageReferenceHelper
 {
-    public static List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(int pageNumber, string pdfServiceName,
-        string pdfFilePath)
+    public static List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
+        int pageNumber,
+        string pdfServiceName,
+        string filename)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
 
         return
         [
             (pdfServiceName,
-                $"Screenshot-{pdfFilename}-{pdfServiceName}-{pageNumber}"),
+                $"Screenshot-{filenameNoExtension}-{pdfServiceName}-{pageNumber}"),
             (GeneralConstants.DocnetExtractorServiceName,
-                $"Screenshot-{pdfFilename}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
+                $"Screenshot-{filenameNoExtension}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
         ];
     }
     
     public static string GetImageReference(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string filename,
         string extension)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return $"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
+        return $"ImageReference-{filenameNoExtension}-{extension}-{pageNumber}-{imageNumber}";
     }
     
-    public static string GetNoOcrPageReferenceAsync(string filepath, string noOcrServiceName, int pageNumber)
+    public static string GetNoOcrPageReferenceAsync(
+        string filename,
+        string noOcrServiceName,
+        int pageNumber)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(filepath);
-        return $"NoOcrPageReference-{pdfFilename}-{noOcrServiceName}-{pageNumber}";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
+        return $"NoOcrPageReference-{filenameNoExtension}-{noOcrServiceName}-{pageNumber}";
     }
 }

@@ -589,7 +589,7 @@ public static partial class WalSchemaConverter
             pdfFolder,
             previouslyParsedPaths,
             processRunId,
-lookupConfiguration);
+            lookupConfiguration);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);

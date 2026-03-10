@@ -16,7 +16,7 @@ public class BaseCacheService
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
-            Filepath = pdfFilePath,
+            Filename = pdfFilePath,
             NoOcrServiceName = noOcrServiceName,
             ProcessRunId = processRunId
         };

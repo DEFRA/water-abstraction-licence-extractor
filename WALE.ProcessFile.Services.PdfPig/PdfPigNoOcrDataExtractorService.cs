@@ -143,12 +143,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         int processRunId,
         ICacheService cacheService)
     {
-        await cacheService.SaveNoOcrImagesMetadataAsync(new NoOcrServiceMetadataCacheRequest
-        {
-            Filepath = pdfDocument.PdfFilename,
-            NoOcrServiceName = Name,
-            ProcessRunId = processRunId
-        }, imagesMetadata);
+        await cacheService.SaveNoOcrImagesMetadataAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                Filename = pdfDocument.PdfFilename,
+                NoOcrServiceName = Name,
+                ProcessRunId = processRunId
+            }, imagesMetadata);
     }
     
     public Task<int> SavePageScreenshotAsync(
@@ -254,7 +255,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = pdfDocument.PdfFilename,
+                Filename = pdfDocument.PdfFilename,
                 NoOcrServiceName = Name,
                 ProcessRunId = processRunId
             },
@@ -290,7 +291,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         var pageRequest = new NoOcrServicePageCacheRequest
         {
-            Filepath = pdfDocument.PdfFilename,
+            Filename = pdfDocument.PdfFilename,
             NoOcrServiceName = Name,
             PageNumber = page.Number,
             ProcessRunId = processRunId

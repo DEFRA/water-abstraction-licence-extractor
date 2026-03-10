@@ -61,22 +61,22 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         int processRunId)
     {
         var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
-        var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
         
         return File.WriteAllTextAsync(
-            $"{outputFolder}/{folderName}/licence-sets.jsonp",
+            $"{outputFolder}/{filenameNoExtension}/licence-sets.jsonp",
             $"var licenceSets = {licenceSetsJson}");
     }
 
     public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
     {
-        var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        Directory.CreateDirectory($"{outputFolder}/{folderName}");
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
         
         var licenceJson = JsonHelper.GetAsString(licence);
 
         await File.WriteAllTextAsync(
-            $"{outputFolder}/{folderName}/licence.jsonp",
+            $"{outputFolder}/{filenameNoExtension}/licence.jsonp",
             $"var data2 = {licenceJson}");
 
         return -1;
@@ -94,13 +94,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
     {
-        var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        Directory.CreateDirectory($"{outputFolder}/{folderName}");
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
 
         var internalJson = JsonHelper.GetAsString(matchesResult);
         
         await File.WriteAllTextAsync(
-            $"{outputFolder}/{folderName}/internal.jsonp",
+            $"{outputFolder}/{filenameNoExtension}/internal.jsonp",
             $"var data = {internalJson}");
 
         return -1;
@@ -118,13 +118,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
         var imagePaths = GetPageScreenshotPaths(
             pageNumber,
             noOcrServiceName,
-            pdfFilePath);
+            pdfFilename);
         
         var exists1 = File.Exists(imagePaths[0].ImageReference);
         var exists2 = imagePaths.Count >= 2 && File.Exists(imagePaths[1].ImageReference);
@@ -173,10 +173,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
     {
-        var folderName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        Directory.CreateDirectory($"{outputFolder}/{folderName}");
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
         
-        var folder = $"{outputFolder}/{folderName}/Text";
+        var folder = $"{outputFolder}/{filenameNoExtension}/Text";
         Directory.CreateDirectory(folder);
         
         var pageAllPath = $"{folder}/pages-all.txt";

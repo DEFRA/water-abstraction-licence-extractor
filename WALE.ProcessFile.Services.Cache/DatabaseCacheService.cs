@@ -93,13 +93,13 @@ public class DatabaseCacheService(
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrImagesMetadata(request);
     }
 
@@ -107,20 +107,20 @@ public class DatabaseCacheService(
     {
         return Task.FromResult(
             ImageReferenceHelper.GetNoOcrPageReferenceAsync(
-                request.Filepath!,
+                request.Filename!,
                 request.NoOcrServiceName!,
                 request.PageNumber));
     }
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
 
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);
     }
 
@@ -156,7 +156,7 @@ public class DatabaseCacheService(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var existing = await databaseReadService.GetNoOcrPagesMetadataAsync(request);
 
@@ -177,7 +177,7 @@ public class DatabaseCacheService(
 
     public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
      
         var existing = await databaseReadService.GetNoOcrImagesMetadata(request);
 
@@ -194,7 +194,7 @@ public class DatabaseCacheService(
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return await databaseWriteService.SaveNoOcrPageAsync(request, pageLines, request.ProcessRunId);
     }
 

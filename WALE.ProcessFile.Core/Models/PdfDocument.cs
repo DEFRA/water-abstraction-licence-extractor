@@ -2,6 +2,7 @@ using Docnet.Core.Models;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Docnet;
@@ -12,6 +13,8 @@ public class PdfDocument
 {
     public bool FromCache { get; }
     public string PdfFilename { get; }
+    
+    public string PdfFilenameNoExtension { get; }
     
     public string PdfFolder { get; }
     
@@ -29,6 +32,7 @@ public class PdfDocument
         LookupConfiguration configuration)
     {
         PdfFilename = pdfFilename;
+        PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         PdfFolder = configuration.PdfFolder;
         FromCache = fromCache;
         OutputService = outputService;
@@ -49,7 +53,7 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(PdfFilename);
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{PdfFolder}/{PdfFilename}");
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -117,7 +121,7 @@ public class PdfDocument
             3F);
 
         var docnetBitmap = new DocnetBitmap().GetPageAsSKBitmap(
-            PdfFilename,
+            PdfFolder + PdfFilename,
             new PageDimensions(1080, 1920),
             pageNumber);
 

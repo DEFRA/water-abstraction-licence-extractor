@@ -482,17 +482,17 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }

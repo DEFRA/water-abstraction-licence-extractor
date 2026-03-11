@@ -264,7 +264,7 @@ public class DatabaseCacheService(
             .ToList();
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
         var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
         var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
@@ -284,12 +284,12 @@ public class DatabaseCacheService(
         };
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);

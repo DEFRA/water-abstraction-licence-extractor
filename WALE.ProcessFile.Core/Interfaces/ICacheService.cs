@@ -105,10 +105,10 @@ public interface ICacheService
     
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
 
-    Task<NaldDataCollection> GetNaldDataAsync(short regionCode);
+    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode);
     
-    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode);
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode);
     
-    Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> 
+    Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)> 
         GetNaldLicenceNumbersAsync(short? regionCode);
 }

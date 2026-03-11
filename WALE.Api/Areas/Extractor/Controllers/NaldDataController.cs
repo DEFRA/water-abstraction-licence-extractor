@@ -11,14 +11,14 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class NaldDataController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllAsync([FromQuery] short regionCode)
+    public async Task<IActionResult> GetAllAsync([FromQuery] short? regionCode = null)
     {
         var naldData = await cacheService.GetNaldDataAsync(regionCode);
         return Ok(naldData);
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetLicenceStatusDataAsync([FromQuery] short regionCode)
+    public async Task<IActionResult> GetLicenceStatusDataAsync([FromQuery] short? regionCode = null)
     {
         var naldLicenceNumbers = await cacheService.GetNaldLicenceNumbersAsync(
             regionCode);
@@ -26,17 +26,17 @@ public class NaldDataController(ICacheService cacheService) : Controller
         return Ok(new NaldLicenceStatusData
         {
             LiveLicences = naldLicenceNumbers.Live
-                .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToHashSet(),
             DeadLicences = naldLicenceNumbers.Dead
-                .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToHashSet(),
             ImpoundmentLicences = naldLicenceNumbers.Impoundment
-                .Select(l => FormattingHelper.StripForComparison(l, regionCode))
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToHashSet()

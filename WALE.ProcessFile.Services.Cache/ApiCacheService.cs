@@ -406,10 +406,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
-        var path = $"/Extractor/NaldData/GetAll?regionCode={regionCode}";
-        
+        var path = "/Extractor/NaldData/GetAll";
+
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
+
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
@@ -419,9 +424,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
     {
-        var path = $"/Extractor/NaldData/GetLicenceStatusData?regionCode={regionCode}";
+        var path = "/Extractor/NaldData/GetLicenceStatusData";
+        
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
         
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
@@ -432,7 +442,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();

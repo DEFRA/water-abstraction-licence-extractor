@@ -719,7 +719,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result.ToList();
     }
 
-    public async Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    public async Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
     {
         // Run the 3 lookups concurrently.
         var liveTask = RunWithNewConnectionAsync(c => GetLiveLicenceNumbersAsync(c, regionCode));
@@ -730,14 +731,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return (await liveTask, await deadTask, await impoundmentTask);
         
         // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
-        async Task<HashSet<string>> RunWithNewConnectionAsync(Func<NpgsqlConnection, Task<HashSet<string>>> query)
+        async Task<HashSet<(string, int)>> RunWithNewConnectionAsync(Func<NpgsqlConnection, Task<HashSet<(string, int)>>> query)
         {
             await using var connection = GetPostgresConnection();
             return await query(connection);
         }
     }
 
-    private async Task<HashSet<string>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -782,11 +783,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode });
         
         return results
-            .Select(r => r.LicenceNumber)
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
 
-    private async Task<HashSet<string>> GetDeadLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetDeadLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -833,11 +834,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode });
         
         return results
-            .Select(r => r.LicenceNumber)
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
 
-    private async Task<HashSet<string>> GetImpoundmentLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetImpoundmentLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -856,11 +857,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode });
 
         return results
-            .Select(r => r.LicenceNumber)
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
 
-    public async Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
+    public async Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -887,7 +888,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "AREP_EIUC_CODE" AS ArepEiucCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LICENCES"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                           WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            """;
 
         return (await QueryAsync<NaldAbstractionLicenceDataLine>(
@@ -897,7 +898,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -927,7 +928,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "DEREG_CODE" AS DeregCode,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                           WHERE (@RegionCode is null or "FGAC_REGION_CODE" = @RegionCode)
                              AND "ISSUE_NO" = (
                                  SELECT max(lic_ver_subquery."ISSUE_NO")
                                  FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
@@ -956,7 +957,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
+    public async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -998,7 +999,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ON p."APUR_APSE_CODE" = ps."CODE"
                            JOIN nald."NALD_PURP_USES" pu
                                ON p."APUR_APUS_CODE" = pu."CODE"
-                           WHERE p."FGAC_REGION_CODE" = @RegionCode
+                           WHERE @RegionCode is null or p."FGAC_REGION_CODE" = @RegionCode
                            """;
 
         return (await QueryAsync<NaldLicencePurposeDataLine>(
@@ -1008,7 +1009,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
+    public async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1060,7 +1061,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            JOIN nald."NALD_POINTS" p
                                ON pp."AAIP_ID" = p."ID"
                                AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
-                           WHERE pp."FGAC_REGION_CODE" = @RegionCode
+                           WHERE @RegionCode is null or pp."FGAC_REGION_CODE" = @RegionCode
                            """;
 
         return (await QueryAsync<NaldLicencePointDataLine>(
@@ -1070,7 +1071,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    public async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1086,7 +1087,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "USER_VALID_IND" AS UserValidInd,
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
-                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                           WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            """;
 
         return (await QueryAsync<NaldLicenceQuantitiesDataLine>(

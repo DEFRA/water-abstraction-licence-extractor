@@ -1,8 +1,9 @@
 ﻿using WALE.Tools._1stHalf;
 using WALE.Tools._2ndHalf;
+using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-const string workflow = "GenerateLicenceReaderExtract";
+const string workflow = "ImportNaldData";//""GenerateLicenceReaderExtract";
 
 const int processRunId = 631;
 const int regionCode = 1; // Anglia=1, NE=3

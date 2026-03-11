@@ -8,10 +8,10 @@ namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
 {
-    public IInternalPdfDocument GetPdfDocument(string pdfFilepath)
+    public IInternalPdfDocument GetPdfDocument(string filepath)
     {
         var document = PdfDocument.Open(
-            pdfFilepath,
+            filepath,
             new ParsingOptions
             {
                 UseLenientParsing = true,

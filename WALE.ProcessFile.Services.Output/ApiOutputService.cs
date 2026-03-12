@@ -69,7 +69,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath = pdfFilename,
+            pdfFilename,
             processRunId,
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -85,7 +85,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath = pdfFilename,
+            pdfFilename,
             processRunId,
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -127,7 +127,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             Matches = matchesResult,
-            PdfFilePath = pdfFilename,
+            pdfFilename,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
         
@@ -247,7 +247,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
-            pdfFilePath = pdfFilename,
+            pdfFilename,
             noOcrServiceName,
             processRunId
         }, JsonHelper.GetSerializerOptions());

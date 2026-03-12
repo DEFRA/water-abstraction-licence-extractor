@@ -82,7 +82,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
+        // NOTE - This doesn't take into account any of the filters except Filename and NoOcrServiceName
         
         var fileCacheFolder= GetFolderPath(request.Filename!);
         var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
@@ -143,7 +143,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             filePath = $"/{filePath}";
         }
 
-        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last();
+        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last(); // TODO use helper
         var directory = filePath[..^filePath.Split('/').Last().Length];
 
         var files = Directory

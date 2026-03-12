@@ -572,7 +572,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
-            pdfFolder,
             processRun.ProcessRunId,
             lookupConfig);
 

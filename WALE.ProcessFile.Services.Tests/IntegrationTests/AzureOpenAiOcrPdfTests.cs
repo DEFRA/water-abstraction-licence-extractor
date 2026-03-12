@@ -163,7 +163,6 @@ public class AzureOpenAiOcrPdfTests
             new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));
         

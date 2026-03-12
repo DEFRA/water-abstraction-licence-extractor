@@ -555,7 +555,6 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
-        string pdfFolder,
         int processRunId,
         LookupConfiguration lookupConfiguration)
     {
@@ -586,7 +585,6 @@ public static partial class WalSchemaConverter
             naldLicenceStatusData,
             naldData,
             pdfDataExtractorService,
-            pdfFolder,
             previouslyParsedPaths,
             processRunId,
             lookupConfiguration);
@@ -985,7 +983,6 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
-        string pdfFolder,
         List<string> previouslyParsedPaths,
         int processRunId,
         LookupConfiguration lookupConfiguration)
@@ -1070,7 +1067,7 @@ public static partial class WalSchemaConverter
 
                         if (!destinationFileName.Contains('/'))
                         {
-                            destinationFileName = $"{pdfFolder}{destinationFileName}";
+                            destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
                         }
 
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
@@ -1132,7 +1129,7 @@ public static partial class WalSchemaConverter
 
             if (!destinationFileName.Contains('/'))
             {
-                destinationFileName = $"{pdfFolder}{destinationFileName}";
+                destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
             }
 
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(

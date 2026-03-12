@@ -241,7 +241,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -334,7 +333,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -413,7 +411,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             [],
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
 
@@ -466,7 +463,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             [],
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
 
@@ -481,7 +477,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -582,7 +577,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -617,7 +611,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -653,7 +646,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -745,7 +737,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor4,
-            TestConfig.PdfFolder4,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         

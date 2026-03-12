@@ -201,7 +201,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -240,7 +239,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
 

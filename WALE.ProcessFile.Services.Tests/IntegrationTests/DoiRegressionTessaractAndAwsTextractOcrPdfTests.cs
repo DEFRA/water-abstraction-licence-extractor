@@ -118,7 +118,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -152,7 +151,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -183,7 +181,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -215,7 +212,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -247,7 +243,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -279,7 +274,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -311,7 +305,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -343,7 +336,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -375,7 +367,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -407,7 +398,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -439,7 +429,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -471,7 +460,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -503,7 +491,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -535,7 +522,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
@@ -567,7 +553,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         

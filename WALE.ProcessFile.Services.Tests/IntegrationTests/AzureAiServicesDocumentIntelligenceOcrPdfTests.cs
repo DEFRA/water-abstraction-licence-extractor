@@ -202,7 +202,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
@@ -269,7 +268,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
 
@@ -310,7 +308,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
 
@@ -396,7 +393,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -509,7 +505,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -637,7 +632,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -714,7 +708,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -741,7 +734,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -844,7 +836,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -956,7 +947,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1019,7 +1009,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1082,7 +1071,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1122,7 +1110,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1304,7 +1291,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1545,7 +1531,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
 
@@ -1614,7 +1599,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
         
@@ -1644,7 +1628,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder2));
         
@@ -1672,7 +1655,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
         
@@ -1700,7 +1682,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
         

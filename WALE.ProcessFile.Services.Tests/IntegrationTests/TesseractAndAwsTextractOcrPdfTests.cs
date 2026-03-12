@@ -177,7 +177,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));
         
@@ -246,7 +245,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));
         
@@ -336,7 +334,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));
         
@@ -415,7 +412,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldLicenceStatusData,
             [],
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3));
 
@@ -464,7 +460,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3));
         

@@ -261,7 +261,6 @@ public class NoOcrDatabaseTests
             new NaldLicenceStatusData(),
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));
 

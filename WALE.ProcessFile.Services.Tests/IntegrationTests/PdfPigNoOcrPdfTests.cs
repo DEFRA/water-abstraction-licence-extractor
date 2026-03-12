@@ -278,7 +278,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
         
@@ -474,7 +473,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -742,7 +740,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -938,7 +935,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -1446,7 +1442,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -1977,7 +1972,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2237,7 +2231,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2343,7 +2336,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2446,7 +2438,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder))).Last();
 
@@ -2591,7 +2582,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2796,7 +2786,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2889,7 +2878,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -2981,7 +2969,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -3084,7 +3071,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -3196,7 +3182,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -3286,7 +3271,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -3409,7 +3393,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -3507,7 +3490,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
 
@@ -3552,7 +3534,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
         
@@ -3680,7 +3661,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -3774,7 +3754,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -3893,7 +3872,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -3989,7 +3967,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -4063,7 +4040,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
@@ -4157,7 +4133,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
 
@@ -4207,7 +4182,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder))).Last();
 
@@ -4241,7 +4215,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4281,7 +4254,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4380,7 +4352,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4523,7 +4494,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2))).Last();
         
@@ -4577,7 +4547,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4680,7 +4649,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             -1,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4723,7 +4691,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor2,
-            TestConfig.PdfFolder2,
             -1,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
         
@@ -4768,7 +4735,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -4814,7 +4780,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -4856,7 +4821,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -4908,7 +4872,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -4943,7 +4906,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -4978,7 +4940,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5013,7 +4974,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5098,7 +5058,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5224,7 +5183,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5261,7 +5219,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5299,7 +5256,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5339,7 +5295,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5378,7 +5333,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5415,7 +5369,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5460,7 +5413,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5498,7 +5450,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5533,7 +5484,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5568,7 +5518,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5603,7 +5552,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5638,7 +5586,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5673,7 +5620,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         
@@ -5708,7 +5654,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
         

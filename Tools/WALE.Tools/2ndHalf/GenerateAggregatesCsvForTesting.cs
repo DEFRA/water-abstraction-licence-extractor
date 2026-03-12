@@ -118,7 +118,6 @@ public static class GenerateAggregatesCsvForTesting
                 naldLicenceStatusData,
                 NaldData,
                 pdfDataExtractor,
-                KeyConfig.PdfFolder,
                 ProcessRunId,
                 LookupConfiguration
             );
@@ -165,7 +164,6 @@ public static class GenerateAggregatesCsvForTesting
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -179,7 +177,6 @@ public static class GenerateAggregatesCsvForTesting
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -191,9 +188,8 @@ public static class GenerateAggregatesCsvForTesting
             internalJson,
             FileLicenceMapping,
             naldLicenceStatusData,
-            NaldData,            
+            NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -207,7 +203,6 @@ public static class GenerateAggregatesCsvForTesting
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -221,7 +216,6 @@ public static class GenerateAggregatesCsvForTesting
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -235,7 +229,6 @@ public static class GenerateAggregatesCsvForTesting
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         

@@ -258,7 +258,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -318,7 +317,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -383,7 +381,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -452,7 +449,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -514,7 +510,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -577,7 +572,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -644,7 +638,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -714,7 +707,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -783,7 +775,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -854,7 +845,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -916,7 +906,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -964,7 +953,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1026,7 +1014,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1077,7 +1064,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1118,7 +1104,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1186,7 +1171,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1241,7 +1225,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1294,7 +1277,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
 
@@ -1341,7 +1323,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1389,7 +1370,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1451,7 +1431,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1508,7 +1487,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1567,7 +1545,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1627,7 +1604,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1671,7 +1647,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1723,7 +1698,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1798,7 +1772,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1848,7 +1821,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
         
@@ -1898,7 +1870,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
-            TestConfig.PdfFolder,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
 
@@ -1955,7 +1926,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined4,
-            TestConfig.PdfFolder4,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         
@@ -2005,7 +1975,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined4,
-            TestConfig.PdfFolder4,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         

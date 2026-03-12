@@ -403,7 +403,7 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var useS3 = false;
+    var useS3 = true;
     IFileService fileService;
 
     if (useS3)
@@ -687,7 +687,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100072"))
+//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100072"))
         .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 

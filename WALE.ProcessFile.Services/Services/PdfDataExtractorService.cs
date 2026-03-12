@@ -20,7 +20,6 @@ public class PdfDataExtractorService(
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
-    string pdfFolderPath,
     int id = -1) : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
@@ -953,16 +952,16 @@ public class PdfDataExtractorService(
                     // TODO this should log a warning
                     continue;
                 }
+
+                var destinationFilenames = dmsFileData.DestinationFileName!;
                 
-                var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
-                
-                if (previouslyParsedFiles.Contains(destinationFilePath))
+                if (previouslyParsedFiles.Contains(destinationFilenames))
                 {
                     continue;
                 }
 
-                previouslyParsedFiles.Add(destinationFilePath);
-                pathsToFetch.Add(destinationFilePath);
+                previouslyParsedFiles.Add(destinationFilenames);
+                pathsToFetch.Add(destinationFilenames);
             }
         }
 

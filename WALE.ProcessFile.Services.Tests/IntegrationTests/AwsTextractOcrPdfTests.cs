@@ -52,8 +52,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -64,8 +63,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder3);
+        DocnetAlternativeDocumentService);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 

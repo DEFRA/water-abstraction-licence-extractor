@@ -41,15 +41,14 @@ public class NoOcrDatabaseTests
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
-    
+
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
 
     public NoOcrDatabaseTests()
     {

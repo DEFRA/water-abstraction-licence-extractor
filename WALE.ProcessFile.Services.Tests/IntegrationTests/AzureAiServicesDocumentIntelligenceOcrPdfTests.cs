@@ -53,8 +53,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -69,8 +68,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder2);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -85,8 +83,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder3);
+        DocnetAlternativeDocumentService);
     
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()

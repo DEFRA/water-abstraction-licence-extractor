@@ -61,8 +61,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -79,8 +78,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder3);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor4 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -97,8 +95,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder4);
+        DocnetAlternativeDocumentService);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()

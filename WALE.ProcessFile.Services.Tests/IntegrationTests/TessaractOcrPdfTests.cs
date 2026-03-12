@@ -67,8 +67,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined3 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -80,8 +79,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder3);
+        DocnetAlternativeDocumentService);
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined4 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -93,8 +91,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder4);
+        DocnetAlternativeDocumentService);
     
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {

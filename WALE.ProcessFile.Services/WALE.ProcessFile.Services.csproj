@@ -75,6 +75,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.AwsS3\WALE.ProcessFile.Services.AwsS3.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AzureComputerVision\WALE.ProcessFile.Services.AzureComputerVision.csproj" />

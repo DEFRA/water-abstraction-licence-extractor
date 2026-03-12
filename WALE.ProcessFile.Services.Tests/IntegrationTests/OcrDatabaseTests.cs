@@ -62,8 +62,7 @@ public class OcrDatabaseTests
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService,
-        TestConfig.PdfFolder);    
+        DocnetAlternativeDocumentService);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};

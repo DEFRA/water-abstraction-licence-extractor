@@ -211,8 +211,7 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             documentService,
-            alternativeDocumentService,
-            pdfFolder);
+            alternativeDocumentService);
     }
 
     public static async Task GenerateLicenceReaderExtractAsync(string pdfFolder, int regionCode)

@@ -50,7 +50,7 @@ public static class GenerateLinkedLicencesCsv
             }
             
             var licenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                ? value.ToString()
+                ? value?.ToString()
                 : null;
 
             var outputLine = new LinkedLicencesCsvLine

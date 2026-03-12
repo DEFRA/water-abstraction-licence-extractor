@@ -361,8 +361,7 @@ public static class TemplateIdentificationExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
-                    docnetAlternativeDocumentService,
-                    KeyConfig.PdfFolder);
+                    docnetAlternativeDocumentService);
 
                 //pdfDataExtractors.Add(extractor);
                 templateTypeServices.Add(new TemplateTypeIdentifierService(extractor, region));

@@ -6,6 +6,8 @@ public class LinkedLicenceSection
     
     public string? LinkReason { get; init; }
     
+    public bool IsBecauseOfAggregate { get; init; }
+    
     public int LineNumber { get; init; }
     
     public int PageNumber { get; init; }

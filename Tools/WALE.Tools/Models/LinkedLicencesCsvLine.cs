@@ -4,9 +4,13 @@ public class LinkedLicencesCsvLine
 {
     public string? Filename { get; set; }
     
+    public Guid? FileId { get; set; }
+    
     public string? DmsPath { get; set; }
     
     public string? LicenceNumber { get; set; }
+    
+    public string? PermitNumber { get; set; }
     
     public string? ScrapedLicenceNumber { get; set; }
     
@@ -49,6 +53,8 @@ public class LinkedLicencesCsvLine
     public bool? LinkedLicenceIsImpoundment { get; set; }
     
     public bool LinkedLicenceFoundInList { get; set; }
+    
+    public string? EuicCode { get; set; }
 
     public LinkedLicencesCsvLine Clone()
     {

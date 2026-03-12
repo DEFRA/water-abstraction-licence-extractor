@@ -25,6 +25,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -41,6 +42,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -79,6 +81,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -93,6 +96,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -131,6 +135,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -146,6 +151,7 @@
                 {
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
@@ -256,6 +262,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -272,6 +279,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -306,6 +314,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -322,6 +331,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -462,6 +472,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -476,6 +487,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -510,6 +522,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -524,6 +537,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -665,6 +679,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -680,6 +695,7 @@
                   {
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
@@ -714,6 +730,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -729,6 +746,7 @@
             {
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
             }

@@ -2161,10 +2161,10 @@ public static partial class WalSchemaConverter
                     || t.Text.Contains("The quantities detailed below are in aggregate")
                     || t.Text.Contains("quantity equal to the difference between")) == true;
 
-            
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList(); // E.g. Jan, Feb etc..
+            
             if (datePurposes.Count >= 1)
             {
                 individualGroups.Add(new AbstractionLimitGroup

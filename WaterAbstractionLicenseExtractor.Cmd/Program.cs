@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
@@ -371,8 +372,6 @@ ConfiguredServices ConfigureServices()
                               ?? throw new NullReferenceException("LOAD_AI_JS"));
     var refreshCache = bool.Parse(Environment.GetEnvironmentVariable("RefreshCache")
                                   ?? throw new NullReferenceException("RefreshCache"));
-    var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-                        ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
                              ?? throw new NullReferenceException("ReportTemplatePath");
     var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
@@ -404,7 +403,29 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var fileService = new LocalFileService(pdfFolderPath);
+    var useS3 = true;
+    IFileService fileService;
+
+    if (useS3)
+    {
+        var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
+            ?? throw new NullReferenceException("AwsS3AccessKey");
+        var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
+            ?? throw new NullReferenceException("AwsS3SecretKey");
+        var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
+            ?? throw new NullReferenceException("AwsS3RegionName");
+        var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
+            ?? throw new NullReferenceException("AwsS3BucketName");
+        
+        fileService = new AwsS3FileService(accessKey, secretKey, regionName, bucketName);
+    }
+    else
+    {
+        var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
+            ?? throw new NullReferenceException("PdfFolderPath");
+        
+        fileService = new LocalFileService(pdfFolderPath);   
+    }
     
     var httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri(apiBaseUrl);
@@ -462,7 +483,6 @@ ConfiguredServices ConfigureServices()
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,
-            pdfFolderPath,
             id);
 
         pdfDataExtractors.Add(pdfDataExtractor);
@@ -685,7 +705,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
 
     var filesInFolder = await fileService.GetAllFilesAsync();
 
-    using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
+    await using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
     {
         using (var reader = ExcelReaderFactory.CreateReader(stream))
         {

@@ -82,8 +82,7 @@ public static class FileTypeIdentificationExtract
                 cacheService, 
                 outputService,
                 pdfPigDocumentService,
-                docnetAlternativeDocumentService,
-                KeyConfig.PdfFolder);
+                docnetAlternativeDocumentService);
 
             pdfDataExtractors.Add(pdfDataExtractor);
         }

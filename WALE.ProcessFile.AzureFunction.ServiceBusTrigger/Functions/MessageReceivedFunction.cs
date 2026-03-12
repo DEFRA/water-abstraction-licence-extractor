@@ -82,8 +82,7 @@ public class MessageReceivedFunction(
             cacheService,
             outputService,
             pdfPigDocumentService,
-            docnetAlternativeDocumentService,
-            pdfFolderPath);
+            docnetAlternativeDocumentService);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,

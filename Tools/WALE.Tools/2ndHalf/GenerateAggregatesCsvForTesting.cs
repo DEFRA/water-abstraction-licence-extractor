@@ -48,8 +48,7 @@ public static class GenerateAggregatesCsvForTesting
             CacheService,
             OutputService,
             DocumentService,
-            DocnetAlternativeDocumentService,
-            KeyConfig.PdfFolder);
+            DocnetAlternativeDocumentService);
 
         var regionCode = 3;
         var data = await GetYorkshire70DataAsync(pdfDataExtractor, regionCode);

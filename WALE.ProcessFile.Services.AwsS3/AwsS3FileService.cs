@@ -51,12 +51,23 @@ public class AwsS3FileService(
     
     private AmazonS3Client GetS3Client()
     {
-        var awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        var client = new AmazonS3Client(awsCredentials, new AmazonS3Config
+        if (_client != null)
         {
-            RegionEndpoint = RegionEndpoint.GetBySystemName(regionName) // eu-west-1
-        });
+            return _client;
+        }
         
+        var awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
+        
+        var client = new AmazonS3Client(
+            awsCredentials,
+            new AmazonS3Config
+            {
+                RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
+            });
+        
+        _client = client;
         return client;
     }
+
+    private AmazonS3Client? _client;
 }

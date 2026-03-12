@@ -6,7 +6,6 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
@@ -20,6 +19,7 @@ public class PdfDataExtractorService(
     ICacheService cacheService,
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
+    INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     string pdfFolderPath,
     int id = -1) : IPdfDataExtractorService
 {
@@ -80,6 +80,7 @@ public class PdfDataExtractorService(
             outputService,
             cacheService,
             noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
             configuration,
             processRunId);
         

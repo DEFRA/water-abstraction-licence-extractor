@@ -11,6 +11,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -68,6 +69,8 @@ public class MessageReceivedFunction(
         };
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
+        
         var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
         var pdfDataExtractor = new PdfDataExtractorService(
@@ -79,6 +82,7 @@ public class MessageReceivedFunction(
             cacheService,
             outputService,
             pdfPigDocumentService,
+            docnetAlternativeDocumentService,
             pdfFolderPath);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(

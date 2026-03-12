@@ -22,6 +22,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration,
         int processRunId)
     {
@@ -32,6 +33,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             metadata != null,
             outputService,
             noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
             configuration);
         
         if (pdfDocument.FromCache)

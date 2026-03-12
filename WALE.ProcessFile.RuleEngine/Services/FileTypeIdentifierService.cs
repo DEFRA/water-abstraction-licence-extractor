@@ -41,11 +41,14 @@ public class FileTypeIdentifierService
     /// <param name="filePath">The path to the PDF file</param>
     /// <param name="outputService">TODO</param>
     /// <param name="documentService"></param>
+    /// <param name="alternativeDocumentService"></param>
+    /// <param name="lookupConfiguration"></param>
     /// <returns>The number of pages in the PDF</returns>
     private static async Task<int> GetPageCountAsync(
         string filePath,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
         LookupConfiguration lookupConfiguration)
     {
         if (!File.Exists(filePath))
@@ -63,6 +66,7 @@ public class FileTypeIdentifierService
                     false,
                     outputService,
                     documentService,
+                    alternativeDocumentService,
                     lookupConfiguration);
                 
                 return pdfDocument.Pages.Count;
@@ -468,14 +472,17 @@ public class FileTypeIdentifierService
     /// <param name="directoryPath">The directory path to process</param>
     /// TODO other 2 params
     /// <param name="outputService"></param>
+    /// <param name="alternativeDocumentService"></param>
     /// <param name="searchPattern">File search pattern (default: "*.*")</param>
     /// <param name="lookupConfiguration"></param>
+    /// <param name="documentService"></param>
     /// <returns>A dictionary mapping file paths to their identification results</returns>
     public async Task<Dictionary<string, FileTypeResult?>> ProcessDirectoryAsync(
         string directoryPath,
         LookupConfiguration lookupConfiguration,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
         string searchPattern = "*.*")
     {
         if (!Directory.Exists(directoryPath))
@@ -586,6 +593,7 @@ public class FileTypeIdentifierService
                             file,
                             outputService,
                             documentService,
+                            alternativeDocumentService,
                             lookupConfiguration);
                         
                         return new

@@ -10,6 +10,7 @@ public interface INoOcrDataExtractorService
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration,
         int processRunId);
     

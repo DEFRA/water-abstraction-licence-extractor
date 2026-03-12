@@ -11,6 +11,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -541,7 +542,9 @@ public static class TestsForAiPrompts
     {
         var cacheService = new FileSystemCacheService("Cache/");
         var outputService = new FileSystemOutputService("Output/");
+        
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
@@ -558,6 +561,7 @@ public static class TestsForAiPrompts
             true,
             outputService,
             pdfPigDocumentService,
+            docnetAlternativeDocumentService,
             lookupConfiguration);
         
         var imagePrompts = new List<ChatMessageContentPart>();

@@ -7,6 +7,7 @@ using WALE.ProcessFile.RuleEngine.Helpers;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Output;
@@ -171,6 +172,7 @@ public static class GenerateLicenceReaderExtract
         ICacheService cacheService,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
         string pdfFolder)
     {
         var dotnetPath = KeyConfig.DotnetPath;
@@ -209,6 +211,7 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             documentService,
+            alternativeDocumentService,
             pdfFolder);
     }
 
@@ -223,6 +226,7 @@ public static class GenerateLicenceReaderExtract
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
@@ -239,6 +243,7 @@ public static class GenerateLicenceReaderExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
+                    docnetAlternativeDocumentService,
                     pdfFolder));
         }
 

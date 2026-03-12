@@ -12,6 +12,7 @@ using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -79,7 +80,7 @@ async Task ProgramAsync()
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
-        Description = $"Run using {services.FileService.FolderPath}",
+        Description = $"Run using {services.FileService!.FolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
         NumberOfFiles = dmsFilesToProcess.Count
     });
@@ -412,6 +413,8 @@ ConfiguredServices ConfigureServices()
     var outputService = new ApiOutputService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+    var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
+    
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -458,6 +461,7 @@ ConfiguredServices ConfigureServices()
             cacheService,
             outputService,
             pdfPigDocumentService,
+            docnetAlternativeDocumentService,
             pdfFolderPath,
             id);
 

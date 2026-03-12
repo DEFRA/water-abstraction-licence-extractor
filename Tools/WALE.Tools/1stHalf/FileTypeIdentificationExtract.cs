@@ -7,6 +7,7 @@ using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -43,6 +44,7 @@ public static class FileTypeIdentificationExtract
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         // Create 10 instances of PdfDataExtractorService for parallel processing
         var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -80,6 +82,7 @@ public static class FileTypeIdentificationExtract
                 cacheService, 
                 outputService,
                 pdfPigDocumentService,
+                docnetAlternativeDocumentService,
                 KeyConfig.PdfFolder);
 
             pdfDataExtractors.Add(pdfDataExtractor);
@@ -102,7 +105,8 @@ public static class FileTypeIdentificationExtract
             KeyConfig.PdfFolder,
             configuration,
             outputService,
-            pdfPigDocumentService);
+            pdfPigDocumentService,
+            docnetAlternativeDocumentService);
         
         var csvData = new List<FileTypeIdentificationResult>();
 

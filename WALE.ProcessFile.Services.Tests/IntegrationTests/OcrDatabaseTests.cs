@@ -6,6 +6,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -37,6 +38,8 @@ public class OcrDatabaseTests
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
     
     public OcrDatabaseTests()
     {
@@ -59,6 +62,7 @@ public class OcrDatabaseTests
         CacheService,
         OutputService,
         DocumentService,
+        DocnetAlternativeDocumentService,
         TestConfig.PdfFolder);    
     
     private static string PdfFolder => TestConfig.PdfFolder;

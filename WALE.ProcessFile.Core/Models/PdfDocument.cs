@@ -1,11 +1,9 @@
-using Docnet.Core.Models;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Docnet;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -20,15 +18,20 @@ public class PdfDocument
     
     private IInternalPdfDocument? InternalDocument { get; set; }
     
+    private IAlternativeImageProvider? AlternativeImageProvider { get; set; }
+    
     private IOutputService OutputService { get; set; }
     
     INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; }
+    
+    INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
     
     public PdfDocument(
         string pdfFilename,
         bool fromCache,
         IOutputService outputService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration)
     {
         PdfFilename = pdfFilename;
@@ -37,6 +40,7 @@ public class PdfDocument
         FromCache = fromCache;
         OutputService = outputService;
         NoOcrPdfDocumentService = noOcrPdfDocumentService;
+        NoOcrAlternativePdfDocumentService = noOcrAlternativePdfDocumentService;
         
         if (fromCache)
         {
@@ -53,7 +57,8 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{FileService.FolderPath}{PdfFilename}");
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(FileService, PdfFilename);
+        AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -120,9 +125,11 @@ public class PdfDocument
             pageNumber,
             3F);
 
-        var docnetBitmap = new DocnetBitmap().GetPageAsSkBitmap(
-            $"{FileService.FolderPath}{PdfFilename}",
-            new PageDimensions(1080, 1920),
+        var docnetBitmap =  AlternativeImageProvider!.GetPageAsSkBitmap(
+            FileService,
+            PdfFilename,
+            1080,
+            1920,
             pageNumber);
 
         return

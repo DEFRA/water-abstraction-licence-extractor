@@ -7,6 +7,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -39,7 +40,9 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
-
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractor1 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -49,6 +52,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         CacheService,
         OutputService,
         DocumentService,
+        DocnetAlternativeDocumentService,
         TestConfig.PdfFolder);
     
     private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
@@ -60,6 +64,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         CacheService,
         OutputService,
         DocumentService,
+        DocnetAlternativeDocumentService,
         TestConfig.PdfFolder3);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };

@@ -12,5 +12,15 @@ public class LocalFileService(string folderPath) : IFileService
             .ToList();
     }
 
+    public Stream GetFileAsStream(string filename)
+    {
+        return File.Open($"{FolderPath}{filename}", FileMode.Open, FileAccess.Read, FileShare.Read);
+    }
+
+    public byte[] GetFileAsBytes(string pdfFilename)
+    {
+        return File.ReadAllBytes($"{FolderPath}{pdfFilename}");
+    }
+
     public string FolderPath { get; set; } = folderPath;
 }

@@ -1,14 +1,24 @@
 using Docnet.Core.Models;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Services.Docnet;
 
-public class DocnetBitmap
+public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
-    public SKBitmap GetPageAsSkBitmap(string pdfFilePath, PageDimensions pageDimensions, int pageNumber)
+    public SKBitmap GetPageAsSkBitmap(
+        IFileService fileService,
+        string pdfFilename,
+        int pageDimensionWidth,
+        int pageDimensionHeight,
+        int pageNumber)
     {
         var docLibInstance = new DocLibInstance();
-        using var docReader = docLibInstance.GetDocReader(pdfFilePath, pageDimensions);
+        
+        using var docReader = docLibInstance.GetDocReader(
+            fileService,
+            pdfFilename,
+            new PageDimensions(pageDimensionWidth, pageDimensionHeight));
 
         using var pageReader = docReader.GetPageReader(pageNumber - 1);
         var rawBytes = pageReader.GetImage();

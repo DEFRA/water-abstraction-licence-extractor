@@ -1065,11 +1065,6 @@ public static partial class WalSchemaConverter
 
                         var destinationFileName = dmsFileData.DestinationFileName!;
 
-                        if (!destinationFileName.Contains('/'))
-                        {
-                            destinationFileName = $"{lookupConfiguration.FileService.FolderPath}{destinationFileName}";
-                        }
-
                         var clonedConfig = lookupConfiguration.Clone();
                         clonedConfig.LicenceNumberMapping = licenceNumberMapping;
                         clonedConfig.RegionCode = matchesResult.RegionCode;
@@ -1125,11 +1120,6 @@ public static partial class WalSchemaConverter
             }
 
             var destinationFileName = dmsFileData.DestinationFileName!;
-
-            if (!destinationFileName.Contains('/'))
-            {
-                destinationFileName = $"{lookupConfiguration.FileService.FolderPath}{destinationFileName}";
-            }
 
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.LicenceNumberMapping = licenceNumberMapping;

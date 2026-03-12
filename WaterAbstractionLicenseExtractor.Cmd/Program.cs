@@ -403,7 +403,7 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var useS3 = true;
+    var useS3 = false;
     IFileService fileService;
 
     if (useS3)

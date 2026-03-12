@@ -53,6 +53,8 @@ public class LabelToMatch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     public bool AutoCorrect { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ConfidenceType ConfidenceType { get; init; } = ConfidenceType.NotSet;
 
     public int NoOcrConfidence { get; init; } = 100;

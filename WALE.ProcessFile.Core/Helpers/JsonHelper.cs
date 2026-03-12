@@ -53,6 +53,10 @@ public static class JsonHelper
             {
                 value = strValue;
             }
+            else if (kvp.Value is null)
+            {
+                value = null;
+            }
             else
             {
                 throw new Exception($"Unknown type - {kvp.Value?.GetType().Name}");

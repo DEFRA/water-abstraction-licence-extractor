@@ -18,7 +18,7 @@ public class AwsS3FileService(
         var response = await client.ListObjectsV2Async(
             new ListObjectsV2Request
             {
-                BucketName = BucketName
+                BucketName = FolderPath
             });
 
         return response.S3Objects
@@ -26,17 +26,26 @@ public class AwsS3FileService(
             .ToList();
     }
 
-    public Task<Stream> GetFileAsStreamAsync(string filename)
+    public async Task<Stream> GetFileAsStreamAsync(string filename)
     {
-        throw new NotImplementedException();
+        var client = GetS3Client();
+        var file = await client.GetObjectAsync(
+            new GetObjectRequest
+            {
+                BucketName = FolderPath,
+                Key = filename
+            });
+
+        return file.ResponseStream;
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public async Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
     {
-        throw new NotImplementedException();
-    }
+        var stream = await GetFileAsStreamAsync(pdfFilename);
 
-    public string BucketName { get; set; } = bucketName;
+        using var binaryReader = new BinaryReader(stream);
+        return binaryReader.ReadBytes((int)stream.Length);
+    }
     
     public string FolderPath { get; set; } = bucketName;
     

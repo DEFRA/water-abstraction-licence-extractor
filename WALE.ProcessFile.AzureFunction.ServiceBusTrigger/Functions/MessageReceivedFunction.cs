@@ -60,9 +60,9 @@ public class MessageReceivedFunction(
         if (string.IsNullOrEmpty(tesseractExeDirectory)) throw new Exception($"{nameof(tesseractExeDirectory)} is missing");
         
         var fileName = Encoding.UTF8.GetString(message.Body);
-        var pdfFilePath = $"{pdfFolderPath}/{fileName}";
+        var pdfFilePath = fileName;
         
-        var previouslyParsedPaths = new List<string>
+        var previouslyParsedFiles = new List<string>
         {
             pdfFilePath
         };
@@ -87,9 +87,9 @@ public class MessageReceivedFunction(
                 WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
-                pdfFolderPath,
+                new LocalFileService(pdfFolderPath),
                 1),
-            previouslyParsedPaths,
+            previouslyParsedFiles,
             0);
         
         var json = JsonHelper.GetAsString(matches);

@@ -109,7 +109,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             3);
     }
 
@@ -678,7 +678,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 GetYorkshireLabels(),
                 _fileLicenceMapping,
                 (await LookupConfigurationAsync(3, TestConfig.PdfFolder3)).ValidLowercaseFirstNames,
-                TestConfig.PdfFolder3,
+            new LocalFileService(TestConfig.PdfFolder3),
                 3),
             [TestConfig.PdfFolder3 + fileName],
             0);

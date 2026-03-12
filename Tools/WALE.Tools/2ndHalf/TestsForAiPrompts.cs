@@ -77,7 +77,7 @@ public static class TestsForAiPrompts
                         [],
                         [],
                         [],
-                        KeyConfig.PdfFolder,
+                        new LocalFileService(KeyConfig.PdfFolder),
                         -1));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");

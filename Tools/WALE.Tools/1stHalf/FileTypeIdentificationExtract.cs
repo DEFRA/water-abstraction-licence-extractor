@@ -95,7 +95,7 @@ public static class FileTypeIdentificationExtract
             labels,
             FileLicenceMapping,
             [],
-            KeyConfig.PdfFolder,
+            new LocalFileService(KeyConfig.PdfFolder),
             3);
 
         var results = await fileTypeService.ProcessDirectoryAsync(

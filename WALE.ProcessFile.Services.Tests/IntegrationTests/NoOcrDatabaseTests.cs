@@ -87,7 +87,7 @@ public class NoOcrDatabaseTests
             WalLabelConfiguration.GetLabels(),
             FileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             3);
     }
     

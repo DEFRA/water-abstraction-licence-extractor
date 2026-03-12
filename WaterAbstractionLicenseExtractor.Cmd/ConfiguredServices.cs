@@ -16,7 +16,7 @@ public class ConfiguredServices
     
     public bool RegenerateMappingJson { get; init; }
     
-    public string? LocalPdfFolderPath { get; init; }
+    public IFileService? FileService { get; init; }
     
     public string? ReportTemplatePath { get; init; }
     

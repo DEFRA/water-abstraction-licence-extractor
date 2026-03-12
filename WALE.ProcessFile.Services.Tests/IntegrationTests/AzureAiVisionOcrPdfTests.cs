@@ -102,7 +102,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             regionCode);
     }
 

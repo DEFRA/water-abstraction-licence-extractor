@@ -16,7 +16,7 @@ public class PdfDocument
     
     public string PdfFilenameNoExtension { get; }
     
-    public string PdfFolder { get; }
+    public IFileService FileService { get; }
     
     private IInternalPdfDocument? InternalDocument { get; set; }
     
@@ -33,7 +33,7 @@ public class PdfDocument
     {
         PdfFilename = pdfFilename;
         PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
-        PdfFolder = configuration.PdfFolder;
+        FileService = configuration.FileService;
         FromCache = fromCache;
         OutputService = outputService;
         NoOcrPdfDocumentService = noOcrPdfDocumentService;
@@ -53,7 +53,7 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{PdfFolder}{PdfFilename}");
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument($"{FileService.FolderPath}{PdfFilename}");
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -121,7 +121,7 @@ public class PdfDocument
             3F);
 
         var docnetBitmap = new DocnetBitmap().GetPageAsSkBitmap(
-            $"{PdfFolder}{PdfFilename}",
+            $"{FileService.FolderPath}{PdfFilename}",
             new PageDimensions(1080, 1920),
             pageNumber);
 

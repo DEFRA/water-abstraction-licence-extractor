@@ -983,7 +983,7 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId,
         LookupConfiguration lookupConfiguration)
     {
@@ -1067,7 +1067,7 @@ public static partial class WalSchemaConverter
 
                         if (!destinationFileName.Contains('/'))
                         {
-                            destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
+                            destinationFileName = $"{lookupConfiguration.FileService.FolderPath}{destinationFileName}";
                         }
 
                         var clonedConfig = lookupConfiguration.Clone();
@@ -1077,7 +1077,7 @@ public static partial class WalSchemaConverter
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                             destinationFileName,
                             clonedConfig,
-                            previouslyParsedPaths,
+                            previouslyParsedFiles,
                             processRunId);
 
                         var licence = ToLicence(
@@ -1128,7 +1128,7 @@ public static partial class WalSchemaConverter
 
             if (!destinationFileName.Contains('/'))
             {
-                destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
+                destinationFileName = $"{lookupConfiguration.FileService.FolderPath}{destinationFileName}";
             }
 
             var clonedConfig = lookupConfiguration.Clone();
@@ -1138,7 +1138,7 @@ public static partial class WalSchemaConverter
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
                 clonedConfig,
-                previouslyParsedPaths,
+                previouslyParsedFiles,
                 processRunId);
 
             var licence = ToLicence(

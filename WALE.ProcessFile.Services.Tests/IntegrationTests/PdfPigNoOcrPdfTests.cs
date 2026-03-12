@@ -127,7 +127,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             WalLabelConfiguration.GetLabels(),
             fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
             await firstNamesFixture.FirstNamesCsvTask(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             regionCode);
     }
     

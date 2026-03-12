@@ -69,7 +69,7 @@ public static class GenerateAggregatesCsvForTesting
                     WalLabelConfiguration.GetLabels(),
                     FileLicenceMapping,
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
-                    KeyConfig.PdfFolder,
+                    new LocalFileService( KeyConfig.PdfFolder),
                     3);
             }
 
@@ -79,12 +79,10 @@ public static class GenerateAggregatesCsvForTesting
     
     static Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
     {
-        var pdfFolder = KeyConfig.PdfFolder;
-        
         return pdfDataExtractor.GetMatchesAsync(
-            pdfFolder + fileName,
+            fileName,
             LookupConfiguration,
-            [pdfFolder + fileName],
+            [fileName],
             ProcessRunId);
     }
 

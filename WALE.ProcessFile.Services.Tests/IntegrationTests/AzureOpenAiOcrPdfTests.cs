@@ -66,7 +66,7 @@ public class AzureOpenAiOcrPdfTests
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
-            pdfFolder,            
+            new LocalFileService(pdfFolder),            
             3);
     }
     

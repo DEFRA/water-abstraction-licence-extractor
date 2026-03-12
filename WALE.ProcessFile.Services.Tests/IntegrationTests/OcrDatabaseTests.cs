@@ -72,7 +72,7 @@ public class OcrDatabaseTests
                 WalLabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
-                PdfFolder,
+                new LocalFileService(PdfFolder),
                 3),
             [PdfFolder + fileName],
             0);

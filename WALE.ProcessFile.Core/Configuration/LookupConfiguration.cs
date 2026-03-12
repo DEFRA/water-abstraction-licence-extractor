@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Configuration;
@@ -6,7 +7,7 @@ public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
     Dictionary<string, DmsFileData> licenceNumberMapping,
     HashSet<string> validLowercaseFirstNames,
-    string pdfFolder,
+    IFileService fileService,
     int regionCode,
     int maxPagesToProcessWhenOcrNeeded = 20)
 {
@@ -14,7 +15,7 @@ public class LookupConfiguration(
 
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
 
-    public string PdfFolder { get; set; } = pdfFolder;
+    public IFileService FileService { get; set; } = fileService;
 
     public int RegionCode { get; set; } = regionCode;
 
@@ -28,7 +29,7 @@ public class LookupConfiguration(
             Labels,
             LicenceNumberMapping,
             ValidLowercaseFirstNames,
-            PdfFolder,
+            FileService,
             RegionCode,
             MaxPagesToProcessWhenOcrNeeded);
     }

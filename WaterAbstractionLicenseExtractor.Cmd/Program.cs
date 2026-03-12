@@ -70,7 +70,7 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        GetDmsFilesAndMapping(services.LocalPdfFolderPath!, services.DmsReportPath!, regionCode);
+        GetDmsFilesAndMapping(services.FileService!, services.DmsReportPath!, regionCode);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
@@ -79,7 +79,7 @@ async Task ProgramAsync()
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
-        Description = $"Run using {services.LocalPdfFolderPath}",
+        Description = $"Run using {services.FileService.FolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
         NumberOfFiles = dmsFilesToProcess.Count
     });
@@ -116,7 +116,7 @@ async Task ProgramAsync()
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
-                    services.LocalPdfFolderPath!,
+                    services.FileService,
                     regionCode,
                     processCount++,
                     processRun.NumberOfFiles,
@@ -402,6 +402,8 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
+
+    var fileService = new LocalFileService(pdfFolderPath);
     
     var httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri(apiBaseUrl);
@@ -470,7 +472,7 @@ ConfiguredServices ConfigureServices()
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
         RegenerateMappingJson = regenerateMappingJson,
-        LocalPdfFolderPath = pdfFolderPath,
+        FileService = fileService,
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
         ListDataPath = listDataPath,
@@ -487,7 +489,7 @@ ConfiguredServices ConfigureServices()
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
-    string pdfFolderPath,
+    IFileService fileService,
     int regionCode,
     int fileNumber,
     int totalNumber,
@@ -524,7 +526,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             WalLabelConfiguration.GetLabels(),
             licenceMapping,
             firstNamesCsv,
-            pdfFolderPath,
+            fileService,
             regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
@@ -645,11 +647,11 @@ async Task MoveReportHtmlFilesAsync(
 
 (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetDmsFilesAndMapping(string localPdfFolderPath, string dmsReportPath, int regionCode)
+    GetDmsFilesAndMapping(IFileService fileService, string dmsReportPath, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
-        localPdfFolderPath,
+        fileService,
         dmsReportPath,
         regionCode);
 
@@ -669,7 +671,7 @@ async Task MoveReportHtmlFilesAsync(
 }
 
 (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string dmsReportPath, int regionCode)
+    GetFilesAndMappingFromExcelDownloadInfoFile(IFileService fileService, string dmsReportPath, int regionCode)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
@@ -677,10 +679,7 @@ async Task MoveReportHtmlFilesAsync(
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-    var filesInFolder = Directory
-        .GetFiles(pdfFolderPath)
-        .Select(path => path.Split('/').Last())
-        .ToList();
+    var filesInFolder = fileService.GetAllFiles();
 
     using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
     {

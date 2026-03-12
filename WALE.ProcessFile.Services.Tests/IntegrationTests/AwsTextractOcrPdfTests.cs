@@ -70,7 +70,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             regionCode);
     }
 

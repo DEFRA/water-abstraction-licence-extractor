@@ -11,7 +11,7 @@ public interface IPdfDataExtractorService
     public Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
         LookupConfiguration configuration,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId);
 
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

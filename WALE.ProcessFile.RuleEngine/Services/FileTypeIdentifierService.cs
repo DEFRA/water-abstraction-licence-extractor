@@ -109,7 +109,10 @@ public class FileTypeIdentifierService
             }
 
             var content = await serviceToUse.GetMatchesAsync(
-                filePath, configuration, [], 0);
+                filePath,
+                configuration,
+                [],
+                0);
 
             return _ruleEngine.Evaluate(content);
         }

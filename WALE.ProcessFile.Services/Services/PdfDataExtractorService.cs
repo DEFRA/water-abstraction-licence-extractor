@@ -32,7 +32,7 @@ public class PdfDataExtractorService(
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
         LookupConfiguration configuration,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId)
     {
         if (pdfFileName.Split('/').Length > 1)
@@ -58,7 +58,7 @@ public class PdfDataExtractorService(
             return await GetMatchesInternalAsync(
                 pdfFileName,
                 configuration,
-                previouslyParsedPaths,
+                previouslyParsedFiles,
                 processRunId);
         }
         finally
@@ -927,7 +927,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
         Dictionary<string, DmsFileData> licenceNumberMapping,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int regionCode,
         int processRunId,
         LookupConfiguration lookupConfiguration)
@@ -955,12 +955,12 @@ public class PdfDataExtractorService(
                 
                 var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
                 
-                if (previouslyParsedPaths.Contains(destinationFilePath))
+                if (previouslyParsedFiles.Contains(destinationFilePath))
                 {
                     continue;
                 }
 
-                previouslyParsedPaths.Add(destinationFilePath);
+                previouslyParsedFiles.Add(destinationFilePath);
                 pathsToFetch.Add(destinationFilePath);
             }
         }
@@ -979,7 +979,7 @@ public class PdfDataExtractorService(
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
                 clonedConfig,
-                previouslyParsedPaths,
+                previouslyParsedFiles,
                 processRunId);
 
             var labelResult = new LabelGroupResult

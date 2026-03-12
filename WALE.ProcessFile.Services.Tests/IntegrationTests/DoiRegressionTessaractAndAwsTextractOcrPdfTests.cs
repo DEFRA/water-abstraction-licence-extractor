@@ -70,7 +70,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
-            pdfFolder,
+            new LocalFileService(pdfFolder),
             regionCode);
     }
     

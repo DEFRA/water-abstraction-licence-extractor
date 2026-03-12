@@ -971,15 +971,14 @@ public class PdfDataExtractorService(
             {
                 continue;
             }
+
+            var clonedConfig = lookupConfiguration.Clone();
+            clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+            clonedConfig.RegionCode = regionCode;
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
-                    licenceNumberMapping,
-                    lookupConfiguration.ValidLowercaseFirstNames,
-                    lookupConfiguration.PdfFolder,
-                    regionCode),
+                clonedConfig,
                 previouslyParsedPaths,
                 processRunId);
 

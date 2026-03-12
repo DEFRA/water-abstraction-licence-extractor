@@ -70,7 +70,7 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        GetDmsFilesAndMapping(services, regionCode);
+        GetDmsFilesAndMapping(services.LocalPdfFolderPath!, services.DmsReportPath!, regionCode);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
@@ -79,7 +79,7 @@ async Task ProgramAsync()
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
-        Description = $"Run using {services.PdfFolderPath}",
+        Description = $"Run using {services.LocalPdfFolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
         NumberOfFiles = dmsFilesToProcess.Count
     });
@@ -116,6 +116,7 @@ async Task ProgramAsync()
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
+                    services.LocalPdfFolderPath!,
                     regionCode,
                     processCount++,
                     processRun.NumberOfFiles,
@@ -469,7 +470,7 @@ ConfiguredServices ConfigureServices()
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
         RegenerateMappingJson = regenerateMappingJson,
-        PdfFolderPath = pdfFolderPath,
+        LocalPdfFolderPath = pdfFolderPath,
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
         ListDataPath = listDataPath,
@@ -480,12 +481,13 @@ ConfiguredServices ConfigureServices()
         ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
-        FileMappingPath = fileMappingPath
+        DmsReportPath = fileMappingPath
     };
 }
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
-    string pdfFilePath,
+    string pdfFilename,
+    string pdfFolderPath,
     int regionCode,
     int fileNumber,
     int totalNumber,
@@ -498,7 +500,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     ProcessRun processRun,
     Lock extractorLock)
 {
-    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
     var dtStart = DateTime.Now;
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
@@ -513,25 +515,22 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
     try
     {
-        var previouslyParsedPaths = new List<string>
+        var previouslyParsedFiles = new List<string>
         {
-            pdfFilePath
+            pdfFilename
         };
-
-        var pdfFolder = pdfFilePath[..(pdfFilePath.LastIndexOf('/') + 1)];
-        var pdfFilename = pdfFolder.Split('/').Last();
         
         var lookupConfig = new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             licenceMapping,
             firstNamesCsv,
-            pdfFolder,
+            pdfFolderPath,
             regionCode);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             lookupConfig,
-            previouslyParsedPaths,
+            previouslyParsedFiles,
             processRun.ProcessRunId);
 
         var matchResultId = await outputService.SaveMatchResultAsync(
@@ -644,21 +643,21 @@ async Task MoveReportHtmlFilesAsync(
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
-    LicenceNumbersWithFilenames)
-    GetDmsFilesAndMapping(ConfiguredServices services, int regionCode)
+(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
+    Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
+    GetDmsFilesAndMapping(string localPdfFolderPath, string dmsReportPath, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
-        services.PdfFolderPath!,
-        services.FileMappingPath!,
+        localPdfFolderPath,
+        dmsReportPath,
         regionCode);
 
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
         .ToDictionary(filePath => filePath.Key, k => k.Value);*/
 
-    filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
+    filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
@@ -669,12 +668,11 @@ async Task MoveReportHtmlFilesAsync(
     return filesAndMapping;
 }
 
-(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
-    LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath, int regionCode)
+(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
+    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string dmsReportPath, int regionCode)
 {
-    var filenames = new Dictionary<string, DmsFileData>();
-    var mappingFile = new Dictionary<string, DmsFileData>();
+    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
+    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
 
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -684,7 +682,7 @@ async Task MoveReportHtmlFilesAsync(
         .Select(path => path.Split('/').Last())
         .ToList();
 
-    using (var stream = File.Open(mappingFilePath, FileMode.Open, FileAccess.Read))
+    using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
     {
         using (var reader = ExcelReaderFactory.CreateReader(stream))
         {
@@ -743,15 +741,15 @@ async Task MoveReportHtmlFilesAsync(
                     StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
                 };
 
-                filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
-                mappingFile.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
+                filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
+                licenceNumbersWithFilenames.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
             }
         }
     }
 
     return (
-        filenames,
-        mappingFile
+        filenamesWithLicenceNumbers,
+        licenceNumbersWithFilenames
     );
 }
 

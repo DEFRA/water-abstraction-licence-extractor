@@ -10,15 +10,26 @@ public class LookupConfiguration(
     int regionCode,
     int maxPagesToProcessWhenOcrNeeded = 20)
 {
-    public Dictionary<string, DmsFileData> LicenceNumberMapping { get; } = licenceNumberMapping;
+    public Dictionary<string, DmsFileData> LicenceNumberMapping { get; set; } = licenceNumberMapping;
 
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
 
     public string PdfFolder { get; set; } = pdfFolder;
 
-    public readonly int RegionCode = regionCode;
+    public int RegionCode { get; set; } = regionCode;
 
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
 
     public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
+
+    public LookupConfiguration Clone()
+    {
+        return new LookupConfiguration(
+            Labels,
+            LicenceNumberMapping,
+            ValidLowercaseFirstNames,
+            PdfFolder,
+            RegionCode,
+            MaxPagesToProcessWhenOcrNeeded);
+    }
 }

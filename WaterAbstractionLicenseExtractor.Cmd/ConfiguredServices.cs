@@ -16,7 +16,7 @@ public class ConfiguredServices
     
     public bool RegenerateMappingJson { get; init; }
     
-    public string? PdfFolderPath { get; init; }
+    public string? LocalPdfFolderPath { get; init; }
     
     public string? ReportTemplatePath { get; init; }
     
@@ -36,7 +36,7 @@ public class ConfiguredServices
     
     public string? FullImageDataPath { get; init; }
     
-    public string? FileMappingPath { get; init; }
+    public string? DmsReportPath { get; init; }
     
     public bool RefreshCache{ get; init; }
 }

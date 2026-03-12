@@ -1070,14 +1070,13 @@ public static partial class WalSchemaConverter
                             destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
                         }
 
+                        var clonedConfig = lookupConfiguration.Clone();
+                        clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+                        clonedConfig.RegionCode = matchesResult.RegionCode;
+                        
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                             destinationFileName,
-                            new LookupConfiguration(
-                                LabelConfiguration.GetLabels(),
-                                licenceNumberMapping,
-                                lookupConfiguration.ValidLowercaseFirstNames,
-                                lookupConfiguration.PdfFolder,
-                                matchesResult.RegionCode),
+                            clonedConfig,
                             previouslyParsedPaths,
                             processRunId);
 
@@ -1132,14 +1131,13 @@ public static partial class WalSchemaConverter
                 destinationFileName = $"{lookupConfiguration.PdfFolder}{destinationFileName}";
             }
 
+            var clonedConfig = lookupConfiguration.Clone();
+            clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+            clonedConfig.RegionCode = matchesResult.RegionCode;
+            
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
-                new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
-                    licenceNumberMapping,
-                    lookupConfiguration.ValidLowercaseFirstNames,
-                    lookupConfiguration.PdfFolder,
-                    matchesResult.RegionCode),
+                clonedConfig,
                 previouslyParsedPaths,
                 processRunId);
 

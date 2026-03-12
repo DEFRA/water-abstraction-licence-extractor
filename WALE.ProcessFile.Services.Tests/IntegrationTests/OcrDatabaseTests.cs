@@ -69,7 +69,7 @@ public class OcrDatabaseTests
         return await _pdfDataExtractorCombined.GetMatchesAsync(
             PdfFolder + fileName,
             new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
+                WalLabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 PdfFolder,

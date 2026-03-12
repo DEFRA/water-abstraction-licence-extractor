@@ -84,7 +84,7 @@ public class MessageReceivedFunction(
         var matches = await pdfDataExtractor.GetMatchesAsync(
             pdfFilePath,
             new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
+                WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 pdfFolderPath,

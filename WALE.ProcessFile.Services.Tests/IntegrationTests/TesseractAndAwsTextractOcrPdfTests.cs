@@ -82,7 +82,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
             pdfFolder,

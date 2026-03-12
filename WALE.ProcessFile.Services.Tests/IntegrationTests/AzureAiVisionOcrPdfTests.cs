@@ -99,7 +99,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
             pdfFolder,

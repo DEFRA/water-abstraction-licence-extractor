@@ -66,7 +66,7 @@ public static class GenerateAggregatesCsvForTesting
             if (_lookupConfiguration == null)
             {
                 _lookupConfiguration = new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
+                    WalLabelConfiguration.GetLabels(),
                     FileLicenceMapping,
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
                     KeyConfig.PdfFolder,

@@ -84,7 +84,7 @@ public class NoOcrDatabaseTests
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             FileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             pdfFolder,

@@ -2,11 +2,11 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IFileService
 {
-    public List<string> GetAllFiles();
+    public Task<List<string>> GetAllFilesAsync();
     
-    public Stream GetFileAsStream(string filename);
+    public Task<Stream> GetFileAsStreamAsync(string filename);
 
-    public byte[] GetFileAsBytes(string pdfFilename);
+    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename);
     
     public string FolderPath { get; set; }
 }

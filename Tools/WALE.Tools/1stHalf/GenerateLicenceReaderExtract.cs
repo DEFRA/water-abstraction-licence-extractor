@@ -313,7 +313,7 @@ public static class GenerateLicenceReaderExtract
             completedResults.Select(existingResult => existingResult.FileName)!,
             StringComparer.OrdinalIgnoreCase);
 
-        var allPdfFileNames = fileService.GetAllFiles()
+        var allPdfFileNames = (await fileService.GetAllFilesAsync())
             .Where(filePath => filePath.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .Select(filePath => filePath.Split('/').Last())
             .OrderBy(fileName => fileName)

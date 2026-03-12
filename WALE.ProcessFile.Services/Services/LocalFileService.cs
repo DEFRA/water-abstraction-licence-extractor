@@ -4,22 +4,28 @@ namespace WALE.ProcessFile.Services.Services;
 
 public class LocalFileService(string folderPath) : IFileService
 {
-    public List<string> GetAllFiles()
+    public Task<List<string>> GetAllFilesAsync()
     {
-        return Directory
-            .GetFiles(FolderPath)
-            .Select(path => path.Split('/').Last())
-            .ToList();
+        return Task.FromResult(
+            Directory
+                .GetFiles(FolderPath)
+                .Select(path => path.Split('/').Last())
+                .ToList());
     }
 
-    public Stream GetFileAsStream(string filename)
+    public Task<Stream> GetFileAsStreamAsync(string filename)
     {
-        return File.Open($"{FolderPath}{filename}", FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Task.FromResult<Stream>(
+            File.Open(
+                $"{FolderPath}{filename}",
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read));
     }
 
-    public byte[] GetFileAsBytes(string pdfFilename)
+    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
     {
-        return File.ReadAllBytes($"{FolderPath}{pdfFilename}");
+        return File.ReadAllBytesAsync($"{FolderPath}{pdfFilename}");
     }
 
     public string FolderPath { get; set; } = folderPath;

@@ -10,8 +10,10 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
 {
     public IInternalPdfDocument GetPdfDocument(IFileService fileService, string filename)
     {
+        var fileStream = Task.Run(() => fileService.GetFileAsStreamAsync(filename)).Result;
+        
         var document = PdfDocument.Open(
-            fileService.GetFileAsStream(filename),
+            fileStream,
             new ParsingOptions
             {
                 UseLenientParsing = true,

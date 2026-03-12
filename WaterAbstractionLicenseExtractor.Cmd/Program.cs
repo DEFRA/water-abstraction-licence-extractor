@@ -71,7 +71,7 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        GetDmsFilesAndMapping(services.FileService!, services.DmsReportPath!, regionCode);
+        await GetDmsFilesAndMappingAsync(services.FileService!, services.DmsReportPath!, regionCode);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
@@ -649,12 +649,12 @@ async Task MoveReportHtmlFilesAsync(
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
-    Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetDmsFilesAndMapping(IFileService fileService, string dmsReportPath, int regionCode)
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
+    Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-    var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
+    var filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
         fileService,
         dmsReportPath,
         regionCode);
@@ -674,8 +674,8 @@ async Task MoveReportHtmlFilesAsync(
     return filesAndMapping;
 }
 
-(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(IFileService fileService, string dmsReportPath, int regionCode)
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    GetFilesAndMappingFromExcelDownloadInfoFileAsync(IFileService fileService, string dmsReportPath, int regionCode)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
@@ -683,7 +683,7 @@ async Task MoveReportHtmlFilesAsync(
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-    var filesInFolder = fileService.GetAllFiles();
+    var filesInFolder = await fileService.GetAllFilesAsync();
 
     using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
     {

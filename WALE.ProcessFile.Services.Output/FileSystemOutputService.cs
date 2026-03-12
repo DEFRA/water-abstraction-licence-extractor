@@ -134,7 +134,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             return -1;
         }
         
-        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+        var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         foreach (var (provider, bitmap) in images)
         {

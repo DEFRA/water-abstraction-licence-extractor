@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IAlternativeImageProvider
 {
-    public SKBitmap GetPageAsSkBitmap(
+    public Task<SKBitmap> GetPageAsSkBitmapAsync(
         IFileService fileService,
         string pdfFilename,
         int pageDimensionWidth,

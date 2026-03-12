@@ -157,7 +157,7 @@ public class DatabaseOutputService(
         int processRunId)
     {
         var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
-        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+        var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         foreach (var (providerName, bitmap) in images)
         {

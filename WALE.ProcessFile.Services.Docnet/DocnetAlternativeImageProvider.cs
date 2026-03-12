@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Docnet;
 
 public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
-    public SKBitmap GetPageAsSkBitmap(
+    public async Task<SKBitmap> GetPageAsSkBitmapAsync(
         IFileService fileService,
         string pdfFilename,
         int pageDimensionWidth,
@@ -15,7 +15,7 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
     {
         var docLibInstance = new DocLibInstance();
         
-        using var docReader = docLibInstance.GetDocReader(
+        using var docReader = await docLibInstance.GetDocReaderAsync(
             fileService,
             pdfFilename,
             new PageDimensions(pageDimensionWidth, pageDimensionHeight));

@@ -9,8 +9,9 @@ public class DocLibInstance
 {
     private static readonly DocLib Instance = DocLib.Instance;
     
-    public IDocReader GetDocReader(IFileService fileService, string pdfFilename, PageDimensions pageDimensions)
+    public async Task<IDocReader> GetDocReaderAsync(IFileService fileService, string pdfFilename, PageDimensions pageDimensions)
     {
-        return Instance.GetDocReader(fileService.GetFileAsBytes(pdfFilename), pageDimensions);
+        var bytes = await fileService.GetFileAsBytesAsync(pdfFilename);
+        return Instance.GetDocReader(bytes, pageDimensions);
     }
 }

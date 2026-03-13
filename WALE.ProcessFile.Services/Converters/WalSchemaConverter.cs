@@ -796,6 +796,7 @@ public static partial class WalSchemaConverter
                             [
                                 new LinkedLicenceSection
                                 {
+                                    Source = LinkedLicenceSource.OtherDocument,
                                     SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
                                     LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})",
                                     LineNumber = -1,
@@ -1243,6 +1244,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.AdditionalInformation,
                             LinkReason = GetLinkReason(
                                 [GetParent(additional, linkedLicenceNumber)],
@@ -1313,6 +1315,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.ReasonsForConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(reasonsForConditions, linkedLicenceNumber)],
@@ -1400,6 +1403,7 @@ public static partial class WalSchemaConverter
                 [
                     new LinkedLicenceSection
                     {
+                        Source = LinkedLicenceSource.Document,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.PageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LineNumber,
@@ -1486,6 +1490,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.LicenceHistory,
                             LinkReason =
                                 GetLinkReason([licenceHistorySection],
@@ -1566,6 +1571,7 @@ public static partial class WalSchemaConverter
                             [
                                 new LinkedLicenceSection
                                 {
+                                    Source = LinkedLicenceSource.Document,
                                     SectionName = LinkedLicenceSectionNames.Purposes,
                                     LinkReason = GetLinkReason(
                                         [GetParent(purposePointGroup, linkedLicenceNumber)],
@@ -1648,6 +1654,7 @@ public static partial class WalSchemaConverter
                             [
                                 new LinkedLicenceSection
                                 {
+                                    Source = LinkedLicenceSource.Document,
                                     SectionName = LinkedLicenceSectionNames.Points,
                                     LinkReason = GetLinkReason(
                                         [GetParent(pointPurposeGroup, linkedLicenceNumber)],
@@ -1721,6 +1728,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.Records,
                             LinkReason = GetLinkReason(
                                 [GetParent(records, linkedLicenceNumber)],
@@ -1790,6 +1798,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.FurtherConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherConditions, linkedLicenceNumber)],
@@ -1860,6 +1869,7 @@ public static partial class WalSchemaConverter
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.FurtherProvisions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherProvisions, linkedLicenceNumber)],
@@ -2218,14 +2228,6 @@ public static partial class WalSchemaConverter
                 {
                     var condition = (Condition?)null; // TODO
 
-                    // TODO the following is bugged - so dont use it
-                    /*var linkedLicenceFilename = siblings
-                        .FirstOrDefault(sibling =>
-                            sibling.MatchedLabel?.Name == "LinkedLicenceFilename")?
-                        .Text?
-                        .FirstOrDefault()?
-                        .Text;*/
-
                     var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber, regionCode);
 
@@ -2258,7 +2260,9 @@ public static partial class WalSchemaConverter
                         [
                             new LinkedLicenceSection
                             {
+                                Source = LinkedLicenceSource.Document,
                                 SectionName = LinkedLicenceSectionNames.AbstractionLimits,
+                                IsBecauseOfAggregate = textSuggestsIsAggregate,
                                 LinkReason = GetLinkReason([abstractionLimitPointSub],
                                     linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                                 LineNumber = linkedLicenceNumber.LineNumber,
@@ -2273,7 +2277,7 @@ public static partial class WalSchemaConverter
 
             .Where(linkedLicence =>
                     FormattingHelper.IsValidLicenceNumber(
-linkedLicence.LicenceNumber!,
+                        linkedLicence.LicenceNumber!,
                         regionCode) != false)
                 .ToList();
             

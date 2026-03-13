@@ -4,5 +4,6 @@ public enum LinkedLicenceSource
 {
     Unknown,
     Nald,
-    Document
+    Document,
+    OtherDocument
 }

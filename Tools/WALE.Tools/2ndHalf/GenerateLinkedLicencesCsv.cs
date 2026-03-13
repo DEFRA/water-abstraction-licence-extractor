@@ -57,6 +57,8 @@ public static class GenerateLinkedLicencesCsv
             {
                 Filename = licence.Filename,
                 DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
+                FileId = licence.DmsFileId,
+                PermitNumber = licence.PermitNumber,
                 LicenceNumber = licence.LicenceNumber?.Value,
                 ScrapedLicenceNumber = licenceNumber,
                 NaldLicenceNumber = licence.NaldLicenceNumber,

@@ -373,7 +373,7 @@ public static partial class WalSchemaConverter
     }
 
     // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
-    private static bool IsPlusOrMinusACoupleOfLines(int document1LineNumber, int document2LineNumber)
+    private static bool IsPlusOrMinusACoupleOfLines(int? document1LineNumber, int? document2LineNumber)
     {
         return document1LineNumber >= document2LineNumber - 2
             && document1LineNumber <= document2LineNumber + 2;            

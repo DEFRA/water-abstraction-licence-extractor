@@ -54,7 +54,7 @@ public class IRuleTests
         };
         
         // Act
-        var result = rule.CanApply(null);
+        var result = rule.CanApply(null!);
 
         // Assert
         result.Should().BeFalse();

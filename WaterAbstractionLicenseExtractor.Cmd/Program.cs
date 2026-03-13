@@ -317,7 +317,7 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    const bool saveListsToFile = false;
+    var saveListsToFile = false;
 
     if (saveListsToFile)
     {

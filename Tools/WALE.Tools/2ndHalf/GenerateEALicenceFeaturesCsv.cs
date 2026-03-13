@@ -44,20 +44,20 @@ public static class GenerateEaLicenceFeaturesCsv
                 continue;
             }
             
-            var hasMultipleScheduleOfConditions = (bool)licence.NoneSchemaData[TemplateFeatures.MultipleScheduleOfConditions];
+            var hasMultipleScheduleOfConditions = (bool?)licence.NoneSchemaData[TemplateFeatures.MultipleScheduleOfConditions] == true;
             var hasPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.PointsTable, out var pointTableFeature1)
-                && (bool)pointTableFeature1;
+                && (bool?)pointTableFeature1 == true;
             
             var hasMeansPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.MeansPointsTable, out var pointTableFeature2)
-                && (bool)pointTableFeature2;
+                && (bool?)pointTableFeature2 == true;
             
             var hasLimitsPointsTable = licence.NoneSchemaData.TryGetValue(TemplateFeatures.LimitPointsTable, out var pointTableFeature3)
-                && (bool)pointTableFeature3;
+                && (bool?)pointTableFeature3 == true;
             
-            var usesOcr = (string)licence.NoneSchemaData["ocr"] == "OCR";
+            var usesOcr = (string?)licence.NoneSchemaData["ocr"] == "OCR";
 
             if (usesOcr
-                && !hasMultipleScheduleOfConditions
+                && hasMultipleScheduleOfConditions != true
                 && !hasPointsTable
                 && !hasMeansPointsTable
                 && !hasLimitsPointsTable)

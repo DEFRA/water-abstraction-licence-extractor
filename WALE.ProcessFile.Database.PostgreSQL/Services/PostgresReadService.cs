@@ -549,14 +549,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     public async Task<AggregateSet[]?> GetAggregateSets(int licenceSetId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
+        /*const string sql = """
                            SELECT 
                                aggregate_set_id,
                                schema_aggregate_set_id,
                                data 
                            FROM aggregate_set 
                            WHERE licence_set_id = @LicenceSetId
-                           """;
+                           """;*/
 
         // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
         return [];
@@ -566,14 +566,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         int processRunId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT 
-                               aggregate_set_id,
-                               schema_aggregate_set_id,
-                               data 
-                           FROM aggregate_set 
-                           WHERE process_run_id = @ProcessRunId
-                           """;
+            /*const string sql = """
+                                SELECT 
+                                    aggregate_set_id,
+                                    schema_aggregate_set_id,
+                                    data 
+                                FROM aggregate_set 
+                                WHERE process_run_id = @ProcessRunId
+                                """;*/
         
         // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
         return [];

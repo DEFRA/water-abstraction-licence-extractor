@@ -324,7 +324,7 @@ public static class ApplicableToMost
                 var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
                 
                 var autoCorrectedOutput = request.isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(
+                    ? AutoCorrectHelper.AutoCorrectText(
                         words,
                         false,
                         request.label?.AutoCorrect ?? false)
@@ -412,7 +412,7 @@ public static class ApplicableToMost
 
             if (request.isOcr)
             {
-                tWords = await AutoCorrectHelper.AutoCorrectTextAsync(
+                tWords = AutoCorrectHelper.AutoCorrectText(
                     tWords,
                     request.isCompanyType,
                     request.label.AutoCorrect);

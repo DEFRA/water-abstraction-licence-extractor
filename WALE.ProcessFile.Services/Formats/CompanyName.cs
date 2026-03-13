@@ -11,7 +11,7 @@ public static class CompanyName
 {
     public const string Constant = "CompanyName";
 
-    public static async Task<(bool AnyFound, IReadOnlyList<DocumentLine> FoundLines)> AnyIsCompanyOrPersonalNameAsync(
+    public static (bool AnyFound, IReadOnlyList<DocumentLine> FoundLines) AnyIsCompanyOrPersonalName(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool lineNumbersAreDescending,
@@ -59,7 +59,7 @@ public static class CompanyName
 
                 // For speed, first check without dictionary
                 var correctedWords = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(trimmedWords, true, false)
+                    ? AutoCorrectHelper.AutoCorrectText(trimmedWords, true, false)
                     : trimmedWords;
                 
                 if (DataHelper.IsCorruptedWords(correctedWords, isOcr)
@@ -74,7 +74,7 @@ public static class CompanyName
                 }
                 
                 correctedWords = isOcr
-                    ? await AutoCorrectHelper.AutoCorrectTextAsync(correctedWords, true, label.AutoCorrect)
+                    ? AutoCorrectHelper.AutoCorrectText(correctedWords, true, label.AutoCorrect)
                     : trimmedWords;
             
                 if (!TryGetCompanyOrPersonalName(correctedWords, label, lookupConfiguration, out companyOrPersonalName))

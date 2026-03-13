@@ -50,7 +50,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 .Where(kvp => kvp.Key.StartsWith("AdditionalLinkedLicence:"))
                 .Select(kvp =>
                 {
-                    var json = kvp.Value.ToString()!;
+                    var json = kvp.Value?.ToString()!;
                     return JsonSerializer.Deserialize<LinkedLicence>(json, JsonHelper.GetSerializerOptions());
                 })
                 .ToList();
@@ -63,7 +63,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
             foreach (var linkedLicence in unknownLinkedLicences)
             {
                 var scrapedLicenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                    ? value.ToString()
+                    ? value?.ToString()
                     : null;
                 
                 returnList.Add(new UnknownSectionLinkedLicencesCsvLine

@@ -123,13 +123,13 @@ public class ImagesController(
         public int pageNumber { get; set; }
         public string? noOcrServiceName { get; set; }
         public string? pdfFilename { get; set; }
-        public byte[] data { get; set; }
+        public byte[] data { get; set; } = [];
         public int processRunId { get; set; }
     }
     
     public class SaveImageOnPageRequest
     {
-        public byte[] bytes { get; set; }
+        public byte[] bytes { get; set; } = [];
 
         public int width { get; set; }
 

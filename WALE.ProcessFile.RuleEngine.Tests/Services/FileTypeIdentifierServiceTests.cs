@@ -31,7 +31,7 @@ public class FileTypeIdentifierServiceTests
     public async Task IdentifyFileType_WithLicenseContent_ShouldReturnLicenseType()
     {
         // Arrange
-        var content = "This document contains license and permit information";
+        //var content = "This document contains license and permit information";
         var filePath = "";
         var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
 
@@ -47,7 +47,7 @@ public class FileTypeIdentifierServiceTests
     public async Task IdentifyFileType_WithAddendumContent_ShouldReturnAddendumType()
     {
         // Arrange
-        var content = "This addendum modifies the agreement";
+        //var content = "This addendum modifies the agreement";
         var filePath = "";
         var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
 
@@ -63,7 +63,7 @@ public class FileTypeIdentifierServiceTests
     public async Task IdentifyFileType_WithNoMatchingContent_ShouldReturnNull()
     {
         // Arrange
-        var content = "This is a regular document";
+        //var content = "This is a regular document";
         var filePath = "";
         var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
 

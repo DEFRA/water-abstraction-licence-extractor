@@ -118,10 +118,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             regionCode);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1, int fileLicenceMapping = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
     {
-        var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
-        if (number == 3) pdfFolder = TestConfig.PdfFolder3;
+        var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
+        if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
@@ -4308,7 +4308,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             NaldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2));
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -4501,7 +4501,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             NaldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2));
         
         Assert.Equal(2, licenceSets.Count);
         

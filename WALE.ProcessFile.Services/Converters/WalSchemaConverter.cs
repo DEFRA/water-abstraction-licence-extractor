@@ -1117,9 +1117,18 @@ public static partial class WalSchemaConverter
             }
 
             var destinationFileName = dmsFileData.DestinationFileName!;
+            if (string.IsNullOrEmpty(destinationFileName))
+            {
+                returnLicences.Add(new Licence
+                {
+                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
+                    Status = LicenceStatus.PathMissing
+                });
+
+                continue;
+            }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.LicenceNumberMapping = lookupConfiguration.LicenceNumberMapping;
             clonedConfig.RegionCode = matchesResult.RegionCode;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(

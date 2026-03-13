@@ -126,6 +126,8 @@ public class DatabaseOutputService(
             licence.LicenceNumber?.Value,
             licenceStr,
             filenameNoExtension,
+            licence.DmsFileId,
+            licence.PermitNumber,
             processRunId);
     }
     

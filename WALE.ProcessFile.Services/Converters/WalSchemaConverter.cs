@@ -354,6 +354,8 @@ public static partial class WalSchemaConverter
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumberWithConfidence,
             NaldLicenceNumber = dmsFileData?.PermitNumber,
+            PermitNumber = dmsFileData?.PermitNumber,
+            DmsFileId = dmsFileData?.FileId,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,

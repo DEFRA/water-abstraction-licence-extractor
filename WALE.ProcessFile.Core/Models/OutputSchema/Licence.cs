@@ -20,6 +20,10 @@ public class Licence
     
     public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
+    public string? PermitNumber { get; set; }
+    
+    public Guid? DmsFileId { get; set; }
+    
     public string? Filename { get; set; }
 
     public LicenceVersion LicenceVersion { get; init; } = new();

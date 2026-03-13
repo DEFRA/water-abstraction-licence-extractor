@@ -11,6 +11,13 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class LicenceController(IOutputService outputService) : Controller
 {
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync([FromQuery] int processRunId)
+    {
+        var licences = await outputService.GetLicencesAsync(processRunId);
+        return Ok(licences);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> SaveAsync(
         [FromBody] SaveLicenceRequest request)

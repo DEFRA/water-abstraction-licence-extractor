@@ -130,10 +130,19 @@ public static partial class WalSchemaConverter
 
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                    naldLinkedLicence.NaldLicence.LicenceNumber,
+                    naldLinkedLicence.NaldLicence.RegionCode);
+
+                var thisDmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                    ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+                    : null;
+                
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     NaldLicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                    DmsPath = thisDmsFileData?.DmsPath,
                     ContainedIn =
                     [
                         new LinkedLicenceSection

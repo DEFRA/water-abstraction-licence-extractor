@@ -42,9 +42,7 @@ public class LinkedLicencesCsvLine
     
     public string? LinkedLicenceDmsPath { get; set; }
     
-    public string? LinkedLicenceFromSection { get; set; }
-    
-    public string? LinkedLicenceLinkReason { get; set; }
+    public string? LinkedLicenceSectionAndReason { get; set; }
     
     public bool? LinkedLicenceIsLive { get; set; }
     
@@ -52,7 +50,7 @@ public class LinkedLicencesCsvLine
     
     public bool? LinkedLicenceIsImpoundment { get; set; }
     
-    public bool LinkedLicenceFoundInList { get; set; }
+    public bool? LinkedLicenceFoundInList { get; set; }
     
     public string? EuicCode { get; set; }
 

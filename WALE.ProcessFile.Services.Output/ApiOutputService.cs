@@ -280,9 +280,19 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Get all licences returned null");
+        }
+
+        return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(

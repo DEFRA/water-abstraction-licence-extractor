@@ -72,6 +72,17 @@ public static class GenerateLinkedLicencesCsv
                 IsDead = licence.IsDeadLicence,
                 IsImpoundment = licence.IsImpoundmentLicence,
                 LicenceFoundInList = licence.LicenceFoundInList,
+                
+                LinkedLicenceNumber = "--",
+                ScrapedLinkedLicenceNumber = "--",
+                NaldLinkedLicenceNumber = "--",
+                LinkedLicenceFilename = "--",
+                LinkedLicenceDmsPath = "--",
+                LinkedLicenceSectionAndReason = "--",
+                LinkedLicenceFoundInList = null,
+                LinkedLicenceIsLive = null,
+                LinkedLicenceIsDead = null,
+                LinkedLicenceIsImpoundment = null
             };
             
             if (licence.LinkedLicences.Length == 0)
@@ -82,8 +93,21 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                var fromSections = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.SectionName));
-                var linkReasons = string.Join(';', linkedLicence.ContainedIn!.Select(ci => ci.LinkReason));
+                var sectionAndReason = string.Join("\n", linkedLicence.ContainedIn!
+                    .Select(ci =>
+                    {
+                        if (ci.Source == LinkedLicenceSource.Nald)
+                        {
+                            return $"{ci.Source}-{ci.LinkReason}";
+                        }
+
+                        if (ci.Source == LinkedLicenceSource.OtherDocument)
+                        {
+                            return $"{ci.SectionName}-{ci.LinkReason}";
+                        }
+                        
+                        return $"{ci.Source}-{ci.LinkReason}-{ci.SectionName}-P{ci.PageNumber}-L{ci.LineNumber}";
+                    }));
 
                 var outputLineCloned = outputLine.Clone();
                 
@@ -94,8 +118,7 @@ public static class GenerateLinkedLicencesCsv
                 outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
                     ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
                     : null;
-                outputLineCloned.LinkedLicenceFromSection = fromSections;
-                outputLineCloned.LinkedLicenceLinkReason = linkReasons;
+                outputLineCloned.LinkedLicenceSectionAndReason = sectionAndReason;
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList;
                 outputLineCloned.LinkedLicenceIsLive = linkedLicence.IsLiveLicence;
                 outputLineCloned.LinkedLicenceIsDead = linkedLicence.IsDeadLicence;

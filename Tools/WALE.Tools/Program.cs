@@ -5,7 +5,7 @@ using WALE.Tools.Config;
 
 var workflow = "GenerateLinkedLicencesCsv";//""GenerateLicenceReaderExtract";
 
-const int processRunId = 631;
+const int processRunId = 1533;
 const int regionCode = 1; // Anglia=1, NE=3
 var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP

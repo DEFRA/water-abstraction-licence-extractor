@@ -84,16 +84,16 @@ public class FileTypeIdentifierService
     /// <summary>
     /// Identifies the file type based on the content of a file using OCR when needed
     /// </summary>
-    /// <param name="filePath">The path to the file</param>
+    /// <param name="fileName">The path to the file</param>
     /// <param name="configuration">The lookup configuration</param>
     /// <returns>The file type identification result, or null if no type could be identified or an error occurred</returns>
-    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
+    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string fileName, LookupConfiguration configuration)
     {
         try
         {
-            if (!File.Exists(filePath))
+            if (!File.Exists(fileName))
             {
-                ConsoleHelper.WriteLine($"File not found: {filePath}");
+                ConsoleHelper.WriteLine($"File not found: {fileName}");
                 return null;
             }
 
@@ -113,7 +113,7 @@ public class FileTypeIdentifierService
             }
 
             var content = await serviceToUse.GetMatchesAsync(
-                filePath,
+                fileName,
                 configuration,
                 [],
                 0);

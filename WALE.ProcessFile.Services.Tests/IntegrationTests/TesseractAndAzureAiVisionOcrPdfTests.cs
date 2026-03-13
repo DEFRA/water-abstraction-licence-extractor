@@ -63,40 +63,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new AzureAiVisionOcrDataExtractorService(
-                TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey,
-                CacheService,
-                OutputService)
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-    
-    private readonly IPdfDataExtractorService _pdfDataExtractor4 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new AzureAiVisionOcrDataExtractorService(
-                TestConfig.AiVisionEndpoint,
-                TestConfig.AiVisionKey,
-                CacheService,
-                OutputService)
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
@@ -119,30 +85,26 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
         string f;
-        IPdfDataExtractorService extractor;
 
         switch (useExtractor)
         {
             case 1:
                 f = TestConfig.PdfFolder;
-                extractor = _pdfDataExtractor;
                 break;
             case 3:
                 f = TestConfig.PdfFolder3;
-                extractor = _pdfDataExtractor3;
                 break;
             case 4:
                 f = TestConfig.PdfFolder4;
-                extractor = _pdfDataExtractor4;
                 break;
             default:
                 throw new Exception("Number not known");
         }
         
-        return await extractor.GetMatchesAsync(
-            f + fileName,
+        return await _pdfDataExtractor.GetMatchesAsync(
+             fileName,
             await LookupConfigurationAsync(1, f),
-            [f + fileName],
+            [fileName],
             0);
     }
     
@@ -413,7 +375,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [],
             _naldLicenceStatusData,
             [],
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
 
@@ -465,7 +427,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [],
             _naldLicenceStatusData,
             [],
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
 
@@ -479,7 +441,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -579,7 +541,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -613,7 +575,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -648,7 +610,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
         
@@ -675,7 +637,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         const string fileName = "22712213__Non-Application Licence Document (16.05.1984).PDF";
 
         // Act
-        var resultFull = await _pdfDataExtractor3.GetMatchesAsync(
+        var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             TestConfig.PdfFolder3 + fileName,
             new LookupConfiguration(
                 GetYorkshireLabels(),
@@ -739,7 +701,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor4,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         

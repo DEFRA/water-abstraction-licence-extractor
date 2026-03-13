@@ -55,36 +55,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor2 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
-                TestConfig.AiServicesEndpoint,
-                TestConfig.AiServicesKey,
-                CacheService,
-                OutputService)
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-    
-    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
-                TestConfig.AiServicesEndpoint,
-                TestConfig.AiServicesKey,
-                CacheService,
-                OutputService)
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-    
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
@@ -114,13 +84,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
         
-        var service = number == 1 ? _pdfDataExtractor : _pdfDataExtractor2;
-        if (number == 3) service = _pdfDataExtractor3;
-        
-        return await service.GetMatchesAsync(
-            pdfFolder + fileName,
+        return await _pdfDataExtractor.GetMatchesAsync(
+            fileName,
             await LookupConfigurationAsync(regionCode, pdfFolder),
-            [pdfFolder + fileName],
+            [fileName],
             0);
     }
     
@@ -204,7 +171,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
@@ -270,7 +237,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
 
@@ -310,7 +277,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
 
@@ -1601,7 +1568,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
         
@@ -1630,7 +1597,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder2));
         
@@ -1657,7 +1624,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
         
@@ -1684,7 +1651,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor2,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
         

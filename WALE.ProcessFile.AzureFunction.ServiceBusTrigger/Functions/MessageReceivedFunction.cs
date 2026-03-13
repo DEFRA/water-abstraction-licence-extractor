@@ -61,11 +61,10 @@ public class MessageReceivedFunction(
         if (string.IsNullOrEmpty(tesseractExeDirectory)) throw new Exception($"{nameof(tesseractExeDirectory)} is missing");
         
         var fileName = Encoding.UTF8.GetString(message.Body);
-        var pdfFilePath = fileName;
         
         var previouslyParsedFiles = new List<string>
         {
-            pdfFilePath
+            fileName
         };
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -85,7 +84,7 @@ public class MessageReceivedFunction(
             docnetAlternativeDocumentService);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
-            pdfFilePath,
+            fileName,
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,
@@ -98,7 +97,7 @@ public class MessageReceivedFunction(
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(fileName);
         var jsonFileName = $"{filenameNoExtension}.json";
 
         var assetsClient = blobClient.GetBlobContainerClient("assets");

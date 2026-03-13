@@ -43,7 +43,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor1 = new PdfDataExtractorService(
+    private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
@@ -54,17 +54,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            textractFixture.Instance
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
@@ -80,12 +69,11 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        var pdfService = number == 1 ? _pdfDataExtractor1 : _pdfDataExtractor3;
         
-        return await pdfService.GetMatchesAsync(
-            pdfFolder + fileName,
+        return await _pdfDataExtractor.GetMatchesAsync(
+            fileName,
             await LookupConfigurationAsync(regionCode, pdfFolder),
-            [pdfFolder + fileName],
+            [fileName],
             0);
     }
     
@@ -203,7 +191,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             new NaldLicenceStatusData(),
             [],
-            _pdfDataExtractor1,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
 
@@ -241,7 +229,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             new NaldLicenceStatusData(),
             [],
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
 

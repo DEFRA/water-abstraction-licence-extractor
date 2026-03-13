@@ -69,30 +69,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractorCombined3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-    
-    private readonly IPdfDataExtractorService _pdfDataExtractorCombined4 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, Core.Enums.PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-    
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
@@ -124,30 +100,26 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
         string f;
-        IPdfDataExtractorService extractor;
 
         switch (folderNumber)
         {
             case 1:
                 f = TestConfig.PdfFolder;
-                extractor = _pdfDataExtractorCombined1;
                 break;
             case 3:
                 f = TestConfig.PdfFolder3;
-                extractor = _pdfDataExtractorCombined3;
                 break;
             case 4:
                 f = TestConfig.PdfFolder4;
-                extractor = _pdfDataExtractorCombined4;
                 break;
             default:
                 throw new Exception("Number not known");
         }
         
-        return await extractor.GetMatchesAsync(
-            f + fileName,
+        return await _pdfDataExtractorCombined1.GetMatchesAsync(
+            fileName,
             await LookupConfigurationAsync(regionCode, f),
-            [f + fileName],
+            [fileName],
             0);
     }
     
@@ -1928,7 +1900,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined4,
+            _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         
@@ -1977,7 +1949,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractorCombined4,
+            _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
         

@@ -80,22 +80,20 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
         string f;
-        IPdfDataExtractorService extractor;
 
         switch (folderNumber)
         {
             case 5:
                 f = TestConfig.PdfFolder5;
-                extractor = _pdfDataExtractorCombined5;
                 break;
             default:
                 throw new Exception("Number not known");
         }
         
-        return await extractor.GetMatchesAsync(
-            f + fileName,
+        return await _pdfDataExtractorCombined5.GetMatchesAsync(
+            fileName,
             await LookupConfigurationAsync(regionCode, f),
-            [f + fileName],
+            [fileName],
             0);
     }
     

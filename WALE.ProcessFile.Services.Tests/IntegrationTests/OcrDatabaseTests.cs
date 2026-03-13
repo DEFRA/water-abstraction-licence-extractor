@@ -70,14 +70,14 @@ public class OcrDatabaseTests
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return await _pdfDataExtractorCombined.GetMatchesAsync(
-            PdfFolder + fileName,
+            fileName,
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
                 3),
-            [PdfFolder + fileName],
+            [fileName],
             0);
     }
 

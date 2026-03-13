@@ -76,10 +76,10 @@ public class AzureOpenAiOcrPdfTests
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + fileName,
+            fileName,
             await LookupConfigurationAsync(PdfFolder),
             
-            [PdfFolder + fileName],
+            [fileName],
             0);
     }
     

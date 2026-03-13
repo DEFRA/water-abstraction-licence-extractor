@@ -59,19 +59,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            textractFixture.Instance
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService);
-
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
@@ -94,13 +81,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
     {
-        var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
         var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         
-        return await pdfExtractor.GetMatchesAsync(
-            folder + fileName,
+        return await _pdfDataExtractor.GetMatchesAsync(
+            fileName,
             await LookupConfigurationAsync(folder),
-            [folder + fileName],
+            [fileName],
             0);
     }
     
@@ -414,7 +400,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             [],
             _naldLicenceStatusData,
             [],
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3));
 
@@ -462,7 +448,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
+            _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3));
         

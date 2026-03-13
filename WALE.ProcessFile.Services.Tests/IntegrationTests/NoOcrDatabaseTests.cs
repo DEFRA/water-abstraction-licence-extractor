@@ -94,12 +94,12 @@ public class NoOcrDatabaseTests
             3);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return await _pdfDataExtractor.GetMatchesAsync(
-            TestConfig.PdfFolder + fileName,
+            fileName,
             await LookupConfigurationAsync(TestConfig.PdfFolder),
-            [TestConfig.PdfFolder + fileName],
+            [fileName],
             0);
     }
     

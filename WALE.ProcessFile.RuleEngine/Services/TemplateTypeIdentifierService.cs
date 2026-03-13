@@ -31,11 +31,11 @@ public class TemplateTypeIdentifierService
         InitializeDefaultRules(region);
     }
     
-    public async Task<TemplateFinderResult?> IdentifyTemplateTypeAsync(string filePath)
+    public async Task<TemplateFinderResult?> IdentifyTemplateTypeAsync(string fileName)
     {
-        if (!File.Exists(filePath))
+        if (!File.Exists(fileName))
         {
-            throw new FileNotFoundException($"File not found: {filePath}");
+            throw new FileNotFoundException($"File not found: {fileName}");
         }
 
         if (_pdfExtractorService == null)
@@ -54,7 +54,7 @@ public class TemplateTypeIdentifierService
             regionCode);
         
         var content = await _pdfExtractorService!.GetMatchesAsync(
-            filePath,
+            fileName,
             lookupConfig,
             [],
             processRunId)!;
@@ -66,7 +66,7 @@ public class TemplateTypeIdentifierService
             return null; // No configuration matched
         }
         
-        result.FileName = Path.GetFileName(filePath);
+        result.FileName = Path.GetFileName(fileName);
         result.NumberOfPages = content.NumberOfPages;
             
         return result; // Stop on first successful evaluation

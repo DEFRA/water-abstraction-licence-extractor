@@ -9,7 +9,8 @@ public class LookupConfiguration(
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     int regionCode,
-    int maxPagesToProcessWhenOcrNeeded = 20)
+    int maxPagesToProcessWhenOcrNeeded = 20,
+    object? naldLinkedLicenceHelper = null)
 {
     public Dictionary<string, DmsFileData> LicenceNumberMapping { get; set; } = licenceNumberMapping;
 
@@ -23,6 +24,8 @@ public class LookupConfiguration(
 
     public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
 
+    public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
+    
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -31,6 +34,7 @@ public class LookupConfiguration(
             ValidLowercaseFirstNames,
             FileService,
             RegionCode,
-            MaxPagesToProcessWhenOcrNeeded);
+            MaxPagesToProcessWhenOcrNeeded,
+            NaldLinkedLicenceHelper);
     }
 }

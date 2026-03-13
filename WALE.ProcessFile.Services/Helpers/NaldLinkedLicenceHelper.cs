@@ -50,62 +50,67 @@ public class NaldLinkedLicenceHelper
     }
 
     private static Dictionary<string, Dictionary<string, NaldLinkedLicence>> BuildLinkedLicenceMap(
-        List<NaldLinkedLicenceRawData> rawData,
+        List<NaldLinkedLicenceRawData> naldRawData,
         short processingRegionCode)
     {
         var map = new Dictionary<string, Dictionary<string, NaldLinkedLicence>>();
 
-        foreach (var item in rawData)
+        foreach (var naldRawDataItem in naldRawData)
         {
-            if (item.RegionCode != processingRegionCode)
+            if (naldRawDataItem.RegionCode != processingRegionCode)
             {
                 continue;
             }
 
-            var forwardLinkKey = item.LicenceNumber;
+            var forwardLinkKey = naldRawDataItem.LicenceNumber;
 
             if (string.IsNullOrEmpty(forwardLinkKey))
             {
                 continue;
             }
 
-            var potentialNumbers = new List<string?>
+            var potentialNumberSources = new List<string?>
             {
-                item.Param1,
-                item.Param2,
-                item.Text,
-                item.Notes
+                naldRawDataItem.Param1,
+                naldRawDataItem.Param2,
+                naldRawDataItem.Text,
+                naldRawDataItem.Notes
             };
 
-            foreach (var text in potentialNumbers)
+            foreach (var text in potentialNumberSources)
             {
                 var linkCandidates = LicenceNumber.ExtractNaldLicences(text);
 
                 foreach (var linkCandidate in linkCandidates)
                 {
-                    if (forwardLinkKey != linkCandidate.LicenceNumber ||
-                        linkCandidate.RegionCode != processingRegionCode)
+                    if (forwardLinkKey == linkCandidate.LicenceNumber
+                        && linkCandidate.RegionCode == processingRegionCode)
                     {
-                        var backLinkKey = linkCandidate.LicenceNumber;
-
-                        // Ensure map keys are initialized in both directions
-                        map.TryAdd(forwardLinkKey, []);
-                        map.TryAdd(backLinkKey, []);
-
-                        // Add forward link (or update if it exists already - a previous iteration may have added it as a back link)
-                        map[forwardLinkKey][backLinkKey] = new NaldLinkedLicence
-                        {
-                            NaldLicence = linkCandidate,
-                            LinkType = NaldLinkedLicenceType.Explicit
-                        };
-
-                        // Add back link, but only if no forward link already exists (achieved by using TryAdd, which does nothing if the key already exists)
-                        map[backLinkKey].TryAdd(forwardLinkKey, new NaldLinkedLicence
-                        {
-                            NaldLicence = item.ToNaldLicence(),
-                            LinkType = NaldLinkedLicenceType.BackLink
-                        });
+                        continue;
                     }
+                    
+                    var backLinkKey = linkCandidate.LicenceNumber;
+
+                    // Ensure map keys are initialized in both directions
+                    map.TryAdd(forwardLinkKey, []);
+                    map.TryAdd(backLinkKey, []);
+
+                    var forwardMap = map[forwardLinkKey];
+                    var backMap = map[backLinkKey];
+
+                    // Add forward link (or update if it exists already - a previous iteration may have added it as a back link)
+                    forwardMap[backLinkKey] = new NaldLinkedLicence
+                    {
+                        NaldLicence = linkCandidate,
+                        LinkType = NaldLinkedLicenceType.Explicit
+                    };
+
+                    // Add back link, but only if no forward link already exists (achieved by using TryAdd, which does nothing if the key already exists)
+                    backMap.TryAdd(forwardLinkKey, new NaldLinkedLicence
+                    {
+                        NaldLicence = naldRawDataItem.ToNaldLicence(),
+                        LinkType = NaldLinkedLicenceType.ImplicitBackLink
+                    });
                 }
             }
         }

@@ -129,7 +129,8 @@ async Task ProgramAsync()
                     pdfDataExtractors,
                     firstNamesCsv,
                     processRun,
-                    extractorLock));
+                    extractorLock,
+                    naldLinkedLicenceHelper));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -213,14 +214,6 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences =
-                    naldLinkedLicenceHelper.GetLinkedLicences(licenceLoop.LicenceNumber?.Value);
-                
-                if (linkedLicences.Count != 0)
-                {
-                    licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
-                }
-
                 var filename = licenceLoop.Filename;
 
                 if (licenceLoop.LicenceNumber != null
@@ -524,7 +517,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     List<IPdfDataExtractorService> pdfDataExtractors,
     HashSet<string> firstNamesCsv,
     ProcessRun processRun,
-    Lock extractorLock)
+    Lock extractorLock,
+    NaldLinkedLicenceHelper naldLinkedLicenceHelper)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -551,7 +545,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             allDmsData,
             firstNamesCsv,
             fileService,
-            regionCode);
+            regionCode,
+            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,

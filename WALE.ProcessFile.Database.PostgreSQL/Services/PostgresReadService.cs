@@ -666,22 +666,88 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
+                           select distinct
                                lic."LIC_NO" AS LicenceNumber,
                                lc."PARAM1" AS Param1,
                                lc."PARAM2" AS Param2,
                                lc."TEXT" AS Text,
+                               NULL AS Notes,
+                               lic."FGAC_REGION_CODE" AS RegionCode
+                           from nald."NALD_ABS_LICENCES" lic
+                           join nald."NALD_ABS_LIC_VERSIONS" ver
+                               ON lic."ID" = ver."AABL_ID"
+                               AND lic."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                               AND ver."ISSUE_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                                   WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
+                                       AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                                   )
+                               AND ver."INCR_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                                   WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
+                                       AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                   )    
+                           join nald."NALD_ABS_LIC_PURPOSES" pu
+                               ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
+                               AND ver."INCR_NO" = pu."AABV_INCR_NO"
+                               AND ver."AABL_ID" = pu."AABV_AABL_ID"
+                               AND ver."FGAC_REGION_CODE" = pu."FGAC_REGION_CODE"
+                           join nald."NALD_LIC_CONDITIONS" lc
+                               ON pu."ID" = lc."AABP_ID"
+                               AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
+                               AND lc."ACIN_CODE" = 'AGG'
+                               AND (lc."PARAM1" IS NOT NULL 
+                                   OR lc."PARAM2" IS NOT NULL 
+                                   OR lc."TEXT" IS NOT NULL)    
+                           WHERE
+                               (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
+                               AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
+                               AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
+                           
+                           UNION
+                           
+                           select distinct
+                               lic."LIC_NO" AS LicenceNumber,
+                               null AS Param1,
+                               null AS Param2,
+                               null AS Text,
                                lic."NOTES" AS Notes,
                                lic."FGAC_REGION_CODE" AS RegionCode
-                           FROM nald."NALD_ABS_LICENCES" lic
-                           LEFT JOIN nald."NALD_LIC_CONDITIONS" lc 
-                                ON lic."ID" = lc."AABP_ID"
-                                AND lic."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
-                                AND lc."ACIN_CODE" = 'AGG'
-                           WHERE lc."PARAM1" IS NOT NULL 
-                              OR lc."PARAM2" IS NOT NULL 
-                              OR lc."TEXT" IS NOT NULL 
-                              OR lic."NOTES" IS NOT NULL;
+                           from nald."NALD_ABS_LICENCES" lic
+                           join nald."NALD_ABS_LIC_VERSIONS" ver
+                               ON lic."ID" = ver."AABL_ID"
+                               AND lic."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                               AND ver."ISSUE_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                                   WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
+                                       AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                                   )
+                               AND ver."INCR_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                                   WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
+                                       AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                   )
+                           WHERE
+                               (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
+                               AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
+                               AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
+                               AND lic."NOTES" IS NOT NULL
                            """;
         
         var result = await QueryAsync<NaldLinkedLicenceRawData>(

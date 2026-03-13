@@ -6,8 +6,8 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Helpers;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 
 namespace WALE.ProcessFile.Services.Converters;
@@ -19,7 +19,8 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        Dictionary<string, List<NaldData>> naldData)
+        Dictionary<string, List<NaldData>> naldData,
+        NaldLinkedLicenceHelper? naldLinkedLicenceHelper)
     {
         var matches = matchesResult.Matches;
         var regionCode = matchesResult.RegionCode;
@@ -120,10 +121,27 @@ public static partial class WalSchemaConverter
             naldLicenceStatusData,
             regionCode);
 
-        var linkedLicences = aggregates
+        var linkedLicences = new List<LinkedLicence>();
+        
+        if (naldLinkedLicenceHelper != null)
+        {
+            var naldLinkedLicences =
+                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
+
+            noneSchemaData.Add("NaldLinkedLicences", naldLinkedLicences);
+
+            foreach (var naldLinkedLicence in naldLinkedLicences)
+            {
+                linkedLicences.Add(new LinkedLicence
+                {
+                    NaldLicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                });
+            }
+        }
+
+        linkedLicences.AddRange(aggregates
             .Where(x => x.LinkedLicences?.Length >= 1)
-            .SelectMany(x => x.LinkedLicences!)
-            .ToList();
+            .SelectMany(x => x.LinkedLicences!));
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(
             matches,
@@ -575,7 +593,8 @@ public static partial class WalSchemaConverter
             naldLicenceStatusData,
             dmsFileData,
             lookupConfiguration.LicenceNumberMapping,
-            naldData);
+            naldData,
+            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
@@ -1024,7 +1043,8 @@ public static partial class WalSchemaConverter
                             naldLicenceStatusData,
                             dmsFileData,
                             lookupConfiguration.LicenceNumberMapping,
-                            naldData);
+                            naldData,
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
                         returnLicences.Add(linkedLicence);
                     }
@@ -1080,7 +1100,8 @@ public static partial class WalSchemaConverter
                             naldLicenceStatusData,
                             dmsFileData,
                             lookupConfiguration.LicenceNumberMapping,
-                            naldData);
+                            naldData,
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
                         returnLicences.Add(licence);
                     }
@@ -1145,7 +1166,8 @@ public static partial class WalSchemaConverter
                 naldLicenceStatusData,
                 dmsFileData,
                 lookupConfiguration.LicenceNumberMapping,
-                naldData);
+                naldData,
+                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
             returnLicences.Add(licence);
         }

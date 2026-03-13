@@ -396,7 +396,7 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var useS3 = true;
+    var useS3 = false;//true;
     IFileService fileService;
 
     if (useS3)
@@ -416,6 +416,11 @@ ConfiguredServices ConfigureServices()
     {
         var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
             ?? throw new NullReferenceException("PdfFolderPath");
+        
+        if (!pdfFolderPath.EndsWith('/'))
+        {
+            pdfFolderPath += "/";
+        }
         
         fileService = new LocalFileService(pdfFolderPath);   
     }
@@ -681,8 +686,9 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100072"))
-        .Take(10)
+//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100073R01"))
+        
+//        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
@@ -738,9 +744,11 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 }
 
                 var dmsPath = (string)row["Definitive URL"];
-                var dmsPathFilename = dmsPath.Split('/').Last();
                 
-                var destinationFileName = $"{permitNumber}__{dmsPathFilename}";
+                //var dmsPathFilename = dmsPath.Split('/').Last();
+                //destinationFileName = $"{permitNumber}__{dmsPathFilename}";
+
+                var destinationFileName = (string)row[1];//"DestinationFilename"];/
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {

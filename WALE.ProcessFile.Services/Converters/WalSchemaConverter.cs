@@ -128,13 +128,20 @@ public static partial class WalSchemaConverter
             var naldLinkedLicences =
                 naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
 
-            noneSchemaData.Add("NaldLinkedLicences", naldLinkedLicences);
-
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
                 linkedLicences.Add(new LinkedLicence
                 {
+                    LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     NaldLicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                    ContainedIn =
+                    [
+                        new LinkedLicenceSection
+                        {
+                            Source = LinkedLicenceSource.Nald,
+                            LinkReason = naldLinkedLicence.LinkType.ToString()
+                        }
+                    ]
                 });
             }
         }
@@ -205,7 +212,6 @@ public static partial class WalSchemaConverter
             .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
             .Select(linkedLicencesGroup =>
             {
-                var firstLinkedLicence = linkedLicencesGroup.First();
                 var containedIn = new List<LinkedLicenceSection>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
@@ -226,7 +232,7 @@ public static partial class WalSchemaConverter
 
                         // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
                         if (containedIn.Any(fs => fs.LineNumber == sectionItem.LineNumber
-                                                  && fs.PageNumber == sectionItem.PageNumber))
+                            && fs.PageNumber == sectionItem.PageNumber))
                         {
                             continue;
                         }
@@ -235,15 +241,26 @@ public static partial class WalSchemaConverter
                     }
                 }
 
-                var linkedLicenceNumber =
-                    FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber, regionCode);
-
+                var licenceNumberStr = linkedLicencesGroup
+                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.LicenceNumber))?
+                    .LicenceNumber;
+                
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumberStr, regionCode);
+                
                 return ToLinkedLicence(
                     linkedLicenceNumber,
-                    firstLinkedLicence.ScrapedLicenceNumber,
-                    firstLinkedLicence.NaldLicenceNumber,
-                    firstLinkedLicence.Filename,
-                    firstLinkedLicence.Condition,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.ScrapedLicenceNumber))?
+                        .ScrapedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.NaldLicenceNumber))?
+                        .NaldLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
+                        .Filename,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.Condition != null)?
+                        .Condition,
                     containedIn.ToArray(),
                     naldLicenceStatusData,
                     licenceNumbersMapping,
@@ -259,7 +276,7 @@ public static partial class WalSchemaConverter
         foreach (var linkedLicence in linkedLicences)
         {
             if (newLinkedLicences.Any(linkedLicence2 =>
-                    LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
             {
                 continue;
             }

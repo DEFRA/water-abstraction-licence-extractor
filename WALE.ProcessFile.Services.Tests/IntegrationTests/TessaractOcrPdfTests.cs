@@ -229,7 +229,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -288,7 +287,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -352,7 +350,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -420,7 +417,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -481,7 +477,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -543,7 +538,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -609,7 +603,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            [],
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -678,7 +671,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -746,7 +738,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -816,7 +807,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -877,7 +867,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -924,7 +913,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -985,7 +973,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1035,7 +1022,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1075,7 +1061,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1142,7 +1127,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1196,7 +1180,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1248,7 +1231,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1294,7 +1276,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1341,7 +1322,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1402,7 +1382,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1458,7 +1437,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1516,7 +1494,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1575,7 +1552,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1618,7 +1594,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1669,7 +1644,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1743,7 +1717,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1792,7 +1765,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1841,7 +1813,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1897,7 +1868,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,
@@ -1946,7 +1916,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined1,

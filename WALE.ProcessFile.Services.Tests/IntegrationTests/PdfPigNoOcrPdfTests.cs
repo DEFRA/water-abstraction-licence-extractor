@@ -258,7 +258,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -453,7 +452,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -720,7 +718,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -915,7 +912,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -1422,7 +1418,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -1952,7 +1947,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2211,7 +2205,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2316,7 +2309,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2418,7 +2410,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMappingWithout52,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2562,7 +2553,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2766,7 +2756,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2858,7 +2847,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -2949,7 +2937,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3051,7 +3038,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3162,7 +3148,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3251,7 +3236,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3373,7 +3357,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3470,7 +3453,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3514,7 +3496,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3641,7 +3622,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3734,7 +3714,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3852,7 +3831,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -3947,7 +3925,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4020,7 +3997,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4113,7 +4089,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4162,7 +4137,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4195,7 +4169,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4234,7 +4207,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceGroups = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4332,7 +4304,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4474,7 +4445,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4527,7 +4497,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4629,7 +4598,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4671,7 +4639,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4715,7 +4682,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4760,7 +4726,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4801,7 +4766,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4852,7 +4816,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4886,7 +4849,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4920,7 +4882,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -4954,7 +4915,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5038,7 +4998,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5163,7 +5122,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5199,7 +5157,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5236,7 +5193,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5275,7 +5231,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5313,7 +5268,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5349,7 +5303,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5393,7 +5346,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5430,7 +5382,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5464,7 +5415,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5498,7 +5448,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5532,7 +5481,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5566,7 +5514,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5600,7 +5547,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,
@@ -5634,7 +5580,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             _naldLicenceStatusData,
             NaldData,
             _pdfDataExtractor,

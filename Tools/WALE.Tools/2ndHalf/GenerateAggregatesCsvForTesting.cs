@@ -115,7 +115,6 @@ public static class GenerateAggregatesCsvForTesting
             var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
             var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
                 internalJson,
-                FileLicenceMapping,
                 naldLicenceStatusData,
                 NaldData,
                 pdfDataExtractor,
@@ -161,7 +160,6 @@ public static class GenerateAggregatesCsvForTesting
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
@@ -174,7 +172,6 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
         var licenceSets2 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
@@ -187,7 +184,6 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
         var licenceSets3 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
@@ -200,7 +196,6 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
         var licenceSets4 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
@@ -213,7 +208,6 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
         var licenceSets5 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
@@ -226,7 +220,6 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
         var licenceSets6 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,

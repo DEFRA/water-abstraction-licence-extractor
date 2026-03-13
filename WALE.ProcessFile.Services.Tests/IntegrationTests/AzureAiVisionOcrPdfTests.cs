@@ -168,7 +168,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -234,7 +233,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -274,7 +272,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -365,7 +362,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -477,7 +473,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -604,7 +599,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -680,7 +674,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -706,7 +699,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -808,7 +800,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -921,7 +912,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -983,7 +973,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1045,7 +1034,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1084,7 +1072,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1265,7 +1252,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1505,7 +1491,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1573,7 +1558,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1603,7 +1587,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1630,7 +1613,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -1657,7 +1639,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,

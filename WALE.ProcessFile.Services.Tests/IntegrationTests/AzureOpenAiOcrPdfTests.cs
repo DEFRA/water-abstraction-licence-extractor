@@ -162,7 +162,6 @@ public class AzureOpenAiOcrPdfTests
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor,

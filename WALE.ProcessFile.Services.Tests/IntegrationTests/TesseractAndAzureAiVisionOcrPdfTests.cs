@@ -202,7 +202,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -294,7 +293,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -372,7 +370,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            [],
             _naldLicenceStatusData,
             [],
             _pdfDataExtractor,
@@ -424,7 +421,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            [],
             _naldLicenceStatusData,
             [],
             _pdfDataExtractor,
@@ -438,7 +434,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -538,7 +533,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -572,7 +566,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -607,7 +600,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
@@ -698,7 +690,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,

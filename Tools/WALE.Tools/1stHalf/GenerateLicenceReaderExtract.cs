@@ -23,7 +23,7 @@ namespace WALE.Tools._1stHalf;
 public static class GenerateLicenceReaderExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
-    private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = [];
+    private static readonly Dictionary<string, DmsFileData> DmsFileData = [];
     private static readonly string ResultsCsvFileName = "licence_reader_processing_results.csv";
     private static readonly Lock CsvWriteLock = new();
 
@@ -267,7 +267,6 @@ public static class GenerateLicenceReaderExtract
 
     private static async Task<MatchesResult> GetMatchesAsync(
         string fileName,
-        IFileService fileService,
         IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
     {
@@ -351,7 +350,7 @@ public static class GenerateLicenceReaderExtract
         
         var configuration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
-            FileLicenceMapping,
+            DmsFileData,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             fileService,
             regionCode);
@@ -450,7 +449,6 @@ public static class GenerateLicenceReaderExtract
             
             var internalJson = await GetMatchesAsync(
                 pdfFilename,
-                fileService,
                 pdfDataExtractor,
                 configuration);
 

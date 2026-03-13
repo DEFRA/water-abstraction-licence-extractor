@@ -517,7 +517,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     int regionCode,
     int fileNumber,
     int totalNumber,
-    Dictionary<string, DmsFileData> licenceMapping,
+    Dictionary<string, DmsFileData> allDmsData,
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
@@ -548,7 +548,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            licenceMapping,
+            allDmsData,
             firstNamesCsv,
             fileService,
             regionCode);
@@ -593,7 +593,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
-            licenceMapping,
             naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
@@ -755,13 +754,17 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
 
                 var naldLicenceRef = (string)row["License Number"];
 
+                var filenameParts = destinationFileName.Split("__");
+                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : (Guid?)null;
+
                 var dmsFileData = new DmsFileData
                 {
                     DestinationFileName = destinationFileName,
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!,
+                    FileId = fileId
                 };
 
                 filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);

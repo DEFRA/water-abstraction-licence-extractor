@@ -551,7 +551,6 @@ public static partial class WalSchemaConverter
 
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
@@ -566,14 +565,14 @@ public static partial class WalSchemaConverter
             matchesResult.RegionCode);
 
         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+            ? lookupConfiguration.LicenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
             : null;
 
         var primaryLicence = ToLicence(
             matchesResult,
             naldLicenceStatusData,
             dmsFileData,
-            licenceNumbersMapping,
+            lookupConfiguration.LicenceNumberMapping,
             naldData);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
@@ -581,7 +580,6 @@ public static partial class WalSchemaConverter
         var linkedLicences = await GetLinkedLicencesAsync(
             matchesResult,
             primaryLicence,
-            licenceNumbersMapping,
             naldLicenceStatusData,
             naldData,
             pdfDataExtractorService,
@@ -702,7 +700,7 @@ public static partial class WalSchemaConverter
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
-                licenceNumbersMapping,
+                lookupConfiguration.LicenceNumberMapping,
                 matchesResult.RegionCode);
 
             var newLicenceSetIds = new List<LicenceSetReference>
@@ -979,7 +977,6 @@ public static partial class WalSchemaConverter
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         MatchesResult matchesResult,
         Licence primaryLicence,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
@@ -1016,14 +1013,14 @@ public static partial class WalSchemaConverter
                             FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
 
                         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-                            ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
+                            ? lookupConfiguration.LicenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
                             : null;
 
                         var linkedLicence = ToLicence(
                             matches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            licenceNumberMapping,
+                            lookupConfiguration.LicenceNumberMapping,
                             naldData);
 
                         returnLicences.Add(linkedLicence);
@@ -1050,7 +1047,7 @@ public static partial class WalSchemaConverter
                         var strippedLicenceNumber =
                             FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode)!;
 
-                        if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
+                        if (!lookupConfiguration.LicenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
                         {
                             returnLicences.Add(new Licence
                             {
@@ -1066,7 +1063,7 @@ public static partial class WalSchemaConverter
                         var destinationFileName = dmsFileData.DestinationFileName!;
 
                         var clonedConfig = lookupConfiguration.Clone();
-                        clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+                        clonedConfig.LicenceNumberMapping = lookupConfiguration.LicenceNumberMapping;
                         clonedConfig.RegionCode = matchesResult.RegionCode;
                         
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
@@ -1079,7 +1076,7 @@ public static partial class WalSchemaConverter
                             relatedFileMatches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            licenceNumberMapping,
+                            lookupConfiguration.LicenceNumberMapping,
                             naldData);
 
                         returnLicences.Add(licence);
@@ -1108,7 +1105,7 @@ public static partial class WalSchemaConverter
                 continue;
             }
 
-            if (!licenceNumberMapping.TryGetValue(strippedLlNumber, out var dmsFileData))
+            if (!lookupConfiguration.LicenceNumberMapping.TryGetValue(strippedLlNumber, out var dmsFileData))
             {
                 returnLicences.Add(new Licence
                 {
@@ -1122,7 +1119,7 @@ public static partial class WalSchemaConverter
             var destinationFileName = dmsFileData.DestinationFileName!;
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+            clonedConfig.LicenceNumberMapping = lookupConfiguration.LicenceNumberMapping;
             clonedConfig.RegionCode = matchesResult.RegionCode;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
@@ -1135,7 +1132,7 @@ public static partial class WalSchemaConverter
                 relatedFileMatches,
                 naldLicenceStatusData,
                 dmsFileData,
-                licenceNumberMapping,
+                lookupConfiguration.LicenceNumberMapping,
                 naldData);
 
             returnLicences.Add(licence);

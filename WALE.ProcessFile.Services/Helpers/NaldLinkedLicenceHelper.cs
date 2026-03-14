@@ -69,16 +69,17 @@ public class NaldLinkedLicenceHelper
                 continue;
             }
 
-            var potentialNumberSources = new List<string?>
+            var potentialNumberSources = new Dictionary<string, string?>
             {
-                naldRawDataItem.Param1,
-                naldRawDataItem.Param2,
-                naldRawDataItem.Text,
-                naldRawDataItem.Notes
+                { nameof(naldRawDataItem.Param1), naldRawDataItem.Param1 },
+                { nameof(naldRawDataItem.Param2), naldRawDataItem.Param2 },
+                { nameof(naldRawDataItem.Text), naldRawDataItem.Text },
+                { nameof(naldRawDataItem.Notes), naldRawDataItem.Notes }
             };
 
-            foreach (var text in potentialNumberSources)
+            foreach (var potentialNumberSource in potentialNumberSources)
             {
+                var text = potentialNumberSource.Value;
                 var linkCandidates = LicenceNumber.ExtractNaldLicences(text);
 
                 foreach (var linkCandidate in linkCandidates)
@@ -102,14 +103,17 @@ public class NaldLinkedLicenceHelper
                     forwardMap[backLinkKey] = new NaldLinkedLicence
                     {
                         NaldLicence = linkCandidate,
-                        LinkType = NaldLinkedLicenceType.Explicit
+                        LinkType = NaldLinkedLicenceType.Explicit,
+                        FromField = potentialNumberSource.Key
                     };
 
                     // Add back link, but only if no forward link already exists (achieved by using TryAdd, which does nothing if the key already exists)
                     backMap.TryAdd(forwardLinkKey, new NaldLinkedLicence
                     {
                         NaldLicence = naldRawDataItem.ToNaldLicence(),
-                        LinkType = NaldLinkedLicenceType.ImplicitBackLink
+                        LinkType = NaldLinkedLicenceType.ImplicitBackLink,
+                        FromField = potentialNumberSource.Key,
+                        IncomingLicenceNumber = backLinkKey
                     });
                 }
             }

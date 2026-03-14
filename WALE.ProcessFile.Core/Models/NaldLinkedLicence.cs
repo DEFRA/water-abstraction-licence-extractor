@@ -8,4 +8,8 @@ public record NaldLinkedLicence
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public required NaldLinkedLicenceType LinkType { get; init; }
+    
+    public string? IncomingLicenceNumber { get; init; }
+    
+    public required string FromField { get; init; }
 }

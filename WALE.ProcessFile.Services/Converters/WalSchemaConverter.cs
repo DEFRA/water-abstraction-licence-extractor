@@ -148,7 +148,10 @@ public static partial class WalSchemaConverter
                         new LinkedLicenceSection
                         {
                             Source = LinkedLicenceSource.Nald,
-                            LinkReason = naldLinkedLicence.LinkType.ToString()
+                            LinkReason = naldLinkedLicence.LinkType.ToString(),
+                            SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
+                                ? $"From {naldLinkedLicence.IncomingLicenceNumber}"
+                                : naldLinkedLicence.FromField
                         }
                     ]
                 });
@@ -843,7 +846,7 @@ public static partial class WalSchemaConverter
                                 {
                                     Source = LinkedLicenceSource.OtherDocument,
                                     SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
-                                    LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})",
+                                    LinkReason = $"From {incomingLink.LicenceNumber}",
                                     LineNumber = -1,
                                     PageNumber = -1,
                                 }

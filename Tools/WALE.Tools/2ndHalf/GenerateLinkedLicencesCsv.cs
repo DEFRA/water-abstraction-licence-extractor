@@ -98,15 +98,21 @@ public static class GenerateLinkedLicencesCsv
                     {
                         if (ci.Source == LinkedLicenceSource.Nald)
                         {
-                            return $"{ci.Source}-{ci.LinkReason}";
+                            if (ci.LinkReason == "ImplicitBackLink")
+                            {
+                                return $"{ci.Source}-{ci.LinkReason}-{ci.SectionName ?? "UNKNOWN"}";
+                            }
+                            
+                            return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
                         }
 
                         if (ci.Source == LinkedLicenceSource.OtherDocument)
                         {
-                            return $"{ci.SectionName}-{ci.LinkReason}";
+                            return $"Document-{ci.SectionName ?? "OtherDocument"}-{ci.LinkReason ?? "UNKNOWN"}";
                         }
                         
-                        return $"{ci.Source}-{ci.LinkReason}-{ci.SectionName}-P{ci.PageNumber}-L{ci.LineNumber}";
+                        return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
+                            $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
                     }));
 
                 var outputLineCloned = outputLine.Clone();

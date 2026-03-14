@@ -4374,7 +4374,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
         Assert.Equal("ImplicitBackLink", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].SectionName);
-        Assert.Equal("Linked from NE/026/0034/056 (NE0260034056__Application New Issued Licence 10.09.2020 11497061.pdf)"
+        Assert.Equal("From NE/026/0034/056"
             , agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
         
         // For third licence
@@ -4409,7 +4409,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LinkedLicences[3].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[3].ContainedIn!);
         Assert.Equal("ImplicitBackLink", agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].SectionName);
-        Assert.Equal("Linked from NE/026/0034/056 (NE0260034056__Application New Issued Licence 10.09.2020 11497061.pdf)",
+        Assert.Equal("From NE/026/0034/056",
             agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].LinkReason);
         
         // For fourth licence

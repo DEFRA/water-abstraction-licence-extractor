@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -32,22 +33,17 @@ public static class JsOutputHelper
         var meansFound = licence.MeansOfAbstraction.Length > 0;
         var status = "Not Found";
 
-        if (licence.LicenceFoundInList)
-        {
-            status = "Found";
-        }
-
-        if (licence.IsLiveLicence == true)
+        if (licence.NaldStatus == NaldLicenceStatus.Live)
         {
             status = "Live";
         }
 
-        if (licence.IsDeadLicence == true)
+        if (licence.NaldStatus == NaldLicenceStatus.Dead)
         {
             status = "Dead";
         }
 
-        if (licence.IsImpoundmentLicence == true)
+        if (licence.LicenceType == LicenceType.Impoundment)
         {
             status = "Impound";
         }

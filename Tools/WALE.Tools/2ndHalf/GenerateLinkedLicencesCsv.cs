@@ -53,6 +53,10 @@ public static class GenerateLinkedLicencesCsv
                 ? value?.ToString()
                 : null;
 
+            var isFound = licence.NaldStatus == NaldLicenceStatus.Live
+                || licence.NaldStatus == NaldLicenceStatus.Dead
+                || licence.LicenceType == LicenceType.Impoundment;
+            
             var outputLine = new LinkedLicencesCsvLine
             {
                 Filename = licence.Filename,
@@ -68,11 +72,10 @@ public static class GenerateLinkedLicencesCsv
                     .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.InLicence) ?? false,
                 HasLicenceToLicenceAggregates = licence.AbstractionLimits
                     .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.LicenceToLicence) ?? false,
-                IsLive = licence.IsLiveLicence,
-                IsDead = licence.IsDeadLicence,
-                IsImpoundment = licence.IsImpoundmentLicence,
-                LicenceFoundInList = licence.LicenceFoundInList,
-                
+                IsLive = licence.NaldStatus == NaldLicenceStatus.Live,
+                IsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                IsImpoundment = licence.LicenceType == LicenceType.Impoundment,
+                LicenceFoundInList = isFound,
                 LinkedLicenceNumber = "--",
                 ScrapedLinkedLicenceNumber = "--",
                 NaldLinkedLicenceNumber = "--",
@@ -117,18 +120,22 @@ public static class GenerateLinkedLicencesCsv
 
                 var outputLineCloned = outputLine.Clone();
                 
+                var linkedLicenceIsFound = linkedLicence.NaldStatus == NaldLicenceStatus.Live
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Dead
+                    || linkedLicence.LicenceType == LicenceType.Impoundment;
+                
                 outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
-                outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.ScrapedLicenceNumber;
-                outputLineCloned.NaldLinkedLicenceNumber = linkedLicence.NaldLicenceNumber;
+                outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.RawScrapedLicenceNumber;
+                outputLineCloned.NaldLinkedLicenceNumber = linkedLicence.PermitNumber;
                 outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename;
                 outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
                     ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
                     : null;
                 outputLineCloned.LinkedLicenceSectionAndReason = sectionAndReason;
-                outputLineCloned.LinkedLicenceFoundInList = linkedLicence.LicenceFoundInList;
-                outputLineCloned.LinkedLicenceIsLive = linkedLicence.IsLiveLicence;
-                outputLineCloned.LinkedLicenceIsDead = linkedLicence.IsDeadLicence;
-                outputLineCloned.LinkedLicenceIsImpoundment = linkedLicence.IsImpoundmentLicence;
+                outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
+                outputLineCloned.LinkedLicenceIsLive = linkedLicence.NaldStatus == NaldLicenceStatus.Live;
+                outputLineCloned.LinkedLicenceIsDead = linkedLicence.NaldStatus == NaldLicenceStatus.Dead;
+                outputLineCloned.LinkedLicenceIsImpoundment = linkedLicence.LicenceType == LicenceType.Impoundment;
                 
                 returnList.Add(outputLineCloned);
             }

@@ -116,7 +116,7 @@ public static partial class WalSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
             licenceNumber,
             naldLicenceStatusData,
             regionCode);
@@ -141,7 +141,7 @@ public static partial class WalSchemaConverter
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
-                    NaldLicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                    PermitNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     ContainedIn =
                     [
@@ -262,11 +262,11 @@ public static partial class WalSchemaConverter
                 return ToLinkedLicence(
                     linkedLicenceNumber,
                     linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.ScrapedLicenceNumber))?
-                        .ScrapedLicenceNumber,
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
+                        .RawScrapedLicenceNumber,
                     linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.NaldLicenceNumber))?
-                        .NaldLicenceNumber,
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
+                        .PermitNumber,
                     linkedLicencesGroup
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
                         .Filename,
@@ -394,6 +394,20 @@ public static partial class WalSchemaConverter
             Aggregates = aggregates,
             Individual = individual
         };
+        
+        var naldStatus = NaldLicenceStatus.Unknown;
+        if (isLiveLicence == true || isImpoundmentLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Live;
+        }
+        else if (isDeadLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Dead;
+        }
+        
+        var licenceType = isImpoundmentLicence == true
+            ? LicenceType.Impoundment
+            : LicenceType.Abstraction;
 
         return new Licence
         {
@@ -412,10 +426,8 @@ public static partial class WalSchemaConverter
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
-            IsDeadLicence = isDeadLicence,
-            IsImpoundmentLicence = isImpoundmentLicence,
-            IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound
+            NaldStatus = naldStatus,
+            LicenceType = licenceType
         };
     }
 
@@ -566,7 +578,7 @@ public static partial class WalSchemaConverter
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
             naldLinkedLicenceNumber,
             naldLicenceStatusData,
             regionCode);
@@ -582,18 +594,30 @@ public static partial class WalSchemaConverter
             ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
             : null;
 
+        var naldStatus = NaldLicenceStatus.Unknown;
+        if (isLiveLicence == true || isImpoundmentLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Live;
+        }
+        else if (isDeadLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Dead;
+        }
+        
+        var licenceType = isImpoundmentLicence == true
+            ? LicenceType.Impoundment
+            : LicenceType.Abstraction;
+        
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
-            ScrapedLicenceNumber = scrapedLinkedLicenceNumber,
-            NaldLicenceNumber = naldLinkedLicenceNumber,
+            RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
+            PermitNumber = naldLinkedLicenceNumber,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
-            IsDeadLicence = isDeadLicence,
-            IsImpoundmentLicence = isImpoundmentLicence,
-            IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound,
+            NaldStatus = naldStatus,
+            LicenceType = licenceType,
             DmsPath = dmsFileData?.DmsPath
         };
     }
@@ -1267,7 +1291,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1280,17 +1304,29 @@ public static partial class WalSchemaConverter
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_AdditionalInformation_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -1338,7 +1374,7 @@ public static partial class WalSchemaConverter
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1351,17 +1387,29 @@ public static partial class WalSchemaConverter
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_ReasonsForConditions_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -1426,7 +1474,7 @@ public static partial class WalSchemaConverter
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
-            var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+            var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                 naldLinkedLicenceNumber,
                 naldLicenceStatusData,
                 regionCode);
@@ -1439,17 +1487,29 @@ public static partial class WalSchemaConverter
 
             noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
             
+            var naldStatus = NaldLicenceStatus.Unknown;
+            if (isLiveLicence == true || isImpoundmentLicence == true)
+            {
+                naldStatus = NaldLicenceStatus.Live;
+            }
+            else if (isDeadLicence == true)
+            {
+                naldStatus = NaldLicenceStatus.Dead;
+            }
+        
+            var licenceType = isImpoundmentLicence == true
+                ? LicenceType.Impoundment
+                : LicenceType.Abstraction;
+            
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                ScrapedLicenceNumber = linkedLicenceNumber,
-                NaldLicenceNumber = naldLinkedLicenceNumber,
+                RawScrapedLicenceNumber = linkedLicenceNumber,
+                PermitNumber = naldLinkedLicenceNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
-                IsLiveLicence = isLiveLicence,
-                IsDeadLicence = isDeadLicence,
-                IsImpoundmentLicence = isImpoundmentLicence,
-                LicenceFoundInList = isFound,
+                NaldStatus = naldStatus,
+                LicenceType = licenceType,
                 ContainedIn =
                 [
                     new LinkedLicenceSection
@@ -1513,7 +1573,7 @@ public static partial class WalSchemaConverter
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1526,17 +1586,29 @@ public static partial class WalSchemaConverter
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = lln,
-                    ScrapedLicenceNumber = lln,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = lln,
+                    PermitNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -1594,7 +1666,7 @@ public static partial class WalSchemaConverter
 
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1607,17 +1679,29 @@ public static partial class WalSchemaConverter
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
                         
+                        var naldStatus = NaldLicenceStatus.Unknown;
+                        if (isLiveLicence == true || isImpoundmentLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Live;
+                        }
+                        else if (isDeadLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Dead;
+                        }
+        
+                        var licenceType = isImpoundmentLicence == true
+                            ? LicenceType.Impoundment
+                            : LicenceType.Abstraction;
+                        
                         return new LinkedLicence
                         {
-                            NaldLicenceNumber = naldLicenceNumber,
-                            ScrapedLicenceNumber = licenceNumber,
+                            PermitNumber = naldLicenceNumber,
+                            RawScrapedLicenceNumber = licenceNumber,
                             LicenceNumber = licenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
-                            IsLiveLicence = isLiveLicence,
-                            IsDeadLicence = isDeadLicence,
-                            IsImpoundmentLicence = isImpoundmentLicence,
-                            LicenceFoundInList = isFound,
+                            NaldStatus = naldStatus,
+                            LicenceType = licenceType,
                             ContainedIn =
                             [
                                 new LinkedLicenceSection
@@ -1677,7 +1761,7 @@ public static partial class WalSchemaConverter
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                             null;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1690,17 +1774,29 @@ public static partial class WalSchemaConverter
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Points_{count++}", linkedLicenceNumber.Confidence);
                         
+                        var naldStatus = NaldLicenceStatus.Unknown;
+                        if (isLiveLicence == true || isImpoundmentLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Live;
+                        }
+                        else if (isDeadLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Dead;
+                        }
+        
+                        var licenceType = isImpoundmentLicence == true
+                            ? LicenceType.Impoundment
+                            : LicenceType.Abstraction;
+                        
                         return new LinkedLicence
                         {
                             LicenceNumber = licenceNumber,
-                            ScrapedLicenceNumber = licenceNumber,
-                            NaldLicenceNumber = naldLicenceNumber,
+                            RawScrapedLicenceNumber = licenceNumber,
+                            PermitNumber = naldLicenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
-                            IsLiveLicence = isLiveLicence,
-                            IsDeadLicence = isDeadLicence,
-                            IsImpoundmentLicence = isImpoundmentLicence,
-                            LicenceFoundInList = isFound,
+                            NaldStatus = naldStatus,
+                            LicenceType = licenceType,
                             ContainedIn =
                             [
                                 new LinkedLicenceSection
@@ -1751,7 +1847,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1764,17 +1860,29 @@ public static partial class WalSchemaConverter
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_Records_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = naldLicenceNumber,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -1821,7 +1929,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1834,17 +1942,29 @@ public static partial class WalSchemaConverter
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherConditions_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -1892,7 +2012,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1905,17 +2025,29 @@ public static partial class WalSchemaConverter
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherProvisions_{count++}", linkedLicenceNumber.Confidence);
 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = naldLicenceNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
@@ -2286,7 +2418,7 @@ public static partial class WalSchemaConverter
                         (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                         null;
 
-                    var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                    var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                         licenceNumber,
                         naldLicenceStatusData,
                         regionCode);
@@ -2295,17 +2427,29 @@ public static partial class WalSchemaConverter
                         ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                         : null;
 
+                    var naldStatus = NaldLicenceStatus.Unknown;
+                    if (isLiveLicence == true || isImpoundmentLicence == true)
+                    {
+                        naldStatus = NaldLicenceStatus.Live;
+                    }
+                    else if (isDeadLicence == true)
+                    {
+                        naldStatus = NaldLicenceStatus.Dead;
+                    }
+        
+                    var licenceType = isImpoundmentLicence == true
+                        ? LicenceType.Impoundment
+                        : LicenceType.Abstraction;
+                    
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,
-                        ScrapedLicenceNumber = scrapedLicenceNumber,
-                        NaldLicenceNumber = naldLicenceNumber,
+                        RawScrapedLicenceNumber = scrapedLicenceNumber,
+                        PermitNumber = naldLicenceNumber,
                         DmsPath = dmsFileData?.DmsPath,
                         Filename = dmsFileData?.DestinationFileName,
-                        IsLiveLicence = isLiveLicence,
-                        IsDeadLicence = isDeadLicence,
-                        IsImpoundmentLicence = isImpoundmentLicence,
-                        LicenceFoundInList = isFound,
+                        NaldStatus = naldStatus,
+                        LicenceType = licenceType,
                         Condition = condition,
                         ContainedIn =
                         [

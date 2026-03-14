@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 
@@ -46,13 +47,11 @@ public class Licence
     
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
     
-    public bool? IsLiveLicence { get; set; }
-    
-    public bool? IsDeadLicence { get; set; }
-    
-    public bool? IsImpoundmentLicence { get; set; }
-    
-    public bool LicenceFoundInList { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public NaldLicenceStatus NaldStatus { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LicenceType LicenceType { get; set; }
     
     public string? DmsPath { get; set; }
 }

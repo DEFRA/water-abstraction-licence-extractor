@@ -1,26 +1,27 @@
+using System.Text.Json.Serialization;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class LinkedLicence
 {
     public string? LicenceNumber { get; set; }
     
-    public string? ScrapedLicenceNumber { get; set; }
+    public string? RawScrapedLicenceNumber { get; set; }
     
-    public string? NaldLicenceNumber { get; set; }
+    public string? PermitNumber { get; set; }
     
     public string? Filename { get; set; }
+    
+    public string? DmsPath { get; set; }
     
     public Condition? Condition { get; set; }
     
     public LinkedLicenceSection[]? ContainedIn { get; set; }
     
-    public bool? IsLiveLicence { get; set; }
-    
-    public bool? IsDeadLicence { get; set; }
-    
-    public bool? IsImpoundmentLicence { get; set; }
-    
-    public bool LicenceFoundInList { get; set; }
-    
-    public string? DmsPath { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public NaldLicenceStatus NaldStatus { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LicenceType LicenceType { get; set; }
 }

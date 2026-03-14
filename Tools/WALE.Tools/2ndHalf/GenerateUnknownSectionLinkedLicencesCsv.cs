@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -66,16 +67,20 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     ? value?.ToString()
                     : null;
                 
+                var isFound = licence.NaldStatus == NaldLicenceStatus.Live
+                    || licence.NaldStatus == NaldLicenceStatus.Dead
+                    || licence.LicenceType == LicenceType.Impoundment;
+                
                 returnList.Add(new UnknownSectionLinkedLicencesCsvLine
                 {
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber?.Value,
                     ScrapedLicenceNumber = scrapedLicenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
-                    LicenceFoundInList = licence.LicenceFoundInList,
-                    LicenceIsLive = licence.IsLiveLicence,
-                    LicenceIsDead = licence.IsDeadLicence,
-                    LicenceIsImpoundment = licence.IsImpoundmentLicence,
+                    LicenceFoundInList = isFound,
+                    LicenceIsLive = licence.NaldStatus == NaldLicenceStatus.Live,
+                    LicenceIsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                    LicenceIsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                     LinkedLicenceNumber = linkedLicence!.LicenceNumber,
                     PageNumber = -1
                 });

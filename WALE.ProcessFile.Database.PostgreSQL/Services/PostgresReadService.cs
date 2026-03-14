@@ -1163,7 +1163,39 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    private async Task<T?> QuerySingleOrDefaultAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    public async Task<Licence?> GetNewestLicenceAsync(string permitNumber)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               data,
+                               licence_id 
+                           FROM licence
+                           WHERE permit_number = @PermitNumber
+                           ORDER BY process_run_id DESC
+                           LIMIT 1;
+                           """;
+        
+        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+            connection,
+            sql,
+            0,
+            new { PermitNumber = permitNumber });
+        if (result == null)
+        {
+            return null;
+        }
+        
+        var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        return data;
+    }
+
+    private async Task<T?> QuerySingleOrDefaultAsync<T>(
+        NpgsqlConnection connection,
+        string sql,
+        int retryNumber,
+        object? param = null)
     {
         try
         {

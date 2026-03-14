@@ -316,4 +316,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
+    {
+        throw new NotImplementedException();
+    }
 }

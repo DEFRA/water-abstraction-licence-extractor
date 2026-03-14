@@ -260,4 +260,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
+    {
+        throw new NotImplementedException();
+    }
 }

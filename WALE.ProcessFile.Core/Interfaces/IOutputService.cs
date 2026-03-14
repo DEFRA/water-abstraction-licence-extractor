@@ -58,4 +58,6 @@ public interface IOutputService
     Task<Licence?> GetLicenceAsync(string filename);
     
     Task<MatchesResult?> GetMatchesResult(string filename);
+    
+    Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 }

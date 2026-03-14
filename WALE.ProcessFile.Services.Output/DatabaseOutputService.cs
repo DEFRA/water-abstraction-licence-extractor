@@ -246,7 +246,13 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetMatchesResult(filename);
     }
-    
+
+    public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
+    {
+        var licence = await databaseReadService.GetNewestLicenceAsync(permitNumber);
+        return licence?.LinkedLicences;
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
         var licences = await databaseReadService.GetLicencesAsync(processRunId);

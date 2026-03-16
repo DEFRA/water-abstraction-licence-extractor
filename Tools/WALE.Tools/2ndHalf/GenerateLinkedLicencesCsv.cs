@@ -58,6 +58,10 @@ public static class GenerateLinkedLicencesCsv
                 || licence.NaldStatus == NaldLicenceStatus.Dead
                 || licence.LicenceType == LicenceType.Impoundment;
             
+            var arepEuicCode = licence.NoneSchemaData.TryGetValue("ArepEuicCode", out var value2)
+                ? value2?.ToString()
+                : null;
+            
             var outputLine = new LinkedLicencesCsvLine
             {
                 Filename = licence.Filename,
@@ -77,6 +81,7 @@ public static class GenerateLinkedLicencesCsv
                 IsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
                 IsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                 LicenceFoundInList = isFound,
+                ArepEuicCode = arepEuicCode,
                 LinkedLicenceNumber = "--",
                 ScrapedLinkedLicenceNumber = "--",
                 LinkedLicenceFilename = "--",

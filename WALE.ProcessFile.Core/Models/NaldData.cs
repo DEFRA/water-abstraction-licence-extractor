@@ -29,4 +29,5 @@ public class NaldData
     public char? QuantityAggregated { get; set; }
     public char? QuantityUserValid { get; set; }
     public string? QuantityPurpPoints { get; set; }
+    public string? ArepEiucCode { get; set; }
 }

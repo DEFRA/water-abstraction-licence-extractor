@@ -16,7 +16,7 @@ public class LinkedLicencesCsvLine
     
     public string? NaldLicenceNumber { get; set; }
     
-    public string? EuicCode { get; set; }
+    public string? ArepEuicCode { get; set; }
     
     public string? IssuedBy { get; set; }
     

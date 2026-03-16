@@ -38,7 +38,8 @@ public static class ExternalDataHelper
                 RevocationDate = RemoveNullWord(line.RevDate),
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
-                FgacRegionCode = line.FgacRegionCode
+                FgacRegionCode = line.FgacRegionCode,
+                ArepEiucCode = line.ArepEiucCode
             };
 
             returnList.Add(key, naldData);

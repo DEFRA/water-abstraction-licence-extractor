@@ -125,11 +125,6 @@ public static partial class WalSchemaConverter
         
         if (naldLinkedLicenceHelper != null)
         {
-            if (licenceNumber == "1/22/03/012A")
-            {
-                
-            }
-            
             var naldLinkedLicences =
                 naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
 
@@ -344,6 +339,11 @@ public static partial class WalSchemaConverter
             ? LicenceType.Impoundment
             : LicenceType.Abstraction;
 
+        if (!string.IsNullOrEmpty(naldDataLine?.ArepEiucCode))
+        {
+            noneSchemaData.Add("ArepEuicCode", naldDataLine.ArepEiucCode);
+        }
+        
         return new Licence
         {
             Filename = matchesResult.Filename,

@@ -92,6 +92,7 @@ async Task ProgramAsync()
     await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
+    
     LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(

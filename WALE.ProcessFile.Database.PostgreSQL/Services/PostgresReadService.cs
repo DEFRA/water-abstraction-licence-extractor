@@ -710,7 +710,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
-                               AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
+                               --AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
                            
                            UNION
                            
@@ -746,7 +746,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
-                               AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
+                               --AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
                                AND lic."NOTES" IS NOT NULL
                            """;
         

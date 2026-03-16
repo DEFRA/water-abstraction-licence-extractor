@@ -6,10 +6,10 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public class NaldLinkedLicenceHelper
 {
-    private readonly Dictionary<string, Dictionary<string, NaldLinkedLicence>> _linkedLicenceMap;
+    private readonly Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> _linkedLicenceMap;
     private readonly short _processingRegionCode;
 
-    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, NaldLinkedLicence>> linkedLicenceMap,
+    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> linkedLicenceMap,
         short processingRegionCode)
     {
         _linkedLicenceMap = linkedLicenceMap;
@@ -45,15 +45,15 @@ public class NaldLinkedLicenceHelper
         }
 
         return _linkedLicenceMap.TryGetValue(candidateLicenceNumbers[0], out var linked)
-            ? linked.Values.ToList()
+            ? linked.Values.SelectMany(v => v).ToList()
             : [];
     }
 
-    private static Dictionary<string, Dictionary<string, NaldLinkedLicence>> BuildLinkedLicenceMap(
+    private static Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> BuildLinkedLicenceMap(
         List<NaldLinkedLicenceRawData> naldRawData,
         short processingRegionCode)
     {
-        var map = new Dictionary<string, Dictionary<string, NaldLinkedLicence>>();
+        var map = new Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>>();
 
         foreach (var naldRawDataItem in naldRawData)
         {
@@ -63,7 +63,7 @@ public class NaldLinkedLicenceHelper
             }
 
             var forwardLinkKey = naldRawDataItem.LicenceNumber;
-
+            
             if (string.IsNullOrEmpty(forwardLinkKey))
             {
                 continue;
@@ -92,6 +92,11 @@ public class NaldLinkedLicenceHelper
                     
                     var backLinkKey = linkCandidate.LicenceNumber;
 
+                    if (naldRawDataItem.LicenceNumber.Contains("159") || linkCandidate.LicenceNumber.Contains("159"))
+                    {
+                
+                    }
+                    
                     // Ensure map keys are initialized in both directions
                     map.TryAdd(forwardLinkKey, []);
                     map.TryAdd(backLinkKey, []);
@@ -99,21 +104,25 @@ public class NaldLinkedLicenceHelper
                     var forwardMap = map[forwardLinkKey];
                     var backMap = map[backLinkKey];
 
-                    // Add forward link (or update if it exists already - a previous iteration may have added it as a back link)
-                    forwardMap[backLinkKey] = new NaldLinkedLicence
+                    forwardMap.TryAdd(backLinkKey, []);
+                    
+                    // Add forward link
+                    forwardMap[backLinkKey].Add(new NaldLinkedLicence
                     {
                         NaldLicence = linkCandidate,
-                        LinkType = NaldLinkedLicenceType.Explicit,
+                        LinkType = NaldLinkedLicenceType.Outgoing,
                         FromField = potentialNumberSource.Key
-                    };
+                    });
 
-                    // Add back link, but only if no forward link already exists (achieved by using TryAdd, which does nothing if the key already exists)
-                    backMap.TryAdd(forwardLinkKey, new NaldLinkedLicence
+                    backMap.TryAdd(forwardLinkKey, []);
+                    
+                    // Add back link
+                    backMap[forwardLinkKey].Add(new NaldLinkedLicence
                     {
                         NaldLicence = naldRawDataItem.ToNaldLicence(),
-                        LinkType = NaldLinkedLicenceType.ImplicitBackLink,
+                        LinkType = NaldLinkedLicenceType.Incoming,
                         FromField = potentialNumberSource.Key,
-                        IncomingLicenceNumber = backLinkKey
+                        IncomingLicenceNumber = forwardLinkKey
                     });
                 }
             }

@@ -851,15 +851,16 @@ public static partial class WalSchemaConverter
 
                     foreach (var incomingLink in incomingLinks)
                     {
-                        if (outgoingLinks.Contains(incomingLink.LicenceNumber)
-                            || licence.LinkedLicences.Any(linkedLicence =>
-                                linkedLicence.LicenceNumber == incomingLink.LicenceNumber))
+                        // Already output
+                        if (licence.LinkedLicences.Any(ll =>
+                                ll.LicenceNumber == incomingLink.LicenceNumber &&
+                                ll.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.IncomingLink) ==
+                                true))
                         {
                             continue;
                         }
-
-                        // Back link is missing
-                        var backLink = ToLinkedLicence(
+                        
+                        var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
                             incomingLink.NaldLicenceNumber,
@@ -869,7 +870,7 @@ public static partial class WalSchemaConverter
                                 new LinkedLicenceSection
                                 {
                                     Source = LinkedLicenceSource.OtherDocument,
-                                    SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
+                                    SectionName = LinkedLicenceSectionNames.IncomingLink,
                                     LinkReason = $"From {incomingLink.LicenceNumber}",
                                     LineNumber = -1,
                                     PageNumber = -1,
@@ -879,11 +880,11 @@ public static partial class WalSchemaConverter
                             licenceNumbersMapping,
                             regionCode);
 
-                        if (backLink != null)
+                        if (incomingLinkedLicence != null)
                         {
                             licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                             {
-                                backLink
+                                incomingLinkedLicence
                             }.ToArray();
                         }
 
@@ -3864,7 +3865,7 @@ public static partial class WalSchemaConverter
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
                   || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                          ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
+                          ci.SectionName == LinkedLicenceSectionNames.IncomingLink) != true)
                       .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

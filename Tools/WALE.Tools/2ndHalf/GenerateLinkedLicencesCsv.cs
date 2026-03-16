@@ -78,7 +78,6 @@ public static class GenerateLinkedLicencesCsv
                 LicenceFoundInList = isFound,
                 LinkedLicenceNumber = "--",
                 ScrapedLinkedLicenceNumber = "--",
-                NaldLinkedLicenceNumber = "--",
                 LinkedLicenceFilename = "--",
                 LinkedLicenceDmsPath = "--",
                 LinkedLicenceSectionAndReason = "--",
@@ -121,7 +120,6 @@ public static class GenerateLinkedLicencesCsv
                 
                 outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
                 outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.RawScrapedLicenceNumber;
-                outputLineCloned.NaldLinkedLicenceNumber = linkedLicence.PermitNumber;
                 outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename;
                 outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
                     ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"

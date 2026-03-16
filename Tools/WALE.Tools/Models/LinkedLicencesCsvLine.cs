@@ -36,8 +36,6 @@ public class LinkedLicencesCsvLine
     
     public string? ScrapedLinkedLicenceNumber { get; set; }
     
-    public string? NaldLinkedLicenceNumber { get; set; }
-    
     public string? LinkedLicenceFilename { get; set; }
     
     public string? LinkedLicenceDmsPath { get; set; }

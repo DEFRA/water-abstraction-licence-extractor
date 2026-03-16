@@ -79,10 +79,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
-            3);
+            regionCode);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
     {
         string f;
 
@@ -103,7 +103,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         return await _pdfDataExtractor.GetMatchesAsync(
              fileName,
-            await LookupConfigurationAsync(1, f),
+            await LookupConfigurationAsync(regionCode, f),
             [fileName],
             0);
     }
@@ -112,11 +112,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 5;
+        await SetupLicenceNumbersAsync((short)regionCode);
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -206,7 +207,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -222,11 +223,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 5; // TODO Hampshire and IOW
+        await SetupLicenceNumbersAsync((short)regionCode);
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -297,7 +299,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -374,7 +376,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [],
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
 
         var licence = agreedSchemaLicenceGroup[0].Licences[0];
 
@@ -425,7 +427,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [],
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
 
         var licence = schemaData[0].Licences[0];
 
@@ -438,7 +440,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
         Assert.NotNull(agreedSchemaLicenceGroup.First().Licences);
 
@@ -537,7 +539,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             -1,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
         Assert.Single(licenceSets);
         
@@ -570,7 +572,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             -1,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
         Assert.Single(licenceSets);
         
@@ -604,7 +606,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             -1,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
         
         Assert.Single(licenceSets);
         
@@ -694,7 +696,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder4));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);

@@ -70,7 +70,7 @@ public class AzureOpenAiOcrPdfTests
             _fileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),            
-            3);
+            4); // TODO - whatever Hampshire & IOW is
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
@@ -171,8 +171,10 @@ public class AzureOpenAiOcrPdfTests
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+        Assert.Equal("11/42/28.2/7", agreedSchemaLicence.LicenceNumber?.Value);
+        
         Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO should be this
     }
 }

@@ -42,13 +42,13 @@ public class LinkedLicencesCsvLine
     
     public string? LinkedLicenceDmsPath { get; set; }
     
-    public string? LinkedLicenceDocumentIncoming { get; set; }
-    
-    public string? LinkedLicenceNaldIncoming { get; set; }
-    
     public string? LinkedLicenceDocumentOutgoing { get; set; }
     
     public string? LinkedLicenceNaldOutgoing { get; set; }
+    
+    public string? LinkedLicenceDocumentIncoming { get; set; }
+    
+    public string? LinkedLicenceNaldIncoming { get; set; }
     
     public bool? LinkedLicenceIsLive { get; set; }
     

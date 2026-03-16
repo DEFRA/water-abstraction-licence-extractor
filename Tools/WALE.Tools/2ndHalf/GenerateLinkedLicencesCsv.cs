@@ -99,23 +99,6 @@ public static class GenerateLinkedLicencesCsv
             
             foreach (var linkedLicence in licence.LinkedLicences)
             {
-                var sectionAndReason = string.Join("\n", linkedLicence.ContainedIn!
-                    .Select(ci =>
-                    {
-                        if (ci.Source == LinkedLicenceSource.Nald)
-                        {
-                            return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
-                        }
-
-                        if (ci.Source == LinkedLicenceSource.OtherDocument)
-                        {
-                            return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}";
-                        }
-                        
-                        return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
-                            $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
-                    }));
-
                 var outputLineCloned = outputLine.Clone();
                 
                 var linkedLicenceIsFound = linkedLicence.NaldStatus == NaldLicenceStatus.Live

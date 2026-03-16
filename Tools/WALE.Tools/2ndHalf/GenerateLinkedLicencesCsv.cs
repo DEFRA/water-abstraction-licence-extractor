@@ -4,6 +4,7 @@ using CsvHelper;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
@@ -80,7 +81,10 @@ public static class GenerateLinkedLicencesCsv
                 ScrapedLinkedLicenceNumber = "--",
                 LinkedLicenceFilename = "--",
                 LinkedLicenceDmsPath = "--",
-                LinkedLicenceSectionAndReason = "--",
+                LinkedLicenceDocumentIncoming = "--",
+                LinkedLicenceDocumentOutgoing = "--",
+                LinkedLicenceNaldIncoming = "--",
+                LinkedLicenceNaldOutgoing = "--",
                 LinkedLicenceFoundInList = null,
                 LinkedLicenceIsLive = null,
                 LinkedLicenceIsDead = null,
@@ -124,7 +128,23 @@ public static class GenerateLinkedLicencesCsv
                 outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
                     ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
                     : null;
-                outputLineCloned.LinkedLicenceSectionAndReason = sectionAndReason;
+
+                outputLineCloned.LinkedLicenceDocumentIncoming = GetContainedInText(linkedLicence.ContainedIn!
+                        .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
+                        .ToArray());
+                
+                outputLineCloned.LinkedLicenceDocumentOutgoing = GetContainedInText(linkedLicence.ContainedIn!
+                    .Where(ci => ci.Source == LinkedLicenceSource.Document)
+                    .ToArray());
+                
+                outputLineCloned.LinkedLicenceNaldIncoming = GetContainedInText(linkedLicence.ContainedIn!
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Incoming" })
+                    .ToArray());
+                
+                outputLineCloned.LinkedLicenceNaldOutgoing = GetContainedInText(linkedLicence.ContainedIn!
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Outgoing" })
+                    .ToArray());
+                
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
                 outputLineCloned.LinkedLicenceIsLive = linkedLicence.NaldStatus == NaldLicenceStatus.Live;
                 outputLineCloned.LinkedLicenceIsDead = linkedLicence.NaldStatus == NaldLicenceStatus.Dead;
@@ -135,5 +155,30 @@ public static class GenerateLinkedLicencesCsv
         }
 
         return returnList;
+    }
+
+    private static string GetContainedInText(LinkedLicenceSection[] containedIn)
+    {
+        if (containedIn.Length == 0)
+        {
+            return "--";
+        }
+        
+        return string.Join("; ", containedIn
+            .Select(ci =>
+            {
+                if (ci.Source == LinkedLicenceSource.Nald)
+                {
+                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
+                }
+
+                if (ci.Source == LinkedLicenceSource.OtherDocument)
+                {
+                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}";
+                }
+                        
+                return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
+                       $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
+            }));
     }
 }

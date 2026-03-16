@@ -63,6 +63,11 @@ public class NaldLinkedLicenceHelper
             }
 
             var forwardLinkKey = naldRawDataItem.LicenceNumber;
+
+            if (forwardLinkKey == "1/22/03/012A")
+            {
+                
+            }
             
             if (string.IsNullOrEmpty(forwardLinkKey))
             {
@@ -91,11 +96,6 @@ public class NaldLinkedLicenceHelper
                     }
                     
                     var backLinkKey = linkCandidate.LicenceNumber;
-
-                    if (naldRawDataItem.LicenceNumber.Contains("159") || linkCandidate.LicenceNumber.Contains("159"))
-                    {
-                
-                    }
                     
                     // Ensure map keys are initialized in both directions
                     map.TryAdd(forwardLinkKey, []);
@@ -128,6 +128,18 @@ public class NaldLinkedLicenceHelper
             }
         }
 
+        foreach (var licenceKvp in map)
+        {
+            foreach (var linkedLicenceKvp in licenceKvp.Value)
+            {
+                if (linkedLicenceKvp.Value.Count > 1)
+                {
+                    
+                }
+            }
+        }
+        
+        // 1/22/03/012A
         return map;
     }
 }

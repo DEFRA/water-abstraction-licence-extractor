@@ -16,6 +16,8 @@ public class LinkedLicencesCsvLine
     
     public string? NaldLicenceNumber { get; set; }
     
+    public string? EuicCode { get; set; }
+    
     public string? IssuedBy { get; set; }
     
     public string? DateOfIssue { get; set; }
@@ -40,7 +42,13 @@ public class LinkedLicencesCsvLine
     
     public string? LinkedLicenceDmsPath { get; set; }
     
-    public string? LinkedLicenceSectionAndReason { get; set; }
+    public string? LinkedLicenceDocumentIncoming { get; set; }
+    
+    public string? LinkedLicenceNaldIncoming { get; set; }
+    
+    public string? LinkedLicenceDocumentOutgoing { get; set; }
+    
+    public string? LinkedLicenceNaldOutgoing { get; set; }
     
     public bool? LinkedLicenceIsLive { get; set; }
     
@@ -49,8 +57,6 @@ public class LinkedLicencesCsvLine
     public bool? LinkedLicenceIsImpoundment { get; set; }
     
     public bool? LinkedLicenceFoundInList { get; set; }
-    
-    public string? EuicCode { get; set; }
 
     public LinkedLicencesCsvLine Clone()
     {

@@ -125,6 +125,11 @@ public static partial class WalSchemaConverter
         
         if (naldLinkedLicenceHelper != null)
         {
+            if (licenceNumber == "1/22/03/012A")
+            {
+                
+            }
+            
             var naldLinkedLicences =
                 naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
 
@@ -133,7 +138,7 @@ public static partial class WalSchemaConverter
                 var strippedLicenceNumber = FormattingHelper.StripForComparison(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
                     naldLinkedLicence.NaldLicence.RegionCode);
-
+                
                 var thisDmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                     : null;
@@ -141,7 +146,7 @@ public static partial class WalSchemaConverter
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
-                    PermitNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                    PermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     ContainedIn =
                     [
@@ -220,83 +225,12 @@ public static partial class WalSchemaConverter
         
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
-        linkedLicences = linkedLicences
-            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
-            .Select(linkedLicencesGroup =>
-            {
-                var containedIn = new List<LinkedLicenceSection>();
-
-                foreach (var linkedLicence in linkedLicencesGroup)
-                {
-                    if (linkedLicence.ContainedIn == null)
-                    {
-                        continue;
-                    }
-
-                    var sectionItems = linkedLicence.ContainedIn;
-
-                    foreach (var sectionItem in sectionItems)
-                    {
-                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
-                        {
-                            continue;
-                        }
-
-                        // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
-                        if (containedIn.Any(fs => fs.LineNumber == sectionItem.LineNumber
-                            && fs.PageNumber == sectionItem.PageNumber))
-                        {
-                            continue;
-                        }
-
-                        containedIn.Add(sectionItem);
-                    }
-                }
-
-                var licenceNumberStr = linkedLicencesGroup
-                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.LicenceNumber))?
-                    .LicenceNumber;
-                
-                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumberStr, regionCode);
-                
-                return ToLinkedLicence(
-                    linkedLicenceNumber,
-                    linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
-                        .RawScrapedLicenceNumber,
-                    linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
-                        .PermitNumber,
-                    linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
-                        .Filename,
-                    linkedLicencesGroup
-                        .FirstOrDefault(ll => ll.Condition != null)?
-                        .Condition,
-                    containedIn.ToArray(),
-                    naldLicenceStatusData,
-                    licenceNumbersMapping,
-                    regionCode);
-            })
-            .Where(linkedLicence => linkedLicence != null)
-            .Select(linkedLicence => linkedLicence!)
-            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
-            .ToList();
-
-        var newLinkedLicences = new List<LinkedLicence>();
-
-        foreach (var linkedLicence in linkedLicences)
-        {
-            if (newLinkedLicences.Any(linkedLicence2 =>
-                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
-            {
-                continue;
-            }
-
-            newLinkedLicences.Add(linkedLicence);
-        }
-
-        linkedLicences = newLinkedLicences;
+        linkedLicences = ConsolidateLinkedLicences(
+            linkedLicences,
+            regionCode,
+            licenceNumber!,
+            naldLicenceStatusData,
+            licenceNumbersMapping);
 
         var anywhereInDocumentLinkedLicences = GetAnywhereInDocumentLinkedLicences(
             matches,
@@ -379,6 +313,7 @@ public static partial class WalSchemaConverter
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
+        
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -429,6 +364,94 @@ public static partial class WalSchemaConverter
             NaldStatus = naldStatus,
             LicenceType = licenceType
         };
+    }
+
+    private static List<LinkedLicence> ConsolidateLinkedLicences(
+        List<LinkedLicence> linkedLicences,
+        int regionCode,
+        string? licenceNumber,
+        NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, DmsFileData> licenceNumbersMapping)
+    {
+        var linkedLicences1 = linkedLicences
+            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
+            .Select(linkedLicencesGroup =>
+            {
+                var containedIn = new List<LinkedLicenceSection>();
+
+                foreach (var linkedLicence in linkedLicencesGroup)
+                {
+                    if (linkedLicence.ContainedIn == null)
+                    {
+                        continue;
+                    }
+
+                    var sectionItems = linkedLicence.ContainedIn;
+
+                    foreach (var sectionItem in sectionItems)
+                    {
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        {
+                            continue;
+                        }
+
+                        // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
+                        // in documents
+                        if (containedIn.Any(fs => 
+                            sectionItem.Source != LinkedLicenceSource.Nald
+                                && (fs.LineNumber == sectionItem.LineNumber && fs.PageNumber == sectionItem.PageNumber)))
+                        {
+                            continue;
+                        }
+
+                        containedIn.Add(sectionItem);
+                    }
+                }
+
+                var licenceNumberStr = linkedLicencesGroup
+                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.LicenceNumber))?
+                    .LicenceNumber;
+                
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumberStr, regionCode);
+                
+                return ToLinkedLicence(
+                    linkedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
+                        .RawScrapedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
+                        .PermitNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
+                        .Filename,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.Condition != null)?
+                        .Condition,
+                    containedIn.ToArray(),
+                    naldLicenceStatusData,
+                    licenceNumbersMapping,
+                    regionCode);
+            })
+            .Where(linkedLicence => linkedLicence != null)
+            .Select(linkedLicence => linkedLicence!)
+            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
+            .ToList();
+
+        var newLinkedLicences = new List<LinkedLicence>();
+
+        foreach (var linkedLicence in linkedLicences1)
+        {
+            if (newLinkedLicences.Any(linkedLicence2 =>
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
+            {
+                continue;
+            }
+
+            newLinkedLicences.Add(linkedLicence);
+        }
+
+        return newLinkedLicences;
     }
 
     // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
@@ -570,7 +593,7 @@ public static partial class WalSchemaConverter
     private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
         string? scrapedLinkedLicenceNumber,
-        string? naldLinkedLicenceNumber,
+        string? linkedLicencePermitNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
@@ -579,7 +602,7 @@ public static partial class WalSchemaConverter
         int regionCode)
     {
         var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
-            naldLinkedLicenceNumber,
+            linkedLicencePermitNumber,
             naldLicenceStatusData,
             regionCode);
 
@@ -612,7 +635,7 @@ public static partial class WalSchemaConverter
         {
             LicenceNumber = linkedLicenceNumber,
             RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
-            PermitNumber = naldLinkedLicenceNumber,
+            PermitNumber = dmsFileData?.PermitNumber,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
@@ -770,13 +793,15 @@ public static partial class WalSchemaConverter
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
             }
 
-            AddMissingBackLinks(
+            AddIncomingLinks(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
                 lookupConfiguration.LicenceNumberMapping,
                 matchesResult.RegionCode);
 
+            
+            
             var newLicenceSetIds = new List<LicenceSetReference>
             {
                 new()
@@ -811,7 +836,7 @@ public static partial class WalSchemaConverter
         return returnList;
     }
 
-    private static List<LicenceSet> AddMissingBackLinks(
+    private static List<LicenceSet> AddIncomingLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         NaldLicenceStatusData naldLicenceStatusData,
@@ -847,11 +872,9 @@ public static partial class WalSchemaConverter
                     var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
                     incomingAndOutgoingLinks.AddRange(outgoingLinks);
 
-                    //...
-
                     foreach (var incomingLink in incomingLinks)
                     {
-                        // Already output
+                        // If already output, don't add again
                         if (licence.LinkedLicences.Any(ll =>
                                 ll.LicenceNumber == incomingLink.LicenceNumber &&
                                 ll.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.IncomingLink) ==
@@ -884,7 +907,7 @@ public static partial class WalSchemaConverter
                         {
                             licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                             {
-                                incomingLinkedLicence
+                                incomingLinkedLicence 
                             }.ToArray();
                         }
 
@@ -929,6 +952,13 @@ public static partial class WalSchemaConverter
 
                         licence.LicenceSets = newLicenceSetIds.ToArray();
                     }
+
+                    licence.LinkedLicences = ConsolidateLinkedLicences(
+                        licence.LinkedLicences.ToList(),
+                        regionCode,
+                        licence.LicenceNumber?.Value,
+                        naldLicenceStatusData,
+                        licenceNumbersMapping).ToArray();
                 }
             }
         }
@@ -940,7 +970,7 @@ public static partial class WalSchemaConverter
 
         return returnList;
     }
-
+    
     private static Licence[] GetLicencesFromStrings(
         IEnumerable<Licence> licences,
         IReadOnlyList<string> licenceNumbers)
@@ -1323,7 +1353,7 @@ public static partial class WalSchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -1406,7 +1436,7 @@ public static partial class WalSchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -1508,7 +1538,7 @@ public static partial class WalSchemaConverter
             {
                 LicenceNumber = linkedLicenceNumber,
                 RawScrapedLicenceNumber = linkedLicenceNumber,
-                PermitNumber = naldLinkedLicenceNumber,
+                PermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
                 NaldStatus = naldStatus,
@@ -1607,7 +1637,7 @@ public static partial class WalSchemaConverter
                 {
                     LicenceNumber = lln,
                     RawScrapedLicenceNumber = lln,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -1698,7 +1728,7 @@ public static partial class WalSchemaConverter
                         
                         return new LinkedLicence
                         {
-                            PermitNumber = naldLicenceNumber,
+                            PermitNumber = dmsFileData?.PermitNumber,
                             RawScrapedLicenceNumber = licenceNumber,
                             LicenceNumber = licenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
@@ -1795,7 +1825,7 @@ public static partial class WalSchemaConverter
                         {
                             LicenceNumber = licenceNumber,
                             RawScrapedLicenceNumber = licenceNumber,
-                            PermitNumber = naldLicenceNumber,
+                            PermitNumber = dmsFileData?.PermitNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
                             NaldStatus = naldStatus,
@@ -1883,7 +1913,7 @@ public static partial class WalSchemaConverter
                     DmsPath = dmsFileData?.DmsPath,
                     LicenceNumber = licenceNumber,
                     RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     NaldStatus = naldStatus,
                     LicenceType = licenceType,
                     ContainedIn =
@@ -1963,7 +1993,7 @@ public static partial class WalSchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -2046,7 +2076,7 @@ public static partial class WalSchemaConverter
                 {
                     LicenceNumber = licenceNumber,
                     RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = naldLicenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -2448,7 +2478,7 @@ public static partial class WalSchemaConverter
                     {
                         LicenceNumber = scrapedLicenceNumber,
                         RawScrapedLicenceNumber = scrapedLicenceNumber,
-                        PermitNumber = naldLicenceNumber,
+                        PermitNumber = dmsFileData?.PermitNumber,
                         DmsPath = dmsFileData?.DmsPath,
                         Filename = dmsFileData?.DestinationFileName,
                         NaldStatus = naldStatus,
@@ -3616,7 +3646,7 @@ public static partial class WalSchemaConverter
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
-        distinctLicenceSets.AddRange(AddMissingBackLinks(
+        distinctLicenceSets.AddRange(AddIncomingLinks(
             licenceSetGroups,
             true,
             naldLicenceStatusData,

@@ -24,23 +24,23 @@ public class DatabaseOutputService(
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilename);
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilePath)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilename)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         
         var bytes1 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
-            pdfFilename,
+            filenameNoExtension,
             pdfServiceName);
         
         var bytes2 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
-            pdfFilename,
+            filenameNoExtension,
             GeneralConstants.DocnetExtractorServiceName);// TODO tidy this up
         
         return [
@@ -54,7 +54,7 @@ public class DatabaseOutputService(
         return databaseWriteService.AddProcessRunAsync(processRun);
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilename, int processRunId)
     {
         foreach (var licenceSetKvp in licenceSets)
         {
@@ -109,23 +109,25 @@ public class DatabaseOutputService(
         }
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, pdfFilename, processRunId);
+        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, filenameNoExtension, processRunId);
     }
     
-    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
+    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
             licenceStr,
-            pdfFilename,
+            filenameNoExtension,
+            licence.DmsFileId,
+            licence.PermitNumber,
             processRunId);
     }
     
@@ -135,12 +137,12 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
-    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, pdfFilename, processRunId);
+        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, filenameNoExtension, processRunId);
     }
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
@@ -153,11 +155,11 @@ public class DatabaseOutputService(
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
+        var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         foreach (var (providerName, bitmap) in images)
         {
@@ -166,7 +168,7 @@ public class DatabaseOutputService(
             await SavePageScreenshotInternalAsync(
                 pageNumber,
                 noOcrServiceName,
-                pdfFilename,
+                filenameNoExtension,
                 bytes,
                 processRunId);
         }
@@ -189,12 +191,12 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilename, string noOcrServiceName, int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
-        await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, pdfFilename, noOcrServiceName, processRunId);
+        await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, filenameNoExtension, noOcrServiceName, processRunId);
     }
 
     public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
@@ -244,7 +246,13 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetMatchesResult(filename);
     }
-    
+
+    public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
+    {
+        var licence = await databaseReadService.GetNewestLicenceAsync(permitNumber);
+        return licence?.LinkedLicences;
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
         var licences = await databaseReadService.GetLicencesAsync(processRunId);

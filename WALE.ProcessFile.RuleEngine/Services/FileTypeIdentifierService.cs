@@ -41,11 +41,15 @@ public class FileTypeIdentifierService
     /// <param name="filePath">The path to the PDF file</param>
     /// <param name="outputService">TODO</param>
     /// <param name="documentService"></param>
+    /// <param name="alternativeDocumentService"></param>
+    /// <param name="lookupConfiguration"></param>
     /// <returns>The number of pages in the PDF</returns>
     private static async Task<int> GetPageCountAsync(
         string filePath,
         IOutputService outputService,
-        INoOcrPdfDocumentService documentService)
+        INoOcrPdfDocumentService documentService,
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
+        LookupConfiguration lookupConfiguration)
     {
         if (!File.Exists(filePath))
         {
@@ -57,7 +61,14 @@ public class FileTypeIdentifierService
             try
             {
                 // TODO should this always load it?
-                var pdfDocument = new PdfDocument(filePath, false, outputService, documentService);
+                var pdfDocument = new PdfDocument(
+                    filePath,
+                    false,
+                    outputService,
+                    documentService,
+                    alternativeDocumentService,
+                    lookupConfiguration);
+                
                 return pdfDocument.Pages.Count;
             }
             catch (Exception ex)
@@ -73,16 +84,16 @@ public class FileTypeIdentifierService
     /// <summary>
     /// Identifies the file type based on the content of a file using OCR when needed
     /// </summary>
-    /// <param name="filePath">The path to the file</param>
+    /// <param name="fileName">The path to the file</param>
     /// <param name="configuration">The lookup configuration</param>
     /// <returns>The file type identification result, or null if no type could be identified or an error occurred</returns>
-    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string filePath, LookupConfiguration configuration)
+    public async Task<FileTypeResult?> IdentifyFileTypeAsync(string fileName, LookupConfiguration configuration)
     {
         try
         {
-            if (!File.Exists(filePath))
+            if (!File.Exists(fileName))
             {
-                ConsoleHelper.WriteLine($"File not found: {filePath}");
+                ConsoleHelper.WriteLine($"File not found: {fileName}");
                 return null;
             }
 
@@ -102,7 +113,10 @@ public class FileTypeIdentifierService
             }
 
             var content = await serviceToUse.GetMatchesAsync(
-                filePath, configuration, [], 0);
+                fileName,
+                configuration,
+                [],
+                0);
 
             return _ruleEngine.Evaluate(content);
         }
@@ -458,14 +472,17 @@ public class FileTypeIdentifierService
     /// <param name="directoryPath">The directory path to process</param>
     /// TODO other 2 params
     /// <param name="outputService"></param>
+    /// <param name="alternativeDocumentService"></param>
     /// <param name="searchPattern">File search pattern (default: "*.*")</param>
     /// <param name="lookupConfiguration"></param>
+    /// <param name="documentService"></param>
     /// <returns>A dictionary mapping file paths to their identification results</returns>
     public async Task<Dictionary<string, FileTypeResult?>> ProcessDirectoryAsync(
         string directoryPath,
         LookupConfiguration lookupConfiguration,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
         string searchPattern = "*.*")
     {
         if (!Directory.Exists(directoryPath))
@@ -572,8 +589,19 @@ public class FileTypeIdentifierService
                 {
                     try
                     {
-                        var pageCount = await GetPageCountAsync(file, outputService, documentService);
-                        return new { File = file, PageCount = pageCount, Success = true };
+                        var pageCount = await GetPageCountAsync(
+                            file,
+                            outputService,
+                            documentService,
+                            alternativeDocumentService,
+                            lookupConfiguration);
+                        
+                        return new
+                        {
+                            File = file,
+                            PageCount = pageCount,
+                            Success = true
+                        };
                     }
                     catch (Exception ex)
                     {

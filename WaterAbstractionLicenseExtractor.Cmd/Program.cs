@@ -8,10 +8,12 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
@@ -70,7 +72,7 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        GetDmsFilesAndMapping(services, regionCode);
+        await GetDmsFilesAndMappingAsync(services.FileService!, services.DmsReportPath!, regionCode);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
@@ -79,7 +81,7 @@ async Task ProgramAsync()
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
-        Description = $"Run using {services.PdfFolderPath}",
+        Description = $"Run using {services.FileService!.FolderPath}",
         StartDateTimeUtc = DateTime.UtcNow,
         NumberOfFiles = dmsFilesToProcess.Count
     });
@@ -90,6 +92,7 @@ async Task ProgramAsync()
     await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
+    
     LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
@@ -116,6 +119,7 @@ async Task ProgramAsync()
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
+                    services.FileService,
                     regionCode,
                     processCount++,
                     processRun.NumberOfFiles,
@@ -126,7 +130,8 @@ async Task ProgramAsync()
                     pdfDataExtractors,
                     firstNamesCsv,
                     processRun,
-                    extractorLock));
+                    extractorLock,
+                    naldLinkedLicenceHelper));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -210,14 +215,6 @@ async Task ProgramAsync()
         {
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
-                var linkedLicences =
-                    naldLinkedLicenceHelper.GetLinkedLicences(licenceLoop.LicenceNumber?.Value);
-                
-                if (linkedLicences.Count != 0)
-                {
-                    licenceLoop.NoneSchemaData["NaldLinkedLicences"] = linkedLicences;
-                }
-
                 var filename = licenceLoop.Filename;
 
                 if (licenceLoop.LicenceNumber != null
@@ -314,7 +311,7 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    const bool saveListsToFile = false;
+    var saveListsToFile = false;
 
     if (saveListsToFile)
     {
@@ -369,8 +366,6 @@ ConfiguredServices ConfigureServices()
                               ?? throw new NullReferenceException("LOAD_AI_JS"));
     var refreshCache = bool.Parse(Environment.GetEnvironmentVariable("RefreshCache")
                                   ?? throw new NullReferenceException("RefreshCache"));
-    var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-                        ?? throw new NullReferenceException("PdfFolderPath");
     var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
                              ?? throw new NullReferenceException("ReportTemplatePath");
     var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
@@ -401,6 +396,35 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
+
+    var useS3 = false;//true;
+    IFileService fileService;
+
+    if (useS3)
+    {
+        var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
+            ?? throw new NullReferenceException("AwsS3AccessKey");
+        var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
+            ?? throw new NullReferenceException("AwsS3SecretKey");
+        var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
+            ?? throw new NullReferenceException("AwsS3RegionName");
+        var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
+            ?? throw new NullReferenceException("AwsS3BucketName");
+        
+        fileService = new AwsS3FileService(accessKey, secretKey, regionName, bucketName);
+    }
+    else
+    {
+        var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
+            ?? throw new NullReferenceException("PdfFolderPath");
+        
+        if (!pdfFolderPath.EndsWith('/'))
+        {
+            pdfFolderPath += "/";
+        }
+        
+        fileService = new LocalFileService(pdfFolderPath);   
+    }
     
     var httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri(apiBaseUrl);
@@ -409,6 +433,8 @@ ConfiguredServices ConfigureServices()
     var outputService = new ApiOutputService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+    var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
+    
     var pdfDataExtractors = new List<IPdfDataExtractorService>();
 
     for (var idx = 0; idx < maxConcurrentScrapers; idx++)
@@ -455,7 +481,7 @@ ConfiguredServices ConfigureServices()
             cacheService,
             outputService,
             pdfPigDocumentService,
-            pdfFolderPath,
+            docnetAlternativeDocumentService,
             id);
 
         pdfDataExtractors.Add(pdfDataExtractor);
@@ -469,7 +495,7 @@ ConfiguredServices ConfigureServices()
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
         RegenerateMappingJson = regenerateMappingJson,
-        PdfFolderPath = pdfFolderPath,
+        FileService = fileService,
         ReportTemplatePath = reportTemplatePath,
         LoadAiJs = loadAiJs,
         ListDataPath = listDataPath,
@@ -480,28 +506,30 @@ ConfiguredServices ConfigureServices()
         ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
-        FileMappingPath = fileMappingPath
+        DmsReportPath = fileMappingPath
     };
 }
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
-    string pdfFilePath,
+    string pdfFilename,
+    IFileService fileService,
     int regionCode,
     int fileNumber,
     int totalNumber,
-    Dictionary<string, DmsFileData> licenceMapping,
+    Dictionary<string, DmsFileData> allDmsData,
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     HashSet<string> firstNamesCsv,
     ProcessRun processRun,
-    Lock extractorLock)
+    Lock extractorLock,
+    NaldLinkedLicenceHelper naldLinkedLicenceHelper)
 {
-    var fileName = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
+    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {fileName} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
     IPdfDataExtractorService pdfDataExtractor;
 
@@ -513,28 +541,28 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
     try
     {
-        var previouslyParsedPaths = new List<string>
+        var previouslyParsedFiles = new List<string>
         {
-            pdfFilePath
+            pdfFilename
         };
-
-        var pdfFolder = pdfFilePath[..(pdfFilePath.LastIndexOf('/') + 1)];
-
+        
         var lookupConfig = new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
-            licenceMapping,
+            WalLabelConfiguration.GetLabels(),
+            allDmsData,
             firstNamesCsv,
-            regionCode);
+            fileService,
+            regionCode,
+            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
-            pdfFilePath,
+            pdfFilename,
             lookupConfig,
-            previouslyParsedPaths,
+            previouslyParsedFiles,
             processRun.ProcessRunId);
 
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesFull,
-            pdfFilePath,
+            pdfFilename,
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
@@ -566,11 +594,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
-            licenceMapping,
             naldLicenceStatusData,
             naldData,
             pdfDataExtractor,
-            pdfFolder,
             processRun.ProcessRunId,
             lookupConfig);
 
@@ -643,47 +669,44 @@ async Task MoveReportHtmlFilesAsync(
     await File.WriteAllTextAsync(indexPath, indexHtml);
 }
 
-(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
-    LicenceNumbersWithFilenames)
-    GetDmsFilesAndMapping(ConfiguredServices services, int regionCode)
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
+    Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-    var filesAndMapping = GetFilesAndMappingFromExcelDownloadInfoFile(
-        services.PdfFolderPath!,
-        services.FileMappingPath!,
+    var filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+        fileService,
+        dmsReportPath,
         regionCode);
 
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
         .ToDictionary(filePath => filePath.Key, k => k.Value);*/
 
-    filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
+    filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100072"))
-        .Take(10)
+//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100073R01"))
+        
+//        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
 }
 
-(Dictionary<string, DmsFileData> FilepathsWithLicenceNumbers, Dictionary<string, DmsFileData>
-    LicenceNumbersWithFilenames)
-    GetFilesAndMappingFromExcelDownloadInfoFile(string pdfFolderPath, string mappingFilePath, int regionCode)
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    GetFilesAndMappingFromExcelDownloadInfoFileAsync(IFileService fileService, string dmsReportPath, int regionCode)
 {
-    var filenames = new Dictionary<string, DmsFileData>();
-    var mappingFile = new Dictionary<string, DmsFileData>();
+    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
+    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
 
     // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-    var filesInFolder = Directory
-        .GetFiles(pdfFolderPath)
-        .Select(path => path.Split('/').Last())
-        .ToList();
+    var filesInFolder = await fileService.GetAllFilesAsync();
 
-    using (var stream = File.Open(mappingFilePath, FileMode.Open, FileAccess.Read))
+    await using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
     {
         using (var reader = ExcelReaderFactory.CreateReader(stream))
         {
@@ -722,9 +745,11 @@ async Task MoveReportHtmlFilesAsync(
                 }
 
                 var dmsPath = (string)row["Definitive URL"];
-                var dmsPathFilename = dmsPath.Split('/').Last();
                 
-                var destinationFileName = $"{permitNumber}__{dmsPathFilename}";
+                //var dmsPathFilename = dmsPath.Split('/').Last();
+                //destinationFileName = $"{permitNumber}__{dmsPathFilename}";
+
+                var destinationFileName = (string)row[1];//"DestinationFilename"];/
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {
@@ -733,24 +758,28 @@ async Task MoveReportHtmlFilesAsync(
 
                 var naldLicenceRef = (string)row["License Number"];
 
+                var filenameParts = destinationFileName.Split("__");
+                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : (Guid?)null;
+
                 var dmsFileData = new DmsFileData
                 {
                     DestinationFileName = destinationFileName,
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!,
+                    FileId = fileId
                 };
 
-                filenames.Add(pdfFolderPath + destinationFileName, dmsFileData);
-                mappingFile.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
+                filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
+                licenceNumbersWithFilenames.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
             }
         }
     }
 
     return (
-        filenames,
-        mappingFile
+        filenamesWithLicenceNumbers,
+        licenceNumbersWithFilenames
     );
 }
 

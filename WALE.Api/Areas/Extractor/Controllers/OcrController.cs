@@ -17,7 +17,7 @@ public class OcrController(
     public async Task<IActionResult> GetImageTextAsync(
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
-        [FromQuery] string filepath,
+        [FromQuery] string filename,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -26,7 +26,7 @@ public class OcrController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filepath,
+                Filename = filename,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -38,7 +38,7 @@ public class OcrController(
     public async Task<IActionResult> GetTemporaryImageTextAsync(
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
-        [FromQuery] string filepath,
+        [FromQuery] string filename,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -47,7 +47,7 @@ public class OcrController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filepath,
+                Filename = filename,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -59,7 +59,7 @@ public class OcrController(
     [HttpGet]
     public async Task<IActionResult> GetScreenshotTextAsync(
         [FromQuery] int pageNumber,
-        [FromQuery] string filepath,
+        [FromQuery] string filename,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -67,7 +67,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,
-                Filepath = filepath,
+                Filename = filename,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -78,7 +78,7 @@ public class OcrController(
     [HttpGet]
     public async Task<IActionResult> GetTemporaryScreenshotTextAsync(
         [FromQuery] int pageNumber,
-        [FromQuery] string filepath,
+        [FromQuery] string filename,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -86,7 +86,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,
-                Filepath = filepath,
+                Filename = filename,
                 OcrServiceName = ocrServiceName,
                 ProcessRunId = processRunId
             }); 
@@ -107,7 +107,7 @@ public class OcrController(
             {
                 PageNumber = request.pageNumber,
                 ImageNumber = request.imageNumber,
-                Filepath = request.filepath,
+                Filename = request.filename,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -128,7 +128,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = request.pageNumber,
-                Filepath = request.filepath,
+                Filename = request.filename,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -144,7 +144,7 @@ public class OcrController(
         await cacheService.SaveOcrImageTextAsync(
             new OcrServiceImageTextCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filename,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId,
                 PageNumber = request.pageNumber,
@@ -163,7 +163,7 @@ public class OcrController(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = request.pageNumber,
-                Filepath = request.filepath,
+                Filename = request.filename,
                 OcrServiceName = request.ocrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -174,7 +174,7 @@ public class OcrController(
     
     public class SaveOcrImageTextRequest
     {
-        public string? filepath { get; set; }
+        public string? filename { get; set; }
         public int pageNumber { get; set; }
         public int imageNumber { get; set; }
         public string? ocrServiceName  { get; set; }
@@ -184,7 +184,7 @@ public class OcrController(
     
     public class SaveTemporaryOcrImageTextRequest
     {
-        public string? filepath { get; set; }
+        public string? filename { get; set; }
         
         public int processRunId { get; set; }
         

@@ -7,6 +7,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.PdfPig;
@@ -42,6 +43,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -54,21 +57,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         CacheService,
         OutputService,
         DocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
-    private readonly IPdfDataExtractorService _pdfDataExtractor3 = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            textractFixture.Instance
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        TestConfig.PdfFolder3);
-
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
@@ -79,24 +69,24 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync()
+    private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder, int regionCode)
     {
         return new(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
-            3);
+            new LocalFileService(pdfFolder),
+            regionCode);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
     {
-        var pdfExtractor = useExtractor == 1 ? _pdfDataExtractor : _pdfDataExtractor3;
         var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         
-        return await pdfExtractor.GetMatchesAsync(
-            folder + fileName,
-            await LookupConfigurationAsync(),
-            [folder + fileName],
+        return await _pdfDataExtractor.GetMatchesAsync(
+            fileName,
+            await LookupConfigurationAsync(folder, regionCode),
+            [fileName],
             0);
     }
     
@@ -104,11 +94,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     public async Task GetSomeFromTesseractAndSomeFromAwsTextract_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 3; // TODO Berkshire
+        await SetupLicenceNumbersAsync((short)regionCode);
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -172,13 +163,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -191,11 +180,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 2; // TODO Lancashire
+        await SetupLicenceNumbersAsync((short)regionCode);
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -241,13 +231,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -263,11 +251,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 5; // TODO IOW
+        await SetupLicenceNumbersAsync((short)regionCode);
+        
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -331,13 +321,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -348,41 +336,41 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     }
     
     [Theory]
-    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0, "1/21/00/004")]
-    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 1967", "02/06/1967", 6, 0, "1/21/00/052")]
-    [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6, 0, "1/21/00/065")]
-    [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7, 0, "1/22/01/014")]
-    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, "1/22/01/021")]
-    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0, "1/22/01/023")]
-    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043")]
-    [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6, 0, "1/22/03/007")]
-    [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045")]
-    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, "1/22/03/120")]
-    [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, "1/22/05/021")]
-    [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 6, 0, "1/22/05/044")]
-    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067")]
-    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 6, 0, "1/23/02/006")]
-    [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY, 1966", "27/05/1966", 7, 0, "1/23/02/044")]
-    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0, "1/23/02/207")]
-    [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11th day of MAY, 19 66", "11/05/1966", 6, 0, "1/23/03/008")]
-    [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 7, 0, "1/23/03/075")]
-    [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967", "13/03/1967", 7, 0, "1/22/02/009")]
-    [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14, 0, "1/23/03/142")]
-    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035")] // TODO the K shouldnt be there
-    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2 0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014")]
-    [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032")]
-    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102")]
-    [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133")]
-    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 14, 0, "1/25/02/141")]
-    [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120")] // TODO looks a bit wrong
-    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 0, "1/24/01/034")]
-    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 7, 0, "1/25/02/023")]
-    [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270")]
-    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167")]
-    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 15, 0, "1/25/06/023")] // Should be 2000 but impossible to tell in file, so fine
-    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298")]
-    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141")]
-    [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001")]
+    [InlineData("12100004__Application Transfer Issued Licence - [1982] - (1982).pdf", "7 DAY OF OCTOBER 19 82", "07/10/1982", 4, 0, "1/21/00/004", 3)]
+    [InlineData("12100052__Application Formal Variation Issued Licence - [1987] - (1987).pdf", "2nd day of JUNE, 1967", "02/06/1967", 6, 0, "1/21/00/052", 3)]
+    [InlineData("12100065__Application New Licence Issued - [1974] - (1974).pdf", "21st day of March 1974", "21/03/1974", 6, 0, "1/21/00/065", 3)]
+    [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7, 0, "1/22/01/014", 3)]
+    [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, "1/22/01/021", 3)]
+    [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0, "1/22/01/023", 3)]
+    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043", 3)]
+    [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6, 0, "1/22/03/007", 3)]
+    [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045", 3)]
+    [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, "1/22/03/120", 3)]
+    [InlineData("12205021__Original Licence 5684532.pdf", "5 DAY OF april 19 82", "05/04/1982", 6, 0, "1/22/05/021", 3)]
+    [InlineData("12205044__Non-Application Licence Document [Original Licence] (14101966).pdf", "14IEH day of OCTOBER, 1966", "14/10/1966", 6, 0, "1/22/05/044", 3)]
+    [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST, 19 66", "01/08/1966", 7, 0, "1/23/01/067", 3)]
+    [InlineData("12302006__Licence Document 10031966.pdf", "10TH day of MARCH, 1966", "10/03/1966", 6, 0, "1/23/02/006", 3)]
+    [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY, 1966", "27/05/1966", 7, 0, "1/23/02/044", 3)]
+    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0, "1/23/02/207", 3)]
+    [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11th day of MAY, 19 66", "11/05/1966", 6, 0, "1/23/03/008", 3)]
+    [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 7, 0, "1/23/03/075", 3)]
+    [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967", "13/03/1967", 7, 0, "1/22/02/009", 3)]
+    [InlineData("12303142__Application - Formal Variation - Issued Licence 27.07.2016 9431557.pdf", "27 July 2016", "27/07/2016", 14, 0, "1/23/03/142", 3)]
+    [InlineData("12405035__Permit to Abstract - 1_24_5_35 - Licence Document - 10031966.pdf", "10th day of MARCH, 19 66K", "10/03/1966", 5, 0, "1/24/05/035", 3)] // TODO the K shouldnt be there
+    [InlineData("12502014__Non-Application Licence Document (20.07.2005).PDF", "2 0 JUL 2005", "20/07/2005", 13, 0, "1/25/02/014", 3)]
+    [InlineData("12502032__Non-Application Licence Document [Licence] (16052000).PDF", "16/5/00", "16/05/2000", 13, 0, "1/25/02/032", 3)]
+    [InlineData("12502102__Non-Application Licence Document [Original Licence] (27042001).PDF", "3/7/01", "03/07/2001", 13, 0, "1/25/02/102", 3)]
+    [InlineData("12502133__Non-Application Licence Document [Licence] (06051998).PDF", "13.5.98", "13/05/1998", 12, 0, "1/25/02/133", 3)]
+    [InlineData("12502141__Application type unknown Licence Issued (08.11.2005).PDF", "8 NOV 2005", "08/11/2005", 14, 0, "1/25/02/141", 3)]
+    [InlineData("12504120__Abstraction licence.PDF", "28/4/99", "28/04/1999", 12, 0, "1/25/04/120", 3)] // TODO looks a bit wrong
+    [InlineData("12401034__1-24-01-034 6099401.pdf", "28th day of May, 1969", "28/05/1969", 6, 0, "1/24/01/034", 3)]
+    [InlineData("12502023__Application type unknown Licence Issued 03.05.1966.pdf", "3rd day of MAY, 19 666", "03/05/1966", 7, 0, "1/25/02/023", 3)]
+    [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270", 3)]
+    [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167", 3)]
+    [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 15, 0, "1/25/06/023", 3)] // Should be 2000 but impossible to tell in file, so fine
+    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298", 3)]
+    [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141", 3)]
+    [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001", 3)]
     //12504178R01__Application type unknown Licence Issued (01.05.2007).pdf, "299 July'03", // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
     //22630110__Issued licence- 2-26-30-110 6075592.PDF, "299 July'03" // Skips word 'issue' in Azure AI frustratingly
     //12201021__Application New Licence Issued - [1966] - (1966).pdf, "28th day of July 1966" // Doesn't read JULY frustratingly
@@ -392,12 +380,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         string expectedIssueDate2,
         int expectedResults,
         int expectedLinkedLicenceCount,
-        string? expectedLicenceNumber)
+        string? expectedLicenceNumber,
+        int regionCode)
     {
         // Act
-        await SetupLicenceNumbersAsync(3);
+        await SetupLicenceNumbersAsync((short)regionCode);
         
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -410,13 +399,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            [],
             _naldLicenceStatusData,
             [],
-            _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
+            _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLicenceNumber, licence.LicenceNumber?.Value);
@@ -431,11 +418,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     public async Task AAA3_B4_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+        var regionCode = 3; // TODO Lancashire
+        await SetupLicenceNumbersAsync((short)regionCode);
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
+        
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3);
+        var resultFull = await GetMatchesAsync(filename, 3, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
@@ -459,13 +448,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
-            _pdfDataExtractor3,
-            TestConfig.PdfFolder3,
+            _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);

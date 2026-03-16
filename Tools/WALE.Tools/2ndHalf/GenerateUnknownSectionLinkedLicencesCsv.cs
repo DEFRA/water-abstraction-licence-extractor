@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -50,7 +51,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                 .Where(kvp => kvp.Key.StartsWith("AdditionalLinkedLicence:"))
                 .Select(kvp =>
                 {
-                    var json = kvp.Value.ToString()!;
+                    var json = kvp.Value?.ToString()!;
                     return JsonSerializer.Deserialize<LinkedLicence>(json, JsonHelper.GetSerializerOptions());
                 })
                 .ToList();
@@ -63,8 +64,12 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
             foreach (var linkedLicence in unknownLinkedLicences)
             {
                 var scrapedLicenceNumber = licence.NoneSchemaData.TryGetValue(scrapedLicenceNumberKey, out var value)
-                    ? value.ToString()
+                    ? value?.ToString()
                     : null;
+                
+                var isFound = licence.NaldStatus == NaldLicenceStatus.Live
+                    || licence.NaldStatus == NaldLicenceStatus.Dead
+                    || licence.LicenceType == LicenceType.Impoundment;
                 
                 returnList.Add(new UnknownSectionLinkedLicencesCsvLine
                 {
@@ -72,10 +77,10 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     LicenceNumber = licence.LicenceNumber?.Value,
                     ScrapedLicenceNumber = scrapedLicenceNumber,
                     NaldLicenceNumber = licence.NaldLicenceNumber,
-                    LicenceFoundInList = licence.LicenceFoundInList,
-                    LicenceIsLive = licence.IsLiveLicence,
-                    LicenceIsDead = licence.IsDeadLicence,
-                    LicenceIsImpoundment = licence.IsImpoundmentLicence,
+                    LicenceFoundInList = isFound,
+                    LicenceIsLive = licence.NaldStatus == NaldLicenceStatus.Live,
+                    LicenceIsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                    LicenceIsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                     LinkedLicenceNumber = linkedLicence!.LicenceNumber,
                     PageNumber = -1
                 });

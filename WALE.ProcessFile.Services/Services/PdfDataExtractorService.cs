@@ -6,7 +6,6 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
@@ -20,7 +19,7 @@ public class PdfDataExtractorService(
     ICacheService cacheService,
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
-    string pdfFolderPath,
+    INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     int id = -1) : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
@@ -30,14 +29,20 @@ public class PdfDataExtractorService(
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
     
     public async Task<MatchesResult> GetMatchesAsync(
-        string pdfFilePath,
+        string pdfFileName,
         LookupConfiguration configuration,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId)
     {
+        if (pdfFileName.Split('/').Length > 1)
+        {
+            Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Pdf file name should not contain full path");
+            pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
+        }
+        
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(pdfFilePath, _ => new SemaphoreSlim(1, 1));
+        var pathLock = PathLocks.GetOrAdd(pdfFileName, _ => new SemaphoreSlim(1, 1));
         await pathLock.WaitAsync();
 
         try
@@ -46,13 +51,13 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFilePath}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFileName}");
             }
             
             return await GetMatchesInternalAsync(
-                pdfFilePath,
+                pdfFileName,
                 configuration,
-                previouslyParsedPaths,
+                previouslyParsedFiles,
                 processRunId);
         }
         finally
@@ -62,7 +67,7 @@ public class PdfDataExtractorService(
     }
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
-        string pdfFilePath,
+        string pdfFileName,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
@@ -70,15 +75,17 @@ public class PdfDataExtractorService(
         var dtStart = DateTime.Now;
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
-            pdfFilePath,
+            pdfFileName,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            configuration,
             processRunId);
         
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-            $" - {pdfDocument.PdfFilePath}");
+            $" - {pdfDocument.PdfFilename}");
         
         if (pdfDocument.DocumentLines == null)
         {
@@ -94,7 +101,7 @@ public class PdfDataExtractorService(
         
         var returnResult = new MatchesResult
         {
-            Filename = FileHelper.GetFilenameWithExtension(pdfFilePath),
+            Filename = pdfFileName,
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
@@ -116,7 +123,7 @@ public class PdfDataExtractorService(
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-            $" - {pdfDocument.PdfFilePath}");
+            $" - {pdfDocument.PdfFilename}");
         
         dtStart = DateTime.Now;
         
@@ -142,7 +149,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filepath = pdfFilePath,
+                Filename = pdfFileName,
                 NoOcrServiceName = Name
             });
 
@@ -220,7 +227,7 @@ public class PdfDataExtractorService(
         {
             ConsoleHelper.WriteLine(
                 $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-                $" - {pdfDocument.PdfFilePath}");
+                $" - {pdfDocument.PdfFilename}");
         }
 
         var documentLines = new List<DocumentLine>();
@@ -240,7 +247,7 @@ public class PdfDataExtractorService(
             if (pageImages.Count > 10)
             {
                 ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
-                    $" - {pdfDocument.PdfFilePath}");
+                    $" - {pdfDocument.PdfFilename}");
                 
                 pageImages = page.ScreenshotReferences
                     .Select(sr => sr.ImageReference)
@@ -289,7 +296,6 @@ public class PdfDataExtractorService(
                         serviceImageLines =
                             (await ocrService.GetTextLinesFromImageAsync(
                                 imageReference,
-                                pdfFilePath,
                                 pageNumber,
                                 imageNumber,
                                 pdfDocument,
@@ -473,7 +479,7 @@ public class PdfDataExtractorService(
         }
         
         ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
-            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilePath}");
+            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilename}");
     }
     
     private static bool IsPageScan(int imageWidth, int imageHeight)
@@ -921,7 +927,7 @@ public class PdfDataExtractorService(
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
         Dictionary<string, DmsFileData> licenceNumberMapping,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int regionCode,
         int processRunId,
         LookupConfiguration lookupConfiguration)
@@ -946,16 +952,16 @@ public class PdfDataExtractorService(
                     // TODO this should log a warning
                     continue;
                 }
+
+                var destinationFilenames = dmsFileData.DestinationFileName!;
                 
-                var destinationFilePath = $"{pdfFolderPath}{dmsFileData.DestinationFileName}";
-                
-                if (previouslyParsedPaths.Contains(destinationFilePath))
+                if (previouslyParsedFiles.Contains(destinationFilenames))
                 {
                     continue;
                 }
 
-                previouslyParsedPaths.Add(destinationFilePath);
-                pathsToFetch.Add(destinationFilePath);
+                previouslyParsedFiles.Add(destinationFilenames);
+                pathsToFetch.Add(destinationFilenames);
             }
         }
 
@@ -965,15 +971,15 @@ public class PdfDataExtractorService(
             {
                 continue;
             }
+
+            var clonedConfig = lookupConfiguration.Clone();
+            clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+            clonedConfig.RegionCode = regionCode;
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
-                    licenceNumberMapping,
-                    lookupConfiguration.ValidLowercaseFirstNames,
-                    regionCode),
-                previouslyParsedPaths,
+                clonedConfig,
+                previouslyParsedFiles,
                 processRunId);
 
             var labelResult = new LabelGroupResult

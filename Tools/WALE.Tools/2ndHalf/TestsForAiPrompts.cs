@@ -5,11 +5,13 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using PDFtoImage;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -71,7 +73,13 @@ public static class TestsForAiPrompts
 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
-                    pageImageGroups);
+                    pageImageGroups,
+                    new LookupConfiguration(
+                        [],
+                        [],
+                        [],
+                        new LocalFileService(KeyConfig.PdfFolder),
+                        -1));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 
@@ -529,11 +537,14 @@ public static class TestsForAiPrompts
 
     static async Task<List<ChatMessageContentPart>> GetImagePromptsAsync(
         string pdfFilename,
-        List<List<SKBitmap>> pageImageGroups)
+        List<List<SKBitmap>> pageImageGroups,
+        LookupConfiguration lookupConfiguration)
     {
         var cacheService = new FileSystemCacheService("Cache/");
         var outputService = new FileSystemOutputService("Output/");
+        
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var tesseractOcr = new TesseractOcrDataExtractorService(
             KeyConfig.TesseractPrefix
@@ -549,7 +560,9 @@ public static class TestsForAiPrompts
             "[NOT_USED]",
             true,
             outputService,
-            pdfPigDocumentService);
+            pdfPigDocumentService,
+            docnetAlternativeDocumentService,
+            lookupConfiguration);
         
         var imagePrompts = new List<ChatMessageContentPart>();
                 
@@ -584,7 +597,6 @@ public static class TestsForAiPrompts
             var lines =
                 (await tesseractOcr.GetTextLinesFromImageAsync(
                     pdfImageName,
-                    pdfFilename,
                     pageNumber,
                     1,
                     mockPdfDocument,

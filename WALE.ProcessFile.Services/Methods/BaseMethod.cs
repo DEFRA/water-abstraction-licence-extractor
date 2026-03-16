@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class BaseMethod
 {
-    public static async Task<List<LabelGroupResult>> FilterIntoFormatAsync(
+    public static List<LabelGroupResult> FilterIntoFormat(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
@@ -60,7 +60,7 @@ public static class BaseMethod
                 break;
             case CompanyName.Constant:
                 var (anyFound, companyNameLines) =
-                    await CompanyName.AnyIsCompanyOrPersonalNameAsync(
+                    CompanyName.AnyIsCompanyOrPersonalName(
                         lines,
                         request.label,
                         lineNumbersAreDescending,

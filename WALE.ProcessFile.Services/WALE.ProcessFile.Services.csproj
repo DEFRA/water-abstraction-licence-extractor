@@ -75,11 +75,13 @@
 
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.AwsS3\WALE.ProcessFile.Services.AwsS3.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AwsTextract\WALE.ProcessFile.Services.AwsTextract.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AzureComputerVision\WALE.ProcessFile.Services.AzureComputerVision.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.AzureOpenAi\WALE.ProcessFile.Services.AzureOpenAi.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Cache\WALE.ProcessFile.Services.Cache.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Docnet\WALE.ProcessFile.Services.Docnet.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Output\WALE.ProcessFile.Services.Output.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.PdfPig\WALE.ProcessFile.Services.PdfPig.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />

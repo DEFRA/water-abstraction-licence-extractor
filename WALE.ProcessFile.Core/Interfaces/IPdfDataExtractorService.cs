@@ -9,9 +9,9 @@ public interface IPdfDataExtractorService
     public bool InUse { get; set; }
     
     public Task<MatchesResult> GetMatchesAsync(
-        string pdfFilePath,
+        string pdfFileName,
         LookupConfiguration configuration,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId);
 
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

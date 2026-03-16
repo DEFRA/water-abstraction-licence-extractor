@@ -18,34 +18,38 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
-              "scrapedLicenceNumber": "25 68 001 247",
-              "naldLicenceNumber": "2568001247",
+              "rawScrapedLicenceNumber": "25 68 001 247",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "dmsPath": "Something to look for",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false,
-              "dmsPath": "Something to look for"
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             },
             {
               "licenceNumber": "25 68 001 248",
-              "scrapedLicenceNumber": "25 68 001 248",
-              "naldLicenceNumber": "2568001248",
+              "rawScrapedLicenceNumber": "25 68 001 248",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             }
           ],
           "limits": [
@@ -72,32 +76,36 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 248",
-              "scrapedLicenceNumber": "25 68 001 248",
-              "naldLicenceNumber": "2568001248",
+              "rawScrapedLicenceNumber": "25 68 001 248",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             },
             {
               "licenceNumber": "25 68 001 249",
-              "scrapedLicenceNumber": "25 68 001 249",
-              "naldLicenceNumber": "2568001249",
+              "rawScrapedLicenceNumber": "25 68 001 249",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             }
           ],
           "limits": [
@@ -124,33 +132,37 @@
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
-              "scrapedLicenceNumber": "25 68 001 247",
-              "naldLicenceNumber": "2568001247",
+              "rawScrapedLicenceNumber": "25 68 001 247",
               "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+              "dmsPath": "Something to look for",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false,
-              "dmsPath": "Something to look for"
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             },
             {
               "licenceNumber": "25 68 001 249",
-              "scrapedLicenceNumber": "25 68 001 249",
-              "naldLicenceNumber": "2568001249",
+              "rawScrapedLicenceNumber": "25 68 001 249",
               "containedIn": [
                 {
+                  "source": "Document",
                   "sectionName": "AbstractionLimits",
                   "linkReason": "AggregateCondition",
+                  "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
-              "licenceFoundInList": false
+              "naldStatus": "Unknown",
+              "licenceType": "Abstraction"
             }
           ],
           "limits": [
@@ -249,34 +261,38 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
-                "scrapedLicenceNumber": "25 68 001 247",
-                "naldLicenceNumber": "2568001247",
+                "rawScrapedLicenceNumber": "25 68 001 247",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "dmsPath": "Something to look for",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false,
-                "dmsPath": "Something to look for"
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               },
               {
                 "licenceNumber": "25 68 001 248",
-                "scrapedLicenceNumber": "25 68 001 248",
-                "naldLicenceNumber": "2568001248",
+                "rawScrapedLicenceNumber": "25 68 001 248",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               }
             ],
             "limits": [
@@ -299,34 +315,52 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/247",
-          "scrapedLicenceNumber": "25 68 001 247",
-          "naldLicenceNumber": "2568001247",
+          "rawScrapedLicenceNumber": "25 68 001 247",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "dmsPath": "Something to look for",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/247",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false,
-          "dmsPath": "Something to look for"
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         },
         {
           "licenceNumber": "25/68/001/248",
-          "scrapedLicenceNumber": "25 68 001 248",
-          "naldLicenceNumber": "2568001248",
+          "rawScrapedLicenceNumber": "25 68 001 248",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/248",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         }
       ],
       "licenceSets": [
@@ -376,7 +410,8 @@
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
       },
-      "licenceFoundInList": false
+      "naldStatus": "Unknown",
+      "licenceType": "Abstraction"
     },
     {
       "id": "2568001247-LV20190619",
@@ -455,32 +490,36 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 248",
-                "scrapedLicenceNumber": "25 68 001 248",
-                "naldLicenceNumber": "2568001248",
+                "rawScrapedLicenceNumber": "25 68 001 248",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               },
               {
                 "licenceNumber": "25 68 001 249",
-                "scrapedLicenceNumber": "25 68 001 249",
-                "naldLicenceNumber": "2568001249",
+                "rawScrapedLicenceNumber": "25 68 001 249",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               }
             ],
             "limits": [
@@ -503,32 +542,51 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/248",
-          "scrapedLicenceNumber": "25 68 001 248",
-          "naldLicenceNumber": "2568001248",
+          "rawScrapedLicenceNumber": "25 68 001 248",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/248",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         },
         {
           "licenceNumber": "25/68/001/249",
-          "scrapedLicenceNumber": "25 68 001 249",
-          "naldLicenceNumber": "2568001249",
+          "rawScrapedLicenceNumber": "25 68 001 249",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/249",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         }
       ],
       "licenceSets": [
@@ -578,7 +636,8 @@
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
       },
-      "licenceFoundInList": false,
+      "naldStatus": "Unknown",
+      "licenceType": "Abstraction",
       "dmsPath": "Something to look for"
     },
     {
@@ -658,33 +717,37 @@
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
-                "scrapedLicenceNumber": "25 68 001 247",
-                "naldLicenceNumber": "2568001247",
+                "rawScrapedLicenceNumber": "25 68 001 247",
                 "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+                "dmsPath": "Something to look for",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false,
-                "dmsPath": "Something to look for"
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               },
               {
                 "licenceNumber": "25 68 001 249",
-                "scrapedLicenceNumber": "25 68 001 249",
-                "naldLicenceNumber": "2568001249",
+                "rawScrapedLicenceNumber": "25 68 001 249",
                 "containedIn": [
                   {
+                    "source": "Document",
                     "sectionName": "AbstractionLimits",
                     "linkReason": "AggregateCondition",
+                    "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
-                "licenceFoundInList": false
+                "naldStatus": "Unknown",
+                "licenceType": "Abstraction"
               }
             ],
             "limits": [
@@ -707,33 +770,52 @@
       "linkedLicences": [
         {
           "licenceNumber": "25/68/001/247",
-          "scrapedLicenceNumber": "25 68 001 247",
-          "naldLicenceNumber": "2568001247",
+          "rawScrapedLicenceNumber": "25 68 001 247",
           "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
+          "dmsPath": "Something to look for",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/247",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false,
-          "dmsPath": "Something to look for"
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         },
         {
           "licenceNumber": "25/68/001/249",
-          "scrapedLicenceNumber": "25 68 001 249",
-          "naldLicenceNumber": "2568001249",
+          "rawScrapedLicenceNumber": "25 68 001 249",
+          "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf",
           "containedIn": [
             {
+              "source": "Document",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
+              "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
+            },
+            {
+              "source": "OtherDocument",
+              "sectionName": "IncomingLink",
+              "linkReason": "From 25/68/001/249",
+              "lineNumber": -1,
+              "pageNumber": -1
             }
           ],
-          "licenceFoundInList": false
+          "naldStatus": "Unknown",
+          "licenceType": "Abstraction"
         }
       ],
       "licenceSets": [
@@ -783,7 +865,8 @@
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
       },
-      "licenceFoundInList": false
+      "naldStatus": "Unknown",
+      "licenceType": "Abstraction"
     }
   ]
 }

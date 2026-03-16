@@ -19,7 +19,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task ClearCacheAsync(string pdfFilename)
     {
-        var path = $"/Extractor/Cache/ClearSingle?pdfFilePath={pdfFilename}";
+        var path = $"/Extractor/Cache/ClearSingle?pdfFilename={pdfFilename}";
        
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
@@ -36,14 +36,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     }
 
     public async Task<byte[]> DeflateImageAsync(
-        string pdfFilePath,
+        string pdfFilename,
         int imageNumber,
         int pageNumber,
         int processRunId,
         string extension,
         string serviceName)
     {
-        var path = $"/Extractor/Images/DeflateImage?pdfFilePath={pdfFilePath}"
+        var path = $"/Extractor/Images/DeflateImage?pdfFilename={pdfFilename}"
            + $"&imageNumber={imageNumber}&pageNumber={pageNumber}"
            + $"&processRunId={processRunId}&extension={extension}&serviceName={serviceName}";
         
@@ -53,17 +53,17 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension, string serviceName,
+    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilename, string extension, string serviceName,
         int? width = null, int? height = null)
     {
         return Task.FromResult(
-            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilePath, extension));
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilename, extension));
     }
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
         var path = $"/Extractor/Images/GetImage?pageNumber={request.PageNumber}"
-           + $"&imageNumber={request.ImageNumber}&filename={request.Filepath}"
+           + $"&imageNumber={request.ImageNumber}&filename={request.Filename}"
            + $"&noOcrServiceName={request.NoOcrServiceName}&extension={request.Extension}";
         
         var response = await httpClient.GetAsync(path);
@@ -75,7 +75,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        var path = $"/Extractor/Images/GetAll?filename={request.Filepath}&noOcrServiceName={request.NoOcrServiceName}";
+        var path = $"/Extractor/Images/GetAll?filename={request.Filename}&noOcrServiceName={request.NoOcrServiceName}";
         
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
@@ -90,7 +90,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         return Task.FromResult(
             ImageReferenceHelper.GetNoOcrPageReferenceAsync(
-                request.Filepath!,
+                request.Filename!,
                 request.NoOcrServiceName!,
                 request.PageNumber));
     }
@@ -117,9 +117,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetImageText?pageNumber={request.PageNumber}"
-            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+            + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
@@ -130,9 +130,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetScreenshotText?pageNumber={request.PageNumber}"
-           + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+           + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
@@ -143,10 +143,10 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         
         var path = $"/Extractor/Ocr/GetTemporaryImageText?pageNumber={request.PageNumber}"
-            + $"&imageNumber={request.ImageNumber}&filepath={filepath}"
+            + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
@@ -157,9 +157,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath);
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
         var path = $"/Extractor/Ocr/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
-            + $"&filepath={filepath}"
+            + $"&filename={filenameNoExtension}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
@@ -172,7 +172,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         byte[] bytes,
         int width,
         int height,
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int imageNumber,
         int pageNumber,
@@ -186,7 +186,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             Bytes = bytes,
             Width = width,
             Height = height,
-            PdfFilePath = pdfFilePath,
+            PdfFilename = pdfFilename,
             NoOcrServiceName = noOcrServiceName,
             ImageNumber = imageNumber,
             PageNumber = pageNumber,
@@ -211,7 +211,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.NoOcrServiceName,
             request.ProcessRunId,
             pageLines = pagesMetadataJson
@@ -230,7 +230,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.NoOcrServiceName,
             request.ProcessRunId,
             ImagesMetadata = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions())
@@ -249,7 +249,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.PageNumber,
             request.NoOcrServiceName,
             request.ProcessRunId,
@@ -269,7 +269,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             request.PageNumber,
@@ -288,7 +288,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             request.PageNumber,
@@ -307,7 +307,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.PageNumber,
             request.ImageNumber,
             request.OcrServiceName,
@@ -326,7 +326,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var json = JsonSerializer.Serialize(new
         {
-            request.Filepath,
+            request.Filename,
             request.PageNumber,
             request.ImageNumber,
             request.OcrServiceName,
@@ -349,7 +349,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         {
             request.PageNumber,
             request.ImageNumber,
-            request.Filepath,
+            request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
@@ -369,7 +369,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var json = JsonSerializer.Serialize(new
         {
             request.PageNumber,
-            request.Filepath,
+            request.Filename,
             request.OcrServiceName,
             request.ProcessRunId,
             Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
@@ -380,10 +380,10 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task<MetadataCollection?> GetMetadataAsync(string pdfFilename, string noOcrServiceName, int processRunId)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        var path = $"/Extractor/Metadata/Get?filename={filepath}&noOcrServiceName={noOcrServiceName}";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
+        var path = $"/Extractor/Metadata/Get?filename={filenameNoExtension}&noOcrServiceName={noOcrServiceName}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
@@ -406,10 +406,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
-        var path = $"/Extractor/NaldData/GetAll?regionCode={regionCode}";
-        
+        var path = "/Extractor/NaldData/GetAll";
+
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
+
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
@@ -419,9 +424,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
     {
-        var path = $"/Extractor/NaldData/GetLicenceStatusData?regionCode={regionCode}";
+        var path = "/Extractor/NaldData/GetLicenceStatusData";
+        
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
         
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
@@ -432,7 +442,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)>
+    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();

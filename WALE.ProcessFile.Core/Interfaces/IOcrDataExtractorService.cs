@@ -7,7 +7,6 @@ public interface IOcrDataExtractorService
     public Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,

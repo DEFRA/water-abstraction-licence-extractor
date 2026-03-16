@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -316,6 +317,7 @@ public static class TemplateIdentificationExtract
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
 
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         foreach (var batch in batches)
         {
@@ -359,7 +361,7 @@ public static class TemplateIdentificationExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
-                    KeyConfig.PdfFolder);
+                    docnetAlternativeDocumentService);
 
                 //pdfDataExtractors.Add(extractor);
                 templateTypeServices.Add(new TemplateTypeIdentifierService(extractor, region));

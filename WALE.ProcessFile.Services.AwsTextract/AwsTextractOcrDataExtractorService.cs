@@ -63,7 +63,6 @@ public class AwsTextractOcrDataExtractorService
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
@@ -77,7 +76,7 @@ public class AwsTextractOcrDataExtractorService
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -103,7 +102,7 @@ public class AwsTextractOcrDataExtractorService
                 bytesList = await _outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     noOcrServiceName,
-                    pdfFilepath);
+                    pdfDocument.PdfFilename);
             }
             else
             {
@@ -111,7 +110,7 @@ public class AwsTextractOcrDataExtractorService
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
+                    Filename = pdfDocument.PdfFilename,
                     NoOcrServiceName = noOcrServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });

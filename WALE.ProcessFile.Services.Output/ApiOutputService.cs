@@ -20,17 +20,17 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilePath);
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilename);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        string pdfFilename)
     {
-        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilePath}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
+        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilename}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
@@ -63,13 +63,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilePath, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilename, int processRunId)
     {
         var path = "/Extractor/Licence/SaveLicenceSets";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath,
+            pdfFilename,
             processRunId,
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -79,13 +79,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilePath, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
     {
         var path = "/Extractor/Licence/Save";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilePath,
+            pdfFilename,
             processRunId,
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -98,7 +98,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilePath, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -120,14 +120,14 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilePath, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
     {
         var path = "/Extractor/MatchResult/Save";
 
         var json = JsonSerializer.Serialize(new
         {
             Matches = matchesResult,
-            PdfFilePath = pdfFilePath,
+            pdfFilename,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
         
@@ -148,11 +148,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilePath,
+        string pdfFilename,
         int processRunId)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        var images = pdfDocument.GetPageAsSkBitmap(pageNumber, noOcrServiceName);
+        var filenameNoExtension = pdfDocument.PdfFilenameNoExtension;
+        var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         var byteSize = 0;
         var tasks = new List<Task<int>>();
@@ -163,7 +163,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
                 providerName,
                 bitmap,
                 pageNumber, 
-                pdfFilename,
+                filenameNoExtension,
                 processRunId));
         }
 
@@ -238,7 +238,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task SaveAllPagesTextAsync(
         List<DocumentLine> documentLines,
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {
@@ -247,7 +247,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
-            pdfFilePath,
+            pdfFilename,
             noOcrServiceName,
             processRunId
         }, JsonHelper.GetSerializerOptions());
@@ -280,9 +280,19 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Get all licences returned null");
+        }
+
+        return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(
@@ -303,6 +313,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     }
 
     public Task<MatchesResult?> GetMatchesResult(string filename)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
     {
         throw new NotImplementedException();
     }

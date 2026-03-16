@@ -11,6 +11,13 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class LicenceController(IOutputService outputService) : Controller
 {
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync([FromQuery] int processRunId)
+    {
+        var licences = await outputService.GetLicencesAsync(processRunId);
+        return Ok(licences);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> SaveAsync(
         [FromBody] SaveLicenceRequest request)
@@ -21,7 +28,7 @@ public class LicenceController(IOutputService outputService) : Controller
         
         var returnId = await outputService.SaveLicenceAsync(
             licence,
-            request.pdfFilePath,
+            request.pdfFilename,
             request.processRunId);
 
         return Ok(returnId);
@@ -46,7 +53,7 @@ public class LicenceController(IOutputService outputService) : Controller
         
         await outputService.SaveLicenceSetsAsync(
             licenceSets,
-            request.pdfFilePath!,
+            request.pdfFilename!,
             request.processRunId);
 
         return Ok();
@@ -56,14 +63,14 @@ public class LicenceController(IOutputService outputService) : Controller
     {
         public string? licenceSets { get; set; }
         
-        public string? pdfFilePath { get; set; }
+        public string? pdfFilename { get; set; }
         
         public int processRunId { get; set; }
     }
     
     public class SaveLicenceRequest
     {
-        public string? pdfFilePath { get; set; }
+        public string? pdfFilename { get; set; }
         public int processRunId { get; set; }
         public string? licence  { get; set; }
     }

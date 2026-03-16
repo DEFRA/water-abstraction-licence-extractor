@@ -6,8 +6,8 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Enums;
+using WALE.ProcessFile.Services.Helpers;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 
 namespace WALE.ProcessFile.Services.Converters;
@@ -19,7 +19,8 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        Dictionary<string, List<NaldData>> naldData)
+        Dictionary<string, List<NaldData>> naldData,
+        NaldLinkedLicenceHelper? naldLinkedLicenceHelper)
     {
         var matches = matchesResult.Matches;
         var regionCode = matchesResult.RegionCode;
@@ -115,15 +116,51 @@ public static partial class WalSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
             licenceNumber,
             naldLicenceStatusData,
             regionCode);
 
-        var linkedLicences = aggregates
+        var linkedLicences = new List<LinkedLicence>();
+        
+        if (naldLinkedLicenceHelper != null)
+        {
+            var naldLinkedLicences =
+                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
+
+            foreach (var naldLinkedLicence in naldLinkedLicences)
+            {
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                    naldLinkedLicence.NaldLicence.LicenceNumber,
+                    naldLinkedLicence.NaldLicence.RegionCode);
+                
+                var thisDmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
+                    ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+                    : null;
+                
+                linkedLicences.Add(new LinkedLicence
+                {
+                    LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                    PermitNumber = thisDmsFileData?.PermitNumber,
+                    DmsPath = thisDmsFileData?.DmsPath,
+                    ContainedIn =
+                    [
+                        new LinkedLicenceSection
+                        {
+                            Source = LinkedLicenceSource.Nald,
+                            LinkReason = naldLinkedLicence.LinkType.ToString(),
+                            SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
+                                ? $"From {naldLinkedLicence.IncomingLicenceNumber}"
+                                : naldLinkedLicence.FromField
+                        }
+                    ]
+                });
+            }
+        }
+
+        linkedLicences.AddRange(aggregates
             .Where(x => x.LinkedLicences?.Length >= 1)
-            .SelectMany(x => x.LinkedLicences!)
-            .ToList();
+            .SelectMany(x => x.LinkedLicences!));
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(
             matches,
@@ -183,73 +220,12 @@ public static partial class WalSchemaConverter
         
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
-        linkedLicences = linkedLicences
-            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
-            .Select(linkedLicencesGroup =>
-            {
-                var firstLinkedLicence = linkedLicencesGroup.First();
-                var containedIn = new List<LinkedLicenceSection>();
-
-                foreach (var linkedLicence in linkedLicencesGroup)
-                {
-                    if (linkedLicence.ContainedIn == null)
-                    {
-                        continue;
-                    }
-
-                    var sectionItems = linkedLicence.ContainedIn;
-
-                    foreach (var sectionItem in sectionItems)
-                    {
-                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
-                        {
-                            continue;
-                        }
-
-                        // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
-                        if (containedIn.Any(fs => fs.LineNumber == sectionItem.LineNumber
-                                                  && fs.PageNumber == sectionItem.PageNumber))
-                        {
-                            continue;
-                        }
-
-                        containedIn.Add(sectionItem);
-                    }
-                }
-
-                var linkedLicenceNumber =
-                    FormattingHelper.FormatLicenceNumber(firstLinkedLicence.LicenceNumber, regionCode);
-
-                return ToLinkedLicence(
-                    linkedLicenceNumber,
-                    firstLinkedLicence.ScrapedLicenceNumber,
-                    firstLinkedLicence.NaldLicenceNumber,
-                    firstLinkedLicence.Filename,
-                    firstLinkedLicence.Condition,
-                    containedIn.ToArray(),
-                    naldLicenceStatusData,
-                    licenceNumbersMapping,
-                    regionCode);
-            })
-            .Where(linkedLicence => linkedLicence != null)
-            .Select(linkedLicence => linkedLicence!)
-            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
-            .ToList();
-
-        var newLinkedLicences = new List<LinkedLicence>();
-
-        foreach (var linkedLicence in linkedLicences)
-        {
-            if (newLinkedLicences.Any(linkedLicence2 =>
-                    LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
-            {
-                continue;
-            }
-
-            newLinkedLicences.Add(linkedLicence);
-        }
-
-        linkedLicences = newLinkedLicences;
+        linkedLicences = ConsolidateLinkedLicences(
+            linkedLicences,
+            regionCode,
+            licenceNumber!,
+            naldLicenceStatusData,
+            licenceNumbersMapping);
 
         var anywhereInDocumentLinkedLicences = GetAnywhereInDocumentLinkedLicences(
             matches,
@@ -332,6 +308,7 @@ public static partial class WalSchemaConverter
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
+        
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -347,13 +324,34 @@ public static partial class WalSchemaConverter
             Aggregates = aggregates,
             Individual = individual
         };
+        
+        var naldStatus = NaldLicenceStatus.Unknown;
+        if (isLiveLicence == true || isImpoundmentLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Live;
+        }
+        else if (isDeadLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Dead;
+        }
+        
+        var licenceType = isImpoundmentLicence == true
+            ? LicenceType.Impoundment
+            : LicenceType.Abstraction;
 
+        if (!string.IsNullOrEmpty(naldDataLine?.ArepEiucCode))
+        {
+            noneSchemaData.Add("ArepEuicCode", naldDataLine.ArepEiucCode);
+        }
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumberWithConfidence,
             NaldLicenceNumber = dmsFileData?.PermitNumber,
+            PermitNumber = dmsFileData?.PermitNumber,
+            DmsFileId = dmsFileData?.FileId,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
             Points = points,
@@ -363,15 +361,101 @@ public static partial class WalSchemaConverter
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
-            IsDeadLicence = isDeadLicence,
-            IsImpoundmentLicence = isImpoundmentLicence,
-            IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound
+            NaldStatus = naldStatus,
+            LicenceType = licenceType
         };
     }
 
+    private static List<LinkedLicence> ConsolidateLinkedLicences(
+        List<LinkedLicence> linkedLicences,
+        int regionCode,
+        string? licenceNumber,
+        NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, DmsFileData> licenceNumbersMapping)
+    {
+        var linkedLicences1 = linkedLicences
+            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
+            .Select(linkedLicencesGroup =>
+            {
+                var containedIn = new List<LinkedLicenceSection>();
+
+                foreach (var linkedLicence in linkedLicencesGroup)
+                {
+                    if (linkedLicence.ContainedIn == null)
+                    {
+                        continue;
+                    }
+
+                    var sectionItems = linkedLicence.ContainedIn;
+
+                    foreach (var sectionItem in sectionItems)
+                    {
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        {
+                            continue;
+                        }
+
+                        // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
+                        // in documents
+                        if (containedIn.Any(fs => 
+                            sectionItem.Source != LinkedLicenceSource.Nald
+                                && (fs.LineNumber == sectionItem.LineNumber && fs.PageNumber == sectionItem.PageNumber)))
+                        {
+                            continue;
+                        }
+
+                        containedIn.Add(sectionItem);
+                    }
+                }
+
+                var licenceNumberStr = linkedLicencesGroup
+                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.LicenceNumber))?
+                    .LicenceNumber;
+                
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumberStr, regionCode);
+                
+                return ToLinkedLicence(
+                    linkedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
+                        .RawScrapedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
+                        .PermitNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
+                        .Filename,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.Condition != null)?
+                        .Condition,
+                    containedIn.ToArray(),
+                    naldLicenceStatusData,
+                    licenceNumbersMapping,
+                    regionCode);
+            })
+            .Where(linkedLicence => linkedLicence != null)
+            .Select(linkedLicence => linkedLicence!)
+            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
+            .ToList();
+
+        var newLinkedLicences = new List<LinkedLicence>();
+
+        foreach (var linkedLicence in linkedLicences1)
+        {
+            if (newLinkedLicences.Any(linkedLicence2 =>
+                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
+            {
+                continue;
+            }
+
+            newLinkedLicences.Add(linkedLicence);
+        }
+
+        return newLinkedLicences;
+    }
+
     // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
-    private static bool IsPlusOrMinusACoupleOfLines(int document1LineNumber, int document2LineNumber)
+    private static bool IsPlusOrMinusACoupleOfLines(int? document1LineNumber, int? document2LineNumber)
     {
         return document1LineNumber >= document2LineNumber - 2
             && document1LineNumber <= document2LineNumber + 2;            
@@ -509,7 +593,7 @@ public static partial class WalSchemaConverter
     private static LinkedLicence? ToLinkedLicence(
         string? linkedLicenceNumber,
         string? scrapedLinkedLicenceNumber,
-        string? naldLinkedLicenceNumber,
+        string? linkedLicencePermitNumber,
         string? filename,
         Condition? condition,
         LinkedLicenceSection[] containedIn,
@@ -517,8 +601,8 @@ public static partial class WalSchemaConverter
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
-            naldLinkedLicenceNumber,
+        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+            linkedLicencePermitNumber,
             naldLicenceStatusData,
             regionCode);
 
@@ -533,29 +617,39 @@ public static partial class WalSchemaConverter
             ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
             : null;
 
+        var naldStatus = NaldLicenceStatus.Unknown;
+        if (isLiveLicence == true || isImpoundmentLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Live;
+        }
+        else if (isDeadLicence == true)
+        {
+            naldStatus = NaldLicenceStatus.Dead;
+        }
+        
+        var licenceType = isImpoundmentLicence == true
+            ? LicenceType.Impoundment
+            : LicenceType.Abstraction;
+        
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
-            ScrapedLicenceNumber = scrapedLinkedLicenceNumber,
-            NaldLicenceNumber = naldLinkedLicenceNumber,
+            RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
+            PermitNumber = dmsFileData?.PermitNumber,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
-            IsDeadLicence = isDeadLicence,
-            IsImpoundmentLicence = isImpoundmentLicence,
-            IsLiveLicence = isLiveLicence,
-            LicenceFoundInList = isFound,
+            NaldStatus = naldStatus,
+            LicenceType = licenceType,
             DmsPath = dmsFileData?.DmsPath
         };
     }
 
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
-        string pdfFolder,
         int processRunId,
         LookupConfiguration lookupConfiguration)
     {
@@ -567,29 +661,28 @@ public static partial class WalSchemaConverter
             matchesResult.RegionCode);
 
         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
+            ? lookupConfiguration.LicenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
             : null;
 
         var primaryLicence = ToLicence(
             matchesResult,
             naldLicenceStatusData,
             dmsFileData,
-            licenceNumbersMapping,
-            naldData);
+            lookupConfiguration.LicenceNumberMapping,
+            naldData,
+            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
         var linkedLicences = await GetLinkedLicencesAsync(
             matchesResult,
             primaryLicence,
-            licenceNumbersMapping,
             naldLicenceStatusData,
             naldData,
             pdfDataExtractorService,
-            pdfFolder,
             previouslyParsedPaths,
             processRunId,
-lookupConfiguration);
+            lookupConfiguration);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -700,13 +793,15 @@ lookupConfiguration);
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
             }
 
-            AddMissingBackLinks(
+            AddIncomingLinks(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
-                licenceNumbersMapping,
+                lookupConfiguration.LicenceNumberMapping,
                 matchesResult.RegionCode);
 
+            
+            
             var newLicenceSetIds = new List<LicenceSetReference>
             {
                 new()
@@ -741,7 +836,7 @@ lookupConfiguration);
         return returnList;
     }
 
-    private static List<LicenceSet> AddMissingBackLinks(
+    private static List<LicenceSet> AddIncomingLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         NaldLicenceStatusData naldLicenceStatusData,
@@ -777,19 +872,18 @@ lookupConfiguration);
                     var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
                     incomingAndOutgoingLinks.AddRange(outgoingLinks);
 
-                    //...
-
                     foreach (var incomingLink in incomingLinks)
                     {
-                        if (outgoingLinks.Contains(incomingLink.LicenceNumber)
-                            || licence.LinkedLicences.Any(linkedLicence =>
-                                linkedLicence.LicenceNumber == incomingLink.LicenceNumber))
+                        // If already output, don't add again
+                        if (licence.LinkedLicences.Any(ll =>
+                                ll.LicenceNumber == incomingLink.LicenceNumber &&
+                                ll.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.IncomingLink) ==
+                                true))
                         {
                             continue;
                         }
-
-                        // Back link is missing
-                        var backLink = ToLinkedLicence(
+                        
+                        var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
                             incomingLink.NaldLicenceNumber,
@@ -798,8 +892,9 @@ lookupConfiguration);
                             [
                                 new LinkedLicenceSection
                                 {
-                                    SectionName = LinkedLicenceSectionNames.ImplicitBackLink,
-                                    LinkReason = $"Linked from {incomingLink.LicenceNumber} ({incomingLink.Filename})",
+                                    Source = LinkedLicenceSource.OtherDocument,
+                                    SectionName = LinkedLicenceSectionNames.IncomingLink,
+                                    LinkReason = $"From {incomingLink.LicenceNumber}",
                                     LineNumber = -1,
                                     PageNumber = -1,
                                 }
@@ -808,11 +903,11 @@ lookupConfiguration);
                             licenceNumbersMapping,
                             regionCode);
 
-                        if (backLink != null)
+                        if (incomingLinkedLicence != null)
                         {
                             licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                             {
-                                backLink
+                                incomingLinkedLicence 
                             }.ToArray();
                         }
 
@@ -857,6 +952,13 @@ lookupConfiguration);
 
                         licence.LicenceSets = newLicenceSetIds.ToArray();
                     }
+
+                    licence.LinkedLicences = ConsolidateLinkedLicences(
+                        licence.LinkedLicences.ToList(),
+                        regionCode,
+                        licence.LicenceNumber?.Value,
+                        naldLicenceStatusData,
+                        licenceNumbersMapping).ToArray();
                 }
             }
         }
@@ -868,7 +970,7 @@ lookupConfiguration);
 
         return returnList;
     }
-
+    
     private static Licence[] GetLicencesFromStrings(
         IEnumerable<Licence> licences,
         IReadOnlyList<string> licenceNumbers)
@@ -981,12 +1083,10 @@ lookupConfiguration);
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         MatchesResult matchesResult,
         Licence primaryLicence,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
-        string pdfFolder,
-        List<string> previouslyParsedPaths,
+        List<string> previouslyParsedFiles,
         int processRunId,
         LookupConfiguration lookupConfiguration)
     {
@@ -1019,15 +1119,16 @@ lookupConfiguration);
                             FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode);
 
                         var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-                            ? licenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
+                            ? lookupConfiguration.LicenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
                             : null;
 
                         var linkedLicence = ToLicence(
                             matches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            licenceNumberMapping,
-                            naldData);
+                            lookupConfiguration.LicenceNumberMapping,
+                            naldData,
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
                         returnLicences.Add(linkedLicence);
                     }
@@ -1053,7 +1154,7 @@ lookupConfiguration);
                         var strippedLicenceNumber =
                             FormattingHelper.StripForComparison(licenceNumber, matchesResult.RegionCode)!;
 
-                        if (!licenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
+                        if (!lookupConfiguration.LicenceNumberMapping.TryGetValue(strippedLicenceNumber, out var dmsFileData))
                         {
                             returnLicences.Add(new Licence
                             {
@@ -1068,27 +1169,23 @@ lookupConfiguration);
 
                         var destinationFileName = dmsFileData.DestinationFileName!;
 
-                        if (!destinationFileName.Contains('/'))
-                        {
-                            destinationFileName = $"{pdfFolder}{destinationFileName}";
-                        }
-
+                        var clonedConfig = lookupConfiguration.Clone();
+                        clonedConfig.LicenceNumberMapping = lookupConfiguration.LicenceNumberMapping;
+                        clonedConfig.RegionCode = matchesResult.RegionCode;
+                        
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                             destinationFileName,
-                            new LookupConfiguration(
-                                LabelConfiguration.GetLabels(),
-                                licenceNumberMapping,
-                                lookupConfiguration.ValidLowercaseFirstNames,
-                                matchesResult.RegionCode),
-                            previouslyParsedPaths,
+                            clonedConfig,
+                            previouslyParsedFiles,
                             processRunId);
 
                         var licence = ToLicence(
                             relatedFileMatches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            licenceNumberMapping,
-                            naldData);
+                            lookupConfiguration.LicenceNumberMapping,
+                            naldData,
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
                         returnLicences.Add(licence);
                     }
@@ -1116,7 +1213,7 @@ lookupConfiguration);
                 continue;
             }
 
-            if (!licenceNumberMapping.TryGetValue(strippedLlNumber, out var dmsFileData))
+            if (!lookupConfiguration.LicenceNumberMapping.TryGetValue(strippedLlNumber, out var dmsFileData))
             {
                 returnLicences.Add(new Licence
                 {
@@ -1128,28 +1225,33 @@ lookupConfiguration);
             }
 
             var destinationFileName = dmsFileData.DestinationFileName!;
-
-            if (!destinationFileName.Contains('/'))
+            if (string.IsNullOrEmpty(destinationFileName))
             {
-                destinationFileName = $"{pdfFolder}{destinationFileName}";
+                returnLicences.Add(new Licence
+                {
+                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
+                    Status = LicenceStatus.PathMissing
+                });
+
+                continue;
             }
 
+            var clonedConfig = lookupConfiguration.Clone();
+            clonedConfig.RegionCode = matchesResult.RegionCode;
+            
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
-                new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
-                    licenceNumberMapping,
-                    lookupConfiguration.ValidLowercaseFirstNames,
-                    matchesResult.RegionCode),
-                previouslyParsedPaths,
+                clonedConfig,
+                previouslyParsedFiles,
                 processRunId);
 
             var licence = ToLicence(
                 relatedFileMatches,
                 naldLicenceStatusData,
                 dmsFileData,
-                licenceNumberMapping,
-                naldData);
+                lookupConfiguration.LicenceNumberMapping,
+                naldData,
+                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
             returnLicences.Add(licence);
         }
@@ -1220,7 +1322,7 @@ lookupConfiguration);
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1233,21 +1335,34 @@ lookupConfiguration);
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_AdditionalInformation_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.AdditionalInformation,
                             LinkReason = GetLinkReason(
                                 [GetParent(additional, linkedLicenceNumber)],
@@ -1290,7 +1405,7 @@ lookupConfiguration);
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1303,21 +1418,34 @@ lookupConfiguration);
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_ReasonsForConditions_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.ReasonsForConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(reasonsForConditions, linkedLicenceNumber)],
@@ -1351,6 +1479,8 @@ lookupConfiguration);
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
     {
+        // TODO make these repeated methods more generic
+        
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
             .ToList();
@@ -1377,7 +1507,7 @@ lookupConfiguration);
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
-            var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+            var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                 naldLinkedLicenceNumber,
                 naldLicenceStatusData,
                 regionCode);
@@ -1390,21 +1520,34 @@ lookupConfiguration);
 
             noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
             
+            var naldStatus = NaldLicenceStatus.Unknown;
+            if (isLiveLicence == true || isImpoundmentLicence == true)
+            {
+                naldStatus = NaldLicenceStatus.Live;
+            }
+            else if (isDeadLicence == true)
+            {
+                naldStatus = NaldLicenceStatus.Dead;
+            }
+        
+            var licenceType = isImpoundmentLicence == true
+                ? LicenceType.Impoundment
+                : LicenceType.Abstraction;
+            
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                ScrapedLicenceNumber = linkedLicenceNumber,
-                NaldLicenceNumber = naldLinkedLicenceNumber,
+                RawScrapedLicenceNumber = linkedLicenceNumber,
+                PermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
-                IsLiveLicence = isLiveLicence,
-                IsDeadLicence = isDeadLicence,
-                IsImpoundmentLicence = isImpoundmentLicence,
-                LicenceFoundInList = isFound,
+                NaldStatus = naldStatus,
+                LicenceType = licenceType,
                 ContainedIn =
                 [
                     new LinkedLicenceSection
                     {
+                        Source = LinkedLicenceSource.Document,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.PageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LineNumber,
@@ -1463,7 +1606,7 @@ lookupConfiguration);
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1476,21 +1619,34 @@ lookupConfiguration);
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = lln,
-                    ScrapedLicenceNumber = lln,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = lln,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.LicenceHistory,
                             LinkReason =
                                 GetLinkReason([licenceHistorySection],
@@ -1543,7 +1699,7 @@ lookupConfiguration);
 
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1556,21 +1712,34 @@ lookupConfiguration);
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
                         
+                        var naldStatus = NaldLicenceStatus.Unknown;
+                        if (isLiveLicence == true || isImpoundmentLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Live;
+                        }
+                        else if (isDeadLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Dead;
+                        }
+        
+                        var licenceType = isImpoundmentLicence == true
+                            ? LicenceType.Impoundment
+                            : LicenceType.Abstraction;
+                        
                         return new LinkedLicence
                         {
-                            NaldLicenceNumber = naldLicenceNumber,
-                            ScrapedLicenceNumber = licenceNumber,
+                            PermitNumber = dmsFileData?.PermitNumber,
+                            RawScrapedLicenceNumber = licenceNumber,
                             LicenceNumber = licenceNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
-                            IsLiveLicence = isLiveLicence,
-                            IsDeadLicence = isDeadLicence,
-                            IsImpoundmentLicence = isImpoundmentLicence,
-                            LicenceFoundInList = isFound,
+                            NaldStatus = naldStatus,
+                            LicenceType = licenceType,
                             ContainedIn =
                             [
                                 new LinkedLicenceSection
                                 {
+                                    Source = LinkedLicenceSource.Document,
                                     SectionName = LinkedLicenceSectionNames.Purposes,
                                     LinkReason = GetLinkReason(
                                         [GetParent(purposePointGroup, linkedLicenceNumber)],
@@ -1625,7 +1794,7 @@ lookupConfiguration);
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                             null;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1638,21 +1807,34 @@ lookupConfiguration);
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Points_{count++}", linkedLicenceNumber.Confidence);
                         
+                        var naldStatus = NaldLicenceStatus.Unknown;
+                        if (isLiveLicence == true || isImpoundmentLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Live;
+                        }
+                        else if (isDeadLicence == true)
+                        {
+                            naldStatus = NaldLicenceStatus.Dead;
+                        }
+        
+                        var licenceType = isImpoundmentLicence == true
+                            ? LicenceType.Impoundment
+                            : LicenceType.Abstraction;
+                        
                         return new LinkedLicence
                         {
                             LicenceNumber = licenceNumber,
-                            ScrapedLicenceNumber = licenceNumber,
-                            NaldLicenceNumber = naldLicenceNumber,
+                            RawScrapedLicenceNumber = licenceNumber,
+                            PermitNumber = dmsFileData?.PermitNumber,
                             Filename = dmsFileData?.DestinationFileName,
                             DmsPath = dmsFileData?.DmsPath,
-                            IsLiveLicence = isLiveLicence,
-                            IsDeadLicence = isDeadLicence,
-                            IsImpoundmentLicence = isImpoundmentLicence,
-                            LicenceFoundInList = isFound,
+                            NaldStatus = naldStatus,
+                            LicenceType = licenceType,
                             ContainedIn =
                             [
                                 new LinkedLicenceSection
                                 {
+                                    Source = LinkedLicenceSource.Document,
                                     SectionName = LinkedLicenceSectionNames.Points,
                                     LinkReason = GetLinkReason(
                                         [GetParent(pointPurposeGroup, linkedLicenceNumber)],
@@ -1698,7 +1880,7 @@ lookupConfiguration);
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1711,21 +1893,34 @@ lookupConfiguration);
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_Records_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.Records,
                             LinkReason = GetLinkReason(
                                 [GetParent(records, linkedLicenceNumber)],
@@ -1767,7 +1962,7 @@ lookupConfiguration);
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     licenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1780,21 +1975,34 @@ lookupConfiguration);
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherConditions_{count++}", linkedLicenceNumber.Confidence);
                 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.FurtherConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherConditions, linkedLicenceNumber)],
@@ -1837,7 +2045,7 @@ lookupConfiguration);
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1850,21 +2058,34 @@ lookupConfiguration);
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherProvisions_{count++}", linkedLicenceNumber.Confidence);
 
+                var naldStatus = NaldLicenceStatus.Unknown;
+                if (isLiveLicence == true || isImpoundmentLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Live;
+                }
+                else if (isDeadLicence == true)
+                {
+                    naldStatus = NaldLicenceStatus.Dead;
+                }
+        
+                var licenceType = isImpoundmentLicence == true
+                    ? LicenceType.Impoundment
+                    : LicenceType.Abstraction;
+                
                 return new LinkedLicence
                 {
                     LicenceNumber = licenceNumber,
-                    ScrapedLicenceNumber = licenceNumber,
-                    NaldLicenceNumber = naldLicenceNumber,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
-                    IsLiveLicence = isLiveLicence,
-                    IsDeadLicence = isDeadLicence,
-                    IsImpoundmentLicence = isImpoundmentLicence,
-                    LicenceFoundInList = isFound,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
+                            Source = LinkedLicenceSource.Document,
                             SectionName = LinkedLicenceSectionNames.FurtherProvisions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherProvisions, linkedLicenceNumber)],
@@ -2174,10 +2395,10 @@ lookupConfiguration);
                     || t.Text.Contains("The quantities detailed below are in aggregate")
                     || t.Text.Contains("quantity equal to the difference between")) == true;
 
-            
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList(); // E.g. Jan, Feb etc..
+            
             if (datePurposes.Count >= 1)
             {
                 individualGroups.Add(new AbstractionLimitGroup
@@ -2223,14 +2444,6 @@ lookupConfiguration);
                 {
                     var condition = (Condition?)null; // TODO
 
-                    // TODO the following is bugged - so dont use it
-                    /*var linkedLicenceFilename = siblings
-                        .FirstOrDefault(sibling =>
-                            sibling.MatchedLabel?.Name == "LinkedLicenceFilename")?
-                        .Text?
-                        .FirstOrDefault()?
-                        .Text;*/
-
                     var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(scrapedLicenceNumber, regionCode);
 
@@ -2238,7 +2451,7 @@ lookupConfiguration);
                         (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                         null;
 
-                    var (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound) = GetLiveDeadImpoundmentFound(
+                    var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
                         licenceNumber,
                         naldLicenceStatusData,
                         regionCode);
@@ -2247,23 +2460,37 @@ lookupConfiguration);
                         ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                         : null;
 
+                    var naldStatus = NaldLicenceStatus.Unknown;
+                    if (isLiveLicence == true || isImpoundmentLicence == true)
+                    {
+                        naldStatus = NaldLicenceStatus.Live;
+                    }
+                    else if (isDeadLicence == true)
+                    {
+                        naldStatus = NaldLicenceStatus.Dead;
+                    }
+        
+                    var licenceType = isImpoundmentLicence == true
+                        ? LicenceType.Impoundment
+                        : LicenceType.Abstraction;
+                    
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,
-                        ScrapedLicenceNumber = scrapedLicenceNumber,
-                        NaldLicenceNumber = naldLicenceNumber,
+                        RawScrapedLicenceNumber = scrapedLicenceNumber,
+                        PermitNumber = dmsFileData?.PermitNumber,
                         DmsPath = dmsFileData?.DmsPath,
                         Filename = dmsFileData?.DestinationFileName,
-                        IsLiveLicence = isLiveLicence,
-                        IsDeadLicence = isDeadLicence,
-                        IsImpoundmentLicence = isImpoundmentLicence,
-                        LicenceFoundInList = isFound,
+                        NaldStatus = naldStatus,
+                        LicenceType = licenceType,
                         Condition = condition,
                         ContainedIn =
                         [
                             new LinkedLicenceSection
                             {
+                                Source = LinkedLicenceSource.Document,
                                 SectionName = LinkedLicenceSectionNames.AbstractionLimits,
+                                IsBecauseOfAggregate = textSuggestsIsAggregate,
                                 LinkReason = GetLinkReason([abstractionLimitPointSub],
                                     linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                                 LineNumber = linkedLicenceNumber.LineNumber,
@@ -2278,7 +2505,7 @@ lookupConfiguration);
 
             .Where(linkedLicence =>
                     FormattingHelper.IsValidLicenceNumber(
-linkedLicence.LicenceNumber!,
+                        linkedLicence.LicenceNumber!,
                         regionCode) != false)
                 .ToList();
             
@@ -3419,7 +3646,7 @@ linkedLicence.LicenceNumber!,
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
-        distinctLicenceSets.AddRange(AddMissingBackLinks(
+        distinctLicenceSets.AddRange(AddIncomingLinks(
             licenceSetGroups,
             true,
             naldLicenceStatusData,
@@ -3668,7 +3895,7 @@ linkedLicence.LicenceNumber!,
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
                   || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                          ci.SectionName == LinkedLicenceSectionNames.ImplicitBackLink) != true)
+                          ci.SectionName == LinkedLicenceSectionNames.IncomingLink) != true)
                       .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

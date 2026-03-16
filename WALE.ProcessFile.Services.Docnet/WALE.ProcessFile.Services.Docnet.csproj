@@ -10,4 +10,8 @@
         <PackageReference Include="Docnet.Core" Version="2.6.0" />
         <PackageReference Include="SkiaSharp" Version="3.119.2" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+    </ItemGroup>
 </Project>

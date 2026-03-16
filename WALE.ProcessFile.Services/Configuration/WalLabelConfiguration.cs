@@ -5,7 +5,7 @@ using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
-public static class LabelConfiguration
+public static class WalLabelConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {

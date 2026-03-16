@@ -82,7 +82,8 @@ public static class FormattingHelper
         {
             return licenceNumber;
         }
-        
+
+        var origLicenceNumber = licenceNumber;
         licenceNumber = licenceNumber
             .Replace("//", "/")
             .Replace(".", "/")
@@ -90,6 +91,9 @@ public static class FormattingHelper
             .Replace("-", "/");
 
         var origSectionLengths = licenceNumber.Split('/');
+        var origSectionInts = origSectionLengths
+            .Select(s => int.TryParse(s, out var i) ? i : (int?)null)
+            .ToArray();
 
         licenceNumber = RemoveSeperators(licenceNumber)!;
         
@@ -386,9 +390,24 @@ public static class FormattingHelper
             if (remainingLicenceNumber.Length >= 7)
             {
                 // Part 3 - 0000
-                parts.Add(remainingLicenceNumber[..4]);
-                remainingLicenceNumber = remainingLicenceNumber[4..];
+                var numberOfCharsInSection = 4;
+                var thisPart = remainingLicenceNumber[..numberOfCharsInSection];
 
+                if (int.TryParse(thisPart, out var thisPartInt))
+                {
+                    var partNumber = 2; // 3 but zero based
+                    if (origSectionInts.Length > 2)
+                    {
+                        if (thisPartInt > origSectionInts[partNumber])
+                        {
+                            numberOfCharsInSection = 3;
+                            thisPart = thisPart[..numberOfCharsInSection];
+                        }
+                    }
+                }
+
+                parts.Add(thisPart);
+                remainingLicenceNumber = remainingLicenceNumber[numberOfCharsInSection..];
 
                 // Part 4 - 000
                 parts.Add(remainingLicenceNumber[..3]);
@@ -430,6 +449,28 @@ public static class FormattingHelper
         else
         {
             return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
+        }
+
+        if (origLicenceNumber.Contains('/'))
+        {
+            var origParts = origLicenceNumber.Split('/');
+            var partsCount = 0;
+            
+            foreach (var origPart in origParts)
+            {
+                if (parts.Count - 1 < partsCount
+                    || !int.TryParse(parts[partsCount++], out var partInt)
+                    || !int.TryParse(origPart, out var origPartInt))
+                {
+                    continue;
+                }
+                
+                if (partInt > origPartInt)
+                {
+                    // We messed it up somewhere - so use the original
+                    return origLicenceNumber;
+                }
+            }
         }
         
         var outputString = string.Join('/', parts);

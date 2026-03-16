@@ -7,6 +7,7 @@ using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -36,7 +37,6 @@ public static class FileTypeIdentificationExtract
         var tesseractExeName = KeyConfig.TesseractExeName;
         var tesseractExeDirectory = KeyConfig.TesseractExeDirectory;
     
-        
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
     
@@ -44,6 +44,7 @@ public static class FileTypeIdentificationExtract
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         // Create 10 instances of PdfDataExtractorService for parallel processing
         var pdfDataExtractors = new List<IPdfDataExtractorService>();
@@ -81,7 +82,7 @@ public static class FileTypeIdentificationExtract
                 cacheService, 
                 outputService,
                 pdfPigDocumentService,
-                KeyConfig.PdfFolder);
+                docnetAlternativeDocumentService);
 
             pdfDataExtractors.Add(pdfDataExtractor);
         }
@@ -96,13 +97,15 @@ public static class FileTypeIdentificationExtract
             labels,
             FileLicenceMapping,
             [],
+            new LocalFileService(KeyConfig.PdfFolder),
             3);
 
         var results = await fileTypeService.ProcessDirectoryAsync(
             KeyConfig.PdfFolder,
             configuration,
             outputService,
-            pdfPigDocumentService);
+            pdfPigDocumentService,
+            docnetAlternativeDocumentService);
         
         var csvData = new List<FileTypeIdentificationResult>();
 

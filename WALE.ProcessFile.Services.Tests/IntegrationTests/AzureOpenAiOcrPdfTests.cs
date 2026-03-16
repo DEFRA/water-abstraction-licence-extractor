@@ -7,6 +7,7 @@ using WALE.ProcessFile.Services.AzureOpenAi;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -39,6 +40,8 @@ public class AzureOpenAiOcrPdfTests
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -54,28 +57,29 @@ public class AzureOpenAiOcrPdfTests
         CacheService,
         OutputService,
         DocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
     
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync()
+    private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
-            3);
+            new LocalFileService(pdfFolder),            
+            4); // TODO - whatever Hampshire & IOW is
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return await _pdfDataExtractor.GetMatchesAsync(
-            PdfFolder + fileName,
-            await LookupConfigurationAsync(),
+            fileName,
+            await LookupConfigurationAsync(PdfFolder),
             
-            [PdfFolder + fileName],
+            [fileName],
             0);
     }
     
@@ -158,19 +162,19 @@ public class AzureOpenAiOcrPdfTests
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             new NaldLicenceStatusData(),
             [],
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+        Assert.Equal("11/42/28.2/7", agreedSchemaLicence.LicenceNumber?.Value);
+        
         Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO should be this
     }
 }

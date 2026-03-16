@@ -11,6 +11,7 @@ using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -25,6 +26,8 @@ public static class GenerateAggregatesCsvForTesting
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
     
     private static readonly Dictionary<string, DmsFileData> FileLicenceMapping = new() {{"", new DmsFileData()}};
     private static readonly Dictionary<string, List<NaldData>> NaldData = [];
@@ -45,7 +48,7 @@ public static class GenerateAggregatesCsvForTesting
             CacheService,
             OutputService,
             DocumentService,
-            KeyConfig.PdfFolder);
+            DocnetAlternativeDocumentService);
 
         var regionCode = 3;
         var data = await GetYorkshire70DataAsync(pdfDataExtractor, regionCode);
@@ -66,9 +69,10 @@ public static class GenerateAggregatesCsvForTesting
             if (_lookupConfiguration == null)
             {
                 _lookupConfiguration = new LookupConfiguration(
-                    LabelConfiguration.GetLabels(),
+                    WalLabelConfiguration.GetLabels(),
                     FileLicenceMapping,
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
+                    new LocalFileService( KeyConfig.PdfFolder),
                     3);
             }
 
@@ -78,12 +82,10 @@ public static class GenerateAggregatesCsvForTesting
     
     static Task<MatchesResult> GetMatchesAsync(string fileName, PdfDataExtractorService pdfDataExtractor)
     {
-        var pdfFolder = KeyConfig.PdfFolder;
-        
         return pdfDataExtractor.GetMatchesAsync(
-            pdfFolder + fileName,
+            fileName,
             LookupConfiguration,
-            [pdfFolder + fileName],
+            [fileName],
             ProcessRunId);
     }
 
@@ -96,8 +98,8 @@ public static class GenerateAggregatesCsvForTesting
             .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .Where(fileName =>
             {
-                var filenameToUse = FileHelper.GetFilenameWithoutExtension(fileName);
-                return yorkshire.Contains(filenameToUse, StringComparer.InvariantCultureIgnoreCase);
+                var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(fileName);
+                return yorkshire.Contains(filenameNoExtension, StringComparer.InvariantCultureIgnoreCase);
                 
             })
             .Select(FileHelper.GetFilenameWithoutExtension)
@@ -113,11 +115,9 @@ public static class GenerateAggregatesCsvForTesting
             var internalJson = await GetMatchesAsync(pdfFilePath!, pdfDataExtractor);
             var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
                 internalJson,
-                FileLicenceMapping,
                 naldLicenceStatusData,
                 NaldData,
                 pdfDataExtractor,
-                KeyConfig.PdfFolder,
                 ProcessRunId,
                 LookupConfiguration
             );
@@ -160,11 +160,9 @@ public static class GenerateAggregatesCsvForTesting
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -174,11 +172,9 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("2-27-29-012 7003124.PDF", pdfDataExtractor);
         var licenceSets2 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -188,11 +184,9 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application - New - Licence Issued 30092021.pdf", pdfDataExtractor);
         var licenceSets3 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
-            NaldData,            
+            NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -202,11 +196,9 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023 (1).pdf", pdfDataExtractor);
         var licenceSets4 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -216,11 +208,9 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Formal Variation Issued Licence 07032023.pdf", pdfDataExtractor);
         var licenceSets5 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         
@@ -230,11 +220,9 @@ public static class GenerateAggregatesCsvForTesting
         internalJson = await GetMatchesAsync("Application Minor Variation Issued Licence 03.10.24.pdf", pdfDataExtractor);
         var licenceSets6 = await WalSchemaConverter.ToLicenceSetsAsync(
             internalJson,
-            FileLicenceMapping,
             naldLicenceStatusData,
             NaldData,
             pdfDataExtractor,
-            KeyConfig.PdfFolder,
             ProcessRunId,
             LookupConfiguration);
         

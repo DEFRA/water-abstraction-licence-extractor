@@ -65,7 +65,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             new OcrServiceImageDataCacheRequest
             {
                 PageNumber = pageNumber,
-                Filepath = filename,
+                Filename = filename,
                 NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName
             });
 
@@ -98,7 +98,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filepath = filename,
+                Filename = filename,
                 NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                 Extension = extension
             });

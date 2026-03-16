@@ -243,7 +243,7 @@ public static class AutoCorrectHelper
         return word;
     }
 
-    public static async Task<List<DocumentLineWord>> AutoCorrectTextAsync(
+    public static List<DocumentLineWord> AutoCorrectText(
         List<DocumentLineWord> lineWords,
         bool removeFirstWordIfLowercase,
         bool checkDictionary)

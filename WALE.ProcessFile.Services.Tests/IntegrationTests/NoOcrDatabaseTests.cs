@@ -8,6 +8,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -38,14 +39,16 @@ public class NoOcrDatabaseTests
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
-    
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
+
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
         DocumentService,
-        TestConfig.PdfFolder);
+        DocnetAlternativeDocumentService);
 
     public NoOcrDatabaseTests()
     {
@@ -81,21 +84,22 @@ public class NoOcrDatabaseTests
 
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync()
+    private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             FileLicenceMapping,
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            new LocalFileService(pdfFolder),
             3);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
         return await _pdfDataExtractor.GetMatchesAsync(
-            TestConfig.PdfFolder + fileName,
-            await LookupConfigurationAsync(),
-            [TestConfig.PdfFolder + fileName],
+            fileName,
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
+            [fileName],
             0);
     }
     
@@ -256,13 +260,11 @@ public class NoOcrDatabaseTests
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             new NaldLicenceStatusData(),
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            await LookupConfigurationAsync());
+            await LookupConfigurationAsync(TestConfig.PdfFolder));
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

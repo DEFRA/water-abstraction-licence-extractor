@@ -82,13 +82,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
     
-    public async Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath,
+    public async Task<int> SaveLicenceAsync(
+        string? licenceNumber,
+        string licenceData,
+        string? filenameNoExtension,
+        Guid? fileId,
+        string? permitNumber,
         int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (filename, licence_number, data, process_run_id, date_time_utc)
-                           VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @DateTimeUtc)
+                           INSERT INTO licence (filename, licence_number, data, process_run_id, file_id, permit_number, date_time_utc)
+                           VALUES (@Filename, @LicenceNumber, @Data, @ProcessRunId, @FileId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -97,10 +102,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new {
-                Filename = pdfFilePath ?? "UNKNOWN",
+                Filename = filenameNoExtension ?? "UNKNOWN",
                 LicenceNumber = licenceNumber,
                 Data = licenceData,
                 ProcessRunId = processRunId,
+                FileId = fileId,
+                PermitNumber = permitNumber,
                 DateTimeUtc = DateTime.UtcNow
             });
     }
@@ -189,7 +196,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.PageNumber,
                 request.NoOcrServiceName,
                 Data = data,
@@ -215,7 +222,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
         new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName,
                 Response = imagesMetadataStr,
                 DateTimeUtc = DateTime.UtcNow,
@@ -237,7 +244,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.NoOcrServiceName,
                 Response = dataStr,
                 DateTimeUtc = DateTime.UtcNow,
@@ -321,7 +328,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -345,7 +352,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,
@@ -368,7 +375,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -392,7 +399,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filepath,
+                Filename = request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,

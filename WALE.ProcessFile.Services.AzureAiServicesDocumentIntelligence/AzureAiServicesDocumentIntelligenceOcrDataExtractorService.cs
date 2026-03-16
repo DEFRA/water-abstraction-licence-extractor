@@ -26,7 +26,6 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
 
     public async Task<IReadOnlyList<WALE.ProcessFile.Core.Models.DocumentLine>> GetTextLinesFromImageAsync(
         string imageReference,
-        string pdfFilepath,
         int pageNumber,
         int imageNumber,
         PdfDocument pdfDocument,
@@ -40,7 +39,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -66,7 +65,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     GeneralConstants.PdfPigDataExtractorServiceName,
-                    pdfFilepath);
+                    pdfDocument.PdfFilename);
             }
             else
             {
@@ -74,7 +73,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
+                    Filename = pdfDocument.PdfFilename,
                     NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
@@ -176,7 +175,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             }
             
             bytes = await cacheService.DeflateImageAsync(
-                request.Filepath!,
+                request.Filename!,
                 request.ImageNumber,
                 request.PageNumber,
                 request.ProcessRunId,

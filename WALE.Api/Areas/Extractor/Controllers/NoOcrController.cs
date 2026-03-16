@@ -21,7 +21,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrPageTextLinesAsync(
             new NoOcrServicePageCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filename,
                 PageNumber = request.pageNumber,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
@@ -42,7 +42,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filename,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -61,7 +61,7 @@ public class NoOcrController(
         
         await outputService.SaveAllPagesTextAsync(
             documentLines,
-            request.pdfFilePath!,
+            request.pdfFilename!,
             request.noOcrServiceName!,
             request.processRunId);
 
@@ -79,7 +79,7 @@ public class NoOcrController(
         await cacheService.SaveNoOcrImagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.filepath,
+                Filename = request.filename,
                 NoOcrServiceName = request.noOcrServiceName,
                 ProcessRunId = request.processRunId
             },
@@ -92,7 +92,7 @@ public class NoOcrController(
 public class SaveNoOcrImagesMetadataRequest
 {
     public string? imagesMetadata { get; set; }
-    public string? filepath { get; set; }
+    public string? filename { get; set; }
     public int processRunId { get; set; }
     public string? noOcrServiceName  { get; set; }
 }
@@ -100,14 +100,14 @@ public class SaveNoOcrImagesMetadataRequest
 public class SaveAllPagesTextRequest
 {
     public string? documentLines{ get; set; }
-    public string? pdfFilePath{ get; set; }
+    public string? pdfFilename{ get; set; }
     public string? noOcrServiceName{ get; set; }
     public int processRunId{ get; set; }
 }
 
 public class SaveNoOcrPageTextLinesRequest
 {
-    public string? filepath { get; set; }
+    public string? filename { get; set; }
     public int pageNumber { get; set; }
     public string? noOcrServiceName  { get; set; }
     public int processRunId { get; set; }

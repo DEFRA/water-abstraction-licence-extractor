@@ -29,13 +29,13 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
     
-    public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName)
+    public async Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName)
     {
         var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilePath,
+            Filename = pdfFilename,
             ProcessRunId = processRunId,
             Extension = extension,
             NoOcrServiceName = serviceName
@@ -48,7 +48,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         
         var deflated = ImageHelper.Deflate(bytAry);
 
-        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var fileCacheFolder= GetFolderPath(pdfFilename);
         var outputFolderFull = $"{fileCacheFolder}/{serviceName}/Images";
         var imagePath = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
         
@@ -62,13 +62,13 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
         int? height = null)
     {
-        var fileCacheFolder= GetFolderPath(pdfFilePath);
+        var fileCacheFolder= GetFolderPath(pdfFilename);
         var outputFolderFull = $"{fileCacheFolder}/{serviceName}/Images";
         Directory.CreateDirectory(outputFolderFull);
 
@@ -82,9 +82,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        // NOTE - This doesn't take into account any of the filters except Filepath and NoOcrServiceName
+        // NOTE - This doesn't take into account any of the filters except Filename and NoOcrServiceName
         
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
 
         var files = Directory.GetFiles(imgCacheFolder).Select(f => f.Split('/').Last()).ToList();
@@ -134,7 +134,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var filePath = await GetImageReferenceAsync(
             request.PageNumber!.Value,
             request.ImageNumber!.Value,
-            request.Filepath!,
+            request.Filename!,
             request.Extension!,
             request.NoOcrServiceName!);
 
@@ -143,7 +143,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             filePath = $"/{filePath}";
         }
 
-        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last();
+        var fileNameWithoutExtension = filePath.Replace($".{request.Extension}", string.Empty).Split('/').Last(); // TODO use helper
         var directory = filePath[..^filePath.Split('/').Last().Length];
 
         var files = Directory
@@ -164,7 +164,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
@@ -173,7 +173,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var imgCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Images";
         Directory.CreateDirectory(imgCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -195,7 +195,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var metadataFileText = await GetNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filepath = request.Filepath,
+                Filename = request.Filename,
                 NoOcrServiceName = request.NoOcrServiceName,
                 ProcessRunId = request.ProcessRunId
             });
@@ -218,7 +218,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
                 PageNumber = pageNumber,
                 NoOcrServiceName = request.NoOcrServiceName,
                 ProcessRunId = request.ProcessRunId,
-                Filepath = request.Filepath
+                Filename = request.Filename
             };
             
             var outputFilename = await GetNoOcrPageReferenceAsync(pageRequest);
@@ -237,7 +237,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -267,7 +267,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -283,7 +283,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -299,7 +299,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -325,7 +325,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -340,9 +340,9 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilename, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilePath, extension, noOcrServiceName, width, height);
+        var filePath = await GetImageReferenceAsync(pageNumber, imageNumber, pdfFilename, extension, noOcrServiceName, width, height);
         await File.WriteAllBytesAsync(filePath, bytes);
 
         return bytes.Length;
@@ -352,7 +352,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
 
@@ -374,7 +374,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
         return File.WriteAllTextAsync(
-            GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filepath!)),
+            GetImageMetadataFilename(request.NoOcrServiceName!, GetFolderPath(request.Filename!)),
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
@@ -382,7 +382,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         NoOcrServicePageCacheRequest request,
         string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var txtCacheFolder = $"{fileCacheFolder.Replace("//", "/")}/{request.NoOcrServiceName}/Text";
         Directory.CreateDirectory(txtCacheFolder); // This checks if exists, and creates the whole path too
         
@@ -397,7 +397,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -410,7 +410,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -420,7 +420,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -433,7 +433,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -443,7 +443,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -457,7 +457,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     
     public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        var fileCacheFolder= GetFolderPath(request.Filepath!);
+        var fileCacheFolder= GetFolderPath(request.Filename!);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
         Directory.CreateDirectory(folder);
     
@@ -468,11 +468,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()));
     }
 
-    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    public Task<MetadataCollection?> GetMetadataAsync(string pdfFilename, string noOcrServiceName, int processRunId)
     {
         return BaseCacheService.GetMetadataAsync(
             this,
-            pdfFilePath,
+            pdfFilename,
             noOcrServiceName,
             processRunId);
     }
@@ -482,17 +482,17 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NaldDataCollection> GetNaldDataAsync(short regionCode)
+    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }

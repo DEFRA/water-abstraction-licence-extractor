@@ -1,35 +1,46 @@
-using Docnet.Core.Models;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Docnet;
 
 namespace WALE.ProcessFile.Core.Models;
 
 public class PdfDocument
 {
     public bool FromCache { get; }
-    public string PdfFilePath { get; }
+    public string PdfFilename { get; }
+    
+    public string PdfFilenameNoExtension { get; }
+    
+    public IFileService FileService { get; }
     
     private IInternalPdfDocument? InternalDocument { get; set; }
+    
+    private IAlternativeImageProvider? AlternativeImageProvider { get; set; }
     
     private IOutputService OutputService { get; set; }
     
     INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; }
-
-    private readonly DocLibInstance DocLibInstance = new();
+    
+    INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
     
     public PdfDocument(
-        string pdfFilePath,
+        string pdfFilename,
         bool fromCache,
         IOutputService outputService,
-        INoOcrPdfDocumentService noOcrPdfDocumentService)
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
+        LookupConfiguration configuration)
     {
-        PdfFilePath = pdfFilePath;
+        PdfFilename = pdfFilename;
+        PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
+        FileService = configuration.FileService;
         FromCache = fromCache;
         OutputService = outputService;
         NoOcrPdfDocumentService = noOcrPdfDocumentService;
+        NoOcrAlternativePdfDocumentService = noOcrAlternativePdfDocumentService;
         
         if (fromCache)
         {
@@ -46,7 +57,8 @@ public class PdfDocument
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(PdfFilePath);
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(FileService, PdfFilename);
+        AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -71,7 +83,7 @@ public class PdfDocument
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
-                        PdfFilePath);
+                        PdfFilename);
                     
                     var pdfPage = new PdfPage
                     {
@@ -102,7 +114,7 @@ public class PdfDocument
         set => _pages = value;
     }
 
-    public List<(string Provider, SKBitmap Bitmap)> GetPageAsSkBitmap(int pageNumber, string noOcrServiceName)
+    public async Task<List<(string Provider, SKBitmap Bitmap)>> GetPageAsSkBitmapAsync(int pageNumber, string noOcrServiceName)
     {
         if (FromCache && InternalDocument == null)
         {
@@ -113,9 +125,11 @@ public class PdfDocument
             pageNumber,
             3F);
 
-        var docnetBitmap = new DocnetBitmap().GetPageAsSKBitmap(
-            PdfFilePath,
-            new PageDimensions(1080, 1920),
+        var docnetBitmap = await AlternativeImageProvider!.GetPageAsSkBitmapAsync(
+            FileService,
+            PdfFilename,
+            1080,
+            1920,
             pageNumber);
 
         return

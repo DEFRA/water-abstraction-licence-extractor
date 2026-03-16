@@ -30,38 +30,38 @@ public static class JsonHelper
             
         foreach (var kvp in inputDictionary)
         {
-            object? value;
-                
-            if (kvp.Value is JsonElement jsonElement)
+            var value = kvp.Value switch
             {
-                value = jsonElement.ValueKind switch
+                int intValue => intValue,
+                string strValue => strValue,
+                null => null,
+                JsonElement jsonElement => jsonElement.ValueKind switch
                 {
                     JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
-                    JsonValueKind.Number => jsonElement.GetInt32(), // NOTE - Used to be double
+                    JsonValueKind.Number => GetSomeTypeOfNumber(jsonElement),
                     JsonValueKind.True => true,
                     JsonValueKind.False => false,
                     JsonValueKind.String => jsonElement.GetString(),
                     JsonValueKind.Object => jsonElement.GetRawText(),
                     _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
-                };
-            }
-            else if (kvp.Value is int intValue)
-            {
-                value = intValue;
-            }
-            else if (kvp.Value is string strValue)
-            {
-                value = strValue;
-            }
-            else
-            {
-                throw new Exception($"Unknown type - {kvp.Value?.GetType().Name}");
-            }
-                
+                },
+                _ => throw new Exception($"Unknown type - {kvp.Value?.GetType().Name}")
+            };
+
             nativeDictionary.Add(kvp.Key, value!);
         }
 
         return nativeDictionary;
+    }
+
+    private static object GetSomeTypeOfNumber(JsonElement jsonElement)
+    {
+        if (jsonElement.TryGetInt32(out var intValue))
+        {
+            return intValue;
+        }
+                            
+        return jsonElement.GetDouble();
     }
     
     public static JsonSerializerOptions GetSerializerOptions()

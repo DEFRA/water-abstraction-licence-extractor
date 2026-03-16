@@ -101,20 +101,15 @@ public static class GenerateLinkedLicencesCsv
                     {
                         if (ci.Source == LinkedLicenceSource.Nald)
                         {
-                            if (ci.LinkReason == "ImplicitBackLink")
-                            {
-                                return $"{ci.Source}-{ci.LinkReason}-{ci.SectionName ?? "UNKNOWN"}";
-                            }
-                            
                             return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
                         }
 
                         if (ci.Source == LinkedLicenceSource.OtherDocument)
                         {
-                            return $"Document-{ci.SectionName ?? "OtherDocument"}-{ci.LinkReason ?? "UNKNOWN"}";
+                            return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}";
                         }
                         
-                        return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
+                        return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
                             $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
                     }));
 

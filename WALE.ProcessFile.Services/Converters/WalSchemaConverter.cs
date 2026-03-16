@@ -1448,6 +1448,8 @@ public static partial class WalSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
     {
+        // TODO make these repeated methods more generic
+        
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
             .ToList();

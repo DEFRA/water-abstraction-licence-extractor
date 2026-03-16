@@ -818,7 +818,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              (
                                (NALD_ABS_LICENCES."EXPIRY_DATE" IS NULL OR NALD_ABS_LICENCES."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (NALD_ABS_LICENCES."LAPSED_DATE" IS NULL OR NALD_ABS_LICENCES."LAPSED_DATE" >= CURRENT_DATE)
-                               AND (NALD_ABS_LICENCES."REV_DATE" IS NULL OR NALD_ABS_LICENCES."REV_DATE" >= CURRENT_DATE)
+                               --AND (NALD_ABS_LICENCES."REV_DATE" IS NULL OR NALD_ABS_LICENCES."REV_DATE" >= CURRENT_DATE)
                              )
                              AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = (
                                SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
@@ -867,7 +867,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              (
                                NALD_ABS_LICENCES."EXPIRY_DATE" < CURRENT_DATE
                                OR NALD_ABS_LICENCES."LAPSED_DATE" < CURRENT_DATE
-                               OR NALD_ABS_LICENCES."REV_DATE" < CURRENT_DATE
+                               --OR NALD_ABS_LICENCES."REV_DATE" < CURRENT_DATE
                              )
                              AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = (
                                SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")

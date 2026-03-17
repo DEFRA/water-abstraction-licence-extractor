@@ -137,18 +137,32 @@ public static partial class WalSchemaConverter
                 var thisDmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
                     ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                     : null;
-                
+
+                var outputLicenceType = LicenceType.Unknown;
+
+                if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.Impoundment)
+                {
+                    outputLicenceType = LicenceType.Impoundment;
+                }
+                else if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.Abstraction)
+                {
+                    outputLicenceType = LicenceType.Abstraction;
+                }
+
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     PermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
+                    LicenceType = outputLicenceType,
                     ContainedIn =
                     [
                         new LinkedLicenceSection
                         {
                             Source = LinkedLicenceSource.Nald,
-                            Direction = LinkedLicenceDirection.Incoming,
+                            Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
+                                ? LinkedLicenceDirection.Incoming
+                                : LinkedLicenceDirection.Outgoing,
                             LinkReason = naldLinkedLicence.LinkType.ToString(),
                             SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
                                 ? $"From {naldLinkedLicence.IncomingLicenceNumber}"

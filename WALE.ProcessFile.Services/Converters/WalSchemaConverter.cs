@@ -350,8 +350,7 @@ public static partial class WalSchemaConverter
             Filename = matchesResult.Filename,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumberWithConfidence,
-            NaldLicenceNumber = dmsFileData?.PermitNumber,
-            PermitNumber = dmsFileData?.PermitNumber,
+            DmsPermitNumber = dmsFileData?.PermitNumber,
             DmsFileId = dmsFileData?.FileId,
             LicenceVersion = licenceVersion,
             MeansOfAbstraction = means,
@@ -889,7 +888,7 @@ public static partial class WalSchemaConverter
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
-                            incomingLink.NaldLicenceNumber,
+                            null,
                             incomingLink.Filename,
                             null,
                             [
@@ -994,10 +993,10 @@ public static partial class WalSchemaConverter
         return returnList.ToArray();
     }
 
-    private static List<(string LicenceNumber, string ScrapedLicenceNumber, string NaldLicenceNumber, string? Filename)>
+    private static List<(string LicenceNumber, string ScrapedLicenceNumber, string? Filename)>
         GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<(string, string, string, string?)>();
+        var returnList = new List<(string, string, string?)>();
 
         foreach (var licence in licences)
         {
@@ -1011,7 +1010,6 @@ public static partial class WalSchemaConverter
                 returnList.Add((
                     licence.LicenceNumber!.Value!,
                     licence.LicenceNumber!.Value!,
-                    licence.NaldLicenceNumber!,
                     licence.Filename));
             }
         }

@@ -78,7 +78,6 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber?.Value,
                     ScrapedLicenceNumber = scrapedLicenceNumber,
-                    NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = isFound,
                     LicenceIsLive = licence.NaldStatus == NaldLicenceStatus.Live,
                     LicenceIsDead = licence.NaldStatus is

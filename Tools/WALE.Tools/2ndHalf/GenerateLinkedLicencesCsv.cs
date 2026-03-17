@@ -126,19 +126,19 @@ public static class GenerateLinkedLicencesCsv
 
                 outputLineCloned.LinkedLicenceDocumentIncoming = GetContainedInText(linkedLicence.ContainedIn!
                         .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
-                        .ToArray());
+                        .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceDocumentOutgoing = GetContainedInText(linkedLicence.ContainedIn!
                     .Where(ci => ci.Source == LinkedLicenceSource.Document)
-                    .ToArray());
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Incoming" })
-                    .ToArray());
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Incoming })
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldOutgoing = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Outgoing" })
-                    .ToArray());
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Outgoing })
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
                 outputLineCloned.LinkedLicenceIsLive = linkedLicence.NaldStatus == NaldLicenceStatus.Live;
@@ -155,7 +155,9 @@ public static class GenerateLinkedLicencesCsv
         return returnList;
     }
 
-    private static string GetContainedInText(LinkedLicenceSection[] containedIn)
+    private static string GetContainedInText(
+        LinkedLicenceSection[] containedIn,
+        LicenceType licenceType)
     {
         if (containedIn.Length == 0)
         {
@@ -165,18 +167,24 @@ public static class GenerateLinkedLicencesCsv
         return string.Join("; ", containedIn
             .Select(ci =>
             {
+                var licenceTypeSuffix = string.Empty;
+                if (licenceType != LicenceType.Abstraction)
+                {
+                    licenceTypeSuffix = $" ({licenceType.ToString()})";
+                }
+                
                 if (ci.Source == LinkedLicenceSource.Nald)
                 {
-                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
+                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}{licenceTypeSuffix}";
                 }
 
                 if (ci.Source == LinkedLicenceSource.OtherDocument)
                 {
-                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}";
+                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}{licenceTypeSuffix}";
                 }
                         
                 return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
-                       $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
+                       $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}{licenceTypeSuffix}";
             }));
     }
 }

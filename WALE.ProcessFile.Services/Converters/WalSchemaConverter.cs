@@ -539,7 +539,7 @@ public static partial class WalSchemaConverter
     {
         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumberInNaldFormat, regionCode);
 
-        if (!string.IsNullOrEmpty(strippedLicenceNumber))
+        if (string.IsNullOrEmpty(strippedLicenceNumber))
         {
             return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
         }
@@ -612,11 +612,17 @@ public static partial class WalSchemaConverter
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
+        var permitOrLicenceNumber = linkedLicencePermitNumber;
+        if (string.IsNullOrWhiteSpace(permitOrLicenceNumber))
+        {
+            permitOrLicenceNumber = linkedLicenceNumber;
+        }
+        
         var (naldStatus, licenceType) = GetLicenceStatusAndType(
-            linkedLicencePermitNumber,
+            permitOrLicenceNumber,
             naldLicenceStatusData,
             regionCode);
-
+        
         var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
 
         if (string.IsNullOrWhiteSpace(strippedLinkedLicenceNumber))

@@ -39,6 +39,26 @@ public static class FormattingHelper
         ];
     }
 
+    public static bool GetDmsFileData(
+        string? licenceNumber,
+        int regionCode,
+        Dictionary<string, DmsFileData>? licenceNumberMapping,
+        out DmsFileData? dmsFileData)
+    {
+        var strippedOptions = StripForComparisonMultipleOptions(licenceNumber, regionCode);
+        dmsFileData = null;
+            
+        foreach (var stripped in strippedOptions)
+        {
+            if (licenceNumberMapping?.TryGetValue(stripped, out dmsFileData) == true)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
     public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))

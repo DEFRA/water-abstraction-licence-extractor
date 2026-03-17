@@ -130,13 +130,11 @@ public static partial class WalSchemaConverter
 
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                FormattingHelper.GetDmsFileData(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
-                    naldLinkedLicence.NaldLicence.RegionCode);
-                
-                var thisDmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-                    ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
-                    : null;
+                    naldLinkedLicence.NaldLicence.RegionCode,
+                    licenceNumbersMapping,
+                    out var thisDmsFileData);
 
                 var outputLicenceType = LicenceType.Unknown;
 
@@ -295,8 +293,11 @@ public static partial class WalSchemaConverter
                     });
             }
 
-            if (FormattingHelper.StripForComparison(anywhereInDocumentLinkedLicence.LicenceNumber, regionCode)!.Length <
-                4)
+            var stripedLinkedLicenceNumber = FormattingHelper.StripForComparison(
+                anywhereInDocumentLinkedLicence.LicenceNumber,
+                regionCode)!;
+            
+            if (stripedLinkedLicenceNumber.Length < 4)
             {
                 found = true;
             }
@@ -633,17 +634,12 @@ public static partial class WalSchemaConverter
             permitOrLicenceNumber,
             naldLicenceStatusData,
             regionCode);
-        
-        var strippedLinkedLicenceNumber = FormattingHelper.StripForComparison(linkedLicenceNumber, regionCode);
 
-        if (string.IsNullOrWhiteSpace(strippedLinkedLicenceNumber))
-        {
-            return null;
-        }
-
-        var dmsFileData = !string.IsNullOrEmpty(strippedLinkedLicenceNumber)
-            ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
-            : null;
+        FormattingHelper.GetDmsFileData(
+            linkedLicenceNumber,
+            regionCode,
+            licenceNumbersMapping,
+            out var dmsFileData);
 
         return new LinkedLicence
         {
@@ -670,14 +666,13 @@ public static partial class WalSchemaConverter
         var returnList = new List<LicenceSet>();
 
         var (licenceNumber, _, _, _) = GetLicenceNumber(matchesResult);
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(
+        
+        FormattingHelper.GetDmsFileData(
             licenceNumber,
-            matchesResult.RegionCode);
-
-        var dmsFileData = !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? lookupConfiguration.LicenceNumberMapping.GetValueOrDefault(strippedLicenceNumber)
-            : null;
-
+            matchesResult.RegionCode,
+            lookupConfiguration.LicenceNumberMapping,
+            out var dmsFileData);
+        
         var primaryLicence = ToLicence(
             matchesResult,
             naldLicenceStatusData,

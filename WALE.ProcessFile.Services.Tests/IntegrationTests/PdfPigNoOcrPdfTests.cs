@@ -2694,7 +2694,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var expectedJson =
             await File.ReadAllTextAsync("Data/2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619.json");
 
-        // TODO there was a lot of unknown fields above that are wrong and need fixing
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),
             actualJson.Replace(" ", string.Empty).Replace("\n", string.Empty));

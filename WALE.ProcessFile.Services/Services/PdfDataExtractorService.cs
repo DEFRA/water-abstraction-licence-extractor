@@ -943,26 +943,29 @@ public class PdfDataExtractorService(
         
         foreach (var licenceNumber in licenceNumbers)
         {
-            if (!string.IsNullOrEmpty(licenceNumber?.Text))
+            if (string.IsNullOrEmpty(licenceNumber?.Text))
             {
-                var stripped =  FormattingHelper.StripForComparison(licenceNumber.Text, regionCode);
-                
-                if (!licenceNumberMapping.TryGetValue(stripped!, out var dmsFileData))
-                {
-                    // TODO this should log a warning
-                    continue;
-                }
-
-                var destinationFilenames = dmsFileData.DestinationFileName!;
-                
-                if (previouslyParsedFiles.Contains(destinationFilenames))
-                {
-                    continue;
-                }
-
-                previouslyParsedFiles.Add(destinationFilenames);
-                pathsToFetch.Add(destinationFilenames);
+                continue;
             }
+            
+            if (!FormattingHelper.GetDmsFileData(
+                licenceNumber.Text,
+                regionCode,
+                licenceNumberMapping,
+                out var dmsFileData))
+            {
+                continue;
+            }
+            
+            var destinationFilenames = dmsFileData!.DestinationFileName!;
+                
+            if (previouslyParsedFiles.Contains(destinationFilenames))
+            {
+                continue;
+            }
+
+            previouslyParsedFiles.Add(destinationFilenames);
+            pathsToFetch.Add(destinationFilenames);
         }
 
         foreach (var relatedFileName in pathsToFetch)

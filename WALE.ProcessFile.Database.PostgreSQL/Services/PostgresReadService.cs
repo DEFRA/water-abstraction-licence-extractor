@@ -803,8 +803,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return (
             await liveTask,
             await lapsedTask,
-            await revokedTask,
             await expiredTask,
+            await revokedTask,
             await impoundmentTask);
         
         // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
